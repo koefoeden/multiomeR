@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>7&nbsp; Main pipeline – multiomeR Manual</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./differential_analyses_walkthrough.html" rel="next">
+<link href="./output_gallery.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-b40990f2348f5ee4c2a2040bcbee9556.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./reaction_aggregation_walkthrough.html">Workflow</a></li><li class="breadcrumb-item"><a href="./reaction_aggregation_walkthrough.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Main pipeline</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">multiomeR Manual</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/koefoeden/multiomeR" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./quickstart.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Quickstart</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Setup</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./installation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Installation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./configuration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Configuration</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./output_gallery.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Output Gallery</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Workflow</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./reaction_aggregation_walkthrough.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Main pipeline</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./differential_analyses_walkthrough.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Differential analyses module</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./genetic_enrichment_walkthrough.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Genetic enrichment module</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#purpose" id="toc-purpose" class="nav-link active" data-scroll-target="#purpose"><span class="header-section-number">7.1</span> Purpose</a></li>
+  <li><a href="#inputs" id="toc-inputs" class="nav-link" data-scroll-target="#inputs"><span class="header-section-number">7.2</span> Inputs</a></li>
+  <li><a href="#workflow-stages" id="toc-workflow-stages" class="nav-link" data-scroll-target="#workflow-stages"><span class="header-section-number">7.3</span> Workflow stages</a></li>
+  <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview"><span class="header-section-number">7.4</span> Overview</a></li>
+  <li><a href="#graph-backed-blood_human-drafts" id="toc-graph-backed-blood_human-drafts" class="nav-link" data-scroll-target="#graph-backed-blood_human-drafts"><span class="header-section-number">7.5</span> Graph-backed blood_human drafts</a>
+  <ul class="collapse">
+  <li><a href="#parallel-pre-processing" id="toc-parallel-pre-processing" class="nav-link" data-scroll-target="#parallel-pre-processing"><span class="header-section-number">7.5.1</span> Parallel pre-processing</a></li>
+  <li><a href="#aggregation" id="toc-aggregation" class="nav-link" data-scroll-target="#aggregation"><span class="header-section-number">7.5.2</span> Aggregation</a></li>
+  <li><a href="#multimodal-dimension-reduction" id="toc-multimodal-dimension-reduction" class="nav-link" data-scroll-target="#multimodal-dimension-reduction"><span class="header-section-number">7.5.3</span> Multimodal dimension reduction</a></li>
+  </ul></li>
+  <li><a href="#atac-modality-addition" id="toc-atac-modality-addition" class="nav-link" data-scroll-target="#atac-modality-addition"><span class="header-section-number">7.6</span> ATAC modality addition</a>
+  <ul class="collapse">
+  <li><a href="#diagram" id="toc-diagram" class="nav-link" data-scroll-target="#diagram"><span class="header-section-number">7.6.1</span> Diagram</a></li>
+  <li><a href="#graph-backed-blood_human-draft" id="toc-graph-backed-blood_human-draft" class="nav-link" data-scroll-target="#graph-backed-blood_human-draft"><span class="header-section-number">7.6.2</span> Graph-backed blood_human draft</a></li>
+  </ul></li>
+  <li><a href="#subgroup-analysis" id="toc-subgroup-analysis" class="nav-link" data-scroll-target="#subgroup-analysis"><span class="header-section-number">7.7</span> Subgroup analysis</a>
+  <ul class="collapse">
+  <li><a href="#diagram-1" id="toc-diagram-1" class="nav-link" data-scroll-target="#diagram-1"><span class="header-section-number">7.7.1</span> Diagram</a></li>
+  <li><a href="#graph-backed-blood_human-draft-1" id="toc-graph-backed-blood_human-draft-1" class="nav-link" data-scroll-target="#graph-backed-blood_human-draft-1"><span class="header-section-number">7.7.2</span> Graph-backed blood_human draft</a></li>
+  </ul></li>
+  <li><a href="#running-the-pipeline" id="toc-running-the-pipeline" class="nav-link" data-scroll-target="#running-the-pipeline"><span class="header-section-number">7.8</span> Running the pipeline</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/reaction_aggregation_walkthrough.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./reaction_aggregation_walkthrough.html">Workflow</a></li><li class="breadcrumb-item"><a href="./reaction_aggregation_walkthrough.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Main pipeline</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Main pipeline</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="purpose" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="purpose"><span class="header-section-number">7.1</span> Purpose</h2>
+<p>This workflow is defined in <a href="https://github.com/koefoeden/multiomeR/tree/main/_targets.R"><code>_targets.R</code></a> and represents the main analysis pipeline after Cell Ranger output generation. It processes individual 10x reactions in parallel, combines selected reactions into aggregations, and builds RNA/ATAC outputs for clustering, cell typing, WNN integration, subgroup reprocessing, and optional downstream modules.</p>
+<p>Representative outputs from the public example workflow are collected in the <a href="./output_gallery.html">output gallery</a>.</p>
+</section>
+<section id="inputs" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="inputs"><span class="header-section-number">7.2</span> Inputs</h2>
+<p>The main pipeline starts from one or more <a href="https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/running-pipelines/single-library-analysis"><code>cellranger-arc count</code></a> output directories. Each configured reaction should point to a directory with the expected <code>outs/</code> files, including:</p>
+<pre class="text"><code>&lt;reaction_cellranger_count_dir&gt;/outs/
+|-- raw_feature_bc_matrix.h5
+|-- filtered_feature_bc_matrix.h5
+|-- atac_fragments.tsv.gz
+|-- atac_fragments.tsv.gz.tbi
+|-- atac_possorted_bam.bam
+|-- per_barcode_metrics.csv</code></pre>
+<p>Reaction-level configuration lives in <a href="https://github.com/koefoeden/multiomeR/tree/main/cfg_reactions_template.tsv"><code>cfg_reactions.tsv</code></a>. Start from <code>cfg_reactions_template.tsv</code>, then add one row per 10x reaction with a stable <code>reaction_ID</code>, the matching <code>dataset</code>, the <code>reaction_cellranger_count_dir</code>, and any donor demultiplexing fields relevant to that reaction.</p>
+<p>Dataset-level and aggregation-level settings live in <a href="https://github.com/koefoeden/multiomeR/tree/main/cfg_datasets_template.yaml"><code>cfg_datasets.yaml</code></a> and <a href="https://github.com/koefoeden/multiomeR/tree/main/cfg_aggregations_template.yaml"><code>cfg_aggregations.yaml</code></a>. See <a href="./configuration.html">Configuration</a> for how these files define filtering, aggregation, annotation, and optional module settings.</p>
+<p>Each aggregation also points to metadata files:</p>
+<ul>
+<li><strong><code>aggregation_donor_id_metadata_tsv</code></strong>: donor-level metadata with a <code>donor_id</code> column matching the donor IDs assigned during per-reaction processing.</li>
+<li><strong><code>aggregation_reaction_ID_metadata_tsv</code></strong>: reaction-level metadata with a <code>TENX_reaction_ID</code> column matching the configured reaction IDs.</li>
+</ul>
+<p>These metadata tables are joined to the per-cell metadata before downstream correction, plotting, and modelling.</p>
+</section>
+<section id="workflow-stages" class="level2" data-number="7.3">
+<h2 data-number="7.3" class="anchored" data-anchor-id="workflow-stages"><span class="header-section-number">7.3</span> Workflow stages</h2>
+<p>The main pipeline runs these stages:</p>
+<ul>
+<li>per-reaction processing and QC, including optional ambient RNA correction, donor demultiplexing, doublet detection, and barcode filtering</li>
+<li>aggregation of selected reactions into dataset-level analysis objects</li>
+<li>RNA processing, clustering, marker detection, and cell type annotation</li>
+<li>ATAC peak calling, consensus peak construction, chromatin accessibility processing, and chromVAR scoring</li>
+<li>WNN integration across RNA and ATAC modalities</li>
+<li>optional subgroup reprocessing for sufficiently large parent groups</li>
+</ul>
+</section>
+<section id="overview" class="level2" data-number="7.4">
+<h2 data-number="7.4" class="anchored" data-anchor-id="overview"><span class="header-section-number">7.4</span> Overview</h2>
+<p>Simplified overview diagram of the pipeline.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+flowchart TB
+  subgraph Legend["Node Color Key"]
+    direction LR
+    Input["Input"] --- Config["Config input"] --- Stage["Intermediate object"] --- Output["Output"] --- QC["QC output"]
+  end
+  linkStyle 0,1,2,3 stroke-width:0px,fill:none;
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+  class Input regular_input;
+  class Config CFG_input;
+  class Stage intermediate_object;
+  class Output regular_output;
+  class QC QC_output;
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+flowchart TB
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+
+  subgraph ReactionInputs["Configured reactions"]
+    direction TB
+    ReactionGEXMatrices("Per-reaction GEX BPCells matrices&lt;br/&gt;(GEX_counts_BPCells_matrix)")
+    ReactionMetadata("Per-reaction metadata tibbles&lt;br/&gt;(cellranger_kept_metadata_tibble)")
+  end
+
+  MarkerGenes("Marker gene sets&lt;br/&gt;(cfg_GEX_marker_genes)")
+  DonorMetadata("Donor metadata TSV&lt;br/&gt;(aggregation_donor_id_metadata_tsv)")
+  ReactionMetadataTSV("Reaction metadata TSV&lt;br/&gt;(aggregation_reaction_ID_metadata_tsv)")
+
+  AggregatedGEX("Aggregated GEX BPCells matrix&lt;br/&gt;(aggregated_counts_BPCells_matrix.GEX)")
+  GEXMetadata("GEX metadata tibble&lt;br/&gt;(metadata_tibble.GEX)")
+  GEXPCA("GEX PCA result&lt;br/&gt;(PCA_BPCells.GEX)")
+  HarmonyGEX("Harmony-corrected GEX embeddings&lt;br/&gt;(harmony_embeddings_matrix.GEX)")
+  GEXClusterMetadata("GEX clusters and UMAP metadata&lt;br/&gt;(metadata_w_clusters_tibble.GEX)")
+  CellTypedGEX("Cell-typed GEX metadata&lt;br/&gt;(metadata_w_cell_types_tibble.GEX)")
+
+  GEXMetadataOutput("Cell-level metadata table&lt;br/&gt;(metadata_w_cell_types_tibble.GEX)")
+  GEXMarkerTables("BPCells marker tables&lt;br/&gt;(SNN_cluster_marker_tibbles.GEX)")
+  GEXPCAPlots("PCA and feature-selection plots&lt;br/&gt;(PCA_*_plot.GEX)")
+  GEXEmbeddingPlots("UMAP, cluster, and marker plots&lt;br/&gt;(categorical.UMAPs.GEX)")
+
+  ReactionGEXMatrices --&gt;|Combine matrices| AggregatedGEX
+  ReactionMetadata --- BuildMetadata
+  DonorMetadata --- BuildMetadata
+  ReactionMetadataTSV --- BuildMetadata
+  BuildMetadata["Join metadata"]
+  BuildMetadata --&gt; GEXMetadata
+
+  AggregatedGEX --- RunPCA
+  GEXMetadata --- RunPCA
+  RunPCA["SCTransform residual PCA"]
+  RunPCA --&gt; GEXPCA
+  GEXPCA --&gt;|Harmony correction| HarmonyGEX
+  HarmonyGEX --&gt;|BPCells nearest-neighbour graph, Leiden clustering, UMAP| GEXClusterMetadata
+
+  GEXClusterMetadata --- AddCellTypes
+  AggregatedGEX --- AddCellTypes
+  MarkerGenes --- AddCellTypes
+  AddCellTypes["Marker-module scoring"]
+  AddCellTypes --&gt; CellTypedGEX
+  CellTypedGEX --&gt;|Per-reaction scDblFinder filtering| GEXMetadataOutput
+
+  GEXMetadataOutput --&gt; GEXMarkerTables
+  GEXPCA --&gt; GEXPCAPlots
+  GEXMetadataOutput --&gt; GEXEmbeddingPlots
+
+  class ReactionGEXMatrices,ReactionMetadata,DonorMetadata,ReactionMetadataTSV regular_input;
+  class MarkerGenes CFG_input;
+  class AggregatedGEX,GEXMetadata,GEXPCA,HarmonyGEX,GEXClusterMetadata,CellTypedGEX intermediate_object;
+  class GEXMetadataOutput,GEXMarkerTables regular_output;
+  class GEXPCAPlots,GEXEmbeddingPlots QC_output;
+  class BuildMetadata,RunPCA,AddCellTypes junction_node;
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="graph-backed-blood_human-drafts" class="level2" data-number="7.5">
+<h2 data-number="7.5" class="anchored" data-anchor-id="graph-backed-blood_human-drafts"><span class="header-section-number">7.5</span> Graph-backed blood_human drafts</h2>
+<p>The diagrams below are generated from the exported <code>blood_human</code> target graph. They are intended as graph-backed drafts for reviewing and refining the simplified documentation diagrams.</p>
+<section id="parallel-pre-processing" class="level3" data-number="7.5.1">
+<h3 data-number="7.5.1" class="anchored" data-anchor-id="parallel-pre-processing"><span class="header-section-number">7.5.1</span> Parallel pre-processing</h3>
+<p>Graph-backed draft of reaction-level inputs, QC summaries, and handoffs into aggregation.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+flowchart TB
+  subgraph Legend["Node Color Key"]
+    direction LR
+    Input["Input"] --- Config["Config input"] --- Stage["Intermediate object"] --- Output["Output"] --- QC["QC output"]
+  end
+  linkStyle 0,1,2,3 stroke-width:0px,fill:none;
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+  class Input regular_input;
+  class Config CFG_input;
+  class Stage intermediate_object;
+  class Output regular_output;
+  class QC QC_output;
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+%%{init: {'layout': 'elk'}}%%
+flowchart TB
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+
+  CellRangerOutputs("Per-reaction Cell Ranger outputs&lt;br/&gt;(cellranger_summary_file)")
+  ReferenceMetadata("Reference and feature metadata&lt;br/&gt;(gene_features_df)")
+  CellBarcodes("Cell barcode list&lt;br/&gt;(cellranger_barcodes_tsv)")
+  ReactionGEX("Reaction GEX matrix&lt;br/&gt;(GEX_counts_BPCells_matrix)")
+  ReactionFragments("Reaction ATAC fragments&lt;br/&gt;(fragments_w_prefix_bpcells)")
+  CellRangerMetrics("Cell Ranger cell metrics&lt;br/&gt;(per_barcode_metrics_tibble)")
+  GEXQCMetrics("GEX QC metrics&lt;br/&gt;(GEX_basic_metadata_tibble)")
+  ATACQCMetrics("ATAC QC metrics&lt;br/&gt;(ATAC_qc_metrics_tibble)")
+  GenotypeDoubletMetrics("Genotype and doublet metrics&lt;br/&gt;(cellsnp/vireo/amulet)")
+  FullMetadata("Full reaction metadata&lt;br/&gt;(full_metadata_tibble)")
+  KeptMetadata("QC-kept reaction metadata&lt;br/&gt;(cellranger_kept_metadata_tibble)")
+  ExclusionSummaries("Exclusion lists and QC plots&lt;br/&gt;(excluded_barcodes_by_type)")
+
+  CellRangerOutputs --&gt;|extract barcodes| CellBarcodes
+  CellRangerOutputs --&gt;|read feature and reference metadata| ReferenceMetadata
+  CellRangerOutputs --&gt;|CellBender or Cell Ranger to BPCells| ReactionGEX
+  ReferenceMetadata --&gt;|align gene features| ReactionGEX
+  CellRangerOutputs --&gt;|prefix fragment barcodes| ReactionFragments
+  ReactionGEX --&gt;|count and feature QC| GEXQCMetrics
+  ReactionFragments --&gt;|TSS and nucleosome QC| ATACQCMetrics
+  ReferenceMetadata --&gt;|gene annotation| ATACQCMetrics
+  CellRangerOutputs --&gt;|per-barcode metrics| CellRangerMetrics
+  CellBarcodes --&gt;|AMULET, cellsnp-lite, vireo| GenotypeDoubletMetrics
+  CellRangerOutputs --&gt;|fragments and BAM inputs| GenotypeDoubletMetrics
+  GEXQCMetrics --&gt;|combine metadata| FullMetadata
+  ATACQCMetrics --&gt;|combine metadata| FullMetadata
+  CellRangerMetrics --&gt;|combine metadata| FullMetadata
+  GenotypeDoubletMetrics --&gt;|combine metadata| FullMetadata
+  FullMetadata --&gt;|apply QC filters| KeptMetadata
+  FullMetadata --&gt;|summarize excluded barcodes| ExclusionSummaries
+  KeptMetadata --&gt;|Cell Ranger-only exclusions| ExclusionSummaries
+
+  class CellRangerOutputs,ReferenceMetadata regular_input;
+  class CellBarcodes,CellRangerMetrics,GEXQCMetrics,ATACQCMetrics,GenotypeDoubletMetrics,FullMetadata intermediate_object;
+  class ReactionGEX,ReactionFragments,KeptMetadata regular_output;
+  class ExclusionSummaries QC_output;
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="aggregation" class="level3" data-number="7.5.2">
+<h3 data-number="7.5.2" class="anchored" data-anchor-id="aggregation"><span class="header-section-number">7.5.2</span> Aggregation</h3>
+<p>Graph-backed draft of merged GEX processing, clustering, cell typing, and GEX outputs.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+flowchart TB
+  subgraph Legend["Node Color Key"]
+    direction LR
+    Input["Input"] --- Config["Config input"] --- Stage["Intermediate object"] --- Output["Output"] --- QC["QC output"]
+  end
+  linkStyle 0,1,2,3 stroke-width:0px,fill:none;
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+  class Input regular_input;
+  class Config CFG_input;
+  class Stage intermediate_object;
+  class Output regular_output;
+  class QC QC_output;
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+%%{init: {'layout': 'elk'}}%%
+flowchart TB
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+
+  AggregatedGEX("Aggregated GEX matrix&lt;br/&gt;(aggregated_counts_BPCells_matrix.GEX)")
+  MetadataInputs("Reaction and donor metadata&lt;br/&gt;(metadata_tibble.GEX inputs)")
+  GEXMetadata("GEX metadata&lt;br/&gt;(metadata_tibble.GEX)")
+  GEXPCA("GEX PCA&lt;br/&gt;(PCA_BPCells.GEX)")
+  GEXHarmony("Corrected GEX embedding&lt;br/&gt;(harmony_embeddings_matrix.GEX)")
+  GEXClusters("GEX clusters and UMAP&lt;br/&gt;(metadata_w_clusters_tibble.GEX)")
+  GEXCellTypes("Cell-typed GEX metadata&lt;br/&gt;(metadata_w_cell_types_tibble.GEX)")
+  GEXOutputs("GEX marker and QC outputs&lt;br/&gt;(markers and QC plots)")
+
+  MetadataInputs --&gt;|join metadata| GEXMetadata
+  AggregatedGEX --&gt;|SCTransform residual PCA| GEXPCA
+  GEXMetadata --&gt;|batch covariates| GEXPCA
+  GEXPCA --&gt;|Harmony| GEXHarmony
+  GEXHarmony --&gt;|SNN clustering + UMAP| GEXClusters
+  GEXClusters --&gt;|cell-type annotation| GEXCellTypes
+  GEXCellTypes --&gt;|markers and QC plots| GEXOutputs
+
+  class AggregatedGEX,MetadataInputs regular_input;
+  class GEXMetadata,GEXPCA,GEXHarmony,GEXClusters intermediate_object;
+  class GEXCellTypes regular_output;
+  class GEXOutputs QC_output;
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="multimodal-dimension-reduction" class="level3" data-number="7.5.3">
+<h3 data-number="7.5.3" class="anchored" data-anchor-id="multimodal-dimension-reduction"><span class="header-section-number">7.5.3</span> Multimodal dimension reduction</h3>
+<p>Graph-backed draft of GEX and ATAC embeddings, WNN integration, and integrated metadata outputs.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+flowchart TB
+  subgraph Legend["Node Color Key"]
+    direction LR
+    Input["Input"] --- Config["Config input"] --- Stage["Intermediate object"] --- Output["Output"] --- QC["QC output"]
+  end
+  linkStyle 0,1,2,3 stroke-width:0px,fill:none;
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+  class Input regular_input;
+  class Config CFG_input;
+  class Stage intermediate_object;
+  class Output regular_output;
+  class QC QC_output;
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+%%{init: {'layout': 'elk'}}%%
+flowchart TB
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+
+  GEXInput("GEX counts and metadata&lt;br/&gt;(aggregated_counts + metadata.GEX)")
+  ATACInput("ATAC peak matrix and metadata&lt;br/&gt;(peak_QC_filtered_BPCells_matrix.ATAC)")
+  GEXEmbedding("GEX PCA and Harmony&lt;br/&gt;(harmony_embeddings_matrix.GEX)")
+  ATACEmbedding("ATAC LSI and Harmony&lt;br/&gt;(harmony_embeddings_matrix.ATAC)")
+  SingleModalityUMAPs("GEX and ATAC UMAPs&lt;br/&gt;(UMAP_embeddings_tibble.GEX/ATAC)")
+  WNNEmbedding("Weighted nearest-neighbor graph&lt;br/&gt;(WNN_results)")
+  WNNMetadata("Integrated cell metadata&lt;br/&gt;(metadata_w_cell_types_tibble.WNN)")
+  WNNOutputs("Integrated UMAP and QC outputs&lt;br/&gt;(WNN UMAP plots)")
+
+  GEXInput --&gt;|PCA + Harmony| GEXEmbedding
+  ATACInput --&gt;|LSI + Harmony| ATACEmbedding
+  GEXEmbedding --&gt;|UMAP + diagnostics| SingleModalityUMAPs
+  ATACEmbedding --&gt;|UMAP + diagnostics| SingleModalityUMAPs
+  GEXEmbedding --&gt;|combine embeddings| WNNEmbedding
+  ATACEmbedding --&gt;|combine embeddings| WNNEmbedding
+  WNNEmbedding --&gt;|clusters + cell types| WNNMetadata
+  WNNMetadata --&gt;|integrated visualization| WNNOutputs
+
+  class GEXInput,ATACInput regular_input;
+  class GEXEmbedding,ATACEmbedding,WNNEmbedding intermediate_object;
+  class SingleModalityUMAPs,WNNMetadata regular_output;
+  class WNNOutputs QC_output;
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="atac-modality-addition" class="level2" data-number="7.6">
+<h2 data-number="7.6" class="anchored" data-anchor-id="atac-modality-addition"><span class="header-section-number">7.6</span> ATAC modality addition</h2>
+<p>This diagram focuses on how the ATAC modality is added to the merged RNA object, from peak calling and consensus peak construction through ATAC processing, chromVAR, and final WNN integration.</p>
+<section id="diagram" class="level3" data-number="7.6.1">
+<h3 data-number="7.6.1" class="anchored" data-anchor-id="diagram"><span class="header-section-number">7.6.1</span> Diagram</h3>
+<p>Simplified overview diagram of ATAC modality addition and WNN integration.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+flowchart TB
+  subgraph Legend["Node Color Key"]
+    direction LR
+    Input["Input"] --- Config["Config input"] --- Stage["Intermediate object"] --- Output["Output"] --- QC["QC output"]
+  end
+  linkStyle 0,1,2,3 stroke-width:0px,fill:none;
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+  class Input regular_input;
+  class Config CFG_input;
+  class Stage intermediate_object;
+  class Output regular_output;
+  class QC QC_output;
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+flowchart TB
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+
+  CellTypedGEX("Cell-typed GEX metadata&lt;br/&gt;(metadata_w_cell_types_tibble.GEX)")
+  GEXEmbeddings("GEX Harmony embeddings&lt;br/&gt;(harmony_embeddings_matrix.GEX)")
+  FragmentDirs("Per-reaction BPCells fragments&lt;br/&gt;(fragment_BPCells_dirs_per_reaction.ATAC)")
+  ClusterBarcodes("Peak-calling barcode sets&lt;br/&gt;(BCs_per_peak_cluster_list.ATAC)")
+  PeakAnnotations("Peak annotation resources&lt;br/&gt;(blacklist_GRanges.ATAC)")
+  MarkerGenes("Marker gene and TF sets&lt;br/&gt;(cfg_GEX_marker_genes, cfg_ATAC_marker_TFs)")
+  MotifMatrices("TF motif matrices&lt;br/&gt;(peak_TF_motif_matrix.ATAC)")
+
+  CombinedFragments("Combined BPCells fragments&lt;br/&gt;(combined_BPCells_fragment_obj.ATAC)")
+  ClusterPeaks("Per-cluster peak sets&lt;br/&gt;(within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC)")
+  ConsensusPeaks("Consensus peaks&lt;br/&gt;(consensus_peak_GRanges.ATAC)")
+  PeakMatrix("Consensus peak BPCells matrix&lt;br/&gt;(consensus_peak_BPCells_matrix.ATAC)")
+  ATACMetadata("Cell-typed ATAC metadata&lt;br/&gt;(metadata_w_cell_types_tibble.ATAC)")
+  ATACEmbeddings("ATAC LSI and Harmony embeddings&lt;br/&gt;(harmony_embeddings_matrix.ATAC)")
+  TFActivity("TF activity BPCells matrix&lt;br/&gt;(TF_activity_BPCells_matrix.ATAC)")
+  WNNResults("WNN graph and modality weights&lt;br/&gt;(WNN_results)")
+  WNNMetadata("Final WNN metadata&lt;br/&gt;(metadata_w_cell_types_tibble.WNN)")
+
+  ATACQC("ATAC QC and embedding plots&lt;br/&gt;(ATAC_QC_excluded_upset)")
+  WNNUMAPs("WNN UMAP plots&lt;br/&gt;(categorical.UMAPs.WNN)")
+  WNNWeights("ATAC vs RNA weight plots&lt;br/&gt;(ATAC_vs_RNA_weight_boxplots_plot.WNN)")
+  WNNDiagnostics("WNN cluster diagnostics&lt;br/&gt;(confusion_matrices_plots.WNN)")
+  WNNMarkers("WNN marker plots&lt;br/&gt;(markers_violin_plot.WNN)")
+
+  FragmentDirs --&gt;|Merge fragments| CombinedFragments
+  CombinedFragments --- CallPeaks
+  ClusterBarcodes --- CallPeaks
+  PeakAnnotations --- CallPeaks
+  CallPeaks["Split fragments and call peaks"]
+  CallPeaks --&gt; ClusterPeaks
+  ClusterPeaks --&gt;|Collapse peaks| ConsensusPeaks
+  ConsensusPeaks --- CountPeaks
+  CombinedFragments --- CountPeaks
+  CountPeaks["Count peaks with BPCells"]
+  CountPeaks --&gt; PeakMatrix
+
+  CellTypedGEX --- ProcessATAC
+  PeakMatrix --- ProcessATAC
+  MarkerGenes --- ProcessATAC
+  ProcessATAC["ATAC QC, LSI, clustering, and cell typing"]
+  ProcessATAC --&gt; ATACMetadata
+  ProcessATAC --&gt; ATACEmbeddings
+  ATACMetadata --&gt; ATACQC
+
+  ATACMetadata --- RunChromVAR
+  PeakMatrix --- RunChromVAR
+  MotifMatrices --- RunChromVAR
+  RunChromVAR["chromVAR and TF activity"]
+  RunChromVAR --&gt; TFActivity
+
+  GEXEmbeddings --- BuildWNN
+  ATACEmbeddings --- BuildWNN
+  ATACMetadata --- BuildWNN
+  BuildWNN["Weighted nearest neighbours"]
+  BuildWNN --&gt; WNNResults
+  WNNResults --- AddWNNMetadata
+  MarkerGenes --- AddWNNMetadata
+  AddWNNMetadata["WNN UMAP, clustering, and cell typing"]
+  AddWNNMetadata --&gt; WNNMetadata
+
+  WNNMetadata --&gt; WNNUMAPs
+  WNNMetadata --&gt; WNNWeights
+  WNNMetadata --&gt; WNNDiagnostics
+  WNNMetadata --&gt; WNNMarkers
+
+  class CellTypedGEX,GEXEmbeddings,FragmentDirs,ClusterBarcodes,PeakAnnotations,MotifMatrices regular_input;
+  class MarkerGenes CFG_input;
+  class CombinedFragments,ClusterPeaks,ConsensusPeaks,PeakMatrix,ATACMetadata,ATACEmbeddings,TFActivity,WNNResults intermediate_object;
+  class WNNMetadata regular_output;
+  class ATACQC,WNNUMAPs,WNNWeights,WNNDiagnostics,WNNMarkers QC_output;
+  class CallPeaks,CountPeaks,ProcessATAC,RunChromVAR,BuildWNN,AddWNNMetadata junction_node;
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="graph-backed-blood_human-draft" class="level3" data-number="7.6.2">
+<h3 data-number="7.6.2" class="anchored" data-anchor-id="graph-backed-blood_human-draft"><span class="header-section-number">7.6.2</span> Graph-backed blood_human draft</h3>
+<p>Graph-backed draft of ATAC QC, peak calling, consensus peaks, derived modalities, coverage tracks, and peak-gene links.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+flowchart TB
+  subgraph Legend["Node Color Key"]
+    direction LR
+    Input["Input"] --- Config["Config input"] --- Stage["Intermediate object"] --- Output["Output"] --- QC["QC output"]
+  end
+  linkStyle 0,1,2,3 stroke-width:0px,fill:none;
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+  class Input regular_input;
+  class Config CFG_input;
+  class Stage intermediate_object;
+  class Output regular_output;
+  class QC QC_output;
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+%%{init: {'layout': 'elk'}}%%
+flowchart TB
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+
+  ATACInputs("Fragments, reference, GEX metadata&lt;br/&gt;(combined fragments + GEX metadata)")
+  ATACQC("ATAC QC metadata&lt;br/&gt;(metadata_w_QC_tibble.ATAC)")
+  PeakCalling("Cluster peak calling&lt;br/&gt;(peak_GRanges_per_cluster)")
+  ConsensusPeaks("Consensus peak set&lt;br/&gt;(consensus_peak_GRanges)")
+  PeakMatrix("Peak accessibility matrix&lt;br/&gt;(peak_QC_filtered_BPCells_matrix)")
+  GeneScores("Gene activity scores&lt;br/&gt;(gene_score_archr_BPCells_matrix)")
+  TFActivity("TF motif activity&lt;br/&gt;(TF_activity_BPCells_matrix)")
+  CoverageTracks("Coverage and browser tracks&lt;br/&gt;(coverage/tracks)")
+  PeakGeneLinks("Peak-gene links and scE2G&lt;br/&gt;(peak_gene_correlation)")
+
+  ATACInputs --&gt;|QC + filtering| ATACQC
+  ATACInputs --&gt;|MACS3 peak calling| PeakCalling
+  PeakCalling --&gt;|collapse peaks| ConsensusPeaks
+  ConsensusPeaks --&gt;|count fragments| PeakMatrix
+  PeakMatrix --&gt;|gene score matrix| GeneScores
+  ConsensusPeaks --&gt;|motif matching + chromVAR| TFActivity
+  PeakCalling --&gt;|coverage export| CoverageTracks
+  PeakMatrix --&gt;|aggregate peak-gene signal| PeakGeneLinks
+
+  class ATACInputs regular_input;
+  class ATACQC,PeakCalling,ConsensusPeaks intermediate_object;
+  class PeakMatrix,GeneScores,TFActivity,CoverageTracks,PeakGeneLinks regular_output;
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="subgroup-analysis" class="level2" data-number="7.7">
+<h2 data-number="7.7" class="anchored" data-anchor-id="subgroup-analysis"><span class="header-section-number">7.7</span> Subgroup analysis</h2>
+<p>This diagram focuses on the subgroup reprocessing branch that starts from the final WNN object, selects sufficiently large parent groups, reruns within-group multimodal embedding and clustering, and generates subgroup-specific QC and marker outputs.</p>
+<section id="diagram-1" class="level3" data-number="7.7.1">
+<h3 data-number="7.7.1" class="anchored" data-anchor-id="diagram-1"><span class="header-section-number">7.7.1</span> Diagram</h3>
+<p>Simplified overview diagram of subgroup selection, reprocessing, clustering, and subgroup-specific outputs.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+flowchart TB
+  subgraph Legend["Node Color Key"]
+    direction LR
+    Input["Input"] --- Config["Config input"] --- Stage["Intermediate object"] --- Output["Output"] --- QC["QC output"]
+  end
+  linkStyle 0,1,2,3 stroke-width:0px,fill:none;
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+  class Input regular_input;
+  class Config CFG_input;
+  class Stage intermediate_object;
+  class Output regular_output;
+  class QC QC_output;
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+flowchart TB
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+
+  WNNMetadata("Final WNN metadata&lt;br/&gt;(metadata_w_cell_types_tibble.WNN)")
+  AggregatedGEX("Aggregated GEX BPCells matrix&lt;br/&gt;(aggregated_counts_BPCells_matrix.GEX)")
+  ATACPeakMatrix("QC-filtered ATAC peak matrix&lt;br/&gt;(peak_QC_filtered_BPCells_matrix.ATAC)")
+  SubgroupConfig("Subgroup settings&lt;br/&gt;(aggregation_subgroups_*)")
+  MarkerGenes("Marker gene sets&lt;br/&gt;(aggregation_GEX_marker_genes)")
+
+  SelectedSubgroups("Eligible subgroup labels&lt;br/&gt;(subgroups_to_process_vec)")
+  SubgroupMetadata("Per-subgroup metadata&lt;br/&gt;(metadata_tibble.subgroups)")
+  GEXPCA("Subgroup GEX PCA&lt;br/&gt;(PCA_BPCells.GEX.subgroups)")
+  GEXHarmony("Subgroup GEX Harmony embeddings&lt;br/&gt;(harmony_embeddings_matrix.GEX.subgroups)")
+  ATACLSI("Subgroup ATAC LSI&lt;br/&gt;(LSI_BPCells.ATAC.subgroups)")
+  ATACHarmony("Subgroup ATAC Harmony embeddings&lt;br/&gt;(harmony_embeddings_matrix.ATAC.subgroups)")
+  WNNResults("Subgroup WNN graph&lt;br/&gt;(WNN_results.subgroups)")
+  ClusteredMetadata("Subgroup cluster metadata&lt;br/&gt;(metadata_w_clusters_tibble.subgroups)")
+  FilteredMetadata("Filtered subgroup metadata&lt;br/&gt;(metadata_w_clusters_tibble_filtered.subgroups)")
+  MarkerTables("Subgroup marker tables&lt;br/&gt;(marker_tibbles.subgroups)")
+  CategoricalUMAPs("Categorical subgroup UMAPs&lt;br/&gt;(categorical.UMAPs.subgroups)")
+  ContinuousUMAPs("Continuous subgroup UMAPs&lt;br/&gt;(continuous.UMAPs.subgroups)")
+  VolcanoPlots("Marker volcano plots&lt;br/&gt;(marker_volcano_plots.subgroups)")
+
+  WNNMetadata --- PickSubgroups
+  SubgroupConfig --- PickSubgroups
+  PickSubgroups["Count cells and keep sufficiently large labels"]
+  PickSubgroups --&gt; SelectedSubgroups
+
+  WNNMetadata --- SliceSubgroups
+  SelectedSubgroups --- SliceSubgroups
+  SubgroupConfig --- SliceSubgroups
+  SliceSubgroups["Subset final metadata by subgroup label"]
+  SliceSubgroups --&gt; SubgroupMetadata
+
+  AggregatedGEX --- RunGEX
+  SubgroupMetadata --- RunGEX
+  RunGEX["Recompute SCTransform PCA and Harmony"]
+  RunGEX --&gt; GEXPCA
+  GEXPCA --&gt; GEXHarmony
+
+  ATACPeakMatrix --- RunATAC
+  SubgroupMetadata --- RunATAC
+  RunATAC["Recompute ATAC LSI and Harmony"]
+  RunATAC --&gt; ATACLSI
+  ATACLSI --&gt; ATACHarmony
+
+  GEXHarmony --- BuildWNN
+  ATACHarmony --- BuildWNN
+  SubgroupMetadata --- BuildWNN
+  BuildWNN["Build subgroup-native WNN graph"]
+  BuildWNN --&gt; WNNResults
+  WNNResults --&gt;|UMAP, clustering, and modality weights| ClusteredMetadata
+
+  ClusteredMetadata --- RefineSubgroups
+  MarkerGenes --- RefineSubgroups
+  RefineSubgroups["Score marker agreement and filter contaminated clusters"]
+  RefineSubgroups --&gt; FilteredMetadata
+
+  FilteredMetadata --&gt;|Find BPCells markers| MarkerTables
+  FilteredMetadata --&gt; CategoricalUMAPs
+  FilteredMetadata --&gt; ContinuousUMAPs
+  MarkerTables --&gt; VolcanoPlots
+
+  class WNNMetadata,AggregatedGEX,ATACPeakMatrix regular_input;
+  class SubgroupConfig,MarkerGenes CFG_input;
+  class SelectedSubgroups,SubgroupMetadata,GEXPCA,GEXHarmony,ATACLSI,ATACHarmony,WNNResults,ClusteredMetadata,FilteredMetadata,MarkerTables intermediate_object;
+  class CategoricalUMAPs,ContinuousUMAPs,VolcanoPlots QC_output;
+  class PickSubgroups,SliceSubgroups,RunGEX,RunATAC,BuildWNN,RefineSubgroups junction_node;
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+<section id="graph-backed-blood_human-draft-1" class="level3" data-number="7.7.2">
+<h3 data-number="7.7.2" class="anchored" data-anchor-id="graph-backed-blood_human-draft-1"><span class="header-section-number">7.7.2</span> Graph-backed blood_human draft</h3>
+<p>Graph-backed draft of subgroup selection, within-subgroup embeddings, WNN integration, and subgroup marker outputs.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+flowchart TB
+  subgraph Legend["Node Color Key"]
+    direction LR
+    Input["Input"] --- Config["Config input"] --- Stage["Intermediate object"] --- Output["Output"] --- QC["QC output"]
+  end
+  linkStyle 0,1,2,3 stroke-width:0px,fill:none;
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+  class Input regular_input;
+  class Config CFG_input;
+  class Stage intermediate_object;
+  class Output regular_output;
+  class QC QC_output;
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+%%{init: {'layout': 'elk'}}%%
+flowchart TB
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+
+  WNNMetadata("Integrated WNN metadata&lt;br/&gt;(metadata_w_cell_types_tibble.WNN)")
+  SubgroupDefinitions("Subgroup definitions&lt;br/&gt;(subgroups_to_process_vec)")
+  SubgroupMetadata("Filtered subgroup metadata&lt;br/&gt;(metadata_tibble.subgroups)")
+  SubgroupGEX("Subgroup GEX embedding&lt;br/&gt;(PCA/Harmony.GEX.subgroups)")
+  SubgroupATAC("Subgroup ATAC embedding&lt;br/&gt;(LSI/Harmony.ATAC.subgroups)")
+  SubgroupWNN("Subgroup WNN embedding&lt;br/&gt;(WNN_results.subgroups)")
+  SubgroupOutputs("Subgroup markers and plots&lt;br/&gt;(subgroup UMAPs and markers)")
+
+  WNNMetadata --&gt;|select cell groups| SubgroupDefinitions
+  SubgroupDefinitions --&gt;|filter cells| SubgroupMetadata
+  SubgroupMetadata --&gt;|rerun GEX embedding| SubgroupGEX
+  SubgroupMetadata --&gt;|rerun ATAC embedding| SubgroupATAC
+  SubgroupGEX --&gt;|combine subgroup embeddings| SubgroupWNN
+  SubgroupATAC --&gt;|combine subgroup embeddings| SubgroupWNN
+  SubgroupWNN --&gt;|visualize + markers| SubgroupOutputs
+
+  class WNNMetadata,SubgroupDefinitions regular_input;
+  class SubgroupMetadata,SubgroupGEX,SubgroupATAC,SubgroupWNN intermediate_object;
+  class SubgroupOutputs regular_output;
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="running-the-pipeline" class="level2" data-number="7.8">
+<h2 data-number="7.8" class="anchored" data-anchor-id="running-the-pipeline"><span class="header-section-number">7.8</span> Running the pipeline</h2>
+<p>From the repository-root R session described in <a href="./installation.html">Installation</a>, run the main workflow in checkpoint-sized pieces. Replace <code>your_aggregation</code> with the aggregation name from <code>cfg_aggregations.yaml</code>, for example <code>blood_human</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">names =</span> targets<span class="sc">::</span><span class="fu">tar_described_as</span>(tidyselect<span class="sc">::</span><span class="fu">contains</span>(<span class="st">"checkpoint:GEX"</span>)) <span class="sc">&amp;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    tidyselect<span class="sc">::</span><span class="fu">matches</span>(<span class="st">"your_aggregation"</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>At the GEX checkpoint, inspect the aggregation-level barcode exclusion summaries, RNA-only QC plots, marker summaries, and <code>GEX_Seurat_object.your_aggregation</code>. If the GEX filtering, clustering, and annotation look acceptable, continue to the multimodal checkpoint:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">names =</span> targets<span class="sc">::</span><span class="fu">tar_described_as</span>(tidyselect<span class="sc">::</span><span class="fu">contains</span>(<span class="st">"checkpoint:multimodal"</span>)) <span class="sc">&amp;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    tidyselect<span class="sc">::</span><span class="fu">matches</span>(<span class="st">"your_aggregation"</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>At the multimodal checkpoint, inspect the ATAC QC plots, peak and motif summaries, WNN UMAPs, modality-weight plots, and <code>multimodal_Seurat_object.your_aggregation</code>. If the aggregation enables the optional downstream modules, continue with their checkpoint outputs:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">names =</span> targets<span class="sc">::</span><span class="fu">tar_described_as</span>(tidyselect<span class="sc">::</span><span class="fu">contains</span>(<span class="st">"checkpoint:differential_analyses"</span>)) <span class="sc">&amp;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    tidyselect<span class="sc">::</span><span class="fu">matches</span>(<span class="st">"your_aggregation"</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">names =</span> targets<span class="sc">::</span><span class="fu">tar_described_as</span>(tidyselect<span class="sc">::</span><span class="fu">contains</span>(<span class="st">"checkpoint:genetic_enrichment"</span>)) <span class="sc">&amp;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    tidyselect<span class="sc">::</span><span class="fu">matches</span>(<span class="st">"your_aggregation"</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>To run all configured aggregations for a checkpoint, omit the <code>&amp; tidyselect::matches("your_aggregation")</code> part. To run the full workflow after checkpoint review, run:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The full main pipeline can be computationally expensive. Start with the public example or a narrow target selection, then scale to larger datasets after local paths, metadata files, and controller settings are working.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/koefoeden\.github\.io\/multiomeR\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./output_gallery.html" class="pagination-link" aria-label="Output Gallery">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Output Gallery</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./differential_analyses_walkthrough.html" class="pagination-link" aria-label="Differential analyses module">
+        <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Differential analyses module</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/reaction_aggregation_walkthrough.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>

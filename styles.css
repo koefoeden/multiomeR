@@ -1,0 +1,76 @@
+/* Fix underlines on YAML and other non-R code blocks in docs pages */
+/* These appear because downlit wraps lines in <a class="sourceLine"> anchor tags */
+.sourceLine {
+  text-decoration: none !important;
+}
+
+/* Also ensure the anchor inherits color from parent (code highlighting) */
+.sourceLine:hover {
+  text-decoration: none !important;
+}
+
+.scrollable-table {
+  width: 100%;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.scrollable-table table {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+
+.template-article h2 {
+  font-size: 1.6rem;
+  font-weight: bold;
+}
+.template-article h3 {
+  font-size: 1.6rem;
+  font-weight: normal;
+  border-top: 4px solid #d9d9d9;
+  padding-top: 0.8rem;
+  margin-top: 2rem;
+}
+
+.output-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 2rem;
+}
+
+.output-gallery-card {
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  padding: 1rem;
+  background: #fff;
+}
+
+.output-gallery-card img,
+.output-gallery-placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  background: #f7f7f7;
+}
+
+.output-gallery-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.output-gallery-card h3 {
+  margin-top: 0.8rem;
+  font-size: 1.1rem;
+}
+
+.output-gallery-target {
+  font-size: 0.85rem;
+  word-break: break-word;
+}

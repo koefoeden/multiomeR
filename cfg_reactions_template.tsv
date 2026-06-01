@@ -1,0 +1,4 @@
+reaction_ID	dataset	reaction_donor_id	reaction_n_donors	reaction_cellranger_count_dir	reaction_cellbender_h5_file	reaction_donors_VCF_file
+embryonic_brain_mouse	brain_mouse	mouse_1	1	example_data/embryonic_brain_mouse	NA	NA
+healthy_PBMC_human	blood_human	human_1	1	example_data/healthy_PBMC_human	NA	NA
+lymphoma_lymph_human	blood_human	human_2	1	example_data/lymphoma_lymph_human	NA	NA

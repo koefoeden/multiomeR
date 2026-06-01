@@ -1,0 +1,33 @@
+default:
+  mandatory:
+    genetic_enrichment_open_targets_studies: NULL # Named Open Targets study mappings keyed by GWAS_ID. Each mapping must include Category and studyId. variant_weighting_mode is optional.
+    genetic_enrichment_psbulk_GWAS_chromVAR_models: NULL # Model specification list for pseudobulk GWAS chromVAR differential activity.
+  optional:
+    genetic_enrichment_posterior_probability_cutoff: 0.001 # posteriorProbability cutoff for gchromVAR. NULL applies no cutoff.
+    genetic_enrichment_posterior_probability_weighting_function_name: NULL # Function expression used to weight Open Targets posteriorProbability values. NULL skips weighting.
+    genetic_enrichment_compartment_patterns: NULL # Named regex patterns used to group cell types or contrasts into plot compartments.
+    genetic_enrichment_SCAVENGE_permutation_times: 100 # Degree-matched random-walk permutations per GWAS/graph branch.
+    genetic_enrichment_SCAVENGE_restart_prob: 0.05 # Random-walk restart probability.
+    genetic_enrichment_SCAVENGE_seed_percent: 0.05 # Maximum fraction of cells used as random-walk seeds.
+    genetic_enrichment_psbulk_GWAS_chromVAR_min_ATAC_counts: 5000 # Minimum pseudobulk ATAC counts per cluster-donor sample for GWAS chromVAR differential activity.
+    genetic_enrichment_psbulk_GWAS_gene_chromVAR_GWAS_IDs: NULL # GWAS_IDs to run in the gene-level pseudobulk GWAS chromVAR extension. NULL skips the extension.
+    genetic_enrichment_extended_donor_id_metadata_tsv: NULL # TSV with donor-level metadata of interest. If NULL, inherits aggregation_donor_id_metadata_tsv.
+
+blood_human:
+  mandatory:
+    genetic_enrichment_open_targets_studies:
+      WhiteBloodCellCount_Vuckovic2020:
+        Category: bloodcell_controls
+        studyId: GCST90002407
+        finemappingMethod: auto
+    genetic_enrichment_psbulk_GWAS_chromVAR_models:
+      major_pbmc_cell_type_contrasts:
+        cell_type_subset: [B, Mono, NK, T]
+        design_matrix_func_name: NULL
+        formula: ~ 0 + cluster + donor_id
+        random_effect: NULL
+        contrast_specs_vec:
+          T_vs_NK: clusterT - clusterNK
+          Mono_vs_B: clusterMono - clusterB
+          lymphoid_vs_mono: (clusterT + clusterNK + clusterB) / 3 - clusterMono
+  optional: {}

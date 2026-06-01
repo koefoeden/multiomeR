@@ -1,0 +1,50 @@
+# Output Gallery
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+source("../R/output_gallery_helpers.R")
+manifest_file <- "output_gallery.yaml"
+gallery_items <- check_output_gallery_assets(
+  manifest_file = manifest_file,
+  gallery_root = "."
+)
+```
+
+This gallery shows representative outputs produced by multiomeR on the public example workflow. It is meant to give a quick sense of the QC summaries, multimodal embeddings, model summaries, and enrichment plots that the pipeline can produce before you run it on your own data.
+
+Each card includes the corresponding `targets` target name so you can connect the displayed output back to the workflow.
+
+```{r, echo = FALSE, results = "asis"}
+render_gallery_item <- function(item) {
+  title <- htmltools::htmlEscape(item$title)
+  description <- htmltools::htmlEscape(item$description)
+  target <- htmltools::htmlEscape(item$target)
+  asset <- item$asset
+  asset_exists <- isTRUE(item$asset_exists)
+
+  cat('<article class="output-gallery-card">\n')
+  if (asset_exists) {
+    cat(sprintf('<a href="%s"><img src="%s" alt="%s"></a>\n', asset, asset, title))
+  } else {
+    cat('<div class="output-gallery-placeholder">Preview pending</div>\n')
+  }
+  cat(sprintf('<h3>%s</h3>\n', title))
+  cat(sprintf('<p>%s</p>\n', description))
+  cat(sprintf('<p class="output-gallery-target"><code>%s</code></p>\n', target))
+  if (asset_exists) {
+    cat(sprintf('<p><a href="%s">Open full output</a></p>\n', asset))
+  }
+  cat('</article>\n')
+}
+
+for (section_name in unique(gallery_items$section)) {
+  section_items <- dplyr::filter(gallery_items, .data$section == section_name)
+  cat(sprintf("\n## %s\n\n", section_name))
+  cat('<div class="output-gallery-grid">\n')
+  purrr::pwalk(section_items, \(...) render_gallery_item(list(...)))
+  cat('</div>\n')
+}
+```

@@ -1,0 +1,121 @@
+graph_stem: blood_human_aggregation_d093e868b61c1467
+graph_build:
+  pipeline_name: blood_human_aggregation
+  target_graph_match: blood_human$
+output_stem: blood_human_genetic_enrichment
+slug: genetic_enrichment
+title: Genetic Enrichment Module
+scope_patterns:
+- ^(metadata_w_cell_types_tibble\.WNN|pseudobulk_counts_matrix\.ATAC|chromVAR_obj\.ATAC|chromVAR_peak_expectation\.ATAC|chromVAR_background_bins\.ATAC|chromVAR_chunk_context_records\.ATAC)\.blood_human$
+- ^genetic_enrichment
+- ^GWAS_
+- ^psbulk_GWAS_
+- ^SCAVENGE_
+- ^posterior_probability_weighting_function\.genetic_enrichment\.blood_human$
+nodes:
+- id: GeneticInputs
+  label: ATAC activity and metadata
+  representative: chromVAR + pseudobulk ATAC
+  class: regular_input
+  target_patterns:
+  - ^chromVAR_(obj|peak_expectation|background_bins|chunk_context_records)\.ATAC\.blood_human$
+  - ^pseudobulk_counts_matrix\.ATAC\.blood_human$
+  - ^metadata_w_cell_types_tibble\.WNN\.blood_human$
+  - ^genetic_enrichment_donor_id_metadata_(tsv|tibble)\.extended\.genetic_enrichment\.blood_human$
+- id: GWASInputs
+  label: GWAS and Open Targets inputs
+  representative: GWAS_inputs_tibble
+  class: regular_input
+  target_patterns:
+  - ^GWAS_(inputs_tibble|analysis_inputs_tibble|open_targets_metadata_tibble)\.genetic_enrichment\.blood_human$
+  - ^GWAS_gene_chromVAR_(inputs_tibble|credible_set_variants_tibble|L2G_tibble)\.genetic_enrichment\.blood_human$
+  - ^posterior_probability_weighting_function\.genetic_enrichment\.blood_human$
+  - ^genetic_enrichment_peak_ranges\.genetic_enrichment\.blood_human$
+- id: PeakWeights
+  label: Variant-to-peak weights
+  representative: GWAS chromVAR weights
+  class: intermediate_object
+  target_patterns:
+  - ^GWAS_chromVAR_(input_records|peak_weight_records|peak_weight_matrix)\.genetic_enrichment\.blood_human$
+  - ^GWAS_chromVAR_peak_weights_barplot\.genetic_enrichment\.blood_human$
+  - ^GWAS_gene_chromVAR_peak_weight_(records|matrix)\.genetic_enrichment\.blood_human$
+- id: SingleCellGWAS
+  label: Single-cell GWAS chromVAR scores
+  representative: GWAS_chromVAR_ZScore_records
+  class: regular_output
+  target_patterns:
+  - ^GWAS_chromVAR_ZScore.*\.genetic_enrichment\.blood_human$
+  - ^GWAS_chromVAR_summarized_.*\.genetic_enrichment\.blood_human$
+- id: PseudobulkGWAS
+  label: Pseudobulk GWAS chromVAR models
+  representative: psbulk_GWAS_chromVAR
+  class: regular_output
+  target_patterns:
+  - ^psbulk_GWAS_chromVAR_.*\.genetic_enrichment\.blood_human$
+- id: GeneChromVAR
+  label: Gene-linked GWAS chromVAR models
+  representative: psbulk_GWAS_gene_chromVAR
+  class: regular_output
+  target_patterns:
+  - ^GWAS_gene_chromVAR_feature_metadata_tibble\.genetic_enrichment\.blood_human$
+  - ^psbulk_GWAS_gene_chromVAR_.*\.genetic_enrichment\.blood_human$
+- id: SCAVENGE
+  label: SCAVENGE trait relevance
+  representative: SCAVENGE_TRS_tibbles
+  class: regular_output
+  target_patterns:
+  - ^SCAVENGE_.*\.genetic_enrichment\.blood_human$
+- id: GeneticOutputs
+  label: Genetic enrichment reports
+  representative: genetic enrichment summary plots
+  class: QC_output
+  target_patterns:
+  - ^GWAS_chromVAR_(peak_weights_barplot|summarized_Zscores_(dotplot|dotplot_scaled|boxplot))\.genetic_enrichment\.blood_human$
+  - ^psbulk_GWAS_(chromVAR_(dotplot|QC_plots)|gene_chromVAR_(volcano_plots_files|QC_plots|KCNJ12_locus_tracks_plot))\.genetic_enrichment\.blood_human$
+  - ^SCAVENGE_(UMAPs|TRS_dotplot|sig_prop_bars|TRS_by_cluster_boxplot)\.genetic_enrichment\.blood_human$
+  - ^GWAS_metadata_tracks_plot\.genetic_enrichment\.blood_human$
+edges:
+- from: GWASInputs
+  to: PeakWeights
+  label: weight variants
+  style: -->
+- from: GeneticInputs
+  to: SingleCellGWAS
+  label: score cells
+  style: -->
+- from: PeakWeights
+  to: SingleCellGWAS
+  label: apply peak weights
+  style: -->
+- from: GeneticInputs
+  to: PseudobulkGWAS
+  label: aggregate activity
+  style: -->
+- from: PeakWeights
+  to: PseudobulkGWAS
+  label: fit weighted models
+  style: -->
+- from: PeakWeights
+  to: GeneChromVAR
+  label: gene-linked weighting
+  style: -->
+- from: SingleCellGWAS
+  to: SCAVENGE
+  label: trait scores
+  style: -->
+- from: SingleCellGWAS
+  to: GeneticOutputs
+  label: summaries
+  style: -->
+- from: PseudobulkGWAS
+  to: GeneticOutputs
+  label: model reports
+  style: -->
+- from: GeneChromVAR
+  to: GeneticOutputs
+  label: locus reports
+  style: -->
+- from: SCAVENGE
+  to: GeneticOutputs
+  label: TRS plots
+  style: -->

@@ -1,0 +1,33 @@
+project:
+  type: book
+  output-dir: ../docs
+
+book:
+  title: "multiomeR Manual"
+  site-url: https://koefoeden.github.io/multiomeR/
+  repo-url: https://github.com/koefoeden/multiomeR
+  repo-actions: [source, issue]
+  page-navigation: true
+  sidebar:
+    collapse-level: 2
+  chapters:
+    - index.qmd
+    - overview.qmd
+    - quickstart.qmd
+    - part: Setup
+      chapters:
+        - installation.qmd
+        - configuration.qmd
+        - output_gallery.qmd
+    - part: Workflow
+      chapters:
+        - reaction_aggregation_walkthrough.qmd
+        - differential_analyses_walkthrough.qmd
+        - genetic_enrichment_walkthrough.qmd
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+    code-copy: true
+    number-sections: true

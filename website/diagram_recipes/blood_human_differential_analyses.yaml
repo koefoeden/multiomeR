@@ -1,0 +1,101 @@
+graph_stem: blood_human_aggregation_d093e868b61c1467
+graph_build:
+  pipeline_name: blood_human_aggregation
+  target_graph_match: blood_human$
+output_stem: blood_human_differential_analyses
+slug: differential_analyses
+title: Differential Analyses Module
+scope_patterns:
+- ^metadata_w_cell_types_tibble\.WNN\.blood_human$
+- ^pseudobulk_(counts_BPCells_matrix_dir|counts_matrix|depth_tibble)\.(GEX|ATAC)\.blood_human$
+- ^pseudobulk_activity_matrix\.TFA\.blood_human$
+- ^(donor_id_metadata_(tsv|tibble)\.extended|models|combined_gene_sets)\.differential_analyses\.blood_human$
+- ^(dynamic_tibble|filtered_mat_per_model|feature_matrix_fit|results_tibble|significant_elements_tibble|top_features_tibble|top_feature_OT_evidence_tibble|PValue_density_plot|PValue_density_plot_file|significant_elements_plot|volcano_plots|volcano_plots_files)\.(DGE|DCA|DTFA)\.differential_analyses\.blood_human$
+- ^(gene_idxs_per_gene_list|results|plots|plots_file)\..*\.GSEA\.DGE\.differential_analyses\.blood_human$
+- ^.*\.DCTC\.differential_analyses\.blood_human$
+- ^(pseudobulk_depth_distribution_plot|significant_elements_modality_distribution_tibble|significant_elements_modality_distribution_plots)\.differential_analyses\.blood_human$
+nodes:
+- id: AnalysisInputs
+  label: Cell metadata and matrices
+  representative: WNN metadata + pseudobulk matrices
+  class: regular_input
+  target_patterns:
+  - ^metadata_w_cell_types_tibble\.WNN\.blood_human$
+  - ^pseudobulk_(counts_BPCells_matrix_dir|counts_matrix|depth_tibble)\.(GEX|ATAC)\.blood_human$
+  - ^pseudobulk_activity_matrix\.TFA\.blood_human$
+- id: DesignInputs
+  label: Donor metadata and model config
+  representative: models + donor metadata
+  class: CFG_input
+  target_patterns:
+  - ^donor_id_metadata_(tsv|tibble)\.extended\.differential_analyses\.blood_human$
+  - ^models\.differential_analyses\.blood_human$
+  - ^combined_gene_sets\.differential_analyses\.blood_human$
+- id: ModelMatrices
+  label: Model-specific matrices
+  representative: filtered_mat_per_model
+  class: intermediate_object
+  target_patterns:
+  - ^(dynamic_tibble|filtered_mat_per_model|feature_matrix_fit)\.(DGE|DCA|DTFA)\.differential_analyses\.blood_human$
+- id: DifferentialResults
+  label: DGE, DCA and DTFA results
+  representative: results_tibble
+  class: regular_output
+  target_patterns:
+  - ^(results_tibble|significant_elements_tibble|top_features_tibble|top_feature_OT_evidence_tibble)\.(DGE|DCA|DTFA)\.differential_analyses\.blood_human$
+- id: CompositionResults
+  label: Cell-type composition tests
+  representative: model_results.DCTC
+  class: regular_output
+  target_patterns:
+  - ^.*\.DCTC\.differential_analyses\.blood_human$
+- id: GSEAResults
+  label: DGE gene-set enrichment
+  representative: GSEA results
+  class: regular_output
+  target_patterns:
+  - ^(gene_idxs_per_gene_list|results|plots|plots_file)\..*\.GSEA\.DGE\.differential_analyses\.blood_human$
+- id: DifferentialOutputs
+  label: Diagnostic and summary plots
+  representative: volcano and QC plots
+  class: QC_output
+  target_patterns:
+  - ^(volcano_plots|volcano_plots_files|PValue_density_plot|PValue_density_plot_file|significant_elements_plot)\.(DGE|DCA|DTFA)\.differential_analyses\.blood_human$
+  - ^(pseudobulk_depth_distribution_plot|significant_elements_modality_distribution_tibble|significant_elements_modality_distribution_plots)\.differential_analyses\.blood_human$
+edges:
+- from: AnalysisInputs
+  to: ModelMatrices
+  label: build model matrices
+  style: -->
+- from: DesignInputs
+  to: ModelMatrices
+  label: apply model formulae
+  style: -->
+- from: ModelMatrices
+  to: DifferentialResults
+  label: fit DGE/DCA/DTFA
+  style: -->
+- from: DesignInputs
+  to: CompositionResults
+  label: fit DCTC models
+  style: -->
+- from: ModelMatrices
+  to: GSEAResults
+  label: rank genes
+  style: -->
+- from: DesignInputs
+  to: GSEAResults
+  label: gene sets
+  style: -->
+- from: DifferentialResults
+  to: DifferentialOutputs
+  label: summarize hits
+  style: -->
+- from: CompositionResults
+  to: DifferentialOutputs
+  label: composition plots
+  style: -->
+- from: GSEAResults
+  to: DifferentialOutputs
+  label: GSEA plots
+  style: -->

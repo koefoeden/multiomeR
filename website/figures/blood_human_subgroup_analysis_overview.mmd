@@ -1,0 +1,31 @@
+%%{init: {'layout': 'elk'}}%%
+flowchart TB
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+
+  WNNMetadata("Integrated WNN metadata<br/>(metadata_w_cell_types_tibble.WNN)")
+  SubgroupDefinitions("Subgroup definitions<br/>(subgroups_to_process_vec)")
+  SubgroupMetadata("Filtered subgroup metadata<br/>(metadata_tibble.subgroups)")
+  SubgroupGEX("Subgroup GEX embedding<br/>(PCA/Harmony.GEX.subgroups)")
+  SubgroupATAC("Subgroup ATAC embedding<br/>(LSI/Harmony.ATAC.subgroups)")
+  SubgroupWNN("Subgroup WNN embedding<br/>(WNN_results.subgroups)")
+  SubgroupOutputs("Subgroup markers and plots<br/>(subgroup UMAPs and markers)")
+
+  WNNMetadata -->|select cell groups| SubgroupDefinitions
+  SubgroupDefinitions -->|filter cells| SubgroupMetadata
+  SubgroupMetadata -->|rerun GEX embedding| SubgroupGEX
+  SubgroupMetadata -->|rerun ATAC embedding| SubgroupATAC
+  SubgroupGEX -->|combine subgroup embeddings| SubgroupWNN
+  SubgroupATAC -->|combine subgroup embeddings| SubgroupWNN
+  SubgroupWNN -->|visualize + markers| SubgroupOutputs
+
+  class WNNMetadata,SubgroupDefinitions regular_input;
+  class SubgroupMetadata,SubgroupGEX,SubgroupATAC,SubgroupWNN intermediate_object;
+  class SubgroupOutputs regular_output;

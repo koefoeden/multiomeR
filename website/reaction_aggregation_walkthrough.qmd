@@ -1,0 +1,164 @@
+# Main pipeline
+
+```{r setup, include = FALSE}
+pipeline_name <- "processing_and_aggregation"
+source("helpers/_setup.R")
+```
+
+## Purpose
+
+This workflow is defined in [`_targets.R`](`r pipeline_github_file`) and represents the main analysis pipeline after Cell Ranger output generation. It processes individual 10x reactions in parallel, combines selected reactions into aggregations, and builds RNA/ATAC outputs for clustering, cell typing, WNN integration, subgroup reprocessing, and optional downstream modules.
+
+Representative outputs from the public example workflow are collected in the [output gallery](output_gallery.qmd).
+
+## Inputs
+
+The main pipeline starts from one or more [`cellranger-arc count`](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/running-pipelines/single-library-analysis) output directories. Each configured reaction should point to a directory with the expected `outs/` files, including:
+
+```text
+<reaction_cellranger_count_dir>/outs/
+|-- raw_feature_bc_matrix.h5
+|-- filtered_feature_bc_matrix.h5
+|-- atac_fragments.tsv.gz
+|-- atac_fragments.tsv.gz.tbi
+|-- atac_possorted_bam.bam
+|-- per_barcode_metrics.csv
+```
+
+Reaction-level configuration lives in [`cfg_reactions.tsv`](`r reactions_github_file`). Start from `cfg_reactions_template.tsv`, then add one row per 10x reaction with a stable `reaction_ID`, the matching `dataset`, the `reaction_cellranger_count_dir`, and any donor demultiplexing fields relevant to that reaction.
+
+Dataset-level and aggregation-level settings live in [`cfg_datasets.yaml`](`r datasets_github_file`) and [`cfg_aggregations.yaml`](https://github.com/koefoeden/multiomeR/tree/main/cfg_aggregations_template.yaml). See [Configuration](configuration.qmd) for how these files define filtering, aggregation, annotation, and optional module settings.
+
+Each aggregation also points to metadata files:
+
+- **`aggregation_donor_id_metadata_tsv`**: donor-level metadata with a `donor_id` column matching the donor IDs assigned during per-reaction processing.
+- **`aggregation_reaction_ID_metadata_tsv`**: reaction-level metadata with a `TENX_reaction_ID` column matching the configured reaction IDs.
+
+These metadata tables are joined to the per-cell metadata before downstream correction, plotting, and modelling.
+
+## Workflow stages
+
+The main pipeline runs these stages:
+
+- per-reaction processing and QC, including optional ambient RNA correction, donor demultiplexing, doublet detection, and barcode filtering
+- aggregation of selected reactions into dataset-level analysis objects
+- RNA processing, clustering, marker detection, and cell type annotation
+- ATAC peak calling, consensus peak construction, chromatin accessibility processing, and chromVAR scoring
+- WNN integration across RNA and ATAC modalities
+- optional subgroup reprocessing for sufficiently large parent groups
+
+```{r, include = FALSE, eval = TRUE}
+overview_stem <- "reaction_aggregation"
+```
+
+{{< include helpers/_overview_snippet.qmd >}}
+
+## Graph-backed blood_human drafts
+
+The diagrams below are generated from the exported `blood_human` target graph. They are intended as graph-backed drafts for reviewing and refining the simplified documentation diagrams.
+
+```{r, include = FALSE, eval = TRUE}
+overview_stem <- "blood_human_parallel_preprocessing"
+overview_heading <- "### Parallel pre-processing"
+overview_description <- "Graph-backed draft of reaction-level inputs, QC summaries, and handoffs into aggregation."
+```
+
+{{< include helpers/_overview_snippet.qmd >}}
+
+```{r, include = FALSE, eval = TRUE}
+overview_stem <- "blood_human_aggregation"
+overview_heading <- "### Aggregation"
+overview_description <- "Graph-backed draft of merged GEX processing, clustering, cell typing, and GEX outputs."
+```
+
+{{< include helpers/_overview_snippet.qmd >}}
+
+```{r, include = FALSE, eval = TRUE}
+overview_stem <- "blood_human_multimodal_dimension_reduction"
+overview_heading <- "### Multimodal dimension reduction"
+overview_description <- "Graph-backed draft of GEX and ATAC embeddings, WNN integration, and integrated metadata outputs."
+```
+
+{{< include helpers/_overview_snippet.qmd >}}
+
+## ATAC modality addition
+
+This diagram focuses on how the ATAC modality is added to the merged RNA object, from peak calling and consensus peak construction through ATAC processing, chromVAR, and final WNN integration.
+
+```{r, include = FALSE, eval = TRUE}
+overview_stem <- "reaction_aggregation_ATAC_modality"
+overview_heading <- "### Diagram"
+overview_description <- "Simplified overview diagram of ATAC modality addition and WNN integration."
+```
+
+{{< include helpers/_overview_snippet.qmd >}}
+
+```{r, include = FALSE, eval = TRUE}
+overview_stem <- "blood_human_atac_derived_modalities"
+overview_heading <- "### Graph-backed blood_human draft"
+overview_description <- "Graph-backed draft of ATAC QC, peak calling, consensus peaks, derived modalities, coverage tracks, and peak-gene links."
+```
+
+{{< include helpers/_overview_snippet.qmd >}}
+
+## Subgroup analysis
+
+This diagram focuses on the subgroup reprocessing branch that starts from the final WNN object, selects sufficiently large parent groups, reruns within-group multimodal embedding and clustering, and generates subgroup-specific QC and marker outputs.
+
+```{r, include = FALSE, eval = TRUE}
+overview_stem <- "reaction_aggregation_subgroups"
+overview_heading <- "### Diagram"
+overview_description <- "Simplified overview diagram of subgroup selection, reprocessing, clustering, and subgroup-specific outputs."
+```
+
+{{< include helpers/_overview_snippet.qmd >}}
+
+```{r, include = FALSE, eval = TRUE}
+overview_stem <- "blood_human_subgroup_analysis"
+overview_heading <- "### Graph-backed blood_human draft"
+overview_description <- "Graph-backed draft of subgroup selection, within-subgroup embeddings, WNN integration, and subgroup marker outputs."
+```
+
+{{< include helpers/_overview_snippet.qmd >}}
+
+## Running the pipeline
+
+From the repository-root R session described in [Installation](installation.qmd), run the main workflow in checkpoint-sized pieces. Replace `your_aggregation` with the aggregation name from `cfg_aggregations.yaml`, for example `blood_human`.
+
+```{r, eval = FALSE}
+targets::tar_make(
+  names = targets::tar_described_as(tidyselect::contains("checkpoint:GEX")) &
+    tidyselect::matches("your_aggregation")
+)
+```
+
+At the GEX checkpoint, inspect the aggregation-level barcode exclusion summaries, RNA-only QC plots, marker summaries, and `GEX_Seurat_object.your_aggregation`. If the GEX filtering, clustering, and annotation look acceptable, continue to the multimodal checkpoint:
+
+```{r, eval = FALSE}
+targets::tar_make(
+  names = targets::tar_described_as(tidyselect::contains("checkpoint:multimodal")) &
+    tidyselect::matches("your_aggregation")
+)
+```
+
+At the multimodal checkpoint, inspect the ATAC QC plots, peak and motif summaries, WNN UMAPs, modality-weight plots, and `multimodal_Seurat_object.your_aggregation`. If the aggregation enables the optional downstream modules, continue with their checkpoint outputs:
+
+```{r, eval = FALSE}
+targets::tar_make(
+  names = targets::tar_described_as(tidyselect::contains("checkpoint:differential_analyses")) &
+    tidyselect::matches("your_aggregation")
+)
+
+targets::tar_make(
+  names = targets::tar_described_as(tidyselect::contains("checkpoint:genetic_enrichment")) &
+    tidyselect::matches("your_aggregation")
+)
+```
+
+To run all configured aggregations for a checkpoint, omit the `& tidyselect::matches("your_aggregation")` part. To run the full workflow after checkpoint review, run:
+
+```{r, eval = FALSE}
+targets::tar_make()
+```
+
+The full main pipeline can be computationally expensive. Start with the public example or a narrow target selection, then scale to larger datasets after local paths, metadata files, and controller settings are working.

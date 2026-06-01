@@ -1,0 +1,35 @@
+%%{init: {'layout': 'elk'}}%%
+flowchart TB
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+
+  AnalysisInputs("Cell metadata and matrices<br/>(WNN metadata + pseudobulk matrices)")
+  DesignInputs("Donor metadata and model config<br/>(models + donor metadata)")
+  ModelMatrices("Model-specific matrices<br/>(filtered_mat_per_model)")
+  DifferentialResults("DGE, DCA and DTFA results<br/>(results_tibble)")
+  CompositionResults("Cell-type composition tests<br/>(model_results.DCTC)")
+  GSEAResults("DGE gene-set enrichment<br/>(GSEA results)")
+  DifferentialOutputs("Diagnostic and summary plots<br/>(volcano and QC plots)")
+
+  AnalysisInputs -->|build model matrices| ModelMatrices
+  DesignInputs -->|apply model formulae| ModelMatrices
+  ModelMatrices -->|fit DGE/DCA/DTFA| DifferentialResults
+  DesignInputs -->|fit DCTC models| CompositionResults
+  ModelMatrices -->|rank genes| GSEAResults
+  DesignInputs -->|gene sets| GSEAResults
+  DifferentialResults -->|summarize hits| DifferentialOutputs
+  CompositionResults -->|composition plots| DifferentialOutputs
+  GSEAResults -->|GSEA plots| DifferentialOutputs
+
+  class AnalysisInputs regular_input;
+  class DesignInputs CFG_input;
+  class ModelMatrices intermediate_object;
+  class DifferentialResults,CompositionResults,GSEAResults regular_output;
+  class DifferentialOutputs QC_output;

@@ -1,0 +1,39 @@
+# Genetic enrichment module
+
+```{r setup, include = FALSE}
+pipeline_name <- "genetic_enrichment"
+source("helpers/_setup.R")
+```
+
+## Purpose
+
+This optional module is relevant for human-data aggregations where GWAS or fine-mapped trait evidence should be integrated with chromatin accessibility data. It is defined inside the root [`_targets.R`](`r pipeline_github_file`) workflow, with module-specific target fragments and configuration in `module_genetic_enrichment/`.
+
+The module can identify trait-relevant cell types and regulatory programs using:
+
+- single-cell and pseudobulk enrichment scoring with gchromVAR
+- graph-based trait relevance scoring with SCAVENGE
+
+Representative outputs from this module are shown in the [output gallery](output_gallery.qmd).
+
+Enable the module for a human-data aggregation in `cfg_aggregations.yaml`, then configure Open Targets studies and module-specific settings in `module_genetic_enrichment/cfg.yaml`. See [Configuration](configuration.qmd) for the general config workflow.
+
+{{< include helpers/_overview_snippet.qmd >}}
+
+```{r, include = FALSE, eval = TRUE}
+overview_stem <- "blood_human_genetic_enrichment"
+overview_heading <- "## Graph-backed blood_human draft"
+overview_description <- "Graph-backed draft of GWAS inputs, variant-to-peak weighting, single-cell and pseudobulk chromVAR enrichment, SCAVENGE, and report outputs."
+```
+
+{{< include helpers/_overview_snippet.qmd >}}
+
+## Running the pipeline
+
+From the repository-root R session described in [Installation](installation.qmd), run the relevant root workflow targets. Replace `your_aggregation` with a human-data aggregation that enables the module in `cfg_aggregations.yaml`.
+
+```{r, eval = FALSE}
+targets::tar_make(names = matches("your_aggregation"))
+```
+
+Runtime depends on the number of configured GWAS studies, enrichment methods, cells, and pseudobulk contrasts.

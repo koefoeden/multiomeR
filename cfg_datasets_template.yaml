@@ -1,0 +1,29 @@
+default:
+  mandatory:
+    dataset_cellranger_arc_refdata_dir: NULL
+  optional:
+    dataset_QC_exclude_list_per_reaction: NULL # Exclusion dplyr::filter-expressions to evaluate on per-barcode metadata prior to initial GEX-based clustering.
+    dataset_run_amulet: true
+    dataset_tar_make_skip_regex_patterns: NULL
+
+brain_mouse:
+  mandatory:
+    dataset_cellranger_arc_refdata_dir: example_data/refdata-cellranger-arc-mm10-2020-A-2.0.0
+  optional:
+    dataset_QC_exclude_list_per_reaction:
+      - TSS.enrichment < 4
+      - nucleosome_signal > 4
+      - nCount_RNA < 250
+      - RNA_mito_percent > 10
+      - amulet_q.value < 0.05
+
+blood_human:
+  mandatory:
+    dataset_cellranger_arc_refdata_dir: example_data/refdata-cellranger-arc-GRCh38-2020-A-2.0.0
+  optional:
+    dataset_QC_exclude_list_per_reaction:
+      - TSS.enrichment < 4
+      - nucleosome_signal > 4
+      - nCount_RNA < 250
+      - RNA_mito_percent > 10
+      - amulet_q.value < 0.05

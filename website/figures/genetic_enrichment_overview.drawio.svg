@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="260" viewBox="0 0 720 260">
+  <style>
+    .title { font: 700 22px Helvetica, Arial, sans-serif; fill: #222; }
+    .label { font: 600 15px Helvetica, Arial, sans-serif; fill: #222; }
+    .body { font: 13px Helvetica, Arial, sans-serif; fill: #444; }
+    .box { fill: #f5f5f5; stroke: #666; stroke-width: 1.5; rx: 12; ry: 12; }
+    .group { fill: #dae8fc; stroke: #6c8ebf; stroke-width: 1.5; stroke-dasharray: 6 4; rx: 24; ry: 24; }
+    .arrow { stroke: #222; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#222"/>
+    </marker>
+  </defs>
+
+  <text x="30" y="38" class="title">Genetic enrichment overview</text>
+
+  <rect x="30" y="80" width="180" height="90" class="box"/>
+  <text x="120" y="112" text-anchor="middle" class="label">Input resources</text>
+  <text x="120" y="136" text-anchor="middle" class="body">Processed GWAS data and</text>
+  <text x="120" y="154" text-anchor="middle" class="body">aggregated ATAC/WNN objects</text>
+
+  <rect x="250" y="60" width="220" height="130" class="group"/>
+  <text x="360" y="98" text-anchor="middle" class="label">genetic_enrichment</text>
+  <text x="360" y="124" text-anchor="middle" class="body">gchromVAR scoring</text>
+  <text x="360" y="144" text-anchor="middle" class="body">SCAVENGE graph propagation</text>
+  <text x="360" y="164" text-anchor="middle" class="body">LDSC enrichment summaries</text>
+
+  <rect x="510" y="80" width="180" height="90" class="box"/>
+  <text x="600" y="112" text-anchor="middle" class="label">Outputs</text>
+  <text x="600" y="136" text-anchor="middle" class="body">Trait relevance scores</text>
+  <text x="600" y="154" text-anchor="middle" class="body">and enrichment heatmaps</text>
+
+  <path d="M 210 125 L 250 125" class="arrow"/>
+  <path d="M 470 125 L 510 125" class="arrow"/>
+</svg>

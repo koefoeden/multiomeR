@@ -1,0 +1,130 @@
+graph_stem: blood_human_aggregation_d093e868b61c1467
+graph_build:
+  pipeline_name: blood_human_aggregation
+  target_graph_match: blood_human$
+output_stem: blood_human_atac_derived_modalities
+slug: atac_derived_modalities
+title: ATAC and Derived Modalities
+scope_patterns:
+- ^(aggregated_cellranger_ref_list|combined_BPCells_fragment_obj)\.(ATAC\.)?blood_human$
+- ^metadata_w_cell_types_tibble\.GEX\.blood_human$
+- ^(blacklist_GRanges|chromHMMs_list_proj|metadata_w_QC_tibble|metadata_filtered_tibble|QC_excluded_BCs_list|QC_excluded_upset_plot|QC_filtered_BCs|peaks_QC_violins_plot)\.ATAC\.blood_human$
+- ^metadata_w_cell_types(_unfiltered)?_tibble\.ATAC\.blood_human$
+- ^(categorical_bars_plots|marker_gene_activity_dot_plot)\.ATAC\.blood_human$
+- ^scDblFinder_.*\.ATAC\.blood_human$
+- ^(BCs_per_peak_cluster_list|peak_calling_cluster_names|peak_calling_cluster_discovery_tibble|peak_GRanges_per_cluster|within_clusters_collapsed_peaks_per_cluster_GRanges|peaks_similarity_tiles_plot)\.ATAC\.blood_human$
+- ^fragments_per_.*\.fragments\.ATAC\.blood_human$
+- ^peaks_per_cluster_(narrowPeaks|BEDs|bigBeds)\.peaks\.ATAC\.blood_human$
+- ^diff_(peak_acc_results_tibble|acc_peaks_per_cluster_BEDs)\.(ATAC|peaks\.ATAC)\.blood_human$
+- ^consensus_peak_(GRanges|annotated_GRanges|tibble|BED|bigBed|BPCells_matrix_dir|BPCells_matrix)\.ATAC\.blood_human$
+- ^peak_QC_filtered_BPCells_matrix\.ATAC\.blood_human$
+- ^gene_score_archr_BPCells_matrix(_dir)?\.ATAC\.blood_human$
+- ^(chromVAR_|motif_chromVAR_|peak_TF_motif_matrix|TF_activity_).*(\.ATAC\.blood_human)$
+- ^(coverage_|tracks_hub|tracks_w_scE2G).*(\.ATAC(_files)?\.blood_human|\.ATAC\.blood_human)$
+- ^(peak_gene_correlation_|scE2G_).*\.blood_human$
+nodes:
+- id: ATACInputs
+  label: Fragments, reference, GEX metadata
+  representative: combined fragments + GEX metadata
+  class: regular_input
+  target_patterns:
+  - ^combined_BPCells_fragment_obj\.ATAC\.blood_human$
+  - ^aggregated_cellranger_ref_list\.blood_human$
+  - ^metadata_w_cell_types_tibble\.GEX\.blood_human$
+  - ^blacklist_GRanges\.ATAC\.blood_human$
+  - ^chromHMMs_list_proj\.ATAC\.blood_human$
+- id: ATACQC
+  label: ATAC QC metadata
+  representative: metadata_w_QC_tibble.ATAC
+  class: intermediate_object
+  target_patterns:
+  - ^metadata_w_QC_tibble\.ATAC\.blood_human$
+  - ^metadata_filtered_tibble\.ATAC\.blood_human$
+  - ^metadata_w_cell_types(_unfiltered)?_tibble\.ATAC\.blood_human$
+  - ^QC_(excluded_BCs_list|excluded_upset_plot|filtered_BCs)\.ATAC\.blood_human$
+  - ^peaks_QC_violins_plot\.ATAC\.blood_human$
+  - ^categorical_bars_plots\.ATAC\.blood_human$
+  - ^scDblFinder_.*\.ATAC\.blood_human$
+- id: PeakCalling
+  label: Cluster peak calling
+  representative: peak_GRanges_per_cluster
+  class: intermediate_object
+  target_patterns:
+  - ^(BCs_per_peak_cluster_list|peak_calling_cluster_names|peak_calling_cluster_discovery_tibble|peak_GRanges_per_cluster|within_clusters_collapsed_peaks_per_cluster_GRanges|peaks_similarity_tiles_plot)\.ATAC\.blood_human$
+  - ^fragments_per_.*\.fragments\.ATAC\.blood_human$
+  - ^peaks_per_cluster_(narrowPeaks|BEDs|bigBeds)\.peaks\.ATAC\.blood_human$
+- id: ConsensusPeaks
+  label: Consensus peak set
+  representative: consensus_peak_GRanges
+  class: intermediate_object
+  target_patterns:
+  - ^consensus_peak_(GRanges|annotated_GRanges|tibble|BED|bigBed)\.ATAC\.blood_human$
+  - ^diff_(peak_acc_results_tibble|acc_peaks_per_cluster_BEDs)\.(ATAC|peaks\.ATAC)\.blood_human$
+- id: PeakMatrix
+  label: Peak accessibility matrix
+  representative: peak_QC_filtered_BPCells_matrix
+  class: regular_output
+  target_patterns:
+  - ^consensus_peak_BPCells_matrix(_dir)?\.ATAC\.blood_human$
+  - ^peak_QC_filtered_BPCells_matrix\.ATAC\.blood_human$
+- id: GeneScores
+  label: Gene activity scores
+  representative: gene_score_archr_BPCells_matrix
+  class: regular_output
+  target_patterns:
+  - ^gene_score_archr_BPCells_matrix(_dir)?\.ATAC\.blood_human$
+  - ^marker_gene_activity_dot_plot\.ATAC\.blood_human$
+- id: TFActivity
+  label: TF motif activity
+  representative: TF_activity_BPCells_matrix
+  class: regular_output
+  target_patterns:
+  - ^(chromVAR_|motif_chromVAR_|peak_TF_motif_matrix|TF_activity_).*(\.ATAC\.blood_human)$
+- id: CoverageTracks
+  label: Coverage and browser tracks
+  representative: coverage/tracks
+  class: regular_output
+  target_patterns:
+  - ^coverage_.*(\.ATAC_files\.blood_human|\.ATAC\.blood_human)$
+  - ^tracks_hub_.*\.ATAC\.blood_human$
+- id: PeakGeneLinks
+  label: Peak-gene links and scE2G
+  representative: peak_gene_correlation
+  class: regular_output
+  target_patterns:
+  - ^peak_gene_correlation_.*\.blood_human$
+  - ^scE2G_.*\.blood_human$
+  - ^tracks_w_scE2G_.*\.ATAC\.blood_human$
+edges:
+- from: ATACInputs
+  to: ATACQC
+  label: QC + filtering
+  style: -->
+- from: ATACInputs
+  to: PeakCalling
+  label: MACS3 peak calling
+  style: -->
+- from: PeakCalling
+  to: ConsensusPeaks
+  label: collapse peaks
+  style: -->
+- from: ConsensusPeaks
+  to: PeakMatrix
+  label: count fragments
+  style: -->
+- from: PeakMatrix
+  to: GeneScores
+  label: gene score matrix
+  style: -->
+- from: ConsensusPeaks
+  to: TFActivity
+  label: motif matching + chromVAR
+  style: -->
+- from: PeakCalling
+  to: CoverageTracks
+  label: coverage export
+  style: -->
+- from: PeakMatrix
+  to: PeakGeneLinks
+  label: aggregate peak-gene signal
+  style: -->

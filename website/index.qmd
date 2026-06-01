@@ -1,0 +1,26 @@
+
+# Introduction
+
+## What is multiomeR?
+multiomeR is a [targets](https://books.ropensci.org/targets/)-based workflow for processing and analyzing single-nucleus 10x Genomics Multiome datasets.
+
+The workflow starts from `cellranger-arc count` outputs, processes RNA and ATAC data, builds multimodal aggregations, and supports optional downstream modules for differential analyses and human genetic enrichment.
+
+multiomeR is currently in beta. It is meant to be adapted to your own data, compute setup, and biological questions, while keeping the shared workflow as lean and readable as possible.
+
+
+## Why use it?
+- **Adaptable framework**: The repository is meant to be modified through config files, target selections, helper functions, and optional modules.
+- **Transparent execution**: Each processing and analysis step is represented as an explicit `targets` target.
+- **Efficient reruns**: `targets` reruns only the parts of the workflow affected by changed inputs, code, or config.
+- **Multimodal analysis**: The main pipeline covers RNA/ATAC processing, clustering, cell typing, WNN integration, and optional downstream modules.
+
+The framework assumes some familiarity with R and `targets`, but the public example workflow is intended to provide a concrete starting point.
+
+## Terminology
+The following nomenclature is used in the documentation and code:
+
+- **'10x reaction' (or possibly just 'reaction')**: The experimental/computational outcome of a single lane on the 10x Genomics Controller chip, which might contain nuclei from multiple samples and/or multiple donors/individuals. One 10x reaction thus corresponds to a single output directory from [cellranger-arc count](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/running-pipelines/single-library-analysis).
+- **donor**: A single individual, subject, patient, participant, etc. that has a unique donor_id and specific genotype.
+- **dataset**: A group of one or more reactions that share dataset-level processing settings, such as reference genome and reaction-level QC filters.
+- **aggregation**: A configured joint analysis of one or more reactions, including merged RNA/ATAC processing, clustering, cell typing, and optional downstream modules.

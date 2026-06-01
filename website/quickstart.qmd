@@ -1,0 +1,60 @@
+# Quickstart
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+This quickstart is the shortest path through the public example workflow. It condenses the detailed [Installation](installation.qmd), [Configuration](configuration.qmd), and [Main pipeline](reaction_aggregation_walkthrough.qmd) pages into two command blocks.
+
+The downloads include public `cellranger-arc count` outputs and matching 10x Genomics Cell Ranger ARC reference directories. They are large, and the example workflow can still take substantial time and disk space.
+
+## 1. Prepare the example workflow
+
+Run these commands in a terminal:
+
+```{bash}
+# Clone the repository
+git clone https://github.com/koefoeden/multiomeR.git
+cd multiomeR
+
+# Install pixi and create the software environment
+curl -fsSL https://pixi.sh/install.sh | sh # if pixi is not installed yet
+export PATH="$HOME/.pixi/bin:$PATH"
+pixi install
+
+# Download public example inputs
+bash example_data/download_10X_cellranger_count_data.sh
+bash example_data/download_10X_cellranger_arc_refdata.sh
+
+# Create local config files from templates
+cp cfg_datasets_template.yaml cfg_datasets.yaml
+cp cfg_aggregations_template.yaml cfg_aggregations.yaml
+cp cfg_reactions_template.tsv cfg_reactions.tsv
+cp crew_controllers_template.R crew_controllers.R
+cp module_differential_analyses/cfg_template.yaml module_differential_analyses/cfg.yaml
+cp module_genetic_enrichment/cfg_template.yaml module_genetic_enrichment/cfg.yaml
+
+# Start the interactive R session used below
+pixi shell
+R
+```
+
+The final two commands start the interactive R session used for the next block.
+
+## 2. Run the example workflow
+
+Run these commands inside that R session:
+
+```{r}
+# Install GitHub-only R dependencies
+pak::pkg_install(c("bnprks/BPCells/r", "stuart-lab/signac@v2", "plger/betterChromVAR"))
+
+# Run the public example targets
+targets::tar_make(names = matches("healthy_PBMC_human|blood_human|brain_mouse"))
+```
+
+After the example workflow has completed, see the [output gallery](output_gallery.qmd) for representative outputs.

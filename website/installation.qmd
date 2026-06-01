@@ -1,0 +1,94 @@
+# Installation
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+multiomeR is developed for Linux systems and is managed with [pixi](https://pixi.sh/). The workflow is not distributed as a conventional installed R package; run it from the repository root so that `targets`, config files, helper code, and external command-line tools resolve together.
+
+## Requirements
+
+- A Linux x86_64 machine.
+- `git`.
+- `pixi`.
+- Enough disk space for the pixi environment, Cell Ranger outputs, target store, and generated plots.
+- Input data from `cellranger-arc count`, or the public example data described in the quickstart.
+
+The pixi workspace pins R and most command-line tools in `pixi.toml` and `pixi.lock`. The active runtime currently targets R 4.5.x.
+
+## Clone the repository
+
+```{bash}
+git clone https://github.com/koefoeden/multiomeR.git
+cd multiomeR
+```
+
+## Create the pixi environment
+
+If `pixi` is not installed yet, install it first:
+
+```{bash}
+curl -fsSL https://pixi.sh/install.sh | sh
+export PATH="$HOME/.pixi/bin:$PATH"
+```
+
+Install the pixi environment from the repository root:
+
+```{bash}
+pixi install
+```
+
+The pixi environment provides R and the command-line tools used by the workflow, such as `bgzip`, `tabix`, `macs3`, `bedGraphToBigWig`, `bedToBigBed`, `cellsnp-lite`, and `vireo`.
+
+Start an interactive R session inside the pixi environment:
+
+```{bash}
+pixi shell
+R
+```
+
+Use this repository-root R session as the evaluation environment for subsequent R commands in this manual.
+
+A small number of R packages still need GitHub versions while upstream conda packages catch up. Install them inside the R session started from the pixi shell:
+
+```{r}
+pak::pkg_install(c("bnprks/BPCells/r", "stuart-lab/signac@v2", "plger/betterChromVAR"))
+```
+
+## Create local config files
+
+Copy the public templates before constructing the target graph:
+
+```{bash}
+cp cfg_datasets_template.yaml cfg_datasets.yaml
+cp cfg_reactions_template.tsv cfg_reactions.tsv
+cp cfg_aggregations_template.yaml cfg_aggregations.yaml
+cp module_differential_analyses/cfg_template.yaml module_differential_analyses/cfg.yaml
+cp module_genetic_enrichment/cfg_template.yaml module_genetic_enrichment/cfg.yaml
+```
+
+Edit the copied files when adapting the workflow to your own data. The templates remain available for reference.
+
+## Configure local execution
+
+Create a local controller file before constructing the target graph:
+
+```{bash}
+cp crew_controllers_template.R crew_controllers.R
+```
+
+The template uses a local `crew` controller. Increase workers, cores, and memory only after the example workflow succeeds on your machine.
+
+## Smoke test
+
+After the config files are in place, use the repository-root R session described above to check target graph construction:
+
+```{r}
+targets::tar_manifest(callr_function = NULL)
+```
+
+If this fails, fix the first missing config file, missing command, or missing package reported by the error before running `targets::tar_make()`.

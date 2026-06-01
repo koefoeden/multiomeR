@@ -1,0 +1,166 @@
+graph_stem: blood_human_parallel_preprocessing_b6ae759d4cdd76aa
+graph_build:
+  pipeline_name: blood_human_parallel_preprocessing
+  target_graph_match: healthy_PBMC_human|lymphoma_lymph_human
+  allow_match: healthy_PBMC_human|lymphoma_lymph_human|Ensembl_gene_annotation_GRanges_list|chromHMMs_list_general
+output_stem: blood_human_parallel_preprocessing
+slug: parallel_preprocessing
+title: Parallel Pre-processing
+scope_patterns:
+- \.(healthy_PBMC_human|lymphoma_lymph_human)$
+nodes:
+- id: CellRangerOutputs
+  label: Per-reaction Cell Ranger outputs
+  representative: cellranger_summary_file
+  class: regular_input
+  target_patterns:
+  - ^cellranger_summary_file\.
+  - ^cellbender_h5_file\.
+- id: ReferenceMetadata
+  label: Reference and feature metadata
+  representative: gene_features_df
+  class: regular_input
+  target_patterns:
+  - ^gene_features_df\.
+  - ^cellranger_ref_list\.
+- id: CellBarcodes
+  label: Cell barcode list
+  representative: cellranger_barcodes_tsv
+  class: intermediate_object
+  target_patterns:
+  - ^cellranger_barcodes_tsv\.
+- id: ReactionGEX
+  label: Reaction GEX matrix
+  representative: GEX_counts_BPCells_matrix
+  class: regular_output
+  target_patterns:
+  - ^GEX_counts_BPcells_matrix_dir\.
+  - ^GEX_counts_BPCells_matrix\.
+- id: ReactionFragments
+  label: Reaction ATAC fragments
+  representative: fragments_w_prefix_bpcells
+  class: regular_output
+  target_patterns:
+  - ^fragments_w_prefix_bpcells_dir\.
+  - ^fragments_w_prefix_bpcells\.
+- id: CellRangerMetrics
+  label: Cell Ranger cell metrics
+  representative: per_barcode_metrics_tibble
+  class: intermediate_object
+  target_patterns:
+  - ^per_barcode_metrics_tibble\.
+- id: GEXQCMetrics
+  label: GEX QC metrics
+  representative: GEX_basic_metadata_tibble
+  class: intermediate_object
+  target_patterns:
+  - ^GEX_basic_metadata_tibble\.
+- id: ATACQCMetrics
+  label: ATAC QC metrics
+  representative: ATAC_qc_metrics_tibble
+  class: intermediate_object
+  target_patterns:
+  - ^ATAC_qc_metrics_tibble\.
+- id: GenotypeDoubletMetrics
+  label: Genotype and doublet metrics
+  representative: cellsnp/vireo/amulet
+  class: intermediate_object
+  target_patterns:
+  - ^cellsnp_dir\.
+  - ^vireo_donor_ids_tibble\.
+  - ^amulet_metrics_tibble\.
+- id: FullMetadata
+  label: Full reaction metadata
+  representative: full_metadata_tibble
+  class: intermediate_object
+  target_patterns:
+  - ^full_metadata_tibble\.
+- id: KeptMetadata
+  label: QC-kept reaction metadata
+  representative: cellranger_kept_metadata_tibble
+  class: regular_output
+  target_patterns:
+  - ^cellranger_kept_metadata_tibble\.
+- id: ExclusionSummaries
+  label: Exclusion lists and QC plots
+  representative: excluded_barcodes_by_type
+  class: QC_output
+  target_patterns:
+  - ^unfiltered_cells_n_vecs\.
+  - ^excluded_barcodes_by_type_list\.
+  - ^excluded_barcodes_by_type_upset\.
+  - ^excluded_cellranger_only_barcodes_by_type_list\.
+  - ^excluded_cellranger_only_barcodes_by_type_upset\.
+edges:
+- from: CellRangerOutputs
+  to: CellBarcodes
+  label: extract barcodes
+  style: -->
+- from: CellRangerOutputs
+  to: ReferenceMetadata
+  label: read feature and reference metadata
+  style: -->
+- from: CellRangerOutputs
+  to: ReactionGEX
+  label: CellBender or Cell Ranger to BPCells
+  style: -->
+- from: ReferenceMetadata
+  to: ReactionGEX
+  label: align gene features
+  style: -->
+- from: CellRangerOutputs
+  to: ReactionFragments
+  label: prefix fragment barcodes
+  style: -->
+- from: ReactionGEX
+  to: GEXQCMetrics
+  label: count and feature QC
+  style: -->
+- from: ReactionFragments
+  to: ATACQCMetrics
+  label: TSS and nucleosome QC
+  style: -->
+- from: ReferenceMetadata
+  to: ATACQCMetrics
+  label: gene annotation
+  style: -->
+- from: CellRangerOutputs
+  to: CellRangerMetrics
+  label: per-barcode metrics
+  style: -->
+- from: CellBarcodes
+  to: GenotypeDoubletMetrics
+  label: AMULET, cellsnp-lite, vireo
+  style: -->
+- from: CellRangerOutputs
+  to: GenotypeDoubletMetrics
+  label: fragments and BAM inputs
+  style: -->
+- from: GEXQCMetrics
+  to: FullMetadata
+  label: combine metadata
+  style: -->
+- from: ATACQCMetrics
+  to: FullMetadata
+  label: combine metadata
+  style: -->
+- from: CellRangerMetrics
+  to: FullMetadata
+  label: combine metadata
+  style: -->
+- from: GenotypeDoubletMetrics
+  to: FullMetadata
+  label: combine metadata
+  style: -->
+- from: FullMetadata
+  to: KeptMetadata
+  label: apply QC filters
+  style: -->
+- from: FullMetadata
+  to: ExclusionSummaries
+  label: summarize excluded barcodes
+  style: -->
+- from: KeptMetadata
+  to: ExclusionSummaries
+  label: Cell Ranger-only exclusions
+  style: -->

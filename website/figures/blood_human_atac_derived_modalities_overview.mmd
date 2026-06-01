@@ -1,0 +1,34 @@
+%%{init: {'layout': 'elk'}}%%
+flowchart TB
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+
+  ATACInputs("Fragments, reference, GEX metadata<br/>(combined fragments + GEX metadata)")
+  ATACQC("ATAC QC metadata<br/>(metadata_w_QC_tibble.ATAC)")
+  PeakCalling("Cluster peak calling<br/>(peak_GRanges_per_cluster)")
+  ConsensusPeaks("Consensus peak set<br/>(consensus_peak_GRanges)")
+  PeakMatrix("Peak accessibility matrix<br/>(peak_QC_filtered_BPCells_matrix)")
+  GeneScores("Gene activity scores<br/>(gene_score_archr_BPCells_matrix)")
+  TFActivity("TF motif activity<br/>(TF_activity_BPCells_matrix)")
+  CoverageTracks("Coverage and browser tracks<br/>(coverage/tracks)")
+  PeakGeneLinks("Peak-gene links and scE2G<br/>(peak_gene_correlation)")
+
+  ATACInputs -->|QC + filtering| ATACQC
+  ATACInputs -->|MACS3 peak calling| PeakCalling
+  PeakCalling -->|collapse peaks| ConsensusPeaks
+  ConsensusPeaks -->|count fragments| PeakMatrix
+  PeakMatrix -->|gene score matrix| GeneScores
+  ConsensusPeaks -->|motif matching + chromVAR| TFActivity
+  PeakCalling -->|coverage export| CoverageTracks
+  PeakMatrix -->|aggregate peak-gene signal| PeakGeneLinks
+
+  class ATACInputs regular_input;
+  class ATACQC,PeakCalling,ConsensusPeaks intermediate_object;
+  class PeakMatrix,GeneScores,TFActivity,CoverageTracks,PeakGeneLinks regular_output;

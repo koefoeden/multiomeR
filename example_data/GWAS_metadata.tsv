@@ -1,0 +1,6 @@
+map_internal_ID	map_pipeline_raw_path	map_study_type	map_n_cases	sample_size	munge_function	genome
+WhiteBloodCellCount_Vuckovic2020	GCST90002407	continuous				GRCh38
+MonocyteCount_Loya2025	GCST90468090	continuous				GRCh38
+LymphocyteCount_Chen2020	GCST90002316	continuous				GRCh38
+T2D_Suzuki2024	example_data/T2D_Suzuki2024.tsv	binary			munge_suzuki2024	GRCh38
+T2D_Verma2024	GCST90475667	binary		154194		GRCh38

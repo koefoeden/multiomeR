@@ -1,0 +1,36 @@
+flowchart TB
+  classDef stage fill:#dbeafe,stroke:#3b82f6,stroke-width:1.5px,color:#1e3a8a;
+  classDef input fill:#f8fafc,stroke:#64748b,stroke-width:1.5px,color:#1f2937;
+  classDef output fill:#ecfdf5,stroke:#10b981,stroke-width:1.5px,color:#065f46;
+
+  subgraph Inputs["1. Inputs"]
+    direction TB
+    ProcessedGWASResources("Processed GWAS Resources")
+    AggregatedATACAndWNNObjects("Aggregated ATAC and WNN Objects")
+  end
+
+  subgraph Processing["2. Processing"]
+    direction TB
+    GchromVARScoring("gchromVAR Scoring")
+    SCAVENGETraitPropagation("SCAVENGE Trait Propagation")
+    LDSCEnrichmentSummaries("LDSC Enrichment Summaries")
+  end
+
+  subgraph Outputs["3. Outputs"]
+    direction TB
+    TraitRelevanceScores("Trait Relevance Scores")
+    EnrichmentHeatmaps("Enrichment Heatmaps")
+  end
+
+  ProcessedGWASResources --> GchromVARScoring
+  AggregatedATACAndWNNObjects --> GchromVARScoring
+  AggregatedATACAndWNNObjects --> SCAVENGETraitPropagation
+  ProcessedGWASResources --> LDSCEnrichmentSummaries
+  GchromVARScoring --> TraitRelevanceScores
+  SCAVENGETraitPropagation --> TraitRelevanceScores
+  LDSCEnrichmentSummaries --> EnrichmentHeatmaps
+  TraitRelevanceScores --> EnrichmentHeatmaps
+
+  class ProcessedGWASResources,AggregatedATACAndWNNObjects input;
+  class GchromVARScoring,SCAVENGETraitPropagation,LDSCEnrichmentSummaries stage;
+  class TraitRelevanceScores,EnrichmentHeatmaps output;

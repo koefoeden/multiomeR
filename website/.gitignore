@@ -1,0 +1,7 @@
+/.quarto/
+**/*.quarto_ipynb
+/*.html
+/*.knit.md
+/*.rmarkdown
+/_targets.yaml
+cache/*

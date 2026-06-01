@@ -1,0 +1,85 @@
+# R-specific files
+.Rhistory
+.Rapp.history
+.Rproj.user/
+*Rproj
+rsconnect/
+
+# Build-specific files:
+*-Ex.R
+/*.tar.gz
+/*.Rcheck/
+
+# OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
+.httr-oauth
+
+# knitr and R markdown default cache directories
+*_cache/
+/cache/
+
+# Temporary files created by R markdown
+*.utf8.md
+*.knit.md
+
+libs
+pkg.lock
+
+# translation temp files
+po/*~
+
+docs
+vignettes/figures
+.quarto/
+
+# cellranger files
+__*.mro
+.__*
+
+# example data
+example_data/embryonic_brain_mouse
+example_data/mature
+example_data/healthy_PBMC_human
+example_data/lymphoma_lymph_human
+example_data/EUR_Metal_LDSC-CORR_Neff.v2.txt
+
+
+
+# custom
+cfg_datasets.yaml
+cfg_aggregations.yaml
+cfg_reactions.tsv
+crew_controllers.R
+module_differential_analyses/cfg.yaml
+module_genetic_enrichment/cfg.yaml
+slurm-*
+pipelines/*/outputs
+archive/targets_projects/*/outputs
+scE2g
+_targets
+logs/
+tmp/
+.vscode
+.nfs*
+src/rust/vendor
+src/Makevars
+src/Makevars.win
+._command_*.R
+datasets.yaml
+tools.yaml
+reactions.R
+GWAS.R
+slurm_monitor_history*
+plots
+slurm-out*
+
+Rplots.pdf
+Rplots.pdf
+.DS_Store
+/.quarto/
+**/*.quarto_ipynb
+
+# pixi environment
+.pixi/
+
+.codex
+plans/deprecated

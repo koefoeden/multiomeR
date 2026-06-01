@@ -1,0 +1,48 @@
+- section: Main pipeline
+  title: WNN cell type overview
+  description: Multimodal tri-panel UMAP summary from the public human blood aggregation.
+  target: cluster_cell_type_dim_tri_plot.WNN.blood_human
+  asset: gallery_assets/main/wnn_cell_type_overview.png
+  status: planned
+
+- section: Main pipeline
+  title: RNA versus ATAC modality weights
+  description: Boxplots showing how much RNA and ATAC contribute to the WNN graph across cell types.
+  target: ATAC_vs_RNA_weight_boxplots_plot.WNN.blood_human
+  asset: gallery_assets/main/atac_vs_rna_weight_boxplots.png
+  status: planned
+
+- section: Main pipeline
+  title: ATAC QC exclusions
+  description: Upset plot summarizing which post-aggregation ATAC QC filters exclude cells.
+  target: QC_excluded_upset_plot.ATAC.blood_human
+  asset: gallery_assets/main/atac_qc_excluded_upset.png
+  status: planned
+
+- section: Differential analyses
+  title: Differential cell type composition
+  description: Modelled change in cell type composition for a configured experimental or phenotypic variable.
+  target: model_change_per_unit_plot.DCTC.differential_analyses.blood_human
+  asset: gallery_assets/differential_analyses/dctc_model_change_per_unit.png
+  status: planned
+
+- section: Differential analyses
+  title: Pseudobulk differential expression support
+  description: Signed count summary of significant pseudobulk differential expression results across configured contrasts.
+  target: significant_elements_plot.DGE.differential_analyses.blood_human
+  asset: gallery_assets/differential_analyses/dge_significant_elements.png
+  status: planned
+
+- section: Genetic enrichment
+  title: GWAS chromVAR enrichment dotplot
+  description: Trait-by-cell-type enrichment summary using Open Targets credible sets and chromVAR-style peak weighting.
+  target: GWAS_chromVAR_summarized_Zscores_dotplot.genetic_enrichment.blood_human
+  asset: gallery_assets/genetic_enrichment/gwas_chromvar_dotplot.png
+  status: planned
+
+- section: Genetic enrichment
+  title: SCAVENGE trait relevance intervals
+  description: Graph-propagated trait relevance score intervals for configured human GWAS traits.
+  target: SCAVENGE_TRS_by_cluster_boxplot.SCAVENGE.WNN_harmony_SNN.genetic_enrichment.blood_human
+  asset: gallery_assets/genetic_enrichment/scavenge_trs_by_cluster_boxplot.png
+  status: planned

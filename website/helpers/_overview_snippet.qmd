@@ -1,0 +1,26 @@
+`r if (exists("overview_heading", inherits = TRUE)) overview_heading else "## Overview"`
+`r if (exists("overview_description", inherits = TRUE)) overview_description else "Simplified overview diagram of the pipeline."`
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+overview_stem_local <- if (exists("overview_stem", inherits = TRUE)) overview_stem else pipeline_name
+overview_mermaid_source <- file.path(repo_root, "website", "figures", paste0(overview_stem_local, "_overview.mmd"))
+asset_dir <- file.path(repo_root, "website", "figures")
+common_theme <- readLines(file.path(asset_dir, "common_theme.mmd"), warn = FALSE)
+
+emit_mermaid <- function(path) {
+  mermaid_lines <- readLines(path, warn = FALSE)
+
+  cat(
+    "```{mermaid}\n",
+    paste(
+      c(common_theme, mermaid_lines),
+      collapse = "\n"
+    ),
+    "\n```\n",
+    sep = ""
+  )
+}
+
+emit_mermaid(file.path(asset_dir, "standard_node_color_legend.mmd"))
+emit_mermaid(overview_mermaid_source)
+```

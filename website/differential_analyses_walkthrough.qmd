@@ -1,0 +1,41 @@
+# Differential analyses module
+
+```{r setup, include = FALSE}
+pipeline_name <- "differential_analyses"
+source("helpers/_setup.R")
+```
+
+## Purpose
+
+This optional module is relevant when an aggregation has experimental, clinical, phenotypic, or technical variables that should be modelled across processed Multiome data. It is defined inside the root [`_targets.R`](`r pipeline_github_file`) workflow, with module-specific target fragments and configuration in `module_differential_analyses/`.
+
+The module can model:
+
+- differential cell type composition using generalized linear mixed models
+- differential gene expression on pseudobulked RNA counts
+- differential chromatin accessibility on pseudobulked ATAC counts
+- differential transcription factor activity using chromVAR-derived pseudobulk signals
+
+Representative outputs from this module are shown in the [output gallery](output_gallery.qmd).
+
+Enable the module for an aggregation in `cfg_aggregations.yaml`, then configure the module-specific model settings in `module_differential_analyses/cfg.yaml`. See [Configuration](configuration.qmd) for the general config workflow.
+
+{{< include helpers/_overview_snippet.qmd >}}
+
+```{r, include = FALSE, eval = TRUE}
+overview_stem <- "blood_human_differential_analyses"
+overview_heading <- "## Graph-backed blood_human draft"
+overview_description <- "Graph-backed draft of module inputs, model-specific matrices, DGE/DCA/DTFA results, cell-type composition models, GSEA, and diagnostic outputs."
+```
+
+{{< include helpers/_overview_snippet.qmd >}}
+
+## Running the pipeline
+
+From the repository-root R session described in [Installation](installation.qmd), run the relevant root workflow targets. Replace `your_aggregation` with an aggregation that enables the module in `cfg_aggregations.yaml`.
+
+```{r, eval = FALSE}
+targets::tar_make(names = matches("your_aggregation"))
+```
+
+Runtime depends on the number of modelled variables, cell types, donors, and pseudobulk contrasts in the aggregation.

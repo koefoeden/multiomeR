@@ -73,7 +73,7 @@ get_vireo_donor_ids_tibble <- function(
 ) {
   vireo_out_dir <- get_structured_file_path(filetype = NULL)
 
-  if (cellsnp_dir == "NULL.txt") {
+  if (length(cellsnp_dir) == 0L) {
     # skip demultiplexing and generate dummy donor_id tibble
     vireo_donor_ids_tibble <- tibble::tibble(
       cell = cellranger_barcodes_tsv %>% readr::read_tsv(col_names = FALSE) %>% dplyr::pull(),

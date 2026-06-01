@@ -502,7 +502,7 @@ get_name_attr <- function(x) {
   }
 }
 
-skip_w_dummy_file_if <- function(condition_expr, targets_list, skip_expr = fs::file_create("NULL.txt")) {
+skip_w_dummy_file_if <- function(condition_expr, targets_list, skip_expr = character(0)) {
   # capture (quote) both pieces without evaluating now
   condition_lang <- substitute(condition_expr)
   skip_lang <- substitute(skip_expr)

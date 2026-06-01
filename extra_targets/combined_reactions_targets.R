@@ -42,7 +42,7 @@ rlang::list2(
         save_plots_structured(plot)
       } else {
         # no demultiplexing was done for any reactions
-        "NULL.txt"
+        character(0)
       }
     }
   ),
@@ -65,7 +65,7 @@ rlang::list2(
         save_plots_structured(plot)
       } else {
         # no demultiplexing was done for any reactions
-        "NULL.txt"
+        character(0)
       }
     }
   )

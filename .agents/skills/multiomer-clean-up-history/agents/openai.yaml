@@ -1,0 +1,4 @@
+interface:
+  display_name: "multiomeR Clean Up History"
+  short_description: "Rewrite multiomeR feature branch history safely"
+  default_prompt: "Use $multiomer-clean-up-history to regroup and rewrite this multiomeR feature branch into a clean commit stack."

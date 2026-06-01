@@ -51,7 +51,28 @@ Run these commands inside that R session:
 
 ```{r}
 # Install GitHub-only R dependencies
-pak::pkg_install(c("bnprks/BPCells/r", "stuart-lab/signac@v2", "plger/betterChromVAR"))
+remotes::install_github(
+  "bnprks/BPCells",
+  subdir = "r",
+  ref = "28759cdd512578b6cbe549e226e1cd52a2d2308c", # BPCells 0.3.1
+  upgrade = "never",
+  dependencies = FALSE,
+  build_vignettes = FALSE
+)
+remotes::install_github(
+  "stuart-lab/signac",
+  ref = "5d66cf6c34322309d5b8aece3fa294f5531b8eee", # Signac 1.9999.4
+  upgrade = "never",
+  dependencies = FALSE,
+  build_vignettes = FALSE
+)
+remotes::install_github(
+  "plger/betterChromVAR",
+  ref = "82ae1e4ada8a43c721aa2ae1c3f2c6dfc3d5a637", # betterChromVAR 0.99.41
+  upgrade = "never",
+  dependencies = FALSE,
+  build_vignettes = FALSE
+)
 
 # Run the public example targets
 targets::tar_make(names = matches("healthy_PBMC_human|blood_human|brain_mouse"))

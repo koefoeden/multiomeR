@@ -294,8 +294,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>Install the pixi environment from the repository root:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pixi</span> install</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pixi</span> install <span class="at">--run-post-link-scripts</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+<p>The <code>--run-post-link-scripts</code> flag is required for Bioconductor data packages such as the BSgenome genome packages. Pixi disables conda post-link scripts by default, but these packages use Bioconda’s post-link scripts to materialize the actual R package directories in the pixi environment.</p>
 <p>The pixi environment provides R and the command-line tools used by the workflow, such as <code>bgzip</code>, <code>tabix</code>, <code>macs3</code>, <code>bedGraphToBigWig</code>, <code>bedToBigBed</code>, <code>cellsnp-lite</code>, and <code>vireo</code>.</p>
 <p>Start an interactive R session inside the pixi environment:</p>
 <div class="cell">

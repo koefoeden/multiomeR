@@ -144,7 +144,7 @@ plot_upset_from_excluded_BCs_list <- function(QC_excluded_BCs_list, n_total) {
     tibble::as_tibble() |>
     dplyr::mutate(
       percent = 100 * .data$n / n_total,
-      percent_label = format_QC_percent(.data$percent)
+      percent_label = dplyr::if_else(.data$percent >= 0.1, format_QC_percent(.data$percent), "")
     )
 
   bar_plot <- intersection_tibble |>
@@ -191,8 +191,8 @@ plot_upset_from_excluded_BCs_list <- function(QC_excluded_BCs_list, n_total) {
       axis.ticks.y = ggplot2::element_blank()
     )
 
-  (patchwork::plot_spacer() + bar_plot + patchwork::plot_layout(widths = c(0.35, 1))) /
-    (set_size_plot + matrix_plot + patchwork::plot_layout(widths = c(0.35, 1))) +
-    patchwork::plot_layout(heights = c(0.65, 0.35)) +
+  (patchwork::plot_spacer() + bar_plot) /
+    (set_size_plot + matrix_plot) +
+    patchwork::plot_layout(widths = c(0.35, 1), heights = c(0.65, 0.35)) +
     patchwork::plot_annotation(title = stringr::str_glue("Excluded barcodes by QC filter type (input barcodes: {n_total})"))
 }

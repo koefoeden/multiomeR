@@ -39,8 +39,10 @@ export PATH="$HOME/.pixi/bin:$PATH"
 Install the pixi environment from the repository root:
 
 ```{bash}
-pixi install
+pixi install --run-post-link-scripts
 ```
+
+The `--run-post-link-scripts` flag is required for Bioconductor data packages such as the BSgenome genome packages. Pixi disables conda post-link scripts by default, but these packages use Bioconda's post-link scripts to materialize the actual R package directories in the pixi environment.
 
 The pixi environment provides R and the command-line tools used by the workflow, such as `bgzip`, `tabix`, `macs3`, `bedGraphToBigWig`, `bedToBigBed`, `cellsnp-lite`, and `vireo`.
 

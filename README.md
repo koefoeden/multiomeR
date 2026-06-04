@@ -26,7 +26,7 @@ git clone https://github.com/koefoeden/multiomeR.git
 cd multiomeR
 curl -fsSL https://pixi.sh/install.sh | sh # if pixi is not installed yet
 export PATH="$HOME/.pixi/bin:$PATH"
-pixi install
+pixi install --run-post-link-scripts
 cp cfg_datasets_template.yaml cfg_datasets.yaml
 cp cfg_aggregations_template.yaml cfg_aggregations.yaml
 cp cfg_reactions_template.tsv cfg_reactions.tsv

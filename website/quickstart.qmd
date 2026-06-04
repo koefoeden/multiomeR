@@ -24,7 +24,7 @@ cd multiomeR
 # Install pixi and create the software environment
 curl -fsSL https://pixi.sh/install.sh | sh # if pixi is not installed yet
 export PATH="$HOME/.pixi/bin:$PATH"
-pixi install
+pixi install --run-post-link-scripts
 
 # Download public example inputs
 bash example_data/download_10X_cellranger_count_data.sh

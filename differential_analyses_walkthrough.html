@@ -107,9 +107,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
-<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
-<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
-<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
 <link rel="stylesheet" href="styles.css">
@@ -240,8 +237,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#purpose" id="toc-purpose" class="nav-link active" data-scroll-target="#purpose"><span class="header-section-number">8.1</span> Purpose</a></li>
   <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview"><span class="header-section-number">8.2</span> Overview</a></li>
-  <li><a href="#graph-backed-blood_human-draft" id="toc-graph-backed-blood_human-draft" class="nav-link" data-scroll-target="#graph-backed-blood_human-draft"><span class="header-section-number">8.3</span> Graph-backed blood_human draft</a></li>
-  <li><a href="#running-the-pipeline" id="toc-running-the-pipeline" class="nav-link" data-scroll-target="#running-the-pipeline"><span class="header-section-number">8.4</span> Running the pipeline</a></li>
+  <li><a href="#running-the-pipeline" id="toc-running-the-pipeline" class="nav-link" data-scroll-target="#running-the-pipeline"><span class="header-section-number">8.3</span> Running the pipeline</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/differential_analyses_walkthrough.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -282,228 +278,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="overview" class="level2" data-number="8.2">
 <h2 data-number="8.2" class="anchored" data-anchor-id="overview"><span class="header-section-number">8.2</span> Overview</h2>
-<p>Simplified overview diagram of the pipeline.</p>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryTextColor': '#1f2937',
-    'lineColor': '#4b5563',
-    'clusterBkg': '#f8fafc',
-    'clusterBorder': '#cbd5e1',
-    'edgeLabelBackground': '#ffffff00',
-    'fontFamily': 'Helvetica, Arial, sans-serif'
-  },
-  'flowchart': {
-    'defaultRenderer': 'elk'
-  },
-  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
-}}%%
-flowchart TB
-  subgraph Legend["Node Color Key"]
-    direction LR
-    Input["Input"] --- Config["Config input"] --- Stage["Intermediate object"] --- Output["Output"] --- QC["QC output"]
-  end
-  linkStyle 0,1,2,3 stroke-width:0px,fill:none;
-  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
-  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
-  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
-  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
-  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
-  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
-  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
-  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
-  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
-  class Input regular_input;
-  class Config CFG_input;
-  class Stage intermediate_object;
-  class Output regular_output;
-  class QC QC_output;
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryTextColor': '#1f2937',
-    'lineColor': '#4b5563',
-    'clusterBkg': '#f8fafc',
-    'clusterBorder': '#cbd5e1',
-    'edgeLabelBackground': '#ffffff00',
-    'fontFamily': 'Helvetica, Arial, sans-serif'
-  },
-  'flowchart': {
-    'defaultRenderer': 'elk'
-  },
-  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
-}}%%
-flowchart TB
-  classDef stage fill:#dbeafe,stroke:#3b82f6,stroke-width:1.5px,color:#1e3a8a;
-  classDef input fill:#f8fafc,stroke:#64748b,stroke-width:1.5px,color:#1f2937;
-  classDef output fill:#ecfdf5,stroke:#10b981,stroke-width:1.5px,color:#065f46;
-
-  subgraph Inputs["1. Inputs"]
-    direction TB
-    AggregatedMultiomeObjects("Aggregated Multiome Objects")
-    DonorLevelPhenotypes("Donor-Level Phenotypes")
-  end
-
-  subgraph Processing["2. Processing"]
-    direction TB
-    PseudobulkAggregation("Pseudobulk Aggregation")
-    DifferentialModelFitting("Differential Model Fitting")
-    CrossClusterSummaries("Cross-Cluster Summaries")
-  end
-
-  subgraph Outputs["3. Outputs"]
-    direction TB
-    DifferentialResultTables("Differential Result Tables")
-    DifferentialPlots("Differential Plots")
-  end
-
-  AggregatedMultiomeObjects --&gt; PseudobulkAggregation
-  DonorLevelPhenotypes --&gt; DifferentialModelFitting
-  PseudobulkAggregation --&gt; DifferentialModelFitting
-  DifferentialModelFitting --&gt; CrossClusterSummaries
-
-  DifferentialModelFitting --&gt; DifferentialResultTables
-  CrossClusterSummaries --&gt; DifferentialPlots
-
-  class AggregatedMultiomeObjects,DonorLevelPhenotypes input;
-  class PseudobulkAggregation,DifferentialModelFitting,CrossClusterSummaries stage;
-  class DifferentialResultTables,DifferentialPlots output;
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
+<p>This diagram started as a generated draft from the exported <code>blood_human</code> target graph and is now maintained as a human-curated documentation diagram.</p>
 </section>
-<section id="graph-backed-blood_human-draft" class="level2" data-number="8.3">
-<h2 data-number="8.3" class="anchored" data-anchor-id="graph-backed-blood_human-draft"><span class="header-section-number">8.3</span> Graph-backed blood_human draft</h2>
-<p>Graph-backed draft of module inputs, model-specific matrices, DGE/DCA/DTFA results, cell-type composition models, GSEA, and diagnostic outputs.</p>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryTextColor': '#1f2937',
-    'lineColor': '#4b5563',
-    'clusterBkg': '#f8fafc',
-    'clusterBorder': '#cbd5e1',
-    'edgeLabelBackground': '#ffffff00',
-    'fontFamily': 'Helvetica, Arial, sans-serif'
-  },
-  'flowchart': {
-    'defaultRenderer': 'elk'
-  },
-  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
-}}%%
-flowchart TB
-  subgraph Legend["Node Color Key"]
-    direction LR
-    Input["Input"] --- Config["Config input"] --- Stage["Intermediate object"] --- Output["Output"] --- QC["QC output"]
-  end
-  linkStyle 0,1,2,3 stroke-width:0px,fill:none;
-  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
-  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
-  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
-  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
-  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
-  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
-  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
-  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
-  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
-  class Input regular_input;
-  class Config CFG_input;
-  class Stage intermediate_object;
-  class Output regular_output;
-  class QC QC_output;
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryTextColor': '#1f2937',
-    'lineColor': '#4b5563',
-    'clusterBkg': '#f8fafc',
-    'clusterBorder': '#cbd5e1',
-    'edgeLabelBackground': '#ffffff00',
-    'fontFamily': 'Helvetica, Arial, sans-serif'
-  },
-  'flowchart': {
-    'defaultRenderer': 'elk'
-  },
-  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
-}}%%
-%%{init: {'layout': 'elk'}}%%
-flowchart TB
-  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
-  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
-  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
-  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
-  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
-  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
-  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
-  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
-  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
-
-  AnalysisInputs("Cell metadata and matrices&lt;br/&gt;(WNN metadata + pseudobulk matrices)")
-  DesignInputs("Donor metadata and model config&lt;br/&gt;(models + donor metadata)")
-  ModelMatrices("Model-specific matrices&lt;br/&gt;(filtered_mat_per_model)")
-  DifferentialResults("DGE, DCA and DTFA results&lt;br/&gt;(results_tibble)")
-  CompositionResults("Cell-type composition tests&lt;br/&gt;(model_results.DCTC)")
-  GSEAResults("DGE gene-set enrichment&lt;br/&gt;(GSEA results)")
-  DifferentialOutputs("Diagnostic and summary plots&lt;br/&gt;(volcano and QC plots)")
-
-  AnalysisInputs --&gt;|build model matrices| ModelMatrices
-  DesignInputs --&gt;|apply model formulae| ModelMatrices
-  ModelMatrices --&gt;|fit DGE/DCA/DTFA| DifferentialResults
-  DesignInputs --&gt;|fit DCTC models| CompositionResults
-  ModelMatrices --&gt;|rank genes| GSEAResults
-  DesignInputs --&gt;|gene sets| GSEAResults
-  DifferentialResults --&gt;|summarize hits| DifferentialOutputs
-  CompositionResults --&gt;|composition plots| DifferentialOutputs
-  GSEAResults --&gt;|GSEA plots| DifferentialOutputs
-
-  class AnalysisInputs regular_input;
-  class DesignInputs CFG_input;
-  class ModelMatrices intermediate_object;
-  class DifferentialResults,CompositionResults,GSEAResults regular_output;
-  class DifferentialOutputs QC_output;
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
-</section>
-<section id="running-the-pipeline" class="level2" data-number="8.4">
-<h2 data-number="8.4" class="anchored" data-anchor-id="running-the-pipeline"><span class="header-section-number">8.4</span> Running the pipeline</h2>
+<section id="running-the-pipeline" class="level2" data-number="8.3">
+<h2 data-number="8.3" class="anchored" data-anchor-id="running-the-pipeline"><span class="header-section-number">8.3</span> Running the pipeline</h2>
 <p>From the repository-root R session described in <a href="./installation.html">Installation</a>, run the relevant root workflow targets. Replace <code>your_aggregation</code> with an aggregation that enables the module in <code>cfg_aggregations.yaml</code>.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(<span class="at">names =</span> <span class="fu">matches</span>(<span class="st">"your_aggregation"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>

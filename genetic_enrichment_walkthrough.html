@@ -106,9 +106,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
-<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
-<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
-<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
 <link rel="stylesheet" href="styles.css">
@@ -239,8 +236,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#purpose" id="toc-purpose" class="nav-link active" data-scroll-target="#purpose"><span class="header-section-number">9.1</span> Purpose</a></li>
   <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview"><span class="header-section-number">9.2</span> Overview</a></li>
-  <li><a href="#graph-backed-blood_human-draft" id="toc-graph-backed-blood_human-draft" class="nav-link" data-scroll-target="#graph-backed-blood_human-draft"><span class="header-section-number">9.3</span> Graph-backed blood_human draft</a></li>
-  <li><a href="#running-the-pipeline" id="toc-running-the-pipeline" class="nav-link" data-scroll-target="#running-the-pipeline"><span class="header-section-number">9.4</span> Running the pipeline</a></li>
+  <li><a href="#running-the-pipeline" id="toc-running-the-pipeline" class="nav-link" data-scroll-target="#running-the-pipeline"><span class="header-section-number">9.3</span> Running the pipeline</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/genetic_enrichment_walkthrough.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -279,231 +275,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="overview" class="level2" data-number="9.2">
 <h2 data-number="9.2" class="anchored" data-anchor-id="overview"><span class="header-section-number">9.2</span> Overview</h2>
-<p>Simplified overview diagram of the pipeline.</p>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryTextColor': '#1f2937',
-    'lineColor': '#4b5563',
-    'clusterBkg': '#f8fafc',
-    'clusterBorder': '#cbd5e1',
-    'edgeLabelBackground': '#ffffff00',
-    'fontFamily': 'Helvetica, Arial, sans-serif'
-  },
-  'flowchart': {
-    'defaultRenderer': 'elk'
-  },
-  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
-}}%%
-flowchart TB
-  subgraph Legend["Node Color Key"]
-    direction LR
-    Input["Input"] --- Config["Config input"] --- Stage["Intermediate object"] --- Output["Output"] --- QC["QC output"]
-  end
-  linkStyle 0,1,2,3 stroke-width:0px,fill:none;
-  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
-  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
-  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
-  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
-  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
-  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
-  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
-  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
-  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
-  class Input regular_input;
-  class Config CFG_input;
-  class Stage intermediate_object;
-  class Output regular_output;
-  class QC QC_output;
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryTextColor': '#1f2937',
-    'lineColor': '#4b5563',
-    'clusterBkg': '#f8fafc',
-    'clusterBorder': '#cbd5e1',
-    'edgeLabelBackground': '#ffffff00',
-    'fontFamily': 'Helvetica, Arial, sans-serif'
-  },
-  'flowchart': {
-    'defaultRenderer': 'elk'
-  },
-  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
-}}%%
-flowchart TB
-  classDef stage fill:#dbeafe,stroke:#3b82f6,stroke-width:1.5px,color:#1e3a8a;
-  classDef input fill:#f8fafc,stroke:#64748b,stroke-width:1.5px,color:#1f2937;
-  classDef output fill:#ecfdf5,stroke:#10b981,stroke-width:1.5px,color:#065f46;
-
-  subgraph Inputs["1. Inputs"]
-    direction TB
-    ProcessedGWASResources("Processed GWAS Resources")
-    AggregatedATACAndWNNObjects("Aggregated ATAC and WNN Objects")
-  end
-
-  subgraph Processing["2. Processing"]
-    direction TB
-    GchromVARScoring("gchromVAR Scoring")
-    SCAVENGETraitPropagation("SCAVENGE Trait Propagation")
-    LDSCEnrichmentSummaries("LDSC Enrichment Summaries")
-  end
-
-  subgraph Outputs["3. Outputs"]
-    direction TB
-    TraitRelevanceScores("Trait Relevance Scores")
-    EnrichmentHeatmaps("Enrichment Heatmaps")
-  end
-
-  ProcessedGWASResources --&gt; GchromVARScoring
-  AggregatedATACAndWNNObjects --&gt; GchromVARScoring
-  AggregatedATACAndWNNObjects --&gt; SCAVENGETraitPropagation
-  ProcessedGWASResources --&gt; LDSCEnrichmentSummaries
-  GchromVARScoring --&gt; TraitRelevanceScores
-  SCAVENGETraitPropagation --&gt; TraitRelevanceScores
-  LDSCEnrichmentSummaries --&gt; EnrichmentHeatmaps
-  TraitRelevanceScores --&gt; EnrichmentHeatmaps
-
-  class ProcessedGWASResources,AggregatedATACAndWNNObjects input;
-  class GchromVARScoring,SCAVENGETraitPropagation,LDSCEnrichmentSummaries stage;
-  class TraitRelevanceScores,EnrichmentHeatmaps output;
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
+<p>This diagram started as a generated draft from the exported <code>blood_human</code> target graph and is now maintained as a human-curated documentation diagram.</p>
 </section>
-<section id="graph-backed-blood_human-draft" class="level2" data-number="9.3">
-<h2 data-number="9.3" class="anchored" data-anchor-id="graph-backed-blood_human-draft"><span class="header-section-number">9.3</span> Graph-backed blood_human draft</h2>
-<p>Graph-backed draft of GWAS inputs, variant-to-peak weighting, single-cell and pseudobulk chromVAR enrichment, SCAVENGE, and report outputs.</p>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryTextColor': '#1f2937',
-    'lineColor': '#4b5563',
-    'clusterBkg': '#f8fafc',
-    'clusterBorder': '#cbd5e1',
-    'edgeLabelBackground': '#ffffff00',
-    'fontFamily': 'Helvetica, Arial, sans-serif'
-  },
-  'flowchart': {
-    'defaultRenderer': 'elk'
-  },
-  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
-}}%%
-flowchart TB
-  subgraph Legend["Node Color Key"]
-    direction LR
-    Input["Input"] --- Config["Config input"] --- Stage["Intermediate object"] --- Output["Output"] --- QC["QC output"]
-  end
-  linkStyle 0,1,2,3 stroke-width:0px,fill:none;
-  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
-  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
-  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
-  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
-  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
-  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
-  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
-  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
-  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
-  class Input regular_input;
-  class Config CFG_input;
-  class Stage intermediate_object;
-  class Output regular_output;
-  class QC QC_output;
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryTextColor': '#1f2937',
-    'lineColor': '#4b5563',
-    'clusterBkg': '#f8fafc',
-    'clusterBorder': '#cbd5e1',
-    'edgeLabelBackground': '#ffffff00',
-    'fontFamily': 'Helvetica, Arial, sans-serif'
-  },
-  'flowchart': {
-    'defaultRenderer': 'elk'
-  },
-  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
-}}%%
-%%{init: {'layout': 'elk'}}%%
-flowchart TB
-  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
-  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
-  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
-  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
-  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
-  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
-  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
-  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
-  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
-
-  GeneticInputs("ATAC activity and metadata&lt;br/&gt;(chromVAR + pseudobulk ATAC)")
-  GWASInputs("GWAS and Open Targets inputs&lt;br/&gt;(GWAS_inputs_tibble)")
-  PeakWeights("Variant-to-peak weights&lt;br/&gt;(GWAS chromVAR weights)")
-  SingleCellGWAS("Single-cell GWAS chromVAR scores&lt;br/&gt;(GWAS_chromVAR_ZScore_records)")
-  PseudobulkGWAS("Pseudobulk GWAS chromVAR models&lt;br/&gt;(psbulk_GWAS_chromVAR)")
-  GeneChromVAR("Gene-linked GWAS chromVAR models&lt;br/&gt;(psbulk_GWAS_gene_chromVAR)")
-  SCAVENGE("SCAVENGE trait relevance&lt;br/&gt;(SCAVENGE_TRS_tibbles)")
-  GeneticOutputs("Genetic enrichment reports&lt;br/&gt;(summary plots)")
-
-  GWASInputs --&gt;|weight variants| PeakWeights
-  GeneticInputs --&gt;|score cells| SingleCellGWAS
-  PeakWeights --&gt;|apply peak weights| SingleCellGWAS
-  GeneticInputs --&gt;|aggregate activity| PseudobulkGWAS
-  PeakWeights --&gt;|fit weighted models| PseudobulkGWAS
-  PeakWeights --&gt;|gene-linked weighting| GeneChromVAR
-  SingleCellGWAS --&gt;|trait scores| SCAVENGE
-  SingleCellGWAS --&gt;|summaries| GeneticOutputs
-  PseudobulkGWAS --&gt;|model reports| GeneticOutputs
-  GeneChromVAR --&gt;|locus reports| GeneticOutputs
-  SCAVENGE --&gt;|TRS plots| GeneticOutputs
-
-  class GeneticInputs,GWASInputs regular_input;
-  class PeakWeights intermediate_object;
-  class SingleCellGWAS,PseudobulkGWAS,GeneChromVAR,SCAVENGE regular_output;
-  class GeneticOutputs QC_output;
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
-</section>
-<section id="running-the-pipeline" class="level2" data-number="9.4">
-<h2 data-number="9.4" class="anchored" data-anchor-id="running-the-pipeline"><span class="header-section-number">9.4</span> Running the pipeline</h2>
+<section id="running-the-pipeline" class="level2" data-number="9.3">
+<h2 data-number="9.3" class="anchored" data-anchor-id="running-the-pipeline"><span class="header-section-number">9.3</span> Running the pipeline</h2>
 <p>From the repository-root R session described in <a href="./installation.html">Installation</a>, run the relevant root workflow targets. Replace <code>your_aggregation</code> with a human-data aggregation that enables the module in <code>cfg_aggregations.yaml</code>.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(<span class="at">names =</span> <span class="fu">matches</span>(<span class="st">"your_aggregation"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>

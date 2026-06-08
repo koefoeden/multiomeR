@@ -35,7 +35,6 @@ pipeline <- rlang::list2(
     delimiter = ".",
     source("extra_targets/per_dataset_targets.R")$value
   ),
-  source("extra_targets/combined_reactions_targets.R")$value,
   tarchetypes::tar_map(
     values = aggregation_tibble,
     names = aggregation,

@@ -86,10 +86,10 @@ brain_mouse:
       Microglia: [Spi1, Irf8, Mef2c, Mafb]
       Endothelial: [Erg, Fli1, Klf2, Sox17]
 
-blood_human:
+immune_human_2x:
   mandatory:
-    aggregation_donor_id_metadata_tsv: example_data/blood_human_donor_id_metadata.tsv
-    aggregation_reaction_ID_metadata_tsv: example_data/blood_human_reaction_metadata.tsv
+    aggregation_donor_id_metadata_tsv: example_data/immune_human_2x_donor_id_metadata.tsv
+    aggregation_reaction_ID_metadata_tsv: example_data/immune_human_2x_reaction_metadata.tsv
     aggregation_reaction_IDs: [healthy_PBMC_human, lymphoma_lymph_human]
     aggregation_GEX_marker_genes:
       T: [CD3D, CD3E, CD4, CD8A, CD8B]
@@ -99,14 +99,55 @@ blood_human:
       pDC: [CLEC4C, TCF4, IRF7, IL3RA]
       Plasma: [XBP1, MZB1, PRDM1, JCHAIN]
   optional:
-    modules: [genetic_enrichment]
+    modules: [differential_analyses]
+    aggregation_categorical_vars: [condition, tissue]
     aggregation_QC_exclude_list_combined_object:
       - nCount_ATAC < 1000
       - atac_peak_counts_frac < 0.1
       - atac_peak_counts_blacklist_frac > 0.01
     aggregation_ATAC_marker_TFs:
       T: [BCL11B, TCF7, LEF1, RUNX3]
-      NK: [EOMES, TBX21, NFIL3, ID2]
+      NK: [EOMES, TBX21, NFIL3]
+      Mono: [SPI1, IRF8, CEBPA, CEBPB]
+      B: [PAX5, EBF1, TCF3, BCL6]
+      pDC: [IRF8, TCF4, SPIB]
+      Plasma: [XBP1, PRDM1, IRF4]
+    aggregation_roadmap_EDACC_names:
+      - Peripheral_Blood_Mononuclear_Primary_Cells
+      - CD4_Memory_Primary_Cells
+      - CD4_Naive_Primary_Cells
+      - CD8_Memory_Primary_Cells
+      - CD8_Naive_Primary_Cells
+      - Monocytes-CD14+_RO01746
+
+PBMC_human_6x:
+  mandatory:
+    aggregation_donor_id_metadata_tsv: example_data/PBMC_human_donor_id_metadata.tsv
+    aggregation_reaction_ID_metadata_tsv: example_data/PBMC_human_reaction_metadata.tsv
+    aggregation_reaction_IDs:
+      - healthy_PBMC_human
+      - pbmc_10k_chromium_controller
+      - pbmc_10k_chromium_x
+      - pbmc_granulocyte_sorted_10k
+      - pbmc_unsorted_10k
+      - pbmc_unsorted_3k
+    aggregation_GEX_marker_genes:
+      T: [CD3D, CD3E, CD4, CD8A, CD8B]
+      NK: [KLRD1, KLRC1, KLRF1, NKG7, GNLY]
+      Mono: [CD14, FCGR3A, LYZ, S100A8, S100A9]
+      B: [CD79A, CD79B, MS4A1, CD19]
+      pDC: [CLEC4C, TCF4, IRF7, IL3RA]
+      Plasma: [XBP1, MZB1, PRDM1, JCHAIN]
+  optional:
+    modules: [genetic_enrichment]
+    aggregation_categorical_vars: [cell_sorting, instrument, target_recovery]
+    aggregation_QC_exclude_list_combined_object:
+      - nCount_ATAC < 1000
+      - atac_peak_counts_frac < 0.1
+      - atac_peak_counts_blacklist_frac > 0.01
+    aggregation_ATAC_marker_TFs:
+      T: [BCL11B, TCF7, LEF1, RUNX3]
+      NK: [EOMES, TBX21, NFIL3]
       Mono: [SPI1, IRF8, CEBPA, CEBPB]
       B: [PAX5, EBF1, TCF3, BCL6]
       pDC: [IRF8, TCF4, SPIB]

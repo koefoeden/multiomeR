@@ -211,10 +211,9 @@ rlang::list2(
   ),
   targets::tar_target(
     name = interesting_genes,
-    description = "Collect unique gene names from nucleus state and profile annotations and other configured genes",
+    description = "Collect unique gene names from marker annotations and other configured genes",
     command = unique(unname(c(
-      unlist(aggregation_nucleus_states),
-      unlist(aggregation_nucleus_profiles),
+      unlist(aggregation_GEX_marker_genes),
       aggregation_other_interesting_genes
     )))
   ),

@@ -17,7 +17,18 @@ brain_mouse:
       - RNA_mito_percent > 10
       - amulet_q.value < 0.05
 
-blood_human:
+PBMC_human:
+  mandatory:
+    dataset_cellranger_arc_refdata_dir: example_data/refdata-cellranger-arc-GRCh38-2020-A-2.0.0
+  optional:
+    dataset_QC_exclude_list_per_reaction:
+      - TSS.enrichment < 4
+      - nucleosome_signal > 4
+      - nCount_RNA < 250
+      - RNA_mito_percent > 10
+      - amulet_q.value < 0.05
+
+lymph_human:
   mandatory:
     dataset_cellranger_arc_refdata_dir: example_data/refdata-cellranger-arc-GRCh38-2020-A-2.0.0
   optional:

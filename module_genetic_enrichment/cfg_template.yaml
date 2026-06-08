@@ -13,7 +13,7 @@ default:
     genetic_enrichment_psbulk_GWAS_gene_chromVAR_GWAS_IDs: NULL # GWAS_IDs to run in the gene-level pseudobulk GWAS chromVAR extension. NULL skips the extension.
     genetic_enrichment_extended_donor_id_metadata_tsv: NULL # TSV with donor-level metadata of interest. If NULL, inherits aggregation_donor_id_metadata_tsv.
 
-blood_human:
+PBMC_human_6x:
   mandatory:
     genetic_enrichment_open_targets_studies:
       WhiteBloodCellCount_Vuckovic2020:

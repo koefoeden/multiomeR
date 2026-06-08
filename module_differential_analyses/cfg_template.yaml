@@ -28,3 +28,18 @@ default:
 #         random_effect: NULL
 #         contrast_specs_vec:
 #           condition_effect_in_cell_type: clusterCellType.condition
+
+immune_human_2x:
+  mandatory: {}
+  optional:
+    differential_analyses_DCTC_plot_phenotype_vars: condition
+    differential_analyses_DCTC_formula_chr: cbind(n_nuclei, n_other_nuclei) ~ 0 + condition
+    differential_analyses_DCTC_color_by_categorical_metadata_column: tissue
+    differential_analyses_psbulk_DX_models:
+      condition_demo:
+        cell_type_subset: NULL
+        design_matrix_func_name: NULL
+        formula: ~ 0 + cluster + condition
+        random_effect: NULL
+        contrast_specs_vec:
+          lymphoma_vs_healthy: conditionlymphoma - conditionhealthy

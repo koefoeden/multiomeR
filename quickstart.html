@@ -323,8 +323,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">build_vignettes =</span> <span class="cn">FALSE</span></span>
 <span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Run the public example targets</span></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(<span class="at">names =</span> <span class="fu">matches</span>(<span class="st">"healthy_PBMC_human|blood_human|brain_mouse"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Run the example data targets</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(<span class="at">names =</span> <span class="fu">tar_described_as</span>(<span class="st">"checkpoint:GEX"</span>) <span class="sc">&amp;</span> <span class="fu">matches</span>(<span class="st">"immune_human_2x|brain_mouse"</span>))</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(<span class="at">names =</span> <span class="fu">tar_described_as</span>(<span class="st">"checkpoint:ATAC"</span>) <span class="sc">&amp;</span> <span class="fu">matches</span>(<span class="st">"immune_human_2x|brain_mouse"</span>))</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(<span class="at">names =</span> <span class="fu">tar_described_as</span>(<span class="st">"checkpoint:multimodal"</span>) <span class="sc">&amp;</span> <span class="fu">matches</span>(<span class="st">"immune_human_2x|brain_mouse"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>After the example workflow has completed, see the <a href="./output_gallery.html">output gallery</a> for representative outputs.</p>
 

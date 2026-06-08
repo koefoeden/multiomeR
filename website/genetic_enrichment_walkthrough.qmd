@@ -18,15 +18,14 @@ Representative outputs from this module are shown in the [output gallery](output
 
 Enable the module for a human-data aggregation in `cfg_aggregations.yaml`, then configure Open Targets studies and module-specific settings in `module_genetic_enrichment/cfg.yaml`. See [Configuration](configuration.qmd) for the general config workflow.
 
-{{< include helpers/_overview_snippet.qmd >}}
+## Overview
 
-```{r, include = FALSE, eval = TRUE}
-overview_stem <- "blood_human_genetic_enrichment"
-overview_heading <- "## Graph-backed blood_human draft"
-overview_description <- "Graph-backed draft of GWAS inputs, variant-to-peak weighting, single-cell and pseudobulk chromVAR enrichment, SCAVENGE, and report outputs."
+This diagram started as a generated draft from the exported `blood_human` target graph and is now maintained as a human-curated documentation diagram.
+
+```{r, echo = FALSE, results = "asis"}
+emit_mermaid("website/figures/standard_node_color_legend.mmd")
+emit_mermaid("website/figures/human_curated/blood_human_genetic_enrichment_overview.mmd")
 ```
-
-{{< include helpers/_overview_snippet.qmd >}}
 
 ## Running the pipeline
 

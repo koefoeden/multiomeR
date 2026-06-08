@@ -20,15 +20,14 @@ Representative outputs from this module are shown in the [output gallery](output
 
 Enable the module for an aggregation in `cfg_aggregations.yaml`, then configure the module-specific model settings in `module_differential_analyses/cfg.yaml`. See [Configuration](configuration.qmd) for the general config workflow.
 
-{{< include helpers/_overview_snippet.qmd >}}
+## Overview
 
-```{r, include = FALSE, eval = TRUE}
-overview_stem <- "blood_human_differential_analyses"
-overview_heading <- "## Graph-backed blood_human draft"
-overview_description <- "Graph-backed draft of module inputs, model-specific matrices, DGE/DCA/DTFA results, cell-type composition models, GSEA, and diagnostic outputs."
+This diagram started as a generated draft from the exported `blood_human` target graph and is now maintained as a human-curated documentation diagram.
+
+```{r, echo = FALSE, results = "asis"}
+emit_mermaid("website/figures/standard_node_color_legend.mmd")
+emit_mermaid("website/figures/human_curated/blood_human_differential_analyses_overview.mmd")
 ```
-
-{{< include helpers/_overview_snippet.qmd >}}
 
 ## Running the pipeline
 

@@ -47,79 +47,53 @@ The main pipeline runs these stages:
 - WNN integration across RNA and ATAC modalities
 - optional subgroup reprocessing for sufficiently large parent groups
 
-```{r, include = FALSE, eval = TRUE}
-overview_stem <- "reaction_aggregation"
+## Overview
+
+The diagrams below started as generated drafts from the exported `blood_human` target graph and are now maintained as human-curated documentation diagrams.
+
+```{r, echo = FALSE, results = "asis"}
+emit_mermaid("website/figures/standard_node_color_legend.mmd")
 ```
 
-{{< include helpers/_overview_snippet.qmd >}}
+### Parallel pre-processing
 
-## Graph-backed blood_human drafts
+Reaction-level inputs, QC summaries, and handoffs into aggregation.
 
-The diagrams below are generated from the exported `blood_human` target graph. They are intended as graph-backed drafts for reviewing and refining the simplified documentation diagrams.
-
-```{r, include = FALSE, eval = TRUE}
-overview_stem <- "blood_human_parallel_preprocessing"
-overview_heading <- "### Parallel pre-processing"
-overview_description <- "Graph-backed draft of reaction-level inputs, QC summaries, and handoffs into aggregation."
+```{r, echo = FALSE, results = "asis"}
+emit_mermaid("website/figures/human_curated/blood_human_parallel_preprocessing_overview.mmd")
 ```
 
-{{< include helpers/_overview_snippet.qmd >}}
+### Aggregation
 
-```{r, include = FALSE, eval = TRUE}
-overview_stem <- "blood_human_aggregation"
-overview_heading <- "### Aggregation"
-overview_description <- "Graph-backed draft of merged GEX processing, clustering, cell typing, and GEX outputs."
+Merged GEX processing, clustering, cell typing, and GEX outputs.
+
+```{r, echo = FALSE, results = "asis"}
+emit_mermaid("website/figures/human_curated/blood_human_aggregation_overview.mmd")
 ```
 
-{{< include helpers/_overview_snippet.qmd >}}
+### Multimodal dimension reduction
 
-```{r, include = FALSE, eval = TRUE}
-overview_stem <- "blood_human_multimodal_dimension_reduction"
-overview_heading <- "### Multimodal dimension reduction"
-overview_description <- "Graph-backed draft of GEX and ATAC embeddings, WNN integration, and integrated metadata outputs."
+GEX and ATAC embeddings, WNN integration, and integrated metadata outputs.
+
+```{r, echo = FALSE, results = "asis"}
+emit_mermaid("website/figures/human_curated/blood_human_multimodal_dimension_reduction_overview.mmd")
 ```
-
-{{< include helpers/_overview_snippet.qmd >}}
 
 ## ATAC modality addition
 
-This diagram focuses on how the ATAC modality is added to the merged RNA object, from peak calling and consensus peak construction through ATAC processing, chromVAR, and final WNN integration.
+ATAC QC, peak calling, consensus peaks, derived modalities, coverage tracks, and peak-gene links.
 
-```{r, include = FALSE, eval = TRUE}
-overview_stem <- "reaction_aggregation_ATAC_modality"
-overview_heading <- "### Diagram"
-overview_description <- "Simplified overview diagram of ATAC modality addition and WNN integration."
+```{r, echo = FALSE, results = "asis"}
+emit_mermaid("website/figures/human_curated/blood_human_atac_derived_modalities_overview.mmd")
 ```
-
-{{< include helpers/_overview_snippet.qmd >}}
-
-```{r, include = FALSE, eval = TRUE}
-overview_stem <- "blood_human_atac_derived_modalities"
-overview_heading <- "### Graph-backed blood_human draft"
-overview_description <- "Graph-backed draft of ATAC QC, peak calling, consensus peaks, derived modalities, coverage tracks, and peak-gene links."
-```
-
-{{< include helpers/_overview_snippet.qmd >}}
 
 ## Subgroup analysis
 
-This diagram focuses on the subgroup reprocessing branch that starts from the final WNN object, selects sufficiently large parent groups, reruns within-group multimodal embedding and clustering, and generates subgroup-specific QC and marker outputs.
+Subgroup selection, within-subgroup embeddings, WNN integration, and subgroup marker outputs.
 
-```{r, include = FALSE, eval = TRUE}
-overview_stem <- "reaction_aggregation_subgroups"
-overview_heading <- "### Diagram"
-overview_description <- "Simplified overview diagram of subgroup selection, reprocessing, clustering, and subgroup-specific outputs."
+```{r, echo = FALSE, results = "asis"}
+emit_mermaid("website/figures/human_curated/blood_human_subgroup_analysis_overview.mmd")
 ```
-
-{{< include helpers/_overview_snippet.qmd >}}
-
-```{r, include = FALSE, eval = TRUE}
-overview_stem <- "blood_human_subgroup_analysis"
-overview_heading <- "### Graph-backed blood_human draft"
-overview_description <- "Graph-backed draft of subgroup selection, within-subgroup embeddings, WNN integration, and subgroup marker outputs."
-```
-
-{{< include helpers/_overview_snippet.qmd >}}
 
 ## Running the pipeline
 

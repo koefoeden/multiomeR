@@ -1,0 +1,37 @@
+%%{init: {'layout': 'elk'}}%%
+flowchart TB
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+
+  GeneticInputs("ATAC activity and metadata<br/>(chromVAR + pseudobulk ATAC)")
+  GWASInputs("GWAS and Open Targets inputs<br/>(GWAS_inputs_tibble)")
+  PeakWeights("Variant-to-peak weights<br/>(GWAS chromVAR weights)")
+  SingleCellGWAS("Single-cell GWAS chromVAR scores<br/>(GWAS_chromVAR_ZScore_records)")
+  PseudobulkGWAS("Pseudobulk GWAS chromVAR models<br/>(psbulk_GWAS_chromVAR)")
+  GeneChromVAR("Gene-linked GWAS chromVAR models<br/>(psbulk_GWAS_gene_chromVAR)")
+  SCAVENGE("SCAVENGE trait relevance<br/>(SCAVENGE_TRS_tibbles)")
+  GeneticOutputs("Genetic enrichment reports<br/>(summary plots)")
+
+  GWASInputs -->|weight variants| PeakWeights
+  GeneticInputs -->|score cells| SingleCellGWAS
+  PeakWeights -->|apply peak weights| SingleCellGWAS
+  GeneticInputs -->|aggregate activity| PseudobulkGWAS
+  PeakWeights -->|fit weighted models| PseudobulkGWAS
+  PeakWeights -->|gene-linked weighting| GeneChromVAR
+  SingleCellGWAS -->|trait scores| SCAVENGE
+  SingleCellGWAS -->|summaries| GeneticOutputs
+  PseudobulkGWAS -->|model reports| GeneticOutputs
+  GeneChromVAR -->|locus reports| GeneticOutputs
+  SCAVENGE -->|TRS plots| GeneticOutputs
+
+  class GeneticInputs,GWASInputs regular_input;
+  class PeakWeights intermediate_object;
+  class SingleCellGWAS,PseudobulkGWAS,GeneChromVAR,SCAVENGE regular_output;
+  class GeneticOutputs QC_output;

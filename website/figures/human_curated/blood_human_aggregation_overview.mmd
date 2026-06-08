@@ -1,0 +1,33 @@
+%%{init: {'layout': 'elk'}}%%
+flowchart TB
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+
+  AggregatedGEX("Aggregated GEX matrix<br/>(aggregated_counts_BPCells_matrix.GEX)")
+  MetadataInputs("Reaction and donor metadata<br/>(metadata_tibble.GEX inputs)")
+  GEXMetadata("GEX metadata<br/>(metadata_tibble.GEX)")
+  GEXPCA("GEX PCA<br/>(PCA_BPCells.GEX)")
+  GEXHarmony("Corrected GEX embedding<br/>(harmony_embeddings_matrix.GEX)")
+  GEXClusters("GEX clusters and UMAP<br/>(metadata_w_clusters_tibble.GEX)")
+  GEXCellTypes("Cell-typed GEX metadata<br/>(metadata_w_cell_types_tibble.GEX)")
+  GEXOutputs("GEX marker and QC outputs<br/>(markers and QC plots)")
+
+  MetadataInputs -->|join metadata| GEXMetadata
+  AggregatedGEX -->|SCTransform residual PCA| GEXPCA
+  GEXMetadata -->|batch covariates| GEXPCA
+  GEXPCA -->|Harmony| GEXHarmony
+  GEXHarmony -->|SNN clustering + UMAP| GEXClusters
+  GEXClusters -->|cell-type annotation| GEXCellTypes
+  GEXCellTypes -->|markers and QC plots| GEXOutputs
+
+  class AggregatedGEX,MetadataInputs regular_input;
+  class GEXMetadata,GEXPCA,GEXHarmony,GEXClusters intermediate_object;
+  class GEXCellTypes regular_output;
+  class GEXOutputs QC_output;

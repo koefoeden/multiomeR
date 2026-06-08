@@ -44,7 +44,7 @@
     "href": "overview.html",
     "title": "2  Overview",
     "section": "",
-    "text": "2.1 How the workflow is organized\nmultiomeR is organized around one main pipeline and optional downstream modules.\nThe main pipeline is the workflow most users run first. It starts from cellranger-arc count outputs, processes each 10x reaction, aggregates selected reactions, and builds multimodal RNA/ATAC outputs for clustering, cell typing, and WNN integration.\nThe modules are optional branches that run from configured aggregations. Enable them only when the relevant input data and biological question are present.",
+    "text": "2.1 How the workflow is organized\nmultiomeR is organized around one main pipeline and optional downstream modules.\nThe main pipeline is the workflow most users run first. It starts from cellranger-arc count outputs, processes each 10x reaction, aggregates selected reactions, and builds multimodal RNA/ATAC outputs for clustering, cell typing, and WNN integration.\nThe modules are optional branches that run from configured aggregations. Enable them only when the relevant input data and biological question are present.\nVisit the dedicated documentation pages for more information: - Main pipeline: Per-reaction QC, dataset-level merging, BPCells-native RNA/ATAC processing, clustering, cell typing, and WNN integration. - Differential analyses module: Optional aggregation module for datasets with experimental or phenotypic variables that should be modelled across cell type composition, pseudobulk expression, chromatin accessibility, and TF activity. - Genetic enrichment module: Optional human-data module for GWAS-informed chromatin accessibility enrichment and trait-relevance analyses.",
     "crumbs": [
       "<span class='chapter-number'>2</span>  <span class='chapter-title'>Overview</span>"
     ]
@@ -54,7 +54,7 @@
     "href": "overview.html#how-the-workflow-is-organized",
     "title": "2  Overview",
     "section": "",
-    "text": "Flowchart of the sample processing pipeline\n\n\n\nMain pipeline: Per-reaction QC, dataset-level merging, BPCells-native RNA/ATAC processing, clustering, cell typing, and WNN integration.\nDifferential analyses: Optional aggregation module for datasets with experimental or phenotypic variables that should be modelled across cell type composition, pseudobulk expression, chromatin accessibility, and TF activity.\nGenetic enrichment: Optional human-data module for GWAS-informed chromatin accessibility enrichment and trait-relevance analyses.",
+    "text": "Flowchart of the sample processing pipeline",
     "crumbs": [
       "<span class='chapter-number'>2</span>  <span class='chapter-title'>Overview</span>"
     ]

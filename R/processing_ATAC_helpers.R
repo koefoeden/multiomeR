@@ -705,56 +705,6 @@ format_peak_GRanges <- function(GRanges, cluster_name = NULL) {
 }
 
 
-write_peak_bed_files_from_GRanges <- function(peak_GRanges, cluster_name) {
-  out_file <- get_structured_file_path(filetype = "BED", override_suffix = cluster_name)
-  if (length(peak_GRanges) == 0) {
-    if (fs::file_exists(out_file)) {
-      fs::file_delete(out_file)
-    }
-    fs::file_create(out_file)
-    return(out_file)
-  }
-  peak_GRanges$score <- round(sqrt(peak_GRanges$score), 0) # has to be between 0 and 1k
-  # peak_GRanges$score <- pmin(peak_GRanges$score),999) # has to be between 0 and 1k, alternative implementation
-  peak_GRanges %>% rtracklayer::export(con = out_file, format = "bed")
-  return(out_file)
-}
-
-#' Write bigBed from BED file
-#'
-#' Convert a BED peak file to a genome-specific bigBed output.
-#'
-#' @param in_bed Input BED path to convert.
-#' @param cluster_name Cluster label used for the structured bigBed output suffix.
-#' @param genome Genome build key used to choose chromosome sizes, blacklist resources, and external-tool parameters.
-#' @return The created file path, submitted job ID, or command result needed by the caller.
-#' @keywords internal
-
-write_bigBed_from_BED_file <- function(in_bed, cluster_name, genome) {
-  chrom_sizes <- switch(
-    genome,
-    "mm10" = "resources/mm10.chrom.sizes",
-    "GRCh38" = "resources/GRCh38.chrom.sizes",
-    "GRCm39" = "resources/GRCm39.chrom.sizes",
-    stop("Invalid genome. Must be 'mm10','GRCh38' or 'GRCm39'.")
-  )
-  out_file <- get_structured_file_path(filetype = "bigBed", override_suffix = cluster_name)
-  if (!fs::file_exists(in_bed) || fs::file_size(in_bed) == 0) {
-    if (fs::file_exists(out_file)) {
-      fs::file_delete(out_file)
-    }
-    fs::file_create(out_file)
-    return(out_file)
-  }
-  bed_to_bigbed_bin <- "bedToBigBed"
-
-  run_w_error_check(
-    command_string = bed_to_bigbed_bin,
-    arguments_chr = c("-type=bed6", in_bed, chrom_sizes, out_file)
-  )
-  return(out_file)
-}
-
 #' Get ATAC QC metadata from BPCells
 #'
 #' Add BPCells-derived ATAC peak and blacklist QC metrics to cell metadata.

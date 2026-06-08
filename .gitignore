@@ -48,6 +48,7 @@ module_genetic_enrichment/cfg.yaml
 # outputs
 pipelines/*/outputs
 tmp/
+logs
 
 # misc
 .vscode

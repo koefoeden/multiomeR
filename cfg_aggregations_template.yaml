@@ -43,19 +43,15 @@ default:
     aggregation_UMAP_min_dist: 0.001 # UMAP min_dist parameter (smaller = tighter clusters).
     aggregation_UMAP_ATAC_PCs: !expr 2:30 # LSI components used as input for ATAC UMAP.
     aggregation_UMAP_GEX_PCs: !expr 1:30 # PCs used as input for GEX UMAP.
-    # Galaxy track upload
-    aggregation_GALAXY_track_upload_API_KEY: NULL # Galaxy API key for uploading ATAC coverage tracks.
-    aggregation_GALAXY_track_upload_HISTORY_ID: NULL # Galaxy history ID for track uploads.
     # Other genes/features
     aggregation_other_interesting_genes: NULL # Additional genes to plot (not used for cell type annotation).
     # Extras
     aggregation_prop_threshold_contaminated_cluster_removal: NULL # Fraction threshold (e.g. 0.51) to discard sub-clusters with mismatched module scores. NULL keeps all.
     aggregation_tar_make_skip_regex_patterns:
-      - ^ATAC_(tracks|insertions|million_reads|coverage|bigBeds) # ---------- skips ATAC tracks
+      - ^coverage_ # ---------- skips ATAC coverage plots
       # NULL
       # Regex patterns to skip targets in custom target selections. Examples below:
       # - ^subgroups_ # ---------- skips subgroup analysis
-      # - _galaxy # ---------- skips Galaxy track upload
       # - ^(psbulk|sc_psbulk)_ # ---------- skips pseudobulk models
       # - GEX_reclustered # ---------- skips GEX reclustering
       # - ^GEX_3D_UMAP_ # ---------- skips GEX 3D UMAPs

@@ -6,15 +6,14 @@
 # scheduler tiers have been configured.
 
 controller_resources_tibble <- tibble::tribble(
-  ~controller_name, ~cores, ~RAM_GB, ~gpus,
-  "local",             15,     200,     0
+  ~controller_name , ~cores , ~RAM_GB , ~gpus ,
+  "local"          ,     15 ,     200 ,     0
 )
 
 controller_list <- list(
   crew::crew_controller_local(
     name = "local",
-    workers = 1,
-    seconds_idle = 30,
+    workers = 15,
     crashes_max = 1
   )
 )

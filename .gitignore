@@ -21,9 +21,6 @@ rsconnect/
 *.utf8.md
 *.knit.md
 
-libs
-pkg.lock
-
 # translation temp files
 po/*~
 
@@ -36,50 +33,26 @@ __*.mro
 .__*
 
 # example data
-example_data/embryonic_brain_mouse
-example_data/mature
-example_data/healthy_PBMC_human
-example_data/lymphoma_lymph_human
-example_data/EUR_Metal_LDSC-CORR_Neff.v2.txt
+example_data/*
+!example_data/*.tsv
+!example_data/*.sh
 
-
-
-# custom
+# configs
 cfg_datasets.yaml
 cfg_aggregations.yaml
 cfg_reactions.tsv
 crew_controllers.R
 module_differential_analyses/cfg.yaml
 module_genetic_enrichment/cfg.yaml
-slurm-*
+
+# outputs
 pipelines/*/outputs
-archive/targets_projects/*/outputs
-scE2g
-_targets
-logs/
 tmp/
+
+# misc
 .vscode
 .nfs*
-src/rust/vendor
-src/Makevars
-src/Makevars.win
-._command_*.R
-datasets.yaml
-tools.yaml
-reactions.R
-GWAS.R
-slurm_monitor_history*
-plots
-slurm-out*
-
-Rplots.pdf
-Rplots.pdf
 .DS_Store
 /.quarto/
 **/*.quarto_ipynb
-
-# pixi environment
 .pixi/
-
-.codex
-plans/deprecated

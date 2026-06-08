@@ -10,6 +10,7 @@ The **modules** are optional branches that run from configured aggregations. Ena
 
 ![Flowchart of the sample processing pipeline](figures/multiomeR_overview.drawio.svg)
 
+Visit the dedicated documentation pages for more information:
 - **[Main pipeline](reaction_aggregation_walkthrough.qmd)**: Per-reaction QC, dataset-level merging, BPCells-native RNA/ATAC processing, clustering, cell typing, and WNN integration.
-- **[Differential analyses](differential_analyses_walkthrough.qmd)**: Optional aggregation module for datasets with experimental or phenotypic variables that should be modelled across cell type composition, pseudobulk expression, chromatin accessibility, and TF activity.
-- **[Genetic enrichment](genetic_enrichment_walkthrough.qmd)**: Optional human-data module for GWAS-informed chromatin accessibility enrichment and trait-relevance analyses.
+- **[Differential analyses module](differential_analyses_walkthrough.qmd)**: Optional aggregation module for datasets with experimental or phenotypic variables that should be modelled across cell type composition, pseudobulk expression, chromatin accessibility, and TF activity.
+- **[Genetic enrichment module](genetic_enrichment_walkthrough.qmd)**: Optional human-data module for GWAS-informed chromatin accessibility enrichment and trait-relevance analyses.

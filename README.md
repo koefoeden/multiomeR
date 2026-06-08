@@ -15,18 +15,16 @@ multiomeR is in beta. The workflow is actively changing, and public interfaces m
 The user manual is built from the Quarto book in `website/`:
 
 - Quickstart: <https://koefoeden.github.io/multiomeR/quickstart.html>
+- Selected outputs gallery: <https://koefoeden.github.io/multiomeR/output_gallery.html>
 - Full documentation site: <https://koefoeden.github.io/multiomeR/>
 
 ## Requirements
 
-- Linux x86_64.
-- `git`.
-- `pixi`.
+- Linux x86_64 system with at least 64 GBs of RAM with plenty of disk-space.
 - 10x Genomics Multiome outputs from `cellranger-arc count`.
 - Cell Ranger ARC reference directories matching the genomes in your config.
-- Sufficient CPU, RAM, and disk for file-backed single-cell analysis.
 
-Most R packages and command-line tools are managed through `pixi.toml` and `pixi.lock`.
+Most R packages and command-line tools are managed through Pixi via `pixi.toml` and `pixi.lock`.
 
 ## Contributions
 

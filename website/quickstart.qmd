@@ -74,8 +74,10 @@ remotes::install_github(
   build_vignettes = FALSE
 )
 
-# Run the public example targets
-targets::tar_make(names = matches("healthy_PBMC_human|blood_human|brain_mouse"))
+# Run the example data targets
+targets::tar_make(names = tar_described_as("checkpoint:GEX") & matches("immune_human_2x|brain_mouse"))
+targets::tar_make(names = tar_described_as("checkpoint:ATAC") & matches("immune_human_2x|brain_mouse"))
+targets::tar_make(names = tar_described_as("checkpoint:multimodal") & matches("immune_human_2x|brain_mouse"))
 ```
 
 After the example workflow has completed, see the [output gallery](output_gallery.qmd) for representative outputs.

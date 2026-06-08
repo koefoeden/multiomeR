@@ -14,57 +14,8 @@ multiomeR is in beta. The workflow is actively changing, and public interfaces m
 
 The user manual is built from the Quarto book in `website/`:
 
-- Documentation site: <https://koefoeden.github.io/multiomeR/>
-- Installation: <https://koefoeden.github.io/multiomeR/installation.html>
 - Quickstart: <https://koefoeden.github.io/multiomeR/quickstart.html>
-- Configuration: <https://koefoeden.github.io/multiomeR/configuration.html>
-
-## Quickstart
-
-```bash
-git clone https://github.com/koefoeden/multiomeR.git
-cd multiomeR
-curl -fsSL https://pixi.sh/install.sh | sh # if pixi is not installed yet
-export PATH="$HOME/.pixi/bin:$PATH"
-pixi install --run-post-link-scripts
-cp cfg_datasets_template.yaml cfg_datasets.yaml
-cp cfg_aggregations_template.yaml cfg_aggregations.yaml
-cp cfg_reactions_template.tsv cfg_reactions.tsv
-cp crew_controllers_template.R crew_controllers.R
-cp module_differential_analyses/cfg_template.yaml module_differential_analyses/cfg.yaml
-cp module_genetic_enrichment/cfg_template.yaml module_genetic_enrichment/cfg.yaml
-pixi shell
-R
-```
-
-Then install the remaining GitHub R packages inside that R session:
-
-```r
-remotes::install_github(
-  "bnprks/BPCells",
-  subdir = "r",
-  ref = "28759cdd512578b6cbe549e226e1cd52a2d2308c", # BPCells 0.3.1
-  upgrade = "never",
-  dependencies = FALSE,
-  build_vignettes = FALSE
-)
-remotes::install_github(
-  "stuart-lab/signac",
-  ref = "5d66cf6c34322309d5b8aece3fa294f5531b8eee", # Signac 1.9999.4
-  upgrade = "never",
-  dependencies = FALSE,
-  build_vignettes = FALSE
-)
-remotes::install_github(
-  "plger/betterChromVAR",
-  ref = "82ae1e4ada8a43c721aa2ae1c3f2c6dfc3d5a637", # betterChromVAR 0.99.41
-  upgrade = "never",
-  dependencies = FALSE,
-  build_vignettes = FALSE
-)
-```
-
-Then follow the [quickstart](https://koefoeden.github.io/multiomeR/quickstart.html) to download public 10x example data and run the example workflow.
+- Full documentation site: <https://koefoeden.github.io/multiomeR/>
 
 ## Requirements
 

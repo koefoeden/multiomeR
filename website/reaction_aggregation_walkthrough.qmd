@@ -60,39 +60,31 @@ emit_mermaid("website/figures/standard_node_color_legend.mmd")
 Reaction-level inputs, QC summaries, and handoffs into aggregation.
 
 ```{r, echo = FALSE, results = "asis"}
-emit_mermaid("website/figures/human_curated/blood_human_parallel_preprocessing_overview.mmd")
+emit_mermaid("website/figures/human_curated/parallel_pruned.mmd")
 ```
 
-### Aggregation
+### GEX processing
 
 Merged GEX processing, clustering, cell typing, and GEX outputs.
 
 ```{r, echo = FALSE, results = "asis"}
-emit_mermaid("website/figures/human_curated/blood_human_aggregation_overview.mmd")
+emit_mermaid("website/figures/human_curated/GEX_pruned.mmd")
 ```
 
-### Multimodal dimension reduction
-
-GEX and ATAC embeddings, WNN integration, and integrated metadata outputs.
-
-```{r, echo = FALSE, results = "asis"}
-emit_mermaid("website/figures/human_curated/blood_human_multimodal_dimension_reduction_overview.mmd")
-```
-
-## ATAC modality addition
+### ATAC processing
 
 ATAC QC, peak calling, consensus peaks, derived modalities, coverage tracks, and peak-gene links.
 
 ```{r, echo = FALSE, results = "asis"}
-emit_mermaid("website/figures/human_curated/blood_human_atac_derived_modalities_overview.mmd")
+emit_mermaid("website/figures/human_curated/ATAC_pruned.mmd")
 ```
 
-## Subgroup analysis
+### WNN integration
 
-Subgroup selection, within-subgroup embeddings, WNN integration, and subgroup marker outputs.
+GEX and ATAC embeddings, WNN integration, and integrated metadata outputs.
 
 ```{r, echo = FALSE, results = "asis"}
-emit_mermaid("website/figures/human_curated/blood_human_subgroup_analysis_overview.mmd")
+emit_mermaid("website/figures/human_curated/WNN_pruned.mmd")
 ```
 
 ## Running the pipeline

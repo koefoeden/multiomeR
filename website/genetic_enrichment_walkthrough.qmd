@@ -24,7 +24,22 @@ This diagram started as a generated draft from the exported `blood_human` target
 
 ```{r, echo = FALSE, results = "asis"}
 emit_mermaid("website/figures/standard_node_color_legend.mmd")
-emit_mermaid("website/figures/human_curated/blood_human_genetic_enrichment_overview.mmd")
+```
+
+### Pseudobulk GWAS
+
+GWAS and pseudobulk inputs used for trait-relevance analyses.
+
+```{r, echo = FALSE, results = "asis"}
+emit_mermaid("website/figures/human_curated/psbulk_GWAS.immune_human_2x_pruned.mmd")
+```
+
+### Genetic enrichment across genes
+
+Across-gene enrichment outputs and downstream trait summaries.
+
+```{r, echo = FALSE, results = "asis"}
+emit_mermaid("website/figures/human_curated/genetic_enrichment_across_genes_pruned.mmd")
 ```
 
 ## Running the pipeline

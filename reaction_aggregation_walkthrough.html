@@ -241,12 +241,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview"><span class="header-section-number">7.4</span> Overview</a>
   <ul class="collapse">
   <li><a href="#parallel-pre-processing" id="toc-parallel-pre-processing" class="nav-link" data-scroll-target="#parallel-pre-processing"><span class="header-section-number">7.4.1</span> Parallel pre-processing</a></li>
-  <li><a href="#aggregation" id="toc-aggregation" class="nav-link" data-scroll-target="#aggregation"><span class="header-section-number">7.4.2</span> Aggregation</a></li>
-  <li><a href="#multimodal-dimension-reduction" id="toc-multimodal-dimension-reduction" class="nav-link" data-scroll-target="#multimodal-dimension-reduction"><span class="header-section-number">7.4.3</span> Multimodal dimension reduction</a></li>
+  <li><a href="#gex-processing" id="toc-gex-processing" class="nav-link" data-scroll-target="#gex-processing"><span class="header-section-number">7.4.2</span> GEX processing</a></li>
+  <li><a href="#atac-processing" id="toc-atac-processing" class="nav-link" data-scroll-target="#atac-processing"><span class="header-section-number">7.4.3</span> ATAC processing</a></li>
+  <li><a href="#wnn-integration" id="toc-wnn-integration" class="nav-link" data-scroll-target="#wnn-integration"><span class="header-section-number">7.4.4</span> WNN integration</a></li>
   </ul></li>
-  <li><a href="#atac-modality-addition" id="toc-atac-modality-addition" class="nav-link" data-scroll-target="#atac-modality-addition"><span class="header-section-number">7.5</span> ATAC modality addition</a></li>
-  <li><a href="#subgroup-analysis" id="toc-subgroup-analysis" class="nav-link" data-scroll-target="#subgroup-analysis"><span class="header-section-number">7.6</span> Subgroup analysis</a></li>
-  <li><a href="#running-the-pipeline" id="toc-running-the-pipeline" class="nav-link" data-scroll-target="#running-the-pipeline"><span class="header-section-number">7.7</span> Running the pipeline</a></li>
+  <li><a href="#running-the-pipeline" id="toc-running-the-pipeline" class="nav-link" data-scroll-target="#running-the-pipeline"><span class="header-section-number">7.5</span> Running the pipeline</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/reaction_aggregation_walkthrough.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -315,25 +314,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 data-number="7.4.1" class="anchored" data-anchor-id="parallel-pre-processing"><span class="header-section-number">7.4.1</span> Parallel pre-processing</h3>
 <p>Reaction-level inputs, QC summaries, and handoffs into aggregation.</p>
 </section>
-<section id="aggregation" class="level3" data-number="7.4.2">
-<h3 data-number="7.4.2" class="anchored" data-anchor-id="aggregation"><span class="header-section-number">7.4.2</span> Aggregation</h3>
+<section id="gex-processing" class="level3" data-number="7.4.2">
+<h3 data-number="7.4.2" class="anchored" data-anchor-id="gex-processing"><span class="header-section-number">7.4.2</span> GEX processing</h3>
 <p>Merged GEX processing, clustering, cell typing, and GEX outputs.</p>
 </section>
-<section id="multimodal-dimension-reduction" class="level3" data-number="7.4.3">
-<h3 data-number="7.4.3" class="anchored" data-anchor-id="multimodal-dimension-reduction"><span class="header-section-number">7.4.3</span> Multimodal dimension reduction</h3>
+<section id="atac-processing" class="level3" data-number="7.4.3">
+<h3 data-number="7.4.3" class="anchored" data-anchor-id="atac-processing"><span class="header-section-number">7.4.3</span> ATAC processing</h3>
+<p>ATAC QC, peak calling, consensus peaks, derived modalities, coverage tracks, and peak-gene links.</p>
+</section>
+<section id="wnn-integration" class="level3" data-number="7.4.4">
+<h3 data-number="7.4.4" class="anchored" data-anchor-id="wnn-integration"><span class="header-section-number">7.4.4</span> WNN integration</h3>
 <p>GEX and ATAC embeddings, WNN integration, and integrated metadata outputs.</p>
 </section>
 </section>
-<section id="atac-modality-addition" class="level2" data-number="7.5">
-<h2 data-number="7.5" class="anchored" data-anchor-id="atac-modality-addition"><span class="header-section-number">7.5</span> ATAC modality addition</h2>
-<p>ATAC QC, peak calling, consensus peaks, derived modalities, coverage tracks, and peak-gene links.</p>
-</section>
-<section id="subgroup-analysis" class="level2" data-number="7.6">
-<h2 data-number="7.6" class="anchored" data-anchor-id="subgroup-analysis"><span class="header-section-number">7.6</span> Subgroup analysis</h2>
-<p>Subgroup selection, within-subgroup embeddings, WNN integration, and subgroup marker outputs.</p>
-</section>
-<section id="running-the-pipeline" class="level2" data-number="7.7">
-<h2 data-number="7.7" class="anchored" data-anchor-id="running-the-pipeline"><span class="header-section-number">7.7</span> Running the pipeline</h2>
+<section id="running-the-pipeline" class="level2" data-number="7.5">
+<h2 data-number="7.5" class="anchored" data-anchor-id="running-the-pipeline"><span class="header-section-number">7.5</span> Running the pipeline</h2>
 <p>From the repository-root R session described in <a href="./installation.html">Installation</a>, run the main workflow in checkpoint-sized pieces. Replace <code>your_aggregation</code> with the aggregation name from <code>cfg_aggregations.yaml</code>, for example <code>blood_human</code>.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(</span>

@@ -315,29 +315,7 @@
     "href": "reaction_aggregation_walkthrough.html#overview",
     "title": "7  Main pipeline",
     "section": "7.4 Overview",
-    "text": "7.4 Overview\nThe diagrams below started as generated drafts from the exported blood_human target graph and are now maintained as human-curated documentation diagrams.\n\n7.4.1 Parallel pre-processing\nReaction-level inputs, QC summaries, and handoffs into aggregation.\n\n\n7.4.2 Aggregation\nMerged GEX processing, clustering, cell typing, and GEX outputs.\n\n\n7.4.3 Multimodal dimension reduction\nGEX and ATAC embeddings, WNN integration, and integrated metadata outputs.",
-    "crumbs": [
-      "Workflow",
-      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Main pipeline</span>"
-    ]
-  },
-  {
-    "objectID": "reaction_aggregation_walkthrough.html#atac-modality-addition",
-    "href": "reaction_aggregation_walkthrough.html#atac-modality-addition",
-    "title": "7  Main pipeline",
-    "section": "7.5 ATAC modality addition",
-    "text": "7.5 ATAC modality addition\nATAC QC, peak calling, consensus peaks, derived modalities, coverage tracks, and peak-gene links.",
-    "crumbs": [
-      "Workflow",
-      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Main pipeline</span>"
-    ]
-  },
-  {
-    "objectID": "reaction_aggregation_walkthrough.html#subgroup-analysis",
-    "href": "reaction_aggregation_walkthrough.html#subgroup-analysis",
-    "title": "7  Main pipeline",
-    "section": "7.6 Subgroup analysis",
-    "text": "7.6 Subgroup analysis\nSubgroup selection, within-subgroup embeddings, WNN integration, and subgroup marker outputs.",
+    "text": "7.4 Overview\nThe diagrams below started as generated drafts from the exported blood_human target graph and are now maintained as human-curated documentation diagrams.\n\n7.4.1 Parallel pre-processing\nReaction-level inputs, QC summaries, and handoffs into aggregation.\n\n\n7.4.2 GEX processing\nMerged GEX processing, clustering, cell typing, and GEX outputs.\n\n\n7.4.3 ATAC processing\nATAC QC, peak calling, consensus peaks, derived modalities, coverage tracks, and peak-gene links.\n\n\n7.4.4 WNN integration\nGEX and ATAC embeddings, WNN integration, and integrated metadata outputs.",
     "crumbs": [
       "Workflow",
       "<span class='chapter-number'>7</span>  <span class='chapter-title'>Main pipeline</span>"
@@ -347,8 +325,8 @@
     "objectID": "reaction_aggregation_walkthrough.html#running-the-pipeline",
     "href": "reaction_aggregation_walkthrough.html#running-the-pipeline",
     "title": "7  Main pipeline",
-    "section": "7.7 Running the pipeline",
-    "text": "7.7 Running the pipeline\nFrom the repository-root R session described in Installation, run the main workflow in checkpoint-sized pieces. Replace your_aggregation with the aggregation name from cfg_aggregations.yaml, for example blood_human.\n\ntargets::tar_make(\n  names = targets::tar_described_as(tidyselect::contains(\"checkpoint:GEX\")) &\n    tidyselect::matches(\"your_aggregation\")\n)\n\nAt the GEX checkpoint, inspect the aggregation-level barcode exclusion summaries, RNA-only QC plots, marker summaries, and GEX_Seurat_object.your_aggregation. If the GEX filtering, clustering, and annotation look acceptable, continue to the multimodal checkpoint:\n\ntargets::tar_make(\n  names = targets::tar_described_as(tidyselect::contains(\"checkpoint:multimodal\")) &\n    tidyselect::matches(\"your_aggregation\")\n)\n\nAt the multimodal checkpoint, inspect the ATAC QC plots, peak and motif summaries, WNN UMAPs, modality-weight plots, and multimodal_Seurat_object.your_aggregation. If the aggregation enables the optional downstream modules, continue with their checkpoint outputs:\n\ntargets::tar_make(\n  names = targets::tar_described_as(tidyselect::contains(\"checkpoint:differential_analyses\")) &\n    tidyselect::matches(\"your_aggregation\")\n)\n\ntargets::tar_make(\n  names = targets::tar_described_as(tidyselect::contains(\"checkpoint:genetic_enrichment\")) &\n    tidyselect::matches(\"your_aggregation\")\n)\n\nTo run all configured aggregations for a checkpoint, omit the & tidyselect::matches(\"your_aggregation\") part. To run the full workflow after checkpoint review, run:\n\ntargets::tar_make()\n\nThe full main pipeline can be computationally expensive. Start with the public example or a narrow target selection, then scale to larger datasets after local paths, metadata files, and controller settings are working.",
+    "section": "7.5 Running the pipeline",
+    "text": "7.5 Running the pipeline\nFrom the repository-root R session described in Installation, run the main workflow in checkpoint-sized pieces. Replace your_aggregation with the aggregation name from cfg_aggregations.yaml, for example blood_human.\n\ntargets::tar_make(\n  names = targets::tar_described_as(tidyselect::contains(\"checkpoint:GEX\")) &\n    tidyselect::matches(\"your_aggregation\")\n)\n\nAt the GEX checkpoint, inspect the aggregation-level barcode exclusion summaries, RNA-only QC plots, marker summaries, and GEX_Seurat_object.your_aggregation. If the GEX filtering, clustering, and annotation look acceptable, continue to the multimodal checkpoint:\n\ntargets::tar_make(\n  names = targets::tar_described_as(tidyselect::contains(\"checkpoint:multimodal\")) &\n    tidyselect::matches(\"your_aggregation\")\n)\n\nAt the multimodal checkpoint, inspect the ATAC QC plots, peak and motif summaries, WNN UMAPs, modality-weight plots, and multimodal_Seurat_object.your_aggregation. If the aggregation enables the optional downstream modules, continue with their checkpoint outputs:\n\ntargets::tar_make(\n  names = targets::tar_described_as(tidyselect::contains(\"checkpoint:differential_analyses\")) &\n    tidyselect::matches(\"your_aggregation\")\n)\n\ntargets::tar_make(\n  names = targets::tar_described_as(tidyselect::contains(\"checkpoint:genetic_enrichment\")) &\n    tidyselect::matches(\"your_aggregation\")\n)\n\nTo run all configured aggregations for a checkpoint, omit the & tidyselect::matches(\"your_aggregation\") part. To run the full workflow after checkpoint review, run:\n\ntargets::tar_make()\n\nThe full main pipeline can be computationally expensive. Start with the public example or a narrow target selection, then scale to larger datasets after local paths, metadata files, and controller settings are working.",
     "crumbs": [
       "Workflow",
       "<span class='chapter-number'>7</span>  <span class='chapter-title'>Main pipeline</span>"
@@ -425,7 +403,7 @@
     "href": "genetic_enrichment_walkthrough.html#overview",
     "title": "9  Genetic enrichment module",
     "section": "9.2 Overview",
-    "text": "9.2 Overview\nThis diagram started as a generated draft from the exported blood_human target graph and is now maintained as a human-curated documentation diagram.",
+    "text": "9.2 Overview\nThis diagram started as a generated draft from the exported blood_human target graph and is now maintained as a human-curated documentation diagram.\n\n9.2.1 Pseudobulk GWAS\nGWAS and pseudobulk inputs used for trait-relevance analyses.\n\n\n9.2.2 Genetic enrichment across genes\nAcross-gene enrichment outputs and downstream trait summaries.",
     "crumbs": [
       "Workflow",
       "<span class='chapter-number'>9</span>  <span class='chapter-title'>Genetic enrichment module</span>"

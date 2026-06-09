@@ -1,0 +1,9 @@
+^metadata_w_cell_types_tibble\.ATAC\.
+^clusters_tibble\.WNN\.
+^embedding_matrices\.WNN\.
+^harmony_embeddings_matrix\.ATAC\.
+^harmony_embeddings_matrix\.GEX\.
+^metadata_w_cell_types_tibble\.WNN\.
+^UCell_GEX_marker_genes_list\.
+^UMAP_embeddings_tibble\.WNN\.
+^WNN_results\.

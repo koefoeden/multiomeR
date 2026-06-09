@@ -95,7 +95,7 @@ immune_human_2x:
       pDC: [CLEC4C, TCF4, IRF7, IL3RA]
       Plasma: [XBP1, MZB1, PRDM1, JCHAIN]
   optional:
-    modules: [differential_analyses]
+    modules: [differential_analyses, genetic_enrichment]
     aggregation_categorical_vars: [condition, tissue]
     aggregation_QC_exclude_list_combined_object:
       - nCount_ATAC < 1000

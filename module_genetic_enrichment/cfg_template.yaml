@@ -30,7 +30,5 @@ immune_human_2x:
           T_vs_NK: clusterT - clusterNK
           Mono_vs_B: clusterMono - clusterB
           lymphoid_vs_mono: (clusterT + clusterNK + clusterB) / 3 - clusterMono
-  optional: {}
-
-PBMC_human_6x:
-  inherits: immune_human_2x
+  optional: 
+    genetic_enrichment_psbulk_GWAS_gene_chromVAR_GWAS_IDs: [WhiteBloodCellCount_Vuckovic2020]

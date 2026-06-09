@@ -1,0 +1,17 @@
+%%{init: {'flowchart': {'defaultRenderer': 'elk'}}}%%
+flowchart TB
+    chromVAR_obj.ATAC(["chromVAR_obj.ATAC"]):::none --> chromVAR_background_bins.ATAC(["chromVAR_background_bins.ATAC"]):::none
+    chromVAR_peak_expectation.ATAC(["chromVAR_peak_expectation.ATAC"]):::none --> chromVAR_background_bins.ATAC(["chromVAR_background_bins.ATAC"]):::none
+    chromVAR_obj.ATAC(["chromVAR_obj.ATAC"]):::none --> chromVAR_peak_expectation.ATAC(["chromVAR_peak_expectation.ATAC"]):::none
+    GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none --> GWAS_chromVAR_summarized_ZScores_tibble(["GWAS_chromVAR_summarized_ZScores_tibble"]):::none
+    open_targets_credible_set_dataset_path(["open_targets_credible_set_dataset_path"]):::none --> GWAS_inputs_tibble(["GWAS_inputs_tibble"]):::none
+    SCAVENGE_graph_matrix(["SCAVENGE_graph_matrix"]):::none --> SCAVENGE_TRS_tibbles["SCAVENGE_TRS_tibbles"]:::none
+    GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none --> SCAVENGE_TRS_tibbles["SCAVENGE_TRS_tibbles"]:::none
+    GWAS_chromVAR_peak_weight_records["GWAS_chromVAR_peak_weight_records"]:::none --> GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none
+    GWAS_inputs_tibble(["GWAS_inputs_tibble"]):::none --> GWAS_chromVAR_peak_weight_records["GWAS_chromVAR_peak_weight_records"]:::none
+    SCAVENGE_TRS_tibbles["SCAVENGE_TRS_tibbles"]:::none --> SCAVENGE_TRS_summary_tibble(["SCAVENGE_TRS_summary_tibble"]):::none
+    chromVAR_background_bins.ATAC(["chromVAR_background_bins.ATAC"]):::none --> GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none
+    chromVAR_obj.ATAC(["chromVAR_obj.ATAC"]):::none --> GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none
+    chromVAR_obj.ATAC(["chromVAR_obj.ATAC"]):::none --> GWAS_chromVAR_peak_weight_records["GWAS_chromVAR_peak_weight_records"]:::none
+    chromVAR_peak_expectation.ATAC(["chromVAR_peak_expectation.ATAC"]):::none --> GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none
+    open_targets_credible_set_dataset_path(["open_targets_credible_set_dataset_path"]):::none --> GWAS_chromVAR_peak_weight_records["GWAS_chromVAR_peak_weight_records"]:::none

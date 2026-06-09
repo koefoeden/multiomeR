@@ -1,0 +1,17 @@
+%%{init: {'flowchart': {'defaultRenderer': 'elk'}}}%%
+flowchart TB
+    feature_matrix_fit.DGE["feature_matrix_fit.DGE"]:::none --> results_tibble.DGE["results_tibble.DGE"]:::none
+    feature_matrix_fit.DTFA["feature_matrix_fit.DTFA"]:::none --> results_tibble.DTFA["results_tibble.DTFA"]:::none
+    feature_matrix_fit.DGE["feature_matrix_fit.DGE"]:::none --> results.CP_KEGG_MEDICUS.GSEA.DGE["results.CP_KEGG_MEDICUS.GSEA.DGE"]:::none
+    feature_matrix_fit.DGE["feature_matrix_fit.DGE"]:::none --> results.TFT_GTRD.GSEA.DGE["results.TFT_GTRD.GSEA.DGE"]:::none
+    models(["models"]):::none --> feature_matrix_fit.DGE["feature_matrix_fit.DGE"]:::none
+    models(["models"]):::none --> feature_matrix_fit.DTFA["feature_matrix_fit.DTFA"]:::none
+    models(["models"]):::none --> results.CP_KEGG_MEDICUS.GSEA.DGE["results.CP_KEGG_MEDICUS.GSEA.DGE"]:::none
+    models(["models"]):::none --> results.TFT_GTRD.GSEA.DGE["results.TFT_GTRD.GSEA.DGE"]:::none
+    models(["models"]):::none --> results_tibble.DGE["results_tibble.DGE"]:::none
+    models(["models"]):::none --> results_tibble.DTFA["results_tibble.DTFA"]:::none
+    pseudobulk_activity_matrix.TFA(["pseudobulk_activity_matrix.TFA"]):::none --> feature_matrix_fit.DTFA["feature_matrix_fit.DTFA"]:::none
+    pseudobulk_counts_BPCells_matrix_dir.ATAC(["pseudobulk_counts_BPCells_matrix_dir.ATAC"]):::none --> feature_matrix_fit.DGE["feature_matrix_fit.DGE"]:::none
+    pseudobulk_counts_BPCells_matrix_dir.ATAC(["pseudobulk_counts_BPCells_matrix_dir.ATAC"]):::none --> feature_matrix_fit.DTFA["feature_matrix_fit.DTFA"]:::none
+    pseudobulk_counts_BPCells_matrix_dir.ATAC(["pseudobulk_counts_BPCells_matrix_dir.ATAC"]):::none --> pseudobulk_activity_matrix.TFA(["pseudobulk_activity_matrix.TFA"]):::none
+    pseudobulk_counts_BPCells_matrix_dir.GEX(["pseudobulk_counts_BPCells_matrix_dir.GEX"]):::none --> feature_matrix_fit.DGE["feature_matrix_fit.DGE"]:::none

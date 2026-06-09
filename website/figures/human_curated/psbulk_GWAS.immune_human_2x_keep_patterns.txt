@@ -1,0 +1,13 @@
+^GWAS_chromVAR_peak_weight_matrix\.
+^GWAS_gene_chromVAR_credible_set_variants_tibble\.
+^GWAS_gene_chromVAR_inputs_tibble\.
+^GWAS_gene_chromVAR_L2G_tibble\.
+^GWAS_gene_chromVAR_peak_weight_matrix\.
+^GWAS_inputs_tibble\.
+^open_targets_gwas_credible_sets_evidence_dataset_path$
+^psbulk_GWAS_chromVAR_activity_matrix\.
+^psbulk_GWAS_chromVAR_models\.
+^psbulk_GWAS_chromVAR_results_tibble\.
+^psbulk_GWAS_gene_chromVAR_activity_matrix\.
+^psbulk_GWAS_gene_chromVAR_results_tibble\.
+^pseudobulk_counts_BPCells_matrix_dir\.ATAC\.

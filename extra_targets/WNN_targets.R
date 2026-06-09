@@ -110,7 +110,7 @@ rlang::list2(
         metadata_tibble = metadata_w_clusters_tibble.WNN,
         named_marker_genes_list = UCell_GEX_marker_genes_list,
         allow_multiple_cell_types = aggregation_allow_multiple_cell_types,
-        cluster_column = "WNN_harmony_SNN_cluster"
+        cluster_column = "WNN_harmony_SNN_cluster" 
       ),
       resources = get_tar_resources(RAM_GB_req = 16)
     )

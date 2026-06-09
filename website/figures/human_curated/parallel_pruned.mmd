@@ -1,0 +1,15 @@
+%%{init: {'flowchart': {'defaultRenderer': 'elk'}}}%%
+flowchart TB
+    cellranger_barcodes_tsv.embryonic_brain_mouse(["cellranger_barcodes_tsv.embryonic_brain_mouse"]):::none --> amulet_metrics_tibble.embryonic_brain_mouse(["amulet_metrics_tibble.embryonic_brain_mouse"]):::none
+    cellranger_barcodes_tsv.embryonic_brain_mouse(["cellranger_barcodes_tsv.embryonic_brain_mouse"]):::none --> cellsnp_dir.embryonic_brain_mouse(["cellsnp_dir.embryonic_brain_mouse"]):::none
+    full_metadata_tibble.embryonic_brain_mouse(["full_metadata_tibble.embryonic_brain_mouse"]):::none --> excluded_cellranger_only_barcodes_by_type_list.embryonic_brain_mouse(["excluded_cellranger_only_barcodes_by_type_list.embryonic_brain_mouse"]):::none
+    vireo_donor_ids_tibble.embryonic_brain_mouse(["vireo_donor_ids_tibble.embryonic_brain_mouse"]):::none --> full_metadata_tibble.embryonic_brain_mouse(["full_metadata_tibble.embryonic_brain_mouse"]):::none
+    amulet_metrics_tibble.embryonic_brain_mouse(["amulet_metrics_tibble.embryonic_brain_mouse"]):::none --> full_metadata_tibble.embryonic_brain_mouse(["full_metadata_tibble.embryonic_brain_mouse"]):::none
+    ATAC_qc_metrics_tibble.embryonic_brain_mouse(["ATAC_qc_metrics_tibble.embryonic_brain_mouse"]):::none --> full_metadata_tibble.embryonic_brain_mouse(["full_metadata_tibble.embryonic_brain_mouse"]):::none
+    cellbender_h5_file.embryonic_brain_mouse(["cellbender_h5_file.embryonic_brain_mouse"]):::none --> GEX_counts_BPcells_matrix_dir.embryonic_brain_mouse(["GEX_counts_BPcells_matrix_dir.embryonic_brain_mouse"]):::none
+    cellranger_barcodes_tsv.embryonic_brain_mouse(["cellranger_barcodes_tsv.embryonic_brain_mouse"]):::none --> vireo_donor_ids_tibble.embryonic_brain_mouse(["vireo_donor_ids_tibble.embryonic_brain_mouse"]):::none
+    cellsnp_dir.embryonic_brain_mouse(["cellsnp_dir.embryonic_brain_mouse"]):::none --> vireo_donor_ids_tibble.embryonic_brain_mouse(["vireo_donor_ids_tibble.embryonic_brain_mouse"]):::none
+    GEX_counts_BPcells_matrix_dir.embryonic_brain_mouse(["GEX_counts_BPcells_matrix_dir.embryonic_brain_mouse"]):::none --> aggregated_GEX_BPCells_matrix_dir.GEX.brain_mouse(["aggregated_GEX_BPCells_matrix_dir.GEX.brain_mouse"]):::none
+    GEX_counts_BPcells_matrix_dir.embryonic_brain_mouse(["GEX_counts_BPcells_matrix_dir.embryonic_brain_mouse"]):::none --> full_metadata_tibble.embryonic_brain_mouse(["full_metadata_tibble.embryonic_brain_mouse"]):::none
+    fragments_w_prefix_bpcells_dir.embryonic_brain_mouse(["fragments_w_prefix_bpcells_dir.embryonic_brain_mouse"]):::none --> ATAC_qc_metrics_tibble.embryonic_brain_mouse(["ATAC_qc_metrics_tibble.embryonic_brain_mouse"]):::none
+    fragments_w_prefix_bpcells_dir.embryonic_brain_mouse(["fragments_w_prefix_bpcells_dir.embryonic_brain_mouse"]):::none --> combined_BPCells_fragment_obj.ATAC.brain_mouse(["combined_BPCells_fragment_obj.ATAC.brain_mouse"]):::none

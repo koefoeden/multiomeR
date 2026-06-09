@@ -1,0 +1,103 @@
+^aggregated_cellranger_ref_list\.brain_mouse$
+^aggregated_counts_BPCells_matrix\.GEX\.brain_mouse$
+# ^aggregated_GEX_BPCells_matrix_dir\.GEX\.brain_mouse$
+# ^amulet_metrics_tibble\.embryonic_brain_mouse$
+# ^ATAC_marker_TFs_list\.brain_mouse$
+# ^ATAC_qc_metrics_tibble\.embryonic_brain_mouse$
+^BCs_per_peak_cluster_list\.ATAC\.brain_mouse$
+^blacklist_GRanges\.ATAC\.brain_mouse$
+# ^cellbender_h5_file\.embryonic_brain_mouse$
+# ^cellranger_barcodes_tsv\.embryonic_brain_mouse$
+^cellranger_kept_metadata_tibble\.embryonic_brain_mouse$
+^cellranger_ref_list\.embryonic_brain_mouse$
+^cellranger_summary_file\.embryonic_brain_mouse$
+# ^cellsnp_dir\.embryonic_brain_mouse$
+^chromHMMs_list_general$
+^chromHMMs_list_proj\.ATAC\.brain_mouse$
+^chromVAR_background_bins\.ATAC\.brain_mouse$
+^chromVAR_cell_chunks\.ATAC\.brain_mouse$
+^chromVAR_chunk_context_records\.ATAC\.brain_mouse$
+# ^chromVAR_obj\.ATAC\.brain_mouse$
+^chromVAR_peak_expectation\.ATAC\.brain_mouse$
+^chromVAR_TF_motif_matrix\.ATAC\.brain_mouse$
+# ^clusters_tibble\.WNN\.brain_mouse$
+^clusters_tibble_raw\.WNN\.brain_mouse$
+# ^combined_BPCells_fragment_obj\.ATAC\.brain_mouse$
+^consensus_peak_annotated_GRanges\.ATAC\.brain_mouse$
+^consensus_peak_BPCells_matrix\.ATAC\.brain_mouse$
+# ^consensus_peak_BPCells_matrix_dir\.ATAC\.brain_mouse$
+# ^consensus_peak_GRanges\.ATAC\.brain_mouse$
+# ^donor_id_metadata_tibble\.brain_mouse$
+^donor_id_metadata_tsv\.brain_mouse$
+# ^embedding_matrices\.WNN\.brain_mouse$
+^Ensembl_gene_annotation_GRanges_list$
+# ^excluded_cellranger_only_barcodes_by_type_list\.embryonic_brain_mouse$
+^fragments_per_peak_calling_cluster_discovery\.fragments\.ATAC\.brain_mouse$
+^fragments_w_prefix_bpcells\.embryonic_brain_mouse$
+# ^fragments_w_prefix_bpcells_dir\.embryonic_brain_mouse$
+# ^full_metadata_tibble\.embryonic_brain_mouse$
+^gene_features_df\.brain_mouse$
+^gene_features_df\.embryonic_brain_mouse$
+^GEX_basic_metadata_tibble\.embryonic_brain_mouse$
+^GEX_cellranger_kept_metadata_tibble\.brain_mouse$
+^GEX_counts_BPCells_matrix\.embryonic_brain_mouse$
+# ^GEX_counts_BPcells_matrix_dir\.embryonic_brain_mouse$
+^GEX_marker_genes_vec\.brain_mouse$
+# ^harmony_embeddings_matrix\.ATAC\.brain_mouse$
+# ^harmony_embeddings_matrix\.GEX\.brain_mouse$
+# ^LSI_BPCells\.ATAC\.brain_mouse$
+# ^LSI_clusters\.ATAC\.brain_mouse$
+^LSI_loadings_tibble\.ATAC\.brain_mouse$
+^marker_validated_Ensembl_annotations_GRanges_list\.brain_mouse$
+^metadata_filtered_tibble\.ATAC\.brain_mouse$
+# ^metadata_tibble\.GEX\.brain_mouse$
+# ^metadata_w_cell_types_tibble\.ATAC\.brain_mouse$
+# ^metadata_w_cell_types_tibble\.GEX\.brain_mouse$
+# ^metadata_w_cell_types_tibble\.WNN\.brain_mouse$
+^metadata_w_cell_types_unfiltered_tibble\.ATAC\.brain_mouse$
+^metadata_w_cell_types_unfiltered_tibble\.GEX\.brain_mouse$
+^metadata_w_clusters_tibble\.ATAC\.brain_mouse$
+^metadata_w_clusters_tibble\.GEX\.brain_mouse$
+^metadata_w_clusters_tibble\.WNN\.brain_mouse$
+^metadata_w_QC_tibble\.ATAC\.brain_mouse$
+^motif_chromVAR_chunk_results\.ATAC\.brain_mouse$
+^motif_chromVAR_results\.ATAC\.brain_mouse$
+^multimodal_Seurat_object\.brain_mouse$
+^organism_chr\.brain_mouse$
+# ^PCA_BPCells\.GEX\.brain_mouse$
+# ^PCA_clusters\.GEX\.brain_mouse$
+^peak_calling_cluster_discovery_tibble\.ATAC\.brain_mouse$
+^peak_calling_cluster_names\.ATAC\.brain_mouse$
+^peak_GRanges_per_cluster\.ATAC\.brain_mouse$
+^peak_QC_filtered_BPCells_matrix\.ATAC\.brain_mouse$
+# ^peak_TF_motif_matrix\.ATAC\.brain_mouse$
+# ^peaks_per_cluster_narrowPeaks\.peaks\.ATAC\.brain_mouse$
+# ^per_barcode_metrics_tibble\.embryonic_brain_mouse$
+^QC_excluded_BCs_list\.ATAC\.brain_mouse$
+^QC_filtered_BCs\.ATAC\.brain_mouse$
+# ^reaction_ID_metadata_tibble\.brain_mouse$
+^reaction_ID_metadata_tsv\.brain_mouse$
+^reference_Ensembl_annotations_GRanges_list\.brain_mouse$
+^scDblFinder_feature_groups\.ATAC\.brain_mouse$
+^scDblFinder_feature_matrix\.ATAC\.brain_mouse$
+^scDblFinder_reaction_tibble\.ATAC\.brain_mouse$
+^scDblFinder_reaction_tibble\.GEX\.brain_mouse$
+^scDblFinder_results_by_reaction_tibble\.ATAC\.brain_mouse$
+^scDblFinder_results_by_reaction_tibble\.GEX\.brain_mouse$
+# ^scDblFinder_results_df\.ATAC\.brain_mouse$
+# ^scDblFinder_results_df\.GEX\.brain_mouse$
+^signac_annotation_GRanges\.brain_mouse$
+^signac_fragment_records_tibble\.brain_mouse$
+^TF_activity_BPCells_matrix\.ATAC\.brain_mouse$
+# ^TF_activity_BPCells_matrix_dir\.ATAC\.brain_mouse$
+^TF_motif_matrix_list$
+# ^UCell_GEX_marker_genes_list\.brain_mouse$
+# ^UMAP_embeddings_tibble\.ATAC\.brain_mouse$
+# ^UMAP_embeddings_tibble\.GEX\.brain_mouse$
+# ^UMAP_embeddings_tibble\.GEX_non_harmony\.brain_mouse$
+# ^UMAP_embeddings_tibble\.WNN\.brain_mouse$
+# ^vireo_donor_ids_tibble\.embryonic_brain_mouse$
+# ^within_clusters_collapsed_peaks_per_cluster_GRanges\.ATAC\.brain_mouse$
+# ^WNN_results\.brain_mouse$
+^WNN_results_raw\.brain_mouse$
+

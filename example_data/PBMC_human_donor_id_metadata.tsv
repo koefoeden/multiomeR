@@ -1,7 +1,7 @@
-donor_id	condition	tissue	cell_sorting	target_recovery	instrument
-pbmc1	healthy	PBMC	granulocytes_removed	3k	Chromium_Controller
-pbmc2	healthy	PBMC	unspecified	10k	Chromium_Controller
-pbmc3	healthy	PBMC	unspecified	10k	Chromium_X
-pbmc4	healthy	PBMC	granulocytes_removed	10k	Chromium_Controller
-pbmc5	healthy	PBMC	unsorted	10k	Chromium_Controller
-pbmc6	healthy	PBMC	unsorted	3k	Chromium_Controller
+donor_id	condition
+pbmc1	healthy
+pbmc2	healthy
+pbmc3	healthy
+pbmc4	healthy
+pbmc5	healthy
+pbmc6	healthy

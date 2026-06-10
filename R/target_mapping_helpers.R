@@ -41,6 +41,49 @@ validate_processing_and_aggregation_config <- function(
   invisible(TRUE)
 }
 
+read_keyed_metadata_tibble <- function(metadata_tsv, key_col) {
+  metadata_tibble <- readr::read_tsv(metadata_tsv, show_col_types = FALSE)
+
+  if (!key_col %in% colnames(metadata_tibble)) {
+    stop("Metadata file must contain key column '", key_col, "': ", metadata_tsv, call. = FALSE)
+  }
+
+  duplicate_keys <- metadata_tibble |>
+    dplyr::count(.data[[key_col]]) |>
+    dplyr::filter(.data$n > 1) |>
+    dplyr::pull(.data[[key_col]])
+  if (length(duplicate_keys) > 0) {
+    stop(
+      "Metadata file contains duplicated ",
+      key_col,
+      " value(s): ",
+      paste(duplicate_keys, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  metadata_tibble |>
+    dplyr::mutate(dplyr::across(dplyr::all_of(key_col), as.character))
+}
+
+assert_donor_reaction_metadata_column_ownership <- function(donor_id_metadata_tibble, reaction_ID_metadata_tibble) {
+  overlapping_cols <- intersect(
+    setdiff(colnames(donor_id_metadata_tibble), "donor_id"),
+    setdiff(colnames(reaction_ID_metadata_tibble), "TENX_reaction_ID")
+  )
+
+  if (length(overlapping_cols) > 0) {
+    stop(
+      "Donor and reaction metadata contain overlapping non-key column(s): ",
+      paste(overlapping_cols, collapse = ", "),
+      ". Each metadata column must belong to exactly one table.",
+      call. = FALSE
+    )
+  }
+
+  invisible(TRUE)
+}
+
 #' Build reaction mapping tibble
 #'
 #' Read reaction-level config and attach dataset-level YAML config values for

@@ -9,7 +9,7 @@ rlang::list2(
   targets::tar_target(
     name = genetic_enrichment_donor_id_metadata_tibble.extended,
     description = "Read the genetic enrichment extended donor ID metadata TSV into a tibble",
-    command = readr::read_tsv(genetic_enrichment_donor_id_metadata_tsv.extended)
+    command = read_keyed_metadata_tibble(genetic_enrichment_donor_id_metadata_tsv.extended, "donor_id")
   ),
   targets::tar_target(
     name = GWAS_inputs_tibble,

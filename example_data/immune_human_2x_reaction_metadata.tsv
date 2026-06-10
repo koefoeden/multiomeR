@@ -1,3 +1,3 @@
-TENX_reaction_ID	condition	tissue	cell_sorting	target_recovery	instrument	n_recovered_nuclei
-healthy_PBMC_human	healthy	PBMC	granulocytes_removed	3k	Chromium_Controller	2711
-lymphoma_lymph_human	lymphoma	lymph_node	sorted_nuclei	14k	Chromium_Controller	14566
+TENX_reaction_ID	tissue	cell_sorting	target_recovery	instrument	n_recovered_nuclei
+healthy_PBMC_human	PBMC	granulocytes_removed	3k	Chromium_Controller	2711
+lymphoma_lymph_human	lymph_node	sorted_nuclei	14k	Chromium_Controller	14566

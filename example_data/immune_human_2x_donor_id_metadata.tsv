@@ -1,3 +1,3 @@
-donor_id	condition	tissue
-pbmc1	healthy	PBMC
-lymph1	lymphoma	lymph_node
+donor_id	condition
+pbmc1	healthy
+lymph1	lymphoma

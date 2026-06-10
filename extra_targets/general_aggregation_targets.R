@@ -196,18 +196,16 @@ rlang::list2(
   targets::tar_target(
     name = donor_id_metadata_tibble,
     description = "Read the donor ID metadata TSV into a tibble with donor_id coerced to character",
-    command = dplyr::mutate(
-      readr::read_tsv(donor_id_metadata_tsv),
-      donor_id = as.character(donor_id)
-    )
+    command = read_keyed_metadata_tibble(donor_id_metadata_tsv, "donor_id")
   ),
   targets::tar_target(
     name = reaction_ID_metadata_tibble,
     description = "Read the reaction ID metadata TSV into a tibble with TENX_reaction_ID coerced to character",
-    command = dplyr::mutate(
-      readr::read_tsv(reaction_ID_metadata_tsv),
-      TENX_reaction_ID = as.character(TENX_reaction_ID)
-    )
+    command = {
+      reaction_metadata <- read_keyed_metadata_tibble(reaction_ID_metadata_tsv, "TENX_reaction_ID")
+      assert_donor_reaction_metadata_column_ownership(donor_id_metadata_tibble, reaction_metadata)
+      reaction_metadata
+    }
   ),
   targets::tar_target(
     name = interesting_genes,

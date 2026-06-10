@@ -42,6 +42,11 @@ rlang::list2(
     pattern = map(SCAVENGE_TRS_tibbles),
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
+  targets::tar_target(
+    name = SCAVENGE_TRS_tibble,
+    description = "Combine the tibble of SCAVENGE TRS values across GWAS within a specific graph",
+    command = bind_rows(SCAVENGE_TRS_tibbles)
+  ),
   tarchetypes::tar_file(
     name = SCAVENGE_UMAPs,
     description = "Plot one GWAS SCAVENGE TRS branch on the graph UMAP and save to file. [checkpoint:genetic_enrichment]",

@@ -78,7 +78,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-b40990f2348f5ee4c2a2040bcbee9556.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-aafe154f14b83768199b70e6209de778.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -106,6 +106,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
 <link rel="stylesheet" href="styles.css">
@@ -280,13 +283,152 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="overview" class="level2" data-number="9.2">
 <h2 data-number="9.2" class="anchored" data-anchor-id="overview"><span class="header-section-number">9.2</span> Overview</h2>
 <p>This diagram started as a generated draft from the exported <code>blood_human</code> target graph and is now maintained as a human-curated documentation diagram.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+flowchart TB
+  subgraph Legend["Node Color Key"]
+    direction LR
+    Input["Input"] --- Config["Config input"] --- Stage["Intermediate object"] --- Output["Output"] --- QC["QC output"]
+  end
+  linkStyle 0,1,2,3 stroke-width:0px,fill:none;
+  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
+  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
+  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
+  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
+  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
+  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
+  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
+  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
+  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
+  class Input regular_input;
+  class Config CFG_input;
+  class Stage intermediate_object;
+  class Output regular_output;
+  class QC QC_output;
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
 <section id="pseudobulk-gwas" class="level3" data-number="9.2.1">
 <h3 data-number="9.2.1" class="anchored" data-anchor-id="pseudobulk-gwas"><span class="header-section-number">9.2.1</span> Pseudobulk GWAS</h3>
 <p>GWAS and pseudobulk inputs used for trait-relevance analyses.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+%%{init: {'flowchart': {'defaultRenderer': 'elk'}}}%%
+flowchart TB
+    GWAS_gene_chromVAR_inputs_tibble(["GWAS_gene_chromVAR_inputs_tibble"]):::none --&gt; GWAS_gene_chromVAR_credible_set_variants_tibble(["GWAS_gene_chromVAR_credible_set_variants_tibble"]):::none
+    open_targets_gwas_credible_sets_evidence_dataset_path(["open_targets_gwas_credible_sets_evidence_dataset_path"]):::none --&gt; GWAS_gene_chromVAR_L2G_tibble(["GWAS_gene_chromVAR_L2G_tibble"]):::none
+    GWAS_gene_chromVAR_credible_set_variants_tibble(["GWAS_gene_chromVAR_credible_set_variants_tibble"]):::none --&gt; GWAS_gene_chromVAR_L2G_tibble(["GWAS_gene_chromVAR_L2G_tibble"]):::none
+    GWAS_chromVAR_peak_weight_matrix(["GWAS_chromVAR_peak_weight_matrix"]):::none --&gt; psbulk_GWAS_chromVAR_activity_matrix(["psbulk_GWAS_chromVAR_activity_matrix"]):::none
+    GWAS_inputs_tibble(["GWAS_inputs_tibble"]):::none --&gt; psbulk_GWAS_chromVAR_results_tibble(["psbulk_GWAS_chromVAR_results_tibble"]):::none
+    GWAS_gene_chromVAR_peak_weight_matrix(["GWAS_gene_chromVAR_peak_weight_matrix"]):::none --&gt; psbulk_GWAS_gene_chromVAR_activity_matrix(["psbulk_GWAS_gene_chromVAR_activity_matrix"]):::none
+    GWAS_gene_chromVAR_L2G_tibble(["GWAS_gene_chromVAR_L2G_tibble"]):::none --&gt; GWAS_gene_chromVAR_peak_weight_matrix(["GWAS_gene_chromVAR_peak_weight_matrix"]):::none
+    GWAS_gene_chromVAR_L2G_tibble(["GWAS_gene_chromVAR_L2G_tibble"]):::none --&gt; psbulk_GWAS_gene_chromVAR_results_tibble(["psbulk_GWAS_gene_chromVAR_results_tibble"]):::none
+    GWAS_gene_chromVAR_credible_set_variants_tibble(["GWAS_gene_chromVAR_credible_set_variants_tibble"]):::none --&gt; GWAS_gene_chromVAR_peak_weight_matrix(["GWAS_gene_chromVAR_peak_weight_matrix"]):::none
+    GWAS_gene_chromVAR_credible_set_variants_tibble(["GWAS_gene_chromVAR_credible_set_variants_tibble"]):::none --&gt; psbulk_GWAS_gene_chromVAR_results_tibble(["psbulk_GWAS_gene_chromVAR_results_tibble"]):::none
+    GWAS_gene_chromVAR_inputs_tibble(["GWAS_gene_chromVAR_inputs_tibble"]):::none --&gt; GWAS_gene_chromVAR_peak_weight_matrix(["GWAS_gene_chromVAR_peak_weight_matrix"]):::none
+    GWAS_gene_chromVAR_inputs_tibble(["GWAS_gene_chromVAR_inputs_tibble"]):::none --&gt; psbulk_GWAS_gene_chromVAR_results_tibble(["psbulk_GWAS_gene_chromVAR_results_tibble"]):::none
+    GWAS_inputs_tibble(["GWAS_inputs_tibble"]):::none --&gt; GWAS_chromVAR_peak_weight_matrix(["GWAS_chromVAR_peak_weight_matrix"]):::none
+    GWAS_inputs_tibble(["GWAS_inputs_tibble"]):::none --&gt; GWAS_gene_chromVAR_inputs_tibble(["GWAS_gene_chromVAR_inputs_tibble"]):::none
+    psbulk_GWAS_chromVAR_activity_matrix(["psbulk_GWAS_chromVAR_activity_matrix"]):::none --&gt; psbulk_GWAS_chromVAR_results_tibble(["psbulk_GWAS_chromVAR_results_tibble"]):::none
+    psbulk_GWAS_chromVAR_models(["psbulk_GWAS_chromVAR_models"]):::none --&gt; psbulk_GWAS_chromVAR_results_tibble(["psbulk_GWAS_chromVAR_results_tibble"]):::none
+    psbulk_GWAS_chromVAR_models(["psbulk_GWAS_chromVAR_models"]):::none --&gt; psbulk_GWAS_gene_chromVAR_results_tibble(["psbulk_GWAS_gene_chromVAR_results_tibble"]):::none
+    psbulk_GWAS_gene_chromVAR_activity_matrix(["psbulk_GWAS_gene_chromVAR_activity_matrix"]):::none --&gt; psbulk_GWAS_gene_chromVAR_results_tibble(["psbulk_GWAS_gene_chromVAR_results_tibble"]):::none
+    pseudobulk_counts_BPCells_matrix_dir.ATAC(["pseudobulk_counts_BPCells_matrix_dir.ATAC"]):::none --&gt; psbulk_GWAS_chromVAR_activity_matrix(["psbulk_GWAS_chromVAR_activity_matrix"]):::none
+    pseudobulk_counts_BPCells_matrix_dir.ATAC(["pseudobulk_counts_BPCells_matrix_dir.ATAC"]):::none --&gt; psbulk_GWAS_chromVAR_results_tibble(["psbulk_GWAS_chromVAR_results_tibble"]):::none
+    pseudobulk_counts_BPCells_matrix_dir.ATAC(["pseudobulk_counts_BPCells_matrix_dir.ATAC"]):::none --&gt; psbulk_GWAS_gene_chromVAR_activity_matrix(["psbulk_GWAS_gene_chromVAR_activity_matrix"]):::none
+    pseudobulk_counts_BPCells_matrix_dir.ATAC(["pseudobulk_counts_BPCells_matrix_dir.ATAC"]):::none --&gt; psbulk_GWAS_gene_chromVAR_results_tibble(["psbulk_GWAS_gene_chromVAR_results_tibble"]):::none
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
 </section>
 <section id="genetic-enrichment-across-genes" class="level3" data-number="9.2.2">
 <h3 data-number="9.2.2" class="anchored" data-anchor-id="genetic-enrichment-across-genes"><span class="header-section-number">9.2.2</span> Genetic enrichment across genes</h3>
 <p>Across-gene enrichment outputs and downstream trait summaries.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+%%{init: {'flowchart': {'defaultRenderer': 'elk'}}}%%
+flowchart TB
+    chromVAR_obj.ATAC(["chromVAR_obj.ATAC"]):::none --&gt; chromVAR_background_bins.ATAC(["chromVAR_background_bins.ATAC"]):::none
+    chromVAR_peak_expectation.ATAC(["chromVAR_peak_expectation.ATAC"]):::none --&gt; chromVAR_background_bins.ATAC(["chromVAR_background_bins.ATAC"]):::none
+    chromVAR_obj.ATAC(["chromVAR_obj.ATAC"]):::none --&gt; chromVAR_peak_expectation.ATAC(["chromVAR_peak_expectation.ATAC"]):::none
+    GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none --&gt; GWAS_chromVAR_summarized_ZScores_tibble(["GWAS_chromVAR_summarized_ZScores_tibble"]):::none
+    open_targets_credible_set_dataset_path(["open_targets_credible_set_dataset_path"]):::none --&gt; GWAS_inputs_tibble(["GWAS_inputs_tibble"]):::none
+    SCAVENGE_graph_matrix(["SCAVENGE_graph_matrix"]):::none --&gt; SCAVENGE_TRS_tibbles["SCAVENGE_TRS_tibbles"]:::none
+    GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none --&gt; SCAVENGE_TRS_tibbles["SCAVENGE_TRS_tibbles"]:::none
+    GWAS_chromVAR_peak_weight_records["GWAS_chromVAR_peak_weight_records"]:::none --&gt; GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none
+    GWAS_inputs_tibble(["GWAS_inputs_tibble"]):::none --&gt; GWAS_chromVAR_peak_weight_records["GWAS_chromVAR_peak_weight_records"]:::none
+    SCAVENGE_TRS_tibbles["SCAVENGE_TRS_tibbles"]:::none --&gt; SCAVENGE_TRS_summary_tibble(["SCAVENGE_TRS_summary_tibble"]):::none
+    chromVAR_background_bins.ATAC(["chromVAR_background_bins.ATAC"]):::none --&gt; GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none
+    chromVAR_obj.ATAC(["chromVAR_obj.ATAC"]):::none --&gt; GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none
+    chromVAR_obj.ATAC(["chromVAR_obj.ATAC"]):::none --&gt; GWAS_chromVAR_peak_weight_records["GWAS_chromVAR_peak_weight_records"]:::none
+    chromVAR_peak_expectation.ATAC(["chromVAR_peak_expectation.ATAC"]):::none --&gt; GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none
+    open_targets_credible_set_dataset_path(["open_targets_credible_set_dataset_path"]):::none --&gt; GWAS_chromVAR_peak_weight_records["GWAS_chromVAR_peak_weight_records"]:::none
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
 </section>
 </section>
 <section id="running-the-pipeline" class="level2" data-number="9.3">

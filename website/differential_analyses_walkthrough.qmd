@@ -24,7 +24,7 @@ Enable the module for an aggregation in `cfg_aggregations.yaml`, then configure 
 
 This diagram started as a generated draft from the exported `blood_human` target graph and is now maintained as a human-curated documentation diagram.
 
-```{r, echo = FALSE, results = "asis"}
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_mermaid("website/figures/standard_node_color_legend.mmd")
 emit_mermaid("website/figures/human_curated/checkpoint.differential_analyses.immune_human_2x_pruned.mmd")
 ```

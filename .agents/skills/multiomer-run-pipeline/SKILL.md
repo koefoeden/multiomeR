@@ -42,4 +42,4 @@ Prefer narrow runs after edits. For dynamic or mapped targets, match the defined
 - Run optional `differential_analyses` and `genetic_enrichment` work through the root workflow; they are aggregation-level modules selected by the `modules` field in `cfg_aggregations.yaml`.
 - The active store remains `pipelines/processing_and_aggregation/outputs` during the root migration.
 - Keep commands visible to the user for long or heavy runs.
-- If targets error, switch to `multiomer-fix-errors` and inspect with `list_distinct_errored_targets()` / `load_workspace()`.
+- If targets error, switch to `multiomer-fix-errors` and inspect with `list_distinct_errored_targets()` / `inspect_target_workspace()`.

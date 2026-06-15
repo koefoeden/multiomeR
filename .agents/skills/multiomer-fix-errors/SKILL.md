@@ -1,6 +1,6 @@
 ---
 name: multiomer-fix-errors
-description: Inspect errors and interactively debug R targets workflows in multiomeR using list_distinct_errored_targets() and load_workspace(). Use when a multiomeR run reports errored targets, when investigating a failing target, or when the user asks to debug multiomeR.
+description: Inspect errors and interactively debug R targets workflows in multiomeR using list_distinct_errored_targets(), inspect_target_workspace(), and targeted tar_read_raw() probes. Use when a multiomeR run reports errored targets, when investigating a failing target, or when the user asks to debug multiomeR.
 ---
 
 # multiomeR Fix Errors
@@ -36,14 +36,29 @@ workspace and rerun the helper call directly to recover complete `stderr` /
 
 ## Inspect The Workspace
 
-For target-local debugging, load the failing target workspace:
+For target-local debugging, first inspect the failing target workspace without
+assigning large objects into the session:
 
 ```r
-load_workspace("<full_target_name>")
-str(object_or_dependency)
+inspect_target_workspace("<full_target_name>")
 ```
 
-Then re-run the failing helper expression directly with smaller objects or `head()` subsets when possible. For upstream objects, use `targets::tar_read()` / `targets::tar_load()` by full target name.
+Use the dependency summaries to decide whether the issue is already present in
+the target inputs. Zero-dimensional matrices, empty lists, absent design
+columns, empty data frames, or obviously wrong configured labels usually point
+upstream. If the inputs look plausible, re-run the failing helper expression
+directly with smaller objects or `head()` subsets when possible.
+
+For deeper probes, read upstream objects by the full target or dynamic branch
+name:
+
+```r
+targets::tar_read_raw("<target_or_branch_name>")
+```
+
+Avoid wrapping `targets::tar_workspace(name)` directly when `name` is a
+character variable; `tar_workspace()` uses non-standard evaluation and will look
+for a target literally called `name`.
 
 ## Fixing
 

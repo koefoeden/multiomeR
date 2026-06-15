@@ -8,8 +8,7 @@ rlang::list2(
       NULL
     } else {
       eval(rlang::parse_expr(genetic_enrichment_posterior_probability_weighting_function_name))
-    },
-    cue = targets::tar_cue(mode = "always")
+    }
   ),
   targets::tar_target(
     name = genetic_enrichment_peak_ranges,
@@ -72,14 +71,18 @@ rlang::list2(
     name = GWAS_chromVAR_ZScore_records.single_cell,
     description = "Combine chunk-level single-cell GWAS_chromVAR Z-scores for one GWAS",
     command = combine_GWAS_chromVAR_ZScore_chunk_records(GWAS_chromVAR_ZScore_chunk_records_by_GWAS),
-    pattern = map(GWAS_chromVAR_ZScore_chunk_records_by_GWAS),
-    resources = get_tar_resources(RAM_GB_req = 60)
+    pattern = map(GWAS_chromVAR_ZScore_chunk_records_by_GWAS)
+  ),
+  targets::tar_target(
+    name = GWAS_chromVAR_ZScores_tibble.single_cell,
+    description = "Combine per-GWAS single-cell GWAS_chromVAR Z-score branches into one long tibble",
+    command = combine_GWAS_chromVAR_ZScore_records_tibble(GWAS_chromVAR_ZScore_records.single_cell)
   ),
   targets::tar_target(
     name = GWAS_chromVAR_summarized_ZScores_tibble,
     description = "Aggregate single-cell GWAS_chromVAR Z-scores to cluster-donor pseudobulk summaries",
     command = summarize_GWAS_chromVAR_ZScores(
-      ZScore_records = GWAS_chromVAR_ZScore_records.single_cell,
+      ZScore_tibble = GWAS_chromVAR_ZScores_tibble.single_cell,
       metadata_tibble = metadata_w_cell_types_tibble.WNN
     )
   ),

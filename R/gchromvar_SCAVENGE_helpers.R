@@ -299,12 +299,32 @@ combine_GWAS_chromVAR_ZScore_chunk_records <- function(ZScore_chunk_records) {
   )
 }
 
+combine_GWAS_chromVAR_ZScore_records_tibble <- function(ZScore_records) {
+  if (length(ZScore_records) == 0) {
+    return(tibble::tibble(
+      GWAS_ID = character(),
+      barcode_w_prefix = character(),
+      score = numeric(),
+      score_is_sig = logical()
+    ))
+  }
+
+  purrr::map_dfr(ZScore_records, \(ZScore_record) {
+    tibble::tibble(
+      GWAS_ID = ZScore_record$GWAS_ID,
+      barcode_w_prefix = names(ZScore_record$ZScore_vec),
+      score = as.numeric(ZScore_record$ZScore_vec),
+      score_is_sig = abs(score) > 1.95
+    )
+  })
+}
+
 #' Summarize GWAS chromVAR ZScores
 #'
 #' Summarize cell-level GWAS chromVAR z scores by cluster and donor groups.
 #'
-#' @param ZScore_records List of records with `GWAS_ID` and named cell-level
-#'   z-score vectors.
+#' @param ZScore_tibble Long cell-level tibble with `GWAS_ID`,
+#'   `barcode_w_prefix`, and `score`.
 #' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
 #' @param cluster_col Single metadata column name used as the cluster/grouping variable.
 #' @return A long summary tibble of GWAS z-score distributions by configured
@@ -312,7 +332,7 @@ combine_GWAS_chromVAR_ZScore_chunk_records <- function(ZScore_chunk_records) {
 #' @keywords internal
 
 summarize_GWAS_chromVAR_ZScores <- function(
-  ZScore_records,
+  ZScore_tibble,
   metadata_tibble,
   cluster_col = "PCA_harmony_SNN_cluster_cell_type"
 ) {
@@ -325,20 +345,11 @@ summarize_GWAS_chromVAR_ZScores <- function(
       cluster_donor_id = stringr::str_c(cluster, donor_id, sep = "_")
     )
 
-  ZScore_records |>
-    purrr::map_dfr(\(ZScore_record) {
-      tibble::tibble(
-        barcode_w_prefix = names(ZScore_record$ZScore_vec),
-        score = as.numeric(ZScore_record$ZScore_vec)
-      ) |>
-        dplyr::inner_join(cell_group_tibble, by = "barcode_w_prefix") |>
-        dplyr::group_by(cluster_donor_id, cluster, donor_id) |>
-        dplyr::summarise(score = mean(score), .groups = "drop") |>
-        dplyr::mutate(
-          GWAS_ID = ZScore_record$GWAS_ID,
-          score_is_sig = abs(score) > 1.95
-        )
-    })
+  ZScore_tibble |>
+    dplyr::inner_join(cell_group_tibble, by = "barcode_w_prefix") |>
+    dplyr::group_by(cluster_donor_id, cluster, donor_id, GWAS_ID) |>
+    dplyr::summarise(score = mean(score), .groups = "drop") |>
+    dplyr::mutate(score_is_sig = abs(score) > 1.95)
 }
 
 get_SCAVENGE_seed_index <- function(ZScore_vec, seed_percent = 0.05, p_value_cutoff = 0.05) {

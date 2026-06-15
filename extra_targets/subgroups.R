@@ -39,7 +39,7 @@ rlang::list2(
       metadata_tibble = metadata_tibble.subgroups,
       organism_chr = organism_chr,
       GEX_PCA_backend = aggregation_GEX_PCA_backend,
-      SCT_regress_vars = aggregation_SCT_regress_vars,
+      SCT_regress_vars = aggregation_subgroups_SCT_regress_vars,
       n_components = utils::tail(aggregation_GEX_data_PCs, 1),
       threads = 15
     ),

@@ -632,7 +632,7 @@ rlang::list2(
       name = peaks_QC_violins_plot.ATAC,
       description = "Violin plots of peak-based ATAC QC metrics per reaction. [checkpoint:multimodal]",
       command = {
-        plot_data <- metadata_w_cell_types_tibble.ATAC |>
+        plot_data <- metadata_w_QC_tibble.ATAC |>
           dplyr::select(TENX_reaction_ID, "dataset", dplyr::any_of(aggregation_peak_based_continuous_QC_vars)) |>
           tidyr::pivot_longer(cols = dplyr::any_of(aggregation_peak_based_continuous_QC_vars), names_to = "feature", values_to = "value")
 

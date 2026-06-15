@@ -35,6 +35,7 @@ default:
     aggregation_subgroups_col: PCA_harmony_SNN_cluster_cell_type # Metadata column to split by for per-cell-type reprocessing.
     aggregation_subgroups_res: 0.3 # Leiden resolution for clustering within subgroup analysis.
     aggregation_subgroups_min_nuclei_filter: 300 # Minimum nuclei required per cluster to include in subgroup analysis.
+    aggregation_subgroups_SCT_regress_vars: NULL # Metadata columns regressed during subgroup GEX PCA. NULL disables subgroup regression.
     aggregation_subgroups_extra_harmony_covars: NULL # Extra metadata columns for harmony in subgroup reprocessing (e.g. [sex, age]).
     # Plotting / UMAP
     aggregation_categorical_vars: NULL # Extra categorical metadata columns for UMAP coloring and bar plots.
@@ -73,7 +74,7 @@ brain_mouse:
     aggregation_QC_exclude_list_combined_object:
       - nCount_ATAC < 1000
       - atac_peak_counts_frac < 0.1
-      - atac_peak_counts_blacklist_frac > 0.01
+      - atac_peak_counts_blacklist_frac > 0.05
     aggregation_ATAC_marker_TFs:
       Neuron: [Tbr1, Satb2, Bcl11b]
       Astrocyte: [Sox9, Nfia, Nfib, Id3]

@@ -75,7 +75,7 @@ brain_mouse:
       - atac_peak_counts_frac < 0.1
       - atac_peak_counts_blacklist_frac > 0.01
     aggregation_ATAC_marker_TFs:
-      Neuron: [Neurod1, Tbr1, Satb2, Bcl11b]
+      Neuron: [Tbr1, Satb2, Bcl11b]
       Astrocyte: [Sox9, Nfia, Nfib, Id3]
       Oligodendrocyte: [Sox10, Myrf, Nkx2-2, Olig2]
       OPC: [Olig2, Sox10, Nkx2-2, Ascl1]

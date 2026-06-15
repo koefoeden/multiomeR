@@ -1,9 +1,9 @@
 reaction_ID	dataset	reaction_donor_id	reaction_n_donors	reaction_cellranger_count_dir	reaction_cellbender_h5_file	reaction_donors_VCF_file
-embryonic_brain_mouse	brain_mouse	mouse_1	1	example_data/embryonic_brain_mouse	NA	NA
-healthy_PBMC_human	PBMC_human	pbmc1	1	example_data/healthy_PBMC_human	NA	NA
-pbmc_10k_chromium_controller	PBMC_human	pbmc2	1	example_data/pbmc_10k_chromium_controller	NA	NA
-pbmc_10k_chromium_x	PBMC_human	pbmc3	1	example_data/pbmc_10k_chromium_x	NA	NA
-pbmc_granulocyte_sorted_10k	PBMC_human	pbmc4	1	example_data/pbmc_granulocyte_sorted_10k	NA	NA
-pbmc_unsorted_10k	PBMC_human	pbmc5	1	example_data/pbmc_unsorted_10k	NA	NA
-pbmc_unsorted_3k	PBMC_human	pbmc6	1	example_data/pbmc_unsorted_3k	NA	NA
-lymphoma_lymph_human	lymph_human	lymph1	1	example_data/lymphoma_lymph_human	NA	NA
+embryonic_brain_mouse	brain_mouse_dataset	mouse_1	1	example_data/embryonic_brain_mouse	NA	NA
+healthy_PBMC_human	immune_human_dataset	pbmc1	1	example_data/healthy_PBMC_human	NA	NA
+pbmc_10k_chromium_controller	immune_human_dataset	pbmc2	1	example_data/pbmc_10k_chromium_controller	NA	NA
+pbmc_10k_chromium_x	immune_human_dataset	pbmc3	1	example_data/pbmc_10k_chromium_x	NA	NA
+pbmc_granulocyte_sorted_10k	immune_human_dataset	pbmc4	1	example_data/pbmc_granulocyte_sorted_10k	NA	NA
+pbmc_unsorted_10k	immune_human_dataset	pbmc5	1	example_data/pbmc_unsorted_10k	NA	NA
+pbmc_unsorted_3k	immune_human_dataset	pbmc6	1	example_data/pbmc_unsorted_3k	NA	NA
+lymphoma_lymph_human	immune_human_dataset	lymph1	1	example_data/lymphoma_lymph_human	NA	NA

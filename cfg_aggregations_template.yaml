@@ -128,5 +128,5 @@ PBMC_human_6x:
       - pbmc_unsorted_10k
       - pbmc_unsorted_3k
   optional:
-    modules: NULL
+    modules: [genetic_enrichment]
     aggregation_categorical_vars: [cell_sorting, instrument, target_recovery]

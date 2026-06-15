@@ -1,17 +1,22 @@
-#' Return a raw targets traceback
-#'
-#' @param name Target name.
-#' @param store Targets store path.
-#' @return Character vector containing the stored traceback, or `character(0)`.
-#' @keywords internal
+.suffix_stripped_target_name <- function(name) {
+  name |>
+    stringr::str_remove("\\..*") |>
+    stringr::str_remove("_[a-f0-9]{16}$")
+}
 
-tar_traceback_raw <- function(name, store = targets::tar_config_get("store")) {
-  targets:::tar_assert_chr(name)
-  targets:::tar_assert_scalar(name)
+.target_traceback <- function(name, store = targets::tar_config_get("store")) {
+  if (!is.character(name) || length(name) != 1L) {
+    stop("`name` must be a length-one character vector.", call. = FALSE)
+  }
+
   workspace <- tryCatch(
     targets:::workspace_read(name = name, path_store = store),
-    error = function(e) e
+    error = function(e) NULL
   )
+  if (is.null(workspace)) {
+    return(character(0))
+  }
+
   out <- workspace$target$metrics$traceback
   if (is.null(out)) {
     return(character(0))
@@ -26,14 +31,14 @@ tar_traceback_raw <- function(name, store = targets::tar_config_get("store")) {
 #' @keywords internal
 
 list_errored_targets <- function(target_name_pattern = ".") {
-  targets::tar_meta() |>
+  targets::tar_meta(fields = c("name", "error", "warnings")) |>
     dplyr::filter(
       !is.na(.data$error),
       .data$name %in% targets::tar_errored(),
       stringr::str_detect(.data$name, target_name_pattern)
     ) |>
     dplyr::arrange(.data$error) |>
-    dplyr::select(.data$name, .data$error, .data$warnings)
+    dplyr::select(dplyr::all_of(c("name", "error", "warnings")))
 }
 
 #' Print distinct errored targets
@@ -49,18 +54,16 @@ list_distinct_errored_targets <- function() {
     error_tibble,
     function(name, error, warnings, ...) {
       cat(
-        "Full, tar_map-resolved target name: ",
+        "- Full, tar_map-resolved target name: ",
         name,
         "\n",
-        "Base target name: ",
-        name |>
-          stringr::str_remove("\\..*") |>
-          stringr::str_remove("_[a-f0-9]{16}$"),
+        "- Suffix-stripped target name: ",
+        .suffix_stripped_target_name(name),
         "\n",
-        "Error: ",
+        "- Error: ",
         stringr::str_trunc(error, width = 500),
         "\n",
-        "Warnings: ",
+        "- Warnings: ",
         stringr::str_trunc(warnings, width = 500),
         "\n\n",
         sep = ""
@@ -84,7 +87,7 @@ list_distinct_errored_targets_w_tracebacks <- function(target_name_pattern = "."
       traceback_str = purrr::map_chr(
         .data$name,
         \(name) {
-          tar_traceback_raw(name) |>
+          .target_traceback(name) |>
             stringr::str_trunc(width = trunc_width) |>
             paste(collapse = "\n\t")
         }
@@ -101,12 +104,11 @@ list_distinct_errored_targets_w_tracebacks <- function(target_name_pattern = "."
     combined_tibble,
     function(name, error, warnings, command, traceback_str, ...) {
       cat(
+        "- Full, tar_map-resolved target name: ",
         name,
         "\n",
-        "- Name in code: ",
-        name |>
-          stringr::str_remove("\\..*") |>
-          stringr::str_remove("_[a-f0-9]{16}$"),
+        "- Suffix-stripped target name: ",
+        .suffix_stripped_target_name(name),
         "\n",
         "- Command: ",
         command,

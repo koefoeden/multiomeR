@@ -77,7 +77,7 @@ rlang::list2(
         psbulk_ATAC_data_matrix = pseudobulk_counts_matrix.ATAC,
         chromVAR_obj = chromVAR_obj.ATAC,
         annotation_matrix = GWAS_gene_chromVAR_peak_weight_matrix,
-        normalize = TRUE
+        normalize = FALSE
       )
     },
     resources = get_tar_resources(RAM_GB_req = 80)

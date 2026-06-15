@@ -828,6 +828,7 @@ get_GWAS_gene_chromVAR_locus_check_tibble <- function(
   GWAS_ID,
   target_id,
   contrast,
+  model = NULL,
   flank = 50000L
 ) {
   result_tibble <- psbulk_GWAS_gene_chromVAR_results_tibble |>
@@ -836,6 +837,10 @@ get_GWAS_gene_chromVAR_locus_check_tibble <- function(
       .data$targetId == .env$target_id,
       .data$contrast == .env$contrast
     )
+  if (!is.null(model)) {
+    result_tibble <- result_tibble |>
+      dplyr::filter(.data$model == .env$model)
+  }
 
   if (nrow(result_tibble) != 1L) {
     stop(
@@ -845,6 +850,7 @@ get_GWAS_gene_chromVAR_locus_check_tibble <- function(
       target_id,
       " / ",
       contrast,
+      if (!is.null(model)) paste0(" / ", model) else "",
       ", found ",
       nrow(result_tibble),
       "."
@@ -892,6 +898,176 @@ get_GWAS_gene_chromVAR_locus_check_tibble <- function(
       locus_end = as.integer(locus_end),
       L2G_score = max(L2G_tibble$L2G_score, na.rm = TRUE)
     )
+}
+
+empty_GWAS_gene_chromVAR_locus_check_tibble <- function(psbulk_GWAS_gene_chromVAR_results_tibble) {
+  psbulk_GWAS_gene_chromVAR_results_tibble[0, , drop = FALSE] |>
+    dplyr::mutate(
+      chr = character(),
+      target_start = integer(),
+      target_end = integer(),
+      target_tss = integer(),
+      locus_start = integer(),
+      locus_end = integer(),
+      L2G_score = numeric(),
+      locus_plot_rank = integer(),
+      plot_name = character()
+    )
+}
+
+make_GWAS_gene_chromVAR_locus_plot_name <- function(rank, GWAS_ID, gene_symbol, targetId, model, contrast) {
+  label <- stringr::str_c(
+    sprintf("%02d", rank),
+    GWAS_ID,
+    dplyr::coalesce(gene_symbol, targetId),
+    model,
+    contrast,
+    sep = "__"
+  )
+  stringr::str_replace_all(label, "[^A-Za-z0-9_.-]+", "_")
+}
+
+get_top_GWAS_gene_chromVAR_locus_check_tibble <- function(
+  psbulk_GWAS_gene_chromVAR_results_tibble,
+  GWAS_gene_chromVAR_credible_set_variants_tibble,
+  GWAS_gene_chromVAR_L2G_tibble,
+  open_targets_target_dataset_path,
+  n_top = 10,
+  FDR_threshold = 0.05,
+  flank = 50000L
+) {
+  n_top <- as.integer(n_top %||% 0L)
+  FDR_threshold <- as.numeric(FDR_threshold %||% 0.05)
+  flank <- as.integer(flank %||% 50000L)
+  if (n_top <= 0L || nrow(psbulk_GWAS_gene_chromVAR_results_tibble) == 0L) {
+    return(empty_GWAS_gene_chromVAR_locus_check_tibble(psbulk_GWAS_gene_chromVAR_results_tibble))
+  }
+
+  selected_tibble <- psbulk_GWAS_gene_chromVAR_results_tibble |>
+    dplyr::filter(!is.na(.data$FDR), .data$FDR <= .env$FDR_threshold) |>
+    dplyr::arrange(
+      .data$FDR,
+      .data$PValue,
+      dplyr::desc(abs(.data$logFC)),
+      dplyr::desc(.data$sum_peak_gene_weight),
+      dplyr::desc(.data$max_L2G_score)
+    ) |>
+    dplyr::slice_head(n = n_top) |>
+    dplyr::mutate(locus_plot_rank = dplyr::row_number())
+
+  if (nrow(selected_tibble) == 0L) {
+    return(empty_GWAS_gene_chromVAR_locus_check_tibble(psbulk_GWAS_gene_chromVAR_results_tibble))
+  }
+
+  selected_tibble |>
+    dplyr::select(locus_plot_rank, GWAS_ID, targetId, model, contrast) |>
+    purrr::pmap_dfr(\(locus_plot_rank, GWAS_ID, targetId, model, contrast) {
+      get_GWAS_gene_chromVAR_locus_check_tibble(
+        psbulk_GWAS_gene_chromVAR_results_tibble = psbulk_GWAS_gene_chromVAR_results_tibble,
+        GWAS_gene_chromVAR_credible_set_variants_tibble = GWAS_gene_chromVAR_credible_set_variants_tibble,
+        GWAS_gene_chromVAR_L2G_tibble = GWAS_gene_chromVAR_L2G_tibble,
+        open_targets_target_dataset_path = open_targets_target_dataset_path,
+        GWAS_ID = GWAS_ID,
+        target_id = targetId,
+        contrast = contrast,
+        model = model,
+        flank = flank
+      ) |>
+        dplyr::mutate(
+          locus_plot_rank = locus_plot_rank,
+          plot_name = make_GWAS_gene_chromVAR_locus_plot_name(
+            rank = locus_plot_rank,
+            GWAS_ID = .data$GWAS_ID,
+            gene_symbol = .data$gene_symbol,
+            targetId = .data$targetId,
+            model = .data$model,
+            contrast = .data$contrast
+          )
+        )
+    })
+}
+
+plot_GWAS_gene_chromVAR_locus_tracks <- function(
+  locus_check_tibble,
+  GWAS_gene_chromVAR_credible_set_variants_tibble,
+  GWAS_gene_chromVAR_L2G_tibble,
+  consensus_peak_GRanges,
+  fragments,
+  metadata_tibble,
+  group_cells_by_col = "PCA_harmony_SNN_cluster_cell_type"
+) {
+  if (nrow(locus_check_tibble) == 0L) {
+    return(structure(list(), class = c("empty_plot_list", "list")))
+  }
+  if (!group_cells_by_col %in% colnames(metadata_tibble)) {
+    stop("metadata_tibble is missing locus-track grouping column: ", group_cells_by_col)
+  }
+
+  fragments <- BPCells::select_cells(fragments, metadata_tibble$barcode_w_prefix)
+  fragment_cell_names <- BPCells::cellNames(fragments)
+  metadata <- metadata_tibble |>
+    dplyr::distinct(.data$barcode_w_prefix, .keep_all = TRUE) |>
+    dplyr::filter(
+      .data$barcode_w_prefix %in% fragment_cell_names,
+      !is.na(.data[[group_cells_by_col]])
+    ) |>
+    dplyr::arrange(match(.data$barcode_w_prefix, fragment_cell_names))
+  if (nrow(metadata) == 0L) {
+    stop("No cells remain for GWAS-gene chromVAR locus track plotting.")
+  }
+  fragments <- BPCells::select_cells(fragments, metadata$barcode_w_prefix)
+
+  cell_read_counts <- if ("atac_fragments" %in% colnames(metadata)) metadata$atac_fragments else metadata$nCount_ATAC
+  groups <- metadata[[group_cells_by_col]]
+  locus_rows <- split(locus_check_tibble, locus_check_tibble$plot_name)
+
+  purrr::map(locus_rows, \(locus_row) {
+    region <- GenomicRanges::GRanges(
+      seqnames = locus_row$chr[[1]],
+      ranges = IRanges::IRanges(
+        start = locus_row$locus_start[[1]],
+        end = locus_row$locus_end[[1]]
+      )
+    )
+    L2G_tibble <- GWAS_gene_chromVAR_L2G_tibble |>
+      dplyr::filter(
+        .data$GWAS_ID == locus_row$GWAS_ID[[1]],
+        .data$targetId == locus_row$targetId[[1]]
+      )
+    variant_tibble <- GWAS_gene_chromVAR_credible_set_variants_tibble |>
+      dplyr::filter(.data$GWAS_ID == locus_row$GWAS_ID[[1]]) |>
+      dplyr::semi_join(
+        L2G_tibble |> dplyr::select(studyLocusId),
+        by = "studyLocusId"
+      )
+
+    coverage_tibble <- BPCells::trackplot_coverage(
+      fragments = fragments,
+      region = region,
+      groups = groups,
+      cell_read_counts = cell_read_counts,
+      group_order = gtools::mixedsort(unique(as.character(groups))),
+      bins = 500,
+      return_data = TRUE
+    )
+
+    BPCells::trackplot_combine(
+      tracks = c(
+        list(
+          make_open_targets_target_locus_track(locus_row, region),
+          make_BPCells_ATAC_coverage_track_from_tibble(coverage_tibble, region),
+          make_consensus_peak_locus_track(consensus_peak_GRanges, region)
+        ),
+        make_open_targets_variant_PIP_tracks(variant_tibble, region)
+      ),
+      title = stringr::str_glue(
+        "{locus_row$GWAS_ID[[1]]} {locus_row$gene_symbol[[1]]}: {locus_row$model[[1]]} / {locus_row$contrast[[1]]}; ",
+        "logFC={round(locus_row$logFC[[1]], 3)}, ",
+        "FDR={format(locus_row$FDR[[1]], scientific = TRUE, digits = 3)}, ",
+        "L2G={round(locus_row$L2G_score[[1]], 3)}"
+      )
+    )
+  })
 }
 
 make_open_targets_target_locus_track <- function(locus_check_tibble, region) {

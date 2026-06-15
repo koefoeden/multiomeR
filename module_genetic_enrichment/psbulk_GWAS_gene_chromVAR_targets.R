@@ -162,127 +162,39 @@ rlang::list2(
       save_plots_structured()
   ),
   targets::tar_target(
-    name = psbulk_GWAS_gene_chromVAR_KCNJ12_ATAC_accessibility_track,
-    description = "Build the hardcoded KCNJ12 BPCells ATAC coverage track for locus-effect sanity-check plotting",
-    command = {
-      hardcoded_GWAS_ID <- "T2D_Suzuki2024_locus_effect"
-      hardcoded_target_id <- "ENSG00000184185"
-      hardcoded_contrast <- "fibers_vs_non_myogenic"
-
-      locus_check_tibble <- get_GWAS_gene_chromVAR_locus_check_tibble(
-        psbulk_GWAS_gene_chromVAR_results_tibble = psbulk_GWAS_gene_chromVAR_results_tibble,
-        GWAS_gene_chromVAR_credible_set_variants_tibble = GWAS_gene_chromVAR_credible_set_variants_tibble,
-        GWAS_gene_chromVAR_L2G_tibble = GWAS_gene_chromVAR_L2G_tibble,
-        open_targets_target_dataset_path = open_targets_target_dataset_path,
-        GWAS_ID = hardcoded_GWAS_ID,
-        target_id = hardcoded_target_id,
-        contrast = hardcoded_contrast
-      )
-      region <- GenomicRanges::GRanges(
-        seqnames = locus_check_tibble$chr[[1]],
-        ranges = IRanges::IRanges(
-          start = locus_check_tibble$locus_start[[1]],
-          end = locus_check_tibble$locus_end[[1]]
-        )
-      )
-
-      metadata_tibble <- metadata_w_cell_types_tibble.WNN
-      fragments <- BPCells::select_cells(
-        combined_BPCells_fragment_obj.ATAC,
-        metadata_tibble$barcode_w_prefix
-      )
-      fragment_cell_names <- BPCells::cellNames(fragments)
-      metadata <- metadata_tibble |>
-        dplyr::distinct(.data$barcode_w_prefix, .keep_all = TRUE) |>
-        dplyr::filter(
-          .data$barcode_w_prefix %in% fragment_cell_names,
-          !is.na(.data[["PCA_harmony_SNN_cluster_cell_type"]])
-        ) |>
-        dplyr::arrange(match(.data$barcode_w_prefix, fragment_cell_names))
-      fragments <- BPCells::select_cells(fragments, metadata$barcode_w_prefix)
-
-      groups <- metadata[["PCA_harmony_SNN_cluster_cell_type"]]
-      cell_read_counts <- if ("atac_fragments" %in% colnames(metadata)) {
-        metadata$atac_fragments
-      } else {
-        metadata$nCount_ATAC
-      }
-      coverage_tibble <- BPCells::trackplot_coverage(
-        fragments = fragments,
-        region = region,
-        groups = groups,
-        cell_read_counts = cell_read_counts,
-        group_order = gtools::mixedsort(unique(as.character(groups))),
-        bins = 500,
-        return_data = TRUE
-      )
-
-      make_BPCells_ATAC_coverage_track_from_tibble(coverage_tibble, region)
-    },
+    name = psbulk_GWAS_gene_chromVAR_locus_check_tibble,
+    description = "Select top significant GWAS-gene chromVAR effects for locus sanity-check tracks",
+    command = get_top_GWAS_gene_chromVAR_locus_check_tibble(
+      psbulk_GWAS_gene_chromVAR_results_tibble = psbulk_GWAS_gene_chromVAR_results_tibble,
+      GWAS_gene_chromVAR_credible_set_variants_tibble = GWAS_gene_chromVAR_credible_set_variants_tibble,
+      GWAS_gene_chromVAR_L2G_tibble = GWAS_gene_chromVAR_L2G_tibble,
+      open_targets_target_dataset_path = open_targets_target_dataset_path,
+      n_top = genetic_enrichment_psbulk_GWAS_gene_chromVAR_locus_plots_n_top,
+      FDR_threshold = genetic_enrichment_psbulk_GWAS_gene_chromVAR_locus_plots_FDR_threshold,
+      flank = genetic_enrichment_psbulk_GWAS_gene_chromVAR_locus_plots_flank
+    )
+  ),
+  targets::tar_target(
+    name = psbulk_GWAS_gene_chromVAR_locus_tracks_plots,
+    description = "Render locus sanity-check tracks for top significant GWAS-gene chromVAR effects",
+    command = plot_GWAS_gene_chromVAR_locus_tracks(
+      locus_check_tibble = psbulk_GWAS_gene_chromVAR_locus_check_tibble,
+      GWAS_gene_chromVAR_credible_set_variants_tibble = GWAS_gene_chromVAR_credible_set_variants_tibble,
+      GWAS_gene_chromVAR_L2G_tibble = GWAS_gene_chromVAR_L2G_tibble,
+      consensus_peak_GRanges = consensus_peak_GRanges.ATAC,
+      fragments = combined_BPCells_fragment_obj.ATAC,
+      metadata_tibble = metadata_w_cell_types_tibble.WNN
+    ),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
-    name = psbulk_GWAS_gene_chromVAR_KCNJ12_locus_tracks_plot,
-    description = "Save a hardcoded KCNJ12 locus-effect sanity-check track plot for the T2D Suzuki 2024 fiber contrast. [checkpoint:genetic_enrichment]",
-    command = {
-      # First-pass sanity check plot. If this remains useful, generalize this
-      # block to selected volcano hits instead of keeping one hardcoded gene.
-      hardcoded_GWAS_ID <- "T2D_Suzuki2024_locus_effect"
-      hardcoded_target_id <- "ENSG00000184185"
-      hardcoded_contrast <- "fibers_vs_non_myogenic"
-
-      locus_check_tibble <- get_GWAS_gene_chromVAR_locus_check_tibble(
-        psbulk_GWAS_gene_chromVAR_results_tibble = psbulk_GWAS_gene_chromVAR_results_tibble,
-        GWAS_gene_chromVAR_credible_set_variants_tibble = GWAS_gene_chromVAR_credible_set_variants_tibble,
-        GWAS_gene_chromVAR_L2G_tibble = GWAS_gene_chromVAR_L2G_tibble,
-        open_targets_target_dataset_path = open_targets_target_dataset_path,
-        GWAS_ID = hardcoded_GWAS_ID,
-        target_id = hardcoded_target_id,
-        contrast = hardcoded_contrast
+    name = psbulk_GWAS_gene_chromVAR_locus_tracks_plot_files,
+    description = "Save locus sanity-check tracks for top significant GWAS-gene chromVAR effects. [checkpoint:genetic_enrichment]",
+    command = psbulk_GWAS_gene_chromVAR_locus_tracks_plots |>
+      save_plots_structured(
+        override_suffix = "top_locus_checks",
+        width = 12,
+        height = 14
       )
-      region <- GenomicRanges::GRanges(
-        seqnames = locus_check_tibble$chr[[1]],
-        ranges = IRanges::IRanges(
-          start = locus_check_tibble$locus_start[[1]],
-          end = locus_check_tibble$locus_end[[1]]
-        )
-      )
-
-      L2G_tibble <- GWAS_gene_chromVAR_L2G_tibble |>
-        dplyr::filter(
-          .data$GWAS_ID == hardcoded_GWAS_ID,
-          .data$targetId == hardcoded_target_id
-        )
-      variant_tibble <- GWAS_gene_chromVAR_credible_set_variants_tibble |>
-        dplyr::filter(.data$GWAS_ID == hardcoded_GWAS_ID) |>
-        dplyr::semi_join(
-          L2G_tibble |> dplyr::select(studyLocusId),
-          by = "studyLocusId"
-        )
-
-      plot <- BPCells::trackplot_combine(
-        tracks = c(
-          list(
-            make_open_targets_target_locus_track(locus_check_tibble, region),
-            psbulk_GWAS_gene_chromVAR_KCNJ12_ATAC_accessibility_track,
-            make_consensus_peak_locus_track(consensus_peak_GRanges.ATAC, region)
-          ),
-          make_open_targets_variant_PIP_tracks(variant_tibble, region)
-        ),
-        title = stringr::str_glue(
-          "{hardcoded_GWAS_ID} {locus_check_tibble$gene_symbol}: {hardcoded_contrast}; ",
-          "logFC={round(locus_check_tibble$logFC, 3)}, ",
-          "FDR={format(locus_check_tibble$FDR, scientific = TRUE, digits = 3)}, ",
-          "L2G={round(locus_check_tibble$L2G_score, 3)}"
-        )
-      )
-
-      plot |>
-        save_plots_structured(
-          override_suffix = "KCNJ12_T2D_Suzuki2024_locus_effect_fibers_vs_non_myogenic",
-          width = 12,
-          height = 14
-        )
-    }
-  ),
+  )
 )

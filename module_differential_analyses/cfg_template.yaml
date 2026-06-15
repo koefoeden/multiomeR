@@ -42,4 +42,4 @@ immune_human_2x:
         formula: ~ 0 + cluster + condition
         random_effect: NULL
         contrast_specs_vec:
-          lymphoma_vs_healthy: conditionlymphoma - conditionhealthy
+          lymphoma_vs_healthy: conditionlymphoma

@@ -709,7 +709,11 @@ rlang::list2(
       description = "Validate configured ATAC marker TFs against organism motif names",
       command = {
         motif_list <- TF_motif_matrix_list
-        motif_names <- names(motif_list)
+        motif_names <- paste0(
+          stringr::str_to_upper(vapply(seq_along(motif_list), \(idx) TFBSTools::name(motif_list[[idx]]), character(1))),
+          "__",
+          vapply(seq_along(motif_list), \(idx) TFBSTools::ID(motif_list[[idx]]), character(1))
+        )
         motif_symbols <- stringr::str_split_i(motif_names, "__", 1)
         resolve_marker_TFs <- function(marker_TFs) {
           purrr::map_chr(

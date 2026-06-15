@@ -76,10 +76,10 @@ brain_mouse:
       - atac_peak_counts_frac < 0.1
       - atac_peak_counts_blacklist_frac > 0.05
     aggregation_ATAC_marker_TFs:
-      Neuron: [Tbr1, Satb2, Bcl11b]
-      Astrocyte: [Sox9, Nfia, Nfib, Id3]
-      Oligodendrocyte: [Sox10, Myrf, Nkx2-2, Olig2]
-      OPC: [Olig2, Sox10, Nkx2-2, Ascl1]
+      Neuron: [Tbr1, Bcl11b]
+      Astrocyte: [Sox9, Nfia, Nfib]
+      Oligodendrocyte: [Sox10, Nkx2-2, OLIG2__MA1997.2]
+      OPC: [OLIG2__MA1997.2, Sox10, Nkx2-2, ASCL1__MA1631.2]
       Microglia: [Spi1, Irf8, Mef2c, Mafb]
       Endothelial: [Erg, Fli1, Klf2, Sox17]
 

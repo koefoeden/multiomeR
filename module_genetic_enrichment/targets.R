@@ -130,7 +130,11 @@ rlang::list2(
     source("module_genetic_enrichment/psbulk_GWAS_chromVAR_targets.R")$value,
     tarchetypes::tar_map(
       values = tibble::tibble(
-        map_SCAVENGE_tar_suffix = c("PCA_harmony_SNN.SCAVENGE", "LSI_harmony_SNN.SCAVENGE", "WNN_harmony_SNN.SCAVENGE"), # TODO: Use SCAVENGE as suffix here. And remove "SCAVENGE" from the graph name and input type vectors below
+        map_SCAVENGE_tar_suffix = c(
+          "PCA_harmony_SNN.SCAVENGE.single_nucleus",
+          "LSI_harmony_SNN.SCAVENGE.single_nucleus",
+          "WNN_harmony_SNN.SCAVENGE.single_nucleus"
+        ), # TODO: Use SCAVENGE as suffix here. And remove "SCAVENGE" from the graph name and input type vectors below
         map_SCAVENGE_graph_name = c("PCA_harmony_SNN", "LSI_harmony_SNN", "WNN_harmony_SNN"),
         map_SCAVENGE_graph_input_type = c("embedding", "embedding", "WNN"),
         map_SCAVENGE_graph_input = rlang::syms(c(

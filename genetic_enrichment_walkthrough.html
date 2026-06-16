@@ -413,11 +413,11 @@ flowchart TB
     chromVAR_obj.ATAC(["chromVAR_obj.ATAC"]):::none --&gt; chromVAR_peak_expectation.ATAC(["chromVAR_peak_expectation.ATAC"]):::none
     GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none --&gt; GWAS_chromVAR_summarized_ZScores_tibble(["GWAS_chromVAR_summarized_ZScores_tibble"]):::none
     open_targets_credible_set_dataset_path(["open_targets_credible_set_dataset_path"]):::none --&gt; GWAS_inputs_tibble(["GWAS_inputs_tibble"]):::none
-    SCAVENGE_graph_matrix(["SCAVENGE_graph_matrix"]):::none --&gt; SCAVENGE_TRS_tibbles["SCAVENGE_TRS_tibbles"]:::none
-    GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none --&gt; SCAVENGE_TRS_tibbles["SCAVENGE_TRS_tibbles"]:::none
+    graph_matrix(["graph_matrix"]):::none --&gt; TRS_tibbles["TRS_tibbles"]:::none
+    GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none --&gt; TRS_tibbles["TRS_tibbles"]:::none
     GWAS_chromVAR_peak_weight_records["GWAS_chromVAR_peak_weight_records"]:::none --&gt; GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none
     GWAS_inputs_tibble(["GWAS_inputs_tibble"]):::none --&gt; GWAS_chromVAR_peak_weight_records["GWAS_chromVAR_peak_weight_records"]:::none
-    SCAVENGE_TRS_tibbles["SCAVENGE_TRS_tibbles"]:::none --&gt; SCAVENGE_TRS_summary_tibble(["SCAVENGE_TRS_summary_tibble"]):::none
+    TRS_tibbles["TRS_tibbles"]:::none --&gt; TRS_summary_tibble(["TRS_summary_tibble"]):::none
     chromVAR_background_bins.ATAC(["chromVAR_background_bins.ATAC"]):::none --&gt; GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none
     chromVAR_obj.ATAC(["chromVAR_obj.ATAC"]):::none --&gt; GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none
     chromVAR_obj.ATAC(["chromVAR_obj.ATAC"]):::none --&gt; GWAS_chromVAR_peak_weight_records["GWAS_chromVAR_peak_weight_records"]:::none

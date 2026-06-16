@@ -19,77 +19,57 @@ default:
 immune_human_2x:
   mandatory:
     genetic_enrichment_open_targets_studies:
-      WhiteBloodCellCount_Vuckovic2020:
-        Category: expected_broad_PBMC
-        studyId: GCST90002407
-        finemappingMethod: auto
       LymphocyteCount_Vuckovic2020:
-        Category: expected_lymphoid
+        Category: positive_control
         studyId: GCST90002388
         finemappingMethod: auto
       MonocyteCount_Vuckovic2020:
-        Category: expected_monocyte
+        Category: positive_control
         studyId: GCST90002393
         finemappingMethod: auto
-      NeutrophilCount_Vuckovic2020:
-        Category: control_granulocyte_non_PBMC
-        studyId: GCST90002398
-        finemappingMethod: auto
-      EosinophilCount_Vuckovic2020:
-        Category: control_granulocyte_non_PBMC
-        studyId: GCST90002381
-        finemappingMethod: auto
-      BasophilCount_Vuckovic2020:
-        Category: control_granulocyte_non_PBMC
-        studyId: GCST90002379
-        finemappingMethod: auto
       IBD_Liu2023:
-        Category: relevant_disease
+        Category: immune_disease
         studyId: GCST90292538
         finemappingMethod: auto
       Crohns_Liu2023:
-        Category: relevant_disease
+        Category: immune_disease
         studyId: GCST90446792
         finemappingMethod: auto
       UlcerativeColitis_Liu2023:
-        Category: relevant_disease
+        Category: immune_disease
         studyId: GCST90446794
         finemappingMethod: auto
       MultipleSclerosis_IMSGC2019:
-        Category: relevant_disease
+        Category: immune_disease
         studyId: GCST009597
         finemappingMethod: auto
       SLE_Verma2024:
-        Category: relevant_disease
+        Category: immune_disease
         studyId: GCST90480453
         finemappingMethod: auto
       Asthma_Zhou2022:
-        Category: relevant_disease
+        Category: immune_disease
         studyId: GCST90399686
         finemappingMethod: auto
       AtopicDermatitis_Oliva2025:
-        Category: relevant_disease
+        Category: immune_disease
         studyId: GCST90503109
         finemappingMethod: auto
       Height_DeWan2023:
-        Category: control_nonimmune
+        Category: negative_control
         studyId: GCST90302890
         finemappingMethod: auto
       BMI_Verma2024:
-        Category: control_nonimmune
+        Category: negative_control
         studyId: GCST90475159
         finemappingMethod: auto
       EducationalAttainment_Okbay2022:
-        Category: control_nonimmune
+        Category: negative_control
         studyId: GCST90105038
         finemappingMethod: auto
       HeelBMD_Mbatchou2021:
-        Category: control_nonimmune
+        Category: negative_control
         studyId: GCST90014022
-        finemappingMethod: auto
-      SystolicBP_Keaton2024:
-        Category: control_nonimmune
-        studyId: GCST90310294
         finemappingMethod: auto
     genetic_enrichment_psbulk_GWAS_chromVAR_models:
       major_pbmc_cell_type_contrasts:

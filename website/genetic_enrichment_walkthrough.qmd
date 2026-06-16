@@ -40,7 +40,7 @@ emit_mermaid("website/figures/standard_node_color_legend.mmd")
 GWAS and pseudobulk inputs used for trait-relevance analyses.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_mermaid("website/figures/human_curated/psbulk_GWAS.immune_human_2x_pruned.mmd")
+emit_mermaid("website/figures/human_curated/genetic_enrichment_pseudobulk_v2.mmd")
 ```
 
 ### Genetic enrichment across genes
@@ -48,7 +48,7 @@ emit_mermaid("website/figures/human_curated/psbulk_GWAS.immune_human_2x_pruned.m
 Across-gene enrichment outputs and downstream trait summaries.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_mermaid("website/figures/human_curated/genetic_enrichment_across_genes_pruned.mmd")
+emit_mermaid("website/figures/human_curated/genetic_enrichment_single_nucleus_v2.mmd")
 ```
 
 ## Running the pipeline

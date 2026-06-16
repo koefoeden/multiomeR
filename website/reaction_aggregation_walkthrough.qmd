@@ -97,7 +97,7 @@ emit_mermaid("website/figures/standard_node_color_legend.mmd")
 Reaction-level inputs, QC summaries, and handoffs into aggregation.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_mermaid("website/figures/human_curated/parallel_pruned.mmd")
+emit_mermaid("website/figures/human_curated/parallel_v2.mmd")
 ```
 
 ### GEX processing
@@ -105,7 +105,7 @@ emit_mermaid("website/figures/human_curated/parallel_pruned.mmd")
 Merged GEX processing, clustering, cell typing, and GEX outputs.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_mermaid("website/figures/human_curated/GEX_pruned.mmd")
+emit_mermaid("website/figures/human_curated/GEX_v2.mmd")
 ```
 
 ### ATAC processing
@@ -113,7 +113,7 @@ emit_mermaid("website/figures/human_curated/GEX_pruned.mmd")
 ATAC QC, peak calling, consensus peaks, derived modalities, coverage tracks, and peak-gene links.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_mermaid("website/figures/human_curated/ATAC_pruned.mmd")
+emit_mermaid("website/figures/human_curated/ATAC_v2.mmd")
 ```
 
 ### WNN integration
@@ -121,7 +121,7 @@ emit_mermaid("website/figures/human_curated/ATAC_pruned.mmd")
 GEX and ATAC embeddings, WNN integration, and integrated metadata outputs.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_mermaid("website/figures/human_curated/WNN_pruned.mmd")
+emit_mermaid("website/figures/human_curated/WNN_v2.mmd")
 ```
 
 ## Running the pipeline

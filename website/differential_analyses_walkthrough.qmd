@@ -35,7 +35,7 @@ This diagram started as a generated draft from the exported `blood_human` target
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_mermaid("website/figures/standard_node_color_legend.mmd")
-emit_mermaid("website/figures/human_curated/checkpoint.differential_analyses.immune_human_2x_pruned.mmd")
+emit_mermaid("website/figures/human_curated/differential_analyses_v2.mmd")
 ```
 
 ## Running the pipeline

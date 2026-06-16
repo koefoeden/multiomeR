@@ -1,6 +1,6 @@
 rlang::list2(
   targets::tar_target(
-    name = peak_gene_correlation_gene_TSS_tibble,
+    name = peak_gene_correlation_gene_TSS_tibble.peak_gene_correlation.WNN,
     description = "Build the gene TSS table used for ArchR-style peak-gene correlation candidates",
     command = make_peak_gene_correlation_gene_TSS_tibble(
       reference_Ensembl_annotations_GRanges_list = marker_validated_Ensembl_annotations_GRanges_list,
@@ -9,24 +9,24 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_candidate_pairs_tibble,
+    name = peak_gene_correlation_candidate_pairs_tibble.peak_gene_correlation.WNN,
     description = "Pair consensus ATAC peaks with same-chromosome gene TSSs within 250 kb",
     command = make_peak_gene_correlation_candidate_pairs(
       consensus_peak_GRanges = consensus_peak_GRanges.ATAC,
-      gene_TSS_tibble = peak_gene_correlation_gene_TSS_tibble
+      gene_TSS_tibble = peak_gene_correlation_gene_TSS_tibble.peak_gene_correlation.WNN
     ),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_chromosome_tibble,
+    name = peak_gene_correlation_chromosome_tibble.peak_gene_correlation.WNN,
     description = "List chromosomes with candidate peak-gene pairs",
     command = make_peak_gene_correlation_chromosome_tibble(
-      peak_gene_correlation_candidate_pairs_tibble
+      peak_gene_correlation_candidate_pairs_tibble.peak_gene_correlation.WNN
     ),
     resources = get_tar_resources(RAM_GB_req = 8)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_cell_group_diagnostics_tibble,
+    name = peak_gene_correlation_cell_group_diagnostics_tibble.peak_gene_correlation.WNN,
     description = "Record broad cell groups dropped before KNN aggregation",
     command = make_peak_gene_correlation_cell_group_diagnostics(
       metadata_tibble = metadata_w_cell_types_tibble.WNN,
@@ -37,7 +37,7 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_cell_groups_tibble,
+    name = peak_gene_correlation_cell_groups_tibble.peak_gene_correlation.WNN,
     description = "Split eligible broad WNN cell-type groups for KNN aggregate construction",
     command = make_peak_gene_correlation_cell_groups(
       metadata_tibble = metadata_w_cell_types_tibble.WNN,
@@ -51,102 +51,102 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_knn_aggregates_tibbles,
+    name = peak_gene_correlation_knn_aggregates_tibbles.peak_gene_correlation.WNN,
     description = "Build non-overlapping ArchR-style KNN aggregates within one broad cell type",
     command = make_peak_gene_correlation_knn_aggregates(
-      cell_group_tibble = peak_gene_correlation_cell_groups_tibble,
+      cell_group_tibble = peak_gene_correlation_cell_groups_tibble.peak_gene_correlation.WNN,
       embedding_matrix = harmony_embeddings_matrix.GEX
     ),
-    pattern = map(peak_gene_correlation_cell_groups_tibble),
+    pattern = map(peak_gene_correlation_cell_groups_tibble.peak_gene_correlation.WNN),
     iteration = "vector",
     packages = w_def("FNN"),
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_group_chromosome_tibble,
+    name = peak_gene_correlation_group_chromosome_tibble.peak_gene_correlation.WNN,
     description = "Split peak-gene correlation work by broad cell type and chromosome",
     command = make_peak_gene_correlation_group_chromosome_tibble(
-      knn_aggregates_tibble = peak_gene_correlation_knn_aggregates_tibbles,
-      chromosome_tibble = peak_gene_correlation_chromosome_tibble,
-      candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble
+      knn_aggregates_tibble = peak_gene_correlation_knn_aggregates_tibbles.peak_gene_correlation.WNN,
+      chromosome_tibble = peak_gene_correlation_chromosome_tibble.peak_gene_correlation.WNN,
+      candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.peak_gene_correlation.WNN
     ),
     iteration = "group",
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_aggregate_matrices,
+    name = peak_gene_correlation_aggregate_matrices.peak_gene_correlation.WNN,
     description = "Aggregate chromosome-specific GEX and ATAC counts over KNN aggregates",
     command = make_peak_gene_correlation_aggregate_matrices(
-      group_chromosome_tibble = peak_gene_correlation_group_chromosome_tibble,
-      knn_aggregates_tibble = peak_gene_correlation_knn_aggregates_tibbles,
-      candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble,
+      group_chromosome_tibble = peak_gene_correlation_group_chromosome_tibble.peak_gene_correlation.WNN,
+      knn_aggregates_tibble = peak_gene_correlation_knn_aggregates_tibbles.peak_gene_correlation.WNN,
+      candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.peak_gene_correlation.WNN,
       GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX,
       ATAC_counts_matrix = consensus_peak_BPCells_matrix.ATAC
     ),
-    pattern = map(peak_gene_correlation_group_chromosome_tibble),
+    pattern = map(peak_gene_correlation_group_chromosome_tibble.peak_gene_correlation.WNN),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_normalized_aggregate_matrices,
+    name = peak_gene_correlation_normalized_aggregate_matrices.peak_gene_correlation.WNN,
     description = "Normalize KNN aggregate GEX and ATAC matrices as log1p CPM",
     command = normalize_peak_gene_correlation_aggregate_matrices(
-      peak_gene_correlation_aggregate_matrices
+      peak_gene_correlation_aggregate_matrices.peak_gene_correlation.WNN
     ),
-    pattern = map(peak_gene_correlation_aggregate_matrices),
+    pattern = map(peak_gene_correlation_aggregate_matrices.peak_gene_correlation.WNN),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_results_tibbles,
+    name = peak_gene_correlation_results_tibbles.peak_gene_correlation.WNN,
     description = "Score Pearson peak-gene correlations for one broad cell type and chromosome",
     command = score_peak_gene_correlations_for_cell_group(
-      normalized_aggregate_matrices = peak_gene_correlation_normalized_aggregate_matrices,
-      candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble
+      normalized_aggregate_matrices = peak_gene_correlation_normalized_aggregate_matrices.peak_gene_correlation.WNN,
+      candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.peak_gene_correlation.WNN
     ),
-    pattern = map(peak_gene_correlation_normalized_aggregate_matrices),
+    pattern = map(peak_gene_correlation_normalized_aggregate_matrices.peak_gene_correlation.WNN),
     iteration = "vector",
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_branch_diagnostics_tibbles,
+    name = peak_gene_correlation_branch_diagnostics_tibbles.peak_gene_correlation.WNN,
     description = "Diagnose skipped or retained peak-gene correlation branches",
     command = diagnose_peak_gene_correlation_branch(
-      normalized_aggregate_matrices = peak_gene_correlation_normalized_aggregate_matrices,
-      candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble
+      normalized_aggregate_matrices = peak_gene_correlation_normalized_aggregate_matrices.peak_gene_correlation.WNN,
+      candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.peak_gene_correlation.WNN
     ),
-    pattern = map(peak_gene_correlation_normalized_aggregate_matrices),
+    pattern = map(peak_gene_correlation_normalized_aggregate_matrices.peak_gene_correlation.WNN),
     iteration = "vector",
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_results_tibble,
+    name = peak_gene_correlation_results_tibble.peak_gene_correlation.WNN,
     description = "Combine chromosome-level peak-gene correlations and add within-cell-group FDR",
     command = finalize_peak_gene_correlation_results(
-      results_tibble = peak_gene_correlation_results_tibbles,
+      results_tibble = peak_gene_correlation_results_tibbles.peak_gene_correlation.WNN,
       aggregation = aggregation
     ),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_links_tibble,
+    name = peak_gene_correlation_links_tibble.peak_gene_correlation.WNN,
     description = "Filter positive non-promoter peak-gene links at FDR < 0.05",
-    command = make_peak_gene_correlation_links(peak_gene_correlation_results_tibble),
+    command = make_peak_gene_correlation_links(peak_gene_correlation_results_tibble.peak_gene_correlation.WNN),
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_diagnostics_tibble,
+    name = peak_gene_correlation_diagnostics_tibble.peak_gene_correlation.WNN,
     description = "Combine peak-gene correlation cell-group and branch diagnostics",
     command = dplyr::bind_rows(
-      peak_gene_correlation_cell_group_diagnostics_tibble,
-      peak_gene_correlation_branch_diagnostics_tibbles
+      peak_gene_correlation_cell_group_diagnostics_tibble.peak_gene_correlation.WNN,
+      peak_gene_correlation_branch_diagnostics_tibbles.peak_gene_correlation.WNN
     ),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
-    name = peak_gene_correlation_correlation_histogram_plot,
+    name = peak_gene_correlation_correlation_histogram_plot.peak_gene_correlation.WNN,
     description = "Save a facetted histogram of peak-gene correlations by cell group",
     command = {
       correlation_bin_width <- 0.025
-      correlation_plot_tibble <- peak_gene_correlation_results_tibble |>
+      correlation_plot_tibble <- peak_gene_correlation_results_tibble.peak_gene_correlation.WNN |>
         dplyr::filter(!is.na(.data$correlation)) |>
         dplyr::mutate(
           correlation_bin = pmin(
@@ -173,10 +173,10 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
-    name = peak_gene_correlation_support_counts_plot,
+    name = peak_gene_correlation_support_counts_plot.peak_gene_correlation.WNN,
     description = "Save peak-gene correlation tested, significant, and linked pair counts by cell group",
     command = {
-      support_plot_tibble <- peak_gene_correlation_results_tibble |>
+      support_plot_tibble <- peak_gene_correlation_results_tibble.peak_gene_correlation.WNN |>
         dplyr::summarise(
           tested_pairs = dplyr::n(),
           FDR_significant_pairs = sum(.data$FDR < 0.05, na.rm = TRUE),
@@ -210,10 +210,10 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
-    name = peak_gene_correlation_distance_correlation_plot,
+    name = peak_gene_correlation_distance_correlation_plot.peak_gene_correlation.WNN,
     description = "Save median peak-gene correlation by absolute TSS distance and cell group",
     command = {
-      distance_plot_tibble <- peak_gene_correlation_results_tibble |>
+      distance_plot_tibble <- peak_gene_correlation_results_tibble.peak_gene_correlation.WNN |>
         dplyr::filter(!is.na(.data$correlation), !.data$isSelfPromoter) |>
         dplyr::mutate(
           abs_distance_bin = pmin(250000, floor(abs(.data$distance) / 5000) * 5000)
@@ -242,10 +242,10 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
-    name = peak_gene_correlation_diagnostics_plot,
+    name = peak_gene_correlation_diagnostics_plot.peak_gene_correlation.WNN,
     description = "Save peak-gene correlation retained and skipped branch diagnostics by cell group",
     command = {
-      diagnostics_plot_tibble <- peak_gene_correlation_diagnostics_tibble |>
+      diagnostics_plot_tibble <- peak_gene_correlation_diagnostics_tibble.peak_gene_correlation.WNN |>
         dplyr::mutate(skipped_reason = dplyr::coalesce(.data$skipped_reason, "retained")) |>
         dplyr::count(.data$cell_group, .data$skipped_reason, name = "n_branches")
 
@@ -265,10 +265,10 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_top_links_tibble,
+    name = peak_gene_correlation_top_links_tibble.peak_gene_correlation.WNN,
     description = "Split top peak-gene links per cell group for downstream QC plots",
     command = {
-      peak_gene_correlation_links_tibble |>
+      peak_gene_correlation_links_tibble.peak_gene_correlation.WNN |>
         dplyr::filter(.data$rank_in_cell_group <= 3) |>
         dplyr::arrange(.data$cell_group, .data$rank_in_cell_group) |>
         dplyr::mutate(
@@ -281,7 +281,7 @@ rlang::list2(
           )
         ) |>
         dplyr::left_join(
-          peak_gene_correlation_candidate_pairs_tibble |>
+          peak_gene_correlation_candidate_pairs_tibble.peak_gene_correlation.WNN |>
             dplyr::select("peak", "TargetGeneID", "gene_matrix_feature") |>
             dplyr::distinct(),
           by = c("peak", "TargetGeneID")
@@ -291,10 +291,10 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_top_link_aggregate_scatter_tibble,
+    name = peak_gene_correlation_top_link_aggregate_scatter_tibble.peak_gene_correlation.WNN,
     description = "Build aggregate-level GEX and ATAC values for one top peak-gene link",
     command = {
-      normalized_branches <- as.list(peak_gene_correlation_normalized_aggregate_matrices)
+      normalized_branches <- as.list(peak_gene_correlation_normalized_aggregate_matrices.peak_gene_correlation.WNN)
       normalized_branches_by_key <- normalized_branches |>
         purrr::set_names(
           purrr::map_chr(
@@ -303,7 +303,7 @@ rlang::list2(
           )
         )
 
-      link_row <- peak_gene_correlation_top_links_tibble
+      link_row <- peak_gene_correlation_top_links_tibble.peak_gene_correlation.WNN
       matching_branches <- purrr::keep(
         normalized_branches_by_key,
         \(branch) {
@@ -339,15 +339,15 @@ rlang::list2(
         )
       })
     },
-    pattern = map(peak_gene_correlation_top_links_tibble),
+    pattern = map(peak_gene_correlation_top_links_tibble.peak_gene_correlation.WNN),
     iteration = "vector",
     resources = get_tar_resources(RAM_GB_req = 32) # apparently 16 GB is not enough
   ),
   tarchetypes::tar_file(
-    name = peak_gene_correlation_top_link_aggregate_scatter_plots,
+    name = peak_gene_correlation_top_link_aggregate_scatter_plots.peak_gene_correlation.WNN,
     description = "Save aggregate-level scatterplots for top peak-gene links per cell group",
     command = {
-      plot_tibble <- peak_gene_correlation_top_link_aggregate_scatter_tibble
+      plot_tibble <- peak_gene_correlation_top_link_aggregate_scatter_tibble.peak_gene_correlation.WNN
       trend_label_tibble <- split(plot_tibble, plot_tibble$cell_group) |>
         purrr::map_dfr(\(cell_group_tibble) {
           cell_group_tibble <- cell_group_tibble |>
@@ -422,13 +422,13 @@ rlang::list2(
           color = "Cell group"
         )
 
-      genome_annotation_track <- peak_gene_correlation_top_link_genome_annotation_track +
+      genome_annotation_track <- peak_gene_correlation_top_link_genome_annotation_track.peak_gene_correlation.WNN +
         ggplot2::theme(
           axis.text.x = ggplot2::element_blank(),
           axis.ticks.x = ggplot2::element_blank(),
           axis.title.x = ggplot2::element_blank()
         )
-      primary_ATAC_track <- peak_gene_correlation_top_link_primary_cell_ATAC_accessibility_track +
+      primary_ATAC_track <- peak_gene_correlation_top_link_primary_cell_ATAC_accessibility_track.peak_gene_correlation.WNN +
         ggplot2::theme(
           axis.text.x = ggplot2::element_blank(),
           axis.ticks.x = ggplot2::element_blank(),
@@ -438,7 +438,7 @@ rlang::list2(
       track_panel <- patchwork::wrap_plots(
         genome_annotation_track,
         primary_ATAC_track,
-        peak_gene_correlation_top_link_peak_gene_loop_track,
+        peak_gene_correlation_top_link_peak_gene_loop_track.peak_gene_correlation.WNN,
         ncol = 1
       )
       plot <- patchwork::wrap_plots(
@@ -455,17 +455,17 @@ rlang::list2(
         )
     },
     pattern = map(
-      peak_gene_correlation_top_link_aggregate_scatter_tibble,
-      peak_gene_correlation_top_link_genome_annotation_track,
-      peak_gene_correlation_top_link_primary_cell_ATAC_accessibility_track,
-      peak_gene_correlation_top_link_peak_gene_loop_track
+      peak_gene_correlation_top_link_aggregate_scatter_tibble.peak_gene_correlation.WNN,
+      peak_gene_correlation_top_link_genome_annotation_track.peak_gene_correlation.WNN,
+      peak_gene_correlation_top_link_primary_cell_ATAC_accessibility_track.peak_gene_correlation.WNN,
+      peak_gene_correlation_top_link_peak_gene_loop_track.peak_gene_correlation.WNN
     )
   ),
   targets::tar_target(
-    name = peak_gene_correlation_top_link_loci_tibble,
+    name = peak_gene_correlation_top_link_loci_tibble.peak_gene_correlation.WNN,
     description = "Add plotting windows to top peak-gene links for per-locus track plots",
     command = {
-      peak_gene_correlation_top_links_tibble |>
+      peak_gene_correlation_top_links_tibble.peak_gene_correlation.WNN |>
         dplyr::mutate(
           locus_start = pmax(
             1L,
@@ -474,14 +474,14 @@ rlang::list2(
           locus_end = max(.data$end[[1]], .data$TargetGeneTSS[[1]], na.rm = TRUE) + 50000L
         )
     },
-    pattern = map(peak_gene_correlation_top_links_tibble),
+    pattern = map(peak_gene_correlation_top_links_tibble.peak_gene_correlation.WNN),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_top_link_genome_annotation_track,
+    name = peak_gene_correlation_top_link_genome_annotation_track.peak_gene_correlation.WNN,
     description = "Build the genome annotation track for one top peak-gene correlation locus",
     command = {
-      locus_tibble <- peak_gene_correlation_top_link_loci_tibble
+      locus_tibble <- peak_gene_correlation_top_link_loci_tibble.peak_gene_correlation.WNN
       region <- GenomicRanges::GRanges(
         seqnames = locus_tibble$chr[[1]],
         ranges = IRanges::IRanges(
@@ -520,14 +520,14 @@ rlang::list2(
 
       gene_track
     },
-    pattern = map(peak_gene_correlation_top_link_loci_tibble),
+    pattern = map(peak_gene_correlation_top_link_loci_tibble.peak_gene_correlation.WNN),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_top_link_primary_cell_ATAC_accessibility_track,
+    name = peak_gene_correlation_top_link_primary_cell_ATAC_accessibility_track.peak_gene_correlation.WNN,
     description = "Build the primary-cell-group BPCells ATAC coverage track for one top peak-gene correlation locus",
     command = {
-      locus_tibble <- peak_gene_correlation_top_link_loci_tibble
+      locus_tibble <- peak_gene_correlation_top_link_loci_tibble.peak_gene_correlation.WNN
       primary_cell_group <- locus_tibble$cell_group[[1]]
       region <- GenomicRanges::GRanges(
         seqnames = locus_tibble$chr[[1]],
@@ -572,14 +572,14 @@ rlang::list2(
         region = region
       )
     },
-    pattern = map(peak_gene_correlation_top_link_loci_tibble),
+    pattern = map(peak_gene_correlation_top_link_loci_tibble.peak_gene_correlation.WNN),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_top_link_ATAC_accessibility_track,
+    name = peak_gene_correlation_top_link_ATAC_accessibility_track.peak_gene_correlation.WNN,
     description = "Build the per-cell-group BPCells ATAC coverage track for one top peak-gene correlation locus",
     command = {
-      locus_tibble <- peak_gene_correlation_top_link_loci_tibble
+      locus_tibble <- peak_gene_correlation_top_link_loci_tibble.peak_gene_correlation.WNN
       region <- GenomicRanges::GRanges(
         seqnames = locus_tibble$chr[[1]],
         ranges = IRanges::IRanges(
@@ -626,14 +626,14 @@ rlang::list2(
       )
       coverage_track
     },
-    pattern = map(peak_gene_correlation_top_link_loci_tibble),
+    pattern = map(peak_gene_correlation_top_link_loci_tibble.peak_gene_correlation.WNN),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_top_link_peak_gene_loop_track,
+    name = peak_gene_correlation_top_link_peak_gene_loop_track.peak_gene_correlation.WNN,
     description = "Build the BPCells peak-gene loop track for filtered links at one top-link locus",
     command = {
-      locus_tibble <- peak_gene_correlation_top_link_loci_tibble
+      locus_tibble <- peak_gene_correlation_top_link_loci_tibble.peak_gene_correlation.WNN
       region <- GenomicRanges::GRanges(
         seqnames = locus_tibble$chr[[1]],
         ranges = IRanges::IRanges(
@@ -642,7 +642,7 @@ rlang::list2(
         )
       )
 
-      loops_tibble <- peak_gene_correlation_links_tibble |>
+      loops_tibble <- peak_gene_correlation_links_tibble.peak_gene_correlation.WNN |>
         dplyr::filter(
           .data$chr == locus_tibble$chr[[1]],
           .data$TargetGeneID == locus_tibble$TargetGeneID[[1]],
@@ -686,38 +686,38 @@ rlang::list2(
       )
       loop_track
     },
-    pattern = map(peak_gene_correlation_top_link_loci_tibble),
+    pattern = map(peak_gene_correlation_top_link_loci_tibble.peak_gene_correlation.WNN),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
-    name = peak_gene_correlation_top_link_ATAC_tracks_plots,
+    name = peak_gene_correlation_top_link_ATAC_tracks_plots.peak_gene_correlation.WNN,
     description = "Save combined genome annotation, ATAC coverage, and peak-gene loop tracks at top-link loci",
     command = {
       plot <- BPCells::trackplot_combine(
         tracks = list(
-          peak_gene_correlation_top_link_genome_annotation_track,
-          peak_gene_correlation_top_link_ATAC_accessibility_track,
-          peak_gene_correlation_top_link_peak_gene_loop_track
+          peak_gene_correlation_top_link_genome_annotation_track.peak_gene_correlation.WNN,
+          peak_gene_correlation_top_link_ATAC_accessibility_track.peak_gene_correlation.WNN,
+          peak_gene_correlation_top_link_peak_gene_loop_track.peak_gene_correlation.WNN
         ),
         title = paste(
-          peak_gene_correlation_top_link_loci_tibble$TargetGene[[1]],
-          peak_gene_correlation_top_link_loci_tibble$peak[[1]],
-          peak_gene_correlation_top_link_loci_tibble$cell_group[[1]],
+          peak_gene_correlation_top_link_loci_tibble.peak_gene_correlation.WNN$TargetGene[[1]],
+          peak_gene_correlation_top_link_loci_tibble.peak_gene_correlation.WNN$peak[[1]],
+          peak_gene_correlation_top_link_loci_tibble.peak_gene_correlation.WNN$cell_group[[1]],
           sep = " - "
         )
       )
 
       plot |>
         save_plots_structured(
-          override_suffix = peak_gene_correlation_top_link_loci_tibble$scatter_plot_name[[1]],
+          override_suffix = peak_gene_correlation_top_link_loci_tibble.peak_gene_correlation.WNN$scatter_plot_name[[1]],
           dyn_suffix_in_subdir = TRUE
         )
     },
     pattern = map(
-      peak_gene_correlation_top_link_loci_tibble,
-      peak_gene_correlation_top_link_genome_annotation_track,
-      peak_gene_correlation_top_link_ATAC_accessibility_track,
-      peak_gene_correlation_top_link_peak_gene_loop_track
+      peak_gene_correlation_top_link_loci_tibble.peak_gene_correlation.WNN,
+      peak_gene_correlation_top_link_genome_annotation_track.peak_gene_correlation.WNN,
+      peak_gene_correlation_top_link_ATAC_accessibility_track.peak_gene_correlation.WNN,
+      peak_gene_correlation_top_link_peak_gene_loop_track.peak_gene_correlation.WNN
     )
   )
 )

@@ -249,29 +249,29 @@
     "href": "output_gallery.html#main-pipeline",
     "title": "6  Output Gallery",
     "section": "",
-    "text": "Preview pending\n\n\nWNN cell type overview\n\n\nMultimodal tri-panel UMAP summary from the public human blood aggregation.\n\n\ncluster_cell_type_dim_tri_plot.WNN.blood_human\n\n\n\n\nPreview pending\n\n\nRNA versus ATAC modality weights\n\n\nBoxplots showing how much RNA and ATAC contribute to the WNN graph across cell types.\n\n\nATAC_vs_RNA_weight_boxplots_plot.WNN.blood_human\n\n\n\n\nPreview pending\n\n\nATAC QC exclusions\n\n\nUpset plot summarizing which post-aggregation ATAC QC filters exclude cells.\n\n\nQC_excluded_upset_plot.ATAC.blood_human",
+    "text": "6.1.1 Parallel reaction pre-processing\n\n\n\n\nPer-reaction QC metric distributions\n\n\nViolin plot of a representative pre-aggregation QC metric across reactions in the public immune human example dataset.\n\n\nper_dataset_QC_violins.immune_human_dataset\n\n\nOpen full output\n\n\n\n\n\nPer-dataset QC exclusions\n\n\nUpSet plot summarizing pre-aggregation QC exclusion overlaps across reactions in the public immune human example dataset.\n\n\nper_dataset_excluded_upset.immune_human_dataset\n\n\nOpen full output\n\n\n\n\n\n6.1.2 GEX\n\n\n\n\nGEX harmony UMAP\n\n\nHarmonized GEX embedding colored by the first configured categorical grouping.\n\n\nharmony.categorical.UMAPs.GEX.immune_human_2x\n\n\nOpen full output\n\n\n\n\n\nGEX marker dot plot\n\n\nMarker gene expression summary across GEX-derived groups.\n\n\nmarkers_dot_plot.GEX.immune_human_2x\n\n\nOpen full output\n\n\n\n\n\n6.1.3 ATAC\n\n\n\n\nATAC harmony UMAP\n\n\nHarmonized ATAC embedding colored by the first configured categorical grouping.\n\n\ncategorical.UMAPs.ATAC.immune_human_2x\n\n\nOpen full output\n\n\n\n\n\nTF activity dot plot\n\n\nTranscription factor activity summary across ATAC-derived groups.\n\n\nTF_activity_dot_plot.ATAC.immune_human_2x\n\n\nOpen full output\n\n\n\n\n\n6.1.4 WNN\n\n\n\n\nWNN harmony UMAP\n\n\nMultimodal WNN embedding colored by the first configured categorical grouping.\n\n\ncategorical.UMAPs.WNN.immune_human_2x\n\n\nOpen full output\n\n\n\n\n\nRNA versus ATAC modality weights\n\n\nBoxplots showing how much RNA and ATAC contribute to the WNN graph across cell types.\n\n\nATAC_vs_RNA_weight_boxplots_plot.WNN.immune_human_2x\n\n\nOpen full output",
     "crumbs": [
       "Setup",
       "<span class='chapter-number'>6</span>  <span class='chapter-title'>Output Gallery</span>"
     ]
   },
   {
-    "objectID": "output_gallery.html#differential-analyses",
-    "href": "output_gallery.html#differential-analyses",
+    "objectID": "output_gallery.html#differential-analyses-module",
+    "href": "output_gallery.html#differential-analyses-module",
     "title": "6  Output Gallery",
-    "section": "6.2 Differential analyses",
-    "text": "6.2 Differential analyses\n\n\n\nPreview pending\n\n\nDifferential cell type composition\n\n\nModelled change in cell type composition for a configured experimental or phenotypic variable.\n\n\nmodel_change_per_unit_plot.DCTC.differential_analyses.blood_human\n\n\n\n\nPreview pending\n\n\nPseudobulk differential expression support\n\n\nSigned count summary of significant pseudobulk differential expression results across configured contrasts.\n\n\nsignificant_elements_plot.DGE.differential_analyses.blood_human",
+    "section": "6.2 Differential analyses module",
+    "text": "6.2 Differential analyses module\n\n6.2.1 Gene expression\n\n\n\n\nDifferential gene expression volcano plot\n\n\nVolcano plot of pseudobulk differential gene expression results for a configured contrast.\n\n\nvolcano_plots_files.DGE.differential_analyses.immune_human_2x_f38cff8e83d87033\n\n\nOpen full output\n\n\n\n\n\nDifferential gene expression support\n\n\nSigned count summary of significant pseudobulk differential expression results across configured contrasts.\n\n\nsignificant_elements_plot.DGE.differential_analyses.immune_human_2x\n\n\nOpen full output\n\n\n\n\n\n6.2.2 Chromatin accessibility\n\n\n\n\nDifferential chromatin accessibility volcano plot\n\n\nVolcano plot of pseudobulk differential chromatin accessibility results for a configured contrast.\n\n\nvolcano_plots_files.DCA.differential_analyses.immune_human_2x_dcd38387c49741f1\n\n\nOpen full output\n\n\n\n\n\nDifferential chromatin accessibility support\n\n\nSigned count summary of significant pseudobulk differential chromatin accessibility results across configured contrasts.\n\n\nsignificant_elements_plot.DCA.differential_analyses.immune_human_2x\n\n\nOpen full output\n\n\n\n\n\n6.2.3 Transcription-factor activity\n\n\n\n\nDifferential TF activity volcano plot\n\n\nVolcano plot of pseudobulk differential transcription-factor activity results for a configured contrast.\n\n\nvolcano_plots_files.DTFA.differential_analyses.immune_human_2x_6eb8983d448a96ed\n\n\nOpen full output\n\n\n\n\n\nDifferential TF activity support\n\n\nSigned count summary of significant pseudobulk differential transcription-factor activity results across configured contrasts.\n\n\nsignificant_elements_plot.DTFA.differential_analyses.immune_human_2x\n\n\nOpen full output\n\n\n\n\n\n6.2.4 Cell-type composition\n\n\n\n\nDifferential cell-type composition\n\n\nModelled change in cell type composition for a configured experimental or phenotypic variable.\n\n\nmodel_change_per_unit_plot.DCTC.differential_analyses.immune_human_2x\n\n\nOpen full output\n\n\n\n\n\nCell-type composition coefficient forest\n\n\nForest plot of fitted cell-type composition model coefficients.\n\n\nmodel_coefs_forest.DCTC.differential_analyses.immune_human_2x\n\n\nOpen full output",
     "crumbs": [
       "Setup",
       "<span class='chapter-number'>6</span>  <span class='chapter-title'>Output Gallery</span>"
     ]
   },
   {
-    "objectID": "output_gallery.html#genetic-enrichment",
-    "href": "output_gallery.html#genetic-enrichment",
+    "objectID": "output_gallery.html#genetic-enrichment-module",
+    "href": "output_gallery.html#genetic-enrichment-module",
     "title": "6  Output Gallery",
-    "section": "6.3 Genetic enrichment",
-    "text": "6.3 Genetic enrichment\n\n\n\nPreview pending\n\n\nGWAS chromVAR enrichment dotplot\n\n\nTrait-by-cell-type enrichment summary using Open Targets credible sets and chromVAR-style peak weighting.\n\n\nZScores_dotplot.summarized.single_nucleus.genetic_enrichment.blood_human\n\n\n\n\nPreview pending\n\n\nSCAVENGE trait relevance intervals\n\n\nGraph-propagated trait relevance score intervals for configured human GWAS traits.\n\n\nTRS_by_cluster_boxplot.SCAVENGE.WNN_harmony_SNN.genetic_enrichment.blood_human",
+    "section": "6.3 Genetic enrichment module",
+    "text": "6.3 Genetic enrichment module\n\n\n\n\nGWAS chromVAR enrichment dotplot\n\n\nTrait-by-cell-type enrichment summary using Open Targets credible sets and chromVAR-style peak weighting.\n\n\nZScores_dotplot.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x\n\n\nOpen full output\n\n\n\n\n\nSCAVENGE trait relevance intervals\n\n\nGraph-propagated trait relevance score intervals for configured human GWAS traits.\n\n\nTRS_by_cluster_boxplot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x\n\n\nOpen full output",
     "crumbs": [
       "Setup",
       "<span class='chapter-number'>6</span>  <span class='chapter-title'>Output Gallery</span>"

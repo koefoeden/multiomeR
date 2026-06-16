@@ -200,9 +200,21 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#main-pipeline" id="toc-main-pipeline" class="nav-link active" data-scroll-target="#main-pipeline"><span class="header-section-number">6.1</span> Main pipeline</a></li>
-  <li><a href="#differential-analyses" id="toc-differential-analyses" class="nav-link" data-scroll-target="#differential-analyses"><span class="header-section-number">6.2</span> Differential analyses</a></li>
-  <li><a href="#genetic-enrichment" id="toc-genetic-enrichment" class="nav-link" data-scroll-target="#genetic-enrichment"><span class="header-section-number">6.3</span> Genetic enrichment</a></li>
+  <li><a href="#main-pipeline" id="toc-main-pipeline" class="nav-link active" data-scroll-target="#main-pipeline"><span class="header-section-number">6.1</span> Main pipeline</a>
+  <ul class="collapse">
+  <li><a href="#parallel-reaction-pre-processing" id="toc-parallel-reaction-pre-processing" class="nav-link" data-scroll-target="#parallel-reaction-pre-processing"><span class="header-section-number">6.1.1</span> Parallel reaction pre-processing</a></li>
+  <li><a href="#gex" id="toc-gex" class="nav-link" data-scroll-target="#gex"><span class="header-section-number">6.1.2</span> GEX</a></li>
+  <li><a href="#atac" id="toc-atac" class="nav-link" data-scroll-target="#atac"><span class="header-section-number">6.1.3</span> ATAC</a></li>
+  <li><a href="#wnn" id="toc-wnn" class="nav-link" data-scroll-target="#wnn"><span class="header-section-number">6.1.4</span> WNN</a></li>
+  </ul></li>
+  <li><a href="#differential-analyses-module" id="toc-differential-analyses-module" class="nav-link" data-scroll-target="#differential-analyses-module"><span class="header-section-number">6.2</span> Differential analyses module</a>
+  <ul class="collapse">
+  <li><a href="#gene-expression" id="toc-gene-expression" class="nav-link" data-scroll-target="#gene-expression"><span class="header-section-number">6.2.1</span> Gene expression</a></li>
+  <li><a href="#chromatin-accessibility" id="toc-chromatin-accessibility" class="nav-link" data-scroll-target="#chromatin-accessibility"><span class="header-section-number">6.2.2</span> Chromatin accessibility</a></li>
+  <li><a href="#transcription-factor-activity" id="toc-transcription-factor-activity" class="nav-link" data-scroll-target="#transcription-factor-activity"><span class="header-section-number">6.2.3</span> Transcription-factor activity</a></li>
+  <li><a href="#cell-type-composition" id="toc-cell-type-composition" class="nav-link" data-scroll-target="#cell-type-composition"><span class="header-section-number">6.2.4</span> Cell-type composition</a></li>
+  </ul></li>
+  <li><a href="#genetic-enrichment-module" id="toc-genetic-enrichment-module" class="nav-link" data-scroll-target="#genetic-enrichment-module"><span class="header-section-number">6.3</span> Genetic enrichment module</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/output_gallery.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -232,25 +244,131 @@ ul.task-list li input[type="checkbox"] {
 <p>Each card includes the corresponding <code>targets</code> target name so you can connect the displayed output back to the workflow.</p>
 <section id="main-pipeline" class="level2" data-number="6.1">
 <h2 data-number="6.1" class="anchored" data-anchor-id="main-pipeline"><span class="header-section-number">6.1</span> Main pipeline</h2>
+<section id="parallel-reaction-pre-processing" class="level3" data-number="6.1.1">
+<h3 data-number="6.1.1" class="anchored" data-anchor-id="parallel-reaction-pre-processing"><span class="header-section-number">6.1.1</span> Parallel reaction pre-processing</h3>
 <div class="output-gallery-grid">
 <article class="output-gallery-card">
-<div class="output-gallery-placeholder">
-Preview pending
-</div>
+<a href="gallery_assets/parallel_reaction_preprocessing/qc_violins.png"><img src="gallery_assets/parallel_reaction_preprocessing/qc_violins.png" alt="Per-reaction QC metric distributions"></a>
 <h3 class="anchored">
-WNN cell type overview
+Per-reaction QC metric distributions
 </h3>
 <p>
-Multimodal tri-panel UMAP summary from the public human blood aggregation.
+Violin plot of a representative pre-aggregation QC metric across reactions in the public immune human example dataset.
 </p>
 <p class="output-gallery-target">
-<code>cluster_cell_type_dim_tri_plot.WNN.blood_human</code>
+<code>per_dataset_QC_violins.immune_human_dataset</code>
+</p>
+<p>
+<a href="gallery_assets/parallel_reaction_preprocessing/qc_violins.png">Open full output</a>
 </p>
 </article>
 <article class="output-gallery-card">
-<div class="output-gallery-placeholder">
-Preview pending
+<a href="gallery_assets/parallel_reaction_preprocessing/qc_excluded_upset.png"><img src="gallery_assets/parallel_reaction_preprocessing/qc_excluded_upset.png" alt="Per-dataset QC exclusions"></a>
+<h3 class="anchored">
+Per-dataset QC exclusions
+</h3>
+<p>
+UpSet plot summarizing pre-aggregation QC exclusion overlaps across reactions in the public immune human example dataset.
+</p>
+<p class="output-gallery-target">
+<code>per_dataset_excluded_upset.immune_human_dataset</code>
+</p>
+<p>
+<a href="gallery_assets/parallel_reaction_preprocessing/qc_excluded_upset.png">Open full output</a>
+</p>
+</article>
 </div>
+</section>
+<section id="gex" class="level3" data-number="6.1.2">
+<h3 data-number="6.1.2" class="anchored" data-anchor-id="gex"><span class="header-section-number">6.1.2</span> GEX</h3>
+<div class="output-gallery-grid">
+<article class="output-gallery-card">
+<a href="gallery_assets/GEX/harmony_categorical_umap.png"><img src="gallery_assets/GEX/harmony_categorical_umap.png" alt="GEX harmony UMAP"></a>
+<h3 class="anchored">
+GEX harmony UMAP
+</h3>
+<p>
+Harmonized GEX embedding colored by the first configured categorical grouping.
+</p>
+<p class="output-gallery-target">
+<code>harmony.categorical.UMAPs.GEX.immune_human_2x</code>
+</p>
+<p>
+<a href="gallery_assets/GEX/harmony_categorical_umap.png">Open full output</a>
+</p>
+</article>
+<article class="output-gallery-card">
+<a href="gallery_assets/GEX/markers_dot_plot.png"><img src="gallery_assets/GEX/markers_dot_plot.png" alt="GEX marker dot plot"></a>
+<h3 class="anchored">
+GEX marker dot plot
+</h3>
+<p>
+Marker gene expression summary across GEX-derived groups.
+</p>
+<p class="output-gallery-target">
+<code>markers_dot_plot.GEX.immune_human_2x</code>
+</p>
+<p>
+<a href="gallery_assets/GEX/markers_dot_plot.png">Open full output</a>
+</p>
+</article>
+</div>
+</section>
+<section id="atac" class="level3" data-number="6.1.3">
+<h3 data-number="6.1.3" class="anchored" data-anchor-id="atac"><span class="header-section-number">6.1.3</span> ATAC</h3>
+<div class="output-gallery-grid">
+<article class="output-gallery-card">
+<a href="gallery_assets/ATAC/harmony_categorical_umap.png"><img src="gallery_assets/ATAC/harmony_categorical_umap.png" alt="ATAC harmony UMAP"></a>
+<h3 class="anchored">
+ATAC harmony UMAP
+</h3>
+<p>
+Harmonized ATAC embedding colored by the first configured categorical grouping.
+</p>
+<p class="output-gallery-target">
+<code>categorical.UMAPs.ATAC.immune_human_2x</code>
+</p>
+<p>
+<a href="gallery_assets/ATAC/harmony_categorical_umap.png">Open full output</a>
+</p>
+</article>
+<article class="output-gallery-card">
+<a href="gallery_assets/ATAC/tf_activity_dot_plot.png"><img src="gallery_assets/ATAC/tf_activity_dot_plot.png" alt="TF activity dot plot"></a>
+<h3 class="anchored">
+TF activity dot plot
+</h3>
+<p>
+Transcription factor activity summary across ATAC-derived groups.
+</p>
+<p class="output-gallery-target">
+<code>TF_activity_dot_plot.ATAC.immune_human_2x</code>
+</p>
+<p>
+<a href="gallery_assets/ATAC/tf_activity_dot_plot.png">Open full output</a>
+</p>
+</article>
+</div>
+</section>
+<section id="wnn" class="level3" data-number="6.1.4">
+<h3 data-number="6.1.4" class="anchored" data-anchor-id="wnn"><span class="header-section-number">6.1.4</span> WNN</h3>
+<div class="output-gallery-grid">
+<article class="output-gallery-card">
+<a href="gallery_assets/WNN/harmony_categorical_umap.png"><img src="gallery_assets/WNN/harmony_categorical_umap.png" alt="WNN harmony UMAP"></a>
+<h3 class="anchored">
+WNN harmony UMAP
+</h3>
+<p>
+Multimodal WNN embedding colored by the first configured categorical grouping.
+</p>
+<p class="output-gallery-target">
+<code>categorical.UMAPs.WNN.immune_human_2x</code>
+</p>
+<p>
+<a href="gallery_assets/WNN/harmony_categorical_umap.png">Open full output</a>
+</p>
+</article>
+<article class="output-gallery-card">
+<a href="gallery_assets/WNN/atac_vs_rna_weight_boxplots.png"><img src="gallery_assets/WNN/atac_vs_rna_weight_boxplots.png" alt="RNA versus ATAC modality weights"></a>
 <h3 class="anchored">
 RNA versus ATAC modality weights
 </h3>
@@ -258,65 +376,163 @@ RNA versus ATAC modality weights
 Boxplots showing how much RNA and ATAC contribute to the WNN graph across cell types.
 </p>
 <p class="output-gallery-target">
-<code>ATAC_vs_RNA_weight_boxplots_plot.WNN.blood_human</code>
+<code>ATAC_vs_RNA_weight_boxplots_plot.WNN.immune_human_2x</code>
 </p>
-</article>
-<article class="output-gallery-card">
-<div class="output-gallery-placeholder">
-Preview pending
-</div>
-<h3 class="anchored">
-ATAC QC exclusions
-</h3>
 <p>
-Upset plot summarizing which post-aggregation ATAC QC filters exclude cells.
-</p>
-<p class="output-gallery-target">
-<code>QC_excluded_upset_plot.ATAC.blood_human</code>
+<a href="gallery_assets/WNN/atac_vs_rna_weight_boxplots.png">Open full output</a>
 </p>
 </article>
 </div>
 </section>
-<section id="differential-analyses" class="level2" data-number="6.2">
-<h2 data-number="6.2" class="anchored" data-anchor-id="differential-analyses"><span class="header-section-number">6.2</span> Differential analyses</h2>
+</section>
+<section id="differential-analyses-module" class="level2" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="differential-analyses-module"><span class="header-section-number">6.2</span> Differential analyses module</h2>
+<section id="gene-expression" class="level3" data-number="6.2.1">
+<h3 data-number="6.2.1" class="anchored" data-anchor-id="gene-expression"><span class="header-section-number">6.2.1</span> Gene expression</h3>
 <div class="output-gallery-grid">
 <article class="output-gallery-card">
-<div class="output-gallery-placeholder">
-Preview pending
-</div>
+<a href="gallery_assets/differential_analyses/gene_expression/volcano_plot.png"><img src="gallery_assets/differential_analyses/gene_expression/volcano_plot.png" alt="Differential gene expression volcano plot"></a>
 <h3 class="anchored">
-Differential cell type composition
+Differential gene expression volcano plot
 </h3>
 <p>
-Modelled change in cell type composition for a configured experimental or phenotypic variable.
+Volcano plot of pseudobulk differential gene expression results for a configured contrast.
 </p>
 <p class="output-gallery-target">
-<code>model_change_per_unit_plot.DCTC.differential_analyses.blood_human</code>
+<code>volcano_plots_files.DGE.differential_analyses.immune_human_2x_f38cff8e83d87033</code>
+</p>
+<p>
+<a href="gallery_assets/differential_analyses/gene_expression/volcano_plot.png">Open full output</a>
 </p>
 </article>
 <article class="output-gallery-card">
-<div class="output-gallery-placeholder">
-Preview pending
-</div>
+<a href="gallery_assets/differential_analyses/gene_expression/significant_elements.png"><img src="gallery_assets/differential_analyses/gene_expression/significant_elements.png" alt="Differential gene expression support"></a>
 <h3 class="anchored">
-Pseudobulk differential expression support
+Differential gene expression support
 </h3>
 <p>
 Signed count summary of significant pseudobulk differential expression results across configured contrasts.
 </p>
 <p class="output-gallery-target">
-<code>significant_elements_plot.DGE.differential_analyses.blood_human</code>
+<code>significant_elements_plot.DGE.differential_analyses.immune_human_2x</code>
+</p>
+<p>
+<a href="gallery_assets/differential_analyses/gene_expression/significant_elements.png">Open full output</a>
 </p>
 </article>
 </div>
 </section>
-<section id="genetic-enrichment" class="level2" data-number="6.3">
-<h2 data-number="6.3" class="anchored" data-anchor-id="genetic-enrichment"><span class="header-section-number">6.3</span> Genetic enrichment</h2>
+<section id="chromatin-accessibility" class="level3" data-number="6.2.2">
+<h3 data-number="6.2.2" class="anchored" data-anchor-id="chromatin-accessibility"><span class="header-section-number">6.2.2</span> Chromatin accessibility</h3>
 <div class="output-gallery-grid">
 <article class="output-gallery-card">
-<div class="output-gallery-placeholder">
-Preview pending
+<a href="gallery_assets/differential_analyses/chromatin_accessibility/volcano_plot.png"><img src="gallery_assets/differential_analyses/chromatin_accessibility/volcano_plot.png" alt="Differential chromatin accessibility volcano plot"></a>
+<h3 class="anchored">
+Differential chromatin accessibility volcano plot
+</h3>
+<p>
+Volcano plot of pseudobulk differential chromatin accessibility results for a configured contrast.
+</p>
+<p class="output-gallery-target">
+<code>volcano_plots_files.DCA.differential_analyses.immune_human_2x_dcd38387c49741f1</code>
+</p>
+<p>
+<a href="gallery_assets/differential_analyses/chromatin_accessibility/volcano_plot.png">Open full output</a>
+</p>
+</article>
+<article class="output-gallery-card">
+<a href="gallery_assets/differential_analyses/chromatin_accessibility/significant_elements.png"><img src="gallery_assets/differential_analyses/chromatin_accessibility/significant_elements.png" alt="Differential chromatin accessibility support"></a>
+<h3 class="anchored">
+Differential chromatin accessibility support
+</h3>
+<p>
+Signed count summary of significant pseudobulk differential chromatin accessibility results across configured contrasts.
+</p>
+<p class="output-gallery-target">
+<code>significant_elements_plot.DCA.differential_analyses.immune_human_2x</code>
+</p>
+<p>
+<a href="gallery_assets/differential_analyses/chromatin_accessibility/significant_elements.png">Open full output</a>
+</p>
+</article>
 </div>
+</section>
+<section id="transcription-factor-activity" class="level3" data-number="6.2.3">
+<h3 data-number="6.2.3" class="anchored" data-anchor-id="transcription-factor-activity"><span class="header-section-number">6.2.3</span> Transcription-factor activity</h3>
+<div class="output-gallery-grid">
+<article class="output-gallery-card">
+<a href="gallery_assets/differential_analyses/transcription_factor_activity/volcano_plot.png"><img src="gallery_assets/differential_analyses/transcription_factor_activity/volcano_plot.png" alt="Differential TF activity volcano plot"></a>
+<h3 class="anchored">
+Differential TF activity volcano plot
+</h3>
+<p>
+Volcano plot of pseudobulk differential transcription-factor activity results for a configured contrast.
+</p>
+<p class="output-gallery-target">
+<code>volcano_plots_files.DTFA.differential_analyses.immune_human_2x_6eb8983d448a96ed</code>
+</p>
+<p>
+<a href="gallery_assets/differential_analyses/transcription_factor_activity/volcano_plot.png">Open full output</a>
+</p>
+</article>
+<article class="output-gallery-card">
+<a href="gallery_assets/differential_analyses/transcription_factor_activity/significant_elements.png"><img src="gallery_assets/differential_analyses/transcription_factor_activity/significant_elements.png" alt="Differential TF activity support"></a>
+<h3 class="anchored">
+Differential TF activity support
+</h3>
+<p>
+Signed count summary of significant pseudobulk differential transcription-factor activity results across configured contrasts.
+</p>
+<p class="output-gallery-target">
+<code>significant_elements_plot.DTFA.differential_analyses.immune_human_2x</code>
+</p>
+<p>
+<a href="gallery_assets/differential_analyses/transcription_factor_activity/significant_elements.png">Open full output</a>
+</p>
+</article>
+</div>
+</section>
+<section id="cell-type-composition" class="level3" data-number="6.2.4">
+<h3 data-number="6.2.4" class="anchored" data-anchor-id="cell-type-composition"><span class="header-section-number">6.2.4</span> Cell-type composition</h3>
+<div class="output-gallery-grid">
+<article class="output-gallery-card">
+<a href="gallery_assets/differential_analyses/cell_type_composition/model_change_per_unit.png"><img src="gallery_assets/differential_analyses/cell_type_composition/model_change_per_unit.png" alt="Differential cell-type composition"></a>
+<h3 class="anchored">
+Differential cell-type composition
+</h3>
+<p>
+Modelled change in cell type composition for a configured experimental or phenotypic variable.
+</p>
+<p class="output-gallery-target">
+<code>model_change_per_unit_plot.DCTC.differential_analyses.immune_human_2x</code>
+</p>
+<p>
+<a href="gallery_assets/differential_analyses/cell_type_composition/model_change_per_unit.png">Open full output</a>
+</p>
+</article>
+<article class="output-gallery-card">
+<a href="gallery_assets/differential_analyses/cell_type_composition/model_coefs_forest.png"><img src="gallery_assets/differential_analyses/cell_type_composition/model_coefs_forest.png" alt="Cell-type composition coefficient forest"></a>
+<h3 class="anchored">
+Cell-type composition coefficient forest
+</h3>
+<p>
+Forest plot of fitted cell-type composition model coefficients.
+</p>
+<p class="output-gallery-target">
+<code>model_coefs_forest.DCTC.differential_analyses.immune_human_2x</code>
+</p>
+<p>
+<a href="gallery_assets/differential_analyses/cell_type_composition/model_coefs_forest.png">Open full output</a>
+</p>
+</article>
+</div>
+</section>
+</section>
+<section id="genetic-enrichment-module" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="genetic-enrichment-module"><span class="header-section-number">6.3</span> Genetic enrichment module</h2>
+<div class="output-gallery-grid">
+<article class="output-gallery-card">
+<a href="gallery_assets/genetic_enrichment/gwas_chromvar_dotplot.png"><img src="gallery_assets/genetic_enrichment/gwas_chromvar_dotplot.png" alt="GWAS chromVAR enrichment dotplot"></a>
 <h3 class="anchored">
 GWAS chromVAR enrichment dotplot
 </h3>
@@ -324,13 +540,14 @@ GWAS chromVAR enrichment dotplot
 Trait-by-cell-type enrichment summary using Open Targets credible sets and chromVAR-style peak weighting.
 </p>
 <p class="output-gallery-target">
-<code>ZScores_dotplot.summarized.single_nucleus.genetic_enrichment.blood_human</code>
+<code>ZScores_dotplot.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x</code>
+</p>
+<p>
+<a href="gallery_assets/genetic_enrichment/gwas_chromvar_dotplot.png">Open full output</a>
 </p>
 </article>
 <article class="output-gallery-card">
-<div class="output-gallery-placeholder">
-Preview pending
-</div>
+<a href="gallery_assets/genetic_enrichment/TRS_by_cluster_boxplot.png"><img src="gallery_assets/genetic_enrichment/TRS_by_cluster_boxplot.png" alt="SCAVENGE trait relevance intervals"></a>
 <h3 class="anchored">
 SCAVENGE trait relevance intervals
 </h3>
@@ -338,7 +555,10 @@ SCAVENGE trait relevance intervals
 Graph-propagated trait relevance score intervals for configured human GWAS traits.
 </p>
 <p class="output-gallery-target">
-<code>TRS_by_cluster_boxplot.SCAVENGE.WNN_harmony_SNN.genetic_enrichment.blood_human</code>
+<code>TRS_by_cluster_boxplot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x</code>
+</p>
+<p>
+<a href="gallery_assets/genetic_enrichment/TRS_by_cluster_boxplot.png">Open full output</a>
 </p>
 </article>
 </div>

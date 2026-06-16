@@ -36,7 +36,7 @@
 - section: Genetic enrichment
   title: GWAS chromVAR enrichment dotplot
   description: Trait-by-cell-type enrichment summary using Open Targets credible sets and chromVAR-style peak weighting.
-  target: GWAS_chromVAR_summarized_Zscores_dotplot.genetic_enrichment.blood_human
+  target: ZScores_dotplot.summarized.single_nucleus.genetic_enrichment.blood_human
   asset: gallery_assets/genetic_enrichment/gwas_chromvar_dotplot.png
   status: planned
 

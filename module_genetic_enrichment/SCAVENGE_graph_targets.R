@@ -19,16 +19,16 @@ rlang::list2(
   ),
   targets::tar_target(
     name = TRS_tibbles,
-    description = "Propagate GWAS_chromVAR Z-scores through the NN graph to compute SCAVENGE TRS for each GWAS",
+    description = "Propagate single-nucleus chromVAR Z-scores through the NN graph to compute SCAVENGE TRS for each GWAS",
     command = get_SCAVENGE_TRS_from_ZScore_record(
-      ZScore_record = GWAS_chromVAR_ZScore_records.single_cell,
+      ZScore_record = ZScore_records.single_nucleus,
       NN_graph = graph_matrix,
       cores = 15,
       permutation_times = genetic_enrichment_SCAVENGE_permutation_times,
       restart_prob = genetic_enrichment_SCAVENGE_restart_prob,
       seed_percent = genetic_enrichment_SCAVENGE_seed_percent
     ),
-    pattern = map(GWAS_chromVAR_ZScore_records.single_cell),
+    pattern = map(ZScore_records.single_nucleus),
     resources = get_tar_resources(RAM_GB_req = 60, cores_req = 15)
   ),
   targets::tar_target(

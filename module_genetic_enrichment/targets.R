@@ -116,7 +116,7 @@ genetic_enrichment_gene_chromVAR_tibble <- genetic_enrichment_tibble |>
     "GWAS_analysis_inputs_tibble",
     "genetic_enrichment_peak_ranges",
     "posterior_probability_weighting_function",
-    "psbulk_GWAS_chromVAR_dynamic_tibble"
+    "model_tibble.trait_level.pseudobulk"
   ))
 
 rlang::list2(

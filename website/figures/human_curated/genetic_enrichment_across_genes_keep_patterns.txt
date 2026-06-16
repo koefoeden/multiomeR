@@ -1,11 +1,11 @@
 ^chromVAR_background_bins\.ATAC\.
 ^chromVAR_obj\.ATAC\.
 ^chromVAR_peak_expectation\.ATAC\.
-^GWAS_chromVAR_peak_weight_records\.
-^GWAS_chromVAR_summarized_ZScores_tibble\.
-^GWAS_chromVAR_ZScore_records\.single_cell\.
+^peak_weight_records\.trait_level\.
+^ZScores_tibble\.summarized\.single_nucleus\.
+^ZScore_records\.single_nucleus\.
 ^GWAS_inputs_tibble\.
 ^open_targets_credible_set_dataset_path$
-^graph_matrix\.SCAVENGE\.WNN_harmony_SNN\.
-^TRS_summary_tibble\.SCAVENGE\.WNN_harmony_SNN\.
-^TRS_tibbles\.SCAVENGE\.WNN_harmony_SNN\.
+^graph_matrix\.WNN_harmony_SNN\.SCAVENGE\.single_nucleus\.
+^TRS_summary_tibble\.WNN_harmony_SNN\.SCAVENGE\.single_nucleus\.
+^TRS_tibbles\.WNN_harmony_SNN\.SCAVENGE\.single_nucleus\.

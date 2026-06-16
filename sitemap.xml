@@ -2,38 +2,34 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://koefoeden.github.io/multiomeR/index.html</loc>
-    <lastmod>2026-06-16T13:37:38.609Z</lastmod>
+    <lastmod>2026-06-16T14:15:22.805Z</lastmod>
   </url>
   <url>
     <loc>https://koefoeden.github.io/multiomeR/overview.html</loc>
-    <lastmod>2026-06-16T13:37:38.609Z</lastmod>
+    <lastmod>2026-06-16T14:15:22.805Z</lastmod>
   </url>
   <url>
     <loc>https://koefoeden.github.io/multiomeR/quickstart.html</loc>
-    <lastmod>2026-06-16T13:37:38.609Z</lastmod>
-  </url>
-  <url>
-    <loc>https://koefoeden.github.io/multiomeR/installation.html</loc>
-    <lastmod>2026-06-16T13:37:38.609Z</lastmod>
-  </url>
-  <url>
-    <loc>https://koefoeden.github.io/multiomeR/configuration.html</loc>
-    <lastmod>2026-06-16T13:37:38.547Z</lastmod>
+    <lastmod>2026-06-16T14:15:22.805Z</lastmod>
   </url>
   <url>
     <loc>https://koefoeden.github.io/multiomeR/output_gallery.html</loc>
-    <lastmod>2026-06-16T13:37:38.609Z</lastmod>
+    <lastmod>2026-06-16T14:15:22.805Z</lastmod>
+  </url>
+  <url>
+    <loc>https://koefoeden.github.io/multiomeR/installation.html</loc>
+    <lastmod>2026-06-16T14:15:22.805Z</lastmod>
   </url>
   <url>
     <loc>https://koefoeden.github.io/multiomeR/reaction_aggregation_walkthrough.html</loc>
-    <lastmod>2026-06-16T13:37:38.609Z</lastmod>
+    <lastmod>2026-06-16T14:15:22.805Z</lastmod>
   </url>
   <url>
     <loc>https://koefoeden.github.io/multiomeR/differential_analyses_walkthrough.html</loc>
-    <lastmod>2026-06-16T13:37:38.547Z</lastmod>
+    <lastmod>2026-06-16T14:15:22.743Z</lastmod>
   </url>
   <url>
     <loc>https://koefoeden.github.io/multiomeR/genetic_enrichment_walkthrough.html</loc>
-    <lastmod>2026-06-16T13:37:38.608Z</lastmod>
+    <lastmod>2026-06-16T14:15:22.805Z</lastmod>
   </url>
 </urlset>

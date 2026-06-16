@@ -19,6 +19,25 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   tarchetypes::tar_file(
+    name = TRS_dotplot_unscaled,
+    description = "Save unscaled SCAVENGE TRS dotplots with Open Targets GWAS metadata annotations. [checkpoint:genetic_enrichment]",
+    command = {
+      plots <- plot_grouped_GWAS_by_cluster_dotplots(
+        TRS_dotplot_data,
+        split_col = "grouping_col",
+        GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
+        compartments_patterns = genetic_enrichment_compartment_patterns
+      )
+      save_plots_structured(
+        plots,
+        filetype = "png",
+        width = 20,
+        height = max(7, 0.24 * dplyr::n_distinct(TRS_dotplot_data$GWAS_ID) + 3)
+      )
+    },
+    resources = get_tar_resources(RAM_GB_req = 32)
+  ),
+  tarchetypes::tar_file(
     name = TRS_dotplot,
     description = "Save SCAVENGE TRS dotplots with Open Targets GWAS metadata annotations. [checkpoint:genetic_enrichment]",
     command = {

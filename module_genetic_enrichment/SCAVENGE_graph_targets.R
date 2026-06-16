@@ -48,7 +48,7 @@ rlang::list2(
     command = bind_rows(TRS_tibbles)
   ),
   tarchetypes::tar_file(
-    name = SCAVENGE_UMAPs,
+    name = TRS_UMAPs,
     description = "Plot one GWAS SCAVENGE TRS branch on the graph UMAP and save to file. [checkpoint:genetic_enrichment]",
     command = {
       plot <- get_SCAVENGE_TRS_UMAP_plots(
@@ -58,7 +58,8 @@ rlang::list2(
       )
       save_plots_structured(
         plot,
-        override_suffix = if (nrow(TRS_tibbles) == 0) NULL else unique(TRS_tibbles$GWAS_ID)[[1]]
+        override_suffix = if (nrow(TRS_tibbles) == 0) NULL else unique(TRS_tibbles$GWAS_ID)[[1]],
+        dyn_suffix_in_subdir = TRUE
       )
     },
     pattern = map(TRS_tibbles),

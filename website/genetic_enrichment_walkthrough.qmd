@@ -27,9 +27,24 @@ optional:
 
 The module config controls which Open Targets studies are used, how enrichment inputs are selected, and which trait-relevance summaries are produced. Start from `module_genetic_enrichment/cfg_template.yaml`, copy it to `module_genetic_enrichment/cfg.yaml`, and keep disabled or example rows available for reference until the corresponding human-data aggregation is ready.
 
-## Overview
+## Running the pipeline
 
-This diagram started as a generated draft from the exported `blood_human` target graph and is now maintained as a human-curated documentation diagram.
+From the repository-root R session described in [Installation](installation.qmd), first complete the main pipeline checkpoints for the human-data aggregation. Then run the module checkpoint. Replace `your_aggregation` with an aggregation that enables the module in `cfg_aggregations.yaml`.
+
+### Genetic enrichment checkpoint
+
+```{r, eval = FALSE}
+targets::tar_make(
+  names = targets::tar_described_as(tidyselect::contains("checkpoint:genetic_enrichment")) &
+    tidyselect::matches("your_aggregation")
+)
+```
+
+This checkpoint writes the configured pseudobulk and single-nucleus trait-relevance summaries, including gchromVAR and SCAVENGE outputs. Runtime depends on the number of configured GWAS studies, enrichment methods, cells, and pseudobulk contrasts.
+
+## Implementation details
+
+The diagrams below are meant to make the module easier to reason about before reading the target code directly. They are generated from tagged target metadata and the real `{targets}` dependency graph, then simplified by pruning or bypassing lower-level nodes that would make each view harder to read. They keep real target names and preserve the dependency structure where practical, while staying compact enough to build intuition about the main control points.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_mermaid("website/figures/standard_node_color_legend.mmd")
@@ -37,7 +52,7 @@ emit_mermaid("website/figures/standard_node_color_legend.mmd")
 
 ### Pseudobulk GWAS
 
-GWAS and pseudobulk inputs used for trait-relevance analyses.
+This view covers GWAS and pseudobulk inputs used for trait-relevance analyses.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_mermaid("website/figures/human_curated/genetic_enrichment_pseudobulk_v2.mmd")
@@ -45,18 +60,8 @@ emit_mermaid("website/figures/human_curated/genetic_enrichment_pseudobulk_v2.mmd
 
 ### Genetic enrichment across genes
 
-Across-gene enrichment outputs and downstream trait summaries.
+This view covers across-gene enrichment outputs and downstream trait summaries.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_mermaid("website/figures/human_curated/genetic_enrichment_single_nucleus_v2.mmd")
 ```
-
-## Running the pipeline
-
-From the repository-root R session described in [Installation](installation.qmd), run the relevant root workflow targets. Replace `your_aggregation` with a human-data aggregation that enables the module in `cfg_aggregations.yaml`.
-
-```{r, eval = FALSE}
-targets::tar_make(names = matches("your_aggregation"))
-```
-
-Runtime depends on the number of configured GWAS studies, enrichment methods, cells, and pseudobulk contrasts.

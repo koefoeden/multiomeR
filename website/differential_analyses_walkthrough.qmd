@@ -29,21 +29,26 @@ optional:
 
 The module config controls which variables are modelled, which metadata columns are used, and which contrasts are run. Start from `module_differential_analyses/cfg_template.yaml`, copy it to `module_differential_analyses/cfg.yaml`, and keep disabled or example rows available for reference until the corresponding aggregation is ready.
 
-## Overview
+## Running the pipeline
 
-This diagram started as a generated draft from the exported `blood_human` target graph and is now maintained as a human-curated documentation diagram.
+From the repository-root R session described in [Installation](installation.qmd), first complete the main pipeline checkpoints for the aggregation. Then run the module checkpoint. Replace `your_aggregation` with an aggregation that enables the module in `cfg_aggregations.yaml`.
+
+### Differential analyses checkpoint
+
+```{r, eval = FALSE}
+targets::tar_make(
+  names = targets::tar_described_as(tidyselect::contains("checkpoint:differential_analyses")) &
+    tidyselect::matches("your_aggregation")
+)
+```
+
+This checkpoint writes the differential cell-type composition plots, pseudobulk model diagnostics, volcano plots, GSEA summaries, and cross-modality summaries configured for the aggregation. Runtime depends on the number of modelled variables, cell types, donors, and pseudobulk contrasts.
+
+## Implementation details
+
+The diagram below is meant to make the module easier to reason about before reading the target code directly. It is generated from tagged target metadata and the real `{targets}` dependency graph, then simplified by pruning or bypassing lower-level nodes that would make the view harder to read. It keeps real target names and preserves the dependency structure where practical, while staying compact enough to build intuition about the main control points.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_mermaid("website/figures/standard_node_color_legend.mmd")
 emit_mermaid("website/figures/human_curated/differential_analyses_v2.mmd")
 ```
-
-## Running the pipeline
-
-From the repository-root R session described in [Installation](installation.qmd), run the relevant root workflow targets. Replace `your_aggregation` with an aggregation that enables the module in `cfg_aggregations.yaml`.
-
-```{r, eval = FALSE}
-targets::tar_make(names = matches("your_aggregation"))
-```
-
-Runtime depends on the number of modelled variables, cell types, donors, and pseudobulk contrasts in the aggregation.

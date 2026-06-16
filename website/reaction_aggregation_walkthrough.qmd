@@ -81,68 +81,13 @@ Each aggregation also points to metadata files:
 
 These metadata tables are joined to the per-cell metadata before downstream correction, plotting, and modelling.
 
-## Workflow stages
-
-The main pipeline runs these stages:
-
-- per-reaction processing and QC, including optional ambient RNA correction, donor demultiplexing, doublet detection, and barcode filtering
-- aggregation of selected reactions into dataset-level analysis objects
-- RNA processing, clustering, marker detection, and cell type annotation
-- ATAC peak calling, consensus peak construction, chromatin accessibility processing, and chromVAR scoring
-- WNN integration across RNA and ATAC modalities
-- optional subgroup reprocessing for sufficiently large parent groups
-
-## Overview
-
-The diagrams below started as generated drafts from the exported `blood_human` target graph and are now maintained as human-curated documentation diagrams.
-
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_mermaid("website/figures/standard_node_color_legend.mmd")
-```
-
-### Parallel pre-processing
-
-Reaction-level inputs, QC summaries, and handoffs into aggregation.
-
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_mermaid("website/figures/human_curated/parallel_v2.mmd")
-```
-
-### GEX processing
-
-Merged GEX processing, clustering, cell typing, and GEX outputs.
-
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_mermaid("website/figures/human_curated/GEX_v2.mmd")
-```
-
-### ATAC processing
-
-ATAC QC, peak calling, consensus peaks, derived modalities, coverage tracks, and peak-gene links.
-
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_mermaid("website/figures/human_curated/ATAC_v2.mmd")
-```
-
-### WNN integration
-
-GEX and ATAC embeddings, WNN integration, and integrated metadata outputs.
-
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_mermaid("website/figures/human_curated/WNN_v2.mmd")
-```
-
-### Subgroup reprocessing
-
-Optional subgroup-native GEX, ATAC, and WNN reprocessing for sufficiently large parent groups.
-
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_mermaid("website/figures/human_curated/full_subgroups_v2.mmd")
-```
-
 ## Running the pipeline
 
 From the repository-root R session described in [Installation](installation.qmd), run the main workflow in checkpoint-sized pieces. Replace `your_aggregation` with the aggregation name from `cfg_aggregations.yaml`, for example `blood_human`.
+
+### GEX checkpoint
+
+Run the RNA-processing checkpoint first:
 
 ```{r, eval = FALSE}
 targets::tar_make(
@@ -151,7 +96,22 @@ targets::tar_make(
 )
 ```
 
-At the GEX checkpoint, inspect the aggregation-level barcode exclusion summaries, RNA-only QC plots, marker summaries, and `GEX_Seurat_object.your_aggregation`. If the GEX filtering, clustering, and annotation look acceptable, continue to the multimodal checkpoint:
+At this checkpoint, inspect the aggregation-level barcode exclusion summaries, RNA-only QC plots, marker summaries, and `GEX_Seurat_object.your_aggregation`. If the GEX filtering, clustering, and annotation look acceptable, continue to the ATAC checkpoint.
+
+### ATAC checkpoint
+
+Run the ATAC-processing checkpoint after the GEX review:
+
+```{r, eval = FALSE}
+targets::tar_make(
+  names = targets::tar_described_as(tidyselect::contains("checkpoint:ATAC")) &
+    tidyselect::matches("your_aggregation")
+)
+```
+
+At this checkpoint, inspect ATAC QC plots, LSI diagnostics, peak and motif summaries, coverage tracks, and TF or gene activity plots. If the ATAC processing looks acceptable, continue to the multimodal checkpoint.
+
+### Multimodal checkpoint
 
 ```{r, eval = FALSE}
 targets::tar_make(
@@ -160,19 +120,7 @@ targets::tar_make(
 )
 ```
 
-At the multimodal checkpoint, inspect the ATAC QC plots, peak and motif summaries, WNN UMAPs, modality-weight plots, and `multimodal_Seurat_object.your_aggregation`. If the aggregation enables the optional downstream modules, continue with their checkpoint outputs:
-
-```{r, eval = FALSE}
-targets::tar_make(
-  names = targets::tar_described_as(tidyselect::contains("checkpoint:differential_analyses")) &
-    tidyselect::matches("your_aggregation")
-)
-
-targets::tar_make(
-  names = targets::tar_described_as(tidyselect::contains("checkpoint:genetic_enrichment")) &
-    tidyselect::matches("your_aggregation")
-)
-```
+At this checkpoint, inspect WNN UMAPs, modality-weight plots, multimodal cluster comparisons, and `multimodal_Seurat_object.your_aggregation`. Optional downstream modules are described in their own walkthroughs.
 
 To run all configured aggregations for a checkpoint, omit the `& tidyselect::matches("your_aggregation")` part. To run the full workflow after checkpoint review, run:
 
@@ -183,3 +131,51 @@ targets::tar_make()
 The full main pipeline can be computationally expensive. Start with the public example or a narrow target selection, then scale to larger datasets after local paths, metadata files, and controller settings are working.
 
 The workflow output directory can be changed with the `store` field in [`_targets.yaml`](https://github.com/koefoeden/multiomeR/tree/main/_targets.yaml).
+
+## Implementation details
+
+The diagrams below are meant to make the pipeline easier to reason about before reading the target code directly. They are generated from tagged target metadata and the real `{targets}` dependency graph, then simplified by pruning or bypassing lower-level nodes that would make the view harder to read. They keep real target names and preserve the dependency structure where practical, while staying compact enough to build intuition about the main control points.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/standard_node_color_legend.mmd")
+```
+
+### Parallel pre-processing
+
+This view covers per-reaction processing and QC, including optional ambient RNA correction, donor demultiplexing, doublet detection, barcode filtering, and handoffs into aggregation-level GEX and ATAC objects.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/human_curated/parallel_v2.mmd")
+```
+
+### GEX processing
+
+This view covers merged RNA processing, clustering, marker detection, cell type annotation, and GEX review outputs.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/human_curated/GEX_v2.mmd")
+```
+
+### ATAC processing
+
+This view covers ATAC QC, peak calling, consensus peak construction, chromatin accessibility processing, chromVAR scoring, coverage tracks, and peak-gene links.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/human_curated/ATAC_v2.mmd")
+```
+
+### WNN integration
+
+This view covers GEX and ATAC embedding handoffs, WNN integration, modality weights, cluster comparison, and integrated metadata outputs.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/human_curated/WNN_v2.mmd")
+```
+
+### Subgroup reprocessing
+
+This view covers optional subgroup-native GEX, ATAC, and WNN reprocessing for sufficiently large parent groups.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/human_curated/full_subgroups_v2.mmd")
+```

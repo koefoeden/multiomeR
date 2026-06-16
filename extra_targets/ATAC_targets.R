@@ -131,7 +131,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = peaks_similarity_tiles_plot.ATAC,
-      description = "Plot pairwise peak-set similarity matrix across clusters. [checkpoint:multimodal]",
+      description = "Plot pairwise peak-set similarity matrix across clusters. [checkpoint:ATAC]",
       command = {
         plot <- plot_similarity_matrix_from_GRanges_list(within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC)
         save_plots_structured(plot)
@@ -279,7 +279,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = coverage_tracks_plots.ATAC,
-      description = "Plot ATAC coverage tracks at marker gene and DA peak loci. [checkpoint:multimodal]",
+      description = "Plot ATAC coverage tracks at marker gene and DA peak loci. [checkpoint:ATAC]",
       command = plot_coverage_at_region_BPCells(
         fragments = combined_BPCells_fragment_obj.ATAC,
         metadata_tibble = metadata_w_cell_types_tibble.ATAC,
@@ -407,7 +407,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = VizDimLoadings_plots.ATAC,
-      description = "Plot top feature loadings for each LSI dimension. [checkpoint:multimodal]",
+      description = "Plot top feature loadings for each LSI dimension. [checkpoint:ATAC]",
       command = plot_LSI_loadings_from_tibble(
         LSI_loadings_tibble = LSI_loadings_tibble.ATAC,
         dims = aggregation_ATAC_data_PCs,
@@ -417,7 +417,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = LSI_singular_values_elbow_plot.ATAC,
-      description = "Elbow plot of native ATAC LSI singular values. [checkpoint:multimodal]",
+      description = "Elbow plot of native ATAC LSI singular values. [checkpoint:ATAC]",
       command = {
         plot <- plot_embedding_singular_values(
           singular_values = LSI_BPCells.ATAC$singular_values,
@@ -428,7 +428,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = LSI_embedding_sdev_plot.ATAC,
-      description = "Non-Harmony and Harmony ATAC LSI embedding coordinate SD plot. [checkpoint:multimodal]",
+      description = "Non-Harmony and Harmony ATAC LSI embedding coordinate SD plot. [checkpoint:ATAC]",
       command = {
         plot <- plot_embedding_sdev(
           embedding_matrix = LSI_BPCells.ATAC$cell_embeddings,
@@ -447,7 +447,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = LSI_metadata_association_barplots.ATAC,
-      description = "Non-Harmony and Harmony ATAC LSI metadata association bar plots. [checkpoint:multimodal]",
+      description = "Non-Harmony and Harmony ATAC LSI metadata association bar plots. [checkpoint:ATAC]",
       command = {
         plots <- plot_embedding_metadata_association_barplots(
           embedding_matrix = LSI_BPCells.ATAC$cell_embeddings,
@@ -569,7 +569,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = scDblFinder_score_violins_plot.ATAC,
-      description = "Violin plots of scDblFinder doublet scores by cluster. [checkpoint:multimodal]",
+      description = "Violin plots of scDblFinder doublet scores by cluster. [checkpoint:ATAC]",
       command = {
         scDblFinder_metadata <- metadata_w_cell_types_unfiltered_tibble.ATAC |>
           dplyr::left_join(scDblFinder_results_df.ATAC, by = "barcode_w_prefix")
@@ -630,7 +630,7 @@ rlang::list2(
   ATAC_QC_plots_targets = rlang::list2(
     tarchetypes::tar_file(
       name = peaks_QC_violins_plot.ATAC,
-      description = "Violin plots of peak-based ATAC QC metrics per reaction. [checkpoint:multimodal]",
+      description = "Violin plots of peak-based ATAC QC metrics per reaction. [checkpoint:ATAC]",
       command = {
         plot_data <- metadata_w_QC_tibble.ATAC |>
           dplyr::select(TENX_reaction_ID, "dataset", dplyr::any_of(aggregation_peak_based_continuous_QC_vars)) |>
@@ -648,7 +648,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = categorical_bars_plots.ATAC,
-      description = "Bar plots of categorical metadata proportions by cell-type cluster. [checkpoint:multimodal]",
+      description = "Bar plots of categorical metadata proportions by cell-type cluster. [checkpoint:ATAC]",
       command = {
         plot <- plot_categorical_bars_plot(
           metadata_w_cell_types_tibble.ATAC,
@@ -660,7 +660,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = QC_excluded_upset_plot.ATAC,
-      description = "UpSet plot of overlapping ATAC QC exclusion reasons. [checkpoint:multimodal]",
+      description = "UpSet plot of overlapping ATAC QC exclusion reasons. [checkpoint:ATAC]",
       command = {
         plot <- plot_upset_from_excluded_BCs_list(QC_excluded_BCs_list.ATAC, n_total = nrow(metadata_w_QC_tibble.ATAC))
         save_plots_structured(plot)
@@ -668,7 +668,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = categorical.UMAPs.ATAC,
-      description = "UMAPs colored by categorical metadata variables. [checkpoint:multimodal]",
+      description = "UMAPs colored by categorical metadata variables. [checkpoint:ATAC]",
       command = {
         plots <- plot_UMAP_from_metadata(metadata_w_cell_types_tibble.ATAC, metadata_cols = aggregation_ATAC_categorical_vars)
         save_plots_structured(plots)
@@ -681,7 +681,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = cross.UMAPs.ATAC,
-      description = "Compute ATAC UMAPs across a sweep of LSI dimension counts and neighbour counts. [checkpoint:multimodal]",
+      description = "Compute ATAC UMAPs across a sweep of LSI dimension counts and neighbour counts. [checkpoint:ATAC]",
       command = {
         sweep_umap <- run_UMAP_from_embedding_matrix(
           embedding_matrix = harmony_embeddings_matrix.ATAC[metadata_w_cell_types_tibble.ATAC$barcode_w_prefix, , drop = FALSE],
@@ -901,7 +901,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = TF_activity_marker_volcano_plots.ATAC,
-      description = "Facetted volcano plot of marker TF activity scores per ATAC cell type. [checkpoint:multimodal]",
+      description = "Facetted volcano plot of marker TF activity scores per ATAC cell type. [checkpoint:ATAC]",
       command = {
         plot <- TF_activity_markers.ATAC |>
           dplyr::mutate(avg_log2FC = .data$avg_diff) |>
@@ -913,7 +913,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = TF_activity_dot_plot.ATAC,
-      description = "Dot plot of configured marker TF activity scores per ATAC cell type. [checkpoint:multimodal]",
+      description = "Dot plot of configured marker TF activity scores per ATAC cell type. [checkpoint:ATAC]",
       command = plot_feature_scores_dot_from_matrix(
         feature_matrix = TF_activity_BPCells_matrix.ATAC,
         metadata_tibble = metadata_w_cell_types_tibble.ATAC,
@@ -925,7 +925,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = continuous.UMAPs.ATAC,
-      description = "UMAPs colored by continuous TF activity and peak accessibility metrics. [checkpoint:multimodal]",
+      description = "UMAPs colored by continuous TF activity and peak accessibility metrics. [checkpoint:ATAC]",
       command = plot_UMAP_from_metadata(
         metadata_tibble = metadata_w_cell_types_tibble.ATAC,
         metadata_cols = aggregation_w_peaks_continuous_vars,
@@ -986,7 +986,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = marker_gene_activity_dot_plot.ATAC,
-      description = "Dot plot of marker gene activity scores per ATAC cell type. [checkpoint:multimodal]",
+      description = "Dot plot of marker gene activity scores per ATAC cell type. [checkpoint:ATAC]",
       command = {
         plot <- plot_marker_gene_activity_dot_BPCells(
           feature_matrix = gene_score_archr_BPCells_matrix.ATAC,

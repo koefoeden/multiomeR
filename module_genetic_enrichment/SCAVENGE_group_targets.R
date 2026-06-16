@@ -1,29 +1,29 @@
 rlang::list2(
   targets::tar_target(
-    name = SCAVENGE_TRS_summary_tibble,
+    name = TRS_summary_tibble,
     description = "Combine per-GWAS SCAVENGE TRS group summaries across named and cell-type graph clusters",
-    command = dplyr::bind_rows(SCAVENGE_TRS_summary_tibbles),
+    command = dplyr::bind_rows(TRS_summary_tibbles),
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   targets::tar_target(
-    name = SCAVENGE_TRS_dotplot_data,
+    name = TRS_dotplot_data,
     description = "Prepare SCAVENGE TRS dotplot data from per-GWAS group summaries",
-    command = SCAVENGE_TRS_summary_tibble |>
+    command = TRS_summary_tibble |>
       get_SCAVENGE_dotplot_data(GWAS_tibble = GWAS_inputs_tibble),
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   targets::tar_target(
-    name = SCAVENGE_TRS_dotplot_scaled_data,
+    name = TRS_dotplot_scaled_data,
     description = "Rescale SCAVENGE TRS dotplot data per GWAS and grouping column to the 0-1 range",
-    command = scale_GWAS_dotplot_scores(SCAVENGE_TRS_dotplot_data, group_cols = "grouping_col"),
+    command = scale_GWAS_dotplot_scores(TRS_dotplot_data, group_cols = "grouping_col"),
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   tarchetypes::tar_file(
-    name = SCAVENGE_TRS_dotplot,
+    name = TRS_dotplot,
     description = "Save SCAVENGE TRS dotplots with Open Targets GWAS metadata annotations. [checkpoint:genetic_enrichment]",
     command = {
       plots <- plot_grouped_GWAS_by_cluster_dotplots(
-        SCAVENGE_TRS_dotplot_scaled_data,
+        TRS_dotplot_scaled_data,
         split_col = "grouping_col",
         name_suffix = "scaled",
         GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
@@ -34,25 +34,25 @@ rlang::list2(
         plots,
         filetype = "png",
         width = 20,
-        height = max(7, 0.24 * dplyr::n_distinct(SCAVENGE_TRS_dotplot_scaled_data$GWAS_ID) + 3)
+        height = max(7, 0.24 * dplyr::n_distinct(TRS_dotplot_scaled_data$GWAS_ID) + 3)
       )
     },
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   tarchetypes::tar_file(
-    name = SCAVENGE_sig_prop_bars,
+    name = sig_prop_bars,
     description = "Plot proportion of cells with significant SCAVENGE TRS per group and GWAS and save to file. [checkpoint:genetic_enrichment]",
     command = {
-      plot <- plot_SCAVENGE_summary_sig_proportion(SCAVENGE_TRS_summary_tibble)
+      plot <- plot_SCAVENGE_summary_sig_proportion(TRS_summary_tibble)
       save_plots_structured(plot)
     },
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   tarchetypes::tar_file(
-    name = SCAVENGE_TRS_by_cluster_boxplot,
+    name = TRS_by_cluster_boxplot,
     description = "Plot per-group SCAVENGE TRS summary intervals and save to file. [checkpoint:genetic_enrichment]",
     command = {
-      plot <- plot_SCAVENGE_summary_score_intervals(SCAVENGE_TRS_summary_tibble)
+      plot <- plot_SCAVENGE_summary_score_intervals(TRS_summary_tibble)
       save_plots_structured(plot)
     },
     resources = get_tar_resources(RAM_GB_req = 32)

@@ -521,7 +521,7 @@ get_degree_matched_permutation_p_values <- function(NN_graph, seed_idx, observed
   )
 }
 
-get_empty_SCAVENGE_TRS_tibble <- function() {
+get_empty_TRS_tibble <- function() {
   tibble::tibble(
     barcode_w_prefix = character(),
     score = numeric(),
@@ -577,7 +577,7 @@ get_SCAVENGE_TRS_from_ZScore_record <- function(
   deg0_filtered_graph <- drop_SCAVENGE_degree_zero_cells(z_score_filtered_graph)
   deg0_ZScore_vec_filtered <- ZScore_vec_filtered[rownames(deg0_filtered_graph)]
   if (length(deg0_ZScore_vec_filtered) == 0) {
-    return(get_empty_SCAVENGE_TRS_tibble())
+    return(get_empty_TRS_tibble())
   }
 
   # Get seed cells from filtered ZScores
@@ -604,14 +604,14 @@ get_SCAVENGE_TRS_from_ZScore_record <- function(
   net_prop_score_named_vec_filtered <- net_prop_score_named_vec[!zero_net_prop_score]
   kept_cells <- names(net_prop_score_named_vec_filtered)
   if (length(kept_cells) == 0) {
-    return(get_empty_SCAVENGE_TRS_tibble())
+    return(get_empty_TRS_tibble())
   }
 
   triple_filtered_graph <- drop_SCAVENGE_degree_zero_cells(deg0_filtered_graph[kept_cells, kept_cells, drop = FALSE])
   kept_cells <- rownames(triple_filtered_graph)
   net_prop_score_named_vec_filtered <- net_prop_score_named_vec_filtered[kept_cells]
   if (length(kept_cells) == 0) {
-    return(get_empty_SCAVENGE_TRS_tibble())
+    return(get_empty_TRS_tibble())
   }
 
   # Cap, scale, and multiply by scale factor
@@ -645,7 +645,7 @@ get_SCAVENGE_TRS_from_ZScore_record <- function(
   return(out_tibble)
 }
 
-get_empty_SCAVENGE_TRS_summary_tibble <- function() {
+get_empty_TRS_summary_tibble <- function() {
   tibble::tibble(
     GWAS_ID = character(),
     grouping_col = character(),
@@ -682,13 +682,13 @@ summarize_SCAVENGE_TRS_by_groups <- function(
   group_by_cols = c("cluster_named", "cluster_cell_type")
 ) {
   if (nrow(TRS_tibble) == 0) {
-    return(get_empty_SCAVENGE_TRS_summary_tibble())
+    return(get_empty_TRS_summary_tibble())
   }
 
   full_group_cols <- stringr::str_c(graph_name, "_", group_by_cols)
   available_group_cols <- intersect(full_group_cols, colnames(metadata_tibble))
   if (length(available_group_cols) == 0) {
-    return(get_empty_SCAVENGE_TRS_summary_tibble())
+    return(get_empty_TRS_summary_tibble())
   }
 
   cell_group_tibble <- metadata_tibble |>
@@ -703,7 +703,7 @@ summarize_SCAVENGE_TRS_by_groups <- function(
     dplyr::filter(!is.na(cluster), cluster != "")
 
   if (nrow(cell_group_tibble) == 0) {
-    return(get_empty_SCAVENGE_TRS_summary_tibble())
+    return(get_empty_TRS_summary_tibble())
   }
 
   TRS_tibble |>

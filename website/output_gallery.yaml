@@ -43,6 +43,6 @@
 - section: Genetic enrichment
   title: SCAVENGE trait relevance intervals
   description: Graph-propagated trait relevance score intervals for configured human GWAS traits.
-  target: SCAVENGE_TRS_by_cluster_boxplot.SCAVENGE.WNN_harmony_SNN.genetic_enrichment.blood_human
-  asset: gallery_assets/genetic_enrichment/scavenge_trs_by_cluster_boxplot.png
+  target: TRS_by_cluster_boxplot.SCAVENGE.WNN_harmony_SNN.genetic_enrichment.blood_human
+  asset: gallery_assets/genetic_enrichment/TRS_by_cluster_boxplot.png
   status: planned

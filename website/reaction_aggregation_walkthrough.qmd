@@ -13,7 +13,22 @@ Representative outputs from the public example workflow are collected in the [ou
 
 ## Inputs
 
-The main pipeline starts from one or more [`cellranger-arc count`](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/running-pipelines/single-library-analysis) output directories. Each configured reaction should point to a directory with the expected `outs/` files, including:
+The main pipeline is configured in three layers: datasets define shared genome and QC settings, reactions point to individual 10x outputs, and aggregations choose which reactions to process together.
+
+### `cfg_datasets.yaml`
+
+Dataset-level settings live in [`cfg_datasets.yaml`](`r datasets_github_file`). A dataset is the shared context for one or more 10x reactions, typically a genome/reference combination plus dataset-wide QC rules. Reactions in `cfg_reactions.tsv` refer to these dataset keys, so define datasets before adding reaction rows.
+
+Typical dataset-level settings include:
+
+- `dataset_cellranger_arc_refdata_dir`: Cell Ranger ARC reference directory for the dataset genome.
+- `dataset_QC_exclude_list_per_reaction`: reaction-level QC filters applied before aggregation.
+
+### `cfg_reactions.tsv`
+
+Reaction-level configuration lives in [`cfg_reactions.tsv`](`r reactions_github_file`). Start from `cfg_reactions_template.tsv`, then add one row per 10x reaction with a stable `reaction_ID`, the matching `dataset`, the `reaction_cellranger_count_dir`, and any donor demultiplexing fields relevant to that reaction.
+
+Each reaction should point to a [`cellranger-arc count`](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/running-pipelines/single-library-analysis) output directory. The pipeline expects the configured `reaction_cellranger_count_dir` to contain the standard `outs/` files, including:
 
 ```text
 <reaction_cellranger_count_dir>/outs/
@@ -24,8 +39,6 @@ The main pipeline starts from one or more [`cellranger-arc count`](https://www.1
 |-- atac_possorted_bam.bam
 |-- per_barcode_metrics.csv
 ```
-
-Reaction-level configuration lives in [`cfg_reactions.tsv`](`r reactions_github_file`). Start from `cfg_reactions_template.tsv`, then add one row per 10x reaction with a stable `reaction_ID`, the matching `dataset`, the `reaction_cellranger_count_dir`, and any donor demultiplexing fields relevant to that reaction.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 reaction_template <- readr::read_tsv("cfg_reactions_template.tsv", show_col_types = FALSE)
@@ -46,12 +59,7 @@ The reaction table columns are:
 | `reaction_cellbender_h5_file` | Optional CellBender-corrected GEX H5 file. Use `NA` when not used. |
 | `reaction_donors_VCF_file` | Optional VCF for donor demultiplexing. Use `NA` when not used. |
 
-Dataset-level settings live in [`cfg_datasets.yaml`](`r datasets_github_file`). This is where shared settings for a dataset are defined once and applied to all reactions that reference that dataset in `cfg_reactions.tsv`.
-
-Typical dataset-level settings include:
-
-- `dataset_cellranger_arc_refdata_dir`: Cell Ranger ARC reference directory for the dataset genome.
-- `dataset_QC_exclude_list_per_reaction`: reaction-level QC filters applied before aggregation.
+### `cfg_aggregations.yaml`
 
 Aggregation-level settings live in [`cfg_aggregations.yaml`](https://github.com/koefoeden/multiomeR/tree/main/cfg_aggregations_template.yaml). An aggregation combines one or more configured reactions and controls merged RNA/ATAC processing, clustering, annotation, plotting, and optional downstream modules.
 

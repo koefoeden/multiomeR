@@ -8,7 +8,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-This quickstart is the shortest path through the public example workflow. It condenses the detailed [Installation](installation.qmd), [Configuration](configuration.qmd), and [Main pipeline](reaction_aggregation_walkthrough.qmd) pages into two command blocks.
+This quickstart is the shortest path through the public example workflow. It condenses the detailed [Installation](installation.qmd) and [Main pipeline](reaction_aggregation_walkthrough.qmd) pages into two command blocks.
 
 The downloads include public `cellranger-arc count` outputs and matching 10x Genomics Cell Ranger ARC reference directories. They are large, and the example workflow can still take substantial time and disk space.
 

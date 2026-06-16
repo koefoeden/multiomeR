@@ -14,11 +14,8 @@ book:
     - index.qmd
     - overview.qmd
     - quickstart.qmd
-    - part: Setup
-      chapters:
-        - installation.qmd
-        - configuration.qmd
-        - output_gallery.qmd
+    - output_gallery.qmd
+    - installation.qmd
     - part: Workflow
       chapters:
         - reaction_aggregation_walkthrough.qmd
@@ -29,5 +26,6 @@ format:
     theme: cosmo
     css: styles.css
     toc: true
+    toc-depth: 3
     code-copy: true
     number-sections: true

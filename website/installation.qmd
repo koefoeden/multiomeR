@@ -106,6 +106,17 @@ cp crew_controllers_template.R crew_controllers.R
 
 The template uses a local `crew` controller. Increase workers, cores, and memory only after the example workflow succeeds on your machine.
 
+The pipelines support distributed computing through the [targets](https://books.ropensci.org/targets/crew.html) framework. The active backend is configured in `crew_controllers.R`, which can be a local symlink or copy.
+
+`crew_controllers.R` must return a named list with:
+
+- `controller_list`: the list of `crew` controllers.
+- `controller_resources_tibble`: a table with `controller_name`, `cores`, `RAM_GB`, and `gpus`.
+
+Targets request resources by cores, RAM, and optionally GPUs through `get_tar_resources()`. The first row of `controller_resources_tibble` is the default controller, and row order controls which matching controller is preferred. GPU controllers are excluded unless `gpus_req > 0`.
+
+For cluster execution, adapt `crew_controllers.R` to match your scheduler, queue names, resource limits, and worker startup requirements.
+
 ## Smoke test
 
 After the config files are in place, use the repository-root R session described above to check target graph construction:

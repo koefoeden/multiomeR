@@ -1,39 +1,39 @@
 - section: Main pipeline
   subsection: Parallel reaction pre-processing
-  title: Per-reaction QC metric distributions
-  description: Violin plot of a representative pre-aggregation QC metric across reactions in the public immune human example dataset.
+  title: QC metric distributions
+  description: Compares QC metric distributions across reactions to reveal outliers before aggregation.
   target: per_dataset_QC_violins.immune_human_dataset
   asset: gallery_assets/parallel_reaction_preprocessing/qc_violins.png
   status: available
 
 - section: Main pipeline
   subsection: Parallel reaction pre-processing
-  title: Per-dataset QC exclusions
-  description: UpSet plot summarizing pre-aggregation QC exclusion overlaps across reactions in the public immune human example dataset.
+  title: QC exclusion overlaps
+  description: Shows how different QC filters overlap when excluding low-quality cells.
   target: per_dataset_excluded_upset.immune_human_dataset
   asset: gallery_assets/parallel_reaction_preprocessing/qc_excluded_upset.png
   status: available
 
 - section: Main pipeline
   subsection: GEX
-  title: GEX harmony UMAP
-  description: Harmonized GEX embedding colored by the first configured categorical grouping.
+  title: Harmony UMAP
+  description: Shows how cells separate in the gene-expression embedding after batch-aware integration.
   target: harmony.categorical.UMAPs.GEX.immune_human_2x
   asset: gallery_assets/GEX/harmony_categorical_umap.png
   status: available
 
 - section: Main pipeline
   subsection: GEX
-  title: GEX marker dot plot
-  description: Marker gene expression summary across GEX-derived groups.
+  title: Marker dot plot
+  description: Highlights marker gene patterns that distinguish the inferred cell groups.
   target: markers_dot_plot.GEX.immune_human_2x
   asset: gallery_assets/GEX/markers_dot_plot.png
   status: available
 
 - section: Main pipeline
   subsection: ATAC
-  title: ATAC harmony UMAP
-  description: Harmonized ATAC embedding colored by the first configured categorical grouping.
+  title: Harmony UMAP
+  description: Shows how cells separate in the chromatin-accessibility embedding after batch-aware integration.
   target: categorical.UMAPs.ATAC.immune_human_2x
   asset: gallery_assets/ATAC/harmony_categorical_umap.png
   status: available
@@ -41,101 +41,101 @@
 - section: Main pipeline
   subsection: ATAC
   title: TF activity dot plot
-  description: Transcription factor activity summary across ATAC-derived groups.
+  description: Summarizes transcription-factor activity patterns across cell groups.
   target: TF_activity_dot_plot.ATAC.immune_human_2x
   asset: gallery_assets/ATAC/tf_activity_dot_plot.png
   status: available
 
 - section: Main pipeline
   subsection: WNN
-  title: WNN harmony UMAP
-  description: Multimodal WNN embedding colored by the first configured categorical grouping.
+  title: Harmony UMAP
+  description: Combines RNA and ATAC information to show the integrated multimodal cell-state structure.
   target: categorical.UMAPs.WNN.immune_human_2x
   asset: gallery_assets/WNN/harmony_categorical_umap.png
   status: available
 
 - section: Main pipeline
   subsection: WNN
-  title: RNA versus ATAC modality weights
-  description: Boxplots showing how much RNA and ATAC contribute to the WNN graph across cell types.
+  title: Modality weights
+  description: Shows how RNA and ATAC evidence contribute differently across cell groups.
   target: ATAC_vs_RNA_weight_boxplots_plot.WNN.immune_human_2x
   asset: gallery_assets/WNN/atac_vs_rna_weight_boxplots.png
   status: available
 
 - section: Differential analyses module
   subsection: Gene expression
-  title: Differential gene expression volcano plot
-  description: Volcano plot of pseudobulk differential gene expression results for a configured contrast.
+  title: Volcano plot
+  description: Highlights genes with the strongest expression differences for one comparison.
   target: volcano_plots_files.DGE.differential_analyses.immune_human_2x_f38cff8e83d87033
   asset: gallery_assets/differential_analyses/gene_expression/volcano_plot.png
   status: available
 
 - section: Differential analyses module
   subsection: Gene expression
-  title: Differential gene expression support
-  description: Signed count summary of significant pseudobulk differential expression results across configured contrasts.
+  title: Significant-elements summary
+  description: Summarizes the number and direction of significant expression changes across comparisons.
   target: significant_elements_plot.DGE.differential_analyses.immune_human_2x
   asset: gallery_assets/differential_analyses/gene_expression/significant_elements.png
   status: available
 
 - section: Differential analyses module
   subsection: Chromatin accessibility
-  title: Differential chromatin accessibility volcano plot
-  description: Volcano plot of pseudobulk differential chromatin accessibility results for a configured contrast.
+  title: Volcano plot
+  description: Highlights regulatory regions with the strongest accessibility differences for one comparison.
   target: volcano_plots_files.DCA.differential_analyses.immune_human_2x_dcd38387c49741f1
   asset: gallery_assets/differential_analyses/chromatin_accessibility/volcano_plot.png
   status: available
 
 - section: Differential analyses module
   subsection: Chromatin accessibility
-  title: Differential chromatin accessibility support
-  description: Signed count summary of significant pseudobulk differential chromatin accessibility results across configured contrasts.
+  title: Significant-elements summary
+  description: Summarizes the number and direction of significant accessibility changes across comparisons.
   target: significant_elements_plot.DCA.differential_analyses.immune_human_2x
   asset: gallery_assets/differential_analyses/chromatin_accessibility/significant_elements.png
   status: available
 
 - section: Differential analyses module
   subsection: Transcription-factor activity
-  title: Differential TF activity volcano plot
-  description: Volcano plot of pseudobulk differential transcription-factor activity results for a configured contrast.
+  title: Volcano plot
+  description: Highlights transcription factors with the strongest activity differences for one comparison.
   target: volcano_plots_files.DTFA.differential_analyses.immune_human_2x_6eb8983d448a96ed
   asset: gallery_assets/differential_analyses/transcription_factor_activity/volcano_plot.png
   status: available
 
 - section: Differential analyses module
   subsection: Transcription-factor activity
-  title: Differential TF activity support
-  description: Signed count summary of significant pseudobulk differential transcription-factor activity results across configured contrasts.
+  title: Significant-elements summary
+  description: Summarizes the number and direction of significant transcription-factor activity changes across comparisons.
   target: significant_elements_plot.DTFA.differential_analyses.immune_human_2x
   asset: gallery_assets/differential_analyses/transcription_factor_activity/significant_elements.png
   status: available
 
 - section: Differential analyses module
   subsection: Cell-type composition
-  title: Differential cell-type composition
-  description: Modelled change in cell type composition for a configured experimental or phenotypic variable.
+  title: Modelled composition change
+  description: Shows how cell-type proportions vary with sample-level conditions or phenotypes.
   target: model_change_per_unit_plot.DCTC.differential_analyses.immune_human_2x
   asset: gallery_assets/differential_analyses/cell_type_composition/model_change_per_unit.png
   status: available
 
 - section: Differential analyses module
   subsection: Cell-type composition
-  title: Cell-type composition coefficient forest
-  description: Forest plot of fitted cell-type composition model coefficients.
+  title: Coefficient forest
+  description: Displays effect estimates and uncertainty for cell-type composition changes.
   target: model_coefs_forest.DCTC.differential_analyses.immune_human_2x
   asset: gallery_assets/differential_analyses/cell_type_composition/model_coefs_forest.png
   status: available
 
 - section: Genetic enrichment module
-  title: GWAS chromVAR enrichment dotplot
-  description: Trait-by-cell-type enrichment summary using Open Targets credible sets and chromVAR-style peak weighting.
+  title: Enrichment dotplot
+  description: Connects genetic association evidence to cell groups through regulatory enrichment patterns.
   target: ZScores_dotplot.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x
   asset: gallery_assets/genetic_enrichment/gwas_chromvar_dotplot.png
   status: available
 
 - section: Genetic enrichment module
-  title: SCAVENGE trait relevance intervals
-  description: Graph-propagated trait relevance score intervals for configured human GWAS traits.
+  title: Trait relevance intervals
+  description: Shows how trait relevance scores vary across cell groups for selected genetic traits.
   target: TRS_by_cluster_boxplot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x
   asset: gallery_assets/genetic_enrichment/TRS_by_cluster_boxplot.png
   status: available

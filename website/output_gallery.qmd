@@ -31,12 +31,9 @@ render_gallery_item <- function(item) {
   } else {
     cat('<div class="output-gallery-placeholder">Preview pending</div>\n')
   }
-  cat(sprintf('<h3>%s</h3>\n', title))
+  cat(sprintf('<p class="output-gallery-title">%s</p>\n', title))
   cat(sprintf('<p>%s</p>\n', description))
   cat(sprintf('<p class="output-gallery-target"><code>%s</code></p>\n', target))
-  if (asset_exists) {
-    cat(sprintf('<p><a href="%s">Open full output</a></p>\n', asset))
-  }
   cat('</article>\n')
 }
 

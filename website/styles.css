@@ -65,9 +65,10 @@
   font-size: 0.95rem;
 }
 
-.output-gallery-card h3 {
+.output-gallery-title {
   margin-top: 0.8rem;
   font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .output-gallery-target {

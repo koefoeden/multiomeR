@@ -8,7 +8,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = donor_id_metadata_tibble.extended,
-    description = "Read the extended donor ID metadata TSV into a tibble [part_of_graph:GEX] [part_of_graph:seurat_export]",
+    description = "Read the extended donor ID metadata TSV into a tibble [part_of_graph:differential_analyses]",
     command = read_keyed_metadata_tibble(donor_id_metadata_tsv.extended, "donor_id")
   ),
   targets::tar_target(

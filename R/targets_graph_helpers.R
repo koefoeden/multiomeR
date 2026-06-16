@@ -100,12 +100,17 @@ targets_graph_mermaid_shape_close <- function(type) {
   )[type])
 }
 
+targets_graph_mermaid_label_text <- function(label) {
+  label <- gsub("<", "&lt;", label, fixed = TRUE)
+  gsub(">", "&gt;", label, fixed = TRUE)
+}
+
 targets_graph_mermaid_vertex_text <- function(nodes) {
   sprintf(
     "%s%s\"%s\"%s:::%s",
     nodes$name,
     targets_graph_mermaid_shape_open(nodes$type),
-    nodes$label,
+    targets_graph_mermaid_label_text(nodes$label),
     targets_graph_mermaid_shape_close(nodes$type),
     nodes$status
   )
@@ -168,46 +173,115 @@ targets_graph_part_of_graph_names <- function(graph_id, manifest = targets::tar_
 }
 
 targets_graph_default_label_suffixes <- function() {
-  suffixes <- character()
+  suffixes <- data.frame(suffix = character(), placeholder = character())
   if (exists("reaction_tibble", inherits = TRUE)) {
     reaction_tibble_obj <- get("reaction_tibble", inherits = TRUE)
     if ("reaction_ID" %in% names(reaction_tibble_obj)) {
-      suffixes <- c(suffixes, reaction_tibble_obj$reaction_ID)
+      suffixes <- rbind(
+        suffixes,
+        data.frame(
+          suffix = reaction_tibble_obj$reaction_ID,
+          placeholder = "<reaction_ID>"
+        )
+      )
     }
   }
   if (exists("dataset_tibble", inherits = TRUE)) {
     dataset_tibble_obj <- get("dataset_tibble", inherits = TRUE)
     if ("dataset" %in% names(dataset_tibble_obj)) {
-      suffixes <- c(suffixes, dataset_tibble_obj$dataset)
+      suffixes <- rbind(
+        suffixes,
+        data.frame(
+          suffix = dataset_tibble_obj$dataset,
+          placeholder = "<dataset_name>"
+        )
+      )
     }
   }
   if (exists("aggregation_tibble", inherits = TRUE)) {
     aggregation_tibble_obj <- get("aggregation_tibble", inherits = TRUE)
     if ("aggregation" %in% names(aggregation_tibble_obj)) {
-      suffixes <- c(suffixes, aggregation_tibble_obj$aggregation)
+      suffixes <- rbind(
+        suffixes,
+        data.frame(
+          suffix = aggregation_tibble_obj$aggregation,
+          placeholder = "<aggregation_name>"
+        )
+      )
     }
   }
   if (exists("known_aggregation_modules", inherits = TRUE)) {
-    suffixes <- c(suffixes, get("known_aggregation_modules", inherits = TRUE))
+    suffixes <- rbind(
+      suffixes,
+      data.frame(
+        suffix = get("known_aggregation_modules", inherits = TRUE),
+        placeholder = "<module_name>"
+      )
+    )
   }
-  suffixes <- unique(as.character(suffixes))
-  suffixes[!is.na(suffixes) & nzchar(suffixes)]
+  suffixes$suffix <- as.character(suffixes$suffix)
+  suffixes$placeholder <- as.character(suffixes$placeholder)
+  suffixes <- suffixes[!is.na(suffixes$suffix) & nzchar(suffixes$suffix), , drop = FALSE]
+  suffixes[!duplicated(suffixes$suffix), , drop = FALSE]
 }
 
 targets_graph_regex_escape <- function(x) {
   gsub("([\\^$.|?*+(){}\\[\\]\\\\])", "\\\\\\1", x, perl = TRUE)
 }
 
+targets_graph_normalize_label_suffixes <- function(suffixes) {
+  if (is.data.frame(suffixes)) {
+    suffixes <- suffixes[, c("suffix", "placeholder"), drop = FALSE]
+  } else {
+    suffixes <- data.frame(suffix = suffixes, placeholder = "", stringsAsFactors = FALSE)
+  }
+  suffixes$suffix <- as.character(suffixes$suffix)
+  suffixes$placeholder <- as.character(suffixes$placeholder)
+  suffixes <- suffixes[!is.na(suffixes$suffix) & nzchar(suffixes$suffix), , drop = FALSE]
+  suffixes <- suffixes[!duplicated(suffixes$suffix), , drop = FALSE]
+  suffixes[order(nchar(suffixes$suffix), decreasing = TRUE), , drop = FALSE]
+}
+
 targets_graph_clean_node_labels <- function(glimpse_graph, suffixes = targets_graph_default_label_suffixes()) {
-  suffixes <- unique(as.character(suffixes))
-  suffixes <- suffixes[!is.na(suffixes) & nzchar(suffixes)]
-  if (!length(suffixes)) {
+  suffixes <- targets_graph_normalize_label_suffixes(suffixes)
+  if (!nrow(suffixes)) {
     return(glimpse_graph)
   }
 
-  suffixes <- suffixes[order(nchar(suffixes), decreasing = TRUE)]
-  pattern <- paste0("\\.(", paste(targets_graph_regex_escape(suffixes), collapse = "|"), ")(?=\\.|$)")
-  glimpse_graph$x$nodes$label <- gsub(pattern, "", glimpse_graph$x$nodes$label, perl = TRUE)
+  labels <- glimpse_graph$x$nodes$label
+  for (i in seq_len(nrow(suffixes))) {
+    labels <- gsub(
+      pattern = paste0("\\.", targets_graph_regex_escape(suffixes$suffix[[i]]), "(?=\\.|$)"),
+      replacement = paste0(".", suffixes$placeholder[[i]]),
+      x = labels,
+      perl = TRUE
+    )
+  }
+  glimpse_graph$x$nodes$label <- labels
+  glimpse_graph
+}
+
+targets_graph_collapse_duplicate_labels <- function(glimpse_graph) {
+  nodes <- glimpse_graph$x$nodes
+  edges <- glimpse_graph$x$edges
+  duplicate_label <- duplicated(nodes$label)
+  if (!any(duplicate_label)) {
+    return(glimpse_graph)
+  }
+
+  representative <- nodes$name[match(nodes$label, nodes$label)]
+  names(representative) <- nodes$name
+  glimpse_graph$x$nodes <- nodes[!duplicate_label, , drop = FALSE]
+
+  edges$from <- unname(representative[edges$from])
+  edges$to <- unname(representative[edges$to])
+  edges <- edges[edges$from != edges$to, , drop = FALSE]
+  glimpse_graph$x$edges <- edges[!duplicated(edges[, c("from", "to"), drop = FALSE]), , drop = FALSE]
+  attr(glimpse_graph, "targets_graph_label_collapse_summary") <- list(
+    kept_nodes = nrow(glimpse_graph$x$nodes),
+    collapsed_nodes = sum(duplicate_label),
+    edges = nrow(glimpse_graph$x$edges)
+  )
   glimpse_graph
 }
 
@@ -341,7 +415,8 @@ targets_graph_write_part_of_graph_mermaid <- function(
     physics = physics
   ) |>
     targets_graph_prune_to_part_of_graph(graph_id = graph_id) |>
-    targets_graph_clean_node_labels(suffixes = label_suffixes)
+    targets_graph_clean_node_labels(suffixes = label_suffixes) |>
+    targets_graph_collapse_duplicate_labels()
 
   dir.create(dirname(output_file), recursive = TRUE, showWarnings = FALSE)
   writeLines(targets_graph_mermaid_lines(graph), output_file)

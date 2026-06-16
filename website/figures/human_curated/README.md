@@ -27,6 +27,7 @@ Current graph IDs are:
 - `GEX`
 - `ATAC`
 - `WNN`
+- `full_subgroups`
 - `seurat_export`
 - `differential_analyses`
 - `genetic_enrichment_single_nucleus`

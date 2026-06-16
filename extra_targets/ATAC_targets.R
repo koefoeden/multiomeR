@@ -706,7 +706,7 @@ rlang::list2(
   ATAC_w_TF_activity_targets = rlang::list2(
     targets::tar_target(
       name = ATAC_marker_TFs_list,
-      description = "Validate configured ATAC marker TFs against organism motif names [part_of_graph:ATAC] [part_of_graph:parallel] [part_of_graph:seurat_export]",
+      description = "Validate configured ATAC marker TFs against organism motif names [part_of_graph:ATAC] [part_of_graph:seurat_export]",
       command = {
         motif_list <- TF_motif_matrix_list
         motif_names <- paste0(

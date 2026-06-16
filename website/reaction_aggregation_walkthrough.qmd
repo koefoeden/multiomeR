@@ -124,6 +124,14 @@ GEX and ATAC embeddings, WNN integration, and integrated metadata outputs.
 emit_mermaid("website/figures/human_curated/WNN_v2.mmd")
 ```
 
+### Subgroup reprocessing
+
+Optional subgroup-native GEX, ATAC, and WNN reprocessing for sufficiently large parent groups.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/human_curated/full_subgroups_v2.mmd")
+```
+
 ## Running the pipeline
 
 From the repository-root R session described in [Installation](installation.qmd), run the main workflow in checkpoint-sized pieces. Replace `your_aggregation` with the aggregation name from `cfg_aggregations.yaml`, for example `blood_human`.

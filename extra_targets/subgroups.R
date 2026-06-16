@@ -33,7 +33,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = PCA_BPCells.GEX.subgroups,
-    description = "Run Seurat SCTransform on BPCells-backed subgroup GEX counts and compute PCA",
+    description = "Run Seurat SCTransform on BPCells-backed subgroup GEX counts and compute PCA [part_of_graph:GEX] [part_of_graph:seurat_export]",
     command = run_GEX_PCA_BPCells(
       GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX,
       metadata_tibble = metadata_tibble.subgroups,
@@ -48,7 +48,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = harmony_embeddings_matrix.GEX.subgroups,
-    description = "Harmony-corrected SCTransform subgroup GEX PCA embeddings",
+    description = "Harmony-corrected SCTransform subgroup GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:WNN] [part_of_graph:seurat_export]",
     command = run_harmony_on_embedding_matrix(
       embedding_matrix = PCA_BPCells.GEX.subgroups$cell_embeddings,
       metadata_tibble = metadata_tibble.subgroups,
@@ -62,7 +62,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = LSI_BPCells.ATAC.subgroups,
-    description = "Run BPCells-native TF-IDF and SVD on subgroup ATAC peak counts",
+    description = "Run BPCells-native TF-IDF and SVD on subgroup ATAC peak counts [part_of_graph:ATAC] [part_of_graph:seurat_export]",
     command = {
       subgroup_barcodes <- intersect(metadata_tibble.subgroups$barcode_w_prefix, colnames(peak_QC_filtered_BPCells_matrix.ATAC))
       run_ATAC_LSI_BPCells(
@@ -76,7 +76,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = harmony_embeddings_matrix.ATAC.subgroups,
-    description = "Harmony-corrected BPCells-native subgroup ATAC LSI embeddings",
+    description = "Harmony-corrected BPCells-native subgroup ATAC LSI embeddings [part_of_graph:ATAC] [part_of_graph:WNN] [part_of_graph:seurat_export]",
     command = run_harmony_on_embedding_matrix(
       embedding_matrix = LSI_BPCells.ATAC.subgroups$cell_embeddings,
       metadata_tibble = metadata_tibble.subgroups,
@@ -90,7 +90,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = UMAP_embeddings_tibble.GEX.subgroups,
-    description = "Compute subgroup GEX UMAP coordinates from recomputed GEX PCA",
+    description = "Compute subgroup GEX UMAP coordinates from recomputed GEX PCA [part_of_graph:GEX] [part_of_graph:seurat_export]",
     command = run_UMAP_from_embedding_matrix(
       embedding_matrix = harmony_embeddings_matrix.GEX.subgroups,
       dims = aggregation_UMAP_GEX_PCs,
@@ -105,7 +105,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = PCA_clusters.GEX.subgroups,
-    description = "Cluster subgroup cells from recomputed GEX PCA",
+    description = "Cluster subgroup cells from recomputed GEX PCA [part_of_graph:GEX] [part_of_graph:seurat_export]",
     command = cluster_embedding_matrix_BPCells(
       embedding_matrix = harmony_embeddings_matrix.GEX.subgroups,
       dims = aggregation_GEX_data_PCs,
@@ -120,7 +120,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = UMAP_embeddings_tibble.ATAC.subgroups,
-    description = "Compute subgroup ATAC UMAP coordinates from recomputed ATAC LSI",
+    description = "Compute subgroup ATAC UMAP coordinates from recomputed ATAC LSI [part_of_graph:ATAC] [part_of_graph:seurat_export]",
     command = run_UMAP_from_embedding_matrix(
       embedding_matrix = harmony_embeddings_matrix.ATAC.subgroups,
       dims = aggregation_UMAP_ATAC_PCs,
@@ -135,7 +135,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = LSI_clusters.ATAC.subgroups,
-    description = "Cluster subgroup cells from recomputed ATAC LSI",
+    description = "Cluster subgroup cells from recomputed ATAC LSI [part_of_graph:ATAC] [part_of_graph:seurat_export]",
     command = cluster_embedding_matrix_BPCells(
       embedding_matrix = harmony_embeddings_matrix.ATAC.subgroups,
       dims = aggregation_ATAC_data_PCs,
@@ -165,7 +165,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = WNN_results.subgroups,
-    description = "Compute subgroup-native weighted nearest-neighbour graph from aligned GEX and ATAC embeddings",
+    description = "Compute subgroup-native weighted nearest-neighbour graph from aligned GEX and ATAC embeddings [part_of_graph:WNN] [part_of_graph:seurat_export]",
     command = weighted_nearest_neighbors_BPCells(
       embeddings_list = embedding_matrices.subgroups,
       k = aggregation_data_nNNs,
@@ -177,7 +177,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = UMAP_embeddings_tibble.WNN.subgroups,
-    description = "Compute subgroup WNN UMAP coordinates from the native weighted neighbour index",
+    description = "Compute subgroup WNN UMAP coordinates from the native weighted neighbour index [part_of_graph:WNN] [part_of_graph:seurat_export]",
     command = run_WNN_UMAP(
       WNN_results = WNN_results.subgroups,
       n_neighbors = aggregation_UMAP_nNNs,
@@ -189,7 +189,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = clusters_tibble.WNN.subgroups,
-    description = "Cluster subgroup cells from the native WNN SNN graph",
+    description = "Cluster subgroup cells from the native WNN SNN graph [part_of_graph:WNN] [part_of_graph:seurat_export]",
     command = cluster_WNN_graph(
       WNN_results = WNN_results.subgroups,
       resolution = aggregation_subgroups_res / 3,

@@ -14,7 +14,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = combined_BPCells_fragment_obj.ATAC,
-      description = "Merge per-reaction BPCells fragment objects and filter to standard chromosomes",
+      description = "Merge per-reaction BPCells fragment objects and filter to standard chromosomes [part_of_graph:ATAC] [part_of_graph:parallel] [part_of_graph:seurat_export]",
       command = {
         standard_chroms <- switch(
           organism_chr,
@@ -78,7 +78,7 @@ rlang::list2(
   ATAC_peak_calling_per_cluster_w_iterative_collapsing_targets = rlang::list2(
     tarchetypes::tar_file(
       name = peaks_per_cluster_narrowPeaks.peaks.ATAC,
-      description = "Call full-genome ATAC peaks per cluster using capped discovery cells",
+      description = "Call full-genome ATAC peaks per cluster using capped discovery cells [part_of_graph:ATAC] [part_of_graph:seurat_export]",
       command = {
         peak_calling_cluster_name <- peak_calling_cluster_discovery_tibble.ATAC$peak_calling_cluster_name[[1]]
         if (identical(aggregation_ATAC_peak_calling_method, "macs3")) {
@@ -122,7 +122,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC,
-      description = "Collapse per-cluster ATAC peaks into non-overlapping peak sets",
+      description = "Collapse per-cluster ATAC peaks into non-overlapping peak sets [part_of_graph:ATAC] [part_of_graph:seurat_export]",
       command = {
         collapsed_peaks <- combine_collapse_GRanges_ArchR(list(peak_GRanges_per_cluster.ATAC), by = "neg_log10pvalue_summit")
         format_peak_GRanges(collapsed_peaks, cluster_name = peak_calling_cluster_names.ATAC)
@@ -142,7 +142,7 @@ rlang::list2(
   ATAC_between_clusters_iterative_peak_collapsing_targets = rlang::list2(
     targets::tar_target(
       name = consensus_peak_GRanges.ATAC,
-      description = "Iteratively collapse per-cluster peak sets into a single consensus peak set",
+      description = "Iteratively collapse per-cluster peak sets into a single consensus peak set [part_of_graph:ATAC] [part_of_graph:seurat_export]",
       command = combine_collapse_GRanges_ArchR(GRanges_list = within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC, by = "fold_change")
     ),
     targets::tar_target(
@@ -185,7 +185,7 @@ rlang::list2(
     # ),
     tarchetypes::tar_file(
       name = consensus_peak_BPCells_matrix_dir.ATAC,
-      description = "Compute the consensus peak-by-cell count matrix using BPCells",
+      description = "Compute the consensus peak-by-cell count matrix using BPCells [part_of_graph:ATAC] [part_of_graph:seurat_export]",
       command = {
         out_dir <- get_structured_file_path()
         frags <- BPCells::select_cells(
@@ -330,7 +330,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = LSI_BPCells.ATAC,
-      description = "Run BPCells-native TF-IDF and SVD on the QC-filtered ATAC peak matrix",
+      description = "Run BPCells-native TF-IDF and SVD on the QC-filtered ATAC peak matrix [part_of_graph:ATAC] [part_of_graph:seurat_export]",
       command = run_ATAC_LSI_BPCells(
         ATAC_peak_BPCells_matrix = peak_QC_filtered_BPCells_matrix.ATAC,
         n_components = utils::tail(aggregation_ATAC_data_PCs, 1),
@@ -352,7 +352,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = harmony_embeddings_matrix.ATAC,
-      description = "Harmony-corrected BPCells-native ATAC LSI embeddings",
+      description = "Harmony-corrected BPCells-native ATAC LSI embeddings [part_of_graph:ATAC] [part_of_graph:WNN] [part_of_graph:seurat_export]",
       command = run_harmony_on_embedding_matrix(
         embedding_matrix = LSI_BPCells.ATAC$cell_embeddings,
         metadata_tibble = metadata_filtered_tibble.ATAC,
@@ -364,7 +364,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = UMAP_embeddings_tibble.ATAC,
-      description = "UMAP coordinates from BPCells-native Harmony-corrected ATAC LSI embeddings",
+      description = "UMAP coordinates from BPCells-native Harmony-corrected ATAC LSI embeddings [part_of_graph:ATAC] [part_of_graph:seurat_export]",
       command = run_UMAP_from_embedding_matrix(
         embedding_matrix = harmony_embeddings_matrix.ATAC,
         dims = aggregation_UMAP_ATAC_PCs,
@@ -376,7 +376,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = LSI_clusters.ATAC,
-      description = "Leiden clusters from a BPCells nearest-neighbour graph on Harmony-corrected ATAC LSI embeddings",
+      description = "Leiden clusters from a BPCells nearest-neighbour graph on Harmony-corrected ATAC LSI embeddings [part_of_graph:ATAC] [part_of_graph:seurat_export]",
       command = cluster_embedding_matrix_BPCells(
         embedding_matrix = harmony_embeddings_matrix.ATAC,
         dims = aggregation_ATAC_data_PCs,
@@ -561,7 +561,7 @@ rlang::list2(
     # ),
     targets::tar_target(
       name = scDblFinder_results_df.ATAC,
-      description = "Combine per-reaction ATAC scDblFinder classifications",
+      description = "Combine per-reaction ATAC scDblFinder classifications [part_of_graph:ATAC] [part_of_graph:seurat_export]",
       command = scDblFinder_results_by_reaction_tibble.ATAC |>
         dplyr::bind_rows() |>
         dplyr::select(-dplyr::any_of("TENX_reaction_ID")),
@@ -601,7 +601,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = metadata_w_cell_types_tibble.ATAC,
-      description = "Remove doublets and high-doublet clusters from BPCells-native ATAC metadata",
+      description = "Remove doublets and high-doublet clusters from BPCells-native ATAC metadata [part_of_graph:ATAC] [part_of_graph:WNN] [part_of_graph:seurat_export]",
       command = {
         excluded_doublets_barcodes <- dplyr::filter(
           scDblFinder_results_df.ATAC,
@@ -706,7 +706,7 @@ rlang::list2(
   ATAC_w_TF_activity_targets = rlang::list2(
     targets::tar_target(
       name = ATAC_marker_TFs_list,
-      description = "Validate configured ATAC marker TFs against organism motif names",
+      description = "Validate configured ATAC marker TFs against organism motif names [part_of_graph:ATAC] [part_of_graph:parallel] [part_of_graph:seurat_export]",
       command = {
         motif_list <- TF_motif_matrix_list
         motif_names <- paste0(
@@ -768,7 +768,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = peak_TF_motif_matrix.ATAC, # TODO: this runs quite slowly for large peak sets - consider looking into faster alternatives.
-      description = "Match TF motifs to ATAC peaks for reuse by betterChromVAR",
+      description = "Match TF motifs to ATAC peaks for reuse by betterChromVAR [part_of_graph:ATAC] [part_of_graph:seurat_export]",
       command = {
         ATAC_marker_TFs_list
         get_motif_matrix_from_ATAC_peak_names(
@@ -782,7 +782,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = chromVAR_obj.ATAC,
-      description = "Build the lightweight BPCells-backed chromVAR RSE for TF activity and genetic enrichment",
+      description = "Build the lightweight BPCells-backed chromVAR RSE for TF activity and genetic enrichment [part_of_graph:ATAC] [part_of_graph:seurat_export] [part_of_graph:genetic_enrichment_single_nucleus]",
       command = get_chromVAR_obj_from_peak_matrix(
         ATAC_peak_matrix = consensus_peak_BPCells_matrix.ATAC[, metadata_w_cell_types_tibble.ATAC$barcode_w_prefix],
         ATAC_peak_GRanges = consensus_peak_GRanges.ATAC,
@@ -792,13 +792,13 @@ rlang::list2(
     ),
     targets::tar_target(
       name = chromVAR_peak_expectation.ATAC,
-      description = "Compute shared peak-level accessibility expectations for chromVAR analyses",
+      description = "Compute shared peak-level accessibility expectations for chromVAR analyses [part_of_graph:genetic_enrichment_single_nucleus]",
       command = get_chromVAR_peak_expectation(chromVAR_obj.ATAC),
       resources = get_tar_resources(RAM_GB_req = 60)
     ),
     targets::tar_target(
       name = chromVAR_background_bins.ATAC,
-      description = "Compute shared peak-level betterChromVAR background bins for chromVAR analyses",
+      description = "Compute shared peak-level betterChromVAR background bins for chromVAR analyses [part_of_graph:genetic_enrichment_single_nucleus]",
       command = get_chromVAR_background_bins(
         chromVAR_obj = chromVAR_obj.ATAC,
         expectation = chromVAR_peak_expectation.ATAC
@@ -865,7 +865,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = TF_activity_BPCells_matrix_dir.ATAC,
-      description = "Write betterChromVAR TF activity Z-scores to a BPCells matrix directory",
+      description = "Write betterChromVAR TF activity Z-scores to a BPCells matrix directory [part_of_graph:ATAC] [part_of_graph:seurat_export]",
       command = {
         out_dir <- get_structured_file_path()
         column_major_dir <- tempfile(pattern = "TF_activity_column_major_", tmpdir = dirname(out_dir))

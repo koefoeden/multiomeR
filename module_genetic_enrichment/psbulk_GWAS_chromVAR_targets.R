@@ -1,7 +1,7 @@
 rlang::list2(
   targets::tar_target(
     name = peak_weight_matrix.trait_level.pseudobulk,
-    description = "Combine per-GWAS peak posterior-probability weights into one peak-by-GWAS annotation matrix",
+    description = "Combine per-GWAS peak posterior-probability weights into one peak-by-GWAS annotation matrix [part_of_graph:genetic_enrichment_pseudobulk]",
     command = get_GWAS_chromVAR_peak_weight_matrix(
       peak_weight_records = peak_weight_records.trait_level,
       RSE_ATAC = chromVAR_obj.ATAC
@@ -10,7 +10,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = activity_matrix.trait_level.pseudobulk,
-    description = "Compute trait-level pseudobulk chromVAR activity scores from BPCells-backed pseudobulk ATAC counts",
+    description = "Compute trait-level pseudobulk chromVAR activity scores from BPCells-backed pseudobulk ATAC counts [part_of_graph:genetic_enrichment_pseudobulk]",
     command = get_pseudobulk_chromVAR_activity_matrix(
       psbulk_ATAC_data_matrix = pseudobulk_counts_matrix.ATAC,
       chromVAR_obj = chromVAR_obj.ATAC,
@@ -21,7 +21,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = models.trait_level.pseudobulk,
-    description = "Build named list of configured trait-level pseudobulk chromVAR model specifications",
+    description = "Build named list of configured trait-level pseudobulk chromVAR model specifications [part_of_graph:differential_analyses] [part_of_graph:genetic_enrichment_pseudobulk]",
     command = normalize_psbulk_feature_models(genetic_enrichment_psbulk_GWAS_chromVAR_models)
   ),
   targets::tar_target(
@@ -66,7 +66,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = results_tibble.trait_level.pseudobulk,
-    description = "Combine trait-level pseudobulk chromVAR differential activity results and add GWAS-category FDR",
+    description = "Combine trait-level pseudobulk chromVAR differential activity results and add GWAS-category FDR [part_of_graph:genetic_enrichment_pseudobulk]",
     command = results_per_model_tibble.trait_level.pseudobulk |>
       format_psbulk_GWAS_chromVAR_results(GWAS_inputs_tibble = GWAS_inputs_tibble)
   ),

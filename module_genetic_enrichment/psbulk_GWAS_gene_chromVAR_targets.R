@@ -1,7 +1,7 @@
 rlang::list2(
   targets::tar_target(
     name = inputs_tibble.gene_level.pseudobulk,
-    description = "Restrict GWAS inputs to the configured gene-level pseudobulk GWAS chromVAR traits",
+    description = "Restrict GWAS inputs to the configured gene-level pseudobulk GWAS chromVAR traits [part_of_graph:genetic_enrichment_pseudobulk]",
     command = get_GWAS_gene_chromVAR_inputs_tibble(
       GWAS_analysis_inputs_tibble = GWAS_analysis_inputs_tibble,
       selected_GWAS_IDs = genetic_enrichment_psbulk_GWAS_gene_chromVAR_GWAS_IDs
@@ -10,7 +10,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = credible_set_variants_tibble.gene_level.pseudobulk,
-    description = "Expose Open Targets 95 percent credible-set variant rows for configured gene-level GWAS chromVAR traits",
+    description = "Expose Open Targets 95 percent credible-set variant rows for configured gene-level GWAS chromVAR traits [part_of_graph:genetic_enrichment_pseudobulk]",
     command = get_open_targets_credible_set_variants_tibble(
       GWAS_inputs_tibble = inputs_tibble.gene_level.pseudobulk,
       open_targets_credible_set_dataset_path = open_targets_credible_set_dataset_path
@@ -20,7 +20,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = L2G_tibble.gene_level.pseudobulk,
-    description = "Read Open Targets L2G evidence for the gene-level GWAS chromVAR credible-set loci",
+    description = "Read Open Targets L2G evidence for the gene-level GWAS chromVAR credible-set loci [part_of_graph:genetic_enrichment_pseudobulk]",
     command = get_GWAS_gene_chromVAR_L2G_tibble(
       GWAS_gene_chromVAR_credible_set_variants_tibble = credible_set_variants_tibble.gene_level.pseudobulk,
       open_targets_gwas_credible_sets_evidence_dataset_path = open_targets_gwas_credible_sets_evidence_dataset_path
@@ -55,7 +55,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = peak_weight_matrix.gene_level.pseudobulk,
-    description = "Combine supported peak-by-GWAS-gene annotations into one sparse peak-by-feature matrix",
+    description = "Combine supported peak-by-GWAS-gene annotations into one sparse peak-by-feature matrix [part_of_graph:genetic_enrichment_pseudobulk]",
     command = get_GWAS_gene_chromVAR_peak_weight_matrix(
       GWAS_gene_chromVAR_peak_weight_records = peak_weight_records.gene_level.pseudobulk,
       GWAS_gene_chromVAR_feature_metadata_tibble = feature_metadata_tibble.gene_level.pseudobulk,
@@ -65,7 +65,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = activity_matrix.gene_level.pseudobulk,
-    description = "Compute pseudobulk GWAS-gene chromVAR activity scores from BPCells-backed pseudobulk ATAC counts",
+    description = "Compute pseudobulk GWAS-gene chromVAR activity scores from BPCells-backed pseudobulk ATAC counts [part_of_graph:genetic_enrichment_pseudobulk]",
     command = if (ncol(peak_weight_matrix.gene_level.pseudobulk) == 0) {
       matrix(
         nrow = 0,
@@ -127,7 +127,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = results_tibble.gene_level.pseudobulk,
-    description = "Combine GWAS-gene chromVAR differential activity results and add within-GWAS FDR",
+    description = "Combine GWAS-gene chromVAR differential activity results and add within-GWAS FDR [part_of_graph:genetic_enrichment_pseudobulk]",
     command = results_per_model_tibble.gene_level.pseudobulk |>
       format_psbulk_GWAS_gene_chromVAR_results(
         GWAS_gene_chromVAR_feature_metadata_tibble = feature_metadata_tibble.gene_level.pseudobulk

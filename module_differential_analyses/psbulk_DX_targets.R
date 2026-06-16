@@ -22,7 +22,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = feature_matrix_fit,
-    description = "Fit edgeR/limma models to pseudobulk feature matrices for each model",
+    description = "Fit edgeR/limma models to pseudobulk feature matrices for each model [part_of_graph:differential_analyses]",
     command = fit_psbulk_feature_matrix_model(
       psbulk_feature_matrix = filtered_mat_per_model,
       extended_donor_id_metadata_tibble = donor_id_metadata_tibble.extended,
@@ -32,7 +32,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = results_tibble,
-    description = "Extract differential testing results tibble from each fitted model",
+    description = "Extract differential testing results tibble from each fitted model [part_of_graph:differential_analyses]",
     command = get_psbulk_feature_model_results(
       psbulk_feature_matrix_fit = feature_matrix_fit,
       psbulk_feature_dynamic_tibble = dynamic_tibble

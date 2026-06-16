@@ -1,7 +1,7 @@
 rlang::list2(
   targets::tar_target(
     name = graph_matrix,
-    description = "Build the SNN graph matrix used for SCAVENGE TRS propagation",
+    description = "Build the SNN graph matrix used for SCAVENGE TRS propagation [part_of_graph:genetic_enrichment_single_nucleus]",
     command = {
       if (identical(map_SCAVENGE_graph_input_type, "WNN")) {
         get_SNN_matrix_from_WNN_results(map_SCAVENGE_graph_input)
@@ -19,7 +19,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = TRS_tibbles,
-    description = "Propagate single-nucleus chromVAR Z-scores through the NN graph to compute SCAVENGE TRS for each GWAS",
+    description = "Propagate single-nucleus chromVAR Z-scores through the NN graph to compute SCAVENGE TRS for each GWAS [part_of_graph:genetic_enrichment_single_nucleus]",
     command = get_SCAVENGE_TRS_from_ZScore_record(
       ZScore_record = ZScore_records.single_nucleus,
       NN_graph = graph_matrix,

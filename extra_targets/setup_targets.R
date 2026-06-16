@@ -1,7 +1,7 @@
 rlang::list2(
   tarchetypes::tar_file(
     name = open_targets_credible_set_dataset_path,
-    description = "Download the Open Targets 26.03 credible_set Parquet dataset for shared GWAS consumers",
+    description = "Download the Open Targets 26.03 credible_set Parquet dataset for shared GWAS consumers [part_of_graph:genetic_enrichment_single_nucleus]",
     command = download_open_targets_dataset("https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.03/output/credible_set/")
   ),
   tarchetypes::tar_file(
@@ -11,7 +11,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = open_targets_gwas_credible_sets_evidence_dataset_path,
-    description = "Download the Open Targets 26.03 GWAS credible-set evidence Parquet dataset for L2G consumers",
+    description = "Download the Open Targets 26.03 GWAS credible-set evidence Parquet dataset for L2G consumers [part_of_graph:genetic_enrichment_pseudobulk]",
     command = download_open_targets_dataset("https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.03/output/evidence_gwas_credible_sets/")
   ),
   tarchetypes::tar_file(

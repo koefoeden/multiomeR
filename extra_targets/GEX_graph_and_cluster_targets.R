@@ -1,7 +1,7 @@
 rlang::list2(
   targets::tar_target(
     name = PCA_clusters.GEX,
-    description = "Leiden clusters from a BPCells nearest-neighbour graph on Harmony-corrected GEX PCA embeddings",
+    description = "Leiden clusters from a BPCells nearest-neighbour graph on Harmony-corrected GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:seurat_export]",
     command = cluster_embedding_matrix_BPCells(
       embedding_matrix = harmony_embeddings_matrix.GEX,
       dims = aggregation_GEX_data_PCs,
@@ -62,7 +62,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = scDblFinder_results_df.GEX,
-    description = "Combine per-reaction GEX scDblFinder classifications",
+    description = "Combine per-reaction GEX scDblFinder classifications [part_of_graph:GEX] [part_of_graph:seurat_export]",
     command = scDblFinder_results_by_reaction_tibble.GEX |>
       dplyr::bind_rows() |>
       dplyr::select(-dplyr::any_of("TENX_reaction_ID")) |>
@@ -98,7 +98,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = metadata_w_cell_types_tibble.GEX,
-    description = "Remove GEX doublets and high-doublet clusters, then annotate remaining cells with scDblFinder scores",
+    description = "Remove GEX doublets and high-doublet clusters, then annotate remaining cells with scDblFinder scores [part_of_graph:ATAC] [part_of_graph:GEX] [part_of_graph:seurat_export]",
     command = {
       scDblFinder_tibble <- scDblFinder_results_df.GEX |>
         tibble::rownames_to_column("barcode_w_prefix")

@@ -48,7 +48,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = UCell_GEX_marker_genes_list,
-    description = "Validate configured UCell GEX marker genes against Cell Ranger feature names",
+    description = "Validate configured UCell GEX marker genes against Cell Ranger feature names [part_of_graph:ATAC] [part_of_graph:GEX] [part_of_graph:WNN] [part_of_graph:seurat_export]",
     command = {
       marker_genes_requested <- aggregation_GEX_marker_genes |>
         unlist(use.names = FALSE) |>
@@ -195,12 +195,12 @@ rlang::list2(
   ),
   targets::tar_target(
     name = donor_id_metadata_tibble,
-    description = "Read the donor ID metadata TSV into a tibble with donor_id coerced to character",
+    description = "Read the donor ID metadata TSV into a tibble with donor_id coerced to character [part_of_graph:GEX] [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = read_keyed_metadata_tibble(donor_id_metadata_tsv, "donor_id")
   ),
   targets::tar_target(
     name = reaction_ID_metadata_tibble,
-    description = "Read the reaction ID metadata TSV into a tibble with TENX_reaction_ID coerced to character",
+    description = "Read the reaction ID metadata TSV into a tibble with TENX_reaction_ID coerced to character [part_of_graph:GEX] [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = {
       reaction_metadata <- read_keyed_metadata_tibble(reaction_ID_metadata_tsv, "TENX_reaction_ID")
       assert_donor_reaction_metadata_column_ownership(donor_id_metadata_tibble, reaction_metadata)
@@ -224,7 +224,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = pseudobulk_counts_BPCells_matrix_dir.GEX,
-    description = "Write pseudobulk GEX counts per WNN cell-type-donor combination to BPCells",
+    description = "Write pseudobulk GEX counts per WNN cell-type-donor combination to BPCells [part_of_graph:differential_analyses]",
     command = {
       out_dir <- get_structured_file_path()
       get_BPCells_pseudobulk_matrix(
@@ -252,7 +252,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = pseudobulk_counts_BPCells_matrix_dir.ATAC,
-    description = "Write pseudobulk ATAC counts per WNN cell-type-donor combination to BPCells",
+    description = "Write pseudobulk ATAC counts per WNN cell-type-donor combination to BPCells [part_of_graph:differential_analyses]",
     command = {
       out_dir <- get_structured_file_path()
       get_BPCells_pseudobulk_matrix(
@@ -269,7 +269,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = pseudobulk_counts_matrix.ATAC,
-    description = "Open BPCells-backed pseudobulk ATAC counts per WNN cell-type-donor combination",
+    description = "Open BPCells-backed pseudobulk ATAC counts per WNN cell-type-donor combination [part_of_graph:genetic_enrichment_pseudobulk]",
     command = BPCells::open_matrix_dir(pseudobulk_counts_BPCells_matrix_dir.ATAC)
   ),
   targets::tar_target(
@@ -280,7 +280,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = pseudobulk_activity_matrix.TFA,
-    description = "Compute pseudobulk TF activity scores from BPCells-backed pseudobulk ATAC counts",
+    description = "Compute pseudobulk TF activity scores from BPCells-backed pseudobulk ATAC counts [part_of_graph:differential_analyses]",
     command = get_pseudobulk_activity_matrix.TFA(
       psbulk_ATAC_data_matrix = pseudobulk_counts_matrix.ATAC,
       chromVAR_obj = chromVAR_obj.ATAC,

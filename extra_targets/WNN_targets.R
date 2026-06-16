@@ -2,7 +2,7 @@ rlang::list2(
   WNN_processing_targets = rlang::list2(
     targets::tar_target(
       name = embedding_matrices.WNN,
-      description = "Align GEX and ATAC Harmony embeddings for native WNN construction",
+      description = "Align GEX and ATAC Harmony embeddings for native WNN construction [part_of_graph:WNN] [part_of_graph:seurat_export]",
       command = get_WNN_embedding_matrices(
         GEX_embedding_matrix = harmony_embeddings_matrix.GEX,
         ATAC_embedding_matrix = harmony_embeddings_matrix.ATAC,
@@ -37,7 +37,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = clusters_tibble.WNN,
-      description = "Filter raw WNN clusters by the minimum barcode threshold",
+      description = "Filter raw WNN clusters by the minimum barcode threshold [part_of_graph:WNN] [part_of_graph:seurat_export]",
       command = {
         clusters <- clusters_tibble_raw.WNN$WNN_harmony_SNN_cluster
         names(clusters) <- clusters_tibble_raw.WNN$barcode_w_prefix
@@ -54,7 +54,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = WNN_results,
-      description = "Native weighted nearest-neighbour graph restricted to retained WNN cells",
+      description = "Native weighted nearest-neighbour graph restricted to retained WNN cells [part_of_graph:WNN] [part_of_graph:seurat_export]",
       command = {
         retained_barcodes <- rownames(WNN_results_raw$nn_idx)[
           rownames(WNN_results_raw$nn_idx) %in%
@@ -83,7 +83,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = UMAP_embeddings_tibble.WNN,
-      description = "Compute WNN UMAP coordinates from the retained native weighted neighbour index",
+      description = "Compute WNN UMAP coordinates from the retained native weighted neighbour index [part_of_graph:WNN] [part_of_graph:seurat_export]",
       command = run_WNN_UMAP(
         WNN_results = WNN_results,
         n_neighbors = aggregation_UMAP_nNNs,
@@ -105,7 +105,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = metadata_w_cell_types_tibble.WNN,
-      description = "Assign cell-type labels to native WNN clusters by GEX module scores",
+      description = "Assign cell-type labels to native WNN clusters by GEX module scores [part_of_graph:WNN] [part_of_graph:seurat_export]",
       command = add_cell_types_to_metadata_from_module_scores(
         metadata_tibble = metadata_w_clusters_tibble.WNN,
         named_marker_genes_list = UCell_GEX_marker_genes_list,

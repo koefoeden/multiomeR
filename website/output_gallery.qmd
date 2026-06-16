@@ -40,11 +40,24 @@ render_gallery_item <- function(item) {
   cat('</article>\n')
 }
 
+render_gallery_grid <- function(items) {
+  cat('<div class="output-gallery-grid">\n')
+  purrr::pwalk(items, \(...) render_gallery_item(list(...)))
+  cat('</div>\n')
+}
+
 for (section_name in unique(gallery_items$section)) {
   section_items <- dplyr::filter(gallery_items, .data$section == section_name)
-  cat(sprintf("\n## %s\n\n", section_name))
-  cat('<div class="output-gallery-grid">\n')
-  purrr::pwalk(section_items, \(...) render_gallery_item(list(...)))
-  cat('</div>\n')
+  cat(sprintf("\n## %s\n\n", htmltools::htmlEscape(section_name)))
+
+  if (all(is.na(section_items$subsection))) {
+    render_gallery_grid(section_items)
+  } else {
+    for (subsection_name in unique(stats::na.omit(section_items$subsection))) {
+      subsection_items <- dplyr::filter(section_items, .data$subsection == subsection_name)
+      cat(sprintf("\n### %s\n\n", htmltools::htmlEscape(subsection_name)))
+      render_gallery_grid(subsection_items)
+    }
+  }
 }
 ```

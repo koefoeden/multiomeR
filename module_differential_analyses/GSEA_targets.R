@@ -10,7 +10,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = results,
-    description = "Run GSEA on pseudobulk DX models for each gene-set subcollection",
+    description = "Run GSEA on pseudobulk DX models for each gene-set subcollection [part_of_graph:differential_analyses]",
     command = get_GSEA_results(
       psbulk_feature_matrix_fit = feature_matrix_fit.DGE,
       gene_indices_per_gene_list = gene_idxs_per_gene_list,

@@ -28,7 +28,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = peak_weight_records.trait_level,
-    description = "Build capped peak posterior-probability weights for one GWAS",
+    description = "Build capped peak posterior-probability weights for one GWAS [part_of_graph:genetic_enrichment_single_nucleus]",
     command = get_GWAS_chromVAR_peak_weight_record(
       GWAS_input_record = input_records.trait_level,
       peak_ranges = genetic_enrichment_peak_ranges,
@@ -69,7 +69,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = ZScore_records.single_nucleus,
-    description = "Combine chunk-level single-nucleus chromVAR Z-scores for one GWAS",
+    description = "Combine chunk-level single-nucleus chromVAR Z-scores for one GWAS [part_of_graph:genetic_enrichment_single_nucleus]",
     command = combine_GWAS_chromVAR_ZScore_chunk_records(ZScore_chunk_records_by_trait.single_nucleus),
     pattern = map(ZScore_chunk_records_by_trait.single_nucleus)
   ),
@@ -80,7 +80,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = ZScores_tibble.summarized.single_nucleus,
-    description = "Aggregate single-nucleus chromVAR Z-scores to cluster-donor pseudobulk summaries",
+    description = "Aggregate single-nucleus chromVAR Z-scores to cluster-donor pseudobulk summaries [part_of_graph:genetic_enrichment_single_nucleus]",
     command = summarize_GWAS_chromVAR_ZScores(
       ZScore_tibble = ZScores_tibble.single_nucleus,
       metadata_tibble = metadata_w_cell_types_tibble.WNN

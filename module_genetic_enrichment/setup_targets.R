@@ -13,7 +13,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = GWAS_inputs_tibble,
-    description = "Resolve configured Open Targets GWAS metadata and fine-mapping methods for this aggregation",
+    description = "Resolve configured Open Targets GWAS metadata and fine-mapping methods for this aggregation [part_of_graph:genetic_enrichment_single_nucleus] [part_of_graph:genetic_enrichment_pseudobulk]",
     command = {
       study_ids <- unique(GWAS_inputs_config_tibble$studyId)
       available_methods_tibble <- arrow::open_dataset(open_targets_credible_set_dataset_path) |>

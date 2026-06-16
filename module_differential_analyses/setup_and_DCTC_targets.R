@@ -8,12 +8,12 @@ rlang::list2(
   ),
   targets::tar_target(
     name = donor_id_metadata_tibble.extended,
-    description = "Read the extended donor ID metadata TSV into a tibble",
+    description = "Read the extended donor ID metadata TSV into a tibble [part_of_graph:GEX] [part_of_graph:seurat_export]",
     command = read_keyed_metadata_tibble(donor_id_metadata_tsv.extended, "donor_id")
   ),
   targets::tar_target(
     name = models,
-    description = "Build named list of configured pseudobulk DX model specifications",
+    description = "Build named list of configured pseudobulk DX model specifications [part_of_graph:differential_analyses]",
     command = normalize_psbulk_feature_models(differential_analyses_psbulk_DX_models)
   ),
   targets::tar_target(
@@ -72,7 +72,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = model_results.DCTC,
-    description = "Fit the configured differential cell-type composition model",
+    description = "Fit the configured differential cell-type composition model [part_of_graph:differential_analyses]",
     command = metadata_w_cell_types_tibble.WNN |>
       get_DCTC_model_results(
         extended_donor_id_metadata_tibble = donor_id_metadata_tibble.extended,

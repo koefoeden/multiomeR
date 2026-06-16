@@ -6,7 +6,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = cellranger_barcodes_tsv,
-    description = "Write CellRanger-native barcodes to a TSV file for use by cellsnp-lite and vireo",
+    description = "Write CellRanger-native barcodes to a TSV file for use by cellsnp-lite and vireo [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = {
       cellranger_h5_file <- file.path(dirname(cellranger_summary_file), "filtered_feature_bc_matrix.h5")
       cellranger_h5_file_con <- hdf5r::H5File$new(cellranger_h5_file, mode = "r")
@@ -83,7 +83,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = cellbender_h5_file,
-    description = "Track the CellBender output h5 file for this reaction, or no files if not configured",
+    description = "Track the CellBender output h5 file for this reaction, or no files if not configured [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = if (is.na(reaction_cellbender_h5_file) || reaction_cellbender_h5_file == "") {
       character(0)
     } else {
@@ -92,7 +92,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = GEX_counts_BPcells_matrix_dir,
-    description = "Convert the CellBender or CellRanger GEX h5 matrix to a BPCells directory with reaction-prefixed barcodes",
+    description = "Convert the CellBender or CellRanger GEX h5 matrix to a BPCells directory with reaction-prefixed barcodes [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = {
       out_dir <- get_structured_file_path()
 
@@ -144,7 +144,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = fragments_w_prefix_bpcells_dir,
-    description = "Convert the CellRanger fragment file to a BPCells directory with reaction-prefixed barcodes",
+    description = "Convert the CellRanger fragment file to a BPCells directory with reaction-prefixed barcodes [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = {
       out_dir <- get_structured_file_path()
 
@@ -163,7 +163,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = ATAC_qc_metrics_tibble,
-    description = "Compute TSS enrichment and nucleosome signal from BPCells ATAC fragments",
+    description = "Compute TSS enrichment and nucleosome signal from BPCells ATAC fragments [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = {
       barcode_prefix <- paste0(reaction_ID, "_")
 
@@ -221,7 +221,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = per_barcode_metrics_tibble,
-    description = "Read per-barcode CellRanger metrics and filter to called cells",
+    description = "Read per-barcode CellRanger metrics and filter to called cells [part_of_graph:seurat_export]",
     command = {
       per_barcode_metrics_file <- file.path(dirname(cellranger_summary_file), "per_barcode_metrics.csv")
       per_barcode_metrics_file |>
@@ -231,7 +231,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = amulet_metrics_tibble,
-    description = "Run AMULET doublet detection on ATAC fragments and return per-barcode metrics",
+    description = "Run AMULET doublet detection on ATAC fragments and return per-barcode metrics [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = {
       if (isTRUE(dataset_run_amulet)) {
         fragment_file <- file.path(dirname(cellranger_summary_file), "atac_fragments.tsv.gz")
@@ -259,7 +259,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = cellsnp_dir,
-    description = "Run cellsnp-lite to genotype each barcode at SNP positions, or return no files if no VCF is configured",
+    description = "Run cellsnp-lite to genotype each barcode at SNP positions, or return no files if no VCF is configured [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = if (!is.na(reaction_donors_VCF_file)) {
       ATAC_bam_file <- file.path(dirname(cellranger_summary_file), "atac_possorted_bam.bam")
       get_cellsnp_dir(
@@ -275,7 +275,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = vireo_donor_ids_tibble,
-    description = "Run vireo to demultiplex donors from cellsnp-lite genotypes and return per-barcode donor assignments",
+    description = "Run vireo to demultiplex donors from cellsnp-lite genotypes and return per-barcode donor assignments [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = get_vireo_donor_ids_tibble(
       cellsnp_dir,
       reaction_donors_VCF_file = reaction_donors_VCF_file,
@@ -293,7 +293,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = full_metadata_tibble,
-    description = "Join GEX metadata with ATAC QC, vireo, per-barcode, and AMULET metrics into a comprehensive per-barcode metadata tibble",
+    description = "Join GEX metadata with ATAC QC, vireo, per-barcode, and AMULET metrics into a comprehensive per-barcode metadata tibble [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = GEX_basic_metadata_tibble |>
       dplyr::full_join(ATAC_qc_metrics_tibble, by = "barcode") |>
       dplyr::full_join(vireo_donor_ids_tibble, by = "barcode") |>
@@ -330,7 +330,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = excluded_cellranger_only_barcodes_by_type_list,
-    description = "Identify CellRanger-only barcodes failing per-reaction QC and group by exclusion reason",
+    description = "Identify CellRanger-only barcodes failing per-reaction QC and group by exclusion reason [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = full_metadata_tibble |>
       dplyr::filter(!discarded_by_cellranger) |>
       get_excluded_BCs(QC_exclude_vector = dataset_QC_exclude_list_per_reaction)

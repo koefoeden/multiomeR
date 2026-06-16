@@ -1,7 +1,7 @@
 rlang::list2(
   targets::tar_target(
     name = TRS_summary_tibble,
-    description = "Combine per-GWAS SCAVENGE TRS group summaries across named and cell-type graph clusters",
+    description = "Combine per-GWAS SCAVENGE TRS group summaries across named and cell-type graph clusters [part_of_graph:genetic_enrichment_single_nucleus]",
     command = dplyr::bind_rows(TRS_summary_tibbles),
     resources = get_tar_resources(RAM_GB_req = 32)
   ),

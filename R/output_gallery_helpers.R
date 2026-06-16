@@ -26,6 +26,7 @@ read_output_gallery_manifest <- function(manifest_file = file.path("website", "o
   purrr::map_dfr(items, \(item) {
     tibble::tibble(
       section = item$section %||% NA_character_,
+      subsection = item$subsection %||% NA_character_,
       title = item$title %||% NA_character_,
       description = item$description %||% NA_character_,
       target = item$target %||% NA_character_,
@@ -69,7 +70,10 @@ resolve_output_gallery_source_paths <- function(
     tidyr::unnest_longer("path", values_to = "target_path", keep_empty = TRUE)
 
   manifest |>
+    dplyr::mutate(.gallery_row = dplyr::row_number()) |>
     dplyr::left_join(path_records, by = c("target" = "name")) |>
+    dplyr::slice_head(n = 1, by = ".gallery_row") |>
+    dplyr::select(-".gallery_row") |>
     dplyr::mutate(
       source_path = dplyr::if_else(
         !is.na(.data$source_file) & dir.exists(.data$target_path),

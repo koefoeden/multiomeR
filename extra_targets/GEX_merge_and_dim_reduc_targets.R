@@ -1,7 +1,7 @@
 rlang::list2(
   tarchetypes::tar_file(
     name = aggregated_GEX_BPCells_matrix_dir.GEX,
-    description = "Write the combined GEX BPCells count matrix for all reactions in the dataset",
+    description = "Write the combined GEX BPCells count matrix for all reactions in the dataset [part_of_graph:GEX] [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = {
       combined_counts_matrix <- purrr::reduce(aggregation_GEX_counts_BPCells_matrix_syms, cbind)
 
@@ -19,7 +19,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = PCA_BPCells.GEX,
-    description = "Run Seurat SCTransform on BPCells-backed GEX counts and compute PCA",
+    description = "Run Seurat SCTransform on BPCells-backed GEX counts and compute PCA [part_of_graph:GEX] [part_of_graph:seurat_export]",
     command = run_GEX_PCA_BPCells(
       GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX,
       metadata_tibble = GEX_cellranger_kept_metadata_tibble |>
@@ -35,7 +35,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = metadata_tibble.GEX,
-    description = "Prepare CellRanger-kept GEX metadata aligned to the native PCA cells",
+    description = "Prepare CellRanger-kept GEX metadata aligned to the native PCA cells [part_of_graph:GEX] [part_of_graph:seurat_export]",
     command = prepare_GEX_metadata_tibble(
       metadata_tibble = GEX_cellranger_kept_metadata_tibble,
       barcode_vec = rownames(PCA_BPCells.GEX$cell_embeddings),
@@ -62,7 +62,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = harmony_embeddings_matrix.GEX,
-    description = "Harmony-corrected SCTransform GEX PCA embeddings",
+    description = "Harmony-corrected SCTransform GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:WNN] [part_of_graph:seurat_export]",
     command = run_harmony_on_embedding_matrix(
       embedding_matrix = PCA_BPCells.GEX$cell_embeddings,
       metadata_tibble = metadata_tibble.GEX,
@@ -75,7 +75,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = UMAP_embeddings_tibble.GEX,
-    description = "UMAP coordinates from BPCells-native Harmony-corrected GEX PCA embeddings",
+    description = "UMAP coordinates from BPCells-native Harmony-corrected GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:seurat_export]",
     command = run_UMAP_from_embedding_matrix(
       embedding_matrix = harmony_embeddings_matrix.GEX,
       dims = aggregation_UMAP_GEX_PCs,
@@ -89,7 +89,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = UMAP_embeddings_tibble.GEX_non_harmony,
-    description = "UMAP coordinates from uncorrected BPCells-native GEX PCA embeddings",
+    description = "UMAP coordinates from uncorrected BPCells-native GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:seurat_export]",
     command = run_UMAP_from_embedding_matrix(
       embedding_matrix = PCA_BPCells.GEX$cell_embeddings,
       dims = aggregation_UMAP_GEX_PCs,

@@ -354,28 +354,32 @@ flowchart TB
 }}%%
 %%{init: {'flowchart': {'defaultRenderer': 'elk'}}}%%
 flowchart TB
-    GWAS_gene_chromVAR_inputs_tibble(["GWAS_gene_chromVAR_inputs_tibble"]):::none --&gt; GWAS_gene_chromVAR_credible_set_variants_tibble(["GWAS_gene_chromVAR_credible_set_variants_tibble"]):::none
-    open_targets_gwas_credible_sets_evidence_dataset_path(["open_targets_gwas_credible_sets_evidence_dataset_path"]):::none --&gt; GWAS_gene_chromVAR_L2G_tibble(["GWAS_gene_chromVAR_L2G_tibble"]):::none
-    GWAS_gene_chromVAR_credible_set_variants_tibble(["GWAS_gene_chromVAR_credible_set_variants_tibble"]):::none --&gt; GWAS_gene_chromVAR_L2G_tibble(["GWAS_gene_chromVAR_L2G_tibble"]):::none
-    GWAS_chromVAR_peak_weight_matrix(["GWAS_chromVAR_peak_weight_matrix"]):::none --&gt; psbulk_GWAS_chromVAR_activity_matrix(["psbulk_GWAS_chromVAR_activity_matrix"]):::none
-    GWAS_inputs_tibble(["GWAS_inputs_tibble"]):::none --&gt; psbulk_GWAS_chromVAR_results_tibble(["psbulk_GWAS_chromVAR_results_tibble"]):::none
-    GWAS_gene_chromVAR_peak_weight_matrix(["GWAS_gene_chromVAR_peak_weight_matrix"]):::none --&gt; psbulk_GWAS_gene_chromVAR_activity_matrix(["psbulk_GWAS_gene_chromVAR_activity_matrix"]):::none
-    GWAS_gene_chromVAR_L2G_tibble(["GWAS_gene_chromVAR_L2G_tibble"]):::none --&gt; GWAS_gene_chromVAR_peak_weight_matrix(["GWAS_gene_chromVAR_peak_weight_matrix"]):::none
-    GWAS_gene_chromVAR_L2G_tibble(["GWAS_gene_chromVAR_L2G_tibble"]):::none --&gt; psbulk_GWAS_gene_chromVAR_results_tibble(["psbulk_GWAS_gene_chromVAR_results_tibble"]):::none
-    GWAS_gene_chromVAR_credible_set_variants_tibble(["GWAS_gene_chromVAR_credible_set_variants_tibble"]):::none --&gt; GWAS_gene_chromVAR_peak_weight_matrix(["GWAS_gene_chromVAR_peak_weight_matrix"]):::none
-    GWAS_gene_chromVAR_credible_set_variants_tibble(["GWAS_gene_chromVAR_credible_set_variants_tibble"]):::none --&gt; psbulk_GWAS_gene_chromVAR_results_tibble(["psbulk_GWAS_gene_chromVAR_results_tibble"]):::none
-    GWAS_gene_chromVAR_inputs_tibble(["GWAS_gene_chromVAR_inputs_tibble"]):::none --&gt; GWAS_gene_chromVAR_peak_weight_matrix(["GWAS_gene_chromVAR_peak_weight_matrix"]):::none
-    GWAS_gene_chromVAR_inputs_tibble(["GWAS_gene_chromVAR_inputs_tibble"]):::none --&gt; psbulk_GWAS_gene_chromVAR_results_tibble(["psbulk_GWAS_gene_chromVAR_results_tibble"]):::none
-    GWAS_inputs_tibble(["GWAS_inputs_tibble"]):::none --&gt; GWAS_chromVAR_peak_weight_matrix(["GWAS_chromVAR_peak_weight_matrix"]):::none
-    GWAS_inputs_tibble(["GWAS_inputs_tibble"]):::none --&gt; GWAS_gene_chromVAR_inputs_tibble(["GWAS_gene_chromVAR_inputs_tibble"]):::none
-    psbulk_GWAS_chromVAR_activity_matrix(["psbulk_GWAS_chromVAR_activity_matrix"]):::none --&gt; psbulk_GWAS_chromVAR_results_tibble(["psbulk_GWAS_chromVAR_results_tibble"]):::none
-    psbulk_GWAS_chromVAR_models(["psbulk_GWAS_chromVAR_models"]):::none --&gt; psbulk_GWAS_chromVAR_results_tibble(["psbulk_GWAS_chromVAR_results_tibble"]):::none
-    psbulk_GWAS_chromVAR_models(["psbulk_GWAS_chromVAR_models"]):::none --&gt; psbulk_GWAS_gene_chromVAR_results_tibble(["psbulk_GWAS_gene_chromVAR_results_tibble"]):::none
-    psbulk_GWAS_gene_chromVAR_activity_matrix(["psbulk_GWAS_gene_chromVAR_activity_matrix"]):::none --&gt; psbulk_GWAS_gene_chromVAR_results_tibble(["psbulk_GWAS_gene_chromVAR_results_tibble"]):::none
-    pseudobulk_counts_BPCells_matrix_dir.ATAC(["pseudobulk_counts_BPCells_matrix_dir.ATAC"]):::none --&gt; psbulk_GWAS_chromVAR_activity_matrix(["psbulk_GWAS_chromVAR_activity_matrix"]):::none
-    pseudobulk_counts_BPCells_matrix_dir.ATAC(["pseudobulk_counts_BPCells_matrix_dir.ATAC"]):::none --&gt; psbulk_GWAS_chromVAR_results_tibble(["psbulk_GWAS_chromVAR_results_tibble"]):::none
-    pseudobulk_counts_BPCells_matrix_dir.ATAC(["pseudobulk_counts_BPCells_matrix_dir.ATAC"]):::none --&gt; psbulk_GWAS_gene_chromVAR_activity_matrix(["psbulk_GWAS_gene_chromVAR_activity_matrix"]):::none
-    pseudobulk_counts_BPCells_matrix_dir.ATAC(["pseudobulk_counts_BPCells_matrix_dir.ATAC"]):::none --&gt; psbulk_GWAS_gene_chromVAR_results_tibble(["psbulk_GWAS_gene_chromVAR_results_tibble"]):::none
+  style Graph fill:#FFFFFF00,stroke:#000000;
+  subgraph Graph
+    direction TB
+    pseudobulk_counts_matrix.ATAC.immune_human_2x(["pseudobulk_counts_matrix.ATAC.immune_human_2x"]):::none --&gt; activity_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["activity_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    peak_weight_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["peak_weight_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none --&gt; activity_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["activity_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    pseudobulk_counts_matrix.ATAC.immune_human_2x(["pseudobulk_counts_matrix.ATAC.immune_human_2x"]):::none --&gt; activity_matrix.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["activity_matrix.trait_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    peak_weight_matrix.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["peak_weight_matrix.trait_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none --&gt; activity_matrix.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["activity_matrix.trait_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    inputs_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["inputs_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none --&gt; credible_set_variants_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["credible_set_variants_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    open_targets_gwas_credible_sets_evidence_dataset_path(["open_targets_gwas_credible_sets_evidence_dataset_path"]):::none --&gt; L2G_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["L2G_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    credible_set_variants_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["credible_set_variants_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none --&gt; L2G_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["L2G_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    GWAS_inputs_tibble.genetic_enrichment.immune_human_2x(["GWAS_inputs_tibble.genetic_enrichment.immune_human_2x"]):::none --&gt; results_tibble.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.trait_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    GWAS_inputs_tibble.genetic_enrichment.immune_human_2x(["GWAS_inputs_tibble.genetic_enrichment.immune_human_2x"]):::none --&gt; inputs_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["inputs_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    GWAS_inputs_tibble.genetic_enrichment.immune_human_2x(["GWAS_inputs_tibble.genetic_enrichment.immune_human_2x"]):::none --&gt; peak_weight_matrix.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["peak_weight_matrix.trait_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    L2G_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["L2G_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none --&gt; peak_weight_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["peak_weight_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    L2G_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["L2G_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none --&gt; results_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    activity_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["activity_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none --&gt; results_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    activity_matrix.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["activity_matrix.trait_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none --&gt; results_tibble.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.trait_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    credible_set_variants_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["credible_set_variants_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none --&gt; peak_weight_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["peak_weight_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    credible_set_variants_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["credible_set_variants_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none --&gt; results_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    inputs_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["inputs_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none --&gt; peak_weight_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["peak_weight_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    inputs_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["inputs_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none --&gt; results_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    models.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["models.trait_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none --&gt; results_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    models.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["models.trait_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none --&gt; results_tibble.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.trait_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    pseudobulk_counts_matrix.ATAC.immune_human_2x(["pseudobulk_counts_matrix.ATAC.immune_human_2x"]):::none --&gt; results_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+    pseudobulk_counts_matrix.ATAC.immune_human_2x(["pseudobulk_counts_matrix.ATAC.immune_human_2x"]):::none --&gt; results_tibble.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.trait_level.pseudobulk.genetic_enrichment.immune_human_2x"]):::none
+  end
 </pre>
 </div>
 <p></p></figure><p></p>
@@ -408,21 +412,25 @@ flowchart TB
 }}%%
 %%{init: {'flowchart': {'defaultRenderer': 'elk'}}}%%
 flowchart TB
-    chromVAR_obj.ATAC(["chromVAR_obj.ATAC"]):::none --&gt; chromVAR_background_bins.ATAC(["chromVAR_background_bins.ATAC"]):::none
-    chromVAR_peak_expectation.ATAC(["chromVAR_peak_expectation.ATAC"]):::none --&gt; chromVAR_background_bins.ATAC(["chromVAR_background_bins.ATAC"]):::none
-    chromVAR_obj.ATAC(["chromVAR_obj.ATAC"]):::none --&gt; chromVAR_peak_expectation.ATAC(["chromVAR_peak_expectation.ATAC"]):::none
-    GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none --&gt; GWAS_chromVAR_summarized_ZScores_tibble(["GWAS_chromVAR_summarized_ZScores_tibble"]):::none
-    open_targets_credible_set_dataset_path(["open_targets_credible_set_dataset_path"]):::none --&gt; GWAS_inputs_tibble(["GWAS_inputs_tibble"]):::none
-    graph_matrix(["graph_matrix"]):::none --&gt; TRS_tibbles["TRS_tibbles"]:::none
-    GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none --&gt; TRS_tibbles["TRS_tibbles"]:::none
-    GWAS_chromVAR_peak_weight_records["GWAS_chromVAR_peak_weight_records"]:::none --&gt; GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none
-    GWAS_inputs_tibble(["GWAS_inputs_tibble"]):::none --&gt; GWAS_chromVAR_peak_weight_records["GWAS_chromVAR_peak_weight_records"]:::none
-    TRS_tibbles["TRS_tibbles"]:::none --&gt; TRS_summary_tibble(["TRS_summary_tibble"]):::none
-    chromVAR_background_bins.ATAC(["chromVAR_background_bins.ATAC"]):::none --&gt; GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none
-    chromVAR_obj.ATAC(["chromVAR_obj.ATAC"]):::none --&gt; GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none
-    chromVAR_obj.ATAC(["chromVAR_obj.ATAC"]):::none --&gt; GWAS_chromVAR_peak_weight_records["GWAS_chromVAR_peak_weight_records"]:::none
-    chromVAR_peak_expectation.ATAC(["chromVAR_peak_expectation.ATAC"]):::none --&gt; GWAS_chromVAR_ZScore_records.single_cell["GWAS_chromVAR_ZScore_records.single_cell"]:::none
-    open_targets_credible_set_dataset_path(["open_targets_credible_set_dataset_path"]):::none --&gt; GWAS_chromVAR_peak_weight_records["GWAS_chromVAR_peak_weight_records"]:::none
+  style Graph fill:#FFFFFF00,stroke:#000000;
+  subgraph Graph
+    direction TB
+    chromVAR_obj.ATAC.immune_human_2x(["chromVAR_obj.ATAC.immune_human_2x"]):::none --&gt; chromVAR_background_bins.ATAC.immune_human_2x(["chromVAR_background_bins.ATAC.immune_human_2x"]):::none
+    chromVAR_peak_expectation.ATAC.immune_human_2x(["chromVAR_peak_expectation.ATAC.immune_human_2x"]):::none --&gt; chromVAR_background_bins.ATAC.immune_human_2x(["chromVAR_background_bins.ATAC.immune_human_2x"]):::none
+    chromVAR_obj.ATAC.immune_human_2x(["chromVAR_obj.ATAC.immune_human_2x"]):::none --&gt; chromVAR_peak_expectation.ATAC.immune_human_2x(["chromVAR_peak_expectation.ATAC.immune_human_2x"]):::none
+    open_targets_credible_set_dataset_path(["open_targets_credible_set_dataset_path"]):::none --&gt; GWAS_inputs_tibble.genetic_enrichment.immune_human_2x(["GWAS_inputs_tibble.genetic_enrichment.immune_human_2x"]):::none
+    ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x["ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x"]:::none --&gt; TRS_tibbles.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x["TRS_tibbles.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x"]:::none
+    graph_matrix.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x(["graph_matrix.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x"]):::none --&gt; TRS_tibbles.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x["TRS_tibbles.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x"]:::none
+    GWAS_inputs_tibble.genetic_enrichment.immune_human_2x(["GWAS_inputs_tibble.genetic_enrichment.immune_human_2x"]):::none --&gt; peak_weight_records.trait_level.genetic_enrichment.immune_human_2x["peak_weight_records.trait_level.genetic_enrichment.immune_human_2x"]:::none
+    TRS_tibbles.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x["TRS_tibbles.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x"]:::none --&gt; TRS_summary_tibble.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x(["TRS_summary_tibble.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x"]):::none
+    ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x["ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x"]:::none --&gt; ZScores_tibble.summarized.single_nucleus.genetic_enrichment.immune_human_2x(["ZScores_tibble.summarized.single_nucleus.genetic_enrichment.immune_human_2x"]):::none
+    chromVAR_background_bins.ATAC.immune_human_2x(["chromVAR_background_bins.ATAC.immune_human_2x"]):::none --&gt; ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x["ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x"]:::none
+    chromVAR_obj.ATAC.immune_human_2x(["chromVAR_obj.ATAC.immune_human_2x"]):::none --&gt; ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x["ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x"]:::none
+    chromVAR_obj.ATAC.immune_human_2x(["chromVAR_obj.ATAC.immune_human_2x"]):::none --&gt; peak_weight_records.trait_level.genetic_enrichment.immune_human_2x["peak_weight_records.trait_level.genetic_enrichment.immune_human_2x"]:::none
+    chromVAR_peak_expectation.ATAC.immune_human_2x(["chromVAR_peak_expectation.ATAC.immune_human_2x"]):::none --&gt; ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x["ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x"]:::none
+    open_targets_credible_set_dataset_path(["open_targets_credible_set_dataset_path"]):::none --&gt; peak_weight_records.trait_level.genetic_enrichment.immune_human_2x["peak_weight_records.trait_level.genetic_enrichment.immune_human_2x"]:::none
+    peak_weight_records.trait_level.genetic_enrichment.immune_human_2x["peak_weight_records.trait_level.genetic_enrichment.immune_human_2x"]:::none --&gt; ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x["ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x"]:::none
+  end
 </pre>
 </div>
 <p></p></figure><p></p>

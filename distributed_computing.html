@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>3&nbsp; Quickstart – multiomeR Manual</title>
+<title>4&nbsp; Distributed computing – multiomeR Manual</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -68,8 +68,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./output_gallery.html" rel="next">
-<link href="./overview.html" rel="prev">
+<link href="./reaction_aggregation_walkthrough.html" rel="next">
+<link href="./running_demo.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -121,7 +121,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./quickstart.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Quickstart</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./distributed_computing.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Distributed computing</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -155,34 +155,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
   </div>
 </li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./overview.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./quickstart.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Quickstart</span></span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./output_gallery.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Output Gallery</span></span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./installation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Installation</span></span></a>
-  </div>
-</li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
- <span class="menu-text">Workflow</span></a>
+ <span class="menu-text">Quickstart: Public PBMC demo</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -190,24 +166,59 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./installation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Installation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./running_demo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Running the demo</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./distributed_computing.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Distributed computing</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Workflow</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./reaction_aggregation_walkthrough.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Main pipeline</span></span></a>
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Main pipeline</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./differential_analyses_walkthrough.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Differential analyses module</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Differential analyses module</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./genetic_enrichment_walkthrough.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Genetic enrichment module</span></span></a>
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Genetic enrichment module</span></span></a>
   </div>
 </li>
       </ul>
   </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./output_gallery.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Output Gallery</span></span></a>
+  </div>
+</li>
     </ul>
     </div>
 </nav>
@@ -218,17 +229,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#prepare-the-example-workflow" id="toc-prepare-the-example-workflow" class="nav-link active" data-scroll-target="#prepare-the-example-workflow"><span class="header-section-number">3.1</span> 1. Prepare the example workflow</a></li>
-  <li><a href="#run-the-example-workflow" id="toc-run-the-example-workflow" class="nav-link" data-scroll-target="#run-the-example-workflow"><span class="header-section-number">3.2</span> 2. Run the example workflow</a></li>
+  <li><a href="#controller-contract" id="toc-controller-contract" class="nav-link active" data-scroll-target="#controller-contract"><span class="header-section-number">4.1</span> Controller contract</a></li>
+  <li><a href="#local-default" id="toc-local-default" class="nav-link" data-scroll-target="#local-default"><span class="header-section-number">4.2</span> Local default</a></li>
+  <li><a href="#cluster-execution" id="toc-cluster-execution" class="nav-link" data-scroll-target="#cluster-execution"><span class="header-section-number">4.3</span> Cluster execution</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/quickstart.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/distributed_computing.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Quickstart</span></h1>
+<h1 class="title"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Distributed computing</span></h1>
 </div>
 
 
@@ -245,73 +257,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>This quickstart is the shortest path through the public example workflow. It condenses the detailed <a href="./installation.html">Installation</a> and <a href="./reaction_aggregation_walkthrough.html">Main pipeline</a> pages into two command blocks.</p>
-<p>The downloads include public <code>cellranger-arc count</code> outputs and matching 10x Genomics Cell Ranger ARC reference directories. They are large, and the example workflow can still take substantial time and disk space.</p>
-<section id="prepare-the-example-workflow" class="level2" data-number="3.1">
-<h2 data-number="3.1" class="anchored" data-anchor-id="prepare-the-example-workflow"><span class="header-section-number">3.1</span> 1. Prepare the example workflow</h2>
-<p>Run these commands in a terminal:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Clone the repository</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/koefoeden/multiomeR.git</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> multiomeR</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Install pixi and create the software environment</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsSL</span> https://pixi.sh/install.sh <span class="kw">|</span> <span class="fu">sh</span> <span class="co"># if pixi is not installed yet</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">"</span><span class="va">$HOME</span><span class="st">/.pixi/bin:</span><span class="va">$PATH</span><span class="st">"</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ex">pixi</span> install <span class="at">--run-post-link-scripts</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Download public example inputs</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> example_data/download_10X_cellranger_count_data.sh</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> example_data/download_10X_cellranger_arc_refdata.sh</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Create local config files from templates</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> cfg_datasets_template.yaml cfg_datasets.yaml</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> cfg_aggregations_template.yaml cfg_aggregations.yaml</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> cfg_reactions_template.tsv cfg_reactions.tsv</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> crew_controllers_template.R crew_controllers.R</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> module_differential_analyses/cfg_template.yaml module_differential_analyses/cfg.yaml</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> module_genetic_enrichment/cfg_template.yaml module_genetic_enrichment/cfg.yaml</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Start the interactive R session used below</span></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="ex">pixi</span> shell</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="ex">R</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>The final two commands start the interactive R session used for the next block.</p>
+<p>multiomeR runs targets through the <a href="https://books.ropensci.org/targets/crew.html">targets</a> and <code>crew</code> backend. The repository ships with <code>crew_controllers.R</code> pointing to a local-controller setup, which is sufficient for the public PBMC demo.</p>
+<p>For larger datasets, adapt <code>crew_controllers.R</code> to match your scheduler, queue names, resource limits, and worker startup requirements.</p>
+<section id="controller-contract" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="controller-contract"><span class="header-section-number">4.1</span> Controller contract</h2>
+<p><code>crew_controllers.R</code> must return a named list with:</p>
+<ul>
+<li><code>controller_list</code>: the list of <code>crew</code> controllers.</li>
+<li><code>controller_resources_tibble</code>: a table with <code>controller_name</code>, <code>cores</code>, <code>RAM_GB</code>, and <code>gpus</code>.</li>
+</ul>
+<p>Targets request resources by cores, RAM, and optionally GPUs through <code>get_tar_resources()</code>. The first row of <code>controller_resources_tibble</code> is the default controller, and row order controls which matching controller is preferred. GPU controllers are excluded unless <code>gpus_req &gt; 0</code>.</p>
 </section>
-<section id="run-the-example-workflow" class="level2" data-number="3.2">
-<h2 data-number="3.2" class="anchored" data-anchor-id="run-the-example-workflow"><span class="header-section-number">3.2</span> 2. Run the example workflow</h2>
-<p>Run these commands inside that R session:</p>
+<section id="local-default" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="local-default"><span class="header-section-number">4.2</span> Local default</h2>
+<p>The default template uses a local <code>crew</code> controller:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install GitHub-only R dependencies</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"bnprks/BPCells"</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">subdir =</span> <span class="st">"r"</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">ref =</span> <span class="st">"28759cdd512578b6cbe549e226e1cd52a2d2308c"</span>, <span class="co"># BPCells 0.3.1</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">upgrade =</span> <span class="st">"never"</span>,</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">dependencies =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">build_vignettes =</span> <span class="cn">FALSE</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"stuart-lab/signac"</span>,</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">ref =</span> <span class="st">"5d66cf6c34322309d5b8aece3fa294f5531b8eee"</span>, <span class="co"># Signac 1.9999.4</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">upgrade =</span> <span class="st">"never"</span>,</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">dependencies =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">build_vignettes =</span> <span class="cn">FALSE</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="st">"plger/betterChromVAR"</span>,</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">ref =</span> <span class="st">"82ae1e4ada8a43c721aa2ae1c3f2c6dfc3d5a637"</span>, <span class="co"># betterChromVAR 0.99.41</span></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">upgrade =</span> <span class="st">"never"</span>,</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">dependencies =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">build_vignettes =</span> <span class="cn">FALSE</span></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Run the example data targets</span></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(<span class="at">names =</span> <span class="fu">tar_described_as</span>(<span class="st">"checkpoint:GEX"</span>) <span class="sc">&amp;</span> <span class="fu">matches</span>(<span class="st">"immune_human_2x|brain_mouse"</span>))</span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(<span class="at">names =</span> <span class="fu">tar_described_as</span>(<span class="st">"checkpoint:ATAC"</span>) <span class="sc">&amp;</span> <span class="fu">matches</span>(<span class="st">"immune_human_2x|brain_mouse"</span>))</span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(<span class="at">names =</span> <span class="fu">tar_described_as</span>(<span class="st">"checkpoint:multimodal"</span>) <span class="sc">&amp;</span> <span class="fu">matches</span>(<span class="st">"immune_human_2x|brain_mouse"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">crew_controllers.R</span> <span class="at">-</span><span class="op">&gt;</span> crew_controllers_template.R</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>After the example workflow has completed, see the <a href="./output_gallery.html">output gallery</a> for representative outputs.</p>
+<p>Increase local workers, cores, and memory only after the example workflow succeeds on your machine.</p>
+</section>
+<section id="cluster-execution" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="cluster-execution"><span class="header-section-number">4.3</span> Cluster execution</h2>
+<p>For cluster execution, replace the local controller with a scheduler-backed controller such as <code>crew.cluster::crew_controller_slurm()</code>. Keep the <code>controller_resources_tibble</code> rows aligned with the controller names, because that table controls how target-level resource requests are routed.</p>
 
 
 </section>
@@ -719,13 +686,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./overview.html" class="pagination-link" aria-label="Overview">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Overview</span></span>
+      <a href="./running_demo.html" class="pagination-link" aria-label="Running the demo">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Running the demo</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./output_gallery.html" class="pagination-link" aria-label="Output Gallery">
-        <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Output Gallery</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./reaction_aggregation_walkthrough.html" class="pagination-link" aria-label="Main pipeline">
+        <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Main pipeline</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -734,4 +701,4 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/quickstart.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/distributed_computing.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>

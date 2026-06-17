@@ -11,15 +11,5 @@ knitr::opts_chunk$set(
 The public PBMC demo runs the `immune_human_2x` aggregation through every configured review checkpoint. Run this from a repository-root R session after completing [Installation](installation.qmd).
 
 ```{.r filename="R"}
-targets::tar_make(
-  names =
-    targets::tar_described_as(
-      tidyselect::matches(
-        "checkpoint:(GEX|ATAC|multimodal|differential_analyses|genetic_enrichment)"
-      )
-    ) &
-    tidyselect::matches("immune_human_2x")
-)
+targets::tar_make(tidyselect::matches("immune_human_2x"))
 ```
-
-The run writes target artifacts to `pipelines/processing_and_aggregation/outputs`, the `targets` store configured in `_targets.yaml`. After the run completes, use the target names shown in the [main pipeline output gallery](output_gallery_main.qmd) with `targets::tar_read()` to inspect representative outputs from the same repository-root R session.

@@ -19,6 +19,7 @@ book:
       chapters:
         - installation.qmd
         - running_demo.qmd
+        - outputs_demo.qmd
     - part: "Running your own data through the main pipeline"
       chapters:
         - main_pipeline_overview.qmd

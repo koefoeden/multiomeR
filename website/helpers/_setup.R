@@ -30,6 +30,31 @@ emit_mermaid <- function(path, theme_path = "website/figures/common_theme.mmd") 
   )
 }
 
+emit_yaml_template_entry <- function(path, key) {
+  yaml_lines <- readLines(path, warn = FALSE)
+  start_line <- which(startsWith(yaml_lines, paste0(key, ":")))
+
+  if (length(start_line) != 1) {
+    stop("Expected exactly one top-level YAML entry named '", key, "' in ", path, call. = FALSE)
+  }
+
+  top_level_lines <- grep("^[[:alnum:]_.-]+:", yaml_lines)
+  next_top_level_line <- top_level_lines[top_level_lines > start_line][1]
+  end_line <- if (is.na(next_top_level_line)) length(yaml_lines) else next_top_level_line - 1
+  entry_lines <- yaml_lines[start_line:end_line]
+
+  while (length(entry_lines) > 0 && identical(utils::tail(entry_lines, 1), "")) {
+    entry_lines <- utils::head(entry_lines, -1)
+  }
+
+  cat(
+    "```yaml\n",
+    paste(entry_lines, collapse = "\n"),
+    "\n```\n",
+    sep = ""
+  )
+}
+
 github_repo <- "https://github.com/koefoeden/multiomeR/tree/main"
 force_recreate_graph <- identical(
   tolower(Sys.getenv("FORCE_RECREATE_GRAPH", "false")),
@@ -37,9 +62,11 @@ force_recreate_graph <- identical(
 )
 
 pipeline_github_file <- file.path(github_repo, "_targets.R")
-datasets_template_file <- "cfg_datasets_template.yaml"
-datasets_github_file <- file.path(github_repo, datasets_template_file)
-reactions_github_file <- file.path(github_repo, "cfg_reactions_template.tsv")
+datasets_config_file <- "cfg_datasets.yaml"
+aggregations_config_file <- "cfg_aggregations.yaml"
+datasets_github_file <- file.path(github_repo, "cfg_datasets.yaml")
+reactions_github_file <- file.path(github_repo, "cfg_reactions.tsv")
+aggregations_github_file <- file.path(github_repo, "cfg_aggregations.yaml")
 
 module_cfg_template_file <- switch(
   pipeline_name,

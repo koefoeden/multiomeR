@@ -16,7 +16,7 @@ The module can model:
 - differential chromatin accessibility on pseudobulked ATAC counts
 - differential transcription factor activity using chromVAR-derived pseudobulk signals
 
-Representative outputs from this module are shown in the [output gallery](output_gallery.qmd).
+Representative outputs from this module are shown in the [Output Gallery](output_gallery.qmd).
 
 Enable the module for an aggregation in `cfg_aggregations.yaml`, then configure the module-specific model settings in `module_differential_analyses/cfg.yaml`. Only edit module rows for aggregations that enable this module.
 
@@ -27,7 +27,7 @@ optional:
   modules: [differential_analyses]
 ```
 
-The module config controls which variables are modelled, which metadata columns are used, and which contrasts are run. Start from `module_differential_analyses/cfg_template.yaml`, copy it to `module_differential_analyses/cfg.yaml`, and keep disabled or example rows available for reference until the corresponding aggregation is ready.
+The module config controls which variables are modelled, which metadata columns are used, and which contrasts are run. Edit `module_differential_analyses/cfg.yaml`, keeping disabled or example rows available for reference until the corresponding aggregation is ready.
 
 ## Running the pipeline
 

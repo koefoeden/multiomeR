@@ -37,14 +37,6 @@ example_data/*
 !example_data/*.tsv
 !example_data/*.sh
 
-# configs
-cfg_datasets.yaml
-cfg_aggregations.yaml
-cfg_reactions.tsv
-crew_controllers.R
-module_differential_analyses/cfg.yaml
-module_genetic_enrichment/cfg.yaml
-
 # outputs
 pipelines/*/outputs
 tmp/

@@ -12,15 +12,17 @@ book:
     collapse-level: 2
   chapters:
     - index.qmd
-    - overview.qmd
-    - quickstart.qmd
-    - output_gallery.qmd
-    - installation.qmd
+    - part: "Quickstart: Public PBMC demo"
+      chapters:
+        - installation.qmd
+        - running_demo.qmd
+    - distributed_computing.qmd
     - part: Workflow
       chapters:
         - reaction_aggregation_walkthrough.qmd
         - differential_analyses_walkthrough.qmd
         - genetic_enrichment_walkthrough.qmd
+    - output_gallery.qmd
 format:
   html:
     theme: cosmo

@@ -14,7 +14,7 @@ The module can identify trait-relevant cell types and regulatory programs using:
 - single-cell and pseudobulk enrichment scoring with gchromVAR
 - graph-based trait relevance scoring with SCAVENGE
 
-Representative outputs from this module are shown in the [Output Gallery](output_gallery.qmd).
+Representative outputs from this module are shown in the [genetic enrichment output gallery](output_gallery_genetic_enrichment.qmd).
 
 Enable the module for a human-data aggregation in `cfg_aggregations.yaml`, then configure Open Targets studies and module-specific settings in `module_genetic_enrichment/cfg.yaml`. Only edit module rows for aggregations that enable this module.
 

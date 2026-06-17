@@ -55,6 +55,64 @@ check_output_gallery_assets <- function(manifest_file = file.path("website", "ou
     )
 }
 
+#' Render one output gallery card
+#'
+#' @param item One-row gallery item represented as a list.
+#' @keywords internal
+render_gallery_item <- function(item) {
+  title <- htmltools::htmlEscape(item$title)
+  description <- htmltools::htmlEscape(item$description)
+  target <- htmltools::htmlEscape(item$target)
+  asset <- item$asset
+  asset_exists <- isTRUE(item$asset_exists)
+
+  cat('<article class="output-gallery-card">\n')
+  if (asset_exists) {
+    cat(sprintf('<a href="%s"><img src="%s" alt="%s"></a>\n', asset, asset, title))
+  } else {
+    cat('<div class="output-gallery-placeholder">Preview pending</div>\n')
+  }
+  cat(sprintf('<p class="output-gallery-title">%s</p>\n', title))
+  cat(sprintf('<p>%s</p>\n', description))
+  cat(sprintf('<p class="output-gallery-target"><code>%s</code></p>\n', target))
+  cat('</article>\n')
+}
+
+#' Render output gallery cards in a responsive grid
+#'
+#' @param items Gallery manifest rows to render.
+#' @keywords internal
+render_gallery_grid <- function(items) {
+  cat('<div class="output-gallery-grid">\n')
+  purrr::pwalk(items, \(...) render_gallery_item(list(...)))
+  cat('</div>\n')
+}
+
+#' Render one output gallery section
+#'
+#' @param gallery_items Gallery manifest rows.
+#' @param section Section name to render.
+#' @keywords internal
+render_gallery_section <- function(gallery_items, section) {
+  section_items <- dplyr::filter(gallery_items, .data$section == .env$section)
+  if (nrow(section_items) == 0) {
+    stop("No output gallery items found for section: ", section, call. = FALSE)
+  }
+
+  if (all(is.na(section_items$subsection))) {
+    render_gallery_grid(section_items)
+    return(invisible(NULL))
+  }
+
+  for (subsection_name in unique(stats::na.omit(section_items$subsection))) {
+    subsection_items <- dplyr::filter(section_items, .data$subsection == subsection_name)
+    cat(sprintf("\n## %s\n\n", htmltools::htmlEscape(subsection_name)))
+    render_gallery_grid(subsection_items)
+  }
+
+  invisible(NULL)
+}
+
 #' Resolve source paths for output gallery targets
 #'
 #' @param manifest Manifest tibble from `read_output_gallery_manifest()`.

@@ -22,4 +22,4 @@ targets::tar_make(
 )
 ```
 
-The run writes target artifacts to `pipelines/processing_and_aggregation/outputs`, the `targets` store configured in `_targets.yaml`. After the run completes, use the target names shown in the [Output Gallery](output_gallery.qmd) with `targets::tar_read()` to inspect representative outputs from the same repository-root R session.
+The run writes target artifacts to `pipelines/processing_and_aggregation/outputs`, the `targets` store configured in `_targets.yaml`. After the run completes, use the target names shown in the [main pipeline output gallery](output_gallery_main.qmd) with `targets::tar_read()` to inspect representative outputs from the same repository-root R session.

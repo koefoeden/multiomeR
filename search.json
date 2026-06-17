@@ -82,11 +82,11 @@
     ]
   },
   {
-    "objectID": "installation.html#clone-the-repository",
-    "href": "installation.html#clone-the-repository",
+    "objectID": "installation.html#clone-and-enter-the-repository",
+    "href": "installation.html#clone-and-enter-the-repository",
     "title": "2  Installation",
-    "section": "2.2 Clone the repository",
-    "text": "2.2 Clone the repository\n\ngit clone https://github.com/koefoeden/multiomeR.git\ncd multiomeR\n\nThe repository includes active config files for the public example workflow. These point to the example-data paths used by the demo, so no template-copy step is needed before the first run.",
+    "section": "2.2 Clone and enter the repository",
+    "text": "2.2 Clone and enter the repository\n\n\nBash\n\ngit clone https://github.com/koefoeden/multiomeR.git\ncd multiomeR",
     "crumbs": [
       "Quickstart: Public PBMC demo",
       "<span class='chapter-number'>2</span>  <span class='chapter-title'>Installation</span>"
@@ -97,18 +97,18 @@
     "href": "installation.html#create-and-launch-the-pixi-environment",
     "title": "2  Installation",
     "section": "2.3 Create and launch the pixi environment",
-    "text": "2.3 Create and launch the pixi environment\nIf pixi is not installed yet, install it first:\n\ncurl -fsSL https://pixi.sh/install.sh | sh\nexport PATH=\"$HOME/.pixi/bin:$PATH\"\n\nInstall the pixi environment from the repository root:\n\npixi install --run-post-link-scripts\n\nStart an interactive R session inside the pixi environment:\n\npixi shell\nR\n\nUse this repository-root R session as the evaluation environment for subsequent R commands in this manual.\n\n\n\n\n\n\nNoteWhy pixi?\n\n\n\n\n\nmultiomeR depends on both R packages and command-line genomics tools. Pixi keeps those dependencies in one locked environment, so R, Bioconductor packages, and external tools such as macs3, tabix, and cellsnp-lite are resolved together instead of being installed manually across separate package managers.\n\n\n\n\n\n\n\n\n\nNoteWhy is --run-post-link-scripts needed?\n\n\n\n\n\nThe --run-post-link-scripts flag is required for Bioconductor data packages such as the BSgenome genome packages. Pixi disables conda post-link scripts by default, but these packages use Bioconda’s post-link scripts to materialize the actual R package directories in the pixi environment.",
+    "text": "2.3 Create and launch the pixi environment\nIf pixi is not installed yet, install it first:\n\n\nBash\n\ncurl -fsSL https://pixi.sh/install.sh | sh\nexport PATH=\"$HOME/.pixi/bin:$PATH\"\n\nInstall the pixi environment from the repository root:\n\n\nBash\n\npixi install --run-post-link-scripts\n\nStart an interactive R session inside the pixi environment:\n\n\nBash\n\npixi shell\nR\n\nUse this repository-root R session as the evaluation environment for subsequent R commands in this manual.\n\n\n\n\n\n\nNoteWhy pixi?\n\n\n\n\n\nmultiomeR depends on both R packages and command-line genomics tools. Pixi keeps those dependencies in one locked environment, so R, Bioconductor packages, and external tools such as macs3, tabix, and cellsnp-lite are resolved together instead of being installed manually across separate package managers.\n\n\n\n\n\n\n\n\n\nNoteWhy is --run-post-link-scripts needed?\n\n\n\n\n\nThe --run-post-link-scripts flag is required for Bioconductor data packages such as the BSgenome genome packages. Pixi disables conda post-link scripts by default, but these packages use Bioconda’s post-link scripts to materialize the actual R package directories in the pixi environment.",
     "crumbs": [
       "Quickstart: Public PBMC demo",
       "<span class='chapter-number'>2</span>  <span class='chapter-title'>Installation</span>"
     ]
   },
   {
-    "objectID": "installation.html#installation-of-r-packages",
-    "href": "installation.html#installation-of-r-packages",
+    "objectID": "installation.html#manual-installation-of-remaining-r-packages",
+    "href": "installation.html#manual-installation-of-remaining-r-packages",
     "title": "2  Installation",
-    "section": "2.4 Installation of R packages",
-    "text": "2.4 Installation of R packages\nA small number of R packages still need GitHub versions while upstream conda packages catch up. Install them inside the R session started from the pixi shell:\n\nremotes::install_github(\n  \"bnprks/BPCells\",\n  subdir = \"r\",\n  ref = \"28759cdd512578b6cbe549e226e1cd52a2d2308c\", # BPCells 0.3.1\n  upgrade = \"never\",\n  dependencies = FALSE,\n  build_vignettes = FALSE\n)\nremotes::install_github(\n  \"stuart-lab/signac\",\n  ref = \"5d66cf6c34322309d5b8aece3fa294f5531b8eee\", # Signac 1.9999.4\n  upgrade = \"never\",\n  dependencies = FALSE,\n  build_vignettes = FALSE\n)\nremotes::install_github(\n  \"plger/betterChromVAR\",\n  ref = \"82ae1e4ada8a43c721aa2ae1c3f2c6dfc3d5a637\", # betterChromVAR 0.99.41\n  upgrade = \"never\",\n  dependencies = FALSE,\n  build_vignettes = FALSE\n)",
+    "section": "2.4 Manual installation of remaining R packages",
+    "text": "2.4 Manual installation of remaining R packages\nA small number of R packages still need GitHub versions while upstream conda packages catch up. Install them inside the R session started from the pixi shell:\n\n\nR\n\nremotes::install_github(\n  \"bnprks/BPCells\",\n  subdir = \"r\",\n  ref = \"28759cdd512578b6cbe549e226e1cd52a2d2308c\", # BPCells 0.3.1\n  upgrade = \"never\",\n  dependencies = FALSE,\n  build_vignettes = FALSE\n)\nremotes::install_github(\n  \"stuart-lab/signac\",\n  ref = \"5d66cf6c34322309d5b8aece3fa294f5531b8eee\", # Signac 1.9999.4\n  upgrade = \"never\",\n  dependencies = FALSE,\n  build_vignettes = FALSE\n)\nremotes::install_github(\n  \"plger/betterChromVAR\",\n  ref = \"82ae1e4ada8a43c721aa2ae1c3f2c6dfc3d5a637\", # betterChromVAR 0.99.41\n  upgrade = \"never\",\n  dependencies = FALSE,\n  build_vignettes = FALSE\n)",
     "crumbs": [
       "Quickstart: Public PBMC demo",
       "<span class='chapter-number'>2</span>  <span class='chapter-title'>Installation</span>"
@@ -119,7 +119,7 @@
     "href": "installation.html#download-public-inputs",
     "title": "2  Installation",
     "section": "2.5 Download public inputs",
-    "text": "2.5 Download public inputs\nThe public PBMC demo uses public cellranger-arc count outputs and the matching 10x Genomics Cell Ranger ARC reference directories. Download both from the repository root before running the demo:\n\nbash example_data/download_10X_cellranger_count_data.sh\nbash example_data/download_10X_cellranger_arc_refdata.sh\n\nThe default controller setup uses a local crew backend. See Distributed computing when adapting the workflow to a cluster or changing resource routing.",
+    "text": "2.5 Download public inputs\nThe public PBMC demo uses two public human cellranger-arc count outputs: healthy_PBMC_human and lymphoma_lymph_human. Download them from the repository root:\n\n\nBash\n\npbmc_dir=\"example_data/healthy_PBMC_human/outs\"\nlymphoma_dir=\"example_data/lymphoma_lymph_human/outs\"\n\nmkdir -p $pbmc_dir $lymphoma_dir\n\npbmc_prefix=\"https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_granulocyte_sorted_3k/pbmc_granulocyte_sorted_3k\"\ncurl -fL -o \"${pbmc_dir}/web_summary.html\" \"${pbmc_prefix}_web_summary.html\"\ncurl -fL -o \"${pbmc_dir}/summary.csv\" \"${pbmc_prefix}_summary.csv\"\ncurl -fL -o \"${pbmc_dir}/per_barcode_metrics.csv\" \"${pbmc_prefix}_per_barcode_metrics.csv\"\ncurl -fL -o \"${pbmc_dir}/filtered_feature_bc_matrix.h5\" \"${pbmc_prefix}_filtered_feature_bc_matrix.h5\"\ncurl -fL -o \"${pbmc_dir}/raw_feature_bc_matrix.h5\" \"${pbmc_prefix}_raw_feature_bc_matrix.h5\"\ncurl -fL -o \"${pbmc_dir}/atac_fragments.tsv.gz\" \"${pbmc_prefix}_atac_fragments.tsv.gz\"\ncurl -fL -o \"${pbmc_dir}/atac_fragments.tsv.gz.tbi\" \"${pbmc_prefix}_atac_fragments.tsv.gz.tbi\"\n\nlymphoma_prefix=\"https://cf.10xgenomics.com/samples/cell-arc/2.0.0/lymph_node_lymphoma_14k/lymph_node_lymphoma_14k\"\ncurl -fL -o \"${lymphoma_dir}/web_summary.html\" \"${lymphoma_prefix}_web_summary.html\"\ncurl -fL -o \"${lymphoma_dir}/summary.csv\" \"${lymphoma_prefix}_summary.csv\"\ncurl -fL -o \"${lymphoma_dir}/per_barcode_metrics.csv\" \"${lymphoma_prefix}_per_barcode_metrics.csv\"\ncurl -fL -o \"${lymphoma_dir}/filtered_feature_bc_matrix.h5\" \"${lymphoma_prefix}_filtered_feature_bc_matrix.h5\"\ncurl -fL -o \"${lymphoma_dir}/raw_feature_bc_matrix.h5\" \"${lymphoma_prefix}_raw_feature_bc_matrix.h5\"\ncurl -fL -o \"${lymphoma_dir}/atac_fragments.tsv.gz\" \"${lymphoma_prefix}_atac_fragments.tsv.gz\"\ncurl -fL -o \"${lymphoma_dir}/atac_fragments.tsv.gz.tbi\" \"${lymphoma_prefix}_atac_fragments.tsv.gz.tbi\"\n\nThen download and unpack the matching human Cell Ranger ARC reference:\n\n\nBash\n\nrefdata=\"refdata-cellranger-arc-GRCh38-2020-A-2.0.0\"\nrefdata_url=\"https://cf.10xgenomics.com/supp/cell-arc\"\n\ncurl -fL -o \"example_data/${refdata}.tar.gz\" \"${refdata_url}/${refdata}.tar.gz\"\ntar -xzf \"example_data/${refdata}.tar.gz\" -C example_data\n\nThe default controller setup uses a local crew backend. See Distributed computing when adapting the workflow to a cluster or changing resource routing.",
     "crumbs": [
       "Quickstart: Public PBMC demo",
       "<span class='chapter-number'>2</span>  <span class='chapter-title'>Installation</span>"

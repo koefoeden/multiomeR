@@ -10,7 +10,7 @@ knitr::opts_chunk$set(
 
 The public PBMC demo runs the `immune_human_2x` aggregation through every configured review checkpoint. Run this from a repository-root R session after completing [Installation](installation.qmd).
 
-```{r}
+```{.r filename="R"}
 targets::tar_make(
   names =
     targets::tar_described_as(

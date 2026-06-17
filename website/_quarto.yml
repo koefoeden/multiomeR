@@ -17,9 +17,13 @@ book:
         - installation.qmd
         - running_demo.qmd
     - distributed_computing.qmd
-    - part: Workflow
+    - part: "Running your own data"
       chapters:
-        - reaction_aggregation_walkthrough.qmd
+        - inputs_main.qmd
+        - running_workflow.qmd
+        - implementation_details.qmd 
+    - part: "Downstream modules"
+      chapters:
         - differential_analyses_walkthrough.qmd
         - genetic_enrichment_walkthrough.qmd
     - output_gallery.qmd
@@ -30,4 +34,5 @@ format:
     toc: true
     toc-depth: 3
     code-copy: true
+    code-overflow: scroll
     number-sections: true

@@ -25,7 +25,7 @@ Targets request resources by cores, RAM, and optionally GPUs through `get_tar_re
 
 The default template uses a local `crew` controller:
 
-```{bash}
+```{.bash filename="Bash"}
 crew_controllers.R -> crew_controllers_template.R
 ```
 

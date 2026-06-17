@@ -113,7 +113,7 @@ From the repository-root R session described in [Installation](installation.qmd)
 
 Run the RNA-processing checkpoint first:
 
-```{r, eval = FALSE}
+```{.r filename="R"}
 targets::tar_make(
   names = targets::tar_described_as(tidyselect::contains("checkpoint:GEX")) &
     tidyselect::matches("your_aggregation")
@@ -126,7 +126,7 @@ At this checkpoint, inspect the aggregation-level barcode exclusion summaries, R
 
 Run the ATAC-processing checkpoint after the GEX review:
 
-```{r, eval = FALSE}
+```{.r filename="R"}
 targets::tar_make(
   names = targets::tar_described_as(tidyselect::contains("checkpoint:ATAC")) &
     tidyselect::matches("your_aggregation")
@@ -137,7 +137,7 @@ At this checkpoint, inspect ATAC QC plots, LSI diagnostics, peak and motif summa
 
 ### Multimodal checkpoint
 
-```{r, eval = FALSE}
+```{.r filename="R"}
 targets::tar_make(
   names = targets::tar_described_as(tidyselect::contains("checkpoint:multimodal")) &
     tidyselect::matches("your_aggregation")
@@ -148,7 +148,7 @@ At this checkpoint, inspect WNN UMAPs, modality-weight plots, multimodal cluster
 
 To run all configured aggregations for a checkpoint, omit the `& tidyselect::matches("your_aggregation")` part. To run the full workflow after checkpoint review, run:
 
-```{r, eval = FALSE}
+```{.r filename="R"}
 targets::tar_make()
 ```
 

@@ -14,33 +14,32 @@ knitr::opts_chunk$set(
 - `git`.
 
 
-## Clone the repository
+## Clone and enter the repository
 
-```{bash}
+```{.bash filename="Bash"}
 git clone https://github.com/koefoeden/multiomeR.git
 cd multiomeR
 ```
 
-The repository includes active config files for the public example workflow. These point to the example-data paths used by the demo, so no template-copy step is needed before the first run.
 
 ## Create and launch the pixi environment
 
 If `pixi` is not installed yet, install it first:
 
-```{bash}
+```{.bash filename="Bash"}
 curl -fsSL https://pixi.sh/install.sh | sh
 export PATH="$HOME/.pixi/bin:$PATH"
 ```
 
 Install the pixi environment from the repository root:
 
-```{bash}
+```{.bash filename="Bash"}
 pixi install --run-post-link-scripts
 ```
 
 Start an interactive R session inside the pixi environment:
 
-```{bash}
+```{.bash filename="Bash"}
 pixi shell
 R
 ```
@@ -59,11 +58,11 @@ multiomeR depends on both R packages and command-line genomics tools. Pixi keeps
 The `--run-post-link-scripts` flag is required for Bioconductor data packages such as the BSgenome genome packages. Pixi disables conda post-link scripts by default, but these packages use Bioconda's post-link scripts to materialize the actual R package directories in the pixi environment.
 :::
 
-## Installation of R packages
+## Manual installation of remaining R packages
 
 A small number of R packages still need GitHub versions while upstream conda packages catch up. Install them inside the R session started from the pixi shell:
 
-```{r}
+```{.r filename="R"}
 remotes::install_github(
   "bnprks/BPCells",
   subdir = "r",
@@ -90,11 +89,39 @@ remotes::install_github(
 
 ## Download public inputs
 
-The public PBMC demo uses public `cellranger-arc count` outputs and the matching 10x Genomics Cell Ranger ARC reference directories. Download both from the repository root before running the demo:
+The public PBMC demo uses two public human `cellranger-arc count` outputs: `healthy_PBMC_human` and `lymphoma_lymph_human`. Download them from the repository root:
 
-```{bash}
-bash example_data/download_10X_cellranger_count_data.sh
-bash example_data/download_10X_cellranger_arc_refdata.sh
+```{.bash filename="Bash"}
+pbmc_dir="example_data/healthy_PBMC_human/outs"
+lymphoma_dir="example_data/lymphoma_lymph_human/outs"
+
+mkdir -p $pbmc_dir $lymphoma_dir
+
+pbmc_prefix="https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_granulocyte_sorted_3k/pbmc_granulocyte_sorted_3k"
+curl -fL -o "${pbmc_dir}/web_summary.html" "${pbmc_prefix}_web_summary.html"
+curl -fL -o "${pbmc_dir}/summary.csv" "${pbmc_prefix}_summary.csv"
+curl -fL -o "${pbmc_dir}/per_barcode_metrics.csv" "${pbmc_prefix}_per_barcode_metrics.csv"
+curl -fL -o "${pbmc_dir}/filtered_feature_bc_matrix.h5" "${pbmc_prefix}_filtered_feature_bc_matrix.h5"
+curl -fL -o "${pbmc_dir}/raw_feature_bc_matrix.h5" "${pbmc_prefix}_raw_feature_bc_matrix.h5"
+curl -fL -o "${pbmc_dir}/atac_fragments.tsv.gz" "${pbmc_prefix}_atac_fragments.tsv.gz"
+curl -fL -o "${pbmc_dir}/atac_fragments.tsv.gz.tbi" "${pbmc_prefix}_atac_fragments.tsv.gz.tbi"
+
+lymphoma_prefix="https://cf.10xgenomics.com/samples/cell-arc/2.0.0/lymph_node_lymphoma_14k/lymph_node_lymphoma_14k"
+curl -fL -o "${lymphoma_dir}/web_summary.html" "${lymphoma_prefix}_web_summary.html"
+curl -fL -o "${lymphoma_dir}/summary.csv" "${lymphoma_prefix}_summary.csv"
+curl -fL -o "${lymphoma_dir}/per_barcode_metrics.csv" "${lymphoma_prefix}_per_barcode_metrics.csv"
+curl -fL -o "${lymphoma_dir}/filtered_feature_bc_matrix.h5" "${lymphoma_prefix}_filtered_feature_bc_matrix.h5"
+curl -fL -o "${lymphoma_dir}/raw_feature_bc_matrix.h5" "${lymphoma_prefix}_raw_feature_bc_matrix.h5"
+curl -fL -o "${lymphoma_dir}/atac_fragments.tsv.gz" "${lymphoma_prefix}_atac_fragments.tsv.gz"
+curl -fL -o "${lymphoma_dir}/atac_fragments.tsv.gz.tbi" "${lymphoma_prefix}_atac_fragments.tsv.gz.tbi"
 ```
 
-The default controller setup uses a local `crew` backend. See [Distributed computing](distributed_computing.qmd) when adapting the workflow to a cluster or changing resource routing.
+Then download and unpack the matching human Cell Ranger ARC reference:
+
+```{.bash filename="Bash"}
+refdata="refdata-cellranger-arc-GRCh38-2020-A-2.0.0"
+refdata_url="https://cf.10xgenomics.com/supp/cell-arc"
+
+curl -fL -o "example_data/${refdata}.tar.gz" "${refdata_url}/${refdata}.tar.gz"
+tar -xzf "example_data/${refdata}.tar.gz" -C example_data
+```

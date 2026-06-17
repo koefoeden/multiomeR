@@ -48,7 +48,7 @@ emit_yaml_template_entry <- function(path, key) {
   }
 
   cat(
-    "```yaml\n",
+    "```{.yaml filename=\"YAML\"}\n",
     paste(entry_lines, collapse = "\n"),
     "\n```\n",
     sep = ""

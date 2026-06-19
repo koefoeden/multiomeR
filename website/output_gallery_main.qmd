@@ -1,0 +1,21 @@
+# Main pipeline output gallery
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+source("../R/output_gallery_helpers.R")
+gallery_items <- check_output_gallery_assets(
+  manifest_file = "output_gallery.yaml",
+  gallery_root = "."
+)
+```
+
+This gallery shows representative outputs produced by multiomeR on the public PBMC demo. It is meant to give a quick sense of the QC summaries and multimodal embeddings that the main pipeline can produce before you run it on your own data.
+
+Each card includes the corresponding `targets` target name so you can connect the displayed output back to the workflow.
+
+```{r, echo = FALSE, results = "asis"}
+render_gallery_section(gallery_items, "Main pipeline")
+```

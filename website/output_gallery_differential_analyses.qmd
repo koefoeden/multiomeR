@@ -1,0 +1,17 @@
+# Differential analyses output gallery
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+source("../R/output_gallery_helpers.R")
+gallery_items <- check_output_gallery_assets(
+  manifest_file = "output_gallery.yaml",
+  gallery_root = "."
+)
+```
+
+```{r, echo = FALSE, results = "asis"}
+render_gallery_section(gallery_items, "Differential analyses module")
+```

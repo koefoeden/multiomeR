@@ -1,0 +1,29 @@
+# Main pipeline overview
+
+```{r setup, include = FALSE}
+pipeline_name <- "processing_and_aggregation"
+source("helpers/_setup.R")
+```
+
+## Main pipeline context
+
+This workflow is defined in [`_targets.R`](`r pipeline_github_file`) and represents the main analysis pipeline after Cell Ranger output generation. It processes individual 10x reactions in parallel, combines selected reactions into aggregations, and builds RNA/ATAC outputs for clustering, cell typing, WNN integration, subgroup reprocessing, and optional downstream modules.
+
+Representative outputs from the public example workflow are collected in the [main pipeline output gallery](output_gallery_main.qmd).
+
+## Features
+
+The main pipeline covers:
+
+- per-reaction QC and optional preprocessing before aggregation
+- dataset-level merging of selected 10x reactions
+- BPCells-native RNA and ATAC processing
+- GEX, ATAC, and WNN clustering and review checkpoints
+- cell type annotation, marker summaries, coverage tracks, and multimodal output objects
+- optional subgroup reprocessing for sufficiently large parent groups
+
+## Configuration layers
+
+The main pipeline is configured in three layers: datasets define shared genome and QC settings, reactions point to individual 10x outputs, and aggregations choose which reactions to process together.
+
+Each YAML file has a `default` entry with shared parameters. Named datasets and aggregations inherit from `default` unless they declare another `inherits` parent, so template entries usually only list required values and settings that intentionally differ from the defaults.

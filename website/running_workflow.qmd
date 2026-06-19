@@ -1,0 +1,50 @@
+# Running the workflow
+
+From the repository-root R session described in [Installation](installation.qmd), run the main workflow in checkpoint-sized pieces. Replace `your_aggregation` with the aggregation name from `cfg_aggregations.yaml`, for example `blood_human`.
+
+## GEX checkpoint
+
+Run the RNA-processing checkpoint first:
+
+```{.r filename="R"}
+targets::tar_make(
+  names = targets::tar_described_as(tidyselect::contains("checkpoint:GEX")) &
+    tidyselect::matches("your_aggregation")
+)
+```
+
+At this checkpoint, inspect the aggregation-level barcode exclusion summaries, RNA-only QC plots, marker summaries, and `GEX_Seurat_object.your_aggregation`. If the GEX filtering, clustering, and annotation look acceptable, continue to the ATAC checkpoint.
+
+## ATAC checkpoint
+
+Run the ATAC-processing checkpoint after the GEX review:
+
+```{.r filename="R"}
+targets::tar_make(
+  names = targets::tar_described_as(tidyselect::contains("checkpoint:ATAC")) &
+    tidyselect::matches("your_aggregation")
+)
+```
+
+At this checkpoint, inspect ATAC QC plots, LSI diagnostics, peak and motif summaries, coverage tracks, and TF or gene activity plots. If the ATAC processing looks acceptable, continue to the multimodal checkpoint.
+
+## Multimodal checkpoint
+
+```{.r filename="R"}
+targets::tar_make(
+  names = targets::tar_described_as(tidyselect::contains("checkpoint:multimodal")) &
+    tidyselect::matches("your_aggregation")
+)
+```
+
+At this checkpoint, inspect WNN UMAPs, modality-weight plots, multimodal cluster comparisons, and `multimodal_Seurat_object.your_aggregation`. Optional downstream modules are described in their own walkthroughs.
+
+To run all configured aggregations for a checkpoint, omit the `& tidyselect::matches("your_aggregation")` part. To run the full workflow after checkpoint review, run:
+
+```{.r filename="R"}
+targets::tar_make()
+```
+
+The full main pipeline can be computationally expensive. Start with the public example or a narrow target selection, then scale to larger datasets after local paths, metadata files, and controller settings are working.
+
+The workflow output directory can be changed with the `store` field in [`_targets.yaml`](https://github.com/koefoeden/multiomeR/tree/main/_targets.yaml).

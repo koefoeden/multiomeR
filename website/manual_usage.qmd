@@ -1,0 +1,19 @@
+# Using this manual
+
+## Where to start
+
+Use the [Quickstart: Public PBMC demo](installation.qmd) if you want to install multiomeR, run a focused public example, and inspect representative outputs before reading the full pipeline walkthroughs.
+
+Then use the workflow pages as references for the parts of the analysis you plan to run:
+
+- **[Running your own data](inputs_main.qmd)**: Main-pipeline inputs, checkpoint-based execution, implementation diagrams, per-reaction QC, dataset-level merging, BPCells-native RNA/ATAC processing, clustering, cell typing, and WNN integration.
+- **[Differential analyses module](differential_analyses_walkthrough.qmd)**: Optional aggregation module for datasets with experimental or phenotypic variables that should be modelled across cell type composition, pseudobulk expression, chromatin accessibility, and TF activity.
+- **[Genetic enrichment module](genetic_enrichment_walkthrough.qmd)**: Optional human-data module for GWAS-informed chromatin accessibility enrichment and trait-relevance analyses.
+
+## Terminology
+The following nomenclature is used in the documentation and code:
+
+- **'10x reaction' (or possibly just 'reaction')**: The experimental/computational outcome of a single lane on the 10x Genomics Controller chip, which might contain nuclei from multiple samples and/or multiple donors/individuals. One 10x reaction thus corresponds to a single output directory from [cellranger-arc count](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/running-pipelines/single-library-analysis).
+- **donor**: A single individual, subject, patient, participant, etc. that has a unique donor_id and specific genotype.
+- **dataset**: A group of one or more reactions that share dataset-level processing settings, such as reference genome and reaction-level QC filters.
+- **aggregation**: A configured joint analysis of one or more reactions, including merged RNA/ATAC processing, clustering, cell typing, and optional downstream modules.

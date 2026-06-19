@@ -1,0 +1,52 @@
+# Implementation details
+
+```{r setup, include = FALSE}
+pipeline_name <- "processing_and_aggregation"
+source("helpers/_setup.R")
+```
+
+The diagrams below are meant to make the pipeline easier to reason about before reading the target code directly. They are generated from tagged target metadata and the real `{targets}` dependency graph, then simplified by pruning or bypassing lower-level nodes that would make the view harder to read. They keep real target names and preserve the dependency structure where practical, while staying compact enough to build intuition about the main control points.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/standard_node_color_legend.mmd")
+```
+
+## Parallel pre-processing
+
+This view covers per-reaction processing and QC, including optional ambient RNA correction, donor demultiplexing, doublet detection, barcode filtering, and handoffs into aggregation-level GEX and ATAC objects.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/human_curated/parallel_v2.mmd")
+```
+
+## GEX processing
+
+This view covers merged RNA processing, clustering, marker detection, cell type annotation, and GEX review outputs.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/human_curated/GEX_v2.mmd")
+```
+
+## ATAC processing
+
+This view covers ATAC QC, peak calling, consensus peak construction, chromatin accessibility processing, chromVAR scoring, coverage tracks, and peak-gene links.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/human_curated/ATAC_v2.mmd")
+```
+
+## WNN integration
+
+This view covers GEX and ATAC embedding handoffs, WNN integration, modality weights, cluster comparison, and integrated metadata outputs.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/human_curated/WNN_v2.mmd")
+```
+
+## Subgroup reprocessing
+
+This view covers optional subgroup-native GEX, ATAC, and WNN reprocessing for sufficiently large parent groups.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/human_curated/full_subgroups_v2.mmd")
+```

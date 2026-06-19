@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>7&nbsp; Genetic enrichment module – multiomeR Manual</title>
+<title>11&nbsp; Genetic enrichment module – multiomeR Manual</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -68,7 +68,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./output_gallery.html" rel="next">
+<link href="./performance_overview.html" rel="next">
 <link href="./differential_analyses_walkthrough.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -124,7 +124,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./reaction_aggregation_walkthrough.html">Workflow</a></li><li class="breadcrumb-item"><a href="./genetic_enrichment_walkthrough.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Genetic enrichment module</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./differential_analyses_walkthrough.html">Downstream modules</a></li><li class="breadcrumb-item"><a href="./genetic_enrichment_walkthrough.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Genetic enrichment module</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -152,16 +152,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         </div>
     <div class="sidebar-menu-container"> 
     <ul class="list-unstyled mt-1">
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
-  </div>
-</li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
- <span class="menu-text">Quickstart: Public PBMC demo</span></a>
+ <span class="menu-text">Overview</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -169,28 +163,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./installation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Installation</span></span></a>
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./running_demo.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Running the demo</span></span></a>
+  <a href="./manual_usage.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Using this manual</span></span></a>
   </div>
 </li>
       </ul>
   </li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./distributed_computing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Distributed computing</span></span></a>
-  </div>
-</li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
- <span class="menu-text">Workflow</span></a>
+ <span class="menu-text">Quickstart: Public PBMC demo</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -198,30 +186,134 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./reaction_aggregation_walkthrough.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Main pipeline</span></span></a>
+  <a href="./installation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Installation</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./running_demo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Running the demo</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./outputs_demo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Outputs</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Running your own data through the main pipeline</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./main_pipeline_overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Main pipeline overview</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./inputs_main.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Configuration and inputs</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./running_workflow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Running the workflow</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./implementation_details.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Implementation details</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Downstream modules</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./differential_analyses_walkthrough.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Differential analyses module</span></span></a>
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential analyses module</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./genetic_enrichment_walkthrough.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Genetic enrichment module</span></span></a>
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Genetic enrichment module</span></span></a>
   </div>
 </li>
       </ul>
   </li>
-        <li class="sidebar-item">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Performance</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./output_gallery.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Output Gallery</span></span></a>
+  <a href="./performance_overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Performance overview</span></span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./distributed_computing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Distributed computing</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Output gallery</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./output_gallery_main.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Main pipeline output gallery</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./output_gallery_differential_analyses.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Differential analyses output gallery</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./output_gallery_genetic_enrichment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Genetic enrichment output gallery</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
     </ul>
     </div>
 </nav>
@@ -232,15 +324,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#purpose" id="toc-purpose" class="nav-link active" data-scroll-target="#purpose"><span class="header-section-number">7.1</span> Purpose</a></li>
-  <li><a href="#running-the-pipeline" id="toc-running-the-pipeline" class="nav-link" data-scroll-target="#running-the-pipeline"><span class="header-section-number">7.2</span> Running the pipeline</a>
+  <li><a href="#purpose" id="toc-purpose" class="nav-link active" data-scroll-target="#purpose"><span class="header-section-number">11.1</span> Purpose</a></li>
+  <li><a href="#running-the-pipeline" id="toc-running-the-pipeline" class="nav-link" data-scroll-target="#running-the-pipeline"><span class="header-section-number">11.2</span> Running the pipeline</a>
   <ul class="collapse">
-  <li><a href="#genetic-enrichment-checkpoint" id="toc-genetic-enrichment-checkpoint" class="nav-link" data-scroll-target="#genetic-enrichment-checkpoint"><span class="header-section-number">7.2.1</span> Genetic enrichment checkpoint</a></li>
+  <li><a href="#genetic-enrichment-checkpoint" id="toc-genetic-enrichment-checkpoint" class="nav-link" data-scroll-target="#genetic-enrichment-checkpoint"><span class="header-section-number">11.2.1</span> Genetic enrichment checkpoint</a></li>
   </ul></li>
-  <li><a href="#implementation-details" id="toc-implementation-details" class="nav-link" data-scroll-target="#implementation-details"><span class="header-section-number">7.3</span> Implementation details</a>
+  <li><a href="#implementation-details" id="toc-implementation-details" class="nav-link" data-scroll-target="#implementation-details"><span class="header-section-number">11.3</span> Implementation details</a>
   <ul class="collapse">
-  <li><a href="#pseudobulk-gwas" id="toc-pseudobulk-gwas" class="nav-link" data-scroll-target="#pseudobulk-gwas"><span class="header-section-number">7.3.1</span> Pseudobulk GWAS</a></li>
-  <li><a href="#genetic-enrichment-across-genes" id="toc-genetic-enrichment-across-genes" class="nav-link" data-scroll-target="#genetic-enrichment-across-genes"><span class="header-section-number">7.3.2</span> Genetic enrichment across genes</a></li>
+  <li><a href="#pseudobulk-gwas" id="toc-pseudobulk-gwas" class="nav-link" data-scroll-target="#pseudobulk-gwas"><span class="header-section-number">11.3.1</span> Pseudobulk GWAS</a></li>
+  <li><a href="#genetic-enrichment-across-genes" id="toc-genetic-enrichment-across-genes" class="nav-link" data-scroll-target="#genetic-enrichment-across-genes"><span class="header-section-number">11.3.2</span> Genetic enrichment across genes</a></li>
   </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/genetic_enrichment_walkthrough.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
@@ -248,9 +340,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./reaction_aggregation_walkthrough.html">Workflow</a></li><li class="breadcrumb-item"><a href="./genetic_enrichment_walkthrough.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Genetic enrichment module</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./differential_analyses_walkthrough.html">Downstream modules</a></li><li class="breadcrumb-item"><a href="./genetic_enrichment_walkthrough.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Genetic enrichment module</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Genetic enrichment module</span></h1>
+<h1 class="title"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Genetic enrichment module</span></h1>
 </div>
 
 
@@ -267,28 +359,36 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="purpose" class="level2" data-number="7.1">
-<h2 data-number="7.1" class="anchored" data-anchor-id="purpose"><span class="header-section-number">7.1</span> Purpose</h2>
+<section id="purpose" class="level2" data-number="11.1">
+<h2 data-number="11.1" class="anchored" data-anchor-id="purpose"><span class="header-section-number">11.1</span> Purpose</h2>
 <p>This optional module is relevant for human-data aggregations where GWAS or fine-mapped trait evidence should be integrated with chromatin accessibility data. It is defined inside the root <a href="https://github.com/koefoeden/multiomeR/tree/main/_targets.R"><code>_targets.R</code></a> workflow, with module-specific target fragments and configuration in <code>module_genetic_enrichment/</code>.</p>
 <p>The module can identify trait-relevant cell types and regulatory programs using:</p>
 <ul>
 <li>single-cell and pseudobulk enrichment scoring with gchromVAR</li>
 <li>graph-based trait relevance scoring with SCAVENGE</li>
 </ul>
-<p>Representative outputs from this module are shown in the <a href="./output_gallery.html">Output Gallery</a>.</p>
+<p>Representative outputs from this module are shown in the <a href="./output_gallery_genetic_enrichment.html">genetic enrichment output gallery</a>.</p>
 <p>Enable the module for a human-data aggregation in <code>cfg_aggregations.yaml</code>, then configure Open Targets studies and module-specific settings in <code>module_genetic_enrichment/cfg.yaml</code>. Only edit module rows for aggregations that enable this module.</p>
 <p>For example, this aggregation setting enables the module:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">optional</span><span class="kw">:</span></span>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>YAML</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-filename="YAML"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">optional</span><span class="kw">:</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">modules</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">genetic_enrichment</span><span class="kw">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
 <p>The module config controls which Open Targets studies are used, how enrichment inputs are selected, and which trait-relevance summaries are produced. Edit <code>module_genetic_enrichment/cfg.yaml</code>, keeping disabled or example rows available for reference until the corresponding human-data aggregation is ready.</p>
 </section>
-<section id="running-the-pipeline" class="level2" data-number="7.2">
-<h2 data-number="7.2" class="anchored" data-anchor-id="running-the-pipeline"><span class="header-section-number">7.2</span> Running the pipeline</h2>
+<section id="running-the-pipeline" class="level2" data-number="11.2">
+<h2 data-number="11.2" class="anchored" data-anchor-id="running-the-pipeline"><span class="header-section-number">11.2</span> Running the pipeline</h2>
 <p>From the repository-root R session described in <a href="./installation.html">Installation</a>, first complete the main pipeline checkpoints for the human-data aggregation. Then run the module checkpoint. Replace <code>your_aggregation</code> with an aggregation that enables the module in <code>cfg_aggregations.yaml</code>.</p>
-<section id="genetic-enrichment-checkpoint" class="level3" data-number="7.2.1">
-<h3 data-number="7.2.1" class="anchored" data-anchor-id="genetic-enrichment-checkpoint"><span class="header-section-number">7.2.1</span> Genetic enrichment checkpoint</h3>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(</span>
+<section id="genetic-enrichment-checkpoint" class="level3" data-number="11.2.1">
+<h3 data-number="11.2.1" class="anchored" data-anchor-id="genetic-enrichment-checkpoint"><span class="header-section-number">11.2.1</span> Genetic enrichment checkpoint</h3>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>R</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="R"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">names =</span> targets<span class="sc">::</span><span class="fu">tar_described_as</span>(tidyselect<span class="sc">::</span><span class="fu">contains</span>(<span class="st">"checkpoint:genetic_enrichment"</span>)) <span class="sc">&amp;</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    tidyselect<span class="sc">::</span><span class="fu">matches</span>(<span class="st">"your_aggregation"</span>)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -296,8 +396,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>This checkpoint writes the configured pseudobulk and single-nucleus trait-relevance summaries, including gchromVAR and SCAVENGE outputs. Runtime depends on the number of configured GWAS studies, enrichment methods, cells, and pseudobulk contrasts.</p>
 </section>
 </section>
-<section id="implementation-details" class="level2" data-number="7.3">
-<h2 data-number="7.3" class="anchored" data-anchor-id="implementation-details"><span class="header-section-number">7.3</span> Implementation details</h2>
+<section id="implementation-details" class="level2" data-number="11.3">
+<h2 data-number="11.3" class="anchored" data-anchor-id="implementation-details"><span class="header-section-number">11.3</span> Implementation details</h2>
 <p>The diagrams below are meant to make the module easier to reason about before reading the target code directly. They are generated from tagged target metadata and the real <code>{targets}</code> dependency graph, then simplified by pruning or bypassing lower-level nodes that would make each view harder to read. They keep real target names and preserve the dependency structure where practical, while staying compact enough to build intuition about the main control points.</p>
 <div class="cell" data-layout-align="default">
 <div class="cell-output-display">
@@ -345,8 +445,8 @@ flowchart TB
 </div>
 </div>
 </div>
-<section id="pseudobulk-gwas" class="level3" data-number="7.3.1">
-<h3 data-number="7.3.1" class="anchored" data-anchor-id="pseudobulk-gwas"><span class="header-section-number">7.3.1</span> Pseudobulk GWAS</h3>
+<section id="pseudobulk-gwas" class="level3" data-number="11.3.1">
+<h3 data-number="11.3.1" class="anchored" data-anchor-id="pseudobulk-gwas"><span class="header-section-number">11.3.1</span> Pseudobulk GWAS</h3>
 <p>This view covers GWAS and pseudobulk inputs used for trait-relevance analyses.</p>
 <div class="cell" data-layout-align="default">
 <div class="cell-output-display">
@@ -399,8 +499,8 @@ flowchart TB
 </div>
 </div>
 </section>
-<section id="genetic-enrichment-across-genes" class="level3" data-number="7.3.2">
-<h3 data-number="7.3.2" class="anchored" data-anchor-id="genetic-enrichment-across-genes"><span class="header-section-number">7.3.2</span> Genetic enrichment across genes</h3>
+<section id="genetic-enrichment-across-genes" class="level3" data-number="11.3.2">
+<h3 data-number="11.3.2" class="anchored" data-anchor-id="genetic-enrichment-across-genes"><span class="header-section-number">11.3.2</span> Genetic enrichment across genes</h3>
 <p>This view covers across-gene enrichment outputs and downstream trait summaries.</p>
 <div class="cell" data-layout-align="default">
 <div class="cell-output-display">
@@ -860,12 +960,12 @@ flowchart TB
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
       <a href="./differential_analyses_walkthrough.html" class="pagination-link" aria-label="Differential analyses module">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Differential analyses module</span></span>
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential analyses module</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./output_gallery.html" class="pagination-link" aria-label="Output Gallery">
-        <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Output Gallery</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./performance_overview.html" class="pagination-link" aria-label="Performance overview">
+        <span class="nav-page-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Performance overview</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

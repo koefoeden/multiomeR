@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>10&nbsp; Differential analyses module – multiomeR Manual</title>
+<title>7&nbsp; Configuration and inputs – multiomeR Manual</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -68,8 +68,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./genetic_enrichment_walkthrough.html" rel="next">
-<link href="./implementation_details.html" rel="prev">
+<link href="./running_workflow.html" rel="next">
+<link href="./main_pipeline_overview.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -107,9 +107,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
-<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
-<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
-<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
 <link rel="stylesheet" href="styles.css">
@@ -124,7 +121,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./differential_analyses_walkthrough.html">Downstream modules</a></li><li class="breadcrumb-item"><a href="./differential_analyses_walkthrough.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential analyses module</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./main_pipeline_overview.html">Running your own data through the main pipeline</a></li><li class="breadcrumb-item"><a href="./inputs_main.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Configuration and inputs</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -221,7 +218,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./inputs_main.html" class="sidebar-item-text sidebar-link">
+  <a href="./inputs_main.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Configuration and inputs</span></span></a>
   </div>
 </li>
@@ -250,7 +247,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./differential_analyses_walkthrough.html" class="sidebar-item-text sidebar-link active">
+  <a href="./differential_analyses_walkthrough.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential analyses module</span></span></a>
   </div>
 </li>
@@ -324,21 +321,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#purpose" id="toc-purpose" class="nav-link active" data-scroll-target="#purpose"><span class="header-section-number">10.1</span> Purpose</a></li>
-  <li><a href="#running-the-pipeline" id="toc-running-the-pipeline" class="nav-link" data-scroll-target="#running-the-pipeline"><span class="header-section-number">10.2</span> Running the pipeline</a>
-  <ul class="collapse">
-  <li><a href="#differential-analyses-checkpoint" id="toc-differential-analyses-checkpoint" class="nav-link" data-scroll-target="#differential-analyses-checkpoint"><span class="header-section-number">10.2.1</span> Differential analyses checkpoint</a></li>
-  </ul></li>
-  <li><a href="#implementation-details" id="toc-implementation-details" class="nav-link" data-scroll-target="#implementation-details"><span class="header-section-number">10.3</span> Implementation details</a></li>
+  <li><a href="#cfg_datasets.yaml" id="toc-cfg_datasets.yaml" class="nav-link active" data-scroll-target="#cfg_datasets.yaml"><span class="header-section-number">7.1</span> <code>cfg_datasets.yaml</code></a></li>
+  <li><a href="#cfg_reactions.tsv" id="toc-cfg_reactions.tsv" class="nav-link" data-scroll-target="#cfg_reactions.tsv"><span class="header-section-number">7.2</span> <code>cfg_reactions.tsv</code></a></li>
+  <li><a href="#cfg_aggregations.yaml" id="toc-cfg_aggregations.yaml" class="nav-link" data-scroll-target="#cfg_aggregations.yaml"><span class="header-section-number">7.3</span> <code>cfg_aggregations.yaml</code></a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/differential_analyses_walkthrough.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/inputs_main.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./differential_analyses_walkthrough.html">Downstream modules</a></li><li class="breadcrumb-item"><a href="./differential_analyses_walkthrough.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential analyses module</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./main_pipeline_overview.html">Running your own data through the main pipeline</a></li><li class="breadcrumb-item"><a href="./inputs_main.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Configuration and inputs</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential analyses module</span></h1>
+<h1 class="title"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Configuration and inputs</span></h1>
 </div>
 
 
@@ -355,150 +349,396 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="purpose" class="level2" data-number="10.1">
-<h2 data-number="10.1" class="anchored" data-anchor-id="purpose"><span class="header-section-number">10.1</span> Purpose</h2>
-<p>This optional module is relevant when an aggregation has experimental, clinical, phenotypic, or technical variables that should be modelled across processed Multiome data. It is defined inside the root <a href="https://github.com/koefoeden/multiomeR/tree/main/_targets.R"><code>_targets.R</code></a> workflow, with module-specific target fragments and configuration in <code>module_differential_analyses/</code>.</p>
-<p>The module can model:</p>
+<section id="cfg_datasets.yaml" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="cfg_datasets.yaml"><span class="header-section-number">7.1</span> <code>cfg_datasets.yaml</code></h2>
+<p>Dataset-level settings live in <a href="https://github.com/koefoeden/multiomeR/tree/main/cfg_datasets.yaml"><code>cfg_datasets.yaml</code></a>. A dataset is the shared context for one or more 10x reactions, typically a genome/reference combination plus dataset-wide QC rules. Reactions in <code>cfg_reactions.tsv</code> refer to these dataset keys, so define datasets before adding reaction rows.</p>
+<p>Typical dataset-level settings include:</p>
 <ul>
-<li>differential cell type composition using generalized linear mixed models</li>
-<li>differential gene expression on pseudobulked RNA counts</li>
-<li>differential chromatin accessibility on pseudobulked ATAC counts</li>
-<li>differential transcription factor activity using chromVAR-derived pseudobulk signals</li>
+<li><code>dataset_cellranger_arc_refdata_dir</code>: Cell Ranger ARC reference directory for the dataset genome.</li>
+<li><code>dataset_QC_exclude_list_per_reaction</code>: reaction-level QC filters applied before aggregation.</li>
 </ul>
-<p>Representative outputs from this module are shown in the <a href="./output_gallery_differential_analyses.html">differential analyses output gallery</a>.</p>
-<p>Enable the module for an aggregation in <code>cfg_aggregations.yaml</code>, then configure the module-specific model settings in <code>module_differential_analyses/cfg.yaml</code>. Only edit module rows for aggregations that enable this module.</p>
-<p>For example, this aggregation setting enables the module:</p>
+<p>The public PBMC example uses the following dataset entry, rendered directly from <code>cfg_datasets.yaml</code>:</p>
+<details>
+<summary>
+Show <code>immune_human_dataset</code>
+</summary>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>YAML</strong></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-filename="YAML"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">optional</span><span class="kw">:</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">modules</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">differential_analyses</span><span class="kw">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-filename="YAML"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">immune_human_dataset</span><span class="kw">:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">mandatory</span><span class="kw">:</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">dataset_cellranger_arc_refdata_dir</span><span class="kw">:</span><span class="at"> example_data/refdata-cellranger-arc-GRCh38-2020-A-2.0.0</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">optional</span><span class="kw">:</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">dataset_QC_exclude_list_per_reaction</span><span class="kw">:</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> TSS.enrichment &lt; 4</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> nucleosome_signal &gt; 4</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> nCount_RNA &lt; 250</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> RNA_mito_percent &gt; 10</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> amulet_q.value &lt; 0.05</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>The module config controls which variables are modelled, which metadata columns are used, and which contrasts are run. Edit <code>module_differential_analyses/cfg.yaml</code>, keeping disabled or example rows available for reference until the corresponding aggregation is ready.</p>
+</details>
 </section>
-<section id="running-the-pipeline" class="level2" data-number="10.2">
-<h2 data-number="10.2" class="anchored" data-anchor-id="running-the-pipeline"><span class="header-section-number">10.2</span> Running the pipeline</h2>
-<p>From the repository-root R session described in <a href="./installation.html">Installation</a>, first complete the main pipeline checkpoints for the aggregation. Then run the module checkpoint. Replace <code>your_aggregation</code> with an aggregation that enables the module in <code>cfg_aggregations.yaml</code>.</p>
-<section id="differential-analyses-checkpoint" class="level3" data-number="10.2.1">
-<h3 data-number="10.2.1" class="anchored" data-anchor-id="differential-analyses-checkpoint"><span class="header-section-number">10.2.1</span> Differential analyses checkpoint</h3>
+<section id="cfg_reactions.tsv" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="cfg_reactions.tsv"><span class="header-section-number">7.2</span> <code>cfg_reactions.tsv</code></h2>
+<p>Reaction-level configuration lives in <a href="https://github.com/koefoeden/multiomeR/tree/main/cfg_reactions.tsv"><code>cfg_reactions.tsv</code></a>. Add one row per 10x reaction with a stable <code>reaction_ID</code>, the matching <code>dataset</code>, the <code>reaction_cellranger_count_dir</code>, and any donor demultiplexing fields relevant to that reaction.</p>
+<p>Each reaction should point to a <a href="https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/running-pipelines/single-library-analysis"><code>cellranger-arc count</code></a> output directory. The pipeline expects the configured <code>reaction_cellranger_count_dir</code> to contain the standard <code>outs/</code> files, including:</p>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
-<pre><strong>R</strong></pre>
+<pre><strong>Text</strong></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="R"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">names =</span> targets<span class="sc">::</span><span class="fu">tar_described_as</span>(tidyselect<span class="sc">::</span><span class="fu">contains</span>(<span class="st">"checkpoint:differential_analyses"</span>)) <span class="sc">&amp;</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    tidyselect<span class="sc">::</span><span class="fu">matches</span>(<span class="st">"your_aggregation"</span>)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text" data-filename="Text"><code>&lt;reaction_cellranger_count_dir&gt;/outs/
+|-- raw_feature_bc_matrix.h5
+|-- filtered_feature_bc_matrix.h5
+|-- atac_fragments.tsv.gz
+|-- atac_fragments.tsv.gz.tbi
+|-- atac_possorted_bam.bam
+|-- per_barcode_metrics.csv</code></pre>
 </div>
-<p>This checkpoint writes the differential cell-type composition plots, pseudobulk model diagnostics, volcano plots, GSEA summaries, and cross-modality summaries configured for the aggregation. Runtime depends on the number of modelled variables, cell types, donors, and pseudobulk contrasts.</p>
+<div class="scrollable-table">
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+reaction_ID
+</th>
+<th style="text-align:left;">
+dataset
+</th>
+<th style="text-align:left;">
+reaction_donor_id
+</th>
+<th style="text-align:right;">
+reaction_n_donors
+</th>
+<th style="text-align:left;">
+reaction_cellranger_count_dir
+</th>
+<th style="text-align:left;">
+reaction_cellbender_h5_file
+</th>
+<th style="text-align:left;">
+reaction_donors_VCF_file
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+embryonic_brain_mouse
+</td>
+<td style="text-align:left;">
+brain_mouse_dataset
+</td>
+<td style="text-align:left;">
+mouse_1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+example_data/embryonic_brain_mouse
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+healthy_PBMC_human
+</td>
+<td style="text-align:left;">
+immune_human_dataset
+</td>
+<td style="text-align:left;">
+pbmc1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+example_data/healthy_PBMC_human
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+pbmc_10k_chromium_controller
+</td>
+<td style="text-align:left;">
+immune_human_dataset
+</td>
+<td style="text-align:left;">
+pbmc2
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+example_data/pbmc_10k_chromium_controller
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+pbmc_10k_chromium_x
+</td>
+<td style="text-align:left;">
+immune_human_dataset
+</td>
+<td style="text-align:left;">
+pbmc3
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+example_data/pbmc_10k_chromium_x
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+pbmc_granulocyte_sorted_10k
+</td>
+<td style="text-align:left;">
+immune_human_dataset
+</td>
+<td style="text-align:left;">
+pbmc4
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+example_data/pbmc_granulocyte_sorted_10k
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+pbmc_unsorted_10k
+</td>
+<td style="text-align:left;">
+immune_human_dataset
+</td>
+<td style="text-align:left;">
+pbmc5
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+example_data/pbmc_unsorted_10k
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+pbmc_unsorted_3k
+</td>
+<td style="text-align:left;">
+immune_human_dataset
+</td>
+<td style="text-align:left;">
+pbmc6
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+example_data/pbmc_unsorted_3k
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lymphoma_lymph_human
+</td>
+<td style="text-align:left;">
+immune_human_dataset
+</td>
+<td style="text-align:left;">
+lymph1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+example_data/lymphoma_lymph_human
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The reaction table columns are:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>reaction_ID</code></td>
+<td>Stable reaction identifier used throughout target names and downstream config.</td>
+</tr>
+<tr class="even">
+<td><code>dataset</code></td>
+<td>Dataset key used to join dataset-level settings from <code>cfg_datasets.yaml</code>.</td>
+</tr>
+<tr class="odd">
+<td><code>reaction_donor_id</code></td>
+<td>Donor ID assigned to all nuclei in a non-multiplexed reaction. Use <code>NA</code> for multiplexed reactions.</td>
+</tr>
+<tr class="even">
+<td><code>reaction_n_donors</code></td>
+<td>Number of donors expected in the reaction.</td>
+</tr>
+<tr class="odd">
+<td><code>reaction_cellranger_count_dir</code></td>
+<td>Path to the <code>cellranger-arc count</code> output directory.</td>
+</tr>
+<tr class="even">
+<td><code>reaction_cellbender_h5_file</code></td>
+<td>Optional CellBender-corrected GEX H5 file. Use <code>NA</code> when not used.</td>
+</tr>
+<tr class="odd">
+<td><code>reaction_donors_VCF_file</code></td>
+<td>Optional VCF for donor demultiplexing. Use <code>NA</code> when not used.</td>
+</tr>
+</tbody>
+</table>
 </section>
-</section>
-<section id="implementation-details" class="level2" data-number="10.3">
-<h2 data-number="10.3" class="anchored" data-anchor-id="implementation-details"><span class="header-section-number">10.3</span> Implementation details</h2>
-<p>The diagram below is meant to make the module easier to reason about before reading the target code directly. It is generated from tagged target metadata and the real <code>{targets}</code> dependency graph, then simplified by pruning or bypassing lower-level nodes that would make the view harder to read. It keeps real target names and preserves the dependency structure where practical, while staying compact enough to build intuition about the main control points.</p>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryTextColor': '#1f2937',
-    'lineColor': '#4b5563',
-    'clusterBkg': '#f8fafc',
-    'clusterBorder': '#cbd5e1',
-    'edgeLabelBackground': '#ffffff00',
-    'fontFamily': 'Helvetica, Arial, sans-serif'
-  },
-  'flowchart': {
-    'defaultRenderer': 'elk'
-  },
-  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
-}}%%
-flowchart TB
-  subgraph Legend["Node Color Key"]
-    direction LR
-    Input["Input"] --- Config["Config input"] --- Stage["Intermediate object"] --- Output["Output"] --- QC["QC output"]
-  end
-  linkStyle 0,1,2,3 stroke-width:0px,fill:none;
-  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
-  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
-  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
-  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
-  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
-  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
-  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
-  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
-  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
-  class Input regular_input;
-  class Config CFG_input;
-  class Stage intermediate_object;
-  class Output regular_output;
-  class QC QC_output;
-</pre>
+<section id="cfg_aggregations.yaml" class="level2" data-number="7.3">
+<h2 data-number="7.3" class="anchored" data-anchor-id="cfg_aggregations.yaml"><span class="header-section-number">7.3</span> <code>cfg_aggregations.yaml</code></h2>
+<p>Aggregation-level settings live in <a href="https://github.com/koefoeden/multiomeR/tree/main/cfg_aggregations.yaml"><code>cfg_aggregations.yaml</code></a>. An aggregation combines one or more configured reactions and controls merged RNA/ATAC processing, clustering, annotation, plotting, and optional downstream modules.</p>
+<p>At minimum, each aggregation needs:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>aggregation_reaction_IDs</code></td>
+<td>Reaction IDs from <code>cfg_reactions.tsv</code> to include in the joint analysis.</td>
+</tr>
+<tr class="even">
+<td><code>aggregation_GEX_marker_genes</code></td>
+<td>Named marker-gene lists used for module scoring and cluster annotation.</td>
+</tr>
+<tr class="odd">
+<td><code>aggregation_donor_id_metadata_tsv</code></td>
+<td>Donor-level metadata table with a <code>donor_id</code> column.</td>
+</tr>
+<tr class="even">
+<td><code>aggregation_reaction_ID_metadata_tsv</code></td>
+<td>Reaction-level metadata table with a <code>TENX_reaction_ID</code> column.</td>
+</tr>
+</tbody>
+</table>
+<p>Optional aggregation settings control QC filters, RNA and ATAC dimensions, clustering resolution, UMAP parameters, subgroup analysis, plotting variables, track export, and enabled modules. YAML entries are divided into <code>mandatory</code> parameters that must be set and <code>optional</code> parameters that are usually inherited from <code>default</code> unless the entry overrides them. <code>NULL</code> values intentionally disable optional behavior.</p>
+<p>Each aggregation also points to metadata files:</p>
+<ul>
+<li><strong><code>aggregation_donor_id_metadata_tsv</code></strong>: donor-level metadata with a <code>donor_id</code> column matching the donor IDs assigned during per-reaction processing.</li>
+<li><strong><code>aggregation_reaction_ID_metadata_tsv</code></strong>: reaction-level metadata with a <code>TENX_reaction_ID</code> column matching the configured reaction IDs.</li>
+</ul>
+<p>These metadata tables are joined to the per-cell metadata before downstream correction, plotting, and modelling.</p>
+<p>The public PBMC aggregation below is rendered directly from <code>cfg_aggregations.yaml</code>. It shows the required aggregation inputs plus the example-specific optional overrides; standard optional settings are inherited from <code>default</code>.</p>
+<details>
+<summary>
+Show <code>immune_human_2x</code>
+</summary>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>YAML</strong></pre>
 </div>
-<p></p></figure><p></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-filename="YAML"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">immune_human_2x</span><span class="kw">:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">mandatory</span><span class="kw">:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">aggregation_donor_id_metadata_tsv</span><span class="kw">:</span><span class="at"> example_data/immune_human_dataset_donor_id_metadata.tsv</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">aggregation_reaction_ID_metadata_tsv</span><span class="kw">:</span><span class="at"> example_data/immune_human_dataset_reaction_id_metadata.tsv</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">aggregation_reaction_IDs</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">healthy_PBMC_human</span><span class="kw">,</span><span class="at"> lymphoma_lymph_human</span><span class="kw">]</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">aggregation_GEX_marker_genes</span><span class="kw">:</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">T</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">CD3D</span><span class="kw">,</span><span class="at"> CD3E</span><span class="kw">,</span><span class="at"> CD4</span><span class="kw">,</span><span class="at"> CD8A</span><span class="kw">,</span><span class="at"> CD8B</span><span class="kw">]</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">NK</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">KLRD1</span><span class="kw">,</span><span class="at"> KLRC1</span><span class="kw">,</span><span class="at"> KLRF1</span><span class="kw">,</span><span class="at"> NKG7</span><span class="kw">,</span><span class="at"> GNLY</span><span class="kw">]</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Mono</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">CD14</span><span class="kw">,</span><span class="at"> FCGR3A</span><span class="kw">,</span><span class="at"> LYZ</span><span class="kw">,</span><span class="at"> S100A8</span><span class="kw">,</span><span class="at"> S100A9</span><span class="kw">]</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">B</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">CD79A</span><span class="kw">,</span><span class="at"> CD79B</span><span class="kw">,</span><span class="at"> MS4A1</span><span class="kw">,</span><span class="at"> CD19</span><span class="kw">]</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">pDC</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">CLEC4C</span><span class="kw">,</span><span class="at"> TCF4</span><span class="kw">,</span><span class="at"> IRF7</span><span class="kw">,</span><span class="at"> IL3RA</span><span class="kw">]</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Plasma</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">XBP1</span><span class="kw">,</span><span class="at"> MZB1</span><span class="kw">,</span><span class="at"> PRDM1</span><span class="kw">,</span><span class="at"> JCHAIN</span><span class="kw">]</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">optional</span><span class="kw">:</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">modules</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">differential_analyses</span><span class="kw">,</span><span class="at"> genetic_enrichment</span><span class="kw">]</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">aggregation_categorical_vars</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">condition</span><span class="kw">,</span><span class="at"> tissue</span><span class="kw">,</span><span class="at"> cell_sorting</span><span class="kw">,</span><span class="at"> instrument</span><span class="kw">,</span><span class="at"> target_recovery</span><span class="kw">]</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">aggregation_QC_exclude_list_combined_object</span><span class="kw">:</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> nCount_ATAC &lt; 1000</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> atac_peak_counts_frac &lt; 0.1</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> atac_peak_counts_blacklist_frac &gt; 0.01</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">aggregation_ATAC_marker_TFs</span><span class="kw">:</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">T</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">BCL11B</span><span class="kw">,</span><span class="at"> TCF7</span><span class="kw">,</span><span class="at"> LEF1</span><span class="kw">,</span><span class="at"> RUNX3</span><span class="kw">]</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">NK</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">EOMES</span><span class="kw">,</span><span class="at"> TBX21</span><span class="kw">,</span><span class="at"> NFIL3</span><span class="kw">]</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Mono</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">SPI1</span><span class="kw">,</span><span class="at"> IRF8</span><span class="kw">,</span><span class="at"> CEBPA</span><span class="kw">,</span><span class="at"> CEBPB</span><span class="kw">]</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">B</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">PAX5</span><span class="kw">,</span><span class="at"> EBF1</span><span class="kw">,</span><span class="at"> TCF3</span><span class="kw">,</span><span class="at"> BCL6</span><span class="kw">]</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">pDC</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">IRF8</span><span class="kw">,</span><span class="at"> TCF4</span><span class="kw">,</span><span class="at"> SPIB</span><span class="kw">]</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Plasma</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">XBP1</span><span class="kw">,</span><span class="at"> PRDM1</span><span class="kw">,</span><span class="at"> IRF4</span><span class="kw">]</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">aggregation_roadmap_EDACC_names</span><span class="kw">:</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> Peripheral_Blood_Mononuclear_Primary_Cells</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> CD4_Memory_Primary_Cells</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> CD4_Naive_Primary_Cells</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> CD8_Memory_Primary_Cells</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> CD8_Naive_Primary_Cells</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> Monocytes-CD14+_RO01746</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</div>
-</div>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryTextColor': '#1f2937',
-    'lineColor': '#4b5563',
-    'clusterBkg': '#f8fafc',
-    'clusterBorder': '#cbd5e1',
-    'edgeLabelBackground': '#ffffff00',
-    'fontFamily': 'Helvetica, Arial, sans-serif'
-  },
-  'flowchart': {
-    'defaultRenderer': 'elk'
-  },
-  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
-}}%%
-%%{init: {'flowchart': {'defaultRenderer': 'elk'}}}%%
-flowchart TB
-  donor_id_metadata_tibble.extended.differential_analyses.immune_human_2x(["donor_id_metadata_tibble.extended.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DCA.differential_analyses.immune_human_2x["feature_matrix_fit.DCA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  donor_id_metadata_tibble.extended.differential_analyses.immune_human_2x(["donor_id_metadata_tibble.extended.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  donor_id_metadata_tibble.extended.differential_analyses.immune_human_2x(["donor_id_metadata_tibble.extended.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DTFA.differential_analyses.immune_human_2x["feature_matrix_fit.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  donor_id_metadata_tibble.extended.differential_analyses.immune_human_2x(["donor_id_metadata_tibble.extended.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; model_results.DCTC.differential_analyses.immune_human_2x(["model_results.DCTC.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  feature_matrix_fit.DCA.differential_analyses.immune_human_2x["feature_matrix_fit.DCA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results_tibble.DCA.differential_analyses.immune_human_2x["results_tibble.DCA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results_tibble.DGE.differential_analyses.immune_human_2x["results_tibble.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  feature_matrix_fit.DTFA.differential_analyses.immune_human_2x["feature_matrix_fit.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results_tibble.DTFA.differential_analyses.immune_human_2x["results_tibble.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results.CP_KEGG_MEDICUS.GSEA.DGE.differential_analyses.immune_human_2x["results.CP_KEGG_MEDICUS.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results.CUSTOM.GSEA.DGE.differential_analyses.immune_human_2x["results.CUSTOM.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results.H.GSEA.DGE.differential_analyses.immune_human_2x["results.H.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results.TFT_GTRD.GSEA.DGE.differential_analyses.immune_human_2x["results.TFT_GTRD.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DCA.differential_analyses.immune_human_2x["feature_matrix_fit.DCA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.DCA.differential_analyses.immune_human_2x["results_tibble.DCA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.DGE.differential_analyses.immune_human_2x["results_tibble.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results.CP_KEGG_MEDICUS.GSEA.DGE.differential_analyses.immune_human_2x["results.CP_KEGG_MEDICUS.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results.CUSTOM.GSEA.DGE.differential_analyses.immune_human_2x["results.CUSTOM.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results.H.GSEA.DGE.differential_analyses.immune_human_2x["results.H.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results.TFT_GTRD.GSEA.DGE.differential_analyses.immune_human_2x["results.TFT_GTRD.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DTFA.differential_analyses.immune_human_2x["feature_matrix_fit.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.DTFA.differential_analyses.immune_human_2x["results_tibble.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  pseudobulk_counts_BPCells_matrix_dir.ATAC.brain_mouse(["pseudobulk_counts_BPCells_matrix_dir.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DCA.differential_analyses.immune_human_2x["feature_matrix_fit.DCA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  pseudobulk_counts_BPCells_matrix_dir.GEX.brain_mouse(["pseudobulk_counts_BPCells_matrix_dir.GEX.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  pseudobulk_counts_BPCells_matrix_dir.ATAC.brain_mouse(["pseudobulk_counts_BPCells_matrix_dir.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  pseudobulk_activity_matrix.TFA.brain_mouse(["pseudobulk_activity_matrix.TFA.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DTFA.differential_analyses.immune_human_2x["feature_matrix_fit.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  pseudobulk_counts_BPCells_matrix_dir.ATAC.brain_mouse(["pseudobulk_counts_BPCells_matrix_dir.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DTFA.differential_analyses.immune_human_2x["feature_matrix_fit.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  pseudobulk_counts_BPCells_matrix_dir.ATAC.brain_mouse(["pseudobulk_counts_BPCells_matrix_dir.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; pseudobulk_activity_matrix.TFA.brain_mouse(["pseudobulk_activity_matrix.TFA.&amp;lt;aggregation_name&amp;gt;"]):::none
-  models.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["models.trait_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
+</details>
 
 
 </section>
@@ -906,13 +1146,13 @@ flowchart TB
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./implementation_details.html" class="pagination-link" aria-label="Implementation details">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Implementation details</span></span>
+      <a href="./main_pipeline_overview.html" class="pagination-link" aria-label="Main pipeline overview">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Main pipeline overview</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./genetic_enrichment_walkthrough.html" class="pagination-link" aria-label="Genetic enrichment module">
-        <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Genetic enrichment module</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./running_workflow.html" class="pagination-link" aria-label="Running the workflow">
+        <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Running the workflow</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -921,4 +1161,4 @@ flowchart TB
 
 
 
-<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/differential_analyses_walkthrough.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/inputs_main.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>

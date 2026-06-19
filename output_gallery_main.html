@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>10&nbsp; Differential analyses module – multiomeR Manual</title>
+<title>14&nbsp; Main pipeline output gallery – multiomeR Manual</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -23,41 +23,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -68,8 +33,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./genetic_enrichment_walkthrough.html" rel="next">
-<link href="./implementation_details.html" rel="prev">
+<link href="./output_gallery_differential_analyses.html" rel="next">
+<link href="./distributed_computing.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -107,9 +72,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
-<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
-<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
-<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
 <link rel="stylesheet" href="styles.css">
@@ -124,7 +86,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./differential_analyses_walkthrough.html">Downstream modules</a></li><li class="breadcrumb-item"><a href="./differential_analyses_walkthrough.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential analyses module</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./output_gallery_main.html">Output gallery</a></li><li class="breadcrumb-item"><a href="./output_gallery_main.html"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Main pipeline output gallery</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -250,7 +212,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./differential_analyses_walkthrough.html" class="sidebar-item-text sidebar-link active">
+  <a href="./differential_analyses_walkthrough.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential analyses module</span></span></a>
   </div>
 </li>
@@ -296,7 +258,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./output_gallery_main.html" class="sidebar-item-text sidebar-link">
+  <a href="./output_gallery_main.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Main pipeline output gallery</span></span></a>
   </div>
 </li>
@@ -324,21 +286,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#purpose" id="toc-purpose" class="nav-link active" data-scroll-target="#purpose"><span class="header-section-number">10.1</span> Purpose</a></li>
-  <li><a href="#running-the-pipeline" id="toc-running-the-pipeline" class="nav-link" data-scroll-target="#running-the-pipeline"><span class="header-section-number">10.2</span> Running the pipeline</a>
-  <ul class="collapse">
-  <li><a href="#differential-analyses-checkpoint" id="toc-differential-analyses-checkpoint" class="nav-link" data-scroll-target="#differential-analyses-checkpoint"><span class="header-section-number">10.2.1</span> Differential analyses checkpoint</a></li>
-  </ul></li>
-  <li><a href="#implementation-details" id="toc-implementation-details" class="nav-link" data-scroll-target="#implementation-details"><span class="header-section-number">10.3</span> Implementation details</a></li>
+  <li><a href="#parallel-reaction-pre-processing" id="toc-parallel-reaction-pre-processing" class="nav-link active" data-scroll-target="#parallel-reaction-pre-processing"><span class="header-section-number">14.1</span> Parallel reaction pre-processing</a></li>
+  <li><a href="#gex" id="toc-gex" class="nav-link" data-scroll-target="#gex"><span class="header-section-number">14.2</span> GEX</a></li>
+  <li><a href="#atac" id="toc-atac" class="nav-link" data-scroll-target="#atac"><span class="header-section-number">14.3</span> ATAC</a></li>
+  <li><a href="#wnn" id="toc-wnn" class="nav-link" data-scroll-target="#wnn"><span class="header-section-number">14.4</span> WNN</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/differential_analyses_walkthrough.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/output_gallery_main.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./differential_analyses_walkthrough.html">Downstream modules</a></li><li class="breadcrumb-item"><a href="./differential_analyses_walkthrough.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential analyses module</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./output_gallery_main.html">Output gallery</a></li><li class="breadcrumb-item"><a href="./output_gallery_main.html"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Main pipeline output gallery</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential analyses module</span></h1>
+<h1 class="title"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Main pipeline output gallery</span></h1>
 </div>
 
 
@@ -355,149 +315,122 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="purpose" class="level2" data-number="10.1">
-<h2 data-number="10.1" class="anchored" data-anchor-id="purpose"><span class="header-section-number">10.1</span> Purpose</h2>
-<p>This optional module is relevant when an aggregation has experimental, clinical, phenotypic, or technical variables that should be modelled across processed Multiome data. It is defined inside the root <a href="https://github.com/koefoeden/multiomeR/tree/main/_targets.R"><code>_targets.R</code></a> workflow, with module-specific target fragments and configuration in <code>module_differential_analyses/</code>.</p>
-<p>The module can model:</p>
-<ul>
-<li>differential cell type composition using generalized linear mixed models</li>
-<li>differential gene expression on pseudobulked RNA counts</li>
-<li>differential chromatin accessibility on pseudobulked ATAC counts</li>
-<li>differential transcription factor activity using chromVAR-derived pseudobulk signals</li>
-</ul>
-<p>Representative outputs from this module are shown in the <a href="./output_gallery_differential_analyses.html">differential analyses output gallery</a>.</p>
-<p>Enable the module for an aggregation in <code>cfg_aggregations.yaml</code>, then configure the module-specific model settings in <code>module_differential_analyses/cfg.yaml</code>. Only edit module rows for aggregations that enable this module.</p>
-<p>For example, this aggregation setting enables the module:</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>YAML</strong></pre>
+<p>This gallery shows representative outputs produced by multiomeR on the public PBMC demo. It is meant to give a quick sense of the QC summaries and multimodal embeddings that the main pipeline can produce before you run it on your own data.</p>
+<p>Each card includes the corresponding <code>targets</code> target name so you can connect the displayed output back to the workflow.</p>
+<section id="parallel-reaction-pre-processing" class="level2" data-number="14.1">
+<h2 data-number="14.1" class="anchored" data-anchor-id="parallel-reaction-pre-processing"><span class="header-section-number">14.1</span> Parallel reaction pre-processing</h2>
+<div class="output-gallery-grid">
+<article class="output-gallery-card">
+<a href="gallery_assets/parallel_reaction_preprocessing/qc_violins.png"><img src="gallery_assets/parallel_reaction_preprocessing/qc_violins.png" alt="QC metric distributions"></a>
+<p class="output-gallery-title">
+QC metric distributions
+</p>
+<p>
+Compares QC metric distributions across reactions to reveal outliers before aggregation.
+</p>
+<p class="output-gallery-target">
+<code>per_dataset_QC_violins.immune_human_dataset</code>
+</p>
+</article>
+<article class="output-gallery-card">
+<a href="gallery_assets/parallel_reaction_preprocessing/qc_excluded_upset.png"><img src="gallery_assets/parallel_reaction_preprocessing/qc_excluded_upset.png" alt="QC exclusion overlaps"></a>
+<p class="output-gallery-title">
+QC exclusion overlaps
+</p>
+<p>
+Shows how different QC filters overlap when excluding low-quality cells.
+</p>
+<p class="output-gallery-target">
+<code>per_dataset_excluded_upset.immune_human_dataset</code>
+</p>
+</article>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-filename="YAML"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">optional</span><span class="kw">:</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">modules</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">differential_analyses</span><span class="kw">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>The module config controls which variables are modelled, which metadata columns are used, and which contrasts are run. Edit <code>module_differential_analyses/cfg.yaml</code>, keeping disabled or example rows available for reference until the corresponding aggregation is ready.</p>
 </section>
-<section id="running-the-pipeline" class="level2" data-number="10.2">
-<h2 data-number="10.2" class="anchored" data-anchor-id="running-the-pipeline"><span class="header-section-number">10.2</span> Running the pipeline</h2>
-<p>From the repository-root R session described in <a href="./installation.html">Installation</a>, first complete the main pipeline checkpoints for the aggregation. Then run the module checkpoint. Replace <code>your_aggregation</code> with an aggregation that enables the module in <code>cfg_aggregations.yaml</code>.</p>
-<section id="differential-analyses-checkpoint" class="level3" data-number="10.2.1">
-<h3 data-number="10.2.1" class="anchored" data-anchor-id="differential-analyses-checkpoint"><span class="header-section-number">10.2.1</span> Differential analyses checkpoint</h3>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>R</strong></pre>
+<section id="gex" class="level2" data-number="14.2">
+<h2 data-number="14.2" class="anchored" data-anchor-id="gex"><span class="header-section-number">14.2</span> GEX</h2>
+<div class="output-gallery-grid">
+<article class="output-gallery-card">
+<a href="gallery_assets/GEX/harmony_categorical_umap.png"><img src="gallery_assets/GEX/harmony_categorical_umap.png" alt="Harmony UMAP"></a>
+<p class="output-gallery-title">
+Harmony UMAP
+</p>
+<p>
+Shows how cells separate in the gene-expression embedding after batch-aware integration.
+</p>
+<p class="output-gallery-target">
+<code>harmony.categorical.UMAPs.GEX.immune_human_2x</code>
+</p>
+</article>
+<article class="output-gallery-card">
+<a href="gallery_assets/GEX/markers_dot_plot.png"><img src="gallery_assets/GEX/markers_dot_plot.png" alt="Marker dot plot"></a>
+<p class="output-gallery-title">
+Marker dot plot
+</p>
+<p>
+Highlights marker gene patterns that distinguish the inferred cell groups.
+</p>
+<p class="output-gallery-target">
+<code>markers_dot_plot.GEX.immune_human_2x</code>
+</p>
+</article>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="R"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">names =</span> targets<span class="sc">::</span><span class="fu">tar_described_as</span>(tidyselect<span class="sc">::</span><span class="fu">contains</span>(<span class="st">"checkpoint:differential_analyses"</span>)) <span class="sc">&amp;</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    tidyselect<span class="sc">::</span><span class="fu">matches</span>(<span class="st">"your_aggregation"</span>)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>This checkpoint writes the differential cell-type composition plots, pseudobulk model diagnostics, volcano plots, GSEA summaries, and cross-modality summaries configured for the aggregation. Runtime depends on the number of modelled variables, cell types, donors, and pseudobulk contrasts.</p>
 </section>
+<section id="atac" class="level2" data-number="14.3">
+<h2 data-number="14.3" class="anchored" data-anchor-id="atac"><span class="header-section-number">14.3</span> ATAC</h2>
+<div class="output-gallery-grid">
+<article class="output-gallery-card">
+<a href="gallery_assets/ATAC/harmony_categorical_umap.png"><img src="gallery_assets/ATAC/harmony_categorical_umap.png" alt="Harmony UMAP"></a>
+<p class="output-gallery-title">
+Harmony UMAP
+</p>
+<p>
+Shows how cells separate in the chromatin-accessibility embedding after batch-aware integration.
+</p>
+<p class="output-gallery-target">
+<code>categorical.UMAPs.ATAC.immune_human_2x</code>
+</p>
+</article>
+<article class="output-gallery-card">
+<a href="gallery_assets/ATAC/tf_activity_dot_plot.png"><img src="gallery_assets/ATAC/tf_activity_dot_plot.png" alt="TF activity dot plot"></a>
+<p class="output-gallery-title">
+TF activity dot plot
+</p>
+<p>
+Summarizes transcription-factor activity patterns across cell groups.
+</p>
+<p class="output-gallery-target">
+<code>TF_activity_dot_plot.ATAC.immune_human_2x</code>
+</p>
+</article>
+</div>
 </section>
-<section id="implementation-details" class="level2" data-number="10.3">
-<h2 data-number="10.3" class="anchored" data-anchor-id="implementation-details"><span class="header-section-number">10.3</span> Implementation details</h2>
-<p>The diagram below is meant to make the module easier to reason about before reading the target code directly. It is generated from tagged target metadata and the real <code>{targets}</code> dependency graph, then simplified by pruning or bypassing lower-level nodes that would make the view harder to read. It keeps real target names and preserves the dependency structure where practical, while staying compact enough to build intuition about the main control points.</p>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryTextColor': '#1f2937',
-    'lineColor': '#4b5563',
-    'clusterBkg': '#f8fafc',
-    'clusterBorder': '#cbd5e1',
-    'edgeLabelBackground': '#ffffff00',
-    'fontFamily': 'Helvetica, Arial, sans-serif'
-  },
-  'flowchart': {
-    'defaultRenderer': 'elk'
-  },
-  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
-}}%%
-flowchart TB
-  subgraph Legend["Node Color Key"]
-    direction LR
-    Input["Input"] --- Config["Config input"] --- Stage["Intermediate object"] --- Output["Output"] --- QC["QC output"]
-  end
-  linkStyle 0,1,2,3 stroke-width:0px,fill:none;
-  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
-  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
-  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
-  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
-  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
-  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
-  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
-  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
-  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
-  class Input regular_input;
-  class Config CFG_input;
-  class Stage intermediate_object;
-  class Output regular_output;
-  class QC QC_output;
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryTextColor': '#1f2937',
-    'lineColor': '#4b5563',
-    'clusterBkg': '#f8fafc',
-    'clusterBorder': '#cbd5e1',
-    'edgeLabelBackground': '#ffffff00',
-    'fontFamily': 'Helvetica, Arial, sans-serif'
-  },
-  'flowchart': {
-    'defaultRenderer': 'elk'
-  },
-  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
-}}%%
-%%{init: {'flowchart': {'defaultRenderer': 'elk'}}}%%
-flowchart TB
-  donor_id_metadata_tibble.extended.differential_analyses.immune_human_2x(["donor_id_metadata_tibble.extended.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DCA.differential_analyses.immune_human_2x["feature_matrix_fit.DCA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  donor_id_metadata_tibble.extended.differential_analyses.immune_human_2x(["donor_id_metadata_tibble.extended.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  donor_id_metadata_tibble.extended.differential_analyses.immune_human_2x(["donor_id_metadata_tibble.extended.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DTFA.differential_analyses.immune_human_2x["feature_matrix_fit.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  donor_id_metadata_tibble.extended.differential_analyses.immune_human_2x(["donor_id_metadata_tibble.extended.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; model_results.DCTC.differential_analyses.immune_human_2x(["model_results.DCTC.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  feature_matrix_fit.DCA.differential_analyses.immune_human_2x["feature_matrix_fit.DCA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results_tibble.DCA.differential_analyses.immune_human_2x["results_tibble.DCA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results_tibble.DGE.differential_analyses.immune_human_2x["results_tibble.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  feature_matrix_fit.DTFA.differential_analyses.immune_human_2x["feature_matrix_fit.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results_tibble.DTFA.differential_analyses.immune_human_2x["results_tibble.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results.CP_KEGG_MEDICUS.GSEA.DGE.differential_analyses.immune_human_2x["results.CP_KEGG_MEDICUS.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results.CUSTOM.GSEA.DGE.differential_analyses.immune_human_2x["results.CUSTOM.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results.H.GSEA.DGE.differential_analyses.immune_human_2x["results.H.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results.TFT_GTRD.GSEA.DGE.differential_analyses.immune_human_2x["results.TFT_GTRD.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DCA.differential_analyses.immune_human_2x["feature_matrix_fit.DCA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.DCA.differential_analyses.immune_human_2x["results_tibble.DCA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.DGE.differential_analyses.immune_human_2x["results_tibble.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results.CP_KEGG_MEDICUS.GSEA.DGE.differential_analyses.immune_human_2x["results.CP_KEGG_MEDICUS.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results.CUSTOM.GSEA.DGE.differential_analyses.immune_human_2x["results.CUSTOM.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results.H.GSEA.DGE.differential_analyses.immune_human_2x["results.H.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results.TFT_GTRD.GSEA.DGE.differential_analyses.immune_human_2x["results.TFT_GTRD.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DTFA.differential_analyses.immune_human_2x["feature_matrix_fit.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.DTFA.differential_analyses.immune_human_2x["results_tibble.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  pseudobulk_counts_BPCells_matrix_dir.ATAC.brain_mouse(["pseudobulk_counts_BPCells_matrix_dir.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DCA.differential_analyses.immune_human_2x["feature_matrix_fit.DCA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  pseudobulk_counts_BPCells_matrix_dir.GEX.brain_mouse(["pseudobulk_counts_BPCells_matrix_dir.GEX.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  pseudobulk_counts_BPCells_matrix_dir.ATAC.brain_mouse(["pseudobulk_counts_BPCells_matrix_dir.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  pseudobulk_activity_matrix.TFA.brain_mouse(["pseudobulk_activity_matrix.TFA.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DTFA.differential_analyses.immune_human_2x["feature_matrix_fit.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  pseudobulk_counts_BPCells_matrix_dir.ATAC.brain_mouse(["pseudobulk_counts_BPCells_matrix_dir.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DTFA.differential_analyses.immune_human_2x["feature_matrix_fit.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  pseudobulk_counts_BPCells_matrix_dir.ATAC.brain_mouse(["pseudobulk_counts_BPCells_matrix_dir.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; pseudobulk_activity_matrix.TFA.brain_mouse(["pseudobulk_activity_matrix.TFA.&amp;lt;aggregation_name&amp;gt;"]):::none
-  models.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["models.trait_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
+<section id="wnn" class="level2" data-number="14.4">
+<h2 data-number="14.4" class="anchored" data-anchor-id="wnn"><span class="header-section-number">14.4</span> WNN</h2>
+<div class="output-gallery-grid">
+<article class="output-gallery-card">
+<a href="gallery_assets/WNN/harmony_categorical_umap.png"><img src="gallery_assets/WNN/harmony_categorical_umap.png" alt="Harmony UMAP"></a>
+<p class="output-gallery-title">
+Harmony UMAP
+</p>
+<p>
+Combines RNA and ATAC information to show the integrated multimodal cell-state structure.
+</p>
+<p class="output-gallery-target">
+<code>categorical.UMAPs.WNN.immune_human_2x</code>
+</p>
+</article>
+<article class="output-gallery-card">
+<a href="gallery_assets/WNN/atac_vs_rna_weight_boxplots.png"><img src="gallery_assets/WNN/atac_vs_rna_weight_boxplots.png" alt="Modality weights"></a>
+<p class="output-gallery-title">
+Modality weights
+</p>
+<p>
+Shows how RNA and ATAC evidence contribute differently across cell groups.
+</p>
+<p class="output-gallery-target">
+<code>ATAC_vs_RNA_weight_boxplots_plot.WNN.immune_human_2x</code>
+</p>
+</article>
 </div>
 
 
@@ -906,13 +839,13 @@ flowchart TB
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./implementation_details.html" class="pagination-link" aria-label="Implementation details">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Implementation details</span></span>
+      <a href="./distributed_computing.html" class="pagination-link" aria-label="Distributed computing">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Distributed computing</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./genetic_enrichment_walkthrough.html" class="pagination-link" aria-label="Genetic enrichment module">
-        <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Genetic enrichment module</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./output_gallery_differential_analyses.html" class="pagination-link" aria-label="Differential analyses output gallery">
+        <span class="nav-page-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Differential analyses output gallery</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -921,4 +854,4 @@ flowchart TB
 
 
 
-<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/differential_analyses_walkthrough.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/output_gallery_main.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>

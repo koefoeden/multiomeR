@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 260" role="img" aria-labelledby="title desc">
   <title id="title">multiomeR logo</title>
   <desc id="desc">A multiomeR wordmark for a targets and BPCells-based 10x Genomics Multiome workflow.</desc>
-  <rect width="900" height="260" rx="28" fill="#f8faf9"/>
+  <rect width="900" height="260" rx="28" fill="#ffffff"/>
 
-  <g transform="translate(80 58)">
+  <g transform="translate(0 0)">
     <text x="0" y="66"
           font-family="Inter, Avenir Next, Segoe UI, Helvetica, Arial, sans-serif"
           font-size="86"

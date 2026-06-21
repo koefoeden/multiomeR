@@ -370,7 +370,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="files" class="level2" data-number="5.2">
 <h2 data-number="5.2" class="anchored" data-anchor-id="files"><span class="header-section-number">5.2</span> Files</h2>
-<p>File-producing targets use <code>tarchetypes::tar_file()</code> so that <code>targets</code> tracks files and directories by path, timestamp, and content hash. These targets still appear in <code>targets::tar_read()</code>, but their value is a path rather than an in-memory analysis object.</p>
+<p>Other targets in the pipeline explicitly writes files to disk inside <code>tarchetypes::tar_file()</code> targets. These targets can still be loaded by <code>targets::tar_read()</code>, but their value is simply the file path rather than an in-memory analysis object.</p>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>R</strong></pre>
@@ -381,31 +381,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>Internally, these paths are created with <code>get_structured_file_path()</code>. The helper derives a stable location from the active target name and writes it under <code>outputs/files</code>. Target name parts after dots become parent directories in reverse order, so a target like <code>aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x</code> is placed under:</p>
 <pre class="text"><code>outputs/files/immune_human_2x/GEX/</code></pre>
-<p>After the public demo run, you should find produced files ordered separated by individual reactions, datasets, and the aggregation name:</p>
+<p>After the public demo run, you should therefore find produced files ordered separated by individual reactions, datasets, and the aggregation name:</p>
 <pre class="text"><code>outputs/files/
 |-- healthy_PBMC_human/ (reaction 1 specific files)
 |-- lymphoma_lymph_human/ (reaction 2 specific files)
 `-- immune_human_2x/ (aggregation-level files)</code></pre>
-<p>Please see the official targets documentation for more info: <em>insert link to most relevant manual page(s)</em></p>
+<p>Please see the official targets documentation for more info on working with external files: <em>insert link to most relevant manual page(s)</em></p>
 </section>
 <section id="plots" class="level2" data-number="5.3">
 <h2 data-number="5.3" class="anchored" data-anchor-id="plots"><span class="header-section-number">5.3</span> Plots</h2>
-<p>Review plots are file targets saved with <code>save_plots_structured()</code>. Like <code>get_structured_file_path()</code>, the helper derives paths from the target name, but writes under <code>outputs/plots</code>. Single plots become one image file. Lists of plots become directories containing numbered image files.</p>
-<p>For example, a target named <code>TF_activity_dot_plot.ATAC.immune_human_2x</code> writes to:</p>
-<pre class="text"><code>outputs/plots/immune_human_2x/ATAC/TF_activity_dot_plot.png</code></pre>
-<p>Targets that return named plot lists write one file per list element:</p>
-<pre class="text"><code>outputs/plots/immune_human_2x/GEX/categorical_bars_plots/
-|-- 01_PCA_harmony_SNN_cluster_named.png
-|-- 02_PCA_harmony_SNN_cluster_cell_type.png
-`-- ...</code></pre>
-<p>As with the files-category, the output plots are organized by the individual reactions, datasets, and aggregations processed:</p>
+<p>Plots are saved in a very similar manner to the files, using the <code>save_plots_structured()</code> helper function, which, like <code>get_structured_file_path()</code>, derives paths from the target name. However, they are saved under <code>outputs/plots</code> instead, but has the same, expected structure after the demo run:</p>
 <pre class="text"><code>outputs/plots/
 |-- healthy_PBMC_human/ (reaction 1 specific plots)
 |-- lymphoma_lymph_human/ (reaction 2 specific plots)
 |-- immune_human_dataset/ (dataset-level plots)
 `-- immune_human_2x/ (aggregation-level plots)</code></pre>
 <p>See the <a href="./output_gallery_main.html">main pipeline output gallery</a> for selected plots.</p>
-<p>The path structure is meant to make the output location predictable from the target name. Use <code>tar_read()</code> when you want the exact tracked path for a plot target, and browse <code>outputs/plots</code> when you want to actually inspect the plots.</p>
 
 
 </section>

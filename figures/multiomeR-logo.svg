@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 260" role="img" aria-labelledby="title desc">
+  <title id="title">multiomeR logo</title>
+  <desc id="desc">A multiomeR wordmark for a targets and BPCells-based 10x Genomics Multiome workflow.</desc>
+  <rect width="900" height="260" rx="28" fill="#f8faf9"/>
+
+  <g transform="translate(80 58)">
+    <text x="0" y="66"
+          font-family="Inter, Avenir Next, Segoe UI, Helvetica, Arial, sans-serif"
+          font-size="86"
+          font-weight="720"
+          letter-spacing="0"
+          fill="#253746">multiome<tspan fill="#1f7a78">R</tspan></text>
+    <text x="4" y="100"
+          font-family="Inter, Avenir Next, Segoe UI, Helvetica, Arial, sans-serif"
+          font-size="22"
+          font-weight="520"
+          letter-spacing="0"
+          fill="#5b6770">High-performant processing &amp; analysis of 10x Genomics Multiome data</text>
+          <text x="4" y="130"
+          font-family="Inter, Avenir Next, Segoe UI, Helvetica, Arial, sans-serif"
+          font-size="22"
+          font-weight="520"
+          letter-spacing="0"
+          fill="#5b6770">Built upon the targets &amp; BPCells frameworks</text>
+  </g>
+</svg>

@@ -344,7 +344,7 @@ format_psbulk_GWAS_chromVAR_ZScores <- function(psbulk_GWAS_chromVAR_activity_ma
     tidyr::pivot_longer(-GWAS_ID, names_to = "sample_name", values_to = "score") |>
     dplyr::left_join(sample_tibble, by = "sample_name") |>
     dplyr::mutate(score_is_sig = abs(score) > 1.95) |>
-    add_GWAS_dotplot_categories(GWAS_tibble = GWAS_inputs_tibble) |>
+    add_GWAS_heatmap_categories(GWAS_tibble = GWAS_inputs_tibble) |>
     dplyr::relocate(GWAS_ID, Category, variant_weighting_mode, sample_name, cluster, donor_id, score, score_is_sig)
 }
 
@@ -1212,67 +1212,6 @@ format_psbulk_GWAS_chromVAR_results <- function(psbulk_GWAS_chromVAR_results_tib
       .by = c(Category, GWAS_ID)
     ) |>
     dplyr::relocate(GWAS_ID, Category, variant_weighting_mode, model, contrast)
-}
-
-#' Plot psbulk GWAS chromVAR dotplot
-#'
-#' Plot pseudobulk GWAS chromVAR contrast scores by GWAS and cluster.
-#'
-#' @param psbulk_GWAS_chromVAR_results_tibble Formatted GWAS chromVAR results
-#'   containing GWAS, model, contrast, cluster, and statistic columns.
-#' @param contrast_compartment_patterns Named patterns used to group contrast labels into biological compartments for plotting.
-#' @return A ggplot, patchwork, or BPCells trackplot object ready for `save_plots_structured()` or composition.
-#' @keywords internal
-
-plot_psbulk_GWAS_chromVAR_dotplot <- function(psbulk_GWAS_chromVAR_results_tibble, contrast_compartment_patterns = NULL) {
-  if (nrow(psbulk_GWAS_chromVAR_results_tibble) == 0) {
-    return(structure(list(), class = c("empty_plot_list", "list")))
-  }
-
-  GWAS_levels <- psbulk_GWAS_chromVAR_results_tibble |>
-    dplyr::distinct(Category, GWAS_ID) |>
-    dplyr::arrange(Category, GWAS_ID) |>
-    dplyr::distinct(GWAS_ID, .keep_all = TRUE) |>
-    dplyr::pull(GWAS_ID) |>
-    rev()
-
-  plot_tibble <- psbulk_GWAS_chromVAR_results_tibble |>
-    dplyr::mutate(
-      model = get_mixsorted_factor(model),
-      GWAS_ID = factor(GWAS_ID, levels = GWAS_levels),
-      log10_FDR_within_GWAS_category = -log10(pmax(FDR_within_GWAS_category, .Machine$double.xmin))
-    )
-
-  plot_tibble |>
-    group_split_by("model") |>
-    purrr::imap(\(model_tibble, model_name) {
-      contrast_metadata <- get_compartment_metadata(
-        model_tibble$contrast,
-        contrast_compartment_patterns,
-        type_col = "contrast",
-        default_compartment = "Contrast"
-      )
-      contrast_levels <- contrast_metadata |>
-        dplyr::arrange(compartment, contrast) |>
-        dplyr::pull(contrast)
-      contrast_metadata <- contrast_metadata |>
-        dplyr::mutate(contrast = factor(contrast, levels = contrast_levels))
-
-      model_tibble <- model_tibble |>
-        dplyr::mutate(contrast = as.character(contrast)) |>
-        dplyr::left_join(contrast_metadata, by = "contrast") |>
-        dplyr::mutate(contrast = factor(contrast, levels = contrast_levels))
-
-      plot_GWAS_feature_dotplot(
-        score_plot_data = model_tibble,
-        feature_metadata = contrast_metadata,
-        feature_col = "contrast",
-        color_col = "logFC",
-        color_label = "logFC",
-        size_col = "log10_FDR_within_GWAS_category",
-        size_label = "-log10 FDR"
-      )
-    })
 }
 
 #' Plot psbulk GWAS chromVAR coefficient ranges

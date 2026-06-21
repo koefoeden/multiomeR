@@ -6,24 +6,24 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   targets::tar_target(
-    name = TRS_dotplot_data,
-    description = "Prepare SCAVENGE TRS dotplot data from per-GWAS group summaries",
+    name = TRS_heatmap_data,
+    description = "Prepare SCAVENGE TRS heatmap data from per-GWAS group summaries",
     command = TRS_summary_tibble |>
-      get_SCAVENGE_dotplot_data(GWAS_tibble = GWAS_inputs_tibble),
+      get_SCAVENGE_heatmap_data(GWAS_tibble = GWAS_inputs_tibble),
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   targets::tar_target(
-    name = TRS_dotplot_scaled_data,
-    description = "Rescale SCAVENGE TRS dotplot data per GWAS and grouping column to the 0-1 range",
-    command = scale_GWAS_dotplot_scores(TRS_dotplot_data, group_cols = "grouping_col"),
+    name = TRS_heatmap_scaled_data,
+    description = "Rescale SCAVENGE TRS heatmap data per GWAS and grouping column to the 0-1 range",
+    command = scale_GWAS_heatmap_scores(TRS_heatmap_data, group_cols = "grouping_col"),
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   tarchetypes::tar_file(
-    name = TRS_dotplot_unscaled,
-    description = "Save unscaled SCAVENGE TRS dotplots with Open Targets GWAS metadata annotations. [checkpoint:genetic_enrichment]",
+    name = TRS_heatmap_unscaled,
+    description = "Save unscaled SCAVENGE TRS heatmaps with Open Targets GWAS metadata annotations. [checkpoint:genetic_enrichment]",
     command = {
-      plots <- plot_grouped_GWAS_by_cluster_dotplots(
-        TRS_dotplot_data,
+      plots <- plot_grouped_GWAS_by_cluster_heatmaps(
+        TRS_heatmap_data,
         split_col = "grouping_col",
         GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
         compartments_patterns = genetic_enrichment_compartment_patterns
@@ -32,17 +32,17 @@ rlang::list2(
         plots,
         filetype = "png",
         width = 20,
-        height = max(7, 0.24 * dplyr::n_distinct(TRS_dotplot_data$GWAS_ID) + 3)
+        height = max(7, 0.24 * dplyr::n_distinct(TRS_heatmap_data$GWAS_ID) + 3)
       )
     },
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   tarchetypes::tar_file(
-    name = TRS_dotplot,
-    description = "Save SCAVENGE TRS dotplots with Open Targets GWAS metadata annotations. [checkpoint:genetic_enrichment]",
+    name = TRS_heatmap,
+    description = "Save SCAVENGE TRS heatmaps with Open Targets GWAS metadata annotations. [checkpoint:genetic_enrichment]",
     command = {
-      plots <- plot_grouped_GWAS_by_cluster_dotplots(
-        TRS_dotplot_scaled_data,
+      plots <- plot_grouped_GWAS_by_cluster_heatmaps(
+        TRS_heatmap_scaled_data,
         split_col = "grouping_col",
         name_suffix = "scaled",
         GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
@@ -53,7 +53,7 @@ rlang::list2(
         plots,
         filetype = "png",
         width = 20,
-        height = max(7, 0.24 * dplyr::n_distinct(TRS_dotplot_scaled_data$GWAS_ID) + 3)
+        height = max(7, 0.24 * dplyr::n_distinct(TRS_heatmap_scaled_data$GWAS_ID) + 3)
       )
     },
     resources = get_tar_resources(RAM_GB_req = 32)

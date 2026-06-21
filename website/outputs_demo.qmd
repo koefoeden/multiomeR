@@ -1,2 +1,87 @@
-#  Outputs
-The run writes target artifacts to `pipelines/processing_and_aggregation/outputs`, the `targets` store configured in `_targets.yaml`. After the run completes, use the target names shown in the [main pipeline output gallery](output_gallery_main.qmd) with `targets::tar_read()` to inspect representative outputs from the same repository-root R session.
+# Outputs
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+The public PBMC demo writes its `targets` store to `outputs`, as configured in `_targets.yaml`. That store contains three kinds of output that are useful to inspect after the run:
+
+- `objects/`: serialized R objects managed by `targets`, returned by `targets::tar_target()` targets
+- `files/`: file and directory artifacts saved by `get_structured_file_path()` inside `tarchetypes::tar_file()` targets
+- `plots/`: PNG and SVG review plots saved by `save_plots_structured()` inside `tarchetypes::tar_file()` targets
+
+## Objects
+
+Most intermediate and final result objects are saved automatically by `targets` under `outputs/objects` during a pipeline run. Read them with `targets::tar_read()` from a repository-root R session after the demo has completed.
+
+```{.r filename="R"}
+targets::tar_read(UMAP_embeddings_tibble.WNN.immune_human_2x)
+targets::tar_read(metadata_w_cell_types_tibble.WNN.immune_human_2x)
+targets::tar_read(cell_type_marker_tibbles.GEX.immune_human_2x)
+```
+
+Please see the official targets documentation for more info: _insert link to most relevant manual page(s)_
+
+## Files
+
+File-producing targets use `tarchetypes::tar_file()` so that `targets` tracks files and directories by path, timestamp, and content hash. These targets still appear in `targets::tar_read()`, but their value is a path rather than an in-memory analysis object.
+
+```{.r filename="R"}
+targets::tar_read(cellranger_barcodes_tsv.healthy_PBMC_human)
+targets::tar_read(aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x)
+targets::tar_read(consensus_peak_BED.ATAC.immune_human_2x)
+```
+
+Internally, these paths are created with `get_structured_file_path()`. The helper derives a stable location from the active target name and writes it under `outputs/files`. Target name parts after dots become parent directories in reverse order, so a target like `aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x` is placed under:
+
+```text
+outputs/files/immune_human_2x/GEX/
+```
+
+After the public demo run, you should find produced files ordered separated by individual reactions, datasets, and the aggregation name:
+
+```text
+outputs/files/
+|-- healthy_PBMC_human/ (reaction 1 specific files)
+|-- lymphoma_lymph_human/ (reaction 2 specific files)
+`-- immune_human_2x/ (aggregation-level files)
+```
+
+Please see the official targets documentation for more info: _insert link to most relevant manual page(s)_
+
+## Plots
+
+Review plots are file targets saved with `save_plots_structured()`. Like `get_structured_file_path()`, the helper derives paths from the target name, but writes under `outputs/plots`. Single plots become one image file. Lists of plots become directories containing numbered image files.
+
+For example, a target named `TF_activity_dot_plot.ATAC.immune_human_2x` writes to:
+
+```text
+outputs/plots/immune_human_2x/ATAC/TF_activity_dot_plot.png
+```
+
+Targets that return named plot lists write one file per list element:
+
+```text
+outputs/plots/immune_human_2x/GEX/categorical_bars_plots/
+|-- 01_PCA_harmony_SNN_cluster_named.png
+|-- 02_PCA_harmony_SNN_cluster_cell_type.png
+`-- ...
+```
+
+As with the files-category, the output plots are organized by the individual reactions, datasets, and aggregations processed:
+
+```text
+outputs/plots/
+|-- healthy_PBMC_human/ (reaction 1 specific plots)
+|-- lymphoma_lymph_human/ (reaction 2 specific plots)
+|-- immune_human_dataset/ (dataset-level plots)
+`-- immune_human_2x/ (aggregation-level plots)
+```
+
+See the [main pipeline output gallery](output_gallery_main.qmd) for selected plots.
+
+The path structure is meant to make the output location predictable from the target name. Use `tar_read()` when you want the exact tracked path for a plot target, and browse `outputs/plots` when you want to actually inspect the plots.

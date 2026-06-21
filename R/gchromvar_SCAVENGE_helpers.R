@@ -386,12 +386,12 @@ min_max_scale_vec <- function(x) {
   (x - x_range[[1]]) / (x_range[[2]] - x_range[[1]])
 }
 
-scale_GWAS_dotplot_scores <- function(dotplot_data, group_cols = character(), score_col = "median_score") {
-  if (nrow(dotplot_data) == 0) {
-    return(dotplot_data)
+scale_GWAS_heatmap_scores <- function(heatmap_data, group_cols = character(), score_col = "median_score") {
+  if (nrow(heatmap_data) == 0) {
+    return(heatmap_data)
   }
 
-  dotplot_data |>
+  heatmap_data |>
     dplyr::group_by(dplyr::across(dplyr::all_of(c("GWAS_ID", group_cols)))) |>
     dplyr::mutate(!!score_col := min_max_scale_vec(.data[[score_col]])) |>
     dplyr::ungroup()
@@ -988,40 +988,40 @@ get_SCAVENGE_chisq_results_from_summary <- function(summary_tibble) {
     dplyr::select(GWAS_ID, grouping_col, cluster, other_sig, other_cells, p, direction, q, sig_label)
 }
 
-add_GWAS_dotplot_categories <- function(dotplot_data, GWAS_tibble) {
-  dotplot_data |>
+add_GWAS_heatmap_categories <- function(heatmap_data, GWAS_tibble) {
+  heatmap_data |>
     dplyr::inner_join(GWAS_tibble |> dplyr::select(GWAS_ID, Category, dplyr::any_of("variant_weighting_mode")), by = "GWAS_ID")
 }
 
-get_SCAVENGE_dotplot_data <- function(summary_tibble, GWAS_tibble) {
+get_SCAVENGE_heatmap_data <- function(summary_tibble, GWAS_tibble) {
   summary_tibble |>
-    add_GWAS_dotplot_categories(GWAS_tibble) |>
+    add_GWAS_heatmap_categories(GWAS_tibble) |>
     dplyr::left_join(
       get_SCAVENGE_chisq_results_from_summary(summary_tibble),
       by = c("GWAS_ID", "grouping_col", "cluster")
     )
 }
 
-summarize_GWAS_score_dotplot_data <- function(cell_by_GWAS_score_tibble_long, score_col = "score", group_by_col = "cluster") {
+summarize_GWAS_score_heatmap_data <- function(cell_by_GWAS_score_tibble_long, score_col = "score", group_by_col = "cluster") {
   cell_by_GWAS_score_tibble_long |>
     dplyr::group_by(GWAS_ID, .data[[group_by_col]]) |>
     dplyr::summarise(median_score = stats::median(.data[[score_col]]), .groups = "drop")
 }
 
-#' Get GWAS dotplot data
+#' Get GWAS heatmap data
 #'
-#' Summarize cell-level GWAS scores into cluster-by-GWAS dotplot data.
+#' Summarize cell-level GWAS scores into cluster-by-GWAS heatmap data.
 #'
 #' @param cell_by_GWAS_score_tibble_long Long cell-level score tibble containing
 #'   `GWAS_ID`, score, significance flag, and grouping column.
 #' @param GWAS_tibble GWAS metadata tibble used to order and annotate GWAS plots.
 #' @param score_col Numeric score column summarized by median.
-#' @param group_by_col Grouping column used as the dotplot feature axis.
-#' @return Dotplot input tibble with median score, GWAS metadata, chi-square
+#' @param group_by_col Grouping column used as the heatmap feature axis.
+#' @return Heatmap input tibble with median score, GWAS metadata, chi-square
 #'   results, and significance labels.
 #' @keywords internal
 
-get_GWAS_dotplot_data <- function(cell_by_GWAS_score_tibble_long, GWAS_tibble, score_col = "score", group_by_col = "cluster") {
+get_GWAS_heatmap_data <- function(cell_by_GWAS_score_tibble_long, GWAS_tibble, score_col = "score", group_by_col = "cluster") {
   if (nrow(cell_by_GWAS_score_tibble_long) == 0) {
     return(tibble::tibble(
       GWAS_ID = character(),
@@ -1037,8 +1037,8 @@ get_GWAS_dotplot_data <- function(cell_by_GWAS_score_tibble_long, GWAS_tibble, s
   }
 
   cluster_by_GWAS_median_score_tibble <- cell_by_GWAS_score_tibble_long |>
-    summarize_GWAS_score_dotplot_data(score_col = score_col, group_by_col = group_by_col) |>
-    add_GWAS_dotplot_categories(GWAS_tibble) # inner join enables filtering out GWASs if prefiltered tibble given, if not all are desired to be plotted.
+    summarize_GWAS_score_heatmap_data(score_col = score_col, group_by_col = group_by_col) |>
+    add_GWAS_heatmap_categories(GWAS_tibble) # inner join enables filtering out GWASs if prefiltered tibble given, if not all are desired to be plotted.
 
   # join chiqsq results
   chisq_test_per_GWAS_and_cluster_results <- cell_by_GWAS_score_tibble_long %>%
@@ -1157,7 +1157,7 @@ gwas_heatmap_metadata_theme <- function(show_y = FALSE, show_x = FALSE) {
 
 #' Order GWAS score plot ids
 #'
-#' Order GWAS rows and feature columns for clustered score heatmap/dotplots.
+#' Order GWAS rows and feature columns for clustered score heatmaps.
 #'
 #' @param score_data GWAS-by-feature score tibble with GWAS ID, cluster/feature,
 #'   and score columns.
@@ -1228,36 +1228,30 @@ get_plot_group_breaks <- function(ordered_values) {
   cumsum(group_lengths)[seq_len(length(group_lengths) - 1)] + 0.5
 }
 
-#' Plot GWAS feature dotplot
+#' Plot GWAS feature heatmap
 #'
-#' Draw a GWAS-by-feature dotplot with score color and optional point size.
+#' Draw a GWAS-by-feature heatmap with score mapped directly to cell fill.
 #'
 #' @param score_plot_data Ordered score tibble containing GWAS IDs, feature IDs,
-#'   color values, and optional size values.
+#'   and fill values.
 #' @param feature_metadata Metadata for plotted features, including compartment
 #'   ordering used for vertical separators.
 #' @param feature_col Feature/cluster column plotted on the x axis.
-#' @param color_col Numeric column mapped to point color.
-#' @param color_label Metadata column or legend label used to map loop/link colors.
-#' @param color_midpoint Midpoint for the diverging color scale.
+#' @param fill_col Numeric column mapped to tile fill.
+#' @param fill_label Legend label for the fill scale.
+#' @param fill_midpoint Midpoint for the diverging fill scale.
 #' @param title Optional plot title.
-#' @param point_size Fixed point size used when `size_col` is `NULL`.
-#' @param size_col Optional numeric column mapped to point size.
-#' @param size_label Legend title for the size scale.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
-plot_GWAS_feature_dotplot <- function(
+plot_GWAS_feature_heatmap <- function(
   score_plot_data,
   feature_metadata,
   feature_col,
-  color_col,
-  color_label,
-  color_midpoint = 0,
-  title = NULL,
-  point_size = 2.2,
-  size_col = NULL,
-  size_label = NULL
+  fill_col,
+  fill_label,
+  fill_midpoint = 0,
+  title = NULL
 ) {
   row_categories <- score_plot_data |>
     dplyr::distinct(GWAS_ID, Category) |>
@@ -1268,12 +1262,13 @@ plot_GWAS_feature_dotplot <- function(
     dplyr::pull(compartment) |>
     get_plot_group_breaks()
 
-  score_plot <- score_plot_data |>
-    ggplot2::ggplot(ggplot2::aes(x = .data[[feature_col]], y = GWAS_ID, color = .data[[color_col]])) +
+  score_plot_data |>
+    ggplot2::ggplot(ggplot2::aes(x = .data[[feature_col]], y = GWAS_ID, fill = .data[[fill_col]])) +
+    ggplot2::geom_tile(color = "grey90", linewidth = 0.15) +
     ggplot2::geom_hline(yintercept = row_breaks, color = "grey25", linewidth = 0.35) +
     ggplot2::geom_vline(xintercept = feature_breaks, color = "grey25", linewidth = 0.35) +
     ggplot2::scale_y_discrete(drop = FALSE) +
-    ggplot2::scale_color_gradient2(low = "#3B4CC0", mid = "white", high = "#B40426", midpoint = color_midpoint, name = color_label) +
+    ggplot2::scale_fill_gradient2(low = "#3B4CC0", mid = "white", high = "#B40426", midpoint = fill_midpoint, name = fill_label) +
     ggplot2::labs(x = NULL, y = NULL, title = title) +
     ggplot2::theme_minimal(base_size = 9) +
     ggplot2::theme(
@@ -1284,16 +1279,6 @@ plot_GWAS_feature_dotplot <- function(
       legend.position = "bottom",
       strip.text.x = ggplot2::element_text(size = 8, margin = ggplot2::margin(b = 2))
     )
-
-  if (is.null(size_col)) {
-    score_plot <- score_plot + ggplot2::geom_point(size = point_size, alpha = 0.85)
-  } else {
-    score_plot <- score_plot +
-      ggplot2::geom_point(ggplot2::aes(size = .data[[size_col]]), alpha = 0.85) +
-      ggplot2::scale_size_continuous(range = c(0.8, 5), name = size_label)
-  }
-
-  score_plot
 }
 
 #' Plot GWAS metadata tracks
@@ -1376,9 +1361,9 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
   patchwork::wrap_plots(category_plot, method_plot, bar_plot, ancestry_plot, nrow = 1, widths = c(0.55, 0.55, 1.4, 1.45), guides = "collect")
 }
 
-#' Plot GWAS by cluster dotplot
+#' Plot GWAS by cluster heatmap
 #'
-#' Combine GWAS metadata tracks with the ordered cluster score dotplot.
+#' Combine GWAS metadata tracks with the ordered cluster score heatmap.
 #'
 #' @param data_per_GWAS_and_cluster_df Score summary tibble with one row per
 #'   GWAS/cluster combination.
@@ -1391,7 +1376,7 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
-plot_GWAS_by_cluster_dotplot <- function(
+plot_GWAS_by_cluster_heatmap <- function(
   data_per_GWAS_and_cluster_df,
   GWAS_metadata_tracks_plot,
   compartments_patterns = NULL,
@@ -1404,13 +1389,13 @@ plot_GWAS_by_cluster_dotplot <- function(
   ordered_data <- get_ordered_GWAS_score_plot_data(data_per_GWAS_and_cluster_df, compartments_patterns)
   patchwork::wrap_plots(
     GWAS_metadata_tracks_plot,
-    plot_GWAS_feature_dotplot(
+    plot_GWAS_feature_heatmap(
       score_plot_data = ordered_data$scores,
       feature_metadata = ordered_data$clusters,
       feature_col = "cluster",
-      color_col = "median_score",
-      color_label = "Score",
-      color_midpoint = if (scaled) 0.5 else 0
+      fill_col = "median_score",
+      fill_label = "Score",
+      fill_midpoint = if (scaled) 0.5 else 0
     ),
     nrow = 1,
     widths = c(5.8, 9),
@@ -1418,13 +1403,13 @@ plot_GWAS_by_cluster_dotplot <- function(
   )
 }
 
-#' Plot grouped GWAS by cluster dotplots
+#' Plot grouped GWAS by cluster heatmaps
 #'
-#' Split GWAS cluster dotplots by a grouping column and return a named plot list.
+#' Split GWAS cluster heatmaps by a grouping column and return a named plot list.
 #'
 #' @param data_per_GWAS_and_cluster_df Score summary tibble containing `split_col`
 #'   in addition to GWAS and cluster score fields.
-#' @param split_col Column used to split the data into one dotplot per value.
+#' @param split_col Column used to split the data into one heatmap per value.
 #' @param GWAS_metadata_tracks_plot Patchwork/ggplot metadata track aligned to
 #'   the same GWAS ordering.
 #' @param name_suffix Optional suffix appended to names of returned plot-list
@@ -1435,7 +1420,7 @@ plot_GWAS_by_cluster_dotplot <- function(
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
-plot_grouped_GWAS_by_cluster_dotplots <- function(
+plot_grouped_GWAS_by_cluster_heatmaps <- function(
   data_per_GWAS_and_cluster_df,
   split_col,
   GWAS_metadata_tracks_plot,
@@ -1447,17 +1432,17 @@ plot_grouped_GWAS_by_cluster_dotplots <- function(
     return(structure(list(), class = c("empty_plot_list", "list")))
   }
 
-  grouped_dotplot_data <- dplyr::group_by(data_per_GWAS_and_cluster_df, .data[[split_col]])
-  plot_names <- dplyr::group_keys(grouped_dotplot_data)[[split_col]]
+  grouped_heatmap_data <- dplyr::group_by(data_per_GWAS_and_cluster_df, .data[[split_col]])
+  plot_names <- dplyr::group_keys(grouped_heatmap_data)[[split_col]]
   if (!is.null(name_suffix)) {
     plot_names <- stringr::str_c(plot_names, "_", name_suffix)
   }
 
-  grouped_dotplot_data |>
+  grouped_heatmap_data |>
     dplyr::group_split() |>
     purrr::set_names(plot_names) |>
     purrr::map(\(group_data) {
-      plot_GWAS_by_cluster_dotplot(
+      plot_GWAS_by_cluster_heatmap(
         group_data |> dplyr::select(-dplyr::all_of(split_col)),
         GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
         compartments_patterns = compartments_patterns,

@@ -87,22 +87,22 @@ rlang::list2(
     )
   ),
   targets::tar_target(
-    name = ZScores_dotplot_data.summarized.single_nucleus,
-    description = "Prepare dotplot data from summarized single-nucleus chromVAR Z-scores grouped by GWAS and cluster",
+    name = ZScores_heatmap_data.summarized.single_nucleus,
+    description = "Prepare heatmap data from summarized single-nucleus chromVAR Z-scores grouped by GWAS and cluster",
     command = ZScores_tibble.summarized.single_nucleus |>
-      get_GWAS_dotplot_data(GWAS_tibble = GWAS_inputs_tibble)
+      get_GWAS_heatmap_data(GWAS_tibble = GWAS_inputs_tibble)
   ),
   targets::tar_target(
-    name = ZScores_dotplot_scaled_data.summarized.single_nucleus,
-    description = "Rescale summarized single-nucleus chromVAR dotplot data per GWAS to the 0-1 range",
-    command = scale_GWAS_dotplot_scores(ZScores_dotplot_data.summarized.single_nucleus)
+    name = ZScores_heatmap_scaled_data.summarized.single_nucleus,
+    description = "Rescale summarized single-nucleus chromVAR heatmap data per GWAS to the 0-1 range",
+    command = scale_GWAS_heatmap_scores(ZScores_heatmap_data.summarized.single_nucleus)
   ),
   tarchetypes::tar_file(
-    name = ZScores_dotplot.summarized.single_nucleus,
-    description = "Save summarized single-nucleus chromVAR Z-score dotplot with Open Targets GWAS metadata annotations. [checkpoint:genetic_enrichment]",
+    name = ZScores_heatmap.summarized.single_nucleus,
+    description = "Save summarized single-nucleus chromVAR Z-score heatmap with Open Targets GWAS metadata annotations. [checkpoint:genetic_enrichment]",
     command = {
-      plot <- plot_GWAS_by_cluster_dotplot(
-        ZScores_dotplot_data.summarized.single_nucleus,
+      plot <- plot_GWAS_by_cluster_heatmap(
+        ZScores_heatmap_data.summarized.single_nucleus,
         GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
         compartments_patterns = genetic_enrichment_compartment_patterns
       )
@@ -110,16 +110,16 @@ rlang::list2(
         plot,
         filetype = "png",
         width = 20,
-        height = max(7, 0.24 * dplyr::n_distinct(ZScores_dotplot_data.summarized.single_nucleus$GWAS_ID) + 3)
+        height = max(7, 0.24 * dplyr::n_distinct(ZScores_heatmap_data.summarized.single_nucleus$GWAS_ID) + 3)
       )
     }
   ),
   tarchetypes::tar_file(
-    name = ZScores_dotplot_scaled.summarized.single_nucleus,
-    description = "Save rescaled summarized single-nucleus chromVAR Z-score dotplot with Open Targets GWAS metadata annotations. [checkpoint:genetic_enrichment]",
+    name = ZScores_heatmap_scaled.summarized.single_nucleus,
+    description = "Save rescaled summarized single-nucleus chromVAR Z-score heatmap with Open Targets GWAS metadata annotations. [checkpoint:genetic_enrichment]",
     command = {
-      plot <- plot_GWAS_by_cluster_dotplot(
-        ZScores_dotplot_scaled_data.summarized.single_nucleus,
+      plot <- plot_GWAS_by_cluster_heatmap(
+        ZScores_heatmap_scaled_data.summarized.single_nucleus,
         GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
         compartments_patterns = genetic_enrichment_compartment_patterns,
         scaled = TRUE
@@ -128,7 +128,7 @@ rlang::list2(
         plot,
         filetype = "png",
         width = 20,
-        height = max(7, 0.24 * dplyr::n_distinct(ZScores_dotplot_scaled_data.summarized.single_nucleus$GWAS_ID) + 3)
+        height = max(7, 0.24 * dplyr::n_distinct(ZScores_heatmap_scaled_data.summarized.single_nucleus$GWAS_ID) + 3)
       )
     }
   ),

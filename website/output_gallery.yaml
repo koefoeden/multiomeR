@@ -128,10 +128,10 @@
 
 - section: Genetic enrichment module
   subsection: Pseudobulk-first chromVAR (raw)
-  title: Trait-level Z-score dotplot
+  title: Trait-level Z-score heatmap
   description: Summarizes global pseudobulk chromVAR Z-scores across cell groups and GWAS traits before differential modeling.
-  target: ZScores_dotplot.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x
-  asset: gallery_assets/genetic_enrichment/pseudobulk_first/trait_level_zscores_dotplot.png
+  target: ZScores_heatmap.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x
+  asset: gallery_assets/genetic_enrichment/pseudobulk_first/trait_level_zscores_heatmap.png
   status: available
 
 - section: Genetic enrichment module
@@ -140,14 +140,6 @@
   description: Shows global pseudobulk chromVAR Z-score distributions across cell groups before differential modeling.
   target: ZScores_boxplot.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x
   asset: gallery_assets/genetic_enrichment/pseudobulk_first/trait_level_zscores_boxplot.png
-  status: available
-
-- section: Genetic enrichment module
-  subsection: Pseudobulk-first chromVAR (modelled)
-  title: Trait-level enrichment dotplot
-  description: Shows GWAS-by-contrast pseudobulk chromVAR differential activity across configured comparisons.
-  target: dotplot.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x
-  asset: gallery_assets/genetic_enrichment/pseudobulk_first/trait_level_dotplot.png
   status: available
 
 - section: Genetic enrichment module
@@ -176,10 +168,10 @@
 
 - section: Genetic enrichment module
   subsection: Single-nucleus chromVAR
-  title: Enrichment dotplot
+  title: Enrichment heatmap
   description: Connects genetic association evidence to cell groups through single-nucleus regulatory enrichment patterns.
-  target: ZScores_dotplot.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x
-  asset: gallery_assets/genetic_enrichment/gwas_chromvar_dotplot.png
+  target: ZScores_heatmap.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x
+  asset: gallery_assets/genetic_enrichment/gwas_chromvar_heatmap.png
   status: available
 
 - section: Genetic enrichment module
@@ -192,10 +184,10 @@
 
 - section: Genetic enrichment module
   subsection: Single-nucleus chromVAR+SCAVENGE
-  title: Celltype by GWAS dotplot
+  title: Celltype by GWAS heatmap
   description: Summarizes graph-propagated trait relevance scores across cell groups and GWAS traits.
-  target: TRS_dotplot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x
-  asset: gallery_assets/genetic_enrichment/single_nucleus_with_scavenge/TRS_dotplot.png
+  target: TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x
+  asset: gallery_assets/genetic_enrichment/single_nucleus_with_scavenge/TRS_heatmap.png
   status: available
 
 - section: Genetic enrichment module

@@ -231,13 +231,13 @@ rlang::list2(
         feature_matrix = aggregated_counts_BPCells_matrix.GEX,
         metadata_tibble = metadata_w_cell_types_tibble.WNN,
         cluster_col = "PCA_harmony_SNN_cluster_cell_type",
-        threads = 15
+        threads = 6
       ) |>
         methods::as("dgCMatrix") |>
         BPCells::write_matrix_dir(out_dir, overwrite = TRUE)
       out_dir
     },
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 60)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
   ),
   targets::tar_target(
     name = pseudobulk_counts_matrix.GEX,
@@ -259,13 +259,13 @@ rlang::list2(
         feature_matrix = peak_QC_filtered_BPCells_matrix.ATAC,
         metadata_tibble = metadata_w_cell_types_tibble.WNN,
         cluster_col = "PCA_harmony_SNN_cluster_cell_type",
-        threads = 15
+        threads = 6
       ) |>
         methods::as("dgCMatrix") |>
         BPCells::write_matrix_dir(out_dir, overwrite = TRUE)
       out_dir
     },
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 60)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
   ),
   targets::tar_target(
     name = pseudobulk_counts_matrix.ATAC,

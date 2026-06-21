@@ -41,10 +41,10 @@ rlang::list2(
       GEX_PCA_backend = aggregation_GEX_PCA_backend,
       SCT_regress_vars = aggregation_subgroups_SCT_regress_vars,
       n_components = utils::tail(aggregation_GEX_data_PCs, 1),
-      threads = 15
+      threads = 6
     ),
     pattern = map(metadata_tibble.subgroups),
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 32)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = harmony_embeddings_matrix.GEX.subgroups,
@@ -54,11 +54,11 @@ rlang::list2(
       metadata_tibble = metadata_tibble.subgroups,
       harmony_correction_metadata_col_names = c(aggregation_harmony_correction_metadata_col_names, aggregation_subgroups_extra_harmony_covars),
       dims = aggregation_GEX_data_PCs,
-      cores = 15,
+      cores = 6,
       dim_prefix = "PCA_"
     ),
     pattern = map(PCA_BPCells.GEX.subgroups, metadata_tibble.subgroups),
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 32)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = LSI_BPCells.ATAC.subgroups,
@@ -68,11 +68,11 @@ rlang::list2(
       run_ATAC_LSI_BPCells(
         ATAC_peak_BPCells_matrix = peak_QC_filtered_BPCells_matrix.ATAC[, subgroup_barcodes, drop = FALSE],
         n_components = utils::tail(aggregation_ATAC_data_PCs, 1),
-        threads = 15
+        threads = 6
       )
     },
     pattern = map(metadata_tibble.subgroups),
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 32)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = harmony_embeddings_matrix.ATAC.subgroups,
@@ -82,11 +82,11 @@ rlang::list2(
       metadata_tibble = metadata_tibble.subgroups,
       harmony_correction_metadata_col_names = aggregation_harmony_correction_metadata_col_names,
       dims = aggregation_ATAC_data_PCs,
-      cores = 15,
+      cores = 6,
       dim_prefix = "LSI_"
     ),
     pattern = map(LSI_BPCells.ATAC.subgroups, metadata_tibble.subgroups),
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 32)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = UMAP_embeddings_tibble.GEX.subgroups,
@@ -101,7 +101,7 @@ rlang::list2(
     ) |>
       tibble::as_tibble(rownames = "barcode_w_prefix"),
     pattern = map(harmony_embeddings_matrix.GEX.subgroups),
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 16)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = PCA_clusters.GEX.subgroups,
@@ -112,11 +112,11 @@ rlang::list2(
       k = aggregation_data_nNNs,
       resolution = aggregation_subgroups_res,
       dim_prefix = "PCA_",
-      threads = 15,
+      threads = 6,
       min_barcodes = aggregation_cluster_min_barcodes
     ),
     pattern = map(harmony_embeddings_matrix.GEX.subgroups),
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 16)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = UMAP_embeddings_tibble.ATAC.subgroups,
@@ -131,7 +131,7 @@ rlang::list2(
     ) |>
       tibble::as_tibble(rownames = "barcode_w_prefix"),
     pattern = map(harmony_embeddings_matrix.ATAC.subgroups),
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 16)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = LSI_clusters.ATAC.subgroups,
@@ -142,11 +142,11 @@ rlang::list2(
       k = aggregation_data_nNNs,
       resolution = aggregation_subgroups_res,
       dim_prefix = "LSI_",
-      threads = 15,
+      threads = 6,
       min_barcodes = aggregation_cluster_min_barcodes
     ),
     pattern = map(harmony_embeddings_matrix.ATAC.subgroups),
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 16)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = embedding_matrices.subgroups,
@@ -170,10 +170,10 @@ rlang::list2(
       embeddings_list = embedding_matrices.subgroups,
       k = aggregation_data_nNNs,
       candidate_k = 200,
-      threads = 15
+      threads = 6
     ),
     pattern = map(embedding_matrices.subgroups),
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 32)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = UMAP_embeddings_tibble.WNN.subgroups,
@@ -185,7 +185,7 @@ rlang::list2(
       col_prefix = "WNN_sub_UMAP"
     ),
     pattern = map(WNN_results.subgroups),
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 16)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = clusters_tibble.WNN.subgroups,

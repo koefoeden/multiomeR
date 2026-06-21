@@ -80,7 +80,7 @@ rlang::list2(
         normalize = FALSE
       )
     },
-    resources = get_tar_resources(RAM_GB_req = 80)
+    resources = get_tar_resources(RAM_GB_req = 60)
   ),
   targets::tar_target(
     name = model_tibble.gene_level.pseudobulk,
@@ -114,7 +114,7 @@ rlang::list2(
       psbulk_feature_dynamic_tibble = model_tibble.gene_level.pseudobulk
     ),
     pattern = map(filtered_matrix.gene_level.pseudobulk, model_tibble.gene_level.pseudobulk),
-    resources = get_tar_resources(RAM_GB_req = 80)
+    resources = get_tar_resources(RAM_GB_req = 60)
   ),
   targets::tar_target(
     name = results_per_model_tibble.gene_level.pseudobulk,

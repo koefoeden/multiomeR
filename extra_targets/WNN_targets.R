@@ -21,9 +21,9 @@ rlang::list2(
         embeddings_list = embedding_matrices.WNN,
         k = aggregation_data_nNNs,
         candidate_k = 200,
-        threads = 15
+        threads = 6
       ),
-      resources = get_tar_resources(cores_req = 15, RAM_GB_req = 60)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
     ),
     targets::tar_target(
       name = clusters_tibble_raw.WNN,
@@ -75,11 +75,11 @@ rlang::list2(
             embeddings_list = retained_embeddings,
             k = aggregation_data_nNNs,
             candidate_k = 200,
-            threads = 15
+            threads = 6
           )
         }
       },
-      resources = get_tar_resources(cores_req = 15, RAM_GB_req = 60)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
     ),
     targets::tar_target(
       name = UMAP_embeddings_tibble.WNN,
@@ -89,7 +89,7 @@ rlang::list2(
         n_neighbors = aggregation_UMAP_nNNs,
         min_dist = aggregation_UMAP_min_dist
       ),
-      resources = get_tar_resources(cores_req = 15, RAM_GB_req = 32)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
     ),
     targets::tar_target(
       name = metadata_w_clusters_tibble.WNN,
@@ -292,7 +292,7 @@ rlang::list2(
           override_suffix = paste0(UMAP_neighbors_seq)
         ),
       pattern = map(UMAP_neighbors_seq),
-      resources = get_tar_resources(cores_req = 15, RAM_GB_req = 32)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
     ),
   ),
 )

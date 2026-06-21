@@ -266,12 +266,12 @@ rlang::list2(
         bam_file = ATAC_bam_file,
         cellranger_barcodes_tsv = cellranger_barcodes_tsv,
         reaction_donors_VCF_file = reaction_donors_VCF_file,
-        cores = 15
+        cores = 6
       )
     } else {
       character(0)
     },
-    resources = get_tar_resources(cores_req = 15)
+    resources = get_tar_resources(cores_req = 6)
   ),
   targets::tar_target(
     name = vireo_donor_ids_tibble,
@@ -284,7 +284,7 @@ rlang::list2(
       cellranger_barcodes_tsv = cellranger_barcodes_tsv,
       cores = 4 # consider decreasing this if increasing memory from 60 > 120 GB doesn't fix the issue.
     ),
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 60)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
   ),
   targets::tar_target(
     name = unfiltered_cells_n_vecs,

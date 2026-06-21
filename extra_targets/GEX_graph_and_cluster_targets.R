@@ -8,10 +8,10 @@ rlang::list2(
       k = aggregation_data_nNNs,
       resolution = aggregation_GEX_cluster_res,
       dim_prefix = "PCA_",
-      threads = 15,
+      threads = 6,
       min_barcodes = aggregation_cluster_min_barcodes
     ),
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 32)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = metadata_w_clusters_tibble.GEX,
@@ -175,7 +175,7 @@ rlang::list2(
     } |>
       save_plots_structured(dyn_suffix_in_subdir = TRUE, override_suffix = paste0(UMAP_n_dims_seq.GEX, "_", UMAP_neighbors_seq)),
     pattern = cross(UMAP_n_dims_seq.GEX, UMAP_neighbors_seq),
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 32)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
   ),
   tarchetypes::tar_file(
     name = harmony.categorical.UMAPs.GEX,

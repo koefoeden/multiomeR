@@ -11,11 +11,11 @@ rlang::list2(
           dims = map_SCAVENGE_embedding_dims,
           k = aggregation_data_nNNs,
           dim_prefix = map_SCAVENGE_dim_prefix,
-          threads = 15
+          threads = 6
         )
       }
     },
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 60)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
   ),
   targets::tar_target(
     name = TRS_tibbles,
@@ -23,13 +23,13 @@ rlang::list2(
     command = get_SCAVENGE_TRS_from_ZScore_record(
       ZScore_record = ZScore_records.single_nucleus,
       NN_graph = graph_matrix,
-      cores = 15,
+      cores = 6,
       permutation_times = genetic_enrichment_SCAVENGE_permutation_times,
       restart_prob = genetic_enrichment_SCAVENGE_restart_prob,
       seed_percent = genetic_enrichment_SCAVENGE_seed_percent
     ),
     pattern = map(ZScore_records.single_nucleus),
-    resources = get_tar_resources(RAM_GB_req = 60, cores_req = 15)
+    resources = get_tar_resources(RAM_GB_req = 60, cores_req = 6)
   ),
   targets::tar_target(
     name = TRS_summary_tibbles,

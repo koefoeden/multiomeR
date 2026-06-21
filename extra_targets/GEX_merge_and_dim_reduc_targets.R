@@ -29,9 +29,9 @@ rlang::list2(
       GEX_PCA_backend = aggregation_GEX_PCA_backend,
       SCT_regress_vars = aggregation_SCT_regress_vars,
       n_components = utils::tail(aggregation_GEX_data_PCs, 1),
-      threads = 15
+      threads = 6
     ),
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 60) # temporary increase for large datasets using SCT_backend until we optimize this.
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60) # temporary increase for large datasets using SCT_backend until we optimize this.
   ),
   targets::tar_target(
     name = metadata_tibble.GEX,
@@ -68,10 +68,10 @@ rlang::list2(
       metadata_tibble = metadata_tibble.GEX,
       harmony_correction_metadata_col_names = aggregation_harmony_correction_metadata_col_names,
       dims = aggregation_GEX_data_PCs,
-      cores = 15,
+      cores = 6,
       dim_prefix = "PCA_"
     ),
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 60)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
   ),
   targets::tar_target(
     name = UMAP_embeddings_tibble.GEX,
@@ -85,7 +85,7 @@ rlang::list2(
       col_prefix = "GEX_UMAP"
     ) |>
       tibble::as_tibble(rownames = "barcode_w_prefix"),
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 32)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = UMAP_embeddings_tibble.GEX_non_harmony,
@@ -99,7 +99,7 @@ rlang::list2(
       col_prefix = "GEX_non_harmony_UMAP"
     ) |>
       tibble::as_tibble(rownames = "barcode_w_prefix"),
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 32)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
   ),
   tarchetypes::tar_file(
     name = VizDimLoadings_plots.GEX,

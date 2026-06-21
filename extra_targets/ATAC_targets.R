@@ -10,7 +10,7 @@ rlang::list2(
           annot_hub_interface = AnnotationHub::AnnotationHub(ask = FALSE)
         )
       }),
-      resources = get_tar_resources(cores_req = 1, RAM_GB_req = 16)
+      resources = get_tar_resources(RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = combined_BPCells_fragment_obj.ATAC,
@@ -334,9 +334,9 @@ rlang::list2(
       command = run_ATAC_LSI_BPCells(
         ATAC_peak_BPCells_matrix = peak_QC_filtered_BPCells_matrix.ATAC,
         n_components = utils::tail(aggregation_ATAC_data_PCs, 1),
-        threads = 15
+        threads = 6
       ),
-      resources = get_tar_resources(cores_req = 15, RAM_GB_req = 60)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
     ),
     targets::tar_target(
       name = LSI_embeddings_tibble.ATAC,
@@ -358,9 +358,9 @@ rlang::list2(
         metadata_tibble = metadata_filtered_tibble.ATAC,
         harmony_correction_metadata_col_names = c(aggregation_harmony_correction_metadata_col_names, aggregation_extra_harmony_covars_ATAC),
         dims = aggregation_ATAC_data_PCs,
-        cores = 15
+        cores = 6
       ),
-      resources = get_tar_resources(cores_req = 15, RAM_GB_req = 60)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
     ),
     targets::tar_target(
       name = UMAP_embeddings_tibble.ATAC,
@@ -372,7 +372,7 @@ rlang::list2(
         min_dist = aggregation_UMAP_min_dist
       ) |>
         tibble::as_tibble(rownames = "barcode_w_prefix"),
-      resources = get_tar_resources(cores_req = 15, RAM_GB_req = 60)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
     ),
     targets::tar_target(
       name = LSI_clusters.ATAC,
@@ -382,10 +382,10 @@ rlang::list2(
         dims = aggregation_ATAC_data_PCs,
         k = aggregation_data_nNNs,
         resolution = aggregation_ATAC_cluster_res,
-        threads = 15,
+        threads = 6,
         min_barcodes = aggregation_cluster_min_barcodes
       ),
-      resources = get_tar_resources(cores_req = 15, RAM_GB_req = 60)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
     ),
     targets::tar_target(
       name = metadata_w_clusters_tibble.ATAC,
@@ -523,9 +523,9 @@ rlang::list2(
       command = aggregate_BPCells_rows_by_group(
         feature_matrix = peak_QC_filtered_BPCells_matrix.ATAC,
         feature_groups = scDblFinder_feature_groups.ATAC,
-        threads = 15
+        threads = 6
       ),
-      resources = get_tar_resources(cores_req = 15, RAM_GB_req = 60)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
     ),
     targets::tar_target(
       name = scDblFinder_results_by_reaction_tibble.ATAC,

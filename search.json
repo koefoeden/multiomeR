@@ -158,7 +158,40 @@
     "href": "outputs_demo.html",
     "title": "5  Outputs",
     "section": "",
-    "text": "The run writes target artifacts to pipelines/processing_and_aggregation/outputs, the targets store configured in _targets.yaml. After the run completes, use the target names shown in the main pipeline output gallery with targets::tar_read() to inspect representative outputs from the same repository-root R session.",
+    "text": "5.1 Objects\nThe public PBMC demo writes its targets store to outputs, as configured in _targets.yaml. That store contains three kinds of output that are useful to inspect after the run:\nMost intermediate and final result objects are saved automatically by targets under outputs/objects during a pipeline run. Read them with targets::tar_read() from a repository-root R session after the demo has completed.\nPlease see the official targets documentation for more info: insert link to most relevant manual page(s)",
+    "crumbs": [
+      "Quickstart: Public PBMC demo",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Outputs</span>"
+    ]
+  },
+  {
+    "objectID": "outputs_demo.html#objects",
+    "href": "outputs_demo.html#objects",
+    "title": "5  Outputs",
+    "section": "",
+    "text": "R\n\ntargets::tar_read(UMAP_embeddings_tibble.WNN.immune_human_2x)\ntargets::tar_read(metadata_w_cell_types_tibble.WNN.immune_human_2x)\ntargets::tar_read(cell_type_marker_tibbles.GEX.immune_human_2x)",
+    "crumbs": [
+      "Quickstart: Public PBMC demo",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Outputs</span>"
+    ]
+  },
+  {
+    "objectID": "outputs_demo.html#files",
+    "href": "outputs_demo.html#files",
+    "title": "5  Outputs",
+    "section": "5.2 Files",
+    "text": "5.2 Files\nFile-producing targets use tarchetypes::tar_file() so that targets tracks files and directories by path, timestamp, and content hash. These targets still appear in targets::tar_read(), but their value is a path rather than an in-memory analysis object.\n\n\nR\n\ntargets::tar_read(cellranger_barcodes_tsv.healthy_PBMC_human)\ntargets::tar_read(aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x)\ntargets::tar_read(consensus_peak_BED.ATAC.immune_human_2x)\n\nInternally, these paths are created with get_structured_file_path(). The helper derives a stable location from the active target name and writes it under outputs/files. Target name parts after dots become parent directories in reverse order, so a target like aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x is placed under:\noutputs/files/immune_human_2x/GEX/\nAfter the public demo run, you should find produced files ordered separated by individual reactions, datasets, and the aggregation name:\noutputs/files/\n|-- healthy_PBMC_human/ (reaction 1 specific files)\n|-- lymphoma_lymph_human/ (reaction 2 specific files)\n`-- immune_human_2x/ (aggregation-level files)\nPlease see the official targets documentation for more info: insert link to most relevant manual page(s)",
+    "crumbs": [
+      "Quickstart: Public PBMC demo",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>Outputs</span>"
+    ]
+  },
+  {
+    "objectID": "outputs_demo.html#plots",
+    "href": "outputs_demo.html#plots",
+    "title": "5  Outputs",
+    "section": "5.3 Plots",
+    "text": "5.3 Plots\nReview plots are file targets saved with save_plots_structured(). Like get_structured_file_path(), the helper derives paths from the target name, but writes under outputs/plots. Single plots become one image file. Lists of plots become directories containing numbered image files.\nFor example, a target named TF_activity_dot_plot.ATAC.immune_human_2x writes to:\noutputs/plots/immune_human_2x/ATAC/TF_activity_dot_plot.png\nTargets that return named plot lists write one file per list element:\noutputs/plots/immune_human_2x/GEX/categorical_bars_plots/\n|-- 01_PCA_harmony_SNN_cluster_named.png\n|-- 02_PCA_harmony_SNN_cluster_cell_type.png\n`-- ...\nAs with the files-category, the output plots are organized by the individual reactions, datasets, and aggregations processed:\noutputs/plots/\n|-- healthy_PBMC_human/ (reaction 1 specific plots)\n|-- lymphoma_lymph_human/ (reaction 2 specific plots)\n|-- immune_human_dataset/ (dataset-level plots)\n`-- immune_human_2x/ (aggregation-level plots)\nSee the main pipeline output gallery for selected plots.\nThe path structure is meant to make the output location predictable from the target name. Use tar_read() when you want the exact tracked path for a plot target, and browse outputs/plots when you want to actually inspect the plots.",
     "crumbs": [
       "Quickstart: Public PBMC demo",
       "<span class='chapter-number'>5</span>  <span class='chapter-title'>Outputs</span>"
@@ -486,155 +519,166 @@
   {
     "objectID": "output_gallery_main.html",
     "href": "output_gallery_main.html",
-    "title": "14  Main pipeline output gallery",
+    "title": "14  Main pipeline",
     "section": "",
     "text": "14.1 Parallel reaction pre-processing\nThis gallery shows representative outputs produced by multiomeR on the public PBMC demo. It is meant to give a quick sense of the QC summaries and multimodal embeddings that the main pipeline can produce before you run it on your own data.\nEach card includes the corresponding targets target name so you can connect the displayed output back to the workflow.",
     "crumbs": [
       "Output gallery",
-      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Main pipeline output gallery</span>"
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Main pipeline</span>"
     ]
   },
   {
     "objectID": "output_gallery_main.html#parallel-reaction-pre-processing",
     "href": "output_gallery_main.html#parallel-reaction-pre-processing",
-    "title": "14  Main pipeline output gallery",
+    "title": "14  Main pipeline",
     "section": "",
     "text": "QC metric distributions\n\n\nCompares QC metric distributions across reactions to reveal outliers before aggregation.\n\n\nper_dataset_QC_violins.immune_human_dataset\n\n\n\n\n\nQC exclusion overlaps\n\n\nShows how different QC filters overlap when excluding low-quality cells.\n\n\nper_dataset_excluded_upset.immune_human_dataset",
     "crumbs": [
       "Output gallery",
-      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Main pipeline output gallery</span>"
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Main pipeline</span>"
     ]
   },
   {
     "objectID": "output_gallery_main.html#gex",
     "href": "output_gallery_main.html#gex",
-    "title": "14  Main pipeline output gallery",
+    "title": "14  Main pipeline",
     "section": "14.2 GEX",
     "text": "14.2 GEX\n\n\n\n\nHarmony UMAP\n\n\nShows how cells separate in the gene-expression embedding after batch-aware integration.\n\n\nharmony.categorical.UMAPs.GEX.immune_human_2x\n\n\n\n\n\nMarker dot plot\n\n\nHighlights marker gene patterns that distinguish the inferred cell groups.\n\n\nmarkers_dot_plot.GEX.immune_human_2x",
     "crumbs": [
       "Output gallery",
-      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Main pipeline output gallery</span>"
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Main pipeline</span>"
     ]
   },
   {
     "objectID": "output_gallery_main.html#atac",
     "href": "output_gallery_main.html#atac",
-    "title": "14  Main pipeline output gallery",
+    "title": "14  Main pipeline",
     "section": "14.3 ATAC",
     "text": "14.3 ATAC\n\n\n\n\nHarmony UMAP\n\n\nShows how cells separate in the chromatin-accessibility embedding after batch-aware integration.\n\n\ncategorical.UMAPs.ATAC.immune_human_2x\n\n\n\n\n\nTF activity dot plot\n\n\nSummarizes transcription-factor activity patterns across cell groups.\n\n\nTF_activity_dot_plot.ATAC.immune_human_2x",
     "crumbs": [
       "Output gallery",
-      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Main pipeline output gallery</span>"
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Main pipeline</span>"
     ]
   },
   {
     "objectID": "output_gallery_main.html#wnn",
     "href": "output_gallery_main.html#wnn",
-    "title": "14  Main pipeline output gallery",
+    "title": "14  Main pipeline",
     "section": "14.4 WNN",
     "text": "14.4 WNN\n\n\n\n\nHarmony UMAP\n\n\nCombines RNA and ATAC information to show the integrated multimodal cell-state structure.\n\n\ncategorical.UMAPs.WNN.immune_human_2x\n\n\n\n\n\nModality weights\n\n\nShows how RNA and ATAC evidence contribute differently across cell groups.\n\n\nATAC_vs_RNA_weight_boxplots_plot.WNN.immune_human_2x",
     "crumbs": [
       "Output gallery",
-      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Main pipeline output gallery</span>"
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Main pipeline</span>"
     ]
   },
   {
     "objectID": "output_gallery_differential_analyses.html",
     "href": "output_gallery_differential_analyses.html",
-    "title": "15  Differential analyses output gallery",
+    "title": "15  Differential analyses",
     "section": "",
     "text": "15.1 Gene expression",
     "crumbs": [
       "Output gallery",
-      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Differential analyses output gallery</span>"
+      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Differential analyses</span>"
     ]
   },
   {
     "objectID": "output_gallery_differential_analyses.html#gene-expression",
     "href": "output_gallery_differential_analyses.html#gene-expression",
-    "title": "15  Differential analyses output gallery",
+    "title": "15  Differential analyses",
     "section": "",
     "text": "Volcano plot\n\n\nHighlights genes with the strongest expression differences for one comparison.\n\n\nvolcano_plots_files.DGE.differential_analyses.immune_human_2x_f38cff8e83d87033\n\n\n\n\n\nSignificant-elements summary\n\n\nSummarizes the number and direction of significant expression changes across comparisons.\n\n\nsignificant_elements_plot.DGE.differential_analyses.immune_human_2x",
     "crumbs": [
       "Output gallery",
-      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Differential analyses output gallery</span>"
+      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Differential analyses</span>"
     ]
   },
   {
     "objectID": "output_gallery_differential_analyses.html#chromatin-accessibility",
     "href": "output_gallery_differential_analyses.html#chromatin-accessibility",
-    "title": "15  Differential analyses output gallery",
+    "title": "15  Differential analyses",
     "section": "15.2 Chromatin accessibility",
     "text": "15.2 Chromatin accessibility\n\n\n\n\nVolcano plot\n\n\nHighlights regulatory regions with the strongest accessibility differences for one comparison.\n\n\nvolcano_plots_files.DCA.differential_analyses.immune_human_2x_dcd38387c49741f1\n\n\n\n\n\nSignificant-elements summary\n\n\nSummarizes the number and direction of significant accessibility changes across comparisons.\n\n\nsignificant_elements_plot.DCA.differential_analyses.immune_human_2x",
     "crumbs": [
       "Output gallery",
-      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Differential analyses output gallery</span>"
+      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Differential analyses</span>"
     ]
   },
   {
     "objectID": "output_gallery_differential_analyses.html#transcription-factor-activity",
     "href": "output_gallery_differential_analyses.html#transcription-factor-activity",
-    "title": "15  Differential analyses output gallery",
+    "title": "15  Differential analyses",
     "section": "15.3 Transcription-factor activity",
     "text": "15.3 Transcription-factor activity\n\n\n\n\nVolcano plot\n\n\nHighlights transcription factors with the strongest activity differences for one comparison.\n\n\nvolcano_plots_files.DTFA.differential_analyses.immune_human_2x_6eb8983d448a96ed\n\n\n\n\n\nSignificant-elements summary\n\n\nSummarizes the number and direction of significant transcription-factor activity changes across comparisons.\n\n\nsignificant_elements_plot.DTFA.differential_analyses.immune_human_2x",
     "crumbs": [
       "Output gallery",
-      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Differential analyses output gallery</span>"
+      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Differential analyses</span>"
     ]
   },
   {
     "objectID": "output_gallery_differential_analyses.html#cell-type-composition",
     "href": "output_gallery_differential_analyses.html#cell-type-composition",
-    "title": "15  Differential analyses output gallery",
+    "title": "15  Differential analyses",
     "section": "15.4 Cell-type composition",
     "text": "15.4 Cell-type composition\n\n\n\n\nModelled composition change\n\n\nShows how cell-type proportions vary with sample-level conditions or phenotypes.\n\n\nmodel_change_per_unit_plot.DCTC.differential_analyses.immune_human_2x\n\n\n\n\n\nCoefficient forest\n\n\nDisplays effect estimates and uncertainty for cell-type composition changes.\n\n\nmodel_coefs_forest.DCTC.differential_analyses.immune_human_2x",
     "crumbs": [
       "Output gallery",
-      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Differential analyses output gallery</span>"
+      "<span class='chapter-number'>15</span>  <span class='chapter-title'>Differential analyses</span>"
     ]
   },
   {
     "objectID": "output_gallery_genetic_enrichment.html",
     "href": "output_gallery_genetic_enrichment.html",
-    "title": "16  Genetic enrichment output gallery",
+    "title": "16  Genetic enrichment",
     "section": "",
-    "text": "16.1 Pseudobulk-first",
+    "text": "16.1 Pseudobulk-first chromVAR (raw)",
     "crumbs": [
       "Output gallery",
-      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Genetic enrichment output gallery</span>"
+      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Genetic enrichment</span>"
     ]
   },
   {
-    "objectID": "output_gallery_genetic_enrichment.html#pseudobulk-first",
-    "href": "output_gallery_genetic_enrichment.html#pseudobulk-first",
-    "title": "16  Genetic enrichment output gallery",
+    "objectID": "output_gallery_genetic_enrichment.html#pseudobulk-first-chromvar-raw",
+    "href": "output_gallery_genetic_enrichment.html#pseudobulk-first-chromvar-raw",
+    "title": "16  Genetic enrichment",
     "section": "",
-    "text": "Preview pending\n\n\nTrait-level enrichment dotplot\n\n\nShows GWAS-by-contrast pseudobulk chromVAR differential activity across configured comparisons.\n\n\ndotplot.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x\n\n\n\n\nPreview pending\n\n\nGene-level volcano plot\n\n\nHighlights GWAS-gene chromVAR effects with the strongest pseudobulk differential activity.\n\n\nvolcano_plot_files.gene_level.pseudobulk.genetic_enrichment.PBMC_human_6x\n\n\n\n\nPreview pending\n\n\nLocus sanity-check tracks\n\n\nPlaces top GWAS-gene chromVAR effects back into their local credible-set and accessibility context.\n\n\nlocus_tracks_plot_files.gene_level.pseudobulk.genetic_enrichment.PBMC_human_6x",
+    "text": "Trait-level Z-score heatmap\n\n\nSummarizes global pseudobulk chromVAR Z-scores across cell groups and GWAS traits before differential modeling.\n\n\nZScores_heatmap.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x\n\n\n\n\n\nTrait-level Z-score boxplots\n\n\nShows global pseudobulk chromVAR Z-score distributions across cell groups before differential modeling.\n\n\nZScores_boxplot.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x",
     "crumbs": [
       "Output gallery",
-      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Genetic enrichment output gallery</span>"
+      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Genetic enrichment</span>"
     ]
   },
   {
-    "objectID": "output_gallery_genetic_enrichment.html#single-nucleus-without-scavenge",
-    "href": "output_gallery_genetic_enrichment.html#single-nucleus-without-scavenge",
-    "title": "16  Genetic enrichment output gallery",
-    "section": "16.2 Single-nucleus without SCAVENGE",
-    "text": "16.2 Single-nucleus without SCAVENGE\n\n\n\n\nEnrichment dotplot\n\n\nConnects genetic association evidence to cell groups through single-nucleus regulatory enrichment patterns.\n\n\nZScores_dotplot.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x\n\n\n\n\nPreview pending\n\n\nEnrichment score boxplots\n\n\nShows the distribution of summarized single-nucleus chromVAR enrichment scores across cell groups.\n\n\nZScores_boxplot.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x",
+    "objectID": "output_gallery_genetic_enrichment.html#pseudobulk-first-chromvar-modelled",
+    "href": "output_gallery_genetic_enrichment.html#pseudobulk-first-chromvar-modelled",
+    "title": "16  Genetic enrichment",
+    "section": "16.2 Pseudobulk-first chromVAR (modelled)",
+    "text": "16.2 Pseudobulk-first chromVAR (modelled)\n\n\n\n\nTrait-level coefficient ranges\n\n\nShows pseudobulk chromVAR model coefficients and approximate uncertainty intervals across contrasts within each GWAS.\n\n\ncoefficient_ranges.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x\n\n\n\n\n\nGene-level volcano plot\n\n\nHighlights GWAS-gene chromVAR effects with the strongest pseudobulk differential activity.\n\n\nvolcano_plot_files.gene_level.pseudobulk.genetic_enrichment.PBMC_human_6x\n\n\n\n\n\nLocus sanity-check tracks\n\n\nPlaces top GWAS-gene chromVAR effects back into their local credible-set and accessibility context.\n\n\nlocus_tracks_plot_files.gene_level.pseudobulk.genetic_enrichment.PBMC_human_6x",
     "crumbs": [
       "Output gallery",
-      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Genetic enrichment output gallery</span>"
+      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Genetic enrichment</span>"
     ]
   },
   {
-    "objectID": "output_gallery_genetic_enrichment.html#single-nucleus-with-scavenge",
-    "href": "output_gallery_genetic_enrichment.html#single-nucleus-with-scavenge",
-    "title": "16  Genetic enrichment output gallery",
-    "section": "16.3 Single-nucleus with SCAVENGE",
-    "text": "16.3 Single-nucleus with SCAVENGE\n\n\n\nPreview pending\n\n\nSCAVENGE dotplot\n\n\nSummarizes graph-propagated trait relevance scores across cell groups and GWAS traits.\n\n\nTRS_dotplot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x\n\n\n\n\n\nTrait relevance intervals\n\n\nShows how trait relevance scores vary across cell groups for selected genetic traits.\n\n\nTRS_by_cluster_boxplot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x\n\n\n\n\nPreview pending\n\n\nTrait relevance UMAP\n\n\nProjects one graph-propagated trait relevance score across the WNN single-nucleus embedding.\n\n\nTRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x",
+    "objectID": "output_gallery_genetic_enrichment.html#single-nucleus-chromvar",
+    "href": "output_gallery_genetic_enrichment.html#single-nucleus-chromvar",
+    "title": "16  Genetic enrichment",
+    "section": "16.3 Single-nucleus chromVAR",
+    "text": "16.3 Single-nucleus chromVAR\n\n\n\n\nEnrichment heatmap\n\n\nConnects genetic association evidence to cell groups through single-nucleus regulatory enrichment patterns.\n\n\nZScores_heatmap.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x\n\n\n\n\n\nEnrichment score boxplots\n\n\nShows the distribution of summarized single-nucleus chromVAR enrichment scores across cell groups.\n\n\nZScores_boxplot.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x",
     "crumbs": [
       "Output gallery",
-      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Genetic enrichment output gallery</span>"
+      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Genetic enrichment</span>"
+    ]
+  },
+  {
+    "objectID": "output_gallery_genetic_enrichment.html#single-nucleus-chromvarscavenge",
+    "href": "output_gallery_genetic_enrichment.html#single-nucleus-chromvarscavenge",
+    "title": "16  Genetic enrichment",
+    "section": "16.4 Single-nucleus chromVAR+SCAVENGE",
+    "text": "16.4 Single-nucleus chromVAR+SCAVENGE\nThese plots show SCAVENGE trait relevance scores. The heatmap and boxplots summarize scores by cell type and GWAS trait, while the UMAPs show raw GWAS-specific trait relevance scores across individual nuclei.\n\n\n\n\nCelltype by GWAS heatmap\n\n\nSummarizes graph-propagated trait relevance scores across cell groups and GWAS traits.\n\n\nTRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x\n\n\n\n\n\nCelltype by GWAS boxplots\n\n\nShows how trait relevance scores vary across cell groups for selected genetic traits.\n\n\nTRS_by_cluster_boxplot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x\n\n\n\n\n\nGWAS-specific UMAPs\n\n\nProjects one graph-propagated trait relevance score across the WNN single-nucleus embedding.\n\n\nTRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x",
+    "crumbs": [
+      "Output gallery",
+      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Genetic enrichment</span>"
     ]
   }
 ]

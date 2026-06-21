@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>16&nbsp; Genetic enrichment output gallery – multiomeR Manual</title>
+<title>16&nbsp; Genetic enrichment – multiomeR Manual</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -85,7 +85,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./output_gallery_main.html">Output gallery</a></li><li class="breadcrumb-item"><a href="./output_gallery_genetic_enrichment.html"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Genetic enrichment output gallery</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./output_gallery_main.html">Output gallery</a></li><li class="breadcrumb-item"><a href="./output_gallery_genetic_enrichment.html"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -258,19 +258,19 @@ ul.task-list li input[type="checkbox"] {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./output_gallery_main.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Main pipeline output gallery</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Main pipeline</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./output_gallery_differential_analyses.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Differential analyses output gallery</span></span></a>
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Differential analyses</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./output_gallery_genetic_enrichment.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Genetic enrichment output gallery</span></span></a>
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></span></a>
   </div>
 </li>
       </ul>
@@ -285,18 +285,19 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#pseudobulk-first" id="toc-pseudobulk-first" class="nav-link active" data-scroll-target="#pseudobulk-first"><span class="header-section-number">16.1</span> Pseudobulk-first</a></li>
-  <li><a href="#single-nucleus-without-scavenge" id="toc-single-nucleus-without-scavenge" class="nav-link" data-scroll-target="#single-nucleus-without-scavenge"><span class="header-section-number">16.2</span> Single-nucleus without SCAVENGE</a></li>
-  <li><a href="#single-nucleus-with-scavenge" id="toc-single-nucleus-with-scavenge" class="nav-link" data-scroll-target="#single-nucleus-with-scavenge"><span class="header-section-number">16.3</span> Single-nucleus with SCAVENGE</a></li>
+  <li><a href="#pseudobulk-first-chromvar-raw" id="toc-pseudobulk-first-chromvar-raw" class="nav-link active" data-scroll-target="#pseudobulk-first-chromvar-raw"><span class="header-section-number">16.1</span> Pseudobulk-first chromVAR (raw)</a></li>
+  <li><a href="#pseudobulk-first-chromvar-modelled" id="toc-pseudobulk-first-chromvar-modelled" class="nav-link" data-scroll-target="#pseudobulk-first-chromvar-modelled"><span class="header-section-number">16.2</span> Pseudobulk-first chromVAR (modelled)</a></li>
+  <li><a href="#single-nucleus-chromvar" id="toc-single-nucleus-chromvar" class="nav-link" data-scroll-target="#single-nucleus-chromvar"><span class="header-section-number">16.3</span> Single-nucleus chromVAR</a></li>
+  <li><a href="#single-nucleus-chromvarscavenge" id="toc-single-nucleus-chromvarscavenge" class="nav-link" data-scroll-target="#single-nucleus-chromvarscavenge"><span class="header-section-number">16.4</span> Single-nucleus chromVAR+SCAVENGE</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/output_gallery_genetic_enrichment.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./output_gallery_main.html">Output gallery</a></li><li class="breadcrumb-item"><a href="./output_gallery_genetic_enrichment.html"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Genetic enrichment output gallery</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./output_gallery_main.html">Output gallery</a></li><li class="breadcrumb-item"><a href="./output_gallery_genetic_enrichment.html"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Genetic enrichment output gallery</span></h1>
+<h1 class="title"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></h1>
 </div>
 
 
@@ -313,27 +314,52 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="pseudobulk-first" class="level2" data-number="16.1">
-<h2 data-number="16.1" class="anchored" data-anchor-id="pseudobulk-first"><span class="header-section-number">16.1</span> Pseudobulk-first</h2>
+<section id="pseudobulk-first-chromvar-raw" class="level2" data-number="16.1">
+<h2 data-number="16.1" class="anchored" data-anchor-id="pseudobulk-first-chromvar-raw"><span class="header-section-number">16.1</span> Pseudobulk-first chromVAR (raw)</h2>
 <div class="output-gallery-grid">
 <article class="output-gallery-card">
-<div class="output-gallery-placeholder">
-Preview pending
-</div>
+<a href="gallery_assets/genetic_enrichment/pseudobulk_first/trait_level_zscores_heatmap.png"><img src="gallery_assets/genetic_enrichment/pseudobulk_first/trait_level_zscores_heatmap.png" alt="Trait-level Z-score heatmap"></a>
 <p class="output-gallery-title">
-Trait-level enrichment dotplot
+Trait-level Z-score heatmap
 </p>
 <p>
-Shows GWAS-by-contrast pseudobulk chromVAR differential activity across configured comparisons.
+Summarizes global pseudobulk chromVAR Z-scores across cell groups and GWAS traits before differential modeling.
 </p>
 <p class="output-gallery-target">
-<code>dotplot.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x</code>
+<code>ZScores_heatmap.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x</code>
 </p>
 </article>
 <article class="output-gallery-card">
-<div class="output-gallery-placeholder">
-Preview pending
+<a href="gallery_assets/genetic_enrichment/pseudobulk_first/trait_level_zscores_boxplot.png"><img src="gallery_assets/genetic_enrichment/pseudobulk_first/trait_level_zscores_boxplot.png" alt="Trait-level Z-score boxplots"></a>
+<p class="output-gallery-title">
+Trait-level Z-score boxplots
+</p>
+<p>
+Shows global pseudobulk chromVAR Z-score distributions across cell groups before differential modeling.
+</p>
+<p class="output-gallery-target">
+<code>ZScores_boxplot.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x</code>
+</p>
+</article>
 </div>
+</section>
+<section id="pseudobulk-first-chromvar-modelled" class="level2" data-number="16.2">
+<h2 data-number="16.2" class="anchored" data-anchor-id="pseudobulk-first-chromvar-modelled"><span class="header-section-number">16.2</span> Pseudobulk-first chromVAR (modelled)</h2>
+<div class="output-gallery-grid">
+<article class="output-gallery-card">
+<a href="gallery_assets/genetic_enrichment/pseudobulk_first/trait_level_coefficient_ranges.png"><img src="gallery_assets/genetic_enrichment/pseudobulk_first/trait_level_coefficient_ranges.png" alt="Trait-level coefficient ranges"></a>
+<p class="output-gallery-title">
+Trait-level coefficient ranges
+</p>
+<p>
+Shows pseudobulk chromVAR model coefficients and approximate uncertainty intervals across contrasts within each GWAS.
+</p>
+<p class="output-gallery-target">
+<code>coefficient_ranges.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x</code>
+</p>
+</article>
+<article class="output-gallery-card">
+<a href="gallery_assets/genetic_enrichment/pseudobulk_first/gene_level_volcano_plot.png"><img src="gallery_assets/genetic_enrichment/pseudobulk_first/gene_level_volcano_plot.png" alt="Gene-level volcano plot"></a>
 <p class="output-gallery-title">
 Gene-level volcano plot
 </p>
@@ -345,9 +371,7 @@ Highlights GWAS-gene chromVAR effects with the strongest pseudobulk differential
 </p>
 </article>
 <article class="output-gallery-card">
-<div class="output-gallery-placeholder">
-Preview pending
-</div>
+<a href="gallery_assets/genetic_enrichment/pseudobulk_first/locus_tracks.png"><img src="gallery_assets/genetic_enrichment/pseudobulk_first/locus_tracks.png" alt="Locus sanity-check tracks"></a>
 <p class="output-gallery-title">
 Locus sanity-check tracks
 </p>
@@ -360,25 +384,23 @@ Places top GWAS-gene chromVAR effects back into their local credible-set and acc
 </article>
 </div>
 </section>
-<section id="single-nucleus-without-scavenge" class="level2" data-number="16.2">
-<h2 data-number="16.2" class="anchored" data-anchor-id="single-nucleus-without-scavenge"><span class="header-section-number">16.2</span> Single-nucleus without SCAVENGE</h2>
+<section id="single-nucleus-chromvar" class="level2" data-number="16.3">
+<h2 data-number="16.3" class="anchored" data-anchor-id="single-nucleus-chromvar"><span class="header-section-number">16.3</span> Single-nucleus chromVAR</h2>
 <div class="output-gallery-grid">
 <article class="output-gallery-card">
-<a href="gallery_assets/genetic_enrichment/gwas_chromvar_dotplot.png"><img src="gallery_assets/genetic_enrichment/gwas_chromvar_dotplot.png" alt="Enrichment dotplot"></a>
+<a href="gallery_assets/genetic_enrichment/gwas_chromvar_heatmap.png"><img src="gallery_assets/genetic_enrichment/gwas_chromvar_heatmap.png" alt="Enrichment heatmap"></a>
 <p class="output-gallery-title">
-Enrichment dotplot
+Enrichment heatmap
 </p>
 <p>
 Connects genetic association evidence to cell groups through single-nucleus regulatory enrichment patterns.
 </p>
 <p class="output-gallery-target">
-<code>ZScores_dotplot.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x</code>
+<code>ZScores_heatmap.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x</code>
 </p>
 </article>
 <article class="output-gallery-card">
-<div class="output-gallery-placeholder">
-Preview pending
-</div>
+<a href="gallery_assets/genetic_enrichment/single_nucleus_without_scavenge/zscores_boxplot.png"><img src="gallery_assets/genetic_enrichment/single_nucleus_without_scavenge/zscores_boxplot.png" alt="Enrichment score boxplots"></a>
 <p class="output-gallery-title">
 Enrichment score boxplots
 </p>
@@ -391,27 +413,26 @@ Shows the distribution of summarized single-nucleus chromVAR enrichment scores a
 </article>
 </div>
 </section>
-<section id="single-nucleus-with-scavenge" class="level2" data-number="16.3">
-<h2 data-number="16.3" class="anchored" data-anchor-id="single-nucleus-with-scavenge"><span class="header-section-number">16.3</span> Single-nucleus with SCAVENGE</h2>
+<section id="single-nucleus-chromvarscavenge" class="level2" data-number="16.4">
+<h2 data-number="16.4" class="anchored" data-anchor-id="single-nucleus-chromvarscavenge"><span class="header-section-number">16.4</span> Single-nucleus chromVAR+SCAVENGE</h2>
+<p>These plots show SCAVENGE trait relevance scores. The heatmap and boxplots summarize scores by cell type and GWAS trait, while the UMAPs show raw GWAS-specific trait relevance scores across individual nuclei.</p>
 <div class="output-gallery-grid">
 <article class="output-gallery-card">
-<div class="output-gallery-placeholder">
-Preview pending
-</div>
+<a href="gallery_assets/genetic_enrichment/single_nucleus_with_scavenge/TRS_heatmap.png"><img src="gallery_assets/genetic_enrichment/single_nucleus_with_scavenge/TRS_heatmap.png" alt="Celltype by GWAS heatmap"></a>
 <p class="output-gallery-title">
-SCAVENGE dotplot
+Celltype by GWAS heatmap
 </p>
 <p>
 Summarizes graph-propagated trait relevance scores across cell groups and GWAS traits.
 </p>
 <p class="output-gallery-target">
-<code>TRS_dotplot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x</code>
+<code>TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x</code>
 </p>
 </article>
 <article class="output-gallery-card">
-<a href="gallery_assets/genetic_enrichment/TRS_by_cluster_boxplot.png"><img src="gallery_assets/genetic_enrichment/TRS_by_cluster_boxplot.png" alt="Trait relevance intervals"></a>
+<a href="gallery_assets/genetic_enrichment/TRS_by_cluster_boxplot.png"><img src="gallery_assets/genetic_enrichment/TRS_by_cluster_boxplot.png" alt="Celltype by GWAS boxplots"></a>
 <p class="output-gallery-title">
-Trait relevance intervals
+Celltype by GWAS boxplots
 </p>
 <p>
 Shows how trait relevance scores vary across cell groups for selected genetic traits.
@@ -421,11 +442,9 @@ Shows how trait relevance scores vary across cell groups for selected genetic tr
 </p>
 </article>
 <article class="output-gallery-card">
-<div class="output-gallery-placeholder">
-Preview pending
-</div>
+<a href="gallery_assets/genetic_enrichment/single_nucleus_with_scavenge/TRS_UMAP.png"><img src="gallery_assets/genetic_enrichment/single_nucleus_with_scavenge/TRS_UMAP.png" alt="GWAS-specific UMAPs"></a>
 <p class="output-gallery-title">
-Trait relevance UMAP
+GWAS-specific UMAPs
 </p>
 <p>
 Projects one graph-propagated trait relevance score across the WNN single-nucleus embedding.
@@ -842,8 +861,8 @@ Projects one graph-propagated trait relevance score across the WNN single-nucleu
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./output_gallery_differential_analyses.html" class="pagination-link" aria-label="Differential analyses output gallery">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Differential analyses output gallery</span></span>
+      <a href="./output_gallery_differential_analyses.html" class="pagination-link" aria-label="Differential analyses">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Differential analyses</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">

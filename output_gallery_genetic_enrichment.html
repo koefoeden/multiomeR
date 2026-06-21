@@ -280,8 +280,16 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#pseudobulk-first" id="toc-pseudobulk-first" class="nav-link active" data-scroll-target="#pseudobulk-first"><span class="header-section-number">16.1</span> Pseudobulk-first</a></li>
+  <li><a href="#single-nucleus-without-scavenge" id="toc-single-nucleus-without-scavenge" class="nav-link" data-scroll-target="#single-nucleus-without-scavenge"><span class="header-section-number">16.2</span> Single-nucleus without SCAVENGE</a></li>
+  <li><a href="#single-nucleus-with-scavenge" id="toc-single-nucleus-with-scavenge" class="nav-link" data-scroll-target="#single-nucleus-with-scavenge"><span class="header-section-number">16.3</span> Single-nucleus with SCAVENGE</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/output_gallery_genetic_enrichment.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -305,6 +313,55 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<section id="pseudobulk-first" class="level2" data-number="16.1">
+<h2 data-number="16.1" class="anchored" data-anchor-id="pseudobulk-first"><span class="header-section-number">16.1</span> Pseudobulk-first</h2>
+<div class="output-gallery-grid">
+<article class="output-gallery-card">
+<div class="output-gallery-placeholder">
+Preview pending
+</div>
+<p class="output-gallery-title">
+Trait-level enrichment dotplot
+</p>
+<p>
+Shows GWAS-by-contrast pseudobulk chromVAR differential activity across configured comparisons.
+</p>
+<p class="output-gallery-target">
+<code>dotplot.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x</code>
+</p>
+</article>
+<article class="output-gallery-card">
+<div class="output-gallery-placeholder">
+Preview pending
+</div>
+<p class="output-gallery-title">
+Gene-level volcano plot
+</p>
+<p>
+Highlights GWAS-gene chromVAR effects with the strongest pseudobulk differential activity.
+</p>
+<p class="output-gallery-target">
+<code>volcano_plot_files.gene_level.pseudobulk.genetic_enrichment.PBMC_human_6x</code>
+</p>
+</article>
+<article class="output-gallery-card">
+<div class="output-gallery-placeholder">
+Preview pending
+</div>
+<p class="output-gallery-title">
+Locus sanity-check tracks
+</p>
+<p>
+Places top GWAS-gene chromVAR effects back into their local credible-set and accessibility context.
+</p>
+<p class="output-gallery-target">
+<code>locus_tracks_plot_files.gene_level.pseudobulk.genetic_enrichment.PBMC_human_6x</code>
+</p>
+</article>
+</div>
+</section>
+<section id="single-nucleus-without-scavenge" class="level2" data-number="16.2">
+<h2 data-number="16.2" class="anchored" data-anchor-id="single-nucleus-without-scavenge"><span class="header-section-number">16.2</span> Single-nucleus without SCAVENGE</h2>
 <div class="output-gallery-grid">
 <article class="output-gallery-card">
 <a href="gallery_assets/genetic_enrichment/gwas_chromvar_dotplot.png"><img src="gallery_assets/genetic_enrichment/gwas_chromvar_dotplot.png" alt="Enrichment dotplot"></a>
@@ -312,10 +369,43 @@ ul.task-list li input[type="checkbox"] {
 Enrichment dotplot
 </p>
 <p>
-Connects genetic association evidence to cell groups through regulatory enrichment patterns.
+Connects genetic association evidence to cell groups through single-nucleus regulatory enrichment patterns.
 </p>
 <p class="output-gallery-target">
 <code>ZScores_dotplot.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x</code>
+</p>
+</article>
+<article class="output-gallery-card">
+<div class="output-gallery-placeholder">
+Preview pending
+</div>
+<p class="output-gallery-title">
+Enrichment score boxplots
+</p>
+<p>
+Shows the distribution of summarized single-nucleus chromVAR enrichment scores across cell groups.
+</p>
+<p class="output-gallery-target">
+<code>ZScores_boxplot.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x</code>
+</p>
+</article>
+</div>
+</section>
+<section id="single-nucleus-with-scavenge" class="level2" data-number="16.3">
+<h2 data-number="16.3" class="anchored" data-anchor-id="single-nucleus-with-scavenge"><span class="header-section-number">16.3</span> Single-nucleus with SCAVENGE</h2>
+<div class="output-gallery-grid">
+<article class="output-gallery-card">
+<div class="output-gallery-placeholder">
+Preview pending
+</div>
+<p class="output-gallery-title">
+SCAVENGE dotplot
+</p>
+<p>
+Summarizes graph-propagated trait relevance scores across cell groups and GWAS traits.
+</p>
+<p class="output-gallery-target">
+<code>TRS_dotplot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x</code>
 </p>
 </article>
 <article class="output-gallery-card">
@@ -330,9 +420,24 @@ Shows how trait relevance scores vary across cell groups for selected genetic tr
 <code>TRS_by_cluster_boxplot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x</code>
 </p>
 </article>
+<article class="output-gallery-card">
+<div class="output-gallery-placeholder">
+Preview pending
+</div>
+<p class="output-gallery-title">
+Trait relevance UMAP
+</p>
+<p>
+Projects one graph-propagated trait relevance score across the WNN single-nucleus embedding.
+</p>
+<p class="output-gallery-target">
+<code>TRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x</code>
+</p>
+</article>
 </div>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -749,4 +854,4 @@ Shows how trait relevance scores vary across cell groups for selected genetic tr
 
 
 
-<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/output_gallery_genetic_enrichment.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/output_gallery_genetic_enrichment.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>

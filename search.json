@@ -598,7 +598,40 @@
     "href": "output_gallery_genetic_enrichment.html",
     "title": "16  Genetic enrichment output gallery",
     "section": "",
-    "text": "Enrichment dotplot\n\n\nConnects genetic association evidence to cell groups through regulatory enrichment patterns.\n\n\nZScores_dotplot.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x\n\n\n\n\n\nTrait relevance intervals\n\n\nShows how trait relevance scores vary across cell groups for selected genetic traits.\n\n\nTRS_by_cluster_boxplot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x",
+    "text": "16.1 Pseudobulk-first",
+    "crumbs": [
+      "Output gallery",
+      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Genetic enrichment output gallery</span>"
+    ]
+  },
+  {
+    "objectID": "output_gallery_genetic_enrichment.html#pseudobulk-first",
+    "href": "output_gallery_genetic_enrichment.html#pseudobulk-first",
+    "title": "16  Genetic enrichment output gallery",
+    "section": "",
+    "text": "Preview pending\n\n\nTrait-level enrichment dotplot\n\n\nShows GWAS-by-contrast pseudobulk chromVAR differential activity across configured comparisons.\n\n\ndotplot.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x\n\n\n\n\nPreview pending\n\n\nGene-level volcano plot\n\n\nHighlights GWAS-gene chromVAR effects with the strongest pseudobulk differential activity.\n\n\nvolcano_plot_files.gene_level.pseudobulk.genetic_enrichment.PBMC_human_6x\n\n\n\n\nPreview pending\n\n\nLocus sanity-check tracks\n\n\nPlaces top GWAS-gene chromVAR effects back into their local credible-set and accessibility context.\n\n\nlocus_tracks_plot_files.gene_level.pseudobulk.genetic_enrichment.PBMC_human_6x",
+    "crumbs": [
+      "Output gallery",
+      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Genetic enrichment output gallery</span>"
+    ]
+  },
+  {
+    "objectID": "output_gallery_genetic_enrichment.html#single-nucleus-without-scavenge",
+    "href": "output_gallery_genetic_enrichment.html#single-nucleus-without-scavenge",
+    "title": "16  Genetic enrichment output gallery",
+    "section": "16.2 Single-nucleus without SCAVENGE",
+    "text": "16.2 Single-nucleus without SCAVENGE\n\n\n\n\nEnrichment dotplot\n\n\nConnects genetic association evidence to cell groups through single-nucleus regulatory enrichment patterns.\n\n\nZScores_dotplot.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x\n\n\n\n\nPreview pending\n\n\nEnrichment score boxplots\n\n\nShows the distribution of summarized single-nucleus chromVAR enrichment scores across cell groups.\n\n\nZScores_boxplot.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x",
+    "crumbs": [
+      "Output gallery",
+      "<span class='chapter-number'>16</span>  <span class='chapter-title'>Genetic enrichment output gallery</span>"
+    ]
+  },
+  {
+    "objectID": "output_gallery_genetic_enrichment.html#single-nucleus-with-scavenge",
+    "href": "output_gallery_genetic_enrichment.html#single-nucleus-with-scavenge",
+    "title": "16  Genetic enrichment output gallery",
+    "section": "16.3 Single-nucleus with SCAVENGE",
+    "text": "16.3 Single-nucleus with SCAVENGE\n\n\n\nPreview pending\n\n\nSCAVENGE dotplot\n\n\nSummarizes graph-propagated trait relevance scores across cell groups and GWAS traits.\n\n\nTRS_dotplot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x\n\n\n\n\n\nTrait relevance intervals\n\n\nShows how trait relevance scores vary across cell groups for selected genetic traits.\n\n\nTRS_by_cluster_boxplot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x\n\n\n\n\nPreview pending\n\n\nTrait relevance UMAP\n\n\nProjects one graph-propagated trait relevance score across the WNN single-nucleus embedding.\n\n\nTRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x",
     "crumbs": [
       "Output gallery",
       "<span class='chapter-number'>16</span>  <span class='chapter-title'>Genetic enrichment output gallery</span>"

@@ -31,7 +31,7 @@ rlang::list2(
       n_components = utils::tail(aggregation_GEX_data_PCs, 1),
       threads = 15
     ),
-    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 200) # temporary increase for large datasets using SCT_backend until we optimize this.
+    resources = get_tar_resources(cores_req = 15, RAM_GB_req = 60) # temporary increase for large datasets using SCT_backend until we optimize this.
   ),
   targets::tar_target(
     name = metadata_tibble.GEX,

@@ -239,7 +239,7 @@ rlang::list2(
           scDblFinder::amulet(
             barcodes = cellranger_barcodes_tsv,
             minFrags = 1000,
-            BPPARAM = BiocParallel::MulticoreParam(workers = 10)
+            BPPARAM = BiocParallel::MulticoreParam(workers = 6)
           ) |>
           dplyr::rename_with(~ paste0("amulet_", .x), .cols = 2:dplyr::last_col()) |>
           tibble::rownames_to_column("barcode")
@@ -255,7 +255,7 @@ rlang::list2(
         )
       }
     },
-    resources = get_tar_resources(RAM_GB_req = 60, cores_req = 10) # needs quite a lot of memory - consider decreasing workers if this is a problem.
+    resources = get_tar_resources(RAM_GB_req = 60, cores_req = 6) # needs quite a lot of memory - consider decreasing workers if this is a problem.
   ),
   tarchetypes::tar_file(
     name = cellsnp_dir,

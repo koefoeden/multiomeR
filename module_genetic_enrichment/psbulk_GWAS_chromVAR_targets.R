@@ -55,7 +55,7 @@ rlang::list2(
       min_sample_counts = genetic_enrichment_psbulk_GWAS_chromVAR_min_ATAC_counts
     ),
     pattern = map(model_tibble.trait_level.pseudobulk),
-    resources = get_tar_resources(cores_req = 1, RAM_GB_req = 60)
+    resources = get_tar_resources(RAM_GB_req = 60)
   ),
   targets::tar_target(
     name = fit.trait_level.pseudobulk,
@@ -113,10 +113,10 @@ rlang::list2(
       }
 
       coefficient_plots |>
-      save_plots_structured(
-        width = max(20, 0.6 * dplyr::n_distinct(results_tibble.trait_level.pseudobulk$contrast) + 13),
-        height = max(9, 0.55 * dplyr::n_distinct(results_tibble.trait_level.pseudobulk$GWAS_ID) + 3)
-      )
+        save_plots_structured(
+          width = max(20, 0.6 * dplyr::n_distinct(results_tibble.trait_level.pseudobulk$contrast) + 13),
+          height = max(9, 0.55 * dplyr::n_distinct(results_tibble.trait_level.pseudobulk$GWAS_ID) + 3)
+        )
     }
   ),
   tarchetypes::tar_file(

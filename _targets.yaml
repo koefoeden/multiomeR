@@ -1,4 +1,4 @@
 main:
   script: _targets.R
-  store: pipelines/processing_and_aggregation/outputs
+  store: outputs
   reporter_make: timestamp

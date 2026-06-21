@@ -18,7 +18,7 @@ rlang::list2(
       min_sample_counts = if (identical(map_psbulk_DX_tar_suffix, "DTFA")) differential_analyses_DTFA_min_ATAC_counts else NULL
     ),
     pattern = map(dynamic_tibble),
-    resources = get_tar_resources(cores_req = 1, RAM_GB_req = 60)
+    resources = get_tar_resources(RAM_GB_req = 60)
   ),
   targets::tar_target(
     name = feature_matrix_fit,

@@ -31,7 +31,7 @@ curl -fsSL https://pixi.sh/install.sh | sh
 export PATH="$HOME/.pixi/bin:$PATH"
 ```
 
-Install the pixi environment from the repository root:
+Install the pixi environment from the repository root (<5 mins):
 
 ```{.bash filename="Bash"}
 pixi install --run-post-link-scripts
@@ -60,7 +60,7 @@ The `--run-post-link-scripts` flag is required for Bioconductor data packages su
 
 ## Manual installation of remaining R packages
 
-A small number of R packages still need GitHub versions while upstream conda packages catch up. Install them inside the R session started from the pixi shell:
+A small number of R packages still need GitHub versions, since they are not currently available on conda-forge/bioconda. Install them inside the R session started from the pixi shell (<5 mins):
 
 ```{.r filename="R"}
 remotes::install_github(

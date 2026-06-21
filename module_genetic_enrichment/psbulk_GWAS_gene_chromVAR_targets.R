@@ -103,7 +103,7 @@ rlang::list2(
       min_sample_counts = genetic_enrichment_psbulk_GWAS_chromVAR_min_ATAC_counts
     ),
     pattern = map(model_tibble.gene_level.pseudobulk),
-    resources = get_tar_resources(cores_req = 1, RAM_GB_req = 60)
+    resources = get_tar_resources(RAM_GB_req = 60)
   ),
   targets::tar_target(
     name = fit.gene_level.pseudobulk,

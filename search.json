@@ -246,7 +246,7 @@
     "href": "inputs_main.html#cfg_datasets.yaml",
     "title": "7  Configuration and inputs",
     "section": "",
-    "text": "dataset_cellranger_arc_refdata_dir: Cell Ranger ARC reference directory for the dataset genome.\ndataset_QC_exclude_list_per_reaction: reaction-level QC filters applied before aggregation.\n\n\n\n\nShow immune_human_dataset\n\n\n\nYAML\n\nimmune_human_dataset:\n  mandatory:\n    dataset_cellranger_arc_refdata_dir: example_data/refdata-cellranger-arc-GRCh38-2020-A-2.0.0\n  optional:\n    dataset_QC_exclude_list_per_reaction:\n      - TSS.enrichment &lt; 4\n      - nucleosome_signal &gt; 4\n      - nCount_RNA &lt; 250\n      - RNA_mito_percent &gt; 10\n      - amulet_q.value &lt; 0.05",
+    "text": "dataset_cellranger_arc_refdata_dir: Cell Ranger ARC reference directory for the dataset genome.\ndataset_QC_exclude_list_per_reaction: reaction-level QC filters applied before aggregation.\n\n\n\n\nShow immune_human_dataset\n\n\n\nYAML\n\nimmune_human_dataset:\n  mandatory:\n    dataset_cellranger_arc_refdata_dir: example_data/refdata-cellranger-arc-GRCh38-2020-A-2.0.0\n  optional:\n    dataset_QC_exclude_list_per_reaction:\n      - TSS.enrichment &lt; 4\n      - nucleosome_signal &gt; 4\n      - nCount_RNA &lt; 250\n      - RNA_mito_percent &gt; 10\n    dataset_run_amulet: false",
     "crumbs": [
       "Your own data: The main pipeline",
       "<span class='chapter-number'>7</span>  <span class='chapter-title'>Configuration and inputs</span>"

@@ -383,8 +383,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="system-requirements" class="level2" data-number="3.1">
 <h2 data-number="3.1" class="anchored" data-anchor-id="system-requirements"><span class="header-section-number">3.1</span> System requirements</h2>
 <ul>
-<li>A Linux x86_64 machine with at least 20 GB free for the public input downloads, plus additional space for the extracted reference, pixi environment, target store, and generated outputs.</li>
-<li><code>git</code>.</li>
+<li>Linux system with at least 60 GB of RAM, preferably equipped with a job-scheduler supported by the crew.cluster package: SLURM, PBS, SGE or LSf.</li>
 </ul>
 </section>
 <section id="clone-and-enter-the-repository" class="level2" data-number="3.2">
@@ -517,7 +516,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fL</span> <span class="at">-o</span> <span class="st">"</span><span class="va">${lymphoma_dir}</span><span class="st">/atac_fragments.tsv.gz"</span> <span class="st">"</span><span class="va">${lymphoma_prefix}</span><span class="st">_atac_fragments.tsv.gz"</span></span>
 <span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fL</span> <span class="at">-o</span> <span class="st">"</span><span class="va">${lymphoma_dir}</span><span class="st">/atac_fragments.tsv.gz.tbi"</span> <span class="st">"</span><span class="va">${lymphoma_prefix}</span><span class="st">_atac_fragments.tsv.gz.tbi"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>Then download and unpack the matching human Cell Ranger ARC reference (14.9 GB).</p>
+<p>Then download and unpack the matching human Cell Ranger ARC reference (14.9 GB) (or simply symlink it to example_data/refdata-cellranger-arc-GRCh38-2020-A-2.0.0 if you have one).</p>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>Bash</strong></pre>

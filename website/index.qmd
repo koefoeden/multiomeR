@@ -1,3 +1,5 @@
+![](figures/multiomeR-logo.svg){fig-alt="multiomeR logo" width="100%"}
+
 # Overview
 
 ## What is multiomeR?

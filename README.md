@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="website/figures/multiomeR-logo.svg" alt="multiomeR logo" width="900">
+</p>
+
 [![status](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 [![Docs](https://github.com/koefoeden/multiomeR/actions/workflows/docs.yaml/badge.svg)](https://koefoeden.github.io/multiomeR/)
 [![R](https://img.shields.io/badge/R-%3E%3D%204.5-276DC3?logo=r&logoColor=white)](https://www.r-project.org/)

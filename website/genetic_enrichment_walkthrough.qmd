@@ -1,4 +1,4 @@
-# Genetic enrichment module
+# Genetic enrichment
 
 ```{r setup, include = FALSE}
 pipeline_name <- "genetic_enrichment"
@@ -41,27 +41,3 @@ targets::tar_make(
 ```
 
 This checkpoint writes the configured pseudobulk and single-nucleus trait-relevance summaries, including gchromVAR and SCAVENGE outputs. Runtime depends on the number of configured GWAS studies, enrichment methods, cells, and pseudobulk contrasts.
-
-## Implementation details
-
-The diagrams below are meant to make the module easier to reason about before reading the target code directly. They are generated from tagged target metadata and the real `{targets}` dependency graph, then simplified by pruning or bypassing lower-level nodes that would make each view harder to read. They keep real target names and preserve the dependency structure where practical, while staying compact enough to build intuition about the main control points.
-
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_mermaid("website/figures/standard_node_color_legend.mmd")
-```
-
-### Pseudobulk GWAS
-
-This view covers GWAS and pseudobulk inputs used for trait-relevance analyses.
-
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_mermaid("website/figures/human_curated/genetic_enrichment_pseudobulk_v2.mmd")
-```
-
-### Genetic enrichment across genes
-
-This view covers across-gene enrichment outputs and downstream trait summaries.
-
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_mermaid("website/figures/human_curated/genetic_enrichment_single_nucleus_v2.mmd")
-```

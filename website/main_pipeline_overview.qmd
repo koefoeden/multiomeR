@@ -1,22 +1,21 @@
-# Main pipeline overview
+# Overview
 
 ```{r setup, include = FALSE}
 pipeline_name <- "processing_and_aggregation"
 source("helpers/_setup.R")
 ```
 
-## Main pipeline context
+## Purpose
 
-This workflow is defined in [`_targets.R`](`r pipeline_github_file`) and represents the main analysis pipeline after Cell Ranger output generation. It processes individual 10x reactions in parallel, combines selected reactions into aggregations, and builds RNA/ATAC outputs for clustering, cell typing, WNN integration, subgroup reprocessing, and optional downstream modules.
+This workflow is defined in [`_targets.R`](`r pipeline_github_file`) and represents the main analysis pipeline after Cell Ranger output generation. It processes individual 10x reactions in parallel, combines selected reactions into aggregations, and runs several multimodal workflows.
 
 Representative outputs from the public example workflow are collected in the [main pipeline output gallery](output_gallery_main.qmd).
 
 ## Features
 
-The main pipeline covers:
+The main pipeline features:
 
 - per-reaction QC and optional preprocessing before aggregation
-- dataset-level merging of selected 10x reactions
 - BPCells-native RNA and ATAC processing
 - GEX, ATAC, and WNN clustering and review checkpoints
 - cell type annotation, marker summaries, coverage tracks, and multimodal output objects

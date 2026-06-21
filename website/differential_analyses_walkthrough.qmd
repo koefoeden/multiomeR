@@ -1,4 +1,4 @@
-# Differential analyses module
+# Differential analyses
 
 ```{r setup, include = FALSE}
 pipeline_name <- "differential_analyses"
@@ -43,12 +43,3 @@ targets::tar_make(
 ```
 
 This checkpoint writes the differential cell-type composition plots, pseudobulk model diagnostics, volcano plots, GSEA summaries, and cross-modality summaries configured for the aggregation. Runtime depends on the number of modelled variables, cell types, donors, and pseudobulk contrasts.
-
-## Implementation details
-
-The diagram below is meant to make the module easier to reason about before reading the target code directly. It is generated from tagged target metadata and the real `{targets}` dependency graph, then simplified by pruning or bypassing lower-level nodes that would make the view harder to read. It keeps real target names and preserves the dependency structure where practical, while staying compact enough to build intuition about the main control points.
-
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_mermaid("website/figures/standard_node_color_legend.mmd")
-emit_mermaid("website/figures/human_curated/differential_analyses_v2.mmd")
-```

@@ -1,0 +1,10 @@
+# Differential analyses
+
+```{r setup, include = FALSE}
+pipeline_name <- "differential_analyses"
+source("helpers/_setup.R")
+```
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/human_curated/differential_analyses_v2.mmd")
+```

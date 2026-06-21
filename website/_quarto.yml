@@ -11,22 +11,21 @@ book:
   sidebar:
     collapse-level: 2
   chapters:
-    - part: "Overview"
+    - part: "Introduction"
       chapters:
       - index.qmd
       - manual_usage.qmd
-    - part: "Quickstart: Public PBMC demo"
+    - part: "Example data: Quick, full run-through"
       chapters:
         - installation.qmd
         - running_demo.qmd
         - outputs_demo.qmd
-    - part: "Running your own data through the main pipeline"
+    - part: "Your own data: The main pipeline"
       chapters:
         - main_pipeline_overview.qmd
         - inputs_main.qmd
         - running_workflow.qmd
-        - implementation_details.qmd 
-    - part: "Downstream modules"
+    - part: "Your own data: Downstream modules"
       chapters:
         - differential_analyses_walkthrough.qmd
         - genetic_enrichment_walkthrough.qmd
@@ -39,6 +38,12 @@ book:
         - output_gallery_main.qmd
         - output_gallery_differential_analyses.qmd
         - output_gallery_genetic_enrichment.qmd
+    - part: "Implementation details"
+      chapters:
+        - implementation_details_overview.qmd
+        - implementation_details.qmd
+        - implementation_details_differential_analyses.qmd
+        - implementation_details_genetic_enrichment.qmd
 format:
   html:
     theme: cosmo

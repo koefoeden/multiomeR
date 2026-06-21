@@ -1,4 +1,4 @@
-# Introduction
+# Overview
 
 ## What is multiomeR?
 multiomeR is a [targets](https://books.ropensci.org/targets/)-based workflow for processing and analyzing single-nucleus 10x Genomics Multiome datasets.

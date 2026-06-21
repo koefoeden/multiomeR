@@ -1,4 +1,9 @@
-[![status](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![status](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![Docs](https://github.com/koefoeden/multiomeR/actions/workflows/docs.yaml/badge.svg)](https://koefoeden.github.io/multiomeR/)
+[![R](https://img.shields.io/badge/R-%3E%3D%204.5-276DC3?logo=r&logoColor=white)](https://www.r-project.org/)
+[![Pixi](https://img.shields.io/badge/env-pixi-f3c638)](https://pixi.sh/)
+[![targets](https://img.shields.io/badge/workflow-targets-276DC3)](https://docs.ropensci.org/targets/)
+[![BPCells](https://img.shields.io/badge/BPCells-native-2A9D8F)](https://bnprks.github.io/BPCells/)
 
 # multiomeR
 

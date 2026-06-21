@@ -1,1 +1,3 @@
 *.html linguist-vendored
+*.mmd -linguist-detectable
+*.mermaid -linguist-detectable

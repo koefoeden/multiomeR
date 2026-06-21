@@ -1,8 +1,0 @@
-title = "Custom Gitleaks configuration"
-
-[extend]
-useDefault = true
-
-[allowlist]
-description = "Ignore everything that isn't a script or config"
-paths = ['''(.*?)(R|yaml|yml|sh|py|toml|slurm)''']

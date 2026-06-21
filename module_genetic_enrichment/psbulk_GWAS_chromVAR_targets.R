@@ -20,6 +20,18 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 60)
   ),
   targets::tar_target(
+    name = ZScores_tibble.trait_level.pseudobulk,
+    description = "Format global trait-level pseudobulk chromVAR Z-scores for GWAS boxplots",
+    command = activity_matrix.trait_level.pseudobulk |>
+      format_psbulk_GWAS_chromVAR_ZScores(GWAS_inputs_tibble = GWAS_inputs_tibble)
+  ),
+  targets::tar_target(
+    name = ZScores_dotplot_data.trait_level.pseudobulk,
+    description = "Prepare dotplot data from global trait-level pseudobulk chromVAR Z-scores grouped by GWAS and cluster",
+    command = ZScores_tibble.trait_level.pseudobulk |>
+      get_GWAS_dotplot_data(GWAS_tibble = GWAS_inputs_tibble)
+  ),
+  targets::tar_target(
     name = models.trait_level.pseudobulk,
     description = "Build named list of configured trait-level pseudobulk chromVAR model specifications [part_of_graph:differential_analyses] [part_of_graph:genetic_enrichment_pseudobulk]",
     command = normalize_psbulk_feature_models(genetic_enrichment_psbulk_GWAS_chromVAR_models)
@@ -106,6 +118,59 @@ rlang::list2(
         height = max(7, 0.24 * dplyr::n_distinct(results_tibble.trait_level.pseudobulk$GWAS_ID) + 3)
       )
     }
+  ),
+  tarchetypes::tar_file(
+    name = coefficient_ranges.trait_level.pseudobulk,
+    description = "Save GWAS-by-contrast coefficient range plots of trait-level pseudobulk chromVAR differential activity. [checkpoint:genetic_enrichment]",
+    command = {
+      coefficient_plots <- results_tibble.trait_level.pseudobulk |>
+        plot_psbulk_GWAS_chromVAR_coefficient_ranges(
+          contrast_compartment_patterns = genetic_enrichment_compartment_patterns
+        )
+
+      if (!inherits(coefficient_plots, "empty_plot_list")) {
+        coefficient_plots <- coefficient_plots |>
+          purrr::imap(\(coefficient_plot, model_name) {
+            patchwork::wrap_plots(
+              GWAS_metadata_tracks_plot,
+              coefficient_plot,
+              nrow = 1,
+              widths = c(5.8, 9),
+              guides = "collect"
+            )
+          })
+      }
+
+      coefficient_plots |>
+      save_plots_structured(
+        width = max(20, 0.6 * dplyr::n_distinct(results_tibble.trait_level.pseudobulk$contrast) + 13),
+        height = max(9, 0.55 * dplyr::n_distinct(results_tibble.trait_level.pseudobulk$GWAS_ID) + 3)
+      )
+    }
+  ),
+  tarchetypes::tar_file(
+    name = ZScores_dotplot.trait_level.pseudobulk,
+    description = "Save global trait-level pseudobulk chromVAR Z-score dotplot with Open Targets GWAS metadata annotations. [checkpoint:genetic_enrichment]",
+    command = {
+      plot <- plot_GWAS_by_cluster_dotplot(
+        ZScores_dotplot_data.trait_level.pseudobulk,
+        GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
+        compartments_patterns = genetic_enrichment_compartment_patterns
+      )
+      save_plots_structured(
+        plot,
+        filetype = "png",
+        width = 20,
+        height = max(7, 0.24 * dplyr::n_distinct(ZScores_dotplot_data.trait_level.pseudobulk$GWAS_ID) + 3)
+      )
+    }
+  ),
+  tarchetypes::tar_file(
+    name = ZScores_boxplot.trait_level.pseudobulk,
+    description = "Save global trait-level pseudobulk chromVAR Z-score boxplots per cluster. [checkpoint:genetic_enrichment]",
+    command = ZScores_tibble.trait_level.pseudobulk |>
+      plot_GWAS_by_group() |>
+      save_plots_structured()
   ),
   tarchetypes::tar_file(
     name = QC_plots.trait_level.pseudobulk,

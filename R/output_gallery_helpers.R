@@ -12,6 +12,14 @@ is_absolute_gallery_path <- function(path) {
   !is.na(path) & grepl("^(/|[A-Za-z]:[/\\\\])", path)
 }
 
+#' Return the first existing path
+#'
+#' @keywords internal
+first_existing_gallery_path <- function(paths) {
+  paths <- paths[!is.na(paths) & file.exists(paths)]
+  if (length(paths) == 0) NA_character_ else paths[[1]]
+}
+
 #' Read the output gallery manifest
 #'
 #' @param manifest_file YAML manifest path.
@@ -92,8 +100,10 @@ render_gallery_grid <- function(items) {
 #'
 #' @param gallery_items Gallery manifest rows.
 #' @param section Section name to render.
+#' @param subsection_descriptions Optional named character vector of text to
+#'   render below matching subsection headings.
 #' @keywords internal
-render_gallery_section <- function(gallery_items, section) {
+render_gallery_section <- function(gallery_items, section, subsection_descriptions = NULL) {
   section_items <- dplyr::filter(gallery_items, .data$section == .env$section)
   if (nrow(section_items) == 0) {
     stop("No output gallery items found for section: ", section, call. = FALSE)
@@ -107,6 +117,9 @@ render_gallery_section <- function(gallery_items, section) {
   for (subsection_name in unique(stats::na.omit(section_items$subsection))) {
     subsection_items <- dplyr::filter(section_items, .data$subsection == subsection_name)
     cat(sprintf("\n## %s\n\n", htmltools::htmlEscape(subsection_name)))
+    if (!is.null(subsection_descriptions) && subsection_name %in% names(subsection_descriptions)) {
+      cat(sprintf("%s\n\n", htmltools::htmlEscape(subsection_descriptions[[subsection_name]])))
+    }
     render_gallery_grid(subsection_items)
   }
 
@@ -127,16 +140,22 @@ resolve_output_gallery_source_paths <- function(
     dplyr::select("name", "path", "error") |>
     tidyr::unnest_longer("path", values_to = "target_path", keep_empty = TRUE)
 
+  branch_path <- \(target) {
+    first_existing_gallery_path(path_records$target_path[startsWith(path_records$name, paste0(target, "_"))])
+  }
+
   manifest |>
     dplyr::mutate(.gallery_row = dplyr::row_number()) |>
     dplyr::left_join(path_records, by = c("target" = "name")) |>
     dplyr::slice_head(n = 1, by = ".gallery_row") |>
     dplyr::select(-".gallery_row") |>
     dplyr::mutate(
-      source_path = dplyr::if_else(
-        !is.na(.data$source_file) & dir.exists(.data$target_path),
-        file.path(.data$target_path, .data$source_file),
-        .data$target_path
+      source_path = dplyr::case_when(
+        !is.na(.data$source_file) & !is.na(.data$target_path) & dir.exists(.data$target_path) ~
+          file.path(.data$target_path, .data$source_file),
+        !is.na(.data$source_file) ~ .data$source_file,
+        !is.na(.data$target_path) ~ .data$target_path,
+        TRUE ~ purrr::map_chr(.data$target, branch_path)
       ),
       source_exists = !is.na(.data$source_path) & file.exists(.data$source_path),
       target_error = !is.na(.data$error)

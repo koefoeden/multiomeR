@@ -127,31 +127,55 @@
   status: available
 
 - section: Genetic enrichment module
-  subsection: Pseudobulk-first
+  subsection: Pseudobulk-first chromVAR (raw)
+  title: Trait-level Z-score dotplot
+  description: Summarizes global pseudobulk chromVAR Z-scores across cell groups and GWAS traits before differential modeling.
+  target: ZScores_dotplot.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x
+  asset: gallery_assets/genetic_enrichment/pseudobulk_first/trait_level_zscores_dotplot.png
+  status: available
+
+- section: Genetic enrichment module
+  subsection: Pseudobulk-first chromVAR (raw)
+  title: Trait-level Z-score boxplots
+  description: Shows global pseudobulk chromVAR Z-score distributions across cell groups before differential modeling.
+  target: ZScores_boxplot.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x
+  asset: gallery_assets/genetic_enrichment/pseudobulk_first/trait_level_zscores_boxplot.png
+  status: available
+
+- section: Genetic enrichment module
+  subsection: Pseudobulk-first chromVAR (modelled)
   title: Trait-level enrichment dotplot
   description: Shows GWAS-by-contrast pseudobulk chromVAR differential activity across configured comparisons.
   target: dotplot.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x
   asset: gallery_assets/genetic_enrichment/pseudobulk_first/trait_level_dotplot.png
-  status: pending
+  status: available
 
 - section: Genetic enrichment module
-  subsection: Pseudobulk-first
+  subsection: Pseudobulk-first chromVAR (modelled)
+  title: Trait-level coefficient ranges
+  description: Shows pseudobulk chromVAR model coefficients and approximate uncertainty intervals across contrasts within each GWAS.
+  target: coefficient_ranges.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x
+  asset: gallery_assets/genetic_enrichment/pseudobulk_first/trait_level_coefficient_ranges.png
+  status: available
+
+- section: Genetic enrichment module
+  subsection: Pseudobulk-first chromVAR (modelled)
   title: Gene-level volcano plot
   description: Highlights GWAS-gene chromVAR effects with the strongest pseudobulk differential activity.
   target: volcano_plot_files.gene_level.pseudobulk.genetic_enrichment.PBMC_human_6x
   asset: gallery_assets/genetic_enrichment/pseudobulk_first/gene_level_volcano_plot.png
-  status: pending
+  status: available
 
 - section: Genetic enrichment module
-  subsection: Pseudobulk-first
+  subsection: Pseudobulk-first chromVAR (modelled)
   title: Locus sanity-check tracks
   description: Places top GWAS-gene chromVAR effects back into their local credible-set and accessibility context.
   target: locus_tracks_plot_files.gene_level.pseudobulk.genetic_enrichment.PBMC_human_6x
   asset: gallery_assets/genetic_enrichment/pseudobulk_first/locus_tracks.png
-  status: pending
+  status: available
 
 - section: Genetic enrichment module
-  subsection: Single-nucleus without SCAVENGE
+  subsection: Single-nucleus chromVAR
   title: Enrichment dotplot
   description: Connects genetic association evidence to cell groups through single-nucleus regulatory enrichment patterns.
   target: ZScores_dotplot.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x
@@ -159,33 +183,33 @@
   status: available
 
 - section: Genetic enrichment module
-  subsection: Single-nucleus without SCAVENGE
+  subsection: Single-nucleus chromVAR
   title: Enrichment score boxplots
   description: Shows the distribution of summarized single-nucleus chromVAR enrichment scores across cell groups.
   target: ZScores_boxplot.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x
   asset: gallery_assets/genetic_enrichment/single_nucleus_without_scavenge/zscores_boxplot.png
-  status: pending
+  status: available
 
 - section: Genetic enrichment module
-  subsection: Single-nucleus with SCAVENGE
-  title: SCAVENGE dotplot
+  subsection: Single-nucleus chromVAR+SCAVENGE
+  title: Celltype by GWAS dotplot
   description: Summarizes graph-propagated trait relevance scores across cell groups and GWAS traits.
   target: TRS_dotplot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x
   asset: gallery_assets/genetic_enrichment/single_nucleus_with_scavenge/TRS_dotplot.png
-  status: pending
+  status: available
 
 - section: Genetic enrichment module
-  subsection: Single-nucleus with SCAVENGE
-  title: Trait relevance intervals
+  subsection: Single-nucleus chromVAR+SCAVENGE
+  title: Celltype by GWAS boxplots
   description: Shows how trait relevance scores vary across cell groups for selected genetic traits.
   target: TRS_by_cluster_boxplot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x
   asset: gallery_assets/genetic_enrichment/TRS_by_cluster_boxplot.png
   status: available
 
 - section: Genetic enrichment module
-  subsection: Single-nucleus with SCAVENGE
-  title: Trait relevance UMAP
+  subsection: Single-nucleus chromVAR+SCAVENGE
+  title: GWAS-specific UMAPs
   description: Projects one graph-propagated trait relevance score across the WNN single-nucleus embedding.
   target: TRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x
   asset: gallery_assets/genetic_enrichment/single_nucleus_with_scavenge/TRS_UMAP.png
-  status: pending
+  status: available

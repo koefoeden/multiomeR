@@ -1,4 +1,4 @@
-# Differential analyses output gallery
+# Differential analyses
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(

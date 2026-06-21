@@ -1,4 +1,4 @@
-# Genetic enrichment output gallery
+# Genetic enrichment
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -13,5 +13,15 @@ gallery_items <- check_output_gallery_assets(
 ```
 
 ```{r, echo = FALSE, results = "asis"}
-render_gallery_section(gallery_items, "Genetic enrichment module")
+render_gallery_section(
+  gallery_items,
+  "Genetic enrichment module",
+  subsection_descriptions = c(
+    "Single-nucleus chromVAR+SCAVENGE" = paste(
+      "These plots show SCAVENGE trait relevance scores.",
+      "The dotplot and boxplots summarize scores by cell type and GWAS trait,",
+      "while the UMAPs show raw GWAS-specific trait relevance scores across individual nuclei."
+    )
+  )
+)
 ```

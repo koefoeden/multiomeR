@@ -73,6 +73,7 @@ Depends:
     GenomicFeatures
     GenomicRanges
     ggforce
+    ggbeeswarm
     ggplot2
     ggplotify
     ggpubr

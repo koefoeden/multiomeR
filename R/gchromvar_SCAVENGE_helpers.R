@@ -766,7 +766,8 @@ get_SCAVENGE_TRS_UMAP_plots <- function(TRS_tibble, metadata_tibble, umap_cols) 
 #'   `GWAS_ID`, `group_by_col`, and `plot_col`.
 #' @param group_by_col Column used on the x axis and fill aesthetic.
 #' @param plot_col Numeric score or `-log10(p)` column plotted on the y axis.
-#' @param geom Distribution geometry: `boxplot` or `violin`.
+#' @param geom Distribution geometry: `boxplot` or `violin`. Boxplots include
+#'   quasirandom points to show the summarized observations.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
@@ -775,17 +776,42 @@ plot_GWAS_by_group <- function(data_tibble, group_by_col = "cluster", plot_col =
     return(structure(list(), class = c("empty_plot_list", "list")))
   }
 
-  plot <- data_tibble %>%
-    ggplot2::ggplot(ggplot2::aes(x = .data[[group_by_col]], y = .data[[plot_col]], fill = .data[[group_by_col]])) +
-    ggplot2::facet_wrap(~GWAS_ID, scales = "free") +
-    ggplot2::theme(legend.position = "top") +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)) +
+  plot_tibble <- if ("Category" %in% names(data_tibble)) {
+    facet_levels <- data_tibble |>
+      dplyr::distinct(Category, GWAS_ID) |>
+      dplyr::arrange(Category, GWAS_ID) |>
+      dplyr::mutate(facet_label = stringr::str_c(Category, "\n", GWAS_ID)) |>
+      dplyr::pull(facet_label)
 
-    if (stringr::str_detect(plot_col, "p_val")) {
-      plot <- plot + ggplot2::geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black")
-    }
+    data_tibble |>
+      dplyr::mutate(facet_label = factor(stringr::str_c(Category, "\n", GWAS_ID), levels = facet_levels))
+  } else {
+    data_tibble |>
+      dplyr::mutate(facet_label = factor(GWAS_ID, levels = sort(unique(GWAS_ID))))
+  }
+
+  plot <- plot_tibble %>%
+    ggplot2::ggplot(ggplot2::aes(x = .data[[group_by_col]], y = .data[[plot_col]], fill = .data[[group_by_col]])) +
+    ggplot2::facet_wrap(~facet_label) +
+    ggplot2::theme(legend.position = "top") +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+
+  if (stringr::str_detect(plot_col, "p_val")) {
+    plot <- plot + ggplot2::geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black")
+  } else {
+    plot <- plot + ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "grey35")
+  }
+
   if (geom[1] == "boxplot") {
-    plot <- plot + ggplot2::geom_boxplot(position = ggplot2::position_dodge(width = 0.8), outlier.shape = NA)
+    plot <- plot +
+      ggplot2::geom_boxplot(position = ggplot2::position_dodge(width = 0.8), outlier.shape = NA) +
+      ggbeeswarm::geom_quasirandom(
+        width = 0.2,
+        alpha = 0.55,
+        size = 0.8,
+        color = "grey20",
+        show.legend = FALSE
+      )
   } else if (geom[1] == "violin") {
     plot <- plot + ggplot2::geom_violin(position = ggplot2::position_dodge(width = 0.8))
   }

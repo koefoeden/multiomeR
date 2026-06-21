@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>6&nbsp; Overview – multiomeR Manual</title>
+<title>18&nbsp; Differential analyses – multiomeR Manual</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -33,8 +33,8 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./inputs_main.html" rel="next">
-<link href="./outputs_demo.html" rel="prev">
+<link href="./implementation_details_genetic_enrichment.html" rel="next">
+<link href="./implementation_details.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -72,6 +72,9 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
 <link rel="stylesheet" href="styles.css">
@@ -86,7 +89,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./main_pipeline_overview.html">Your own data: The main pipeline</a></li><li class="breadcrumb-item"><a href="./main_pipeline_overview.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Overview</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./implementation_details_overview.html">Implementation details</a></li><li class="breadcrumb-item"><a href="./implementation_details_differential_analyses.html"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Differential analyses</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -177,7 +180,7 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./main_pipeline_overview.html" class="sidebar-item-text sidebar-link active">
+  <a href="./main_pipeline_overview.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
   </div>
 </li>
@@ -293,7 +296,7 @@ ul.task-list li input[type="checkbox"] {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./implementation_details_differential_analyses.html" class="sidebar-item-text sidebar-link">
+  <a href="./implementation_details_differential_analyses.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Differential analyses</span></span></a>
   </div>
 </li>
@@ -310,23 +313,15 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">Table of contents</h2>
-   
-  <ul>
-  <li><a href="#purpose" id="toc-purpose" class="nav-link active" data-scroll-target="#purpose"><span class="header-section-number">6.1</span> Purpose</a></li>
-  <li><a href="#features" id="toc-features" class="nav-link" data-scroll-target="#features"><span class="header-section-number">6.2</span> Features</a></li>
-  <li><a href="#configuration-layers" id="toc-configuration-layers" class="nav-link" data-scroll-target="#configuration-layers"><span class="header-section-number">6.3</span> Configuration layers</a></li>
-  </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/main_pipeline_overview.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+        
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./main_pipeline_overview.html">Your own data: The main pipeline</a></li><li class="breadcrumb-item"><a href="./main_pipeline_overview.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Overview</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./implementation_details_overview.html">Implementation details</a></li><li class="breadcrumb-item"><a href="./implementation_details_differential_analyses.html"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Differential analyses</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Overview</span></h1>
+<h1 class="title"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Differential analyses</span></h1>
 </div>
 
 
@@ -343,29 +338,64 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="purpose" class="level2" data-number="6.1">
-<h2 data-number="6.1" class="anchored" data-anchor-id="purpose"><span class="header-section-number">6.1</span> Purpose</h2>
-<p>This workflow is defined in <a href="https://github.com/koefoeden/multiomeR/tree/main/_targets.R"><code>_targets.R</code></a> and represents the main analysis pipeline after Cell Ranger output generation. It processes individual 10x reactions in parallel, combines selected reactions into aggregations, and runs several multimodal workflows.</p>
-<p>Representative outputs from the public example workflow are collected in the <a href="./output_gallery_main.html">main pipeline output gallery</a>.</p>
-</section>
-<section id="features" class="level2" data-number="6.2">
-<h2 data-number="6.2" class="anchored" data-anchor-id="features"><span class="header-section-number">6.2</span> Features</h2>
-<p>The main pipeline features:</p>
-<ul>
-<li>per-reaction QC and optional preprocessing before aggregation</li>
-<li>BPCells-native RNA and ATAC processing</li>
-<li>GEX, ATAC, and WNN clustering and review checkpoints</li>
-<li>cell type annotation, marker summaries, coverage tracks, and multimodal output objects</li>
-<li>optional subgroup reprocessing for sufficiently large parent groups</li>
-</ul>
-</section>
-<section id="configuration-layers" class="level2" data-number="6.3">
-<h2 data-number="6.3" class="anchored" data-anchor-id="configuration-layers"><span class="header-section-number">6.3</span> Configuration layers</h2>
-<p>The main pipeline is configured in three layers: datasets define shared genome and QC settings, reactions point to individual 10x outputs, and aggregations choose which reactions to process together.</p>
-<p>Each YAML file has a <code>default</code> entry with shared parameters. Named datasets and aggregations inherit from <code>default</code> unless they declare another <code>inherits</code> parent, so template entries usually only list required values and settings that intentionally differ from the defaults.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryTextColor': '#1f2937',
+    'lineColor': '#4b5563',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#cbd5e1',
+    'edgeLabelBackground': '#ffffff00',
+    'fontFamily': 'Helvetica, Arial, sans-serif'
+  },
+  'flowchart': {
+    'defaultRenderer': 'elk'
+  },
+  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
+}}%%
+%%{init: {'flowchart': {'defaultRenderer': 'elk'}}}%%
+flowchart TB
+  donor_id_metadata_tibble.extended.differential_analyses.immune_human_2x(["donor_id_metadata_tibble.extended.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DCA.differential_analyses.immune_human_2x["feature_matrix_fit.DCA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  donor_id_metadata_tibble.extended.differential_analyses.immune_human_2x(["donor_id_metadata_tibble.extended.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  donor_id_metadata_tibble.extended.differential_analyses.immune_human_2x(["donor_id_metadata_tibble.extended.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DTFA.differential_analyses.immune_human_2x["feature_matrix_fit.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  donor_id_metadata_tibble.extended.differential_analyses.immune_human_2x(["donor_id_metadata_tibble.extended.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; model_results.DCTC.differential_analyses.immune_human_2x(["model_results.DCTC.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
+  feature_matrix_fit.DCA.differential_analyses.immune_human_2x["feature_matrix_fit.DCA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results_tibble.DCA.differential_analyses.immune_human_2x["results_tibble.DCA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results_tibble.DGE.differential_analyses.immune_human_2x["results_tibble.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  feature_matrix_fit.DTFA.differential_analyses.immune_human_2x["feature_matrix_fit.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results_tibble.DTFA.differential_analyses.immune_human_2x["results_tibble.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results.CP_KEGG_MEDICUS.GSEA.DGE.differential_analyses.immune_human_2x["results.CP_KEGG_MEDICUS.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results.CUSTOM.GSEA.DGE.differential_analyses.immune_human_2x["results.CUSTOM.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results.H.GSEA.DGE.differential_analyses.immune_human_2x["results.H.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; results.TFT_GTRD.GSEA.DGE.differential_analyses.immune_human_2x["results.TFT_GTRD.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DCA.differential_analyses.immune_human_2x["feature_matrix_fit.DCA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.DCA.differential_analyses.immune_human_2x["results_tibble.DCA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.DGE.differential_analyses.immune_human_2x["results_tibble.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results.CP_KEGG_MEDICUS.GSEA.DGE.differential_analyses.immune_human_2x["results.CP_KEGG_MEDICUS.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results.CUSTOM.GSEA.DGE.differential_analyses.immune_human_2x["results.CUSTOM.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results.H.GSEA.DGE.differential_analyses.immune_human_2x["results.H.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results.TFT_GTRD.GSEA.DGE.differential_analyses.immune_human_2x["results.TFT_GTRD.GSEA.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DTFA.differential_analyses.immune_human_2x["feature_matrix_fit.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  models.differential_analyses.immune_human_2x(["models.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.DTFA.differential_analyses.immune_human_2x["results_tibble.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  pseudobulk_counts_BPCells_matrix_dir.ATAC.brain_mouse(["pseudobulk_counts_BPCells_matrix_dir.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DCA.differential_analyses.immune_human_2x["feature_matrix_fit.DCA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  pseudobulk_counts_BPCells_matrix_dir.GEX.brain_mouse(["pseudobulk_counts_BPCells_matrix_dir.GEX.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  pseudobulk_counts_BPCells_matrix_dir.ATAC.brain_mouse(["pseudobulk_counts_BPCells_matrix_dir.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DGE.differential_analyses.immune_human_2x["feature_matrix_fit.DGE.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  pseudobulk_activity_matrix.TFA.brain_mouse(["pseudobulk_activity_matrix.TFA.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DTFA.differential_analyses.immune_human_2x["feature_matrix_fit.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  pseudobulk_counts_BPCells_matrix_dir.ATAC.brain_mouse(["pseudobulk_counts_BPCells_matrix_dir.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; feature_matrix_fit.DTFA.differential_analyses.immune_human_2x["feature_matrix_fit.DTFA.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
+  pseudobulk_counts_BPCells_matrix_dir.ATAC.brain_mouse(["pseudobulk_counts_BPCells_matrix_dir.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; pseudobulk_activity_matrix.TFA.brain_mouse(["pseudobulk_activity_matrix.TFA.&amp;lt;aggregation_name&amp;gt;"]):::none
+  models.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["models.trait_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
 
 
-</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -770,13 +800,13 @@ ul.task-list li input[type="checkbox"] {
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./outputs_demo.html" class="pagination-link" aria-label="Outputs">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Outputs</span></span>
+      <a href="./implementation_details.html" class="pagination-link" aria-label="Main pipeline">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Main pipeline</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./inputs_main.html" class="pagination-link" aria-label="Configuration and inputs">
-        <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Configuration and inputs</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./implementation_details_genetic_enrichment.html" class="pagination-link" aria-label="Genetic enrichment">
+        <span class="nav-page-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -785,4 +815,4 @@ ul.task-list li input[type="checkbox"] {
 
 
 
-<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/main_pipeline_overview.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/implementation_details_differential_analyses.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>

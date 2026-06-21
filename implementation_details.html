@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>9&nbsp; Implementation details – multiomeR Manual</title>
+<title>17&nbsp; Main pipeline – multiomeR Manual</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -33,8 +33,8 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./differential_analyses_walkthrough.html" rel="next">
-<link href="./running_workflow.html" rel="prev">
+<link href="./implementation_details_differential_analyses.html" rel="next">
+<link href="./implementation_details_overview.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -89,7 +89,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./main_pipeline_overview.html">Running your own data through the main pipeline</a></li><li class="breadcrumb-item"><a href="./implementation_details.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Implementation details</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./implementation_details_overview.html">Implementation details</a></li><li class="breadcrumb-item"><a href="./implementation_details.html"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Main pipeline</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -120,7 +120,7 @@ ul.task-list li input[type="checkbox"] {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
- <span class="menu-text">Overview</span></a>
+ <span class="menu-text">Introduction</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -129,7 +129,7 @@ ul.task-list li input[type="checkbox"] {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -143,7 +143,7 @@ ul.task-list li input[type="checkbox"] {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
- <span class="menu-text">Quickstart: Public PBMC demo</span></a>
+ <span class="menu-text">Example data: Quick, full run-through</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -172,7 +172,7 @@ ul.task-list li input[type="checkbox"] {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">Running your own data through the main pipeline</span></a>
+ <span class="menu-text">Your own data: The main pipeline</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -181,7 +181,7 @@ ul.task-list li input[type="checkbox"] {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./main_pipeline_overview.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Main pipeline overview</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -196,18 +196,12 @@ ul.task-list li input[type="checkbox"] {
  <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Running the workflow</span></span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./implementation_details.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Implementation details</span></span></a>
-  </div>
-</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
- <span class="menu-text">Downstream modules</span></a>
+ <span class="menu-text">Your own data: Downstream modules</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -216,13 +210,13 @@ ul.task-list li input[type="checkbox"] {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./differential_analyses_walkthrough.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential analyses module</span></span></a>
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Differential analyses</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./genetic_enrichment_walkthrough.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Genetic enrichment module</span></span></a>
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></span></a>
   </div>
 </li>
       </ul>
@@ -239,13 +233,13 @@ ul.task-list li input[type="checkbox"] {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./performance_overview.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Performance overview</span></span></a>
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Performance overview</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./distributed_computing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Distributed computing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Distributed computing</span></span></a>
   </div>
 </li>
       </ul>
@@ -262,19 +256,54 @@ ul.task-list li input[type="checkbox"] {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./output_gallery_main.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Main pipeline</span></span></a>
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Main pipeline</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./output_gallery_differential_analyses.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Differential analyses</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Differential analyses</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./output_gallery_genetic_enrichment.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></span></a>
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Implementation details</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./implementation_details_overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./implementation_details.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Main pipeline</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./implementation_details_differential_analyses.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Differential analyses</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./implementation_details_genetic_enrichment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></span></a>
   </div>
 </li>
       </ul>
@@ -289,20 +318,20 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#parallel-pre-processing" id="toc-parallel-pre-processing" class="nav-link active" data-scroll-target="#parallel-pre-processing"><span class="header-section-number">9.1</span> Parallel pre-processing</a></li>
-  <li><a href="#gex-processing" id="toc-gex-processing" class="nav-link" data-scroll-target="#gex-processing"><span class="header-section-number">9.2</span> GEX processing</a></li>
-  <li><a href="#atac-processing" id="toc-atac-processing" class="nav-link" data-scroll-target="#atac-processing"><span class="header-section-number">9.3</span> ATAC processing</a></li>
-  <li><a href="#wnn-integration" id="toc-wnn-integration" class="nav-link" data-scroll-target="#wnn-integration"><span class="header-section-number">9.4</span> WNN integration</a></li>
-  <li><a href="#subgroup-reprocessing" id="toc-subgroup-reprocessing" class="nav-link" data-scroll-target="#subgroup-reprocessing"><span class="header-section-number">9.5</span> Subgroup reprocessing</a></li>
+  <li><a href="#parallel-pre-processing" id="toc-parallel-pre-processing" class="nav-link active" data-scroll-target="#parallel-pre-processing"><span class="header-section-number">17.1</span> Parallel pre-processing</a></li>
+  <li><a href="#gex-processing" id="toc-gex-processing" class="nav-link" data-scroll-target="#gex-processing"><span class="header-section-number">17.2</span> GEX processing</a></li>
+  <li><a href="#atac-processing" id="toc-atac-processing" class="nav-link" data-scroll-target="#atac-processing"><span class="header-section-number">17.3</span> ATAC processing</a></li>
+  <li><a href="#wnn-integration" id="toc-wnn-integration" class="nav-link" data-scroll-target="#wnn-integration"><span class="header-section-number">17.4</span> WNN integration</a></li>
+  <li><a href="#subgroup-reprocessing" id="toc-subgroup-reprocessing" class="nav-link" data-scroll-target="#subgroup-reprocessing"><span class="header-section-number">17.5</span> Subgroup reprocessing</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/implementation_details.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./main_pipeline_overview.html">Running your own data through the main pipeline</a></li><li class="breadcrumb-item"><a href="./implementation_details.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Implementation details</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./implementation_details_overview.html">Implementation details</a></li><li class="breadcrumb-item"><a href="./implementation_details.html"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Main pipeline</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Implementation details</span></h1>
+<h1 class="title"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Main pipeline</span></h1>
 </div>
 
 
@@ -319,55 +348,8 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>The diagrams below are meant to make the pipeline easier to reason about before reading the target code directly. They are generated from tagged target metadata and the real <code>{targets}</code> dependency graph, then simplified by pruning or bypassing lower-level nodes that would make the view harder to read. They keep real target names and preserve the dependency structure where practical, while staying compact enough to build intuition about the main control points.</p>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryTextColor': '#1f2937',
-    'lineColor': '#4b5563',
-    'clusterBkg': '#f8fafc',
-    'clusterBorder': '#cbd5e1',
-    'edgeLabelBackground': '#ffffff00',
-    'fontFamily': 'Helvetica, Arial, sans-serif'
-  },
-  'flowchart': {
-    'defaultRenderer': 'elk'
-  },
-  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
-}}%%
-flowchart TB
-  subgraph Legend["Node Color Key"]
-    direction LR
-    Input["Input"] --- Config["Config input"] --- Stage["Intermediate object"] --- Output["Output"] --- QC["QC output"]
-  end
-  linkStyle 0,1,2,3 stroke-width:0px,fill:none;
-  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
-  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
-  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
-  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
-  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
-  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
-  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
-  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
-  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
-  class Input regular_input;
-  class Config CFG_input;
-  class Stage intermediate_object;
-  class Output regular_output;
-  class QC QC_output;
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
-<section id="parallel-pre-processing" class="level2" data-number="9.1">
-<h2 data-number="9.1" class="anchored" data-anchor-id="parallel-pre-processing"><span class="header-section-number">9.1</span> Parallel pre-processing</h2>
+<section id="parallel-pre-processing" class="level2" data-number="17.1">
+<h2 data-number="17.1" class="anchored" data-anchor-id="parallel-pre-processing"><span class="header-section-number">17.1</span> Parallel pre-processing</h2>
 <p>This view covers per-reaction processing and QC, including optional ambient RNA correction, donor demultiplexing, doublet detection, barcode filtering, and handoffs into aggregation-level GEX and ATAC objects.</p>
 <div class="cell" data-layout-align="default">
 <div class="cell-output-display">
@@ -412,8 +394,8 @@ flowchart TB
 </div>
 </div>
 </section>
-<section id="gex-processing" class="level2" data-number="9.2">
-<h2 data-number="9.2" class="anchored" data-anchor-id="gex-processing"><span class="header-section-number">9.2</span> GEX processing</h2>
+<section id="gex-processing" class="level2" data-number="17.2">
+<h2 data-number="17.2" class="anchored" data-anchor-id="gex-processing"><span class="header-section-number">17.2</span> GEX processing</h2>
 <p>This view covers merged RNA processing, clustering, marker detection, cell type annotation, and GEX review outputs.</p>
 <div class="cell" data-layout-align="default">
 <div class="cell-output-display">
@@ -469,8 +451,8 @@ flowchart TB
 </div>
 </div>
 </section>
-<section id="atac-processing" class="level2" data-number="9.3">
-<h2 data-number="9.3" class="anchored" data-anchor-id="atac-processing"><span class="header-section-number">9.3</span> ATAC processing</h2>
+<section id="atac-processing" class="level2" data-number="17.3">
+<h2 data-number="17.3" class="anchored" data-anchor-id="atac-processing"><span class="header-section-number">17.3</span> ATAC processing</h2>
 <p>This view covers ATAC QC, peak calling, consensus peak construction, chromatin accessibility processing, chromVAR scoring, coverage tracks, and peak-gene links.</p>
 <div class="cell" data-layout-align="default">
 <div class="cell-output-display">
@@ -546,8 +528,8 @@ flowchart TB
 </div>
 </div>
 </section>
-<section id="wnn-integration" class="level2" data-number="9.4">
-<h2 data-number="9.4" class="anchored" data-anchor-id="wnn-integration"><span class="header-section-number">9.4</span> WNN integration</h2>
+<section id="wnn-integration" class="level2" data-number="17.4">
+<h2 data-number="17.4" class="anchored" data-anchor-id="wnn-integration"><span class="header-section-number">17.4</span> WNN integration</h2>
 <p>This view covers GEX and ATAC embedding handoffs, WNN integration, modality weights, cluster comparison, and integrated metadata outputs.</p>
 <div class="cell" data-layout-align="default">
 <div class="cell-output-display">
@@ -596,8 +578,8 @@ flowchart TB
 </div>
 </div>
 </section>
-<section id="subgroup-reprocessing" class="level2" data-number="9.5">
-<h2 data-number="9.5" class="anchored" data-anchor-id="subgroup-reprocessing"><span class="header-section-number">9.5</span> Subgroup reprocessing</h2>
+<section id="subgroup-reprocessing" class="level2" data-number="17.5">
+<h2 data-number="17.5" class="anchored" data-anchor-id="subgroup-reprocessing"><span class="header-section-number">17.5</span> Subgroup reprocessing</h2>
 <p>This view covers optional subgroup-native GEX, ATAC, and WNN reprocessing for sufficiently large parent groups.</p>
 <div class="cell" data-layout-align="default">
 <div class="cell-output-display">
@@ -1061,13 +1043,13 @@ flowchart TB
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./running_workflow.html" class="pagination-link" aria-label="Running the workflow">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Running the workflow</span></span>
+      <a href="./implementation_details_overview.html" class="pagination-link" aria-label="Overview">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Overview</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./differential_analyses_walkthrough.html" class="pagination-link" aria-label="Differential analyses module">
-        <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential analyses module</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./implementation_details_differential_analyses.html" class="pagination-link" aria-label="Differential analyses">
+        <span class="nav-page-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Differential analyses</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

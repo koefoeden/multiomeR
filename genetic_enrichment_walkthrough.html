@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>11&nbsp; Genetic enrichment module – multiomeR Manual</title>
+<title>10&nbsp; Genetic enrichment – multiomeR Manual</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -107,9 +107,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
-<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
-<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
-<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
 <link rel="stylesheet" href="styles.css">
@@ -124,7 +121,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./differential_analyses_walkthrough.html">Downstream modules</a></li><li class="breadcrumb-item"><a href="./genetic_enrichment_walkthrough.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Genetic enrichment module</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./differential_analyses_walkthrough.html">Your own data: Downstream modules</a></li><li class="breadcrumb-item"><a href="./genetic_enrichment_walkthrough.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -155,7 +152,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
- <span class="menu-text">Overview</span></a>
+ <span class="menu-text">Introduction</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -164,7 +161,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -178,7 +175,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
- <span class="menu-text">Quickstart: Public PBMC demo</span></a>
+ <span class="menu-text">Example data: Quick, full run-through</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -207,7 +204,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">Running your own data through the main pipeline</span></a>
+ <span class="menu-text">Your own data: The main pipeline</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -216,7 +213,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./main_pipeline_overview.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Main pipeline overview</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -231,18 +228,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Running the workflow</span></span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./implementation_details.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Implementation details</span></span></a>
-  </div>
-</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
- <span class="menu-text">Downstream modules</span></a>
+ <span class="menu-text">Your own data: Downstream modules</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -251,13 +242,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./differential_analyses_walkthrough.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential analyses module</span></span></a>
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Differential analyses</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./genetic_enrichment_walkthrough.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Genetic enrichment module</span></span></a>
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></span></a>
   </div>
 </li>
       </ul>
@@ -274,13 +265,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./performance_overview.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Performance overview</span></span></a>
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Performance overview</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./distributed_computing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Distributed computing</span></span></a>
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Distributed computing</span></span></a>
   </div>
 </li>
       </ul>
@@ -297,19 +288,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./output_gallery_main.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Main pipeline</span></span></a>
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Main pipeline</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./output_gallery_differential_analyses.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Differential analyses</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Differential analyses</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./output_gallery_genetic_enrichment.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></span></a>
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Implementation details</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./implementation_details_overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./implementation_details.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Main pipeline</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./implementation_details_differential_analyses.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Differential analyses</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./implementation_details_genetic_enrichment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></span></a>
   </div>
 </li>
       </ul>
@@ -324,15 +350,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#purpose" id="toc-purpose" class="nav-link active" data-scroll-target="#purpose"><span class="header-section-number">11.1</span> Purpose</a></li>
-  <li><a href="#running-the-pipeline" id="toc-running-the-pipeline" class="nav-link" data-scroll-target="#running-the-pipeline"><span class="header-section-number">11.2</span> Running the pipeline</a>
+  <li><a href="#purpose" id="toc-purpose" class="nav-link active" data-scroll-target="#purpose"><span class="header-section-number">10.1</span> Purpose</a></li>
+  <li><a href="#running-the-pipeline" id="toc-running-the-pipeline" class="nav-link" data-scroll-target="#running-the-pipeline"><span class="header-section-number">10.2</span> Running the pipeline</a>
   <ul class="collapse">
-  <li><a href="#genetic-enrichment-checkpoint" id="toc-genetic-enrichment-checkpoint" class="nav-link" data-scroll-target="#genetic-enrichment-checkpoint"><span class="header-section-number">11.2.1</span> Genetic enrichment checkpoint</a></li>
-  </ul></li>
-  <li><a href="#implementation-details" id="toc-implementation-details" class="nav-link" data-scroll-target="#implementation-details"><span class="header-section-number">11.3</span> Implementation details</a>
-  <ul class="collapse">
-  <li><a href="#pseudobulk-gwas" id="toc-pseudobulk-gwas" class="nav-link" data-scroll-target="#pseudobulk-gwas"><span class="header-section-number">11.3.1</span> Pseudobulk GWAS</a></li>
-  <li><a href="#genetic-enrichment-across-genes" id="toc-genetic-enrichment-across-genes" class="nav-link" data-scroll-target="#genetic-enrichment-across-genes"><span class="header-section-number">11.3.2</span> Genetic enrichment across genes</a></li>
+  <li><a href="#genetic-enrichment-checkpoint" id="toc-genetic-enrichment-checkpoint" class="nav-link" data-scroll-target="#genetic-enrichment-checkpoint"><span class="header-section-number">10.2.1</span> Genetic enrichment checkpoint</a></li>
   </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/genetic_enrichment_walkthrough.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
@@ -340,9 +361,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./differential_analyses_walkthrough.html">Downstream modules</a></li><li class="breadcrumb-item"><a href="./genetic_enrichment_walkthrough.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Genetic enrichment module</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./differential_analyses_walkthrough.html">Your own data: Downstream modules</a></li><li class="breadcrumb-item"><a href="./genetic_enrichment_walkthrough.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Genetic enrichment module</span></h1>
+<h1 class="title"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></h1>
 </div>
 
 
@@ -359,8 +380,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="purpose" class="level2" data-number="11.1">
-<h2 data-number="11.1" class="anchored" data-anchor-id="purpose"><span class="header-section-number">11.1</span> Purpose</h2>
+<section id="purpose" class="level2" data-number="10.1">
+<h2 data-number="10.1" class="anchored" data-anchor-id="purpose"><span class="header-section-number">10.1</span> Purpose</h2>
 <p>This optional module is relevant for human-data aggregations where GWAS or fine-mapped trait evidence should be integrated with chromatin accessibility data. It is defined inside the root <a href="https://github.com/koefoeden/multiomeR/tree/main/_targets.R"><code>_targets.R</code></a> workflow, with module-specific target fragments and configuration in <code>module_genetic_enrichment/</code>.</p>
 <p>The module can identify trait-relevant cell types and regulatory programs using:</p>
 <ul>
@@ -379,11 +400,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>The module config controls which Open Targets studies are used, how enrichment inputs are selected, and which trait-relevance summaries are produced. Edit <code>module_genetic_enrichment/cfg.yaml</code>, keeping disabled or example rows available for reference until the corresponding human-data aggregation is ready.</p>
 </section>
-<section id="running-the-pipeline" class="level2" data-number="11.2">
-<h2 data-number="11.2" class="anchored" data-anchor-id="running-the-pipeline"><span class="header-section-number">11.2</span> Running the pipeline</h2>
+<section id="running-the-pipeline" class="level2" data-number="10.2">
+<h2 data-number="10.2" class="anchored" data-anchor-id="running-the-pipeline"><span class="header-section-number">10.2</span> Running the pipeline</h2>
 <p>From the repository-root R session described in <a href="./installation.html">Installation</a>, first complete the main pipeline checkpoints for the human-data aggregation. Then run the module checkpoint. Replace <code>your_aggregation</code> with an aggregation that enables the module in <code>cfg_aggregations.yaml</code>.</p>
-<section id="genetic-enrichment-checkpoint" class="level3" data-number="11.2.1">
-<h3 data-number="11.2.1" class="anchored" data-anchor-id="genetic-enrichment-checkpoint"><span class="header-section-number">11.2.1</span> Genetic enrichment checkpoint</h3>
+<section id="genetic-enrichment-checkpoint" class="level3" data-number="10.2.1">
+<h3 data-number="10.2.1" class="anchored" data-anchor-id="genetic-enrichment-checkpoint"><span class="header-section-number">10.2.1</span> Genetic enrichment checkpoint</h3>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>R</strong></pre>
@@ -394,163 +415,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This checkpoint writes the configured pseudobulk and single-nucleus trait-relevance summaries, including gchromVAR and SCAVENGE outputs. Runtime depends on the number of configured GWAS studies, enrichment methods, cells, and pseudobulk contrasts.</p>
-</section>
-</section>
-<section id="implementation-details" class="level2" data-number="11.3">
-<h2 data-number="11.3" class="anchored" data-anchor-id="implementation-details"><span class="header-section-number">11.3</span> Implementation details</h2>
-<p>The diagrams below are meant to make the module easier to reason about before reading the target code directly. They are generated from tagged target metadata and the real <code>{targets}</code> dependency graph, then simplified by pruning or bypassing lower-level nodes that would make each view harder to read. They keep real target names and preserve the dependency structure where practical, while staying compact enough to build intuition about the main control points.</p>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryTextColor': '#1f2937',
-    'lineColor': '#4b5563',
-    'clusterBkg': '#f8fafc',
-    'clusterBorder': '#cbd5e1',
-    'edgeLabelBackground': '#ffffff00',
-    'fontFamily': 'Helvetica, Arial, sans-serif'
-  },
-  'flowchart': {
-    'defaultRenderer': 'elk'
-  },
-  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
-}}%%
-flowchart TB
-  subgraph Legend["Node Color Key"]
-    direction LR
-    Input["Input"] --- Config["Config input"] --- Stage["Intermediate object"] --- Output["Output"] --- QC["QC output"]
-  end
-  linkStyle 0,1,2,3 stroke-width:0px,fill:none;
-  classDef regular_input fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a;
-  classDef CFG_input fill:#f3e8ff,stroke:#8b5cf6,color:#6d28d9;
-  classDef intermediate_object fill:#f8fafc,stroke:#64748b,color:#1f2937;
-  classDef regular_output fill:#ecfdf5,stroke:#10b981,color:#065f46;
-  classDef QC_output fill:#fff7ed,stroke:#f97316,color:#9a3412;
-  classDef optional_regular_input fill:#dbeafe,stroke:#3b82f6,stroke-dasharray: 5 5,color:#1e3a8a;
-  classDef optional_intermediate_object fill:#f8fafc,stroke:#64748b,stroke-dasharray: 5 5,color:#1f2937;
-  classDef optional_regular_output fill:#ecfdf5,stroke:#10b981,stroke-dasharray: 5 5,color:#065f46;
-  classDef junction_node fill:none,stroke:none,color:#334155,font-weight:bold;
-  class Input regular_input;
-  class Config CFG_input;
-  class Stage intermediate_object;
-  class Output regular_output;
-  class QC QC_output;
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
-<section id="pseudobulk-gwas" class="level3" data-number="11.3.1">
-<h3 data-number="11.3.1" class="anchored" data-anchor-id="pseudobulk-gwas"><span class="header-section-number">11.3.1</span> Pseudobulk GWAS</h3>
-<p>This view covers GWAS and pseudobulk inputs used for trait-relevance analyses.</p>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryTextColor': '#1f2937',
-    'lineColor': '#4b5563',
-    'clusterBkg': '#f8fafc',
-    'clusterBorder': '#cbd5e1',
-    'edgeLabelBackground': '#ffffff00',
-    'fontFamily': 'Helvetica, Arial, sans-serif'
-  },
-  'flowchart': {
-    'defaultRenderer': 'elk'
-  },
-  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
-}}%%
-%%{init: {'flowchart': {'defaultRenderer': 'elk'}}}%%
-flowchart TB
-  peak_weight_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["peak_weight_matrix.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; activity_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["activity_matrix.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  pseudobulk_counts_matrix.ATAC.brain_mouse(["pseudobulk_counts_matrix.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; activity_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["activity_matrix.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  pseudobulk_counts_matrix.ATAC.brain_mouse(["pseudobulk_counts_matrix.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; activity_matrix.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["activity_matrix.trait_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  peak_weight_matrix.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["peak_weight_matrix.trait_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; activity_matrix.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["activity_matrix.trait_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  inputs_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["inputs_tibble.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; credible_set_variants_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["credible_set_variants_tibble.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  open_targets_gwas_credible_sets_evidence_dataset_path(["open_targets_gwas_credible_sets_evidence_dataset_path"]):::none --&gt; L2G_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["L2G_tibble.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  credible_set_variants_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["credible_set_variants_tibble.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; L2G_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["L2G_tibble.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  GWAS_inputs_tibble.genetic_enrichment.immune_human_2x(["GWAS_inputs_tibble.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.trait_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  L2G_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["L2G_tibble.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; peak_weight_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["peak_weight_matrix.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  inputs_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["inputs_tibble.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; peak_weight_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["peak_weight_matrix.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  credible_set_variants_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["credible_set_variants_tibble.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; peak_weight_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["peak_weight_matrix.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  L2G_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["L2G_tibble.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  inputs_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["inputs_tibble.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  credible_set_variants_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["credible_set_variants_tibble.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  activity_matrix.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["activity_matrix.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  pseudobulk_counts_matrix.ATAC.brain_mouse(["pseudobulk_counts_matrix.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  models.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["models.trait_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  activity_matrix.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["activity_matrix.trait_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.trait_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  models.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["models.trait_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.trait_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  pseudobulk_counts_matrix.ATAC.brain_mouse(["pseudobulk_counts_matrix.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; results_tibble.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["results_tibble.trait_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  GWAS_inputs_tibble.genetic_enrichment.immune_human_2x(["GWAS_inputs_tibble.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; inputs_tibble.gene_level.pseudobulk.genetic_enrichment.immune_human_2x(["inputs_tibble.gene_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  GWAS_inputs_tibble.genetic_enrichment.immune_human_2x(["GWAS_inputs_tibble.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; peak_weight_matrix.trait_level.pseudobulk.genetic_enrichment.immune_human_2x(["peak_weight_matrix.trait_level.pseudobulk.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
-</section>
-<section id="genetic-enrichment-across-genes" class="level3" data-number="11.3.2">
-<h3 data-number="11.3.2" class="anchored" data-anchor-id="genetic-enrichment-across-genes"><span class="header-section-number">11.3.2</span> Genetic enrichment across genes</h3>
-<p>This view covers across-gene enrichment outputs and downstream trait summaries.</p>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">%%{init: {
-  'theme': 'base',
-  'themeVariables': {
-    'primaryTextColor': '#1f2937',
-    'lineColor': '#4b5563',
-    'clusterBkg': '#f8fafc',
-    'clusterBorder': '#cbd5e1',
-    'edgeLabelBackground': '#ffffff00',
-    'fontFamily': 'Helvetica, Arial, sans-serif'
-  },
-  'flowchart': {
-    'defaultRenderer': 'elk'
-  },
-  'themeCSS': '.cluster rect { fill: #f8fafc !important; stroke: #cbd5e1 !important; } .cluster-label text, .cluster-label span { font-weight: 700 !important; font-size: 16px !important; fill: #475569 !important; color: #475569 !important; }'
-}}%%
-%%{init: {'flowchart': {'defaultRenderer': 'elk'}}}%%
-flowchart TB
-  chromVAR_obj.ATAC.brain_mouse(["chromVAR_obj.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; chromVAR_background_bins.ATAC.brain_mouse(["chromVAR_background_bins.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none
-  chromVAR_peak_expectation.ATAC.brain_mouse(["chromVAR_peak_expectation.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; chromVAR_background_bins.ATAC.brain_mouse(["chromVAR_background_bins.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none
-  chromVAR_obj.ATAC.brain_mouse(["chromVAR_obj.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; chromVAR_peak_expectation.ATAC.brain_mouse(["chromVAR_peak_expectation.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none
-  open_targets_credible_set_dataset_path(["open_targets_credible_set_dataset_path"]):::none --&gt; GWAS_inputs_tibble.genetic_enrichment.immune_human_2x(["GWAS_inputs_tibble.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x["ZScore_records.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; TRS_tibbles.LSI_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x["TRS_tibbles.LSI_harmony_SNN.SCAVENGE.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  graph_matrix.LSI_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x(["graph_matrix.LSI_harmony_SNN.SCAVENGE.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; TRS_tibbles.LSI_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x["TRS_tibbles.LSI_harmony_SNN.SCAVENGE.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  graph_matrix.PCA_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x(["graph_matrix.PCA_harmony_SNN.SCAVENGE.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; TRS_tibbles.PCA_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x["TRS_tibbles.PCA_harmony_SNN.SCAVENGE.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x["ZScore_records.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; TRS_tibbles.PCA_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x["TRS_tibbles.PCA_harmony_SNN.SCAVENGE.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  graph_matrix.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x(["graph_matrix.WNN_harmony_SNN.SCAVENGE.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; TRS_tibbles.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x["TRS_tibbles.WNN_harmony_SNN.SCAVENGE.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x["ZScore_records.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; TRS_tibbles.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x["TRS_tibbles.WNN_harmony_SNN.SCAVENGE.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  chromVAR_obj.ATAC.brain_mouse(["chromVAR_obj.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x["ZScore_records.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  chromVAR_background_bins.ATAC.brain_mouse(["chromVAR_background_bins.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x["ZScore_records.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  chromVAR_peak_expectation.ATAC.brain_mouse(["chromVAR_peak_expectation.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x["ZScore_records.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  chromVAR_obj.ATAC.brain_mouse(["chromVAR_obj.ATAC.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; peak_weight_records.trait_level.genetic_enrichment.immune_human_2x["peak_weight_records.trait_level.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  GWAS_inputs_tibble.genetic_enrichment.immune_human_2x(["GWAS_inputs_tibble.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none --&gt; peak_weight_records.trait_level.genetic_enrichment.immune_human_2x["peak_weight_records.trait_level.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  open_targets_credible_set_dataset_path(["open_targets_credible_set_dataset_path"]):::none --&gt; peak_weight_records.trait_level.genetic_enrichment.immune_human_2x["peak_weight_records.trait_level.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  TRS_tibbles.LSI_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x["TRS_tibbles.LSI_harmony_SNN.SCAVENGE.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; TRS_summary_tibble.LSI_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x(["TRS_summary_tibble.LSI_harmony_SNN.SCAVENGE.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  TRS_tibbles.PCA_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x["TRS_tibbles.PCA_harmony_SNN.SCAVENGE.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; TRS_summary_tibble.PCA_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x(["TRS_summary_tibble.PCA_harmony_SNN.SCAVENGE.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  TRS_tibbles.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x["TRS_tibbles.WNN_harmony_SNN.SCAVENGE.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; TRS_summary_tibble.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.immune_human_2x(["TRS_summary_tibble.WNN_harmony_SNN.SCAVENGE.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-  peak_weight_records.trait_level.genetic_enrichment.immune_human_2x["peak_weight_records.trait_level.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x["ZScore_records.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none
-  ZScore_records.single_nucleus.genetic_enrichment.immune_human_2x["ZScore_records.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]:::none --&gt; ZScores_tibble.summarized.single_nucleus.genetic_enrichment.immune_human_2x(["ZScores_tibble.summarized.single_nucleus.&amp;lt;module_name&amp;gt;.&amp;lt;aggregation_name&amp;gt;"]):::none
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
 
 
 </section>
@@ -959,13 +823,13 @@ flowchart TB
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./differential_analyses_walkthrough.html" class="pagination-link" aria-label="Differential analyses module">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential analyses module</span></span>
+      <a href="./differential_analyses_walkthrough.html" class="pagination-link" aria-label="Differential analyses">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Differential analyses</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
       <a href="./performance_overview.html" class="pagination-link" aria-label="Performance overview">
-        <span class="nav-page-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Performance overview</span></span> <i class="bi bi-arrow-right-short"></i>
+        <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Performance overview</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

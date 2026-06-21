@@ -15,25 +15,17 @@ multiomeR is a targets-based workflow for processing and analyzing single-nucleu
 
 The active workflow is a single root `targets` project driven by `_targets.R`, `cfg_reactions.tsv`, `cfg_datasets.yaml`, and `cfg_aggregations.yaml`.
 
-## Status
+## Development status
 
 multiomeR is in beta. The workflow is actively changing, and public interfaces may still change.
 
-## Documentation
+## User manual
 
-The user manual is built from the Quarto book in `website/`:
+The user manual is built from the Quarto book in `website/`. It includes a quickstart guide, an output gallery and full implementation details: <https://koefoeden.github.io/multiomeR/>
 
-- Quickstart: <https://koefoeden.github.io/multiomeR/quickstart.html>
-- Selected outputs gallery: <https://koefoeden.github.io/multiomeR/output_gallery.html>
-- Full documentation site: <https://koefoeden.github.io/multiomeR/>
+## System requirements
 
-## Requirements
-
-- Linux x86_64 system with at least 64 GBs of RAM with plenty of disk-space.
-- 10x Genomics Multiome outputs from `cellranger-arc count`.
-- Cell Ranger ARC reference directories matching the genomes in your config.
-
-Most R packages and command-line tools are managed through Pixi via `pixi.toml` and `pixi.lock`.
+- Linux system with at least 60 GB of RAM, preferably equipped with a job-scheduler supported by the crew.cluster package: SLURM, PBS, SGE or LSf.
 
 ## Contributions
 

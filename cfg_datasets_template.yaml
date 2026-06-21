@@ -8,7 +8,7 @@ default:
 
 brain_mouse_dataset:
   mandatory:
-    dataset_cellranger_arc_refdata_dir: example_data/refdata-cellranger-arc-mm10-2020-A-2.0.0
+    dataset_cellranger_arc_refdata_dir: example_data/refdata-cellranger-arc-GRCm39-2024-A
   optional:
     dataset_QC_exclude_list_per_reaction:
       - TSS.enrichment < 4
@@ -19,7 +19,7 @@ brain_mouse_dataset:
 
 immune_human_dataset:
   mandatory:
-    dataset_cellranger_arc_refdata_dir: example_data/refdata-cellranger-arc-GRCh38-2020-A-2.0.0
+    dataset_cellranger_arc_refdata_dir: example_data/refdata-cellranger-arc-GRCh38-2024-A
   optional:
     dataset_QC_exclude_list_per_reaction:
       - TSS.enrichment < 4

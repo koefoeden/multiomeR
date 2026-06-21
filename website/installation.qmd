@@ -10,8 +10,7 @@ knitr::opts_chunk$set(
 
 ## System requirements
 
-- A Linux x86_64 machine with at least 20 GB free for the public input downloads, plus additional space for the extracted reference, pixi environment, target store, and generated outputs.
-- `git`.
+- Linux system with at least 60 GB of RAM, preferably equipped with a job-scheduler supported by the crew.cluster package: SLURM, PBS, SGE or LSf.
 
 
 ## Clone and enter the repository
@@ -116,7 +115,7 @@ curl -fL -o "${lymphoma_dir}/atac_fragments.tsv.gz" "${lymphoma_prefix}_atac_fra
 curl -fL -o "${lymphoma_dir}/atac_fragments.tsv.gz.tbi" "${lymphoma_prefix}_atac_fragments.tsv.gz.tbi"
 ```
 
-Then download and unpack the matching human Cell Ranger ARC reference (14.9 GB).
+Then download and unpack the matching human Cell Ranger ARC reference (14.9 GB) (or simply symlink it to example_data/refdata-cellranger-arc-GRCh38-2020-A-2.0.0 if you have one).
 
 ```{.bash filename="Bash"}
 refdata="refdata-cellranger-arc-GRCh38-2020-A-2.0.0"

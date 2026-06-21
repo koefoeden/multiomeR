@@ -145,12 +145,12 @@
   {
     "objectID": "running_demo.html",
     "href": "running_demo.html",
-    "title": "4  Running the demo",
+    "title": "4  Run the main pipeline",
     "section": "",
-    "text": "The public PBMC demo runs the immune_human_2x aggregation through every configured review checkpoint. Run this from a repository-root R session after completing Installation.\n\n\nR\n\ntargets::tar_make(tidyselect::matches(\"immune_human_2x\"))",
+    "text": "Run the command below to process the example immune_human_2x aggregation and produce a multimodal Seurat object. Note that this object is primarily a convenience object, since the pipeline does not use Seurat under-the-hood to do the actual processing, but instead relies n the high-performant BPCells package. Using 16 logical threads on an AMD EPYC 7543, this process takes &lt;25 minutes to run and produces a total of 6 GBs data on disk.\n\n\nR\n\ntargets::tar_make(tidyselect::matches(\"multimodal_Seurat_object.immune_human_2x\"))",
     "crumbs": [
       "Example data: Quick, full run-through",
-      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Running the demo</span>"
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Run the main pipeline</span>"
     ]
   },
   {

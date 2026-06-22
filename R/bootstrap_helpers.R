@@ -36,7 +36,7 @@ get_project_root <- function(force = FALSE) {
   }
 
   bootstrap_state_env$project_root <- rprojroot::find_root(
-    criterion = rprojroot::has_file("DESCRIPTION"),
+    criterion = rprojroot::has_file("pixi.toml"),
     path = base::getwd()
   )
   bootstrap_state_env$project_root

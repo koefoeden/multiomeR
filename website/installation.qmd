@@ -34,6 +34,7 @@ Install the pixi environment from the repository root (<5 mins):
 
 ```{.bash filename="Bash"}
 pixi install --run-post-link-scripts
+pixi run install-r-github-packages
 ```
 
 Start an interactive R session inside the pixi environment:
@@ -57,34 +58,9 @@ multiomeR depends on both R packages and command-line genomics tools. Pixi keeps
 The `--run-post-link-scripts` flag is required for Bioconductor data packages such as the BSgenome genome packages. Pixi disables conda post-link scripts by default, but these packages use Bioconda's post-link scripts to materialize the actual R package directories in the pixi environment.
 :::
 
-## Manual installation of remaining R packages
+## Why is `pixi run install-r-github-packages` needed?
 
-A small number of R packages still need GitHub versions, since they are not currently available on conda-forge/bioconda. Install them inside the R session started from the pixi shell (<5 mins):
-
-```{.r filename="R"}
-remotes::install_github(
-  "bnprks/BPCells",
-  subdir = "r",
-  ref = "28759cdd512578b6cbe549e226e1cd52a2d2308c", # BPCells 0.3.1
-  upgrade = "never",
-  dependencies = FALSE,
-  build_vignettes = FALSE
-)
-remotes::install_github(
-  "stuart-lab/signac",
-  ref = "5d66cf6c34322309d5b8aece3fa294f5531b8eee", # Signac 1.9999.4
-  upgrade = "never",
-  dependencies = FALSE,
-  build_vignettes = FALSE
-)
-remotes::install_github(
-  "plger/betterChromVAR",
-  ref = "82ae1e4ada8a43c721aa2ae1c3f2c6dfc3d5a637", # betterChromVAR 0.99.41
-  upgrade = "never",
-  dependencies = FALSE,
-  build_vignettes = FALSE
-)
-```
+A small number of R packages still need GitHub versions, since they are not currently available on conda-forge/bioconda. The pixi task installs the pinned GitHub versions of BPCells, Signac, and betterChromVAR into the pixi R library.
 
 ## Download public inputs
 
@@ -115,10 +91,10 @@ curl -fL -o "${lymphoma_dir}/atac_fragments.tsv.gz" "${lymphoma_prefix}_atac_fra
 curl -fL -o "${lymphoma_dir}/atac_fragments.tsv.gz.tbi" "${lymphoma_prefix}_atac_fragments.tsv.gz.tbi"
 ```
 
-Then download and unpack the matching human Cell Ranger ARC reference (14.9 GB) (or simply symlink it to example_data/refdata-cellranger-arc-GRCh38-2020-A-2.0.0 if you have one).
+Then download and unpack the matching human Cell Ranger ARC reference (14.9 GB) (or simply symlink it to example_data/refdata-cellranger-arc-GRCh38-2024-A if you have one).
 
 ```{.bash filename="Bash"}
-refdata="refdata-cellranger-arc-GRCh38-2020-A-2.0.0"
+refdata="refdata-cellranger-arc-GRCh38-2024-A"
 refdata_url="https://cf.10xgenomics.com/supp/cell-arc"
 
 curl -fL -o "example_data/${refdata}.tar.gz" "${refdata_url}/${refdata}.tar.gz"

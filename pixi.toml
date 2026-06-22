@@ -7,6 +7,9 @@ name = "multiomeR"
 channels = ["conda-forge", "bioconda"]
 platforms = ["linux-64"]
 
+[tasks]
+install-r-github-packages = { cmd = "Rscript scripts/install_r_github_packages.R", description = "Install GitHub-only R packages into the pixi R library." }
+
 [dependencies]
 # we still need some more general cleanup before we do a final dependency hygiene check. Lots of prefix calls in functions/targets that are not used anymore.
 # system tools

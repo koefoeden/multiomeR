@@ -1,11 +1,26 @@
-# Performance overview
+# Overview
 
-multiomeR is built on [`targets`](https://books.ropensci.org/targets/), which represents the workflow as a dependency graph. This makes the pipeline naturally parallelizable: whenever two targets do not depend on each other, `targets` can schedule them independently through the configured execution backend.
+## Philosophy
 
-In practice, this is why reaction-level work, aggregation-level branches, and optional downstream modules can often run in parallel. The exact amount of parallelism depends on the active target selection, available workers, file-system throughput, and the controller setup described in [Distributed computing](distributed_computing.qmd).
+multiomeR challenges the commonly used single-cell & single-nucleus processing workflows, where most processing steps are run sequentially and are implemented in hard-to-customize packaged functions. Widely used examples include brilliant packages such as Seurat and Signac. However, while offering superb ease-of-use, this traditional workflow has two important downsides: 
 
-```{.r filename="R"}
-targets::tar_make()
-```
+1) The built-in processing steps (usually functions) are only customizable to levels chosen by the package developers, which often falls short in the face of the enormous variance and complexity of real-life single-cell and single-nucleus sequencing datasets
+2) The traiditional workflows leave a lot of performance on the table, since they rarely take advantage of the inherent parallelism when processing these large sequencing datasets. This includes commonly found multiplicities of: 1) independent experimental samples (donors, reactions), data modalities, data representations, downstream analyses etc.
 
-The command above asks `targets` to build every outdated target. `targets` then follows the dependency graph, skips up-to-date work, and dispatches independent branches according to the configured controller.
+Until recently, this simplified and easy-to-use workflow has been necessary to make the tools practically usable in a busy research environment. However, with the recent advent of powerful, AI coding agents, which can quickly ingest large complex codebases, this inhererent tug-of-war between performance/customizability and ease-of-use/code interpretability has started to move the needle in favor of the complex, but performant and customizable approaches. Especially considering the simultaneous size-growth of single-cell and single-nucleus datasets, which far outrun the improvements in compute. These observations, together with a lack of an established framework for the processing of Multiome data, constitute the main, driving motivation for the development of this pipeline.
+
+
+## Achieving customizability
+
+By not packaging the pipeline into an ordinary R-package, the user retains straightforward access to the codebase, and can easily modify any part of the workflow to fit his or her needs. The pipeline thus functions as a reasonable template, indicating suggested best-practices, which can then be used as-is, or modified and extended as needed.
+
+## Achieving performance
+
+multiomeR achieves its high performance through two key design choices:
+
+1) The workflow is implemented as a `targets` pipeline, which explicitly represents each processing and analysis step as a target, and the dependencies between them as a directed acyclic graph (DAG). This allows `targets` to automatically determine which parts of the workflow can be run in parallel, and which parts need to be run sequentially - and whether they need to run at all, or can simply re-use the cached data.
+2) The package builds heavily on the BPCells package, which is implemented from the ground up with a focus on effiency, using on-disk, lazy and streaming processing. Please see the BPCells documentation for more details!
+
+## Performance results
+
+In an internal benchmark run on our SLURM-enabled HPC, we used multiomeR to simultaneously process 5 distinct datasets simultaneously, totalling ~1.5 million nuclei as called by `cellranger-arc count`. The entire workflow, from raw `cellranger-arc count` outputs to final, multiomodal Seurat objects took XYZ hours to run.

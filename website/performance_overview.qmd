@@ -18,9 +18,9 @@ By not packaging the pipeline into an ordinary R-package, the user retains strai
 
 multiomeR achieves its high performance through two key design choices:
 
-1) The workflow is implemented as a `targets` pipeline, which explicitly represents each processing and analysis step as a target, and the dependencies between them as a directed acyclic graph (DAG). This allows `targets` to automatically determine which parts of the workflow can be run in parallel, and which parts need to be run sequentially - and whether they need to run at all, or can simply re-use the cached data.
-2) The package builds heavily on the BPCells package, which is implemented from the ground up with a focus on effiency, using on-disk, lazy and streaming processing. Please see the BPCells documentation for more details!
+1) The workflow is implemented as a `targets` pipeline, which explicitly represents each processing and analysis step as a node, and the dependencies between them as edges, in a directed acyclic graph (DAG). This allows `targets` to automatically determine which parts of the workflow can be run in parallel, and which parts need to be run sequentially - and whether they need to run at all through the use of cached data and intelligent invalidation.
+2) multiomeR builds heavily on the BPCells R-package, which is designed the ground up with a focus on computational effiency that intelligently benefits from lazy, streaming data processing and on-disk storage. Please see the BPCells documentation for more details!
 
 ## Performance results
 
-In an internal benchmark run on our SLURM-enabled HPC, we used multiomeR to simultaneously process 5 distinct datasets simultaneously, totalling ~1.5 million nuclei as called by `cellranger-arc count`. The entire workflow, from raw `cellranger-arc count` outputs to final, multiomodal Seurat objects took XYZ hours to run.
+In an internal benchmark run on our SLURM-enabled HPC (AMD EPYC 7543 CPUs), we used multiomeR to simultaneously process 5 distinct datasets, totalling ~1.5 million nuclei as called by `cellranger-arc count`. The entire workflow, from raw `cellranger-arc count` inputs to final, multimodal Seurat objects, took XYZ hours.

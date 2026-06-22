@@ -58,9 +58,11 @@ multiomeR depends on both R packages and command-line genomics tools. Pixi keeps
 The `--run-post-link-scripts` flag is required for Bioconductor data packages such as the BSgenome genome packages. Pixi disables conda post-link scripts by default, but these packages use Bioconda's post-link scripts to materialize the actual R package directories in the pixi environment.
 :::
 
+::: {.callout-note collapse="true"}
 ## Why is `pixi run install-r-github-packages` needed?
 
-A small number of R packages still need GitHub versions, since they are not currently available on conda-forge/bioconda. The pixi task installs the pinned GitHub versions of BPCells, Signac, and betterChromVAR into the pixi R library.
+A small number of R packages still need GitHub versions, since they are not currently available on conda-forge/bioconda. The `pixi run install-r-github-packages` task installs the pinned GitHub versions of BPCells, Signac, and betterChromVAR into the pixi R library.
+:::
 
 ## Download public inputs
 

@@ -387,12 +387,56 @@
   {
     "objectID": "performance_overview.html",
     "href": "performance_overview.html",
-    "title": "11  Performance overview",
+    "title": "11  Overview",
     "section": "",
-    "text": "multiomeR is built on targets, which represents the workflow as a dependency graph. This makes the pipeline naturally parallelizable: whenever two targets do not depend on each other, targets can schedule them independently through the configured execution backend.\nIn practice, this is why reaction-level work, aggregation-level branches, and optional downstream modules can often run in parallel. The exact amount of parallelism depends on the active target selection, available workers, file-system throughput, and the controller setup described in Distributed computing.\n\n\nR\n\ntargets::tar_make()\n\nThe command above asks targets to build every outdated target. targets then follows the dependency graph, skips up-to-date work, and dispatches independent branches according to the configured controller.",
+    "text": "11.1 Philosophy\nmultiomeR challenges the commonly used single-cell & single-nucleus processing workflows, where most processing steps are run sequentially and are implemented in hard-to-customize packaged functions. Widely used examples include brilliant packages such as Seurat and Signac. However, while offering superb ease-of-use, this traditional workflow has two important downsides:\nUntil recently, this simplified and easy-to-use workflow has been necessary to make the tools practically usable in a busy research environment. However, with the recent advent of powerful, AI coding agents, which can quickly ingest large complex codebases, this inhererent tug-of-war between performance/customizability and ease-of-use/code interpretability has started to move the needle in favor of the complex, but performant and customizable approaches. Especially considering the simultaneous size-growth of single-cell and single-nucleus datasets, which far outrun the improvements in compute. These observations, together with a lack of an established framework for the processing of Multiome data, constitute the main, driving motivation for the development of this pipeline.",
     "crumbs": [
       "Performance",
-      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Performance overview</span>"
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Overview</span>"
+    ]
+  },
+  {
+    "objectID": "performance_overview.html#philosophy",
+    "href": "performance_overview.html#philosophy",
+    "title": "11  Overview",
+    "section": "",
+    "text": "The built-in processing steps (usually functions) are only customizable to levels chosen by the package developers, which often falls short in the face of the enormous variance and complexity of real-life single-cell and single-nucleus sequencing datasets\nThe traiditional workflows leave a lot of performance on the table, since they rarely take advantage of the inherent parallelism when processing these large sequencing datasets. This includes commonly found multiplicities of: 1) independent experimental samples (donors, reactions), data modalities, data representations, downstream analyses etc.",
+    "crumbs": [
+      "Performance",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Overview</span>"
+    ]
+  },
+  {
+    "objectID": "performance_overview.html#achieving-customizability",
+    "href": "performance_overview.html#achieving-customizability",
+    "title": "11  Overview",
+    "section": "11.2 Achieving customizability",
+    "text": "11.2 Achieving customizability\nBy not packaging the pipeline into an ordinary R-package, the user retains straightforward access to the codebase, and can easily modify any part of the workflow to fit his or her needs. The pipeline thus functions as a reasonable template, indicating suggested best-practices, which can then be used as-is, or modified and extended as needed.",
+    "crumbs": [
+      "Performance",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Overview</span>"
+    ]
+  },
+  {
+    "objectID": "performance_overview.html#achieving-performance",
+    "href": "performance_overview.html#achieving-performance",
+    "title": "11  Overview",
+    "section": "11.3 Achieving performance",
+    "text": "11.3 Achieving performance\nmultiomeR achieves its high performance through two key design choices:\n\nThe workflow is implemented as a targets pipeline, which explicitly represents each processing and analysis step as a target, and the dependencies between them as a directed acyclic graph (DAG). This allows targets to automatically determine which parts of the workflow can be run in parallel, and which parts need to be run sequentially - and whether they need to run at all, or can simply re-use the cached data.\nThe package builds heavily on the BPCells package, which is implemented from the ground up with a focus on effiency, using on-disk, lazy and streaming processing. Please see the BPCells documentation for more details!",
+    "crumbs": [
+      "Performance",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Overview</span>"
+    ]
+  },
+  {
+    "objectID": "performance_overview.html#performance-results",
+    "href": "performance_overview.html#performance-results",
+    "title": "11  Overview",
+    "section": "11.4 Performance results",
+    "text": "11.4 Performance results\nIn an internal benchmark run on our SLURM-enabled HPC, we used multiomeR to simultaneously process 5 distinct datasets simultaneously, totalling ~1.5 million nuclei as called by cellranger-arc count. The entire workflow, from raw cellranger-arc count outputs to final, multiomodal Seurat objects took XYZ hours to run.",
+    "crumbs": [
+      "Performance",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Overview</span>"
     ]
   },
   {

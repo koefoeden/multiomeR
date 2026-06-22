@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>11&nbsp; Performance overview – multiomeR Manual</title>
+<title>11&nbsp; Overview – multiomeR Manual</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -22,41 +22,6 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
-}
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -121,7 +86,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./performance_overview.html">Performance</a></li><li class="breadcrumb-item"><a href="./performance_overview.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Performance overview</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./performance_overview.html">Performance</a></li><li class="breadcrumb-item"><a href="./performance_overview.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Overview</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -265,7 +230,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./performance_overview.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Performance overview</span></span></a>
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -345,15 +310,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#philosophy" id="toc-philosophy" class="nav-link active" data-scroll-target="#philosophy"><span class="header-section-number">11.1</span> Philosophy</a></li>
+  <li><a href="#achieving-customizability" id="toc-achieving-customizability" class="nav-link" data-scroll-target="#achieving-customizability"><span class="header-section-number">11.2</span> Achieving customizability</a></li>
+  <li><a href="#achieving-performance" id="toc-achieving-performance" class="nav-link" data-scroll-target="#achieving-performance"><span class="header-section-number">11.3</span> Achieving performance</a></li>
+  <li><a href="#performance-results" id="toc-performance-results" class="nav-link" data-scroll-target="#performance-results"><span class="header-section-number">11.4</span> Performance results</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/performance_overview.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./performance_overview.html">Performance</a></li><li class="breadcrumb-item"><a href="./performance_overview.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Performance overview</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./performance_overview.html">Performance</a></li><li class="breadcrumb-item"><a href="./performance_overview.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Overview</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Performance overview</span></h1>
+<h1 class="title"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Overview</span></h1>
 </div>
 
 
@@ -370,17 +344,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>multiomeR is built on <a href="https://books.ropensci.org/targets/"><code>targets</code></a>, which represents the workflow as a dependency graph. This makes the pipeline naturally parallelizable: whenever two targets do not depend on each other, <code>targets</code> can schedule them independently through the configured execution backend.</p>
-<p>In practice, this is why reaction-level work, aggregation-level branches, and optional downstream modules can often run in parallel. The exact amount of parallelism depends on the active target selection, available workers, file-system throughput, and the controller setup described in <a href="./distributed_computing.html">Distributed computing</a>.</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>R</strong></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-filename="R"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>The command above asks <code>targets</code> to build every outdated target. <code>targets</code> then follows the dependency graph, skips up-to-date work, and dispatches independent branches according to the configured controller.</p>
+<section id="philosophy" class="level2" data-number="11.1">
+<h2 data-number="11.1" class="anchored" data-anchor-id="philosophy"><span class="header-section-number">11.1</span> Philosophy</h2>
+<p>multiomeR challenges the commonly used single-cell &amp; single-nucleus processing workflows, where most processing steps are run sequentially and are implemented in hard-to-customize packaged functions. Widely used examples include brilliant packages such as Seurat and Signac. However, while offering superb ease-of-use, this traditional workflow has two important downsides:</p>
+<ol type="1">
+<li>The built-in processing steps (usually functions) are only customizable to levels chosen by the package developers, which often falls short in the face of the enormous variance and complexity of real-life single-cell and single-nucleus sequencing datasets</li>
+<li>The traiditional workflows leave a lot of performance on the table, since they rarely take advantage of the inherent parallelism when processing these large sequencing datasets. This includes commonly found multiplicities of: 1) independent experimental samples (donors, reactions), data modalities, data representations, downstream analyses etc.</li>
+</ol>
+<p>Until recently, this simplified and easy-to-use workflow has been necessary to make the tools practically usable in a busy research environment. However, with the recent advent of powerful, AI coding agents, which can quickly ingest large complex codebases, this inhererent tug-of-war between performance/customizability and ease-of-use/code interpretability has started to move the needle in favor of the complex, but performant and customizable approaches. Especially considering the simultaneous size-growth of single-cell and single-nucleus datasets, which far outrun the improvements in compute. These observations, together with a lack of an established framework for the processing of Multiome data, constitute the main, driving motivation for the development of this pipeline.</p>
+</section>
+<section id="achieving-customizability" class="level2" data-number="11.2">
+<h2 data-number="11.2" class="anchored" data-anchor-id="achieving-customizability"><span class="header-section-number">11.2</span> Achieving customizability</h2>
+<p>By not packaging the pipeline into an ordinary R-package, the user retains straightforward access to the codebase, and can easily modify any part of the workflow to fit his or her needs. The pipeline thus functions as a reasonable template, indicating suggested best-practices, which can then be used as-is, or modified and extended as needed.</p>
+</section>
+<section id="achieving-performance" class="level2" data-number="11.3">
+<h2 data-number="11.3" class="anchored" data-anchor-id="achieving-performance"><span class="header-section-number">11.3</span> Achieving performance</h2>
+<p>multiomeR achieves its high performance through two key design choices:</p>
+<ol type="1">
+<li>The workflow is implemented as a <code>targets</code> pipeline, which explicitly represents each processing and analysis step as a target, and the dependencies between them as a directed acyclic graph (DAG). This allows <code>targets</code> to automatically determine which parts of the workflow can be run in parallel, and which parts need to be run sequentially - and whether they need to run at all, or can simply re-use the cached data.</li>
+<li>The package builds heavily on the BPCells package, which is implemented from the ground up with a focus on effiency, using on-disk, lazy and streaming processing. Please see the BPCells documentation for more details!</li>
+</ol>
+</section>
+<section id="performance-results" class="level2" data-number="11.4">
+<h2 data-number="11.4" class="anchored" data-anchor-id="performance-results"><span class="header-section-number">11.4</span> Performance results</h2>
+<p>In an internal benchmark run on our SLURM-enabled HPC, we used multiomeR to simultaneously process 5 distinct datasets simultaneously, totalling ~1.5 million nuclei as called by <code>cellranger-arc count</code>. The entire workflow, from raw <code>cellranger-arc count</code> outputs to final, multiomodal Seurat objects took XYZ hours to run.</p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -800,4 +790,4 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/performance_overview.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/performance_overview.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>

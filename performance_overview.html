@@ -360,14 +360,14 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="performance-results" class="level2" data-number="12.1">
 <h2 data-number="12.1" class="anchored" data-anchor-id="performance-results"><span class="header-section-number">12.1</span> Performance results</h2>
-<p>The initial example benchmark shows sub-linear scaling from 2 to 6 reactions: a three-fold increase in reactions increases estimated wall time by only ~1.4-fold. In practice, this means that larger projects should benefit substantially from the pipeline’s reaction-level and branch-level parallelism when sufficient compute resources are available, rather than scaling like a fully serial workflow.</p>
+<p>The initial example benchmark shows sub-linear scaling across the current 2- and 6-reaction example aggregations: the larger CellRanger input increases estimated wall time by only ~1.4-fold. In practice, this means that larger projects should benefit substantially from the pipeline’s reaction-level and branch-level parallelism when sufficient compute resources are available, rather than scaling like a fully serial workflow.</p>
 <div id="fig-multimodal-seurat-walltime" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-multimodal-seurat-walltime-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../outputs/benchmark/multimodal_seurat_walltime.png" class="img-fluid figure-img">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-multimodal-seurat-walltime-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;12.1: Estimated wall time to each aggregation’s final <code>multimodal_Seurat_object</code> target for the current 2- and 6-reaction example aggregations. Estimates are generated from recorded <code>targets</code> runtime metadata with <code>cache_multimodal_seurat_walltime()</code>, using the DAG critical path and treating dynamic branches as concurrently runnable. This interim figure will be replaced with the full 5-, 10-, 20-, and 40-reaction benchmark once those aggregations have been generated.
+Figure&nbsp;12.1: Estimated wall time to each aggregation’s final <code>multimodal_Seurat_object</code> target by total CellRanger input nuclei. Stacked bar segments show the largest critical-path target-step contributions, remaining steps are collapsed into <code>Other</code>, the line connects total critical-path wall time, and point labels show the number of reactions in each aggregation. Estimates are generated from recorded <code>targets</code> runtime metadata with <code>cache_multimodal_seurat_walltime()</code>, using the DAG critical path and treating dynamic branches as concurrently runnable. This interim figure will be replaced with the full 5-, 10-, 20-, and 40-reaction benchmark once those aggregations have been generated.
 </figcaption>
 </figure>
 </div>

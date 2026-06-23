@@ -67,6 +67,7 @@ r-base = ">=4.5.3,<4.6"
 # The conda/R-universe builds can report the same package version while missing newer
 # ATAC export arguments such as write_insertion_bedgraph(normalization_method = "cpm").
 # r-bpcells is not available yet for R 4.5.x. PR submitted.
+libhwy = ">=1.4.0,<2" # preinstalls Highway so the GitHub BPCells install does not build it from source
 r-assertthat = ">=0.2.1,<0.3"
 # r-bedr = ">=1.1.5,<2" # no direct source use after GWAS cleanup
 "r-broom.mixed" = ">=0.2.9.7,<0.3"

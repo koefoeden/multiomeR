@@ -2,13 +2,13 @@
 
 ## Where to start
 
-Use the [Quickstart: Public PBMC demo](installation.qmd) if you want to install multiomeR, run a focused public example, and inspect representative outputs before reading the full pipeline walkthroughs.
+Use the [Quickstart: Public PBMC demo](demo_installation.qmd) if you want to install multiomeR, run a focused public example, and inspect representative outputs before reading the full pipeline walkthroughs.
 
 Then use the workflow pages as references for the parts of the analysis you plan to run:
 
-- **[Running your own data](inputs_main.qmd)**: Main-pipeline inputs, checkpoint-based execution, implementation diagrams, per-reaction QC, dataset-level merging, BPCells-native RNA/ATAC processing, clustering, cell typing, and WNN integration.
-- **[Differential analyses module](differential_analyses_walkthrough.qmd)**: Optional aggregation module for datasets with experimental or phenotypic variables that should be modelled across cell type composition, pseudobulk expression, chromatin accessibility, and TF activity.
-- **[Genetic enrichment module](genetic_enrichment_walkthrough.qmd)**: Optional human-data module for GWAS-informed chromatin accessibility enrichment and trait-relevance analyses.
+- **[Running your own data](main_inputs.qmd)**: Main-pipeline inputs, checkpoint-based execution, implementation diagrams, per-reaction QC, dataset-level merging, BPCells-native RNA/ATAC processing, clustering, cell typing, and WNN integration.
+- **[Differential analyses module](downstream_differential_analyses.qmd)**: Optional aggregation module for datasets with experimental or phenotypic variables that should be modelled across cell type composition, pseudobulk expression, chromatin accessibility, and TF activity.
+- **[Genetic enrichment module](downstream_genetic_enrichment.qmd)**: Optional human-data module for GWAS-informed chromatin accessibility enrichment and trait-relevance analyses.
 
 ## Terminology
 The following nomenclature is used in the documentation and code:

@@ -13,40 +13,40 @@ book:
   chapters:
     - part: "Introduction"
       chapters:
-      - index.qmd
-      - manual_usage.qmd
+        - index.qmd
+        - intro_manual_usage.qmd
     - part: "Background and design philosophy"
       chapters:
-        - philosophy.qmd
+        - background_philosophy.qmd
     - part: "Example data: Quick, full run-through"
       chapters:
-        - installation.qmd
-        - running_demo.qmd
-        - outputs_demo.qmd
+        - demo_installation.qmd
+        - demo_running.qmd
+        - demo_outputs.qmd
     - part: "Your own data: The main pipeline"
       chapters:
-        - main_pipeline_overview.qmd
-        - inputs_main.qmd
-        - running_workflow.qmd
+        - main_overview.qmd
+        - main_inputs.qmd
+        - main_running.qmd
     - part: "Your own data: Downstream modules"
       chapters:
-        - differential_analyses_walkthrough.qmd
-        - genetic_enrichment_walkthrough.qmd
+        - downstream_differential_analyses.qmd
+        - downstream_genetic_enrichment.qmd
     - part: "Performance"
       chapters:
         - performance_overview.qmd
-        - distributed_computing.qmd
+        - performance_distributed_computing.qmd
     - part: "Output gallery"
       chapters:
-        - output_gallery_main.qmd
-        - output_gallery_differential_analyses.qmd
-        - output_gallery_genetic_enrichment.qmd
+        - gallery_main.qmd
+        - gallery_differential_analyses.qmd
+        - gallery_genetic_enrichment.qmd
     - part: "Implementation details"
       chapters:
-        - implementation_details_overview.qmd
-        - implementation_details.qmd
-        - implementation_details_differential_analyses.qmd
-        - implementation_details_genetic_enrichment.qmd
+        - implementation_overview.qmd
+        - implementation_main.qmd
+        - implementation_differential_analyses.qmd
+        - implementation_genetic_enrichment.qmd
 format:
   html:
     theme: cosmo

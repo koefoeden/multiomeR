@@ -1,0 +1,63 @@
+# Differential analyses
+
+```{r setup, include = FALSE}
+pipeline_name <- "differential_analyses"
+source("helpers/_setup.R")
+```
+
+## Purpose
+
+This optional module is relevant when an aggregation has experimental, clinical, phenotypic, or technical variables that should be modelled across processed Multiome data. It is defined inside the root [`_targets.R`](`r pipeline_github_file`) workflow, with module-specific target fragments and configuration in `module_differential_analyses/`.
+
+Representative outputs from this module are shown in the [differential analyses output gallery](gallery_differential_analyses.qmd).
+
+## Features
+
+The differential analyses module extends a completed aggregation with configurable statistical models for composition and pseudobulk feature testing.
+
+- **Differential modelling**
+  - Cell-type composition models for phenotype, clinical, technical, or experimental variables.
+  - Pseudobulk differential gene expression, chromatin accessibility, and transcription-factor activity.
+  - Model fitting with [`edgeR`](https://bioconductor.org/packages/release/bioc/html/edgeR.html) and [`limma`](https://bioconductor.org/packages/release/bioc/html/limma.html).
+
+- **Configuration-driven contrasts**
+  - Dynamic model branches defined from module configuration.
+  - Shared donor metadata and modality-specific filtering.
+  - Reusable model specifications across GEX, ATAC, and TF-activity analyses.
+
+- **Result interpretation**
+  - Pseudobulk depth summaries and P-value density diagnostics.
+  - Volcano plots and significant-element summaries.
+  - Cross-modality summaries comparing significant signals across data layers.
+
+- **Biological annotation**
+  - GSEA on DGE results using selected [`MSigDB`](https://www.gsea-msigdb.org/gsea/msigdb) collections and optional custom gene sets.
+  - Optional links between top features and [`Open Targets`](https://platform.opentargets.org/) GWAS evidence.
+
+## Configuration
+
+Enable the module for an aggregation in `cfg_aggregations.yaml`, then configure the module-specific model settings in `module_differential_analyses/cfg.yaml`. Only edit module rows for aggregations that enable this module.
+
+For example, this aggregation setting enables the module:
+
+```{.yaml filename="YAML"}
+optional:
+  modules: [differential_analyses]
+```
+
+The module config controls which variables are modelled, which metadata columns are used, and which contrasts are run. Edit `module_differential_analyses/cfg.yaml`, keeping disabled or example rows available for reference until the corresponding aggregation is ready.
+
+## Running the pipeline
+
+From the repository-root R session described in [Installation](demo_installation.qmd), first complete the main pipeline checkpoints for the aggregation. Then run the module checkpoint. Replace `your_aggregation` with an aggregation that enables the module in `cfg_aggregations.yaml`.
+
+### Differential analyses checkpoint
+
+```{.r filename="R"}
+targets::tar_make(
+  names = targets::tar_described_as(tidyselect::contains("checkpoint:differential_analyses")) &
+    tidyselect::matches("your_aggregation")
+)
+```
+
+This checkpoint writes the differential cell-type composition plots, pseudobulk model diagnostics, volcano plots, GSEA summaries, and cross-modality summaries configured for the aggregation. Runtime depends on the number of modelled variables, cell types, donors, and pseudobulk contrasts.

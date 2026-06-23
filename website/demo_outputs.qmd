@@ -64,4 +64,4 @@ outputs/plots/
 `-- immune_human_2x/ (aggregation-level plots)
 ```
 
-See the [main pipeline output gallery](output_gallery_main.qmd) for selected plots.
+See the [main pipeline output gallery](gallery_main.qmd) for selected plots.

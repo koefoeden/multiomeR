@@ -1,0 +1,63 @@
+# Genetic enrichment
+
+```{r setup, include = FALSE}
+pipeline_name <- "genetic_enrichment"
+source("helpers/_setup.R")
+```
+
+## Purpose
+
+This optional module is relevant for human-data aggregations where GWAS or fine-mapped trait evidence should be integrated with chromatin accessibility data. It is defined inside the root [`_targets.R`](`r pipeline_github_file`) workflow, with module-specific target fragments and configuration in `module_genetic_enrichment/`.
+
+Representative outputs from this module are shown in the [genetic enrichment output gallery](gallery_genetic_enrichment.qmd).
+
+## Features
+
+The genetic enrichment module links processed human multiome aggregations to fine-mapped GWAS and Open Targets evidence.
+
+- **GWAS input handling**
+  - Configured study metadata, credible sets, ancestry/sample metadata, and annotation tracks.
+  - Posterior-probability weighting of credible-set variants.
+  - Mapping of genetic evidence onto consensus ATAC peaks.
+
+- **Single-nucleus enrichment**
+  - [`chromVAR`](https://greenleaflab.github.io/chromVAR/articles/Introduction.html) / [`gchromVAR`](https://caleblareau.github.io/gchromVAR/reference/index.html) Z-scores for configured traits.
+  - Summaries by clusters, donors, and cell types.
+  - Heatmaps, boxplots, and metadata-linked review plots.
+
+- **Graph-based enrichment**
+  - [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) trait-score propagation across PCA, LSI, and WNN graph representations.
+  - TRS UMAPs, enrichment heatmaps, cluster-level boxplots, and significant-cell proportion summaries.
+
+- **Pseudobulk genetic enrichment**
+  - Trait-level GWAS chromVAR models fit on pseudobulk ATAC activity with `limma`.
+  - Optional gene-level GWAS chromVAR using L2G-weighted annotations.
+  - Volcano plots, coefficient summaries, QC plots, and locus-level sanity checks.
+
+## Configuration
+
+Enable the module for a human-data aggregation in `cfg_aggregations.yaml`, then configure Open Targets studies and module-specific settings in `module_genetic_enrichment/cfg.yaml`. Only edit module rows for aggregations that enable this module.
+
+For example, this aggregation setting enables the module:
+
+```{.yaml filename="YAML"}
+optional:
+  modules: [genetic_enrichment]
+```
+
+The module config controls which Open Targets studies are used, how enrichment inputs are selected, and which trait-relevance summaries are produced. Edit `module_genetic_enrichment/cfg.yaml`, keeping disabled or example rows available for reference until the corresponding human-data aggregation is ready.
+
+## Running the pipeline
+
+From the repository-root R session described in [Installation](demo_installation.qmd), first complete the main pipeline checkpoints for the human-data aggregation. Then run the module checkpoint. Replace `your_aggregation` with an aggregation that enables the module in `cfg_aggregations.yaml`.
+
+### Genetic enrichment checkpoint
+
+```{.r filename="R"}
+targets::tar_make(
+  names = targets::tar_described_as(tidyselect::contains("checkpoint:genetic_enrichment")) &
+    tidyselect::matches("your_aggregation")
+)
+```
+
+This checkpoint writes the configured pseudobulk and single-nucleus trait-relevance summaries, including gchromVAR and SCAVENGE outputs. Runtime depends on the number of configured GWAS studies, enrichment methods, cells, and pseudobulk contrasts.

@@ -1,0 +1,28 @@
+# Overview
+
+```{r setup, include = FALSE}
+pipeline_name <- "processing_and_aggregation"
+source("helpers/_setup.R")
+```
+
+## Purpose
+
+This workflow is defined in [`_targets.R`](`r pipeline_github_file`) and represents the main analysis pipeline after Cell Ranger output generation. It processes individual 10x reactions in parallel, combines selected reactions into aggregations, and runs several multimodal workflows.
+
+Representative outputs from the public example workflow are collected in the [main pipeline output gallery](gallery_main.qmd).
+
+## Features
+
+- **Genotype-aware demultiplexing and metadata integration**: per-reaction barcode extraction, optional [`cellsnp-lite`](https://cellsnp-lite.readthedocs.io/) and [`vireo`](https://vireosnp.readthedocs.io/) donor assignment, donor/reaction metadata validation, and aggregation-level metadata joins.
+- **Extensive configurable QC**: RNA count/feature/mitochondrial/novelty metrics, ATAC TSS enrichment and nucleosome signal, Cell Ranger-only and full-metadata exclusion sets, [`AMULET`](https://github.com/UcarLab/AMULET) ATAC doublet metrics, GEX/ATAC [`scDblFinder`](https://www.bioconductor.org/packages/release/bioc/html/scDblFinder.html), and interpretable UpSet/violin/checkpoint plots across reaction, dataset, and aggregation levels.
+- **BPCells-native GEX processing**: optional CellBender input, BPCells-backed count matrices, SCTransform/PCA, [`Harmony`](https://portals.broadinstitute.org/harmony/) correction, UMAP, Leiden clustering, marker-gene module scoring, cell-type labelling, cluster marker testing, and marker/metadata review plots.
+- **BPCells-native ATAC processing**: fragment merging, genome blacklist handling, cluster-aware peak calling with MACS3 or BPCells tiling, consensus peak construction, peak annotation, BPCells peak matrices, TF-IDF/LSI, Harmony correction, UMAP, Leiden clustering, differential accessibility, motif/TF activity summaries, and coverage-track plots.
+- **Multimodal integration**: native WNN construction from aligned GEX PCA and ATAC LSI embeddings, WNN clustering and UMAPs, RNA/ATAC modality-weight summaries, cross-modality cluster comparison plots, and final multimodal metadata.
+- **Regulatory feature outputs**: consensus peak tables, marker TF activity, differential accessibility BEDs, ArchR-style peak-gene correlation candidates/results, and pseudobulk GEX/ATAC matrices for downstream modules.
+- **Compatibility exports and focused reprocessing**: GEX-only review objects and final [`Seurat`](https://satijalab.org/seurat/)/[`Signac`](https://stuartlab.org/signac/) multimodal objects, while keeping BPCells-native targets as the primary pipeline state; optional subgroup reprocessing reruns GEX, ATAC, and WNN analyses within large parent cell groups.
+
+## Configuration layers
+
+The main pipeline is configured in three layers: datasets define shared genome and QC settings, reactions point to individual 10x outputs, and aggregations choose which reactions to process together.
+
+Each YAML file has a `default` entry with shared parameters. Named datasets and aggregations inherit from `default` unless they declare another `inherits` parent, so template entries usually only list required values and settings that intentionally differ from the defaults.

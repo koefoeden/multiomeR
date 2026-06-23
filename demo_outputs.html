@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>3&nbsp; Background and design philosophy – multiomeR Manual</title>
+<title>6&nbsp; Outputs – multiomeR Manual</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -23,6 +23,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -33,8 +68,8 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./installation.html" rel="next">
-<link href="./manual_usage.html" rel="prev">
+<link href="./main_overview.html" rel="next">
+<link href="./demo_running.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -86,7 +121,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./philosophy.html">Background and design philosophy</a></li><li class="breadcrumb-item"><a href="./philosophy.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Background and design philosophy</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./demo_installation.html">Example data: Quick, full run-through</a></li><li class="breadcrumb-item"><a href="./demo_outputs.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Outputs</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -131,7 +166,7 @@ ul.task-list li input[type="checkbox"] {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./manual_usage.html" class="sidebar-item-text sidebar-link">
+  <a href="./intro_manual_usage.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Using this manual</span></span></a>
   </div>
 </li>
@@ -148,7 +183,7 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./philosophy.html" class="sidebar-item-text sidebar-link active">
+  <a href="./background_philosophy.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Background and design philosophy</span></span></a>
   </div>
 </li>
@@ -165,19 +200,19 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./installation.html" class="sidebar-item-text sidebar-link">
+  <a href="./demo_installation.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Installation</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./running_demo.html" class="sidebar-item-text sidebar-link">
+  <a href="./demo_running.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Run the main pipeline</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./outputs_demo.html" class="sidebar-item-text sidebar-link">
+  <a href="./demo_outputs.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Outputs</span></span></a>
   </div>
 </li>
@@ -194,19 +229,19 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./main_pipeline_overview.html" class="sidebar-item-text sidebar-link">
+  <a href="./main_overview.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./inputs_main.html" class="sidebar-item-text sidebar-link">
+  <a href="./main_inputs.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Configuration and inputs</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./running_workflow.html" class="sidebar-item-text sidebar-link">
+  <a href="./main_running.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Running the workflow</span></span></a>
   </div>
 </li>
@@ -223,13 +258,13 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./differential_analyses_walkthrough.html" class="sidebar-item-text sidebar-link">
+  <a href="./downstream_differential_analyses.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential analyses</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./genetic_enrichment_walkthrough.html" class="sidebar-item-text sidebar-link">
+  <a href="./downstream_genetic_enrichment.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></span></a>
   </div>
 </li>
@@ -252,7 +287,7 @@ ul.task-list li input[type="checkbox"] {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./distributed_computing.html" class="sidebar-item-text sidebar-link">
+  <a href="./performance_distributed_computing.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Distributed computing</span></span></a>
   </div>
 </li>
@@ -269,19 +304,19 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./output_gallery_main.html" class="sidebar-item-text sidebar-link">
+  <a href="./gallery_main.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Main pipeline</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./output_gallery_differential_analyses.html" class="sidebar-item-text sidebar-link">
+  <a href="./gallery_differential_analyses.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Differential analyses</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./output_gallery_genetic_enrichment.html" class="sidebar-item-text sidebar-link">
+  <a href="./gallery_genetic_enrichment.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></span></a>
   </div>
 </li>
@@ -298,25 +333,25 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./implementation_details_overview.html" class="sidebar-item-text sidebar-link">
+  <a href="./implementation_overview.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./implementation_details.html" class="sidebar-item-text sidebar-link">
+  <a href="./implementation_main.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Main pipeline</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./implementation_details_differential_analyses.html" class="sidebar-item-text sidebar-link">
+  <a href="./implementation_differential_analyses.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Differential analyses</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./implementation_details_genetic_enrichment.html" class="sidebar-item-text sidebar-link">
+  <a href="./implementation_genetic_enrichment.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></span></a>
   </div>
 </li>
@@ -332,18 +367,18 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#philosophy" id="toc-philosophy" class="nav-link active" data-scroll-target="#philosophy"><span class="header-section-number">3.1</span> Philosophy</a></li>
-  <li><a href="#achieving-customizability" id="toc-achieving-customizability" class="nav-link" data-scroll-target="#achieving-customizability"><span class="header-section-number">3.2</span> Achieving customizability</a></li>
-  <li><a href="#achieving-performance" id="toc-achieving-performance" class="nav-link" data-scroll-target="#achieving-performance"><span class="header-section-number">3.3</span> Achieving performance</a></li>
+  <li><a href="#objects" id="toc-objects" class="nav-link active" data-scroll-target="#objects"><span class="header-section-number">6.1</span> Objects</a></li>
+  <li><a href="#files" id="toc-files" class="nav-link" data-scroll-target="#files"><span class="header-section-number">6.2</span> Files</a></li>
+  <li><a href="#plots" id="toc-plots" class="nav-link" data-scroll-target="#plots"><span class="header-section-number">6.3</span> Plots</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/philosophy.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/demo_outputs.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./philosophy.html">Background and design philosophy</a></li><li class="breadcrumb-item"><a href="./philosophy.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Background and design philosophy</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./demo_installation.html">Example data: Quick, full run-through</a></li><li class="breadcrumb-item"><a href="./demo_outputs.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Outputs</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Background and design philosophy</span></h1>
+<h1 class="title"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Outputs</span></h1>
 </div>
 
 
@@ -360,26 +395,54 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="philosophy" class="level2" data-number="3.1">
-<h2 data-number="3.1" class="anchored" data-anchor-id="philosophy"><span class="header-section-number">3.1</span> Philosophy</h2>
-<p>multiomeR challenges the commonly used single-cell &amp; single-nucleus processing workflows, where most processing steps are run sequentially and are implemented in hard-to-customize packaged functions. Widely used examples include brilliant packages such as Seurat and Signac. However, while offering superb ease-of-use, this traditional workflow has two important downsides:</p>
-<ol type="1">
-<li>The built-in processing steps (usually functions) are only customizable to levels chosen by the package developers, which often falls short in the face of the enormous variance and complexity of real-life single-cell and single-nucleus sequencing datasets</li>
-<li>The traiditional workflows leave a lot of performance on the table, since they rarely take advantage of the inherent parallelism when processing these large sequencing datasets. This includes commonly found multiplicities of: 1) independent experimental samples (donors, reactions), data modalities, data representations, downstream analyses etc.</li>
-</ol>
-<p>Until recently, this simplified and easy-to-use workflow has been necessary to make the tools practically usable in a busy research environment. However, with the recent advent of powerful, AI coding agents, which can quickly ingest large complex codebases, this inhererent tug-of-war between performance/customizability and ease-of-use/code interpretability has started to move the needle in favor of the complex, but performant and customizable approaches. Especially considering the simultaneous size-growth of single-cell and single-nucleus datasets, which far outrun the improvements in compute. These observations, together with a lack of an established framework for the processing of Multiome data, constitute the main, driving motivation for the development of this pipeline.</p>
+<p>The public PBMC demo writes its <code>targets</code> store to <code>outputs</code>, as configured in <code>_targets.yaml</code>. That store contains three kinds of output that are useful to inspect after the run:</p>
+<ul>
+<li><code>objects/</code>: serialized R objects managed by <code>targets</code>, returned by <code>targets::tar_target()</code> targets</li>
+<li><code>files/</code>: file and directory artifacts saved by <code>get_structured_file_path()</code> inside <code>tarchetypes::tar_file()</code> targets</li>
+<li><code>plots/</code>: PNG and SVG review plots saved by <code>save_plots_structured()</code> inside <code>tarchetypes::tar_file()</code> targets</li>
+</ul>
+<section id="objects" class="level2" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="objects"><span class="header-section-number">6.1</span> Objects</h2>
+<p>Most intermediate and final result objects are saved automatically by <code>targets</code> under <code>outputs/objects</code> during a pipeline run. Read them with <code>targets::tar_read()</code> from a repository-root R session after the demo has completed.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>R</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-filename="R"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_read</span>(UMAP_embeddings_tibble.WNN.immune_human_2x)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_read</span>(metadata_w_cell_types_tibble.WNN.immune_human_2x)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_read</span>(cell_type_marker_tibbles.GEX.immune_human_2x)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Please see the official targets documentation for more info: <em>insert link to most relevant manual page(s)</em></p>
 </section>
-<section id="achieving-customizability" class="level2" data-number="3.2">
-<h2 data-number="3.2" class="anchored" data-anchor-id="achieving-customizability"><span class="header-section-number">3.2</span> Achieving customizability</h2>
-<p>By not packaging the pipeline into an ordinary R-package, the user retains straightforward access to the codebase, and can easily modify any part of the workflow to fit his or her needs. The pipeline thus functions as a reasonable template, indicating suggested best-practices, which can then be used as-is, or modified and extended as needed.</p>
+<section id="files" class="level2" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="files"><span class="header-section-number">6.2</span> Files</h2>
+<p>Other targets in the pipeline explicitly writes files to disk inside <code>tarchetypes::tar_file()</code> targets. These targets can still be loaded by <code>targets::tar_read()</code>, but their value is simply the file path rather than an in-memory analysis object.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>R</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="R"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_read</span>(cellranger_barcodes_tsv.healthy_PBMC_human)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_read</span>(aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_read</span>(consensus_peak_BED.ATAC.immune_human_2x)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Internally, these paths are created with <code>get_structured_file_path()</code>. The helper derives a stable location from the active target name and writes it under <code>outputs/files</code>. Target name parts after dots become parent directories in reverse order, so a target like <code>aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x</code> is placed under:</p>
+<pre class="text"><code>outputs/files/immune_human_2x/GEX/</code></pre>
+<p>After the public demo run, you should therefore find produced files ordered separated by individual reactions, datasets, and the aggregation name:</p>
+<pre class="text"><code>outputs/files/
+|-- healthy_PBMC_human/ (reaction 1 specific files)
+|-- lymphoma_lymph_human/ (reaction 2 specific files)
+`-- immune_human_2x/ (aggregation-level files)</code></pre>
+<p>Please see the official targets documentation for more info on working with external files: <em>insert link to most relevant manual page(s)</em></p>
 </section>
-<section id="achieving-performance" class="level2" data-number="3.3">
-<h2 data-number="3.3" class="anchored" data-anchor-id="achieving-performance"><span class="header-section-number">3.3</span> Achieving performance</h2>
-<p>multiomeR achieves its high performance through two key design choices:</p>
-<ol type="1">
-<li>The workflow is implemented as a <code>targets</code> pipeline, which explicitly represents each processing and analysis step as a node, and the dependencies between them as edges, in a directed acyclic graph (DAG). This allows <code>targets</code> to automatically determine which parts of the workflow can be run in parallel, and which parts need to run sequentially - and whether they need to run at all through the use of cached data and intelligent invalidation.</li>
-<li>multiomeR builds heavily on the BPCells R-package, which is designed the ground up with a focus on computational effiency that intelligently benefits from lazy, streaming data processing and on-disk storage. Please see the BPCells documentation for more details!</li>
-</ol>
+<section id="plots" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="plots"><span class="header-section-number">6.3</span> Plots</h2>
+<p>Plots are saved in a very similar manner to the files, using the <code>save_plots_structured()</code> helper function, which, like <code>get_structured_file_path()</code>, derives paths from the target name. However, they are saved under <code>outputs/plots</code> instead, but has the same, expected structure after the demo run:</p>
+<pre class="text"><code>outputs/plots/
+|-- healthy_PBMC_human/ (reaction 1 specific plots)
+|-- lymphoma_lymph_human/ (reaction 2 specific plots)
+|-- immune_human_dataset/ (dataset-level plots)
+`-- immune_human_2x/ (aggregation-level plots)</code></pre>
+<p>See the <a href="./gallery_main.html">main pipeline output gallery</a> for selected plots.</p>
 
 
 </section>
@@ -787,13 +850,13 @@ ul.task-list li input[type="checkbox"] {
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./manual_usage.html" class="pagination-link" aria-label="Using this manual">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Using this manual</span></span>
+      <a href="./demo_running.html" class="pagination-link" aria-label="Run the main pipeline">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Run the main pipeline</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./installation.html" class="pagination-link" aria-label="Installation">
-        <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Installation</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./main_overview.html" class="pagination-link" aria-label="Overview">
+        <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Overview</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -802,4 +865,4 @@ ul.task-list li input[type="checkbox"] {
 
 
 
-<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/philosophy.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/demo_outputs.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>

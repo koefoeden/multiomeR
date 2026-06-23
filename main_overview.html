@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>13&nbsp; Distributed computing – multiomeR Manual</title>
+<title>7&nbsp; Overview – multiomeR Manual</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -23,41 +23,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -68,8 +33,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./output_gallery_main.html" rel="next">
-<link href="./performance_overview.html" rel="prev">
+<link href="./main_inputs.html" rel="next">
+<link href="./demo_outputs.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -121,7 +86,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./performance_overview.html">Performance</a></li><li class="breadcrumb-item"><a href="./distributed_computing.html"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Distributed computing</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./main_overview.html">Your own data: The main pipeline</a></li><li class="breadcrumb-item"><a href="./main_overview.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Overview</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -166,7 +131,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./manual_usage.html" class="sidebar-item-text sidebar-link">
+  <a href="./intro_manual_usage.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Using this manual</span></span></a>
   </div>
 </li>
@@ -183,7 +148,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./philosophy.html" class="sidebar-item-text sidebar-link">
+  <a href="./background_philosophy.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Background and design philosophy</span></span></a>
   </div>
 </li>
@@ -200,19 +165,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./installation.html" class="sidebar-item-text sidebar-link">
+  <a href="./demo_installation.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Installation</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./running_demo.html" class="sidebar-item-text sidebar-link">
+  <a href="./demo_running.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Run the main pipeline</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./outputs_demo.html" class="sidebar-item-text sidebar-link">
+  <a href="./demo_outputs.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Outputs</span></span></a>
   </div>
 </li>
@@ -229,19 +194,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./main_pipeline_overview.html" class="sidebar-item-text sidebar-link">
+  <a href="./main_overview.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./inputs_main.html" class="sidebar-item-text sidebar-link">
+  <a href="./main_inputs.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Configuration and inputs</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./running_workflow.html" class="sidebar-item-text sidebar-link">
+  <a href="./main_running.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Running the workflow</span></span></a>
   </div>
 </li>
@@ -258,13 +223,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./differential_analyses_walkthrough.html" class="sidebar-item-text sidebar-link">
+  <a href="./downstream_differential_analyses.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Differential analyses</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./genetic_enrichment_walkthrough.html" class="sidebar-item-text sidebar-link">
+  <a href="./downstream_genetic_enrichment.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></span></a>
   </div>
 </li>
@@ -287,7 +252,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./distributed_computing.html" class="sidebar-item-text sidebar-link active">
+  <a href="./performance_distributed_computing.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Distributed computing</span></span></a>
   </div>
 </li>
@@ -304,19 +269,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./output_gallery_main.html" class="sidebar-item-text sidebar-link">
+  <a href="./gallery_main.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Main pipeline</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./output_gallery_differential_analyses.html" class="sidebar-item-text sidebar-link">
+  <a href="./gallery_differential_analyses.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Differential analyses</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./output_gallery_genetic_enrichment.html" class="sidebar-item-text sidebar-link">
+  <a href="./gallery_genetic_enrichment.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></span></a>
   </div>
 </li>
@@ -333,25 +298,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./implementation_details_overview.html" class="sidebar-item-text sidebar-link">
+  <a href="./implementation_overview.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./implementation_details.html" class="sidebar-item-text sidebar-link">
+  <a href="./implementation_main.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Main pipeline</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./implementation_details_differential_analyses.html" class="sidebar-item-text sidebar-link">
+  <a href="./implementation_differential_analyses.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Differential analyses</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./implementation_details_genetic_enrichment.html" class="sidebar-item-text sidebar-link">
+  <a href="./implementation_genetic_enrichment.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Genetic enrichment</span></span></a>
   </div>
 </li>
@@ -367,18 +332,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#controller-contract" id="toc-controller-contract" class="nav-link active" data-scroll-target="#controller-contract"><span class="header-section-number">13.1</span> Controller contract</a></li>
-  <li><a href="#local-default" id="toc-local-default" class="nav-link" data-scroll-target="#local-default"><span class="header-section-number">13.2</span> Local default</a></li>
-  <li><a href="#cluster-execution" id="toc-cluster-execution" class="nav-link" data-scroll-target="#cluster-execution"><span class="header-section-number">13.3</span> Cluster execution</a></li>
+  <li><a href="#purpose" id="toc-purpose" class="nav-link active" data-scroll-target="#purpose"><span class="header-section-number">7.1</span> Purpose</a></li>
+  <li><a href="#features" id="toc-features" class="nav-link" data-scroll-target="#features"><span class="header-section-number">7.2</span> Features</a></li>
+  <li><a href="#configuration-layers" id="toc-configuration-layers" class="nav-link" data-scroll-target="#configuration-layers"><span class="header-section-number">7.3</span> Configuration layers</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/distributed_computing.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/main_overview.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./performance_overview.html">Performance</a></li><li class="breadcrumb-item"><a href="./distributed_computing.html"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Distributed computing</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./main_overview.html">Your own data: The main pipeline</a></li><li class="breadcrumb-item"><a href="./main_overview.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Overview</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Distributed computing</span></h1>
+<h1 class="title"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Overview</span></h1>
 </div>
 
 
@@ -395,31 +360,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>multiomeR runs targets through the <a href="https://books.ropensci.org/targets/crew.html">targets</a> and <code>crew</code> backend. The repository ships with <code>crew_controllers.R</code> pointing to a local-controller setup, which is sufficient for the public PBMC demo.</p>
-<p>For larger datasets, adapt <code>crew_controllers.R</code> to match your scheduler, queue names, resource limits, and worker startup requirements.</p>
-<section id="controller-contract" class="level2" data-number="13.1">
-<h2 data-number="13.1" class="anchored" data-anchor-id="controller-contract"><span class="header-section-number">13.1</span> Controller contract</h2>
-<p><code>crew_controllers.R</code> must return a named list with:</p>
+<section id="purpose" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="purpose"><span class="header-section-number">7.1</span> Purpose</h2>
+<p>This workflow is defined in <a href="https://github.com/koefoeden/multiomeR/tree/main/_targets.R"><code>_targets.R</code></a> and represents the main analysis pipeline after Cell Ranger output generation. It processes individual 10x reactions in parallel, combines selected reactions into aggregations, and runs several multimodal workflows.</p>
+<p>Representative outputs from the public example workflow are collected in the <a href="./gallery_main.html">main pipeline output gallery</a>.</p>
+</section>
+<section id="features" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="features"><span class="header-section-number">7.2</span> Features</h2>
 <ul>
-<li><code>controller_list</code>: the list of <code>crew</code> controllers.</li>
-<li><code>controller_resources_tibble</code>: a table with <code>controller_name</code>, <code>cores</code>, <code>RAM_GB</code>, and <code>gpus</code>.</li>
+<li><strong>Genotype-aware demultiplexing and metadata integration</strong>: per-reaction barcode extraction, optional <a href="https://cellsnp-lite.readthedocs.io/"><code>cellsnp-lite</code></a> and <a href="https://vireosnp.readthedocs.io/"><code>vireo</code></a> donor assignment, donor/reaction metadata validation, and aggregation-level metadata joins.</li>
+<li><strong>Extensive configurable QC</strong>: RNA count/feature/mitochondrial/novelty metrics, ATAC TSS enrichment and nucleosome signal, Cell Ranger-only and full-metadata exclusion sets, <a href="https://github.com/UcarLab/AMULET"><code>AMULET</code></a> ATAC doublet metrics, GEX/ATAC <a href="https://www.bioconductor.org/packages/release/bioc/html/scDblFinder.html"><code>scDblFinder</code></a>, and interpretable UpSet/violin/checkpoint plots across reaction, dataset, and aggregation levels.</li>
+<li><strong>BPCells-native GEX processing</strong>: optional CellBender input, BPCells-backed count matrices, SCTransform/PCA, <a href="https://portals.broadinstitute.org/harmony/"><code>Harmony</code></a> correction, UMAP, Leiden clustering, marker-gene module scoring, cell-type labelling, cluster marker testing, and marker/metadata review plots.</li>
+<li><strong>BPCells-native ATAC processing</strong>: fragment merging, genome blacklist handling, cluster-aware peak calling with MACS3 or BPCells tiling, consensus peak construction, peak annotation, BPCells peak matrices, TF-IDF/LSI, Harmony correction, UMAP, Leiden clustering, differential accessibility, motif/TF activity summaries, and coverage-track plots.</li>
+<li><strong>Multimodal integration</strong>: native WNN construction from aligned GEX PCA and ATAC LSI embeddings, WNN clustering and UMAPs, RNA/ATAC modality-weight summaries, cross-modality cluster comparison plots, and final multimodal metadata.</li>
+<li><strong>Regulatory feature outputs</strong>: consensus peak tables, marker TF activity, differential accessibility BEDs, ArchR-style peak-gene correlation candidates/results, and pseudobulk GEX/ATAC matrices for downstream modules.</li>
+<li><strong>Compatibility exports and focused reprocessing</strong>: GEX-only review objects and final <a href="https://satijalab.org/seurat/"><code>Seurat</code></a>/<a href="https://stuartlab.org/signac/"><code>Signac</code></a> multimodal objects, while keeping BPCells-native targets as the primary pipeline state; optional subgroup reprocessing reruns GEX, ATAC, and WNN analyses within large parent cell groups.</li>
 </ul>
-<p>Targets request resources by cores, RAM, and optionally GPUs through <code>get_tar_resources()</code>. The first row of <code>controller_resources_tibble</code> is the default controller, and row order controls which matching controller is preferred. GPU controllers are excluded unless <code>gpus_req &gt; 0</code>.</p>
 </section>
-<section id="local-default" class="level2" data-number="13.2">
-<h2 data-number="13.2" class="anchored" data-anchor-id="local-default"><span class="header-section-number">13.2</span> Local default</h2>
-<p>The default template uses a local <code>crew</code> controller:</p>
-<div class="code-with-filename">
-<div class="code-with-filename-file">
-<pre><strong>Bash</strong></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-filename="Bash"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">crew_controllers.R</span> <span class="at">-</span><span class="op">&gt;</span> crew_controllers_template.R</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>Increase local workers, cores, and memory only after the example workflow succeeds on your machine.</p>
-</section>
-<section id="cluster-execution" class="level2" data-number="13.3">
-<h2 data-number="13.3" class="anchored" data-anchor-id="cluster-execution"><span class="header-section-number">13.3</span> Cluster execution</h2>
-<p>For cluster execution, replace the local controller with a scheduler-backed controller such as <code>crew.cluster::crew_controller_slurm()</code>. Keep the <code>controller_resources_tibble</code> rows aligned with the controller names, because that table controls how target-level resource requests are routed.</p>
+<section id="configuration-layers" class="level2" data-number="7.3">
+<h2 data-number="7.3" class="anchored" data-anchor-id="configuration-layers"><span class="header-section-number">7.3</span> Configuration layers</h2>
+<p>The main pipeline is configured in three layers: datasets define shared genome and QC settings, reactions point to individual 10x outputs, and aggregations choose which reactions to process together.</p>
+<p>Each YAML file has a <code>default</code> entry with shared parameters. Named datasets and aggregations inherit from <code>default</code> unless they declare another <code>inherits</code> parent, so template entries usually only list required values and settings that intentionally differ from the defaults.</p>
 
 
 </section>
@@ -827,13 +788,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./performance_overview.html" class="pagination-link" aria-label="Performance overview">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Performance overview</span></span>
+      <a href="./demo_outputs.html" class="pagination-link" aria-label="Outputs">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Outputs</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./output_gallery_main.html" class="pagination-link" aria-label="Main pipeline">
-        <span class="nav-page-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Main pipeline</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./main_inputs.html" class="pagination-link" aria-label="Configuration and inputs">
+        <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Configuration and inputs</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -842,4 +803,4 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/distributed_computing.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/main_overview.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>

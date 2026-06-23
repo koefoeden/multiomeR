@@ -695,6 +695,8 @@ score_peak_gene_correlations_for_cell_group <- function(
 #' @keywords internal
 
 finalize_peak_gene_correlation_results <- function(results_tibble, aggregation) {
+  aggregation_label <- aggregation
+
   if (nrow(results_tibble) == 0L) {
     return(empty_peak_gene_correlation_results_tibble() |>
       dplyr::mutate(
@@ -706,40 +708,54 @@ finalize_peak_gene_correlation_results <- function(results_tibble, aggregation) 
       ))
   }
 
-  results_tibble |>
-    dplyr::group_by(cell_group) |>
-    dplyr::mutate(FDR = stats::p.adjust(.data$nominal_pvalue, method = "BH")) |>
-    dplyr::arrange(.data$cell_group, dplyr::desc(.data$correlation), .by_group = FALSE) |>
-    dplyr::mutate(rank_in_cell_group = dplyr::row_number()) |>
-    dplyr::group_by(cell_group, TargetGeneID) |>
-    dplyr::arrange(dplyr::desc(.data$correlation), .by_group = TRUE) |>
-    dplyr::mutate(rank_for_gene = dplyr::row_number()) |>
-    dplyr::ungroup() |>
-    dplyr::mutate(aggregation = aggregation, .before = 1) |>
-    dplyr::select(
-      "aggregation",
-      "cell_group",
-      "peak",
-      "chr",
-      "start",
-      "end",
-      "peak_center",
-      "TargetGeneID",
-      "TargetGene",
-      "TargetGeneTSS",
-      "distance",
-      "isSelfPromoter",
-      "n_aggregates",
-      "mean_gene_expression",
-      "gene_detected_frac",
-      "mean_peak_accessibility",
-      "peak_accessible_frac",
-      "correlation",
-      "nominal_pvalue",
-      "FDR",
-      "rank_in_cell_group",
-      "rank_for_gene"
-    )
+  output_cols <- c(
+    "aggregation",
+    "cell_group",
+    "peak",
+    "chr",
+    "start",
+    "end",
+    "peak_center",
+    "TargetGeneID",
+    "TargetGene",
+    "TargetGeneTSS",
+    "distance",
+    "isSelfPromoter",
+    "n_aggregates",
+    "mean_gene_expression",
+    "gene_detected_frac",
+    "mean_peak_accessibility",
+    "peak_accessible_frac",
+    "correlation",
+    "nominal_pvalue",
+    "FDR",
+    "rank_in_cell_group",
+    "rank_for_gene"
+  )
+
+  data.table::setDT(results_tibble)
+  results_tibble[, FDR := stats::p.adjust(nominal_pvalue, method = "BH"), by = cell_group]
+  data.table::setorderv(
+    results_tibble,
+    c("cell_group", "correlation"),
+    c(1L, -1L),
+    na.last = TRUE
+  )
+  results_tibble[, rank_in_cell_group := seq_len(.N), by = cell_group]
+  data.table::setorderv(
+    results_tibble,
+    c("cell_group", "TargetGeneID", "correlation"),
+    c(1L, 1L, -1L),
+    na.last = TRUE
+  )
+  results_tibble[, rank_for_gene := seq_len(.N), by = .(cell_group, TargetGeneID)]
+  results_tibble[, aggregation := aggregation_label]
+  extra_cols <- setdiff(names(results_tibble), output_cols)
+  if (length(extra_cols) > 0L) {
+    results_tibble[, (extra_cols) := NULL]
+  }
+  data.table::setcolorder(results_tibble, output_cols)
+  tibble::as_tibble(results_tibble)
 }
 
 make_peak_gene_correlation_links <- function(results_tibble) {

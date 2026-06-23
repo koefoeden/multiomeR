@@ -104,7 +104,7 @@ rlang::list2(
     ),
     pattern = map(peak_gene_correlation_normalized_aggregate_matrices.peak_gene_correlation.WNN),
     iteration = "vector",
-    resources = get_tar_resources(RAM_GB_req = 16)
+    resources = get_tar_resources(RAM_GB_req = 60)
   ),
   targets::tar_target(
     name = peak_gene_correlation_branch_diagnostics_tibbles.peak_gene_correlation.WNN,

@@ -353,8 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#system-requirements" id="toc-system-requirements" class="nav-link active" data-scroll-target="#system-requirements"><span class="header-section-number">3.1</span> System requirements</a></li>
   <li><a href="#clone-and-enter-the-repository" id="toc-clone-and-enter-the-repository" class="nav-link" data-scroll-target="#clone-and-enter-the-repository"><span class="header-section-number">3.2</span> Clone and enter the repository</a></li>
   <li><a href="#create-and-launch-the-pixi-environment" id="toc-create-and-launch-the-pixi-environment" class="nav-link" data-scroll-target="#create-and-launch-the-pixi-environment"><span class="header-section-number">3.3</span> Create and launch the pixi environment</a></li>
-  <li><a href="#why-is-pixi-run-install-r-github-packages-needed" id="toc-why-is-pixi-run-install-r-github-packages-needed" class="nav-link" data-scroll-target="#why-is-pixi-run-install-r-github-packages-needed"><span class="header-section-number">3.4</span> Why is <code>pixi run install-r-github-packages</code> needed?</a></li>
-  <li><a href="#download-public-inputs" id="toc-download-public-inputs" class="nav-link" data-scroll-target="#download-public-inputs"><span class="header-section-number">3.5</span> Download public inputs</a></li>
+  <li><a href="#download-public-inputs" id="toc-download-public-inputs" class="nav-link" data-scroll-target="#download-public-inputs"><span class="header-section-number">3.4</span> Download public inputs</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/koefoeden/multiomeR/blob/main/installation.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/koefoeden/multiomeR/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -455,13 +454,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Why is <code>pixi run install-r-github-packages</code> needed?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>A small number of R packages still need GitHub versions, since they are not currently available on conda-forge/bioconda. The <code>pixi run install-r-github-packages</code> task installs the pinned GitHub versions of BPCells, Signac, and betterChromVAR into the pixi R library.</p>
+</div>
+</div>
+</div>
 </section>
-<section id="why-is-pixi-run-install-r-github-packages-needed" class="level2" data-number="3.4">
-<h2 data-number="3.4" class="anchored" data-anchor-id="why-is-pixi-run-install-r-github-packages-needed"><span class="header-section-number">3.4</span> Why is <code>pixi run install-r-github-packages</code> needed?</h2>
-<p>A small number of R packages still need GitHub versions, since they are not currently available on conda-forge/bioconda. The pixi task installs the pinned GitHub versions of BPCells, Signac, and betterChromVAR into the pixi R library.</p>
-</section>
-<section id="download-public-inputs" class="level2" data-number="3.5">
-<h2 data-number="3.5" class="anchored" data-anchor-id="download-public-inputs"><span class="header-section-number">3.5</span> Download public inputs</h2>
+<section id="download-public-inputs" class="level2" data-number="3.4">
+<h2 data-number="3.4" class="anchored" data-anchor-id="download-public-inputs"><span class="header-section-number">3.4</span> Download public inputs</h2>
 <p>Download the two public human <code>cellranger-arc count</code> outputs from the repository root (3.9 GB).</p>
 <div class="code-with-filename">
 <div class="code-with-filename-file">

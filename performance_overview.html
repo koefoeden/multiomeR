@@ -361,13 +361,13 @@ ul.task-list li input[type="checkbox"] {
 <h2 data-number="11.3" class="anchored" data-anchor-id="achieving-performance"><span class="header-section-number">11.3</span> Achieving performance</h2>
 <p>multiomeR achieves its high performance through two key design choices:</p>
 <ol type="1">
-<li>The workflow is implemented as a <code>targets</code> pipeline, which explicitly represents each processing and analysis step as a target, and the dependencies between them as a directed acyclic graph (DAG). This allows <code>targets</code> to automatically determine which parts of the workflow can be run in parallel, and which parts need to be run sequentially - and whether they need to run at all, or can simply re-use the cached data.</li>
-<li>The package builds heavily on the BPCells package, which is implemented from the ground up with a focus on effiency, using on-disk, lazy and streaming processing. Please see the BPCells documentation for more details!</li>
+<li>The workflow is implemented as a <code>targets</code> pipeline, which explicitly represents each processing and analysis step as a node, and the dependencies between them as edges, in a directed acyclic graph (DAG). This allows <code>targets</code> to automatically determine which parts of the workflow can be run in parallel, and which parts need to be run sequentially - and whether they need to run at all through the use of cached data and intelligent invalidation.</li>
+<li>multiomeR builds heavily on the BPCells R-package, which is designed the ground up with a focus on computational effiency that intelligently benefits from lazy, streaming data processing and on-disk storage. Please see the BPCells documentation for more details!</li>
 </ol>
 </section>
 <section id="performance-results" class="level2" data-number="11.4">
 <h2 data-number="11.4" class="anchored" data-anchor-id="performance-results"><span class="header-section-number">11.4</span> Performance results</h2>
-<p>In an internal benchmark run on our SLURM-enabled HPC, we used multiomeR to simultaneously process 5 distinct datasets simultaneously, totalling ~1.5 million nuclei as called by <code>cellranger-arc count</code>. The entire workflow, from raw <code>cellranger-arc count</code> outputs to final, multiomodal Seurat objects took XYZ hours to run.</p>
+<p>In an internal benchmark run on our SLURM-enabled HPC (AMD EPYC 7543 CPUs), we used multiomeR to simultaneously process 5 distinct datasets, totalling ~1.5 million nuclei as called by <code>cellranger-arc count</code>. The entire workflow, from raw <code>cellranger-arc count</code> inputs to final, multimodal Seurat objects, took XYZ hours.</p>
 
 
 </section>

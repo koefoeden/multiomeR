@@ -15,6 +15,9 @@ book:
       chapters:
       - index.qmd
       - manual_usage.qmd
+    - part: "Background and design philosophy"
+      chapters:
+        - philosophy.qmd
     - part: "Example data: Quick, full run-through"
       chapters:
         - installation.qmd

@@ -1,38 +1,68 @@
+BENCHMARK_OPTIONAL_PREPROCESSING_REGEX <- c(
+  "^amulet_metrics_tibble(\\.|$)",
+  "^(cellsnp_dir|vireo_donor_ids_tibble)(\\.|$)"
+)
+
+
+benchmark_targets_match_regex <- function(target_names, regex) {
+  regex <- regex[!is.na(regex) & nzchar(regex)]
+  if (!length(regex)) {
+    return(rep(FALSE, length(target_names)))
+  }
+
+  Reduce(`|`, purrr::map(regex, \(pattern) grepl(pattern, target_names, perl = TRUE)))
+}
+
+
 #' Build wall-time weights from recorded targets runtimes
 #'
 #' @param network Output from `targets::tar_network(targets_only = TRUE)`.
 #' @param meta Output from `targets::tar_meta()`.
 #' @param branch_parallel If `TRUE`, replace pattern-target runtime sums with
 #'   the slowest recorded dynamic branch runtime.
+#' @param exclude_target_regex Regular expressions matching target names whose
+#'   recorded runtime should be set to zero without removing them from the DAG.
 #' @return Tibble with one runtime weight per static target node.
 #' @keywords internal
-target_runtime_weights <- function(network, meta, branch_parallel = TRUE) {
+target_runtime_weights <- function(
+  network,
+  meta,
+  branch_parallel = TRUE,
+  exclude_target_regex = character()
+) {
   weights <- network$vertices[, c("name", "type", "seconds", "branches"), drop = FALSE]
   weights$runtime_seconds <- as.numeric(weights$seconds)
+  weights$recorded_runtime_seconds <- weights$runtime_seconds
   weights$runtime_source <- ifelse(is.na(weights$runtime_seconds), "missing", "recorded_target")
 
-  if (!isTRUE(branch_parallel)) {
-    return(weights)
-  }
+  if (isTRUE(branch_parallel)) {
+    pattern_idx <- which(weights$type == "pattern")
+    for (idx in pattern_idx) {
+      meta_row <- meta[meta$name == weights$name[[idx]], , drop = FALSE]
+      children <- if (nrow(meta_row)) unlist(meta_row$children[[1]], use.names = FALSE) else character()
+      child_seconds <- meta$seconds[match(children, meta$name)]
+      child_seconds <- child_seconds[!is.na(child_seconds)]
 
-  pattern_idx <- which(weights$type == "pattern")
-  for (idx in pattern_idx) {
-    meta_row <- meta[meta$name == weights$name[[idx]], , drop = FALSE]
-    children <- if (nrow(meta_row)) unlist(meta_row$children[[1]], use.names = FALSE) else character()
-    child_seconds <- meta$seconds[match(children, meta$name)]
-    child_seconds <- child_seconds[!is.na(child_seconds)]
-
-    if (length(child_seconds)) {
-      weights$runtime_seconds[[idx]] <- max(child_seconds)
-      weights$runtime_source[[idx]] <- "slowest_dynamic_branch"
+      if (length(child_seconds)) {
+        weights$runtime_seconds[[idx]] <- max(child_seconds)
+        weights$runtime_source[[idx]] <- "slowest_dynamic_branch"
+      }
     }
   }
+
+  weights$runtime_seconds_before_exclusion <- weights$runtime_seconds
+  weights$excluded_from_benchmark <- benchmark_targets_match_regex(
+    target_names = weights$name,
+    regex = exclude_target_regex
+  )
+  weights$runtime_seconds[weights$excluded_from_benchmark] <- 0
+  weights$runtime_source[weights$excluded_from_benchmark] <- "excluded"
 
   weights
 }
 
 
-benchmark_aggregation_reaction_counts <- function(aggregations) {
+benchmark_aggregation_tibble <- function(aggregations) {
   dataset_tibble_from_yaml <- read_config_tibble(config_file = "cfg_datasets.yaml", key_col = "dataset")
   reaction_tibble <- build_reaction_tibble(dataset_tibble_from_yaml = dataset_tibble_from_yaml)
   aggregation_tibble_all_from_yaml <- read_config_tibble(config_file = "cfg_aggregations.yaml", key_col = "aggregation")
@@ -50,8 +80,43 @@ benchmark_aggregation_reaction_counts <- function(aggregations) {
     )
   }
 
+  aggregation_tibble |>
+    dplyr::mutate(
+      benchmark_cellranger_count_dirs = purrr::map(
+        .data$aggregation_reaction_IDs,
+        \(reaction_ids) reaction_tibble$reaction_cellranger_count_dir[match(reaction_ids, reaction_tibble$reaction_ID)]
+      )
+    ) |>
+    dplyr::slice(match(aggregations, .data$aggregation))
+}
+
+
+benchmark_aggregation_reaction_counts <- function(aggregations) {
+  aggregation_tibble <- benchmark_aggregation_tibble(aggregations)
   reaction_counts <- lengths(aggregation_tibble$aggregation_reaction_IDs)
   stats::setNames(reaction_counts, aggregation_tibble$aggregation)[aggregations]
+}
+
+
+benchmark_cellranger_input_nuclei <- function(cellranger_count_dir) {
+  cellranger_h5_file <- file.path(cellranger_count_dir, "outs", "filtered_feature_bc_matrix.h5")
+  cellranger_h5_file_con <- hdf5r::H5File$new(cellranger_h5_file, mode = "r")
+  on.exit(cellranger_h5_file_con$close_all())
+  length(cellranger_h5_file_con[["matrix/barcodes"]][])
+}
+
+
+benchmark_aggregation_cellranger_input_nuclei <- function(aggregations) {
+  aggregation_tibble <- benchmark_aggregation_tibble(aggregations)
+  cellranger_input_nuclei <- purrr::map_int(
+    aggregation_tibble$benchmark_cellranger_count_dirs,
+    \(cellranger_count_dirs) {
+      purrr::map_int(cellranger_count_dirs, benchmark_cellranger_input_nuclei) |>
+        sum()
+    }
+  )
+
+  stats::setNames(cellranger_input_nuclei, aggregation_tibble$aggregation)[aggregations]
 }
 
 
@@ -62,6 +127,8 @@ benchmark_aggregation_reaction_counts <- function(aggregations) {
 #' @param meta Output from `targets::tar_meta()`.
 #' @param branch_parallel If `TRUE`, dynamic branches are assumed to run in
 #'   parallel and pattern targets use their slowest branch runtime.
+#' @param exclude_target_regex Regular expressions matching target names whose
+#'   recorded runtime should be set to zero without removing them from the DAG.
 #' @param strict If `TRUE`, fail when any ancestor lacks recorded runtime.
 #' @return List with a one-row summary tibble, the critical path, and all
 #'   ancestor weights.
@@ -78,6 +145,7 @@ estimate_target_walltime <- function(
   ),
   meta = targets::tar_meta(),
   branch_parallel = TRUE,
+  exclude_target_regex = character(),
   strict = TRUE
 ) {
   if (!target_name %in% network$vertices$name) {
@@ -96,7 +164,8 @@ estimate_target_walltime <- function(
   weights <- target_runtime_weights(
     network = network,
     meta = meta,
-    branch_parallel = branch_parallel
+    branch_parallel = branch_parallel,
+    exclude_target_regex = exclude_target_regex
   )
   weights <- weights[match(ancestor_names, weights$name), , drop = FALSE]
   missing_runtime <- weights$name[is.na(weights$runtime_seconds)]
@@ -135,6 +204,10 @@ estimate_target_walltime <- function(
 
   path <- weights[match(path_names, weights$name), , drop = FALSE]
   path$critical_path_seconds <- unname(path_seconds[path$name])
+  excluded_runtime_seconds <- sum(
+    weights$runtime_seconds_before_exclusion[weights$excluded_from_benchmark],
+    na.rm = TRUE
+  )
 
   summary <- tibble::tibble(
     target = target_name,
@@ -146,6 +219,9 @@ estimate_target_walltime <- function(
     ancestor_targets = length(ancestor_names),
     critical_path_targets = nrow(path),
     parallelized_pattern_targets = sum(weights$runtime_source == "slowest_dynamic_branch"),
+    excluded_runtime_targets = sum(weights$excluded_from_benchmark),
+    excluded_runtime_seconds = excluded_runtime_seconds,
+    excluded_runtime_hours = excluded_runtime_seconds / 3600,
     missing_runtime_targets = length(missing_runtime)
   )
 
@@ -160,6 +236,7 @@ estimate_target_walltime <- function(
 #' @param store Targets store path.
 #' @param branch_parallel If `TRUE`, dynamic branches are assumed to run in
 #'   parallel and pattern targets use their slowest branch runtime.
+#' @inheritParams estimate_target_walltime
 #' @return Tibble with one row per aggregation. Critical-path details are stored
 #'   in the `benchmark_details` attribute.
 #' @keywords internal
@@ -167,6 +244,7 @@ estimate_multimodal_seurat_walltime <- function(
   aggregations,
   store = targets::tar_config_get("store"),
   branch_parallel = TRUE,
+  exclude_target_regex = character(),
   envir = parent.frame()
 ) {
   network <- targets::tar_network(
@@ -187,6 +265,7 @@ estimate_multimodal_seurat_walltime <- function(
         network = network,
         meta = meta,
         branch_parallel = branch_parallel,
+        exclude_target_regex = exclude_target_regex,
         envir = envir
       )
     }
@@ -201,14 +280,20 @@ estimate_multimodal_seurat_walltime <- function(
     }
   )
   reaction_counts <- benchmark_aggregation_reaction_counts(summary$aggregation)
+  cellranger_input_nuclei <- benchmark_aggregation_cellranger_input_nuclei(summary$aggregation)
   summary <- dplyr::mutate(
     summary,
     reaction_count = unname(reaction_counts[.data$aggregation]),
+    cellranger_input_nuclei = unname(cellranger_input_nuclei[.data$aggregation]),
     critical_path_minutes = .data$critical_path_seconds / 60,
     serial_sum_minutes = .data$serial_sum_seconds / 60,
+    excluded_runtime_minutes = .data$excluded_runtime_seconds / 60,
     .after = "target"
   )
   attr(summary, "benchmark_details") <- estimates
+  attr(summary, "benchmark_aggregations") <- aggregations
+  attr(summary, "benchmark_branch_parallel") <- branch_parallel
+  attr(summary, "benchmark_exclude_target_regex") <- exclude_target_regex
   summary
 }
 
@@ -228,16 +313,26 @@ cache_multimodal_seurat_walltime <- function(
   force = FALSE,
   store = targets::tar_config_get("store"),
   branch_parallel = TRUE,
+  exclude_target_regex = character(),
   envir = parent.frame()
 ) {
   if (file.exists(cache_file) && !isTRUE(force)) {
-    return(readRDS(cache_file))
+    summary <- readRDS(cache_file)
+    cache_is_current <- "cellranger_input_nuclei" %in% colnames(summary) &&
+      identical(attr(summary, "benchmark_aggregations"), aggregations) &&
+      identical(attr(summary, "benchmark_branch_parallel"), branch_parallel) &&
+      identical(attr(summary, "benchmark_exclude_target_regex"), exclude_target_regex)
+
+    if (isTRUE(cache_is_current)) {
+      return(summary)
+    }
   }
 
   summary <- estimate_multimodal_seurat_walltime(
     aggregations = aggregations,
     store = store,
     branch_parallel = branch_parallel,
+    exclude_target_regex = exclude_target_regex,
     envir = envir
   )
   dir.create(dirname(cache_file), recursive = TRUE, showWarnings = FALSE)
@@ -246,18 +341,107 @@ cache_multimodal_seurat_walltime <- function(
 }
 
 
-#' Plot multimodal Seurat wall time by reaction count
+benchmark_plot_label_suffixes <- function(benchmark_results) {
+  reaction_IDs <- tryCatch(
+    {
+      aggregation_tibble <- benchmark_aggregation_tibble(benchmark_results$aggregation)
+      unlist(aggregation_tibble$aggregation_reaction_IDs, use.names = FALSE)
+    },
+    error = \(condition) character()
+  )
+
+  unique(c(benchmark_results$aggregation, reaction_IDs))
+}
+
+
+benchmark_strip_target_label_suffixes <- function(target_names, suffixes) {
+  suffixes <- suffixes[order(nchar(suffixes), decreasing = TRUE)]
+  purrr::map_chr(
+    target_names,
+    \(target_name) {
+      for (suffix in suffixes) {
+        target_name <- sub(paste0("\\.", suffix, "$"), "", target_name)
+      }
+      target_name
+    }
+  )
+}
+
+
+benchmark_walltime_composition_tibble <- function(benchmark_results, top_n_targets = 10) {
+  benchmark_details <- attr(benchmark_results, "benchmark_details")
+  if (is.null(benchmark_details)) {
+    stop(
+      "Benchmark result is missing the 'benchmark_details' attribute. ",
+      "Recompute it with estimate_multimodal_seurat_walltime() or cache_multimodal_seurat_walltime().",
+      call. = FALSE
+    )
+  }
+
+  missing_details <- setdiff(benchmark_results$aggregation, names(benchmark_details))
+  if (length(missing_details)) {
+    stop(
+      "Benchmark details are missing aggregation(s): ",
+      paste(missing_details, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  suffixes <- benchmark_plot_label_suffixes(benchmark_results)
+  path_tibble <- purrr::map_dfr(
+    benchmark_results$aggregation,
+    \(aggregation) {
+      benchmark_details[[aggregation]]$critical_path |>
+        tibble::as_tibble() |>
+        dplyr::mutate(aggregation = aggregation, .before = 1)
+    }
+  ) |>
+    dplyr::filter(.data$runtime_seconds > 0) |>
+    dplyr::mutate(
+      target_step = benchmark_strip_target_label_suffixes(.data$name, suffixes),
+      runtime_minutes = .data$runtime_seconds / 60
+    )
+
+  top_targets <- path_tibble |>
+    dplyr::summarise(runtime_minutes = sum(.data$runtime_minutes), .by = "target_step") |>
+    dplyr::slice_max(.data$runtime_minutes, n = top_n_targets, with_ties = FALSE) |>
+    dplyr::arrange(dplyr::desc(.data$runtime_minutes)) |>
+    dplyr::pull(.data$target_step)
+  target_levels <- c("Other", top_targets)
+
+  path_tibble |>
+    dplyr::mutate(
+      target_step = dplyr::if_else(.data$target_step %in% top_targets, .data$target_step, "Other"),
+      target_step = factor(.data$target_step, levels = target_levels)
+    ) |>
+    dplyr::summarise(runtime_minutes = sum(.data$runtime_minutes), .by = c("aggregation", "target_step")) |>
+    dplyr::left_join(
+      benchmark_results |>
+        dplyr::select("aggregation", "cellranger_input_nuclei", "reaction_count", "critical_path_minutes"),
+      by = "aggregation"
+    )
+}
+
+
+#' Plot multimodal Seurat wall time by CellRanger input nuclei
 #'
 #' @param benchmark_results Output from `estimate_multimodal_seurat_walltime()`
 #'   or `cache_multimodal_seurat_walltime()`.
 #' @param time_col Numeric column to plot on the y axis.
+#' @param top_n_targets Number of critical-path target steps to show as
+#'   separate bar segments. Remaining steps are collapsed to `Other`.
 #' @return ggplot object.
 #' @keywords internal
 plot_multimodal_seurat_walltime <- function(
   benchmark_results,
-  time_col = "critical_path_minutes"
+  time_col = "critical_path_minutes",
+  top_n_targets = 10
 ) {
-  required_cols <- c("aggregation", "reaction_count", time_col)
+  if (!identical(time_col, "critical_path_minutes")) {
+    stop("The composition plot only supports time_col = 'critical_path_minutes'.", call. = FALSE)
+  }
+
+  required_cols <- c("aggregation", "reaction_count", "cellranger_input_nuclei", time_col)
   missing_cols <- setdiff(required_cols, names(benchmark_results))
   if (length(missing_cols)) {
     stop(
@@ -267,30 +451,102 @@ plot_multimodal_seurat_walltime <- function(
     )
   }
 
+  composition_tibble <- benchmark_walltime_composition_tibble(
+    benchmark_results = benchmark_results,
+    top_n_targets = top_n_targets
+  )
   plot_tibble <- benchmark_results |>
-    dplyr::arrange(.data$reaction_count)
+    dplyr::arrange(.data$cellranger_input_nuclei) |>
+    dplyr::mutate(
+      reaction_count_label = as.character(.data$reaction_count),
+      walltime_minutes = .data[[time_col]]
+  )
+  unique_x <- sort(unique(plot_tibble$cellranger_input_nuclei))
+  bar_width <- if (length(unique_x) > 1) {
+    min(diff(unique_x)) * 0.18
+  } else {
+    unique_x[[1]] * 0.07
+  }
+  target_levels <- levels(composition_tibble$target_step)
+  target_levels_without_other <- setdiff(target_levels, "Other")
+  fill_values <- c(
+    Other = "grey70",
+    stats::setNames(scales::hue_pal()(length(target_levels_without_other)), target_levels_without_other)
+  )
 
-  ggplot2::ggplot(
-    plot_tibble,
-    ggplot2::aes(x = .data$reaction_count, y = .data[[time_col]])
-  ) +
-    ggplot2::geom_line(linewidth = 0.7, color = "#3D5A5B") +
-    ggplot2::geom_point(size = 2.8, color = "#1F2D2E") +
-    ggplot2::scale_x_continuous(breaks = plot_tibble$reaction_count) +
-    ggplot2::scale_y_continuous(
-      labels = scales::label_number(accuracy = 0.1),
+  ggplot2::ggplot() +
+    ggplot2::geom_col(
+      data = composition_tibble,
+      ggplot2::aes(
+        x = .data$cellranger_input_nuclei,
+        y = .data$runtime_minutes,
+        fill = .data$target_step
+      ),
+      width = bar_width,
+      color = "white",
+      linewidth = 0.2
+    ) +
+    ggplot2::geom_segment(
+      data = plot_tibble,
+      ggplot2::aes(
+        x = .data$cellranger_input_nuclei,
+        xend = .data$cellranger_input_nuclei,
+        y = 0,
+        yend = .data$walltime_minutes
+      ),
+      color = "grey15",
+      linetype = "dashed",
+      linewidth = 0.35,
+      alpha = 0.65
+    ) +
+    ggplot2::geom_line(
+      data = plot_tibble,
+      ggplot2::aes(x = .data$cellranger_input_nuclei, y = .data$walltime_minutes),
+      linewidth = 0.7,
+      color = "#1F2D2E"
+    ) +
+    ggplot2::geom_point(
+      data = plot_tibble,
+      ggplot2::aes(x = .data$cellranger_input_nuclei, y = .data$walltime_minutes),
+      size = 2.8,
+      color = "#1F2D2E"
+    ) +
+    ggplot2::geom_text(
+      data = plot_tibble,
+      ggplot2::aes(
+        x = .data$cellranger_input_nuclei,
+        y = .data$walltime_minutes,
+        label = .data$reaction_count_label
+      ),
+      vjust = -0.8,
+      size = 3.2,
+      color = "grey20"
+    ) +
+    ggplot2::scale_x_continuous(
+      labels = scales::label_number(scale_cut = scales::cut_short_scale()),
       limits = c(0, NA),
       expand = ggplot2::expansion(mult = c(0, 0.08))
     ) +
+    ggplot2::scale_fill_manual(
+      values = fill_values[target_levels],
+      labels = \(labels) stringr::str_wrap(labels, width = 42)
+    ) +
+    ggplot2::scale_y_continuous(
+      labels = scales::label_number(accuracy = 0.1),
+      limits = c(0, NA),
+      expand = ggplot2::expansion(mult = c(0, 0.18))
+    ) +
     ggplot2::labs(
-      x = "Reactions",
-      y = "Wall time (minutes)"
+      x = "CellRanger input nuclei",
+      y = "Wall time (minutes)",
+      fill = "Critical-path step"
     ) +
     ggplot2::theme_minimal(base_size = 11) +
     ggplot2::theme(
       panel.grid.minor = ggplot2::element_blank(),
       panel.grid.major.x = ggplot2::element_blank(),
       panel.grid.major.y = ggplot2::element_line(color = "grey88", linewidth = 0.35),
+      legend.position = "right",
       axis.title = ggplot2::element_text(color = "grey15"),
       axis.text = ggplot2::element_text(color = "grey30")
     )

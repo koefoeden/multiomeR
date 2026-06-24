@@ -395,7 +395,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>The public PBMC demo writes its <code>targets</code> store to <code>outputs</code>, as configured in <code>_targets.yaml</code>. That store contains three kinds of output that are useful to inspect after the run:</p>
+<p>The public <code>immune_human_2x</code> demo writes its <code>targets</code> store to <code>outputs</code>, as configured in <code>_targets.yaml</code>. That store contains three kinds of output that are useful to inspect after the run:</p>
 <ul>
 <li><code>objects/</code>: serialized R objects managed by <code>targets</code>, returned by <code>targets::tar_target()</code> targets</li>
 <li><code>files/</code>: file and directory artifacts saved by <code>get_structured_file_path()</code> inside <code>tarchetypes::tar_file()</code> targets</li>
@@ -412,11 +412,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_read</span>(metadata_w_cell_types_tibble.WNN.immune_human_2x)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_read</span>(cell_type_marker_tibbles.GEX.immune_human_2x)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>Please see the official targets documentation for more info: <em>insert link to most relevant manual page(s)</em></p>
+<p>See the official <a href="https://docs.ropensci.org/targets/reference/tar_read.html"><code>tar_read()</code> documentation</a> for details on reading target values from storage.</p>
 </section>
 <section id="files" class="level2" data-number="6.2">
 <h2 data-number="6.2" class="anchored" data-anchor-id="files"><span class="header-section-number">6.2</span> Files</h2>
-<p>Other targets in the pipeline explicitly writes files to disk inside <code>tarchetypes::tar_file()</code> targets. These targets can still be loaded by <code>targets::tar_read()</code>, but their value is simply the file path rather than an in-memory analysis object.</p>
+<p>Other targets in the pipeline explicitly write files to disk inside <code>tarchetypes::tar_file()</code> targets. These targets can still be loaded by <code>targets::tar_read()</code>, but their value is simply the file path rather than an in-memory analysis object.</p>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>R</strong></pre>
@@ -432,11 +432,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 |-- healthy_PBMC_human/ (reaction 1 specific files)
 |-- lymphoma_lymph_human/ (reaction 2 specific files)
 `-- immune_human_2x/ (aggregation-level files)</code></pre>
-<p>Please see the official targets documentation for more info on working with external files: <em>insert link to most relevant manual page(s)</em></p>
+<p>See the official <a href="https://books.ropensci.org/targets/data.html#external-files"><code>targets</code> local data documentation</a> for more information on file targets.</p>
 </section>
 <section id="plots" class="level2" data-number="6.3">
 <h2 data-number="6.3" class="anchored" data-anchor-id="plots"><span class="header-section-number">6.3</span> Plots</h2>
-<p>Plots are saved in a very similar manner to the files, using the <code>save_plots_structured()</code> helper function, which, like <code>get_structured_file_path()</code>, derives paths from the target name. However, they are saved under <code>outputs/plots</code> instead, but has the same, expected structure after the demo run:</p>
+<p>Plots are saved in a very similar manner to files. The <code>save_plots_structured()</code> helper function derives paths from the target name, like <code>get_structured_file_path()</code>, but writes under <code>outputs/plots</code> instead:</p>
 <pre class="text"><code>outputs/plots/
 |-- healthy_PBMC_human/ (reaction 1 specific plots)
 |-- lymphoma_lymph_human/ (reaction 2 specific plots)

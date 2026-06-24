@@ -387,7 +387,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Run the command below to process the example <code>immune_human_2x</code> aggregation and produce a multimodal Seurat object. Note that this object is primarily a convenience object, since the pipeline does not use Seurat under-the-hood to do the actual processing, but instead relies n the high-performant BPCells package. Using 16 logical threads on an AMD EPYC 7543, this process takes &lt;25 minutes to run and produces a total of 6 GBs data on disk.</p>
+<p>Run the command below to process the example <code>immune_human_2x</code> aggregation and produce a multimodal Seurat object. This object is primarily a convenience export: the pipeline does not use Seurat for the core processing, and instead keeps BPCells-backed matrices as the primary state. Using 16 logical threads on an AMD EPYC 7543, this target selection takes &lt;25 minutes to run and writes about 6 GB of data to disk.</p>
 <div class="code-with-filename">
 <div class="code-with-filename-file">
 <pre><strong>R</strong></pre>

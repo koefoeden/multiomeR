@@ -395,8 +395,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>multiomeR runs targets through the <a href="https://books.ropensci.org/targets/crew.html">targets</a> and <code>crew</code> backend. The repository ships with <code>crew_controllers.R</code> pointing to a local-controller setup, which is sufficient for the public PBMC demo.</p>
-<p>For larger datasets, adapt <code>crew_controllers.R</code> to match your scheduler, queue names, resource limits, and worker startup requirements.</p>
+<p>multiomeR runs targets through the <a href="https://books.ropensci.org/targets/crew.html">targets</a> and <code>crew</code> backend. The public controller template, <code>crew_controllers_template.R</code>, defines a local-controller setup that is sufficient for the public demo.</p>
+<p>For larger datasets, adapt your active <code>crew_controllers.R</code> to match your scheduler, queue names, resource limits, and worker startup requirements.</p>
 <section id="controller-contract" class="level2" data-number="13.1">
 <h2 data-number="13.1" class="anchored" data-anchor-id="controller-contract"><span class="header-section-number">13.1</span> Controller contract</h2>
 <p><code>crew_controllers.R</code> must return a named list with:</p>

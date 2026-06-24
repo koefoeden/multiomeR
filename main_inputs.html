@@ -398,12 +398,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="cfg_datasets.yaml" class="level2" data-number="8.1">
 <h2 data-number="8.1" class="anchored" data-anchor-id="cfg_datasets.yaml"><span class="header-section-number">8.1</span> <code>cfg_datasets.yaml</code></h2>
 <p>Dataset-level settings live in <a href="https://github.com/koefoeden/multiomeR/tree/main/cfg_datasets.yaml"><code>cfg_datasets.yaml</code></a>. A dataset is the shared context for one or more 10x reactions, typically a genome/reference combination plus dataset-wide QC rules. Reactions in <code>cfg_reactions.tsv</code> refer to these dataset keys, so define datasets before adding reaction rows.</p>
+<p>In the public repository, <code>cfg_datasets.yaml</code>, <code>cfg_reactions.tsv</code>, and <code>cfg_aggregations.yaml</code> point to template files. Keep those public example entries as a reference, and use project-specific copies or downstream private config files for study-specific paths, metadata, and analysis settings.</p>
 <p>Typical dataset-level settings include:</p>
 <ul>
 <li><code>dataset_cellranger_arc_refdata_dir</code>: Cell Ranger ARC reference directory for the dataset genome.</li>
 <li><code>dataset_QC_exclude_list_per_reaction</code>: reaction-level QC filters applied before aggregation.</li>
 </ul>
-<p>The public PBMC example uses the following dataset entry, rendered directly from <code>cfg_datasets.yaml</code>:</p>
+<p>The public human example uses the following dataset entry, rendered directly from <code>cfg_datasets.yaml</code>:</p>
 <details>
 <summary>
 Show <code>immune_human_dataset</code>
@@ -741,7 +742,7 @@ NA
 <li><strong><code>aggregation_reaction_ID_metadata_tsv</code></strong>: reaction-level metadata with a <code>TENX_reaction_ID</code> column matching the configured reaction IDs.</li>
 </ul>
 <p>These metadata tables are joined to the per-cell metadata before downstream correction, plotting, and modelling.</p>
-<p>The public PBMC aggregation below is rendered directly from <code>cfg_aggregations.yaml</code>. It shows the required aggregation inputs plus the example-specific optional overrides; standard optional settings are inherited from <code>default</code>.</p>
+<p>The public <code>immune_human_2x</code> aggregation below is rendered directly from <code>cfg_aggregations.yaml</code>. It shows the required aggregation inputs plus the example-specific optional overrides; standard optional settings are inherited from <code>default</code>.</p>
 <details>
 <summary>
 Show <code>immune_human_2x</code>

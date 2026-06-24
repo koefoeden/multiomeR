@@ -12,7 +12,7 @@ gallery_items <- check_output_gallery_assets(
 )
 ```
 
-This gallery shows representative outputs produced by multiomeR on the public PBMC demo. It is meant to give a quick sense of the QC summaries and multimodal embeddings that the main pipeline can produce before you run it on your own data.
+This gallery shows representative outputs produced by multiomeR on the public `immune_human_2x` demo. It is meant to give a quick sense of the QC summaries and multimodal embeddings that the main pipeline can produce before you run it on your own data.
 
 Each card includes the corresponding `targets` target name so you can connect the displayed output back to the workflow.
 

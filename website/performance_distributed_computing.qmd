@@ -8,9 +8,9 @@ knitr::opts_chunk$set(
 )
 ```
 
-multiomeR runs targets through the [targets](https://books.ropensci.org/targets/crew.html) and `crew` backend. The repository ships with `crew_controllers.R` pointing to a local-controller setup, which is sufficient for the public PBMC demo.
+multiomeR runs targets through the [targets](https://books.ropensci.org/targets/crew.html) and `crew` backend. The public controller template, `crew_controllers_template.R`, defines a local-controller setup that is sufficient for the public demo.
 
-For larger datasets, adapt `crew_controllers.R` to match your scheduler, queue names, resource limits, and worker startup requirements.
+For larger datasets, adapt your active `crew_controllers.R` to match your scheduler, queue names, resource limits, and worker startup requirements.
 
 ## Controller contract
 

@@ -1,6 +1,6 @@
 # Running the workflow
 
-From the repository-root R session described in [Installation](demo_installation.qmd), run the main workflow in checkpoint-sized pieces. Replace `your_aggregation` with the aggregation name from `cfg_aggregations.yaml`, for example `blood_human`.
+From the repository-root R session described in [Installation](demo_installation.qmd), run the main workflow in checkpoint-sized pieces. Replace `your_aggregation` with the aggregation name from `cfg_aggregations.yaml`, for example `immune_human_2x`.
 
 ## GEX checkpoint
 

@@ -9,12 +9,14 @@ source("helpers/_setup.R")
 
 Dataset-level settings live in [`cfg_datasets.yaml`](`r datasets_github_file`). A dataset is the shared context for one or more 10x reactions, typically a genome/reference combination plus dataset-wide QC rules. Reactions in `cfg_reactions.tsv` refer to these dataset keys, so define datasets before adding reaction rows.
 
+In the public repository, `cfg_datasets.yaml`, `cfg_reactions.tsv`, and `cfg_aggregations.yaml` point to template files. Keep those public example entries as a reference, and use project-specific copies or downstream private config files for study-specific paths, metadata, and analysis settings.
+
 Typical dataset-level settings include:
 
 - `dataset_cellranger_arc_refdata_dir`: Cell Ranger ARC reference directory for the dataset genome.
 - `dataset_QC_exclude_list_per_reaction`: reaction-level QC filters applied before aggregation.
 
-The public PBMC example uses the following dataset entry, rendered directly from `cfg_datasets.yaml`:
+The public human example uses the following dataset entry, rendered directly from `cfg_datasets.yaml`:
 
 <details>
 <summary>Show <code>immune_human_dataset</code></summary>
@@ -82,7 +84,7 @@ Each aggregation also points to metadata files:
 
 These metadata tables are joined to the per-cell metadata before downstream correction, plotting, and modelling.
 
-The public PBMC aggregation below is rendered directly from `cfg_aggregations.yaml`. It shows the required aggregation inputs plus the example-specific optional overrides; standard optional settings are inherited from `default`.
+The public `immune_human_2x` aggregation below is rendered directly from `cfg_aggregations.yaml`. It shows the required aggregation inputs plus the example-specific optional overrides; standard optional settings are inherited from `default`.
 
 <details>
 <summary>Show <code>immune_human_2x</code></summary>

@@ -8,7 +8,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-The public PBMC demo writes its `targets` store to `outputs`, as configured in `_targets.yaml`. That store contains three kinds of output that are useful to inspect after the run:
+The public `immune_human_2x` demo writes its `targets` store to `outputs`, as configured in `_targets.yaml`. That store contains three kinds of output that are useful to inspect after the run:
 
 - `objects/`: serialized R objects managed by `targets`, returned by `targets::tar_target()` targets
 - `files/`: file and directory artifacts saved by `get_structured_file_path()` inside `tarchetypes::tar_file()` targets
@@ -24,11 +24,11 @@ targets::tar_read(metadata_w_cell_types_tibble.WNN.immune_human_2x)
 targets::tar_read(cell_type_marker_tibbles.GEX.immune_human_2x)
 ```
 
-Please see the official targets documentation for more info: _insert link to most relevant manual page(s)_
+See the official [`tar_read()` documentation](https://docs.ropensci.org/targets/reference/tar_read.html) for details on reading target values from storage.
 
 ## Files
 
-Other targets in the pipeline explicitly writes files to disk inside `tarchetypes::tar_file()` targets. These targets can still be loaded by `targets::tar_read()`, but their value is simply the file path rather than an in-memory analysis object.
+Other targets in the pipeline explicitly write files to disk inside `tarchetypes::tar_file()` targets. These targets can still be loaded by `targets::tar_read()`, but their value is simply the file path rather than an in-memory analysis object.
 
 ```{.r filename="R"}
 targets::tar_read(cellranger_barcodes_tsv.healthy_PBMC_human)
@@ -51,11 +51,11 @@ outputs/files/
 `-- immune_human_2x/ (aggregation-level files)
 ```
 
-Please see the official targets documentation for more info on working with external files: _insert link to most relevant manual page(s)_
+See the official [`targets` local data documentation](https://books.ropensci.org/targets/data.html#external-files) for more information on file targets.
 
 ## Plots
 
-Plots are saved in a very similar manner to the files, using the `save_plots_structured()` helper function, which, like `get_structured_file_path()`, derives paths from the target name. However, they are saved under `outputs/plots` instead, but has the same, expected structure after the demo run:
+Plots are saved in a very similar manner to files. The `save_plots_structured()` helper function derives paths from the target name, like `get_structured_file_path()`, but writes under `outputs/plots` instead:
 ```text
 outputs/plots/
 |-- healthy_PBMC_human/ (reaction 1 specific plots)

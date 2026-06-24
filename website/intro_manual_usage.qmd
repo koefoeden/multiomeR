@@ -2,7 +2,7 @@
 
 ## Where to start
 
-Use the [Quickstart: Public PBMC demo](demo_installation.qmd) if you want to install multiomeR, run a focused public example, and inspect representative outputs before reading the full pipeline walkthroughs.
+Use the [public example quickstart](demo_installation.qmd) if you want to install multiomeR, run the focused `immune_human_2x` example, and inspect representative outputs before reading the full pipeline walkthroughs.
 
 Then use the workflow pages as references for the parts of the analysis you plan to run:
 

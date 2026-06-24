@@ -10,7 +10,7 @@ knitr::opts_chunk$set(
 
 ## System requirements
 
-- Linux system with at least 60 GB of RAM, preferably equipped with a job-scheduler supported by the crew.cluster package: SLURM, PBS, SGE or LSf.
+- Linux system with at least 60 GB of RAM, preferably equipped with a job scheduler supported by the `crew.cluster` package: SLURM, PBS, SGE, or LSF.
 
 
 ## Clone and enter the repository
@@ -30,10 +30,10 @@ curl -fsSL https://pixi.sh/install.sh | sh
 export PATH="$HOME/.pixi/bin:$PATH"
 ```
 
-Install the pixi environment from the repository root (<5 mins):
+Install the locked pixi environment from the repository root (<5 mins):
 
 ```{.bash filename="Bash"}
-pixi install --run-post-link-scripts
+pixi install --locked --run-post-link-scripts
 pixi run install-r-github-packages
 ```
 
@@ -55,18 +55,18 @@ multiomeR depends on both R packages and command-line genomics tools. Pixi keeps
 ::: {.callout-note collapse="true"}
 ## Why is `--run-post-link-scripts` needed?
 
-The `--run-post-link-scripts` flag is required for Bioconductor data packages such as the BSgenome genome packages. Pixi disables conda post-link scripts by default, but these packages use Bioconda's post-link scripts to materialize the actual R package directories in the pixi environment.
+The `--locked` flag keeps installation aligned with `pixi.lock`. The `--run-post-link-scripts` flag is required for Bioconductor data packages such as the BSgenome genome packages. Pixi disables conda post-link scripts by default, but these packages use Bioconda's post-link scripts to materialize the actual R package directories in the pixi environment.
 :::
 
 ::: {.callout-note collapse="true"}
 ## Why is `pixi run install-r-github-packages` needed?
 
-A small number of R packages still need GitHub versions, since they are not currently available on conda-forge/bioconda. The `pixi run install-r-github-packages` task installs the pinned GitHub versions of BPCells, Signac, and betterChromVAR into the pixi R library.
+A small number of R packages still need GitHub versions, since they are not currently available on conda-forge/bioconda. The `pixi run install-r-github-packages` task installs the pinned GitHub versions of BPCells, Signac, and betterChromVAR into the pixi R library. The pixi environment also preinstalls system libraries needed by these source installs, including `libhwy` for BPCells.
 :::
 
 ## Download public inputs
 
-Download the two public human `cellranger-arc count` outputs from the repository root (3.9 GB).
+Download the two public human `cellranger-arc count` outputs used by the `immune_human_2x` example aggregation from the repository root (3.9 GB).
 
 ```{.bash filename="Bash"}
 pbmc_dir="example_data/healthy_PBMC_human/outs"
@@ -93,7 +93,7 @@ curl -fL -o "${lymphoma_dir}/atac_fragments.tsv.gz" "${lymphoma_prefix}_atac_fra
 curl -fL -o "${lymphoma_dir}/atac_fragments.tsv.gz.tbi" "${lymphoma_prefix}_atac_fragments.tsv.gz.tbi"
 ```
 
-Then download and unpack the matching human Cell Ranger ARC reference (14.9 GB) (or simply symlink it to example_data/refdata-cellranger-arc-GRCh38-2024-A if you have one).
+Then download and unpack the matching human Cell Ranger ARC reference (14.9 GB). If you already have this reference, symlink it to `example_data/refdata-cellranger-arc-GRCh38-2024-A` instead.
 
 ```{.bash filename="Bash"}
 refdata="refdata-cellranger-arc-GRCh38-2024-A"

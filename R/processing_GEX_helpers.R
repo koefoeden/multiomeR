@@ -392,19 +392,20 @@ add_cell_cycle_scores_to_cell_attr <- function(counts_matrix, cell_attr, organis
     )
   }
 
-  normalized_assay <- SeuratObject::CreateAssay5Object(counts = counts_matrix) |>
-    Seurat::NormalizeData(verbose = FALSE)
-  normalized_data <- SeuratObject::GetAssayData(normalized_assay, layer = "data")
+  cell_counts <- BPCells::colSums(counts_matrix)
+  normalized_data <- counts_matrix |>
+    BPCells::multiply_cols(ifelse(cell_counts > 0, 10000 / cell_counts, 0)) |>
+    log1p()
   n_unique_vals <- min(
-    length(unique(Matrix::rowMeans(normalized_data[s_features, , drop = FALSE]))),
-    length(unique(Matrix::rowMeans(normalized_data[g2m_features, , drop = FALSE])))
+    length(unique(BPCells::rowMeans(normalized_data[s_features, , drop = FALSE]))),
+    length(unique(BPCells::rowMeans(normalized_data[g2m_features, , drop = FALSE])))
   )
   if (n_unique_vals < 3) {
     stop("Cell-cycle scoring was requested, but the normalized GEX data has too few unique cell-cycle feature means.")
   }
 
-  cc_scores <- calculate_Seurat_cell_cycle_scores_from_matrix(
-    assay_data = normalized_assay,
+  cc_scores <- calculate_BPCells_cell_cycle_scores_from_matrix(
+    normalized_data = normalized_data,
     s.features = s_features,
     g2m.features = g2m_features,
     nbin = min(n_unique_vals - 2, 24)
@@ -416,19 +417,16 @@ add_cell_cycle_scores_to_cell_attr <- function(counts_matrix, cell_attr, organis
   cell_attr
 }
 
-calculate_Seurat_cell_cycle_scores_from_matrix <- function(assay_data, s.features, g2m.features, nbin, seed = 1) {
+calculate_BPCells_cell_cycle_scores_from_matrix <- function(normalized_data, s.features, g2m.features, nbin, seed = 1) {
   features <- list(S.Score = s.features, G2M.Score = g2m.features)
-  set.seed(seed)
-  feature_scores <- Seurat::AddModuleScore(
-    object = assay_data,
+
+  feature_scores <- calculate_BPCells_module_scores_from_matrix(
+    normalized_data = normalized_data,
     features = features,
     ctrl = min(lengths(features)),
     nbin = nbin,
-    name = "Cell.Cycle",
-    seed = seed,
-    slot = "data"
+    seed = seed
   )
-  colnames(feature_scores) <- c("S.Score", "G2M.Score")
 
   phase <- apply(feature_scores, 1, function(scores) {
     if (all(scores < 0)) {
@@ -446,6 +444,38 @@ calculate_Seurat_cell_cycle_scores_from_matrix <- function(assay_data, s.feature
     Phase = phase,
     row.names = rownames(feature_scores)
   )
+}
+
+calculate_BPCells_module_scores_from_matrix <- function(normalized_data, features, nbin = 24, ctrl = 100, seed = 1) {
+  features <- lapply(features, intersect, y = rownames(normalized_data))
+  if (!all(lengths(features) > 0)) {
+    stop("All module feature sets must have at least one feature present in the normalized matrix.")
+  }
+
+  gene_means <- BPCells::rowMeans(normalized_data)
+  gene_means <- gene_means[order(gene_means)]
+  set.seed(seed)
+  gene_bins <- ggplot2::cut_number(gene_means + stats::rnorm(length(gene_means)) / 1e30, n = nbin, labels = FALSE, right = FALSE)
+  names(gene_bins) <- names(gene_means)
+
+  control_features <- lapply(features, function(feature_set) {
+    unique(unlist(lapply(feature_set, function(feature) {
+      bin_features <- names(gene_bins)[gene_bins == gene_bins[[feature]]]
+      sample(bin_features, size = min(ctrl, length(bin_features)), replace = FALSE)
+    }), use.names = FALSE))
+  })
+
+  scores <- matrix(0, nrow = length(features), ncol = ncol(normalized_data))
+  for (idx in seq_along(features)) {
+    module_score <- BPCells::colMeans(normalized_data[features[[idx]], , drop = FALSE])
+    control_score <- BPCells::colMeans(normalized_data[control_features[[idx]], , drop = FALSE])
+    scores[idx, ] <- module_score - control_score
+  }
+
+  scores <- as.data.frame(t(scores))
+  colnames(scores) <- names(features)
+  rownames(scores) <- colnames(normalized_data)
+  scores
 }
 
 get_SCT_variable_feature_variance <- function(SCT_out, pearson_residuals) {

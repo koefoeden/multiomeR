@@ -50,3 +50,4 @@ logs
 **/*.quarto_ipynb
 .pixi/
 AGENTS.md
+outputs

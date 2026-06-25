@@ -280,8 +280,18 @@ rlang::list2(
           )
         ))
 
-        metadata_w_clusters_tibble_filtered.subgroups |>
-          plot_UMAP_from_metadata(metadata_cols = categorical_vars, umap_cols = UMAP_cols) |>
+        plots <- categorical_vars |>
+          purrr::set_names() |>
+          purrr::map(\(variable) {
+            plot_UMAP_from_metadata(
+              metadata_tibble = metadata_w_clusters_tibble_filtered.subgroups,
+              variable = variable,
+              umap_cols = UMAP_cols
+            )
+          }) |>
+          purrr::discard(\(plot) inherits(plot, "empty_plot_list"))
+
+        plots |>
           save_plots_structured(dyn_suffix_in_subdir = TRUE, override_suffix = subgroups_to_process_vec)
       },
       pattern = map(metadata_w_clusters_tibble_filtered.subgroups, subgroups_to_process_vec),
@@ -290,13 +300,31 @@ rlang::list2(
     tarchetypes::tar_file(
       name = continuous.UMAPs.subgroups,
       description = "Plot continuous feature UMAPs for each subgroup and save to file",
-      command = plot_UMAP_from_metadata(
-        metadata_tibble = metadata_w_clusters_tibble_filtered.subgroups,
-        metadata_cols = aggregation_w_WNN_continuous_vars,
-        feature_matrix = aggregated_counts_BPCells_matrix.GEX,
-        feature_rows = GEX_marker_genes_vec,
-        umap_cols = UMAP_cols
-      ) %>%
+      command = {
+        metadata_plots <- aggregation_w_WNN_continuous_vars |>
+          purrr::set_names() |>
+          purrr::map(\(variable) {
+            plot_UMAP_from_metadata(
+              metadata_tibble = metadata_w_clusters_tibble_filtered.subgroups,
+              variable = variable,
+              umap_cols = UMAP_cols
+            )
+          })
+        feature_plots <- intersect(GEX_marker_genes_vec, rownames(aggregated_counts_BPCells_matrix.GEX)) |>
+          purrr::set_names() |>
+          purrr::map(\(variable) {
+            plot_UMAP_from_metadata(
+              metadata_tibble = metadata_w_clusters_tibble_filtered.subgroups,
+              variable = variable,
+              value_source = "feature",
+              feature_matrix = aggregated_counts_BPCells_matrix.GEX,
+              umap_cols = UMAP_cols
+            )
+          })
+
+        c(metadata_plots, feature_plots) |>
+          purrr::discard(\(plot) inherits(plot, "empty_plot_list"))
+      } %>%
         save_plots_structured(
           dyn_suffix_in_subdir = TRUE,
           override_suffix = subgroups_to_process_vec

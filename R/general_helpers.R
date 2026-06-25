@@ -369,15 +369,13 @@ get_embedding_matrix_from_metadata <- function(metadata_tibble, umap_cols) {
 
 #' Plot UMAP from metadata
 #'
-#' Draw UMAP overlays for metadata columns and optional feature-expression rows.
+#' Draw a UMAP overlay for one metadata column or feature-expression row.
 #'
 #' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
-#' @param metadata_cols Character vector of metadata columns to test or plot.
-#' @param optional_metadata_cols Metadata columns to include only when present, so shared plotting code can span datasets with different annotations.
+#' @param variable Metadata column or feature row to plot.
+#' @param value_source Whether `variable` should be read from `metadata_tibble`
+#'   or from `feature_matrix`.
 #' @param feature_matrix Feature-by-cell matrix-like object with row names as feature IDs and column names as cell barcodes.
-#' @param feature_rows Optional feature names, or nested feature-name vectors,
-#'   to pull from `feature_matrix` and plot as continuous UMAP overlays. Trailing
-#'   `+`/`-` suffixes are ignored when matching matrix row names.
 #' @param umap_cols Two metadata columns used as embedding x/y coordinates.
 #' @param labels_discrete Logical passed to `BPCells::plot_embedding()`; when
 #'   `TRUE`, discrete labels are drawn on the embedding.
@@ -394,10 +392,9 @@ get_embedding_matrix_from_metadata <- function(metadata_tibble, umap_cols) {
 
 plot_UMAP_from_metadata <- function(
   metadata_tibble,
-  metadata_cols = NULL,
-  optional_metadata_cols = NULL,
+  variable,
+  value_source = c("metadata", "feature"),
   feature_matrix = NULL,
-  feature_rows = NULL,
   umap_cols = c("LSI_UMAP_1", "LSI_UMAP_2"),
   labels_discrete = FALSE,
   legend_continuous = "quantile",
@@ -406,92 +403,74 @@ plot_UMAP_from_metadata <- function(
   randomize_order = TRUE,
   ...
 ) {
-  metadata_cols <- metadata_cols %||% character()
+  value_source <- match.arg(value_source)
+  if (!is.character(variable) || length(variable) != 1 || is.na(variable) || !nzchar(variable)) {
+    stop("`variable` must be a non-empty length-1 character vector.", call. = FALSE)
+  }
+
   missing_umap_cols <- setdiff(umap_cols, colnames(metadata_tibble))
   if (length(missing_umap_cols) > 0) {
     stop("Required UMAP column(s) not found: ", paste(missing_umap_cols, collapse = ", "))
   }
 
-  missing_metadata_cols <- setdiff(metadata_cols, colnames(metadata_tibble))
-  if (length(missing_metadata_cols) > 0) {
-    stop("Required metadata column(s) not found: ", paste(missing_metadata_cols, collapse = ", "))
-  }
-
-  optional_metadata_cols <- intersect(optional_metadata_cols %||% character(), colnames(metadata_tibble))
-  plot_metadata_cols <- unique(c(metadata_cols, optional_metadata_cols))
-
-  requested_feature_rows <- character()
-  if (!is.null(feature_rows)) {
-    requested_feature_rows <- feature_rows
-  }
-  available_feature_rows <- if (!is.null(feature_matrix)) {
-    intersect(requested_feature_rows, rownames(feature_matrix))
-  } else {
-    character()
-  }
-
-  plot_source <- metadata_tibble |>
-    dplyr::select(dplyr::all_of(plot_metadata_cols)) |>
-    as.data.frame()
-  if (length(available_feature_rows) > 0) {
-    feature_source <- metadata_tibble |>
-      dplyr::select(barcode_w_prefix) |>
-      add_feature_matrix_to_metadata(
-        feature_matrix = feature_matrix,
-        features = available_feature_rows
-      ) |>
-      dplyr::select(dplyr::all_of(available_feature_rows)) |>
-      as.data.frame()
-    plot_source <- dplyr::bind_cols(plot_source, feature_source)
-  }
-  rownames(plot_source) <- NULL
-
-  if (ncol(plot_source) == 0) {
-    return(list())
-  }
+  plot_col_data <- switch(
+    value_source,
+    metadata = {
+      if (!variable %in% colnames(metadata_tibble)) {
+        stop("Required metadata column not found: ", variable, call. = FALSE)
+      }
+      metadata_tibble |>
+        dplyr::select(dplyr::all_of(variable)) |>
+        as.data.frame()
+    },
+    feature = {
+      if (is.null(feature_matrix)) {
+        stop("`feature_matrix` is required when `value_source = 'feature'`.", call. = FALSE)
+      }
+      if (!variable %in% rownames(feature_matrix)) {
+        stop("Required feature row not found: ", variable, call. = FALSE)
+      }
+      metadata_tibble |>
+        dplyr::select(barcode_w_prefix) |>
+        add_feature_matrix_to_metadata(
+          feature_matrix = feature_matrix,
+          features = variable
+        ) |>
+        dplyr::select(dplyr::all_of(variable)) |>
+        as.data.frame()
+    }
+  )
+  rownames(plot_col_data) <- NULL
 
   alpha_size_list <- get_BPCells_plot_embedding_aesthetics(metadata_tibble, rasterize = rasterize)
   embedding_matrix <- get_embedding_matrix_from_metadata(metadata_tibble, umap_cols)
+  plot_embedding_matrix <- embedding_matrix
 
-  plot_list <- colnames(plot_source) |>
-    purrr::set_names() |>
-    purrr::map(\(plot_col) {
-      plot_col_data <- plot_source[plot_col]
-      plot_embedding_matrix <- embedding_matrix
-
-      if (is.numeric(plot_col_data[[1]])) {
-        keep_rows <- is.finite(plot_col_data[[1]])
-        if (!any(keep_rows)) {
-          return(NULL)
-        }
-        plot_col_data <- plot_col_data[keep_rows, , drop = FALSE]
-        plot_embedding_matrix <- plot_embedding_matrix[keep_rows, , drop = FALSE]
-      }
-
-      BPCells::plot_embedding(
-        source = plot_col_data,
-        embedding = plot_embedding_matrix,
-        features = plot_col,
-        size = alpha_size_list$size,
-        rasterize = rasterize,
-        raster_pixels = raster_pixels,
-        randomize_order = randomize_order,
-        labels_discrete = labels_discrete,
-        legend_continuous = legend_continuous,
-        return_plot_list = TRUE,
-        apply_styling = TRUE,
-        ...
-      ) |>
-        apply_alpha_to_plot_embedding(alpha_size_list$alpha) |>
-        (\(plot) plot + ggplot2::labs(title = plot_col))() # feature var name is dropped for one-column dataframes, and replaced with generic "value" so we add it back as title. PR candidate for BPCells.
-    }) |>
-    purrr::compact()
-
-  if (length(plot_list) == 1) {
-    return(plot_list[[1]])
+  if (is.numeric(plot_col_data[[1]])) {
+    keep_rows <- is.finite(plot_col_data[[1]])
+    if (!any(keep_rows)) {
+      return(structure(list(), class = c("empty_plot_list", "list")))
+    }
+    plot_col_data <- plot_col_data[keep_rows, , drop = FALSE]
+    plot_embedding_matrix <- plot_embedding_matrix[keep_rows, , drop = FALSE]
   }
 
-  plot_list
+  BPCells::plot_embedding(
+    source = plot_col_data,
+    embedding = plot_embedding_matrix,
+    features = variable,
+    size = alpha_size_list$size,
+    rasterize = rasterize,
+    raster_pixels = raster_pixels,
+    randomize_order = randomize_order,
+    labels_discrete = labels_discrete,
+    legend_continuous = legend_continuous,
+    return_plot_list = TRUE,
+    apply_styling = TRUE,
+    ...
+  ) |>
+    apply_alpha_to_plot_embedding(alpha_size_list$alpha) |>
+    (\(plot) plot + ggplot2::labs(title = variable))() # feature var name is dropped for one-column dataframes, and replaced with generic "value" so we add it back as title. PR candidate for BPCells.
 }
 
 #' Plot 3 by 3 clusters and reduction UMAPs from metadata
@@ -525,7 +504,7 @@ plot_3_by_3_clusters_and_reduction_UMAPs_from_metadata <- function(metadata_tibb
         \(umap_cols, modality_title) {
           metadata_tibble |>
             plot_UMAP_from_metadata(
-              metadata_cols = cluster_col,
+              variable = cluster_col,
               umap_cols = umap_cols
             ) +
             CONST_UMAP_ggplot2_theme +

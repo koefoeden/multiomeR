@@ -156,6 +156,48 @@ rlang::list2(
     description = "Generate a sequence of neighbour counts for cross-parameter UMAP exploration",
     command = round(seq(10, aggregation_UMAP_nNNs, length.out = 3))
   ),
+  targets::tar_target(
+    name = categorical_UMAP_var.GEX,
+    description = "Categorical GEX UMAP variables to plot one at a time",
+    command = aggregation_GEX_categorical_vars,
+    iteration = "vector"
+  ),
+  targets::tar_target(
+    name = harmony_continuous_UMAP_spec.GEX,
+    description = "Continuous Harmony GEX UMAP variables to plot one at a time",
+    command = {
+      feature_vars <- intersect(
+        unique(c(GEX_marker_genes_vec, interesting_genes, top_variable_genes.GEX)),
+        rownames(aggregated_counts_BPCells_matrix.GEX)
+      )
+      tibble::tibble(
+        variable = c(aggregation_non_peak_based_continuous_vars, feature_vars),
+        value_source = c(
+          rep("metadata", length(aggregation_non_peak_based_continuous_vars)),
+          rep("feature", length(feature_vars))
+        )
+      )
+    },
+    iteration = "vector"
+  ),
+  targets::tar_target(
+    name = non_harmony_continuous_UMAP_spec.GEX,
+    description = "Continuous non-Harmony GEX UMAP variables to plot one at a time",
+    command = {
+      feature_vars <- intersect(
+        unique(c(GEX_marker_genes_vec, interesting_genes)),
+        rownames(aggregated_counts_BPCells_matrix.GEX)
+      )
+      tibble::tibble(
+        variable = c(aggregation_non_peak_based_continuous_vars, feature_vars),
+        value_source = c(
+          rep("metadata", length(aggregation_non_peak_based_continuous_vars)),
+          rep("feature", length(feature_vars))
+        )
+      )
+    },
+    iteration = "vector"
+  ),
   tarchetypes::tar_file(
     name = cross.UMAPs.GEX,
     description = "Compute GEX UMAPs across a sweep of PC counts and neighbour counts. [checkpoint:GEX]",
@@ -173,7 +215,7 @@ rlang::list2(
       metadata_w_cell_types_tibble.GEX |>
         dplyr::select(-dplyr::any_of(c("GEX_UMAP_1", "GEX_UMAP_2"))) |>
         dplyr::left_join(sweep_umap, by = "barcode_w_prefix") |>
-        plot_UMAP_from_metadata(metadata_cols = "PCA_harmony_SNN_cluster_cell_type", umap_cols = c("GEX_UMAP_1", "GEX_UMAP_2"))
+        plot_UMAP_from_metadata(variable = "PCA_harmony_SNN_cluster_cell_type", umap_cols = c("GEX_UMAP_1", "GEX_UMAP_2"))
     } |>
       save_plots_structured(dyn_suffix_in_subdir = TRUE, override_suffix = paste0(UMAP_n_dims_seq.GEX, "_", UMAP_neighbors_seq)),
     pattern = cross(UMAP_n_dims_seq.GEX, UMAP_neighbors_seq),
@@ -183,8 +225,12 @@ rlang::list2(
     name = harmony.categorical.UMAPs.GEX,
     description = "UMAPs colored by categorical metadata variables. [checkpoint:GEX]",
     command = metadata_w_cell_types_tibble.GEX |>
-      plot_UMAP_from_metadata(metadata_cols = aggregation_GEX_categorical_vars, umap_cols = c("GEX_UMAP_1", "GEX_UMAP_2")) |>
-      save_plots_structured(),
+      plot_UMAP_from_metadata(variable = categorical_UMAP_var.GEX, umap_cols = c("GEX_UMAP_1", "GEX_UMAP_2")) |>
+      save_plots_structured(
+        dyn_suffix_in_subdir = TRUE,
+        override_suffix = stringr::str_replace_all(categorical_UMAP_var.GEX, "[/\\\\]", "_")
+      ),
+    pattern = map(categorical_UMAP_var.GEX),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
@@ -192,20 +238,28 @@ rlang::list2(
     description = "UMAPs colored by continuous QC and gene expression features. [checkpoint:GEX]",
     command = plot_UMAP_from_metadata(
       metadata_tibble = metadata_w_cell_types_tibble.GEX,
-      metadata_cols = aggregation_non_peak_based_continuous_vars,
+      variable = harmony_continuous_UMAP_spec.GEX$variable,
+      value_source = harmony_continuous_UMAP_spec.GEX$value_source,
       feature_matrix = aggregated_counts_BPCells_matrix.GEX,
-      feature_rows = c(GEX_marker_genes_vec, interesting_genes, top_variable_genes.GEX),
       umap_cols = c("GEX_UMAP_1", "GEX_UMAP_2")
     ) |>
-      save_plots_structured(),
+      save_plots_structured(
+        dyn_suffix_in_subdir = TRUE,
+        override_suffix = stringr::str_replace_all(harmony_continuous_UMAP_spec.GEX$variable, "[/\\\\]", "_")
+      ),
+    pattern = map(harmony_continuous_UMAP_spec.GEX),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
     name = non_harmony.categorical.UMAPs.GEX,
     description = "UMAPs colored by categorical metadata variables on the uncorrected PCA embedding. [checkpoint:GEX]",
     command = metadata_w_cell_types_tibble.GEX |>
-      plot_UMAP_from_metadata(metadata_cols = aggregation_GEX_categorical_vars, umap_cols = c("GEX_non_harmony_UMAP_1", "GEX_non_harmony_UMAP_2")) |>
-      save_plots_structured(),
+      plot_UMAP_from_metadata(variable = categorical_UMAP_var.GEX, umap_cols = c("GEX_non_harmony_UMAP_1", "GEX_non_harmony_UMAP_2")) |>
+      save_plots_structured(
+        dyn_suffix_in_subdir = TRUE,
+        override_suffix = stringr::str_replace_all(categorical_UMAP_var.GEX, "[/\\\\]", "_")
+      ),
+    pattern = map(categorical_UMAP_var.GEX),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
@@ -213,12 +267,16 @@ rlang::list2(
     description = "UMAPs colored by continuous features on the uncorrected PCA embedding. [checkpoint:GEX]",
     command = plot_UMAP_from_metadata(
       metadata_tibble = metadata_w_cell_types_tibble.GEX,
-      metadata_cols = aggregation_non_peak_based_continuous_vars,
+      variable = non_harmony_continuous_UMAP_spec.GEX$variable,
+      value_source = non_harmony_continuous_UMAP_spec.GEX$value_source,
       feature_matrix = aggregated_counts_BPCells_matrix.GEX,
-      feature_rows = c(GEX_marker_genes_vec, interesting_genes),
       umap_cols = c("GEX_non_harmony_UMAP_1", "GEX_non_harmony_UMAP_2")
     ) |>
-      save_plots_structured(),
+      save_plots_structured(
+        dyn_suffix_in_subdir = TRUE,
+        override_suffix = stringr::str_replace_all(non_harmony_continuous_UMAP_spec.GEX$variable, "[/\\\\]", "_")
+      ),
+    pattern = map(non_harmony_continuous_UMAP_spec.GEX),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(

@@ -745,17 +745,17 @@ get_SCAVENGE_TRS_UMAP_plots <- function(TRS_tibble, metadata_tibble, umap_cols) 
     dplyr::left_join(dplyr::select(TRS_tibble, barcode_w_prefix, score), by = "barcode_w_prefix") |>
     dplyr::rename(!!score_col := score)
 
-  plots <- plot_UMAP_from_metadata(
+  plot <- plot_UMAP_from_metadata(
     metadata_tibble = SCAVENGE_metadata_tibble,
-    metadata_cols = score_col,
+    variable = score_col,
     umap_cols = unlist(as.list(umap_cols), use.names = FALSE)
   )
 
-  if (inherits(plots, "empty_plot_list") || length(plots) == 0) {
+  if (inherits(plot, "empty_plot_list")) {
     return(structure(list(), class = c("empty_plot_list", "list")))
   }
 
-  plots + ggplot2::scale_color_viridis_c()
+  plot + ggplot2::scale_color_viridis_c()
 }
 
 #' Plot GWAS by group

@@ -666,13 +666,22 @@ rlang::list2(
         save_plots_structured(plot)
       }
     ),
+    targets::tar_target(
+      name = categorical_UMAP_var.ATAC,
+      description = "Categorical ATAC UMAP variables to plot one at a time",
+      command = aggregation_ATAC_categorical_vars,
+      iteration = "vector"
+    ),
     tarchetypes::tar_file(
       name = categorical.UMAPs.ATAC,
       description = "UMAPs colored by categorical metadata variables. [checkpoint:ATAC]",
-      command = {
-        plots <- plot_UMAP_from_metadata(metadata_w_cell_types_tibble.ATAC, metadata_cols = aggregation_ATAC_categorical_vars)
-        save_plots_structured(plots)
-      }
+      command = metadata_w_cell_types_tibble.ATAC |>
+        plot_UMAP_from_metadata(variable = categorical_UMAP_var.ATAC) |>
+        save_plots_structured(
+          dyn_suffix_in_subdir = TRUE,
+          override_suffix = stringr::str_replace_all(categorical_UMAP_var.ATAC, "[/\\\\]", "_")
+        ),
+      pattern = map(categorical_UMAP_var.ATAC)
     ),
     targets::tar_target(
       name = UMAP_n_dims_seq.ATAC,
@@ -691,12 +700,12 @@ rlang::list2(
         ) |>
           tibble::as_tibble(rownames = "barcode_w_prefix")
 
-        plots <- metadata_w_cell_types_tibble.ATAC |>
+        plot <- metadata_w_cell_types_tibble.ATAC |>
           dplyr::select(-dplyr::any_of(c("LSI_UMAP_1", "LSI_UMAP_2"))) |>
           dplyr::left_join(sweep_umap, by = "barcode_w_prefix") |>
-          plot_UMAP_from_metadata(metadata_cols = "LSI_harmony_SNN_cluster_cell_type")
+          plot_UMAP_from_metadata(variable = "LSI_harmony_SNN_cluster_cell_type")
 
-        save_plots_structured(plots, dyn_suffix_in_subdir = TRUE, override_suffix = paste0(UMAP_n_dims_seq.ATAC, "_", UMAP_neighbors_seq))
+        save_plots_structured(plot, dyn_suffix_in_subdir = TRUE, override_suffix = paste0(UMAP_n_dims_seq.ATAC, "_", UMAP_neighbors_seq))
       },
       pattern = cross(UMAP_n_dims_seq.ATAC, UMAP_neighbors_seq),
       resources = get_tar_resources(RAM_GB_req = 60)
@@ -923,16 +932,35 @@ rlang::list2(
         save_plots_structured(),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
+    targets::tar_target(
+      name = continuous_UMAP_spec.ATAC,
+      description = "Continuous ATAC UMAP variables to plot one at a time",
+      command = {
+        feature_vars <- intersect(ATAC_marker_TFs_vec, rownames(TF_activity_BPCells_matrix.ATAC))
+        tibble::tibble(
+          variable = c(aggregation_w_peaks_continuous_vars, feature_vars),
+          value_source = c(
+            rep("metadata", length(aggregation_w_peaks_continuous_vars)),
+            rep("feature", length(feature_vars))
+          )
+        )
+      },
+      iteration = "vector"
+    ),
     tarchetypes::tar_file(
       name = continuous.UMAPs.ATAC,
       description = "UMAPs colored by continuous TF activity and peak accessibility metrics. [checkpoint:ATAC]",
       command = plot_UMAP_from_metadata(
         metadata_tibble = metadata_w_cell_types_tibble.ATAC,
-        metadata_cols = aggregation_w_peaks_continuous_vars,
-        feature_matrix = TF_activity_BPCells_matrix.ATAC,
-        feature_rows = ATAC_marker_TFs_vec
+        variable = continuous_UMAP_spec.ATAC$variable,
+        value_source = continuous_UMAP_spec.ATAC$value_source,
+        feature_matrix = TF_activity_BPCells_matrix.ATAC
       ) |>
-        save_plots_structured(),
+        save_plots_structured(
+          dyn_suffix_in_subdir = TRUE,
+          override_suffix = stringr::str_replace_all(continuous_UMAP_spec.ATAC$variable, "[/\\\\]", "_")
+        ),
+      pattern = map(continuous_UMAP_spec.ATAC),
       resources = get_tar_resources(RAM_GB_req = 60)
     )
   ),

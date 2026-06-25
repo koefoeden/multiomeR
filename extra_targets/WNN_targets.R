@@ -116,15 +116,40 @@ rlang::list2(
     )
   ),
   WNN_plot_targets = rlang::list2(
+    targets::tar_target(
+      name = categorical_UMAP_var.WNN,
+      description = "Categorical WNN UMAP variables to plot one at a time",
+      command = aggregation_WNN_categorical_vars,
+      iteration = "vector"
+    ),
+    targets::tar_target(
+      name = continuous_UMAP_spec.WNN,
+      description = "Continuous WNN UMAP variables to plot one at a time",
+      command = {
+        feature_vars <- intersect(GEX_marker_genes_vec, rownames(aggregated_counts_BPCells_matrix.GEX))
+        tibble::tibble(
+          variable = c(aggregation_w_WNN_continuous_vars, feature_vars),
+          value_source = c(
+            rep("metadata", length(aggregation_w_WNN_continuous_vars)),
+            rep("feature", length(feature_vars))
+          )
+        )
+      },
+      iteration = "vector"
+    ),
     tarchetypes::tar_file(
       name = categorical.UMAPs.WNN,
       description = "UMAPs colored by categorical metadata variables on the WNN embedding. [checkpoint:multimodal]",
       command = metadata_w_cell_types_tibble.WNN |>
         plot_UMAP_from_metadata(
-          metadata_cols = aggregation_WNN_categorical_vars,
+          variable = categorical_UMAP_var.WNN,
           umap_cols = c("WNN_UMAP_1", "WNN_UMAP_2")
         ) |>
-        save_plots_structured(),
+        save_plots_structured(
+          dyn_suffix_in_subdir = TRUE,
+          override_suffix = stringr::str_replace_all(categorical_UMAP_var.WNN, "[/\\\\]", "_")
+        ),
+      pattern = map(categorical_UMAP_var.WNN),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
@@ -132,12 +157,16 @@ rlang::list2(
       description = "UMAPs colored by continuous QC and gene expression features on the WNN embedding. [checkpoint:multimodal]",
       command = plot_UMAP_from_metadata(
         metadata_tibble = metadata_w_cell_types_tibble.WNN,
-        metadata_cols = aggregation_w_WNN_continuous_vars,
+        variable = continuous_UMAP_spec.WNN$variable,
+        value_source = continuous_UMAP_spec.WNN$value_source,
         feature_matrix = aggregated_counts_BPCells_matrix.GEX,
-        feature_rows = GEX_marker_genes_vec,
         umap_cols = c("WNN_UMAP_1", "WNN_UMAP_2")
       ) |>
-        save_plots_structured(),
+        save_plots_structured(
+          dyn_suffix_in_subdir = TRUE,
+          override_suffix = stringr::str_replace_all(continuous_UMAP_spec.WNN$variable, "[/\\\\]", "_")
+        ),
+      pattern = map(continuous_UMAP_spec.WNN),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
@@ -283,7 +312,7 @@ rlang::list2(
           dplyr::select(-dplyr::any_of(c("WNN_UMAP_1", "WNN_UMAP_2"))) |>
           dplyr::left_join(sweep_umap_tibble, by = "barcode_w_prefix") |>
           plot_UMAP_from_metadata(
-            metadata_cols = "WNN_harmony_SNN_cluster_cell_type",
+            variable = "WNN_harmony_SNN_cluster_cell_type",
             umap_cols = c("WNN_UMAP_1", "WNN_UMAP_2")
           )
       } |>

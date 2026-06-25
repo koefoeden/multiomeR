@@ -25,9 +25,9 @@ rlang::list2(
   ),
   targets::tar_target(
     name = metadata_w_cell_types_unfiltered_tibble.GEX,
-    description = "Assign GEX cell types from native marker-module scores before doublet removal",
+    description = "Assign GEX cell types from BPCells-native UCell marker scores before doublet removal",
     command = metadata_w_clusters_tibble.GEX |>
-      add_GEX_module_scores_to_metadata(
+      add_GEX_UCell_scores_to_metadata(
         GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX,
         named_marker_genes_list = UCell_GEX_marker_genes_list
       ) |>
@@ -273,7 +273,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = module_scores_dot_plot.GEX,
-    description = "Dot plot of marker module scores per GEX cell type. [checkpoint:GEX]",
+    description = "Dot plot of marker UCell scores per GEX cell type. [checkpoint:GEX]",
     command = plot_module_scores_dot_for_metadata(
       metadata_tibble = metadata_w_cell_types_tibble.GEX,
       marker_genes_list = UCell_GEX_marker_genes_list,

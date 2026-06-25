@@ -66,3 +66,9 @@ git diff --check
 ```
 
 For target behavior changes, also run a narrow `targets::tar_make()` selection that exercises the affected target family.
+
+For BPCells-native scoring-helper changes, run the synthetic parity check:
+
+```bash
+pixi run test-scoring-parity
+```

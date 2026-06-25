@@ -397,7 +397,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = metadata_w_cell_types_unfiltered_tibble.ATAC,
-      description = "Assign cell type labels to BPCells-native ATAC clusters from metadata module scores",
+      description = "Assign cell type labels to BPCells-native ATAC clusters from GEX UCell marker scores in metadata",
       command = add_cell_types_to_metadata_from_module_scores(
         metadata_tibble = metadata_w_clusters_tibble.ATAC,
         named_marker_genes_list = UCell_GEX_marker_genes_list,

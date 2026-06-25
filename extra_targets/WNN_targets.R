@@ -105,7 +105,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = metadata_w_cell_types_tibble.WNN,
-      description = "Assign cell-type labels to native WNN clusters by GEX module scores [part_of_graph:WNN] [part_of_graph:seurat_export]",
+      description = "Assign cell-type labels to native WNN clusters by GEX UCell marker scores [part_of_graph:WNN] [part_of_graph:seurat_export]",
       command = add_cell_types_to_metadata_from_module_scores(
         metadata_tibble = metadata_w_clusters_tibble.WNN,
         named_marker_genes_list = UCell_GEX_marker_genes_list,

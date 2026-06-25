@@ -48,7 +48,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = UCell_GEX_marker_genes_list,
-    description = "Validate configured UCell GEX marker genes against Cell Ranger feature names [part_of_graph:ATAC] [part_of_graph:GEX] [part_of_graph:WNN] [part_of_graph:seurat_export]",
+    description = "Validate configured UCell-syntax GEX marker genes against Cell Ranger feature names [part_of_graph:ATAC] [part_of_graph:GEX] [part_of_graph:WNN] [part_of_graph:seurat_export]",
     command = {
       marker_genes_requested <- aggregation_GEX_marker_genes |>
         unlist(use.names = FALSE) |>

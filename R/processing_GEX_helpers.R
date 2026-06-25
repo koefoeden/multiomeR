@@ -674,20 +674,32 @@ aggregate_BPCells_rows_by_group <- function(feature_matrix, feature_groups, thre
     t()
 }
 
-#' Add GEX module scores to metadata
+#' Add GEX UCell scores to metadata
 #'
-#' Add simple marker module scores from log-normalized GEX counts to metadata.
+#' Add marker signature scores from BPCells-backed GEX counts to metadata.
 #'
 #' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
 #' @param named_marker_genes_list Named list of marker gene vectors. A trailing
-#'   `-` marks genes whose average expression is subtracted from the module score.
+#'   `-` marks negative signature genes and a trailing `+` marks positive genes,
+#'   matching UCell signature syntax.
 #' @param GEX_counts_matrix Gene-by-cell count matrix; row names are gene IDs/names and column names are cell barcodes.
-#' @param scale_factor Scale factor used when normalizing counts, coverage, or marker scores.
+#' @param max_rank Maximum rank used by the UCell U statistic.
+#' @param chunk_size Number of cells materialized per ranking chunk.
+#' @param w_neg Weight applied to negative marker signatures.
+#' @param ties_method Tie handling passed to `data.table::frankv()`.
+#' @param missing_genes Whether missing genes are imputed at `max_rank` or skipped.
 #' @return Metadata tibble with one added numeric module-score column per marker
 #'   list name.
 #' @keywords internal
 
-add_GEX_module_scores_to_metadata <- function(metadata_tibble, named_marker_genes_list, GEX_counts_matrix, scale_factor = 10000) {
+add_GEX_UCell_scores_to_metadata <- function(metadata_tibble,
+                                             named_marker_genes_list,
+                                             GEX_counts_matrix,
+                                             max_rank = 1500,
+                                             chunk_size = 100,
+                                             w_neg = 1,
+                                             ties_method = "average",
+                                             missing_genes = c("impute", "skip")) {
   counts_matrix <- GEX_counts_matrix
   keep_barcodes <- intersect(metadata_tibble$barcode_w_prefix, colnames(counts_matrix))
   if (length(keep_barcodes) == 0) {
@@ -695,39 +707,156 @@ add_GEX_module_scores_to_metadata <- function(metadata_tibble, named_marker_gene
   }
   counts_matrix <- counts_matrix[, keep_barcodes, drop = FALSE]
 
-  cell_counts <- BPCells::colSums(counts_matrix)
-  col_scaling <- ifelse(cell_counts > 0, scale_factor / cell_counts, 0)
-  log_norm_matrix <- counts_matrix |>
-    BPCells::multiply_cols(col_scaling) |>
-    BPCells::log1p_slow()
-
-  score_tibble <- tibble::tibble(barcode_w_prefix = colnames(log_norm_matrix))
-  for (module_name in names(named_marker_genes_list)) {
-    marker_vec <- named_marker_genes_list[[module_name]]
-    positive_features <- marker_vec[!stringr::str_detect(marker_vec, "-$")] |>
-      stringr::str_remove_all("[+-]$")
-    negative_features <- marker_vec[stringr::str_detect(marker_vec, "-$")] |>
-      stringr::str_remove_all("[+-]$")
-
-    positive_features <- intersect(unique(positive_features), rownames(log_norm_matrix))
-    negative_features <- intersect(unique(negative_features), rownames(log_norm_matrix))
-
-    positive_score <- if (length(positive_features) > 0) {
-      BPCells::colMeans(log_norm_matrix[positive_features, , drop = FALSE])
-    } else {
-      rep(0, ncol(log_norm_matrix))
-    }
-    negative_score <- if (length(negative_features) > 0) {
-      BPCells::colMeans(log_norm_matrix[negative_features, , drop = FALSE])
-    } else {
-      rep(0, ncol(log_norm_matrix))
-    }
-
-    score_tibble[[module_name]] <- positive_score - negative_score
-  }
+  score_tibble <- calculate_BPCells_UCell_scores_from_matrix(
+    counts_matrix = counts_matrix,
+    features = named_marker_genes_list,
+    max_rank = max_rank,
+    chunk_size = chunk_size,
+    w_neg = w_neg,
+    ties_method = ties_method,
+    missing_genes = missing_genes
+  ) |>
+    tibble::as_tibble(rownames = "barcode_w_prefix")
 
   metadata_tibble |>
     dplyr::left_join(score_tibble, by = "barcode_w_prefix")
+}
+
+calculate_BPCells_UCell_scores_from_matrix <- function(counts_matrix,
+                                                       features,
+                                                       max_rank = 1500,
+                                                       chunk_size = 100,
+                                                       w_neg = 1,
+                                                       ties_method = "average",
+                                                       missing_genes = c("impute", "skip")) {
+  missing_genes <- match.arg(missing_genes)
+  if (is.null(w_neg)) {
+    w_neg <- 1
+  }
+  if (!is.numeric(w_neg) || w_neg < 0) {
+    stop("Weight on negative signatures (w_neg) must be >= 0.")
+  }
+  if (!is.numeric(max_rank)) {
+    stop("Rank cutoff (max_rank) must be numeric.")
+  }
+
+  features <- normalize_UCell_signature_names(features)
+  max_rank <- min(as.integer(max_rank), nrow(counts_matrix))
+  if (any(lengths(features) > max_rank)) {
+    stop("One or more signatures contain more genes than max_rank. Increase max_rank or use shorter signatures.")
+  }
+
+  feature_indices <- prepare_UCell_signature_indices(
+    features = features,
+    feature_names = rownames(counts_matrix),
+    missing_genes = missing_genes
+  )
+
+  # BPCells-native reimplementation of UCell 2.14.0 scoring, kept separate from
+  # the Seurat AddModuleScore-compatible helper above. We intentionally mirror
+  # UCell's per-cell descending ranks, max-rank capping, signed positive/negative
+  # signatures, and lower-bound clipping. Validation compares this helper against
+  # UCell::ScoreSignatures_UCell() on generated matrices; numerical output should
+  # match exactly apart from ordinary floating-point representation.
+  score_matrix <- matrix(NA_real_, nrow = ncol(counts_matrix), ncol = length(features))
+  rownames(score_matrix) <- colnames(counts_matrix)
+  colnames(score_matrix) <- names(features)
+
+  chunks <- split(seq_len(ncol(counts_matrix)), ceiling(seq_len(ncol(counts_matrix)) / chunk_size))
+  for (chunk_idx in chunks) {
+    counts_chunk <- as.matrix(counts_matrix[, chunk_idx, drop = FALSE])
+    rank_chunk <- rank_UCell_count_chunk(counts_chunk, ties_method = ties_method)
+    score_matrix[colnames(counts_chunk), ] <- calculate_UCell_scores_from_rank_chunk(
+      rank_chunk = rank_chunk,
+      feature_indices = feature_indices,
+      max_rank = max_rank,
+      w_neg = w_neg
+    )
+  }
+
+  as.data.frame(score_matrix, check.names = FALSE)
+}
+
+normalize_UCell_signature_names <- function(features) {
+  default_names <- paste0("signature_", seq_along(features))
+  if (is.null(names(features))) {
+    names(features) <- default_names
+    return(features)
+  }
+
+  invalid_names <- names(features) == "" | duplicated(names(features))
+  names(features)[invalid_names] <- default_names[invalid_names]
+  features
+}
+
+prepare_UCell_signature_indices <- function(features, feature_names, missing_genes) {
+  lapply(features, function(signature) {
+    negative_features <- grep("-$", unlist(signature), perl = TRUE, value = TRUE)
+    positive_features <- setdiff(unlist(signature), negative_features)
+    positive_features <- gsub("\\+$", "", positive_features, perl = TRUE)
+    negative_features <- gsub("-$", "", negative_features, perl = TRUE)
+
+    list(
+      positive = get_UCell_feature_indices(feature_names, positive_features, missing_genes = missing_genes),
+      negative = get_UCell_feature_indices(feature_names, negative_features, missing_genes = missing_genes)
+    )
+  })
+}
+
+get_UCell_feature_indices <- function(feature_names, signature, missing_genes) {
+  idx <- match(signature, feature_names)
+  if (identical(missing_genes, "skip")) {
+    idx <- idx[!is.na(idx)]
+  } else {
+    idx[is.na(idx)] <- -1L
+  }
+  idx
+}
+
+rank_UCell_count_chunk <- function(counts_chunk, ties_method = "average") {
+  rank_chunk <- vapply(
+    seq_len(ncol(counts_chunk)),
+    \(col_idx) data.table::frankv(counts_chunk[, col_idx], ties.method = ties_method, order = -1L),
+    numeric(nrow(counts_chunk))
+  )
+  dimnames(rank_chunk) <- dimnames(counts_chunk)
+  rank_chunk
+}
+
+calculate_UCell_scores_from_rank_chunk <- function(rank_chunk, feature_indices, max_rank, w_neg) {
+  scores <- vapply(feature_indices, function(signature_indices) {
+    positive_score <- calculate_UCell_score_from_indices(rank_chunk, signature_indices$positive, max_rank)
+    negative_score <- calculate_UCell_score_from_indices(rank_chunk, signature_indices$negative, max_rank)
+    score <- positive_score - w_neg * negative_score
+    score[score < 0] <- 0
+    score
+  }, numeric(ncol(rank_chunk)))
+
+  if (is.vector(scores)) {
+    scores <- matrix(scores, nrow = ncol(rank_chunk))
+  }
+  rownames(scores) <- colnames(rank_chunk)
+  colnames(scores) <- names(feature_indices)
+  scores
+}
+
+calculate_UCell_score_from_indices <- function(rank_chunk, feature_idx, max_rank) {
+  signature_length <- length(feature_idx)
+  if (signature_length == 0) {
+    return(rep(0, ncol(rank_chunk)))
+  }
+
+  present_idx <- feature_idx[feature_idx > 0]
+  missing_idx <- feature_idx[feature_idx < 0]
+  rank_sum <- rep(length(missing_idx) * max_rank, ncol(rank_chunk))
+  if (length(present_idx) > 0) {
+    signature_ranks <- rank_chunk[present_idx, , drop = FALSE]
+    signature_ranks[signature_ranks >= max_rank] <- max_rank
+    rank_sum <- rank_sum + colSums(signature_ranks)
+  }
+
+  minimum_rank_sum <- signature_length * (signature_length + 1) / 2
+  1 - (rank_sum - minimum_rank_sum) / (signature_length * max_rank - minimum_rank_sum)
 }
 
 #' Get BPCells markers within parent groups from matrix

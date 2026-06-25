@@ -685,8 +685,9 @@ aggregate_BPCells_rows_by_group <- function(feature_matrix, feature_groups, thre
 #' @param GEX_counts_matrix Gene-by-cell count matrix; row names are gene IDs/names and column names are cell barcodes.
 #' @param max_rank Maximum rank used by the UCell U statistic.
 #' @param chunk_size Number of cells materialized per ranking chunk.
+#' @param workers Number of parallel fork workers used to score chunks.
 #' @param w_neg Weight applied to negative marker signatures.
-#' @param ties_method Tie handling passed to `data.table::frankv()`.
+#' @param ties_method Tie handling passed to `matrixStats::colRanks()`.
 #' @param missing_genes Whether missing genes are imputed at `max_rank` or skipped.
 #' @return Metadata tibble with one added numeric module-score column per marker
 #'   list name.
@@ -696,7 +697,8 @@ add_GEX_UCell_scores_to_metadata <- function(metadata_tibble,
                                              named_marker_genes_list,
                                              GEX_counts_matrix,
                                              max_rank = 1500,
-                                             chunk_size = 100,
+                                             chunk_size = 1000,
+                                             workers = 1,
                                              w_neg = 1,
                                              ties_method = "average",
                                              missing_genes = c("impute", "skip")) {
@@ -712,6 +714,7 @@ add_GEX_UCell_scores_to_metadata <- function(metadata_tibble,
     features = named_marker_genes_list,
     max_rank = max_rank,
     chunk_size = chunk_size,
+    workers = workers,
     w_neg = w_neg,
     ties_method = ties_method,
     missing_genes = missing_genes
@@ -725,7 +728,8 @@ add_GEX_UCell_scores_to_metadata <- function(metadata_tibble,
 calculate_BPCells_UCell_scores_from_matrix <- function(counts_matrix,
                                                        features,
                                                        max_rank = 1500,
-                                                       chunk_size = 100,
+                                                       chunk_size = 1000,
+                                                       workers = 1,
                                                        w_neg = 1,
                                                        ties_method = "average",
                                                        missing_genes = c("impute", "skip")) {
@@ -739,9 +743,13 @@ calculate_BPCells_UCell_scores_from_matrix <- function(counts_matrix,
   if (!is.numeric(max_rank)) {
     stop("Rank cutoff (max_rank) must be numeric.")
   }
+  if (!is.numeric(workers) || workers < 1) {
+    stop("Number of workers must be >= 1.")
+  }
 
   features <- normalize_UCell_signature_names(features)
   max_rank <- min(as.integer(max_rank), nrow(counts_matrix))
+  workers <- as.integer(workers)
   if (any(lengths(features) > max_rank)) {
     stop("One or more signatures contain more genes than max_rank. Increase max_rank or use shorter signatures.")
   }
@@ -758,21 +766,25 @@ calculate_BPCells_UCell_scores_from_matrix <- function(counts_matrix,
   # signatures, and lower-bound clipping. Validation compares this helper against
   # UCell::ScoreSignatures_UCell() on generated matrices; numerical output should
   # match exactly apart from ordinary floating-point representation.
-  score_matrix <- matrix(NA_real_, nrow = ncol(counts_matrix), ncol = length(features))
-  rownames(score_matrix) <- colnames(counts_matrix)
-  colnames(score_matrix) <- names(features)
-
   chunks <- split(seq_len(ncol(counts_matrix)), ceiling(seq_len(ncol(counts_matrix)) / chunk_size))
-  for (chunk_idx in chunks) {
+  score_chunk <- function(chunk_idx) {
     counts_chunk <- as.matrix(counts_matrix[, chunk_idx, drop = FALSE])
     rank_chunk <- rank_UCell_count_chunk(counts_chunk, ties_method = ties_method)
-    score_matrix[colnames(counts_chunk), ] <- calculate_UCell_scores_from_rank_chunk(
+    calculate_UCell_scores_from_rank_chunk(
       rank_chunk = rank_chunk,
       feature_indices = feature_indices,
       max_rank = max_rank,
       w_neg = w_neg
     )
   }
+
+  chunk_scores <- if (workers == 1) {
+    lapply(chunks, score_chunk)
+  } else {
+    parallel::mclapply(chunks, score_chunk, mc.cores = workers)
+  }
+  score_matrix <- do.call(rbind, chunk_scores)
+  score_matrix <- score_matrix[colnames(counts_matrix), , drop = FALSE]
 
   as.data.frame(score_matrix, check.names = FALSE)
 }
@@ -814,10 +826,10 @@ get_UCell_feature_indices <- function(feature_names, signature, missing_genes) {
 }
 
 rank_UCell_count_chunk <- function(counts_chunk, ties_method = "average") {
-  rank_chunk <- vapply(
-    seq_len(ncol(counts_chunk)),
-    \(col_idx) data.table::frankv(counts_chunk[, col_idx], ties.method = ties_method, order = -1L),
-    numeric(nrow(counts_chunk))
+  rank_chunk <- matrixStats::colRanks(
+    -counts_chunk,
+    ties.method = ties_method,
+    preserveShape = TRUE
   )
   dimnames(rank_chunk) <- dimnames(counts_chunk)
   rank_chunk

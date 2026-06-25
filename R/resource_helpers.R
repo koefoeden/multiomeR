@@ -119,7 +119,9 @@ apply_crew_controller_options <- function(controller_setup) {
 #' Select the smallest crew controller tier satisfying a target's resource needs.
 #'
 #' @param cores_req Minimum CPU cores required by the target.
-#' @param RAM_GB_req Minimum RAM in GB required by the target.
+#' @param RAM_GB_req Minimum base RAM in GB required by the target.
+#' @param RAM_GB_per_extra_core Additional RAM in GB required per CPU core
+#'   beyond the first requested core.
 #' @param gpus_req Minimum GPU count required by the target; use 0 for CPU-only work.
 #' @param controller_resources Tibble of available controller tiers with CPU, RAM, GPU, controller name, and default flags.
 #' @return A `targets::tar_resources()` object pointing at the selected crew
@@ -130,6 +132,7 @@ apply_crew_controller_options <- function(controller_setup) {
 get_tar_resources <- function(
   cores_req = NULL,
   RAM_GB_req = NULL,
+  RAM_GB_per_extra_core = NULL,
   gpus_req = 0,
   controller_resources = NULL
 ) {
@@ -145,15 +148,24 @@ get_tar_resources <- function(
   if (is.null(cores_req)) {
     cores_req <- default_controller_row$cores[[1]]
   }
-  if (is.null(RAM_GB_req)) {
-    RAM_GB_req <- default_controller_row$RAM_GB[[1]]
-  }
 
   if (!is.numeric(cores_req) || length(cores_req) != 1 || is.na(cores_req)) {
     stop("cores_req must be a single numeric value.", call. = FALSE)
   }
+  if (is.null(RAM_GB_req)) {
+    RAM_GB_req <- default_controller_row$RAM_GB[[1]]
+  }
   if (!is.numeric(RAM_GB_req) || length(RAM_GB_req) != 1 || is.na(RAM_GB_req)) {
     stop("RAM_GB_req must be a single numeric value in GB.", call. = FALSE)
+  }
+  if (!is.null(RAM_GB_per_extra_core)) {
+    if (!is.numeric(RAM_GB_per_extra_core) || length(RAM_GB_per_extra_core) != 1 || is.na(RAM_GB_per_extra_core)) {
+      stop("RAM_GB_per_extra_core must be a single numeric value in GB.", call. = FALSE)
+    }
+    if (RAM_GB_per_extra_core < 0) {
+      stop("RAM_GB_per_extra_core cannot be negative.", call. = FALSE)
+    }
+    RAM_GB_req <- RAM_GB_req + max(cores_req - 1, 0) * RAM_GB_per_extra_core
   }
   if (!is.numeric(gpus_req) || length(gpus_req) != 1 || is.na(gpus_req)) {
     stop("gpus_req must be a single numeric value.", call. = FALSE)

@@ -25,18 +25,20 @@ rlang::list2(
   ),
   targets::tar_target(
     name = metadata_w_cell_types_unfiltered_tibble.GEX,
-    description = "Assign GEX cell types from BPCells-native UCell marker scores before doublet removal",
+    description = "Assign GEX cell types from BPCells-native UCell marker scores before doublet removal [resource_observation: chunk_size=1000; workers=1/3/6; cgroup_peak_delta_GB=2.0/5.0/7.6; dataset=immune_human_2x; method=cgroup_v1_memory_usage_sampling; date=2026-06-25]",
     command = metadata_w_clusters_tibble.GEX |>
       add_GEX_UCell_scores_to_metadata(
         GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX,
-        named_marker_genes_list = UCell_GEX_marker_genes_list
+        named_marker_genes_list = UCell_GEX_marker_genes_list,
+        chunk_size = 1000,
+        workers = 6
       ) |>
       add_cell_types_to_metadata_from_module_scores(
         named_marker_genes_list = UCell_GEX_marker_genes_list,
         allow_multiple_cell_types = aggregation_allow_multiple_cell_types,
         cluster_column = "PCA_harmony_SNN_cluster"
       ),
-    resources = get_tar_resources(RAM_GB_req = 32)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 8, RAM_GB_per_extra_core = 3)
   ),
   targets::tar_target(
     name = scDblFinder_reaction_tibble.GEX,

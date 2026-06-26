@@ -451,12 +451,15 @@ benchmark_walltime_composition_tibble <- function(benchmark_results, top_n_targe
 #' @param time_col Numeric column to plot on the y axis.
 #' @param top_n_targets Number of critical-path target steps to show as
 #'   separate bar segments. Remaining steps are collapsed to `Other`.
+#' @param target_step_labels Optional named character vector mapping target-step
+#'   names to reader-facing labels.
 #' @return ggplot object.
 #' @keywords internal
 plot_multimodal_seurat_walltime <- function(
   benchmark_results,
   time_col = "critical_path_minutes",
-  top_n_targets = 10
+  top_n_targets = 10,
+  target_step_labels = NULL
 ) {
   if (!identical(time_col, "critical_path_minutes")) {
     stop("The composition plot only supports time_col = 'critical_path_minutes'.", call. = FALSE)
@@ -479,12 +482,13 @@ plot_multimodal_seurat_walltime <- function(
   plot_tibble <- benchmark_results |>
     dplyr::arrange(.data$cellranger_input_nuclei) |>
     dplyr::mutate(
-      reaction_count_label = as.character(.data$reaction_count),
-      walltime_minutes = .data[[time_col]]
-  )
+      walltime_hours = .data[[time_col]] / 60
+    )
+  composition_tibble <- composition_tibble |>
+    dplyr::mutate(runtime_hours = .data$runtime_minutes / 60)
   unique_x <- sort(unique(plot_tibble$cellranger_input_nuclei))
   bar_width <- if (length(unique_x) > 1) {
-    min(diff(unique_x)) * 0.18
+    min(diff(unique_x)) * 0.22
   } else {
     unique_x[[1]] * 0.07
   }
@@ -494,13 +498,20 @@ plot_multimodal_seurat_walltime <- function(
     Other = "grey70",
     stats::setNames(scales::hue_pal()(length(target_levels_without_other)), target_levels_without_other)
   )
+  fill_labels <- function(labels) {
+    if (!is.null(target_step_labels)) {
+      mapped_labels <- target_step_labels[labels]
+      labels[!is.na(mapped_labels)] <- unname(mapped_labels[!is.na(mapped_labels)])
+    }
+    stringr::str_wrap(labels, width = 34)
+  }
 
   ggplot2::ggplot() +
     ggplot2::geom_col(
       data = composition_tibble,
       ggplot2::aes(
         x = .data$cellranger_input_nuclei,
-        y = .data$runtime_minutes,
+        y = .data$runtime_hours,
         fill = .data$target_step
       ),
       width = bar_width,
@@ -513,7 +524,7 @@ plot_multimodal_seurat_walltime <- function(
         x = .data$cellranger_input_nuclei,
         xend = .data$cellranger_input_nuclei,
         y = 0,
-        yend = .data$walltime_minutes
+        yend = .data$walltime_hours
       ),
       color = "grey15",
       linetype = "dashed",
@@ -522,26 +533,16 @@ plot_multimodal_seurat_walltime <- function(
     ) +
     ggplot2::geom_line(
       data = plot_tibble,
-      ggplot2::aes(x = .data$cellranger_input_nuclei, y = .data$walltime_minutes),
+      ggplot2::aes(x = .data$cellranger_input_nuclei, y = .data$walltime_hours),
       linewidth = 0.7,
+      linetype = "dashed",
       color = "#1F2D2E"
     ) +
     ggplot2::geom_point(
       data = plot_tibble,
-      ggplot2::aes(x = .data$cellranger_input_nuclei, y = .data$walltime_minutes),
+      ggplot2::aes(x = .data$cellranger_input_nuclei, y = .data$walltime_hours),
       size = 2.8,
       color = "#1F2D2E"
-    ) +
-    ggplot2::geom_text(
-      data = plot_tibble,
-      ggplot2::aes(
-        x = .data$cellranger_input_nuclei,
-        y = .data$walltime_minutes,
-        label = .data$reaction_count_label
-      ),
-      vjust = -0.8,
-      size = 3.2,
-      color = "grey20"
     ) +
     ggplot2::scale_x_continuous(
       labels = scales::label_number(scale_cut = scales::cut_short_scale()),
@@ -550,16 +551,16 @@ plot_multimodal_seurat_walltime <- function(
     ) +
     ggplot2::scale_fill_manual(
       values = fill_values[target_levels],
-      labels = \(labels) stringr::str_wrap(labels, width = 42)
+      labels = fill_labels
     ) +
     ggplot2::scale_y_continuous(
       labels = scales::label_number(accuracy = 0.1),
       limits = c(0, NA),
-      expand = ggplot2::expansion(mult = c(0, 0.18))
+      expand = ggplot2::expansion(mult = c(0, 0.08))
     ) +
     ggplot2::labs(
       x = "CellRanger input nuclei",
-      y = "Wall time (minutes)",
+      y = "Wall time (hours)",
       fill = "Critical-path step"
     ) +
     ggplot2::theme_minimal(base_size = 11) +

@@ -41,6 +41,7 @@ rlang::list2(
       data_nNNs = aggregation_data_nNNs,
       graph_threads = 15
     ),
+    resources = get_tar_resources(RAM_GB_req = 60),
     packages = w_def(c("Seurat", "SeuratObject", "Signac", "BPCells"))
   )
 )

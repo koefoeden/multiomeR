@@ -129,6 +129,9 @@ benchmark_aggregation_cellranger_input_nuclei <- function(aggregations) {
 #'   parallel and pattern targets use their slowest branch runtime.
 #' @param exclude_target_regex Regular expressions matching target names whose
 #'   recorded runtime should be set to zero without removing them from the DAG.
+#' @param skip_endpoint_runtime If `TRUE`, set the endpoint target runtime to
+#'   zero and allow it to have missing recorded runtime. Upstream ancestors must
+#'   still have recorded runtimes when `strict = TRUE`.
 #' @param strict If `TRUE`, fail when any ancestor lacks recorded runtime.
 #' @return List with a one-row summary tibble, the critical path, and all
 #'   ancestor weights.
@@ -146,6 +149,7 @@ estimate_target_walltime <- function(
   meta = targets::tar_meta(),
   branch_parallel = TRUE,
   exclude_target_regex = character(),
+  skip_endpoint_runtime = FALSE,
   strict = TRUE
 ) {
   if (!target_name %in% network$vertices$name) {
@@ -168,6 +172,14 @@ estimate_target_walltime <- function(
     exclude_target_regex = exclude_target_regex
   )
   weights <- weights[match(ancestor_names, weights$name), , drop = FALSE]
+  endpoint_idx <- match(target_name, weights$name)
+  weights$runtime_seconds_before_endpoint_skip <- weights$runtime_seconds
+  weights$endpoint_runtime_skipped <- FALSE
+  if (isTRUE(skip_endpoint_runtime)) {
+    weights$runtime_seconds[[endpoint_idx]] <- 0
+    weights$runtime_source[[endpoint_idx]] <- "skipped_endpoint"
+    weights$endpoint_runtime_skipped[[endpoint_idx]] <- TRUE
+  }
   missing_runtime <- weights$name[is.na(weights$runtime_seconds)]
   if (length(missing_runtime) && isTRUE(strict)) {
     stop(
@@ -208,6 +220,7 @@ estimate_target_walltime <- function(
     weights$runtime_seconds_before_exclusion[weights$excluded_from_benchmark],
     na.rm = TRUE
   )
+  skipped_endpoint_seconds <- weights$runtime_seconds_before_endpoint_skip[[endpoint_idx]]
 
   summary <- tibble::tibble(
     target = target_name,
@@ -216,6 +229,8 @@ estimate_target_walltime <- function(
     serial_sum_seconds = sum(runtime),
     serial_sum_hours = sum(runtime) / 3600,
     endpoint_seconds = runtime[[target_name]],
+    endpoint_seconds_before_skip = skipped_endpoint_seconds,
+    endpoint_runtime_skipped = isTRUE(skip_endpoint_runtime),
     ancestor_targets = length(ancestor_names),
     critical_path_targets = nrow(path),
     parallelized_pattern_targets = sum(weights$runtime_source == "slowest_dynamic_branch"),
@@ -245,6 +260,7 @@ estimate_multimodal_seurat_walltime <- function(
   store = targets::tar_config_get("store"),
   branch_parallel = TRUE,
   exclude_target_regex = character(),
+  skip_endpoint_runtime = FALSE,
   envir = parent.frame()
 ) {
   network <- targets::tar_network(
@@ -266,6 +282,7 @@ estimate_multimodal_seurat_walltime <- function(
         meta = meta,
         branch_parallel = branch_parallel,
         exclude_target_regex = exclude_target_regex,
+        skip_endpoint_runtime = skip_endpoint_runtime,
         envir = envir
       )
     }
@@ -294,6 +311,7 @@ estimate_multimodal_seurat_walltime <- function(
   attr(summary, "benchmark_aggregations") <- aggregations
   attr(summary, "benchmark_branch_parallel") <- branch_parallel
   attr(summary, "benchmark_exclude_target_regex") <- exclude_target_regex
+  attr(summary, "benchmark_skip_endpoint_runtime") <- skip_endpoint_runtime
   summary
 }
 
@@ -314,6 +332,7 @@ cache_multimodal_seurat_walltime <- function(
   store = targets::tar_config_get("store"),
   branch_parallel = TRUE,
   exclude_target_regex = character(),
+  skip_endpoint_runtime = FALSE,
   envir = parent.frame()
 ) {
   if (file.exists(cache_file) && !isTRUE(force)) {
@@ -321,7 +340,8 @@ cache_multimodal_seurat_walltime <- function(
     cache_is_current <- "cellranger_input_nuclei" %in% colnames(summary) &&
       identical(attr(summary, "benchmark_aggregations"), aggregations) &&
       identical(attr(summary, "benchmark_branch_parallel"), branch_parallel) &&
-      identical(attr(summary, "benchmark_exclude_target_regex"), exclude_target_regex)
+      identical(attr(summary, "benchmark_exclude_target_regex"), exclude_target_regex) &&
+      identical(attr(summary, "benchmark_skip_endpoint_runtime"), skip_endpoint_runtime)
 
     if (isTRUE(cache_is_current)) {
       return(summary)
@@ -333,6 +353,7 @@ cache_multimodal_seurat_walltime <- function(
     store = store,
     branch_parallel = branch_parallel,
     exclude_target_regex = exclude_target_regex,
+    skip_endpoint_runtime = skip_endpoint_runtime,
     envir = envir
   )
   dir.create(dirname(cache_file), recursive = TRUE, showWarnings = FALSE)

@@ -455,7 +455,7 @@
     "href": "performance_overview.html#performance-results",
     "title": "12  Performance overview",
     "section": "",
-    "text": "Figure 12.1: Estimated wall time to each aggregation’s final multimodal_Seurat_object target by total CellRanger input nuclei. Stacked bar segments show the largest critical-path target-step contributions, remaining steps are collapsed into Other, the line connects total critical-path wall time, and point labels show the number of reactions in each aggregation. Estimates are generated from recorded targets runtime metadata with cache_multimodal_seurat_walltime(), using the DAG critical path and treating dynamic branches as concurrently runnable. This interim figure will be replaced with the full 5-, 10-, 20-, and 40-reaction benchmark once those aggregations have been generated.",
+    "text": "Figure 12.1: Estimated wall time to each aggregation’s final multimodal_Seurat_object target by total CellRanger input nuclei. Stacked bar segments show the largest critical-path target-step contributions, remaining steps are collapsed into Other, and the dashed line connects total critical-path wall time. Estimates are generated from recorded targets runtime metadata with cache_multimodal_seurat_walltime(), using the DAG critical path and treating dynamic branches as concurrently runnable. This interim figure will be replaced with the full 5-, 10-, 20-, and 40-reaction benchmark once those aggregations have been generated.",
     "crumbs": [
       "Performance",
       "<span class='chapter-number'>12</span>  <span class='chapter-title'>Performance overview</span>"

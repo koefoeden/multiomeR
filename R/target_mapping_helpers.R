@@ -6,12 +6,16 @@
 #'   values.
 #' @param aggregation_tibble_from_yaml Aggregation config tibble with
 #'   `aggregation` labels and list-column `aggregation_reaction_IDs`.
+#' @param reaction_config_file Path to the reaction TSV config.
+#' @param aggregation_config_file Path to the aggregation YAML config.
 #' @return Invisibly returns after the validation or setup side effect succeeds.
 #' @keywords internal
 
 validate_processing_and_aggregation_config <- function(
   reaction_tibble,
-  aggregation_tibble_from_yaml
+  aggregation_tibble_from_yaml,
+  reaction_config_file = "cfg_reactions.tsv",
+  aggregation_config_file = "cfg_aggregations.yaml"
 ) {
   configured_aggregation_reaction_IDs <- unique(unlist(
     aggregation_tibble_from_yaml$aggregation_reaction_IDs
@@ -23,8 +27,12 @@ validate_processing_and_aggregation_config <- function(
   )
   if (length(unknown_aggregation_reactions_vec) > 0) {
     stop(
-      "Aggregation reaction ID(s) missing from cfg_reactions.tsv: ",
-      paste(unknown_aggregation_reactions_vec, collapse = ", ")
+      aggregation_config_file,
+      " references reaction ID(s) not defined in ",
+      reaction_config_file,
+      ": ",
+      paste(unknown_aggregation_reactions_vec, collapse = ", "),
+      call. = FALSE
     )
   }
 
@@ -33,8 +41,10 @@ validate_processing_and_aggregation_config <- function(
   ]
   if (length(empty_aggregation_vec) > 0) {
     stop(
-      "Aggregation(s) must contain at least one reaction: ",
-      paste(empty_aggregation_vec, collapse = ", ")
+      aggregation_config_file,
+      " contains aggregation(s) without reaction IDs: ",
+      paste(empty_aggregation_vec, collapse = ", "),
+      call. = FALSE
     )
   }
 
@@ -54,7 +64,8 @@ read_keyed_metadata_tibble <- function(metadata_tsv, key_col) {
     dplyr::pull(.data[[key_col]])
   if (length(duplicate_keys) > 0) {
     stop(
-      "Metadata file contains duplicated ",
+      metadata_tsv,
+      " contains duplicated ",
       key_col,
       " value(s): ",
       paste(duplicate_keys, collapse = ", "),
@@ -92,12 +103,31 @@ assert_donor_reaction_metadata_column_ownership <- function(donor_id_metadata_ti
 #' @param dataset_tibble_from_yaml Dataset config tibble created from
 #'   `cfg_datasets.yaml`.
 #' @param reaction_config_file Path to the reaction TSV config.
+#' @param dataset_config_file Path to the dataset YAML config.
 #' @return A tibble with one row per reaction and joined dataset config columns.
 #' @keywords internal
 
-build_reaction_tibble <- function(dataset_tibble_from_yaml, reaction_config_file = "cfg_reactions.tsv") {
-  readr::read_tsv(reaction_config_file, show_col_types = FALSE) |>
-    dplyr::mutate(dplyr::across(c(reaction_ID, reaction_donor_id), as.character)) |>
+build_reaction_tibble <- function(
+  dataset_tibble_from_yaml,
+  reaction_config_file = "cfg_reactions.tsv",
+  dataset_config_file = "cfg_datasets.yaml"
+) {
+  reaction_tibble <- readr::read_tsv(reaction_config_file, show_col_types = FALSE) |>
+    dplyr::mutate(dplyr::across(c(reaction_ID, reaction_donor_id), as.character))
+
+  unknown_datasets <- setdiff(reaction_tibble$dataset, dataset_tibble_from_yaml$dataset)
+  if (length(unknown_datasets) > 0) {
+    stop(
+      reaction_config_file,
+      " references dataset(s) not defined in ",
+      dataset_config_file,
+      ": ",
+      paste(unknown_datasets, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  reaction_tibble |>
     dplyr::left_join(dataset_tibble_from_yaml, by = "dataset")
 }
 
@@ -110,11 +140,18 @@ build_reaction_tibble <- function(dataset_tibble_from_yaml, reaction_config_file
 #'   from `cfg_aggregations.yaml`.
 #' @param reaction_tibble Reaction mapping tibble created by
 #'   `build_reaction_tibble()`.
+#' @param aggregation_config_file Path to the aggregation YAML config.
+#' @param reaction_config_file Path to the reaction TSV config.
 #' @return A tibble with one row per active aggregation, QC feature columns, and
 #'   target symbol list-columns.
 #' @keywords internal
 
-build_aggregation_tibble <- function(aggregation_tibble_all_from_yaml, reaction_tibble) {
+build_aggregation_tibble <- function(
+  aggregation_tibble_all_from_yaml,
+  reaction_tibble,
+  aggregation_config_file = "cfg_aggregations.yaml",
+  reaction_config_file = "cfg_reactions.tsv"
+) {
   aggregation_tibble_from_yaml <- aggregation_tibble_all_from_yaml |>
     dplyr::filter(purrr::map_lgl(is_active, isTRUE))
 
@@ -191,7 +228,9 @@ build_aggregation_tibble <- function(aggregation_tibble_all_from_yaml, reaction_
 
   validate_processing_and_aggregation_config(
     reaction_tibble = reaction_tibble,
-    aggregation_tibble_from_yaml = aggregation_tibble_from_yaml
+    aggregation_tibble_from_yaml = aggregation_tibble_from_yaml,
+    reaction_config_file = reaction_config_file,
+    aggregation_config_file = aggregation_config_file
   )
 
   aggregation_tibble |>
@@ -296,10 +335,15 @@ aggregation_has_module <- function(modules, module_name) {
 #'
 #' @param aggregation_tibble Aggregation mapping tibble with a `modules` column.
 #' @param known_modules Character vector of supported module names.
+#' @param aggregation_config_file Path to the aggregation YAML config.
 #' @return Invisibly returns `NULL`; errors on unknown configured modules.
 #' @keywords internal
 
-validate_aggregation_module_names <- function(aggregation_tibble, known_modules) {
+validate_aggregation_module_names <- function(
+  aggregation_tibble,
+  known_modules,
+  aggregation_config_file = "cfg_aggregations.yaml"
+) {
   configured_modules <- aggregation_tibble$modules |>
     as.list() |>
     purrr::map(normalize_modules) |>
@@ -309,43 +353,14 @@ validate_aggregation_module_names <- function(aggregation_tibble, known_modules)
   unknown_modules <- setdiff(configured_modules, known_modules)
 
   if (length(unknown_modules) > 0) {
-    stop(stringr::str_glue(
-      "Unknown aggregation module(s) in cfg_aggregations.yaml: ",
-      "{paste(unknown_modules, collapse = ', ')}."
-    ))
-  }
-}
-
-#' Validate module config
-#'
-#' Check that a module YAML is consistent with opted-in aggregations.
-#'
-#' @param module_name Module identifier used in error messages.
-#' @param module_config_tibble Module-specific config tibble with an
-#'   `aggregation` column.
-#' @param module_aggregation_tibble Aggregations that opted into the module,
-#'   filtered from the main aggregation config.
-#' @param aggregation_tibble Main aggregation config tibble defining all valid
-#'   aggregation names.
-#' @return Invisibly returns after the validation or setup side effect succeeds.
-#' @keywords internal
-
-validate_module_config <- function(module_name, module_config_tibble, module_aggregation_tibble, aggregation_tibble) {
-  missing_module_rows <- setdiff(module_aggregation_tibble$aggregation, module_config_tibble$aggregation)
-  unknown_module_rows <- setdiff(module_config_tibble$aggregation, aggregation_tibble$aggregation)
-
-  if (length(missing_module_rows) > 0) {
-    stop(stringr::str_glue(
-      "Aggregation(s) opted into module '{module_name}' but are missing from the module YAML: ",
-      "{paste(missing_module_rows, collapse = ', ')}."
-    ))
-  }
-
-  if (length(unknown_module_rows) > 0) {
-    stop(stringr::str_glue(
-      "Module '{module_name}' YAML contains aggregation(s) not defined in cfg_aggregations.yaml: ",
-      "{paste(unknown_module_rows, collapse = ', ')}."
-    ))
+    stop(
+      aggregation_config_file,
+      " references unknown module(s): ",
+      paste(unknown_modules, collapse = ", "),
+      ". Valid modules: ",
+      paste(known_modules, collapse = ", "),
+      call. = FALSE
+    )
   }
 }
 
@@ -355,10 +370,22 @@ validate_module_config <- function(module_name, module_config_tibble, module_agg
 #' downstream validation path.
 #'
 #' @param config_file Path to a module YAML config file.
+#' @param module_name Module identifier used in error messages.
+#' @param module_aggregation_tibble Aggregations that opted into the module,
+#'   filtered from the main aggregation config.
+#' @param aggregation_tibble Main aggregation config tibble defining all valid
+#'   aggregation names.
+#' @param aggregation_config_file Path to the aggregation YAML config.
 #' @return A tibble with at least an `aggregation` column.
 #' @keywords internal
 
-read_module_config_tibble <- function(config_file) {
+read_module_config_tibble <- function(
+  config_file,
+  module_name,
+  module_aggregation_tibble,
+  aggregation_tibble,
+  aggregation_config_file = "cfg_aggregations.yaml"
+) {
   module_config_tibble <- read_config_tibble(
     config_file = config_file,
     key_col = "aggregation"
@@ -366,6 +393,32 @@ read_module_config_tibble <- function(config_file) {
 
   if (!"aggregation" %in% names(module_config_tibble)) {
     module_config_tibble <- tibble::tibble(aggregation = character())
+  }
+
+  missing_module_rows <- setdiff(module_aggregation_tibble$aggregation, module_config_tibble$aggregation)
+  if (length(missing_module_rows) > 0) {
+    stop(
+      aggregation_config_file,
+      " opts aggregation(s) into module '",
+      module_name,
+      "' that are missing from ",
+      config_file,
+      ": ",
+      paste(missing_module_rows, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  unknown_module_rows <- setdiff(module_config_tibble$aggregation, aggregation_tibble$aggregation)
+  if (length(unknown_module_rows) > 0) {
+    stop(
+      config_file,
+      " contains aggregation(s) not defined in ",
+      aggregation_config_file,
+      ": ",
+      paste(unknown_module_rows, collapse = ", "),
+      call. = FALSE
+    )
   }
 
   module_config_tibble

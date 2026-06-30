@@ -16,12 +16,8 @@ genetic_enrichment_aggregation_tibble <- aggregation_tibble |>
   dplyr::filter(aggregation_has_module(modules, "genetic_enrichment"))
 
 genetic_enrichment_config_tibble <- read_module_config_tibble(
-  config_file = "module_genetic_enrichment/cfg.yaml"
-)
-
-validate_module_config(
+  config_file = "module_genetic_enrichment/cfg.yaml",
   module_name = "genetic_enrichment",
-  module_config_tibble = genetic_enrichment_config_tibble,
   module_aggregation_tibble = genetic_enrichment_aggregation_tibble,
   aggregation_tibble = aggregation_tibble_all_from_yaml
 )

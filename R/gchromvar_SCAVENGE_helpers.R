@@ -1151,7 +1151,9 @@ gwas_heatmap_metadata_theme <- function(show_y = FALSE, show_x = FALSE) {
       legend.position = "bottom",
       plot.margin = ggplot2::margin(t = 10, r = 8, b = 2, l = 2),
       strip.clip = "off",
-      strip.text.x = ggplot2::element_text(angle = 45, hjust = 0, size = 8, margin = ggplot2::margin(b = 2))
+      strip.placement = "outside",
+      strip.text.x = ggplot2::element_text(angle = 45, hjust = 0, size = 8, margin = ggplot2::margin(b = 2)),
+      strip.text.x.bottom = ggplot2::element_text(size = 8, margin = ggplot2::margin(t = 2))
     )
 }
 
@@ -1268,7 +1270,14 @@ plot_GWAS_feature_heatmap <- function(
     ggplot2::geom_hline(yintercept = row_breaks, color = "grey25", linewidth = 0.35) +
     ggplot2::geom_vline(xintercept = feature_breaks, color = "grey25", linewidth = 0.35) +
     ggplot2::scale_y_discrete(drop = FALSE) +
-    ggplot2::scale_fill_gradient2(low = "#3B4CC0", mid = "white", high = "#B40426", midpoint = fill_midpoint, name = fill_label) +
+    ggplot2::scale_fill_gradient2(
+      low = "#3B4CC0",
+      mid = "white",
+      high = "#B40426",
+      midpoint = fill_midpoint,
+      name = fill_label,
+      guide = ggplot2::guide_colorbar(title.position = "top")
+    ) +
     ggplot2::labs(x = NULL, y = NULL, title = title) +
     ggplot2::theme_minimal(base_size = 9) +
     ggplot2::theme(
@@ -1303,34 +1312,30 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
   ancestry_plot_data <- ordered_metadata |>
     dplyr::select(GWAS_ID, dplyr::matches("^ancestry_(EUR|EAS|AFR|AMR|SAS|OTH)$")) |>
     tidyr::pivot_longer(-GWAS_ID, names_to = "ancestry_group", values_to = "fraction") |>
-    dplyr::mutate(ancestry_group = stringr::str_remove(ancestry_group, "^ancestry_"), track = "Ancestry")
+    dplyr::mutate(ancestry_group = stringr::str_remove(ancestry_group, "^ancestry_"))
 
   category_plot <- ordered_metadata |>
-    dplyr::mutate(track = "Category") |>
     ggplot2::ggplot(ggplot2::aes(x = 1, y = GWAS_ID, fill = Category)) +
     ggplot2::geom_tile() +
     ggplot2::geom_hline(yintercept = row_breaks, color = "grey25", linewidth = 0.35) +
-    ggplot2::facet_grid(. ~ track) +
     ggplot2::scale_x_continuous(expand = c(0, 0)) +
     ggplot2::scale_fill_manual(
       values = make_named_heatmap_palette(ordered_metadata$Category, "Set3"),
       name = "Category",
-      guide = ggplot2::guide_legend(ncol = get_heatmap_legend_ncol(ordered_metadata$Category, max_row_chars = 45))
+      guide = ggplot2::guide_legend(ncol = 1, title.position = "top")
     ) +
     ggplot2::labs(x = NULL, y = NULL) +
     gwas_heatmap_metadata_theme(show_y = TRUE)
 
   method_plot <- ordered_metadata |>
-    dplyr::mutate(track = "Method") |>
     ggplot2::ggplot(ggplot2::aes(x = 1, y = GWAS_ID, fill = finemappingMethod)) +
     ggplot2::geom_tile() +
     ggplot2::geom_hline(yintercept = row_breaks, color = "grey25", linewidth = 0.35) +
-    ggplot2::facet_grid(. ~ track) +
     ggplot2::scale_x_continuous(expand = c(0, 0)) +
     ggplot2::scale_fill_manual(
       values = method_colors,
       name = "Method",
-      guide = ggplot2::guide_legend(ncol = get_heatmap_legend_ncol(ordered_metadata$finemappingMethod, max_row_chars = 25))
+      guide = ggplot2::guide_legend(ncol = 1, title.position = "top")
     ) +
     ggplot2::labs(x = NULL, y = NULL) +
     gwas_heatmap_metadata_theme()
@@ -1339,7 +1344,7 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
     ggplot2::ggplot(ggplot2::aes(x = value, y = GWAS_ID)) +
     ggplot2::geom_col(fill = "grey45", width = 0.8, na.rm = TRUE) +
     ggplot2::geom_hline(yintercept = row_breaks, color = "grey25", linewidth = 0.35) +
-    ggplot2::facet_grid(. ~ track, scales = "free_x") +
+    ggplot2::facet_grid(. ~ track, scales = "free_x", switch = "x") +
     ggplot2::scale_x_continuous(labels = scales::label_number(scale_cut = scales::cut_short_scale())) +
     ggplot2::labs(x = NULL, y = NULL) +
     gwas_heatmap_metadata_theme(show_x = TRUE)
@@ -1348,12 +1353,11 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
     ggplot2::ggplot(ggplot2::aes(x = fraction, y = GWAS_ID, fill = ancestry_group)) +
     ggplot2::geom_col(width = 0.8) +
     ggplot2::geom_hline(yintercept = row_breaks, color = "grey25", linewidth = 0.35) +
-    ggplot2::facet_grid(. ~ track) +
     ggplot2::scale_x_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0, 1), expand = c(0, 0)) +
     ggplot2::scale_fill_manual(
       values = c("EUR" = "#4DAF4A", "EAS" = "#377EB8", "AFR" = "#984EA3", "AMR" = "#FF7F00", "SAS" = "#E41A1C", "OTH" = "#999999"),
       name = "Ancestry",
-      guide = ggplot2::guide_legend(ncol = min(2L, get_heatmap_legend_ncol(ancestry_plot_data$ancestry_group, max_row_chars = 35)), byrow = TRUE)
+      guide = ggplot2::guide_legend(ncol = min(2L, get_heatmap_legend_ncol(ancestry_plot_data$ancestry_group, max_row_chars = 35)), byrow = TRUE, title.position = "top")
     ) +
     ggplot2::labs(x = NULL, y = NULL) +
     gwas_heatmap_metadata_theme(show_x = TRUE)

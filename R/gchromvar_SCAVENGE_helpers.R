@@ -1269,7 +1269,7 @@ plot_GWAS_feature_heatmap <- function(
     ggplot2::geom_tile(color = "grey90", linewidth = 0.15) +
     ggplot2::geom_hline(yintercept = row_breaks, color = "grey25", linewidth = 0.35) +
     ggplot2::geom_vline(xintercept = feature_breaks, color = "grey25", linewidth = 0.35) +
-    ggplot2::scale_y_discrete(drop = FALSE) +
+    ggplot2::scale_y_discrete(drop = FALSE, expand = c(0, 0)) +
     ggplot2::scale_fill_gradient2(
       low = "#3B4CC0",
       mid = "white",
@@ -1286,6 +1286,8 @@ plot_GWAS_feature_heatmap <- function(
       axis.ticks.y = ggplot2::element_blank(),
       panel.grid = ggplot2::element_blank(),
       legend.position = "bottom",
+      legend.justification = "right",
+      legend.box.just = "right",
       strip.text.x = ggplot2::element_text(size = 8, margin = ggplot2::margin(b = 2))
     )
 }
@@ -1301,13 +1303,20 @@ plot_GWAS_feature_heatmap <- function(
 
 plot_GWAS_metadata_tracks <- function(ordered_metadata) {
   method_colors <- c("SuSie" = "#238B45", "SuSiE-inf" = "#41B6C4", "PICS" = "#F16913")
+  endpoint_breaks <- function(limits) {
+    limits <- limits[is.finite(limits)]
+    if (length(limits) == 0) {
+      return(numeric())
+    }
+    unique(range(limits))
+  }
   row_levels <- if (is.factor(ordered_metadata$GWAS_ID)) levels(ordered_metadata$GWAS_ID) else unique(as.character(ordered_metadata$GWAS_ID))
   row_categories <- ordered_metadata |>
     dplyr::distinct(GWAS_ID, Category) |>
     dplyr::mutate(GWAS_ID = as.character(GWAS_ID))
   row_breaks <- get_plot_group_breaks(row_categories$Category[match(row_levels, row_categories$GWAS_ID)])
   bar_plot_data <- ordered_metadata |>
-    dplyr::transmute(GWAS_ID, Loci = n_credible_set_loci, N = sample_size) |>
+    dplyr::transmute(GWAS_ID, Loci = n_credible_set_loci, Samples = sample_size) |>
     tidyr::pivot_longer(-GWAS_ID, names_to = "track", values_to = "value")
   ancestry_plot_data <- ordered_metadata |>
     dplyr::select(GWAS_ID, dplyr::matches("^ancestry_(EUR|EAS|AFR|AMR|SAS|OTH)$")) |>
@@ -1319,6 +1328,7 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
     ggplot2::geom_tile() +
     ggplot2::geom_hline(yintercept = row_breaks, color = "grey25", linewidth = 0.35) +
     ggplot2::scale_x_continuous(expand = c(0, 0)) +
+    ggplot2::scale_y_discrete(drop = FALSE, expand = c(0, 0)) +
     ggplot2::scale_fill_manual(
       values = make_named_heatmap_palette(ordered_metadata$Category, "Set3"),
       name = "Category",
@@ -1332,6 +1342,7 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
     ggplot2::geom_tile() +
     ggplot2::geom_hline(yintercept = row_breaks, color = "grey25", linewidth = 0.35) +
     ggplot2::scale_x_continuous(expand = c(0, 0)) +
+    ggplot2::scale_y_discrete(drop = FALSE, expand = c(0, 0)) +
     ggplot2::scale_fill_manual(
       values = method_colors,
       name = "Method",
@@ -1345,7 +1356,8 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
     ggplot2::geom_col(fill = "grey45", width = 0.8, na.rm = TRUE) +
     ggplot2::geom_hline(yintercept = row_breaks, color = "grey25", linewidth = 0.35) +
     ggplot2::facet_grid(. ~ track, scales = "free_x", switch = "x") +
-    ggplot2::scale_x_continuous(labels = scales::label_number(scale_cut = scales::cut_short_scale())) +
+    ggplot2::scale_x_continuous(breaks = endpoint_breaks, labels = scales::label_number(scale_cut = scales::cut_short_scale()), expand = c(0, 0)) +
+    ggplot2::scale_y_discrete(drop = FALSE, expand = c(0, 0)) +
     ggplot2::labs(x = NULL, y = NULL) +
     gwas_heatmap_metadata_theme(show_x = TRUE)
 
@@ -1353,7 +1365,8 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
     ggplot2::ggplot(ggplot2::aes(x = fraction, y = GWAS_ID, fill = ancestry_group)) +
     ggplot2::geom_col(width = 0.8) +
     ggplot2::geom_hline(yintercept = row_breaks, color = "grey25", linewidth = 0.35) +
-    ggplot2::scale_x_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0, 1), expand = c(0, 0)) +
+    ggplot2::scale_x_continuous(breaks = c(0, 1), labels = scales::percent_format(accuracy = 1), limits = c(0, 1), expand = c(0, 0)) +
+    ggplot2::scale_y_discrete(drop = FALSE, expand = c(0, 0)) +
     ggplot2::scale_fill_manual(
       values = c("EUR" = "#4DAF4A", "EAS" = "#377EB8", "AFR" = "#984EA3", "AMR" = "#FF7F00", "SAS" = "#E41A1C", "OTH" = "#999999"),
       name = "Ancestry",
@@ -1362,7 +1375,8 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
     ggplot2::labs(x = NULL, y = NULL) +
     gwas_heatmap_metadata_theme(show_x = TRUE)
 
-  patchwork::wrap_plots(category_plot, method_plot, bar_plot, ancestry_plot, nrow = 1, widths = c(0.55, 0.55, 1.4, 1.45), guides = "collect")
+  patchwork::wrap_plots(category_plot, method_plot, bar_plot, ancestry_plot, nrow = 1, widths = c(0.55, 0.55, 1.4, 1.45), guides = "collect") &
+    ggplot2::theme(legend.justification = "left", legend.box.just = "left")
 }
 
 #' Plot GWAS by cluster heatmap
@@ -1402,8 +1416,7 @@ plot_GWAS_by_cluster_heatmap <- function(
       fill_midpoint = if (scaled) 0.5 else 0
     ),
     nrow = 1,
-    widths = c(5.8, 9),
-    guides = "collect"
+    widths = c(5.8, 9)
   )
 }
 

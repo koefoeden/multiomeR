@@ -267,7 +267,6 @@ plot_marker_expression_dot_BPCells <- function(feature_matrix, metadata_tibble, 
     source = log_norm_matrix,
     features = features,
     groups = metadata[[group_col]],
-    group_order = unique(metadata[[group_col]]),
     gene_mapping = NULL
   )
 }

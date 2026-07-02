@@ -89,12 +89,12 @@ immune_human_2x:
     aggregation_reaction_ID_metadata_tsv: example_data/immune_human_dataset_reaction_id_metadata.tsv
     aggregation_reaction_IDs: [healthy_PBMC_human, lymphoma_lymph_human]
     aggregation_GEX_marker_genes:
-      T: [CD3D, CD3E, CD4, CD8A, CD8B]
-      NK: [KLRD1, KLRC1, KLRF1, NKG7, GNLY]
-      Mono: [CD14, FCGR3A, LYZ, S100A8, S100A9]
-      B: [CD79A, CD79B, MS4A1, CD19]
-      pDC: [CLEC4C, TCF4, IRF7, IL3RA]
-      Plasma: [XBP1, MZB1, PRDM1, JCHAIN]
+      T: [TRAC, CD3D]
+      NK: [KLDR1, GNLY]
+      Mono: [LYZ, S100A9]
+      B: [MS4A1, CD79A]
+      pDC: [LILRA4, CLEC4C]
+      Plasma: [MZB1, JCHAIN]
   optional:
     modules: [differential_analyses, genetic_enrichment]
     aggregation_categorical_vars: [condition, tissue, cell_sorting, instrument, target_recovery]

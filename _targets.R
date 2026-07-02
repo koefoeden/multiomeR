@@ -1,5 +1,5 @@
 # Mapping tibbles ---------------------------------------------------------------
-dataset_tibble_from_yaml <- read_config_tibble(config_file = "cfg_datasets.yaml", key_col = "dataset")
+dataset_tibble_from_yaml <- read_dataset_config_tibble(config_file = "cfg_datasets.yaml")
 reaction_tibble <- build_reaction_tibble(dataset_tibble_from_yaml = dataset_tibble_from_yaml)
 
 aggregation_tibble_all_from_yaml <- read_aggregation_config_tibble(config_file = "cfg_aggregations.yaml")

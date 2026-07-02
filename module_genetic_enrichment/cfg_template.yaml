@@ -1,94 +1,74 @@
-default:
-  mandatory:
-    genetic_enrichment_open_targets_studies: NULL # Named Open Targets study mappings keyed by GWAS_ID. Each mapping must include Category and studyId. variant_weighting_mode is optional.
-    genetic_enrichment_psbulk_GWAS_chromVAR_models: NULL # Model specification list for pseudobulk GWAS chromVAR differential activity.
-  optional:
-    genetic_enrichment_posterior_probability_cutoff: 0.001 # posteriorProbability cutoff for gchromVAR. NULL applies no cutoff.
-    genetic_enrichment_posterior_probability_weighting_function_name: NULL # Function expression used to weight Open Targets posteriorProbability values. NULL skips weighting.
-    genetic_enrichment_compartment_patterns: NULL # Named regex patterns used to group cell types or contrasts into plot compartments.
-    genetic_enrichment_SCAVENGE_permutation_times: 100 # Degree-matched random-walk permutations per GWAS/graph branch.
-    genetic_enrichment_SCAVENGE_restart_prob: 0.05 # Random-walk restart probability.
-    genetic_enrichment_SCAVENGE_seed_percent: 0.05 # Maximum fraction of cells used as random-walk seeds.
-    genetic_enrichment_psbulk_GWAS_chromVAR_min_ATAC_counts: 5000 # Minimum pseudobulk ATAC counts per cluster-donor sample for GWAS chromVAR differential activity.
-    genetic_enrichment_psbulk_GWAS_gene_chromVAR_GWAS_IDs: NULL # GWAS_IDs to run in the gene-level pseudobulk GWAS chromVAR extension. NULL skips the extension.
-    genetic_enrichment_psbulk_GWAS_gene_chromVAR_locus_plots_n_top: 10 # Number of top significant GWAS-gene chromVAR effects to draw as locus tracks. Set to 0 to skip.
-    genetic_enrichment_psbulk_GWAS_gene_chromVAR_locus_plots_FDR_threshold: 0.05 # FDR cutoff for top GWAS-gene chromVAR locus-track plots.
-    genetic_enrichment_psbulk_GWAS_gene_chromVAR_locus_plots_flank: 50000 # Bases added around the linked target/credible-set locus in GWAS-gene chromVAR locus-track plots.
-    genetic_enrichment_extended_donor_id_metadata_tsv: NULL # TSV with donor-level metadata of interest. If NULL, inherits aggregation_donor_id_metadata_tsv.
-
 immune_human_2x:
-  mandatory:
-    genetic_enrichment_open_targets_studies:
-      LymphocyteCount_Vuckovic2020:
-        Category: positive_control
-        studyId: GCST90002388
-        finemappingMethod: auto
-      MonocyteCount_Vuckovic2020:
-        Category: positive_control
-        studyId: GCST90002393
-        finemappingMethod: auto
-      IBD_Liu2023:
-        Category: immune_disease
-        studyId: GCST90292538
-        finemappingMethod: auto
-      Crohns_Liu2023:
-        Category: immune_disease
-        studyId: GCST90446792
-        finemappingMethod: auto
-      UlcerativeColitis_Liu2023:
-        Category: immune_disease
-        studyId: GCST90446794
-        finemappingMethod: auto
-      MultipleSclerosis_IMSGC2019:
-        Category: immune_disease
-        studyId: GCST009597
-        finemappingMethod: auto
-      SLE_Verma2024:
-        Category: immune_disease
-        studyId: GCST90480453
-        finemappingMethod: auto
-      Asthma_Zhou2022:
-        Category: immune_disease
-        studyId: GCST90399686
-        finemappingMethod: auto
-      AtopicDermatitis_Oliva2025:
-        Category: immune_disease
-        studyId: GCST90503109
-        finemappingMethod: auto
-      Height_DeWan2023:
-        Category: negative_control
-        studyId: GCST90302890
-        finemappingMethod: auto
-      BMI_Verma2024:
-        Category: negative_control
-        studyId: GCST90475159
-        finemappingMethod: auto
-      EducationalAttainment_Okbay2022:
-        Category: negative_control
-        studyId: GCST90105038
-        finemappingMethod: auto
-      HeelBMD_Mbatchou2021:
-        Category: negative_control
-        studyId: GCST90014022
-        finemappingMethod: auto
-    genetic_enrichment_psbulk_GWAS_chromVAR_models:
-      major_pbmc_cell_type_contrasts:
-        cell_type_subset: [B, Mono, NK, pDC, T]
-        design_matrix_func_name: NULL
-        formula: ~ 0 + cluster + donor_id
-        random_effect: NULL
-        contrast_specs_vec:
-          B_vs_other_PBMC: clusterB - (clusterT + clusterNK + clusterMono + clusterpDC) / 4
-          T_vs_other_PBMC: clusterT - (clusterB + clusterNK + clusterMono + clusterpDC) / 4
-          NK_vs_other_PBMC: clusterNK - (clusterB + clusterT + clusterMono + clusterpDC) / 4
-          Mono_vs_other_PBMC: clusterMono - (clusterB + clusterT + clusterNK + clusterpDC) / 4
-          pDC_vs_other_PBMC: clusterpDC - (clusterB + clusterT + clusterNK + clusterMono) / 4
-          lymphoid_vs_innate_PBMC: (clusterT + clusterNK + clusterB) / 3 - (clusterMono + clusterpDC) / 2
-          lymphoid_vs_mono: (clusterT + clusterNK + clusterB) / 3 - clusterMono
-  optional: 
-    genetic_enrichment_psbulk_GWAS_gene_chromVAR_GWAS_IDs:
-      - LymphocyteCount_Vuckovic2020
-      - MonocyteCount_Vuckovic2020
+  genetic_enrichment_open_targets_studies:
+    LymphocyteCount_Vuckovic2020:
+      Category: positive_control
+      studyId: GCST90002388
+      finemappingMethod: auto
+    MonocyteCount_Vuckovic2020:
+      Category: positive_control
+      studyId: GCST90002393
+      finemappingMethod: auto
+    IBD_Liu2023:
+      Category: immune_disease
+      studyId: GCST90292538
+      finemappingMethod: auto
+    Crohns_Liu2023:
+      Category: immune_disease
+      studyId: GCST90446792
+      finemappingMethod: auto
+    UlcerativeColitis_Liu2023:
+      Category: immune_disease
+      studyId: GCST90446794
+      finemappingMethod: auto
+    MultipleSclerosis_IMSGC2019:
+      Category: immune_disease
+      studyId: GCST009597
+      finemappingMethod: auto
+    SLE_Verma2024:
+      Category: immune_disease
+      studyId: GCST90480453
+      finemappingMethod: auto
+    Asthma_Zhou2022:
+      Category: immune_disease
+      studyId: GCST90399686
+      finemappingMethod: auto
+    AtopicDermatitis_Oliva2025:
+      Category: immune_disease
+      studyId: GCST90503109
+      finemappingMethod: auto
+    Height_DeWan2023:
+      Category: negative_control
+      studyId: GCST90302890
+      finemappingMethod: auto
+    BMI_Verma2024:
+      Category: negative_control
+      studyId: GCST90475159
+      finemappingMethod: auto
+    EducationalAttainment_Okbay2022:
+      Category: negative_control
+      studyId: GCST90105038
+      finemappingMethod: auto
+    HeelBMD_Mbatchou2021:
+      Category: negative_control
+      studyId: GCST90014022
+      finemappingMethod: auto
+  genetic_enrichment_psbulk_GWAS_chromVAR_models:
+    major_pbmc_cell_type_contrasts:
+      cell_type_subset: [B, Mono, NK, pDC, T]
+      design_matrix_func_name: NULL
+      formula: ~ 0 + cluster + donor_id
+      random_effect: NULL
+      contrast_specs_vec:
+        B_vs_other_PBMC: clusterB - (clusterT + clusterNK + clusterMono + clusterpDC) / 4
+        T_vs_other_PBMC: clusterT - (clusterB + clusterNK + clusterMono + clusterpDC) / 4
+        NK_vs_other_PBMC: clusterNK - (clusterB + clusterT + clusterMono + clusterpDC) / 4
+        Mono_vs_other_PBMC: clusterMono - (clusterB + clusterT + clusterNK + clusterpDC) / 4
+        pDC_vs_other_PBMC: clusterpDC - (clusterB + clusterT + clusterNK + clusterMono) / 4
+        lymphoid_vs_innate_PBMC: (clusterT + clusterNK + clusterB) / 3 - (clusterMono + clusterpDC) / 2
+        lymphoid_vs_mono: (clusterT + clusterNK + clusterB) / 3 - clusterMono
+  genetic_enrichment_psbulk_GWAS_gene_chromVAR_GWAS_IDs:
+    - LymphocyteCount_Vuckovic2020
+    - MonocyteCount_Vuckovic2020
 
 PBMC_human_6x:
   inherits: immune_human_2x

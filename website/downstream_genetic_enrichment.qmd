@@ -41,11 +41,10 @@ Enable the module for a human-data aggregation in `cfg_aggregations.yaml`, then 
 For example, this aggregation setting enables the module:
 
 ```{.yaml filename="YAML"}
-optional:
-  modules: [genetic_enrichment]
+modules: [genetic_enrichment]
 ```
 
-The module config controls which Open Targets studies are used, how enrichment inputs are selected, and which trait-relevance summaries are produced. Edit `module_genetic_enrichment/cfg.yaml`, keeping disabled or example rows available for reference until the corresponding human-data aggregation is ready.
+The module config controls which Open Targets studies are used, how enrichment inputs are selected, and which trait-relevance summaries are produced. Defaults and validation rules for module parameters live in `cfg_pipeline_parameters.tsv`. Edit `module_genetic_enrichment/cfg.yaml`, keeping disabled or example rows available for reference until the corresponding human-data aggregation is ready.
 
 ## Running the pipeline
 

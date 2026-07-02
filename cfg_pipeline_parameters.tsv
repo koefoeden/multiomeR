@@ -1,4 +1,8 @@
 scope	param_name	data_type	cardinality	default_value	required	allowed_values	topic	part_of	description
+dataset	dataset_cellranger_arc_refdata_dir	path	scalar	NULL	TRUE		required inputs	dataset	Cell Ranger ARC reference directory for the dataset genome.
+dataset	dataset_QC_exclude_list_per_reaction	character	vector	NULL	FALSE		QC	dataset	Exclusion dplyr filter expressions to evaluate on per-barcode metadata before initial GEX-based clustering.
+dataset	dataset_run_amulet	logical	scalar	true	FALSE	TRUE,FALSE	QC	dataset	Whether to run AMULET ATAC doublet detection for reactions in this dataset.
+dataset	dataset_tar_make_skip_regex_patterns	regex	vector	NULL	FALSE		graph	dataset	Regex patterns to skip dataset-specific targets in custom target selections.
 aggregation	aggregation_reaction_IDs	character	vector	NULL	TRUE		required inputs	all	10X reaction IDs to aggregate.
 aggregation	aggregation_GEX_marker_genes	named_list	named_list	NULL	TRUE		required inputs	GEX,WNN,seurat_export	Named list of marker genes per cell type for module scoring and cluster annotation.
 aggregation	aggregation_donor_id_metadata_tsv	path	scalar	NULL	TRUE		required inputs	all	TSV with donor-level phenotypes and a donor_id column.

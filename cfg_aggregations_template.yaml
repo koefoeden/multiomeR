@@ -1,132 +1,66 @@
-default:
-  mandatory:
-    aggregation_reaction_IDs: NULL # 10X reaction IDs to aggregate (must match configured processing_and_aggregation reactions).
-    aggregation_GEX_marker_genes: NULL # Named list of genes per cell type for module scoring and cluster annotation.
-    aggregation_donor_id_metadata_tsv: NULL # TSV with donor-level phenotypes; must have 'donor_id' column. Joined to cell metadata before harmony.
-    aggregation_reaction_ID_metadata_tsv: NULL # TSV mapping reactions to metadata; must have 'TENX_reaction_ID' column. Joined to cell metadata.
-  optional:
-    is_active: true # Whether to construct targets for this aggregation.
-    modules: NULL # Optional aggregation-level modules to add to the target graph.
-    aggregation_QC_exclude_list_combined_object: NULL # dplyr filter expressions for post-peak-calling QC.
-    # GEX processing
-    aggregation_ATAC_marker_TFs: NULL # Named list of TFs per cell type for chromVAR motif enrichment analysis.
-    aggregation_harmony_correction_metadata_col_names: NULL # Cell metadata columns for harmony batch correction. NULL skips harmony.
-    aggregation_GEX_data_PCs: !expr 1:30 # Sequence of PC integers for GEX PCA, harmony, NN-graph, and clustering.
-    aggregation_GEX_PCA_backend: BPCells_native # GEX PCA backend: Seurat_SCT or BPCells_native.
-    aggregation_SCT_regress_vars: [CC.Difference] # Metadata columns passed to Seurat::SCTransform(vars.to.regress). Cell-cycle scores are computed when requested.
-    aggregation_max_scDblFinder_GEX_score_filter: 0.5 # Numeric 0-1: scDblFinder-predicted doublet score cutoff to remove. 1 keeps all.
-    aggregation_scDblFinder_GEX_cell_type_collapse_list: NULL # Named list mapping collapsed group names to vectors of PCA_harmony_SNN_cluster_cell_type labels (e.g. {epithelial: [Hepatocytes, Cholangiocytes]}). NULL uses cell type labels as-is.
-    aggregation_allow_multiple_cell_types: FALSE # If TRUE, clusters with tied module scores get combined labels (e.g. "TypeA&TypeB").
-    aggregation_roadmap_EDACC_names: NULL # Roadmap Epigenomics tissue names for chromHMM peak annotation - only valid for human datasets. If NULL, chromHMMs are not added to the ATAC_GRanges.
-    # ATAC processing
-    aggregation_ATAC_data_PCs: !expr 2:30 # Sequence of LSI component integers for ATAC harmony, NN-graph, and clustering. Starts at 2 to skip depth-correlated PC1.
-    aggregation_ATAC_peak_matrix_mode: insertions # BPCells peak counting mode for `BPCells::peak_matrix()`; use `overlaps` for datasets that should count full fragment overlaps.
-    aggregation_ATAC_peak_calling_method: macs3 # Per-cluster ATAC peak caller: `macs3` or `bpcells_tile`.
-    aggregation_call_peaks_by_cluster_col: PCA_harmony_SNN_cluster # Metadata column defining groups for peak calling and DA testing.
-    aggregation_extra_harmony_covars_ATAC: NULL # Additional metadata columns for ATAC-specific harmony (added to aggregation_harmony_correction_metadata_col_names).
-    aggregation_max_scDblFinder_ATAC_score_filter: 0.5 # Numeric 0-1: scDblFinder-predicted ATAC doublet score cutoff to remove. 1 keeps all.
-    # Clustering
-    aggregation_GEX_cluster_res: 0.3 # Leiden resolution for BPCells-native GEX clustering.
-    aggregation_ATAC_cluster_res: 0.3 # Leiden resolution for BPCells-native ATAC clustering.
-    aggregation_WNN_cluster_res: 0.3 # Leiden resolution for BPCells-native WNN clustering.
-    aggregation_cluster_min_barcodes: 100 # Minimum barcodes per Leiden cluster; smaller clusters are removed from downstream metadata.
-    aggregation_data_nNNs: 30 # k nearest neighbors for SNN graph construction (clustering).
-    # subgroup analysis
-    aggregation_subgroups_col: PCA_harmony_SNN_cluster_cell_type # Metadata column to split by for per-cell-type reprocessing.
-    aggregation_subgroups_res: 0.3 # Leiden resolution for clustering within subgroup analysis.
-    aggregation_subgroups_min_nuclei_filter: 300 # Minimum nuclei required per cluster to include in subgroup analysis.
-    aggregation_subgroups_SCT_regress_vars: NULL # Metadata columns regressed during subgroup GEX PCA. NULL disables subgroup regression.
-    aggregation_subgroups_extra_harmony_covars: NULL # Extra metadata columns for harmony in subgroup reprocessing (e.g. [sex, age]).
-    # Plotting / UMAP
-    aggregation_categorical_vars: NULL # Extra categorical metadata columns for UMAP coloring and bar plots.
-    aggregation_continuous_vars: NULL # Extra continuous metadata columns for UMAP coloring (phenotype data).
-    aggregation_UMAP_nNNs: 30 # k nearest neighbors for UMAP embedding.
-    aggregation_UMAP_min_dist: 0.001 # UMAP min_dist parameter (smaller = tighter clusters).
-    aggregation_UMAP_ATAC_PCs: !expr 2:30 # LSI components used as input for ATAC UMAP.
-    aggregation_UMAP_GEX_PCs: !expr 1:30 # PCs used as input for GEX UMAP.
-    # Other genes/features
-    aggregation_other_interesting_genes: NULL # Additional genes to plot (not used for cell type annotation).
-    # Extras
-    aggregation_prop_threshold_contaminated_cluster_removal: NULL # Fraction threshold (e.g. 0.51) to discard sub-clusters with mismatched module scores. NULL keeps all.
-    aggregation_tar_make_skip_regex_patterns:
-      - ^coverage_ # ---------- skips ATAC coverage plots
-      # NULL
-      # Regex patterns to skip targets in custom target selections. Examples below:
-      # - ^subgroups_ # ---------- skips subgroup analysis
-      # - ^(psbulk|sc_psbulk)_ # ---------- skips pseudobulk models
-      # - GEX_reclustered # ---------- skips GEX reclustering
-      # - ^GEX_3D_UMAP_ # ---------- skips GEX 3D UMAPs
-      # - TF_activity # ---------- skips chromVAR TF activity
-
 brain_mouse:
-  mandatory:
-    aggregation_donor_id_metadata_tsv: example_data/brain_mouse_donor_id_metadata.tsv
-    aggregation_reaction_ID_metadata_tsv: example_data/brain_mouse_reaction_metadata.tsv
-    aggregation_reaction_IDs: [embryonic_brain_mouse]
-    aggregation_GEX_marker_genes:
-      Neuron: [Rbfox3, Snap25, Syt1, Tubb3]
-      Astrocyte: [Gfap, Aqp4, Aldh1l1, S100b]
-      Oligodendrocyte: [Mbp, Plp1, Mog, Mag]
-      OPC: [Pdgfra, Cspg4, Olig1, Olig2]
-      Microglia: [Cx3cr1, P2ry12, Tmem119, Hexb]
-      Endothelial: [Pecam1, Cldn5, Flt1, Vwf]
-  optional:
-    aggregation_QC_exclude_list_combined_object:
-      - nCount_ATAC < 1000
-      - atac_peak_counts_frac < 0.1
-      - atac_peak_counts_blacklist_frac > 0.05
-    aggregation_ATAC_marker_TFs:
-      Neuron: [Tbr1, Bcl11b]
-      Astrocyte: [Sox9, Nfia, Nfib]
-      Oligodendrocyte: [Sox10, Nkx2-2, OLIG2__MA1997.2]
-      OPC: [OLIG2__MA1997.2, Sox10, Nkx2-2, ASCL1__MA1631.2]
-      Microglia: [Spi1, Irf8, Mef2c, Mafb]
-      Endothelial: [Erg, Fli1, Klf2, Sox17]
+  aggregation_donor_id_metadata_tsv: example_data/brain_mouse_donor_id_metadata.tsv
+  aggregation_reaction_ID_metadata_tsv: example_data/brain_mouse_reaction_metadata.tsv
+  aggregation_reaction_IDs: [embryonic_brain_mouse]
+  aggregation_GEX_marker_genes:
+    Neuron: [Rbfox3, Snap25, Syt1, Tubb3]
+    Astrocyte: [Gfap, Aqp4, Aldh1l1, S100b]
+    Oligodendrocyte: [Mbp, Plp1, Mog, Mag]
+    OPC: [Pdgfra, Cspg4, Olig1, Olig2]
+    Microglia: [Cx3cr1, P2ry12, Tmem119, Hexb]
+    Endothelial: [Pecam1, Cldn5, Flt1, Vwf]
+  aggregation_QC_exclude_list_combined_object:
+    - nCount_ATAC < 1000
+    - atac_peak_counts_frac < 0.1
+    - atac_peak_counts_blacklist_frac > 0.05
+  aggregation_ATAC_marker_TFs:
+    Neuron: [Tbr1, Bcl11b]
+    Astrocyte: [Sox9, Nfia, Nfib]
+    Oligodendrocyte: [Sox10, Nkx2-2, OLIG2__MA1997.2]
+    OPC: [OLIG2__MA1997.2, Sox10, Nkx2-2, ASCL1__MA1631.2]
+    Microglia: [Spi1, Irf8, Mef2c, Mafb]
+    Endothelial: [Erg, Fli1, Klf2, Sox17]
 
 immune_human_2x:
-  mandatory:
-    aggregation_donor_id_metadata_tsv: example_data/immune_human_dataset_donor_id_metadata.tsv
-    aggregation_reaction_ID_metadata_tsv: example_data/immune_human_dataset_reaction_id_metadata.tsv
-    aggregation_reaction_IDs: [healthy_PBMC_human, lymphoma_lymph_human]
-    aggregation_GEX_marker_genes:
-      B: [MS4A1, CD79A]
-      Mono: [LYZ, S100A9]
-      NK: [KLRD1, GNLY]
-      pDC: [LILRA4, CLEC4C]
-      Plasma: [MZB1, JCHAIN]
-      T: [TRAC, CD3D]
-  optional:
-    modules: [differential_analyses, genetic_enrichment]
-    aggregation_categorical_vars: [condition, tissue, cell_sorting, instrument, target_recovery]
-    aggregation_QC_exclude_list_combined_object:
-      - nCount_ATAC < 1000
-      - atac_peak_counts_frac < 0.1
-      - atac_peak_counts_blacklist_frac > 0.01
-    aggregation_ATAC_marker_TFs:
-      B: [PAX5, EBF1, TCF3, BCL6]
-      Mono: [SPI1, IRF8, CEBPA, CEBPB]
-      NK: [EOMES, TBX21, NFIL3]
-      pDC: [IRF8, TCF4, SPIB]
-      Plasma: [XBP1, PRDM1, IRF4]
-      T: [BCL11B, TCF7, LEF1, RUNX3]
-    aggregation_roadmap_EDACC_names:
-      - Peripheral_Blood_Mononuclear_Primary_Cells
-      - CD4_Memory_Primary_Cells
-      - CD4_Naive_Primary_Cells
-      - CD8_Memory_Primary_Cells
-      - CD8_Naive_Primary_Cells
-      - Monocytes-CD14+_RO01746
+  aggregation_donor_id_metadata_tsv: example_data/immune_human_dataset_donor_id_metadata.tsv
+  aggregation_reaction_ID_metadata_tsv: example_data/immune_human_dataset_reaction_id_metadata.tsv
+  aggregation_reaction_IDs: [healthy_PBMC_human, lymphoma_lymph_human]
+  aggregation_GEX_marker_genes:
+    B: [MS4A1, CD79A]
+    Mono: [LYZ, S100A9]
+    NK: [KLRD1, GNLY]
+    pDC: [LILRA4, CLEC4C]
+    Plasma: [MZB1, JCHAIN]
+    T: [TRAC, CD3D]
+  modules: [differential_analyses, genetic_enrichment]
+  aggregation_categorical_vars: [condition, tissue, cell_sorting, instrument, target_recovery]
+  aggregation_QC_exclude_list_combined_object:
+    - nCount_ATAC < 1000
+    - atac_peak_counts_frac < 0.1
+    - atac_peak_counts_blacklist_frac > 0.01
+  aggregation_ATAC_marker_TFs:
+    B: [PAX5, EBF1, TCF3, BCL6]
+    Mono: [SPI1, IRF8, CEBPA, CEBPB]
+    NK: [EOMES, TBX21, NFIL3]
+    pDC: [IRF8, TCF4, SPIB]
+    Plasma: [XBP1, PRDM1, IRF4]
+    T: [BCL11B, TCF7, LEF1, RUNX3]
+  aggregation_roadmap_EDACC_names:
+    - Peripheral_Blood_Mononuclear_Primary_Cells
+    - CD4_Memory_Primary_Cells
+    - CD4_Naive_Primary_Cells
+    - CD8_Memory_Primary_Cells
+    - CD8_Naive_Primary_Cells
+    - Monocytes-CD14+_RO01746
 
 PBMC_human_6x:
   inherits: immune_human_2x
-  mandatory:
-    aggregation_reaction_IDs:
-      - healthy_PBMC_human
-      - pbmc_10k_chromium_controller
-      - pbmc_10k_chromium_x
-      - pbmc_granulocyte_sorted_10k
-      - pbmc_unsorted_10k
-      - pbmc_unsorted_3k
-  optional:
-    modules: [genetic_enrichment]
-    aggregation_categorical_vars: [cell_sorting, instrument, target_recovery]
+  aggregation_reaction_IDs:
+    - healthy_PBMC_human
+    - pbmc_10k_chromium_controller
+    - pbmc_10k_chromium_x
+    - pbmc_granulocyte_sorted_10k
+    - pbmc_unsorted_10k
+    - pbmc_unsorted_3k
+  modules: [genetic_enrichment]
+  aggregation_categorical_vars: [cell_sorting, instrument, target_recovery]

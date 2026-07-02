@@ -1,45 +1,27 @@
-default:
-  mandatory: {}
-  optional:
-    differential_analyses_DCTC_plot_phenotype_vars: NULL # Phenotypes to plot in the differential cell type composition analysis.
-    differential_analyses_DCTC_formula_chr: NULL # Formula for differential cell type composition models.
-    differential_analyses_DCTC_color_by_categorical_metadata_column: NULL # Optional categorical metadata column for DCTC plot coloring.
-    differential_analyses_psbulk_DX_models: NULL # Model specification list to run pseudobulk differential analyses (DGE, DCA, DTFA).
-    differential_analyses_psbulk_DX_GSEA_custom_lists: NULL # List of custom gene sets to use in pseudobulk analysis.
-    differential_analyses_psbulk_DX_OT_GWAS_efo_id: NULL # Optional Open Targets EFO/MONDO disease ID for volcano plot GWAS-evidence coloring.
-    differential_analyses_DTFA_min_ATAC_counts: 5000 # Minimum pseudobulk ATAC counts per cluster-donor sample for differential TF activity.
-    differential_analyses_extended_donor_id_metadata_tsv: NULL # TSV with donor-level metadata of interest. If NULL, inherits aggregation_donor_id_metadata_tsv.
-    differential_analyses_OLINK_parquet_file_path: NULL
-    differential_analyses_bulk_RNA_rds_file_path: NULL
-
 # Add one explicit row per aggregation that has `modules: [differential_analyses]`
 # in cfg_aggregations.yaml. Example:
 #
 # example_human:
-#   mandatory: {}
-#   optional:
-#     differential_analyses_DCTC_plot_phenotype_vars: condition
-#     differential_analyses_DCTC_formula_chr: cbind(n_nuclei, n_other_nuclei) ~ 0 + 1 + condition
-#     differential_analyses_psbulk_DX_models:
-#       simple:
-#         cell_type_subset: NULL
-#         design_matrix_func_name: NULL
-#         formula: ~ cluster:condition
-#         random_effect: NULL
-#         contrast_specs_vec:
-#           condition_effect_in_cell_type: clusterCellType.condition
+#   differential_analyses_DCTC_plot_phenotype_vars: condition
+#   differential_analyses_DCTC_formula_chr: cbind(n_nuclei, n_other_nuclei) ~ 0 + 1 + condition
+#   differential_analyses_psbulk_DX_models:
+#     simple:
+#       cell_type_subset: NULL
+#       design_matrix_func_name: NULL
+#       formula: ~ cluster:condition
+#       random_effect: NULL
+#       contrast_specs_vec:
+#         condition_effect_in_cell_type: clusterCellType.condition
 
 immune_human_2x:
-  mandatory: {}
-  optional:
-    differential_analyses_DCTC_plot_phenotype_vars: condition
-    differential_analyses_DCTC_formula_chr: cbind(n_nuclei, n_other_nuclei) ~ 0 + condition
-    differential_analyses_DCTC_color_by_categorical_metadata_column: tissue
-    differential_analyses_psbulk_DX_models:
-      condition_demo:
-        cell_type_subset: NULL
-        design_matrix_func_name: NULL
-        formula: ~ 0 + cluster + condition
-        random_effect: NULL
-        contrast_specs_vec:
-          lymphoma_vs_healthy: conditionlymphoma
+  differential_analyses_DCTC_plot_phenotype_vars: condition
+  differential_analyses_DCTC_formula_chr: cbind(n_nuclei, n_other_nuclei) ~ 0 + condition
+  differential_analyses_DCTC_color_by_categorical_metadata_column: tissue
+  differential_analyses_psbulk_DX_models:
+    condition_demo:
+      cell_type_subset: NULL
+      design_matrix_func_name: NULL
+      formula: ~ 0 + cluster + condition
+      random_effect: NULL
+      contrast_specs_vec:
+        lymphoma_vs_healthy: conditionlymphoma

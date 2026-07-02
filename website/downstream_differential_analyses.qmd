@@ -41,11 +41,10 @@ Enable the module for an aggregation in `cfg_aggregations.yaml`, then configure 
 For example, this aggregation setting enables the module:
 
 ```{.yaml filename="YAML"}
-optional:
-  modules: [differential_analyses]
+modules: [differential_analyses]
 ```
 
-The module config controls which variables are modelled, which metadata columns are used, and which contrasts are run. Edit `module_differential_analyses/cfg.yaml`, keeping disabled or example rows available for reference until the corresponding aggregation is ready.
+The module config controls which variables are modelled, which metadata columns are used, and which contrasts are run. Defaults and validation rules for module parameters live in `cfg_pipeline_parameters.tsv`. Edit `module_differential_analyses/cfg.yaml`, keeping disabled or example rows available for reference until the corresponding aggregation is ready.
 
 ## Running the pipeline
 

@@ -1,29 +1,17 @@
-default:
-  mandatory:
-    dataset_cellranger_arc_refdata_dir: NULL
-  optional:
-    dataset_QC_exclude_list_per_reaction: NULL # Exclusion dplyr::filter-expressions to evaluate on per-barcode metadata prior to initial GEX-based clustering.
-    dataset_run_amulet: true
-    dataset_tar_make_skip_regex_patterns: NULL
-
 brain_mouse_dataset:
-  mandatory:
-    dataset_cellranger_arc_refdata_dir: example_data/refdata-cellranger-arc-GRCm39-2024-A
-  optional:
-    dataset_QC_exclude_list_per_reaction:
-      - TSS.enrichment < 4
-      - nucleosome_signal > 4
-      - nCount_RNA < 250
-      - RNA_mito_percent > 10
-    dataset_run_amulet: false
+  dataset_cellranger_arc_refdata_dir: example_data/refdata-cellranger-arc-GRCm39-2024-A
+  dataset_QC_exclude_list_per_reaction:
+    - TSS.enrichment < 4
+    - nucleosome_signal > 4
+    - nCount_RNA < 250
+    - RNA_mito_percent > 10
+  dataset_run_amulet: false
 
 immune_human_dataset:
-  mandatory:
-    dataset_cellranger_arc_refdata_dir: example_data/refdata-cellranger-arc-GRCh38-2024-A
-  optional:
-    dataset_QC_exclude_list_per_reaction:
-      - TSS.enrichment < 4
-      - nucleosome_signal > 4
-      - nCount_RNA < 250
-      - RNA_mito_percent > 10
-    dataset_run_amulet: false
+  dataset_cellranger_arc_refdata_dir: example_data/refdata-cellranger-arc-GRCh38-2024-A
+  dataset_QC_exclude_list_per_reaction:
+    - TSS.enrichment < 4
+    - nucleosome_signal > 4
+    - nCount_RNA < 250
+    - RNA_mito_percent > 10
+  dataset_run_amulet: false

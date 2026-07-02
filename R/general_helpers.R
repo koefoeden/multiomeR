@@ -41,181 +41,6 @@ collapse_duplicate_names <- function(input_list_object) {
 }
 
 
-cfg_parameter_section_names <- c("mandatory", "optional")
-
-
-shallow_merge_cfg_sections <- function(parent_cfg, child_cfg) {
-  merged_cfg <- parent_cfg
-
-  for (section_name in cfg_parameter_section_names) {
-    parent_values <- parent_cfg[[section_name]] %||% list()
-    child_values <- child_cfg[[section_name]] %||% list()
-
-    parent_values[names(child_values)] <- child_values
-    merged_cfg[[section_name]] <- parent_values
-  }
-
-  merged_cfg$inherits <- child_cfg$inherits
-  merged_cfg
-}
-
-
-#' Resolve cfg dataset config
-#'
-#' Resolve one dataset entry from the YAML config, including inherited sections.
-#'
-#' @param raw_cfg Named list returned by `yaml::read_yaml()`; top-level names are
-#'   config keys such as dataset names plus optional `default`.
-#' @param dataset Single config key to resolve.
-#' @param config_file Path to the YAML file, used in diagnostic messages when a
-#'   key is missing or inheritance is circular.
-#' @param seen_datasets Character vector used internally to detect circular
-#'   inheritance while recursively resolving parent configs.
-#' @param key_col Label for the top-level config key, for example `dataset`;
-#'   only used in error messages.
-#' @return A list with merged `mandatory` and `optional` sections. Child values
-#'   override parent values, and non-`default` entries inherit from `default`
-#'   unless they declare an explicit `inherits` value.
-#' @keywords internal
-
-resolve_cfg_dataset_config <- function(raw_cfg, dataset, config_file, seen_datasets = character(), key_col = "dataset") {
-  if (!dataset %in% names(raw_cfg)) {
-    stop(stringr::str_glue("Config {key_col} '{dataset}' is not defined in {config_file}."))
-  }
-
-  if (dataset %in% seen_datasets) {
-    stop(stringr::str_glue("Circular config inheritance found in {config_file}: {paste(c(seen_datasets, dataset), collapse = ' -> ')}."))
-  }
-
-  dataset_cfg <- raw_cfg[[dataset]]
-  parent_datasets <- dataset_cfg$inherits %||% if (dataset == "default") character() else "default"
-
-  parent_cfg <- list(mandatory = list(), optional = list())
-  for (parent_dataset in parent_datasets) {
-    resolved_parent_cfg <- resolve_cfg_dataset_config(
-      raw_cfg = raw_cfg,
-      dataset = parent_dataset,
-      config_file = config_file,
-      seen_datasets = c(seen_datasets, dataset),
-      key_col = key_col
-    )
-    parent_cfg <- shallow_merge_cfg_sections(parent_cfg, resolved_parent_cfg)
-  }
-
-  shallow_merge_cfg_sections(parent_cfg, dataset_cfg)
-}
-
-
-#' Normalize cfg dataset config
-#'
-#' Validate the resolved YAML config shape and flatten parameter sections.
-#'
-#' @param cfg_list Resolved config list for one key. It must contain `mandatory`
-#'   and `optional` YAML maps and may contain `inherits`.
-#' @param dataset Config key being normalized, used in validation errors.
-#' @param config_file Path to the YAML file, used in validation errors.
-#' @param key_col Label for the top-level config key, for example `dataset`;
-#'   only used in validation errors.
-#' @return A list with one `values` element containing mandatory and optional
-#'   parameters merged into a flat named list. Mandatory `NULL` values, mixed
-#'   top-level parameters, and duplicate mandatory/optional names are rejected.
-#' @keywords internal
-
-normalize_cfg_dataset_config <- function(cfg_list, dataset, config_file, key_col = "dataset") {
-  cfg_names <- names(cfg_list)
-  missing_section_names <- setdiff(cfg_parameter_section_names, cfg_names)
-
-  if (length(missing_section_names) > 0) {
-    stop(stringr::str_glue(
-      "Config {key_col} '{dataset}' in {config_file} must define nested parameter section(s): ",
-      "{paste(missing_section_names, collapse = ', ')}."
-    ))
-  }
-
-  top_level_names <- setdiff(cfg_names, c(cfg_parameter_section_names, "inherits"))
-  if (length(top_level_names) > 0) {
-    stop(stringr::str_glue(
-      "Config {key_col} '{dataset}' in {config_file} mixes nested parameter sections with top-level parameter(s): ",
-      "{paste(top_level_names, collapse = ', ')}. ",
-      "Move these parameters under either 'mandatory:' or 'optional:'."
-    ))
-  }
-
-  mandatory_values <- cfg_list$mandatory %||% list()
-  optional_values <- cfg_list$optional %||% list()
-
-  if (!is.list(mandatory_values) || !is.list(optional_values)) {
-    stop(stringr::str_glue(
-      "Config {key_col} '{dataset}' in {config_file} must define 'mandatory:' and 'optional:' as YAML maps."
-    ))
-  }
-
-  duplicate_param_names <- intersect(names(mandatory_values), names(optional_values))
-  if (length(duplicate_param_names) > 0) {
-    stop(stringr::str_glue(
-      "Config {key_col} '{dataset}' in {config_file} defines parameter(s) in both 'mandatory:' and 'optional:': ",
-      "{paste(duplicate_param_names, collapse = ', ')}."
-    ))
-  }
-
-  missing_param_names <- names(mandatory_values)[purrr::map_lgl(mandatory_values, is.null)]
-  if (length(missing_param_names) > 0) {
-    stop(stringr::str_glue(
-      "Mandatory parameter(s) '{paste(missing_param_names, collapse = ', ')}' ",
-      "are NULL for config {key_col}: {dataset}. Please set these parameters in {config_file}."
-    ))
-  }
-
-  list(values = c(mandatory_values, optional_values))
-}
-
-
-#' Read config tibble
-#'
-#' Read the YAML pipeline config into a rectangular tibble.
-#'
-#' @param config_file Path to a YAML config file in the nested
-#'   `mandatory`/`optional` format.
-#' @param key_col Name of the output key column, such as `dataset` or another
-#'   config dimension.
-#' @param verbose Logical; when `TRUE`, print the config keys as they are read.
-#' @return A tibble with one row per non-`default` config entry and one column
-#'   per flattened parameter after inheritance and validation.
-#' @keywords internal
-
-read_config_tibble <- function(config_file, key_col, verbose = FALSE) {
-  if (requireNamespace("googlesheets4", quietly = TRUE)) {
-    googlesheets4::gs4_deauth()
-  }
-
-  raw_cfg <- suppressWarnings(yaml::read_yaml(config_file, eval.expr = TRUE))
-  config_instances <- raw_cfg %>% names() %>% purrr::set_names()
-  config_keys <- config_instances %>% purrr::discard(~ .x %in% c("default"))
-
-  if (verbose) {
-    cat("Reading configs for ", key_col, ":\n", paste("-", config_keys, collapse = "\n"), "\n\n", sep = "")
-  }
-
-  cfg_list_per_key <- config_keys %>%
-    purrr::set_names() %>%
-    purrr::map(~ resolve_cfg_dataset_config(raw_cfg = raw_cfg, dataset = .x, config_file = config_file, key_col = key_col))
-
-  normalized_cfg_per_key <- purrr::imap(
-    cfg_list_per_key,
-    ~ normalize_cfg_dataset_config(
-      cfg_list = .x,
-      dataset = .y,
-      config_file = config_file,
-      key_col = key_col
-    )
-  )
-
-  per_key_tibbles <- normalized_cfg_per_key %>%
-    purrr::map(~ .x$values %>% tibble::enframe() %>% tidyr::pivot_wider())
-
-  dplyr::bind_rows(per_key_tibbles, .id = key_col)
-}
-
 read_config_parameter_manifest <- function(manifest_file, scope = NULL) {
   manifest_tibble <- readr::read_tsv(
     manifest_file,
@@ -271,6 +96,20 @@ manifest_defaults <- function(manifest_tibble) {
   defaults
 }
 
+read_dataset_config_tibble <- function(
+  config_file = "cfg_datasets.yaml",
+  manifest_file = "cfg_pipeline_parameters.tsv",
+  verbose = FALSE
+) {
+  read_manifest_config_tibble(
+    config_file = config_file,
+    manifest_file = manifest_file,
+    scope = "dataset",
+    key_col = "dataset",
+    verbose = verbose
+  )
+}
+
 read_aggregation_config_tibble <- function(
   config_file = "cfg_aggregations.yaml",
   manifest_file = "cfg_pipeline_parameters.tsv",
@@ -286,9 +125,12 @@ read_aggregation_config_tibble <- function(
 }
 
 read_manifest_config_tibble <- function(config_file, manifest_file, scope, key_col, verbose = FALSE) {
+  if (requireNamespace("googlesheets4", quietly = TRUE)) {
+    googlesheets4::gs4_deauth()
+  }
+
   manifest_tibble <- read_config_parameter_manifest(manifest_file, scope = scope)
   raw_cfg <- suppressWarnings(yaml::read_yaml(config_file, eval.expr = TRUE))
-  raw_cfg$default <- manifest_default_config(manifest_tibble)
   config_keys <- names(raw_cfg) |>
     purrr::discard(~ .x %in% c("default"))
 
@@ -298,24 +140,21 @@ read_manifest_config_tibble <- function(config_file, manifest_file, scope, key_c
 
   validate_manifest_config_names(raw_cfg, config_keys, manifest_tibble, config_file, key_col = key_col)
 
-  cfg_list_per_key <- config_keys |>
+  values_per_key <- config_keys |>
     purrr::set_names() |>
-    purrr::map(~ resolve_cfg_dataset_config(raw_cfg = raw_cfg, dataset = .x, config_file = config_file, key_col = key_col))
-
-  normalized_cfg_per_key <- purrr::imap(
-    cfg_list_per_key,
-    ~ normalize_cfg_dataset_config(
-      cfg_list = .x,
-      dataset = .y,
-      config_file = config_file,
-      key_col = key_col
-    )
+    purrr::map(
+      ~ resolve_manifest_config_values(
+        raw_cfg = raw_cfg,
+        config_key = .x,
+        config_file = config_file,
+        manifest_tibble = manifest_tibble,
+        key_col = key_col
+      )
   )
 
   per_key_tibbles <- purrr::imap(
-    normalized_cfg_per_key,
-    \(cfg_list, config_key) {
-      values <- cfg_list$values
+    values_per_key,
+    \(values, config_key) {
       validate_manifest_config_values(
         values = values,
         config_key = config_key,
@@ -332,18 +171,14 @@ read_manifest_config_tibble <- function(config_file, manifest_file, scope, key_c
   dplyr::bind_rows(per_key_tibbles, .id = key_col)
 }
 
-manifest_default_config <- function(manifest_tibble) {
-  defaults <- manifest_defaults(manifest_tibble)
-  required_params <- manifest_tibble$param_name[manifest_tibble$required]
-  list(
-    mandatory = defaults[required_params],
-    optional = defaults[setdiff(names(defaults), required_params)]
-  )
-}
-
 validate_manifest_config_names <- function(raw_cfg, config_keys, manifest_tibble, config_file, key_col) {
   purrr::walk(config_keys, \(config_key) {
-    entry_params <- c(names(raw_cfg[[config_key]]$mandatory), names(raw_cfg[[config_key]]$optional))
+    entry_params <- names(flatten_manifest_config_entry(
+      cfg_list = raw_cfg[[config_key]],
+      config_key = config_key,
+      config_file = config_file,
+      key_col = key_col
+    ))
     unknown_params <- setdiff(entry_params, manifest_tibble$param_name)
     if (length(unknown_params) > 0) {
       stop(
@@ -359,6 +194,64 @@ validate_manifest_config_names <- function(raw_cfg, config_keys, manifest_tibble
       )
     }
   })
+}
+
+resolve_manifest_config_values <- function(
+  raw_cfg,
+  config_key,
+  config_file,
+  manifest_tibble,
+  key_col,
+  seen_configs = character()
+) {
+  if (!config_key %in% names(raw_cfg) || config_key == "default") {
+    stop(stringr::str_glue("Config {key_col} '{config_key}' is not defined in {config_file}."), call. = FALSE)
+  }
+
+  if (config_key %in% seen_configs) {
+    stop(stringr::str_glue(
+      "Circular config inheritance found in {config_file}: ",
+      "{paste(c(seen_configs, config_key), collapse = ' -> ')}."
+    ), call. = FALSE)
+  }
+
+  cfg_list <- raw_cfg[[config_key]]
+  parent_configs <- cfg_list$inherits %||% character()
+  values <- manifest_defaults(manifest_tibble)
+
+  for (parent_config in parent_configs) {
+    values <- merge_manifest_config_values(
+      parent_values = values,
+      child_values = resolve_manifest_config_values(
+        raw_cfg = raw_cfg,
+        config_key = parent_config,
+        config_file = config_file,
+        manifest_tibble = manifest_tibble,
+        key_col = key_col,
+        seen_configs = c(seen_configs, config_key)
+      )
+    )
+  }
+
+  merge_manifest_config_values(
+    parent_values = values,
+    child_values = flatten_manifest_config_entry(
+      cfg_list = cfg_list,
+      config_key = config_key,
+      config_file = config_file,
+      key_col = key_col
+    )
+  )
+}
+
+flatten_manifest_config_entry <- function(cfg_list, config_key, config_file, key_col) {
+  cfg_names <- names(cfg_list)
+  cfg_list[setdiff(cfg_names, "inherits")]
+}
+
+merge_manifest_config_values <- function(parent_values, child_values) {
+  parent_values[names(child_values)] <- child_values
+  parent_values
 }
 
 validate_manifest_config_values <- function(values, config_key, config_file, manifest_tibble, key_col) {
@@ -485,7 +378,7 @@ validate_manifest_allowed_values <- function(value, allowed_values, param_name, 
 
 
 get_cfg_per_dataset_tibble <- function(config_file = "cfg_datasets.yaml", verbose = TRUE) {
-  cfg_tibble <- read_config_tibble(config_file = config_file, key_col = "dataset", verbose = verbose)
+  cfg_tibble <- read_dataset_config_tibble(config_file = config_file, verbose = verbose)
 
   return(cfg_tibble)
 }

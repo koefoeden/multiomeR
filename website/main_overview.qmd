@@ -25,4 +25,4 @@ Representative outputs from the public example workflow are collected in the [ma
 
 The main pipeline is configured in three layers: datasets define shared genome and QC settings, reactions point to individual 10x outputs, and aggregations choose which reactions to process together.
 
-Each YAML file has a `default` entry with shared parameters. Named datasets and aggregations inherit from `default` unless they declare another `inherits` parent, so template entries usually only list required values and settings that intentionally differ from the defaults.
+Defaults, requiredness, data types, and allowed values for YAML-backed configuration live in `cfg_pipeline_parameters.tsv`. Dataset, aggregation, and module YAML files contain concrete config rows and optional row-to-row inheritance with `inherits:`.

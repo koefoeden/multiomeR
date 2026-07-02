@@ -376,6 +376,7 @@ validate_aggregation_module_names <- function(
 #' @param aggregation_tibble Main aggregation config tibble defining all valid
 #'   aggregation names.
 #' @param aggregation_config_file Path to the aggregation YAML config.
+#' @param manifest_file Path to the pipeline parameter manifest TSV.
 #' @return A tibble with at least an `aggregation` column.
 #' @keywords internal
 
@@ -384,10 +385,13 @@ read_module_config_tibble <- function(
   module_name,
   module_aggregation_tibble,
   aggregation_tibble,
-  aggregation_config_file = "cfg_aggregations.yaml"
+  aggregation_config_file = "cfg_aggregations.yaml",
+  manifest_file = "cfg_pipeline_parameters.tsv"
 ) {
-  module_config_tibble <- read_config_tibble(
+  module_config_tibble <- read_manifest_config_tibble(
     config_file = config_file,
+    manifest_file = manifest_file,
+    scope = module_name,
     key_col = "aggregation"
   )
 

@@ -1,0 +1,66 @@
+scope	param_name	data_type	cardinality	default_value	required	allowed_values	topic	part_of	description
+aggregation	aggregation_reaction_IDs	character	vector	NULL	TRUE		required inputs	all	10X reaction IDs to aggregate.
+aggregation	aggregation_GEX_marker_genes	named_list	named_list	NULL	TRUE		required inputs	GEX,WNN,seurat_export	Named list of marker genes per cell type for module scoring and cluster annotation.
+aggregation	aggregation_donor_id_metadata_tsv	path	scalar	NULL	TRUE		required inputs	all	TSV with donor-level phenotypes and a donor_id column.
+aggregation	aggregation_reaction_ID_metadata_tsv	path	scalar	NULL	TRUE		required inputs	all	TSV mapping reactions to metadata with a TENX_reaction_ID column.
+aggregation	is_active	logical	scalar	true	FALSE	TRUE,FALSE	modules	graph	Whether to construct targets for this aggregation.
+aggregation	modules	character	vector	NULL	FALSE		modules	graph	Optional aggregation-level modules to add to the target graph.
+aggregation	aggregation_QC_exclude_list_combined_object	character	vector	NULL	FALSE		QC	all	dplyr filter expressions for post-peak-calling QC.
+aggregation	aggregation_ATAC_marker_TFs	named_list	named_list	NULL	FALSE		GEX processing	ATAC,WNN,seurat_export	Named list of TFs per cell type for chromVAR motif enrichment analysis.
+aggregation	aggregation_harmony_correction_metadata_col_names	character	vector	NULL	FALSE		GEX processing	GEX,ATAC,WNN	Cell metadata columns for harmony batch correction. NULL skips harmony.
+aggregation	aggregation_GEX_data_PCs	integer	vector	!expr 1:30	FALSE		GEX processing	GEX,WNN	Sequence of PC integers for GEX PCA, harmony, NN-graph, and clustering.
+aggregation	aggregation_GEX_PCA_backend	character	scalar	BPCells_native	FALSE	Seurat_SCT,BPCells_native	GEX processing	GEX	GEX PCA backend.
+aggregation	aggregation_SCT_regress_vars	character	vector	[CC.Difference]	FALSE		GEX processing	GEX	Metadata columns passed to Seurat::SCTransform vars.to.regress.
+aggregation	aggregation_max_scDblFinder_GEX_score_filter	numeric	scalar	0.5	FALSE		GEX processing	GEX	Numeric 0-1 scDblFinder-predicted GEX doublet score cutoff to remove. 1 keeps all.
+aggregation	aggregation_scDblFinder_GEX_cell_type_collapse_list	named_list	named_list	NULL	FALSE		GEX processing	GEX	Named list mapping collapsed group names to vectors of cell type labels. NULL uses cell type labels as-is.
+aggregation	aggregation_allow_multiple_cell_types	logical	scalar	FALSE	FALSE	TRUE,FALSE	GEX processing	GEX	If TRUE clusters with tied module scores get combined labels.
+aggregation	aggregation_roadmap_EDACC_names	character	vector	NULL	FALSE		GEX processing	ATAC	Roadmap Epigenomics tissue names for chromHMM peak annotation. NULL skips chromHMM annotation.
+aggregation	aggregation_ATAC_data_PCs	integer	vector	!expr 2:30	FALSE		ATAC processing	ATAC,WNN	Sequence of LSI component integers for ATAC harmony, NN-graph, and clustering.
+aggregation	aggregation_ATAC_peak_matrix_mode	character	scalar	insertions	FALSE	insertions,overlaps	ATAC processing	ATAC	BPCells peak counting mode for BPCells::peak_matrix().
+aggregation	aggregation_ATAC_peak_calling_method	character	scalar	macs3	FALSE	macs3,bpcells_tile	ATAC processing	ATAC	Per-cluster ATAC peak caller.
+aggregation	aggregation_call_peaks_by_cluster_col	character	scalar	PCA_harmony_SNN_cluster	FALSE		ATAC processing	ATAC	Metadata column defining groups for peak calling and DA testing.
+aggregation	aggregation_extra_harmony_covars_ATAC	character	vector	NULL	FALSE		ATAC processing	ATAC	Additional metadata columns for ATAC-specific harmony.
+aggregation	aggregation_max_scDblFinder_ATAC_score_filter	numeric	scalar	0.5	FALSE		ATAC processing	ATAC	Numeric 0-1 scDblFinder-predicted ATAC doublet score cutoff to remove. 1 keeps all.
+aggregation	aggregation_GEX_cluster_res	numeric	scalar	0.3	FALSE		clustering	GEX	Leiden resolution for BPCells-native GEX clustering.
+aggregation	aggregation_ATAC_cluster_res	numeric	scalar	0.3	FALSE		clustering	ATAC	Leiden resolution for BPCells-native ATAC clustering.
+aggregation	aggregation_WNN_cluster_res	numeric	scalar	0.3	FALSE		clustering	WNN	Leiden resolution for BPCells-native WNN clustering.
+aggregation	aggregation_cluster_min_barcodes	integer	scalar	100	FALSE		clustering	GEX,ATAC,WNN	Minimum barcodes per Leiden cluster for downstream metadata.
+aggregation	aggregation_data_nNNs	integer	scalar	30	FALSE		clustering	GEX,ATAC,WNN	k nearest neighbors for SNN graph construction.
+aggregation	aggregation_subgroups_col	character	scalar	PCA_harmony_SNN_cluster_cell_type	FALSE		subgroup analysis	subgroups	Metadata column to split by for per-cell-type reprocessing.
+aggregation	aggregation_subgroups_res	numeric	scalar	0.3	FALSE		subgroup analysis	subgroups	Leiden resolution for clustering within subgroup analysis.
+aggregation	aggregation_subgroups_min_nuclei_filter	integer	scalar	300	FALSE		subgroup analysis	subgroups	Minimum nuclei required per cluster to include in subgroup analysis.
+aggregation	aggregation_subgroups_SCT_regress_vars	character	vector	NULL	FALSE		subgroup analysis	subgroups	Metadata columns regressed during subgroup GEX PCA. NULL disables subgroup regression.
+aggregation	aggregation_subgroups_extra_harmony_covars	character	vector	NULL	FALSE		subgroup analysis	subgroups	Extra metadata columns for harmony in subgroup reprocessing.
+aggregation	aggregation_categorical_vars	character	vector	NULL	FALSE		plotting/UMAP	GEX,ATAC,WNN	Extra categorical metadata columns for UMAP coloring and bar plots.
+aggregation	aggregation_continuous_vars	character	vector	NULL	FALSE		plotting/UMAP	GEX,ATAC,WNN	Extra continuous metadata columns for UMAP coloring.
+aggregation	aggregation_UMAP_nNNs	integer	scalar	30	FALSE		plotting/UMAP	GEX,ATAC,WNN	k nearest neighbors for UMAP embedding.
+aggregation	aggregation_UMAP_min_dist	numeric	scalar	0.001	FALSE		plotting/UMAP	GEX,ATAC,WNN	UMAP min_dist parameter.
+aggregation	aggregation_UMAP_ATAC_PCs	integer	vector	!expr 2:30	FALSE		plotting/UMAP	ATAC,WNN	LSI components used as input for ATAC UMAP.
+aggregation	aggregation_UMAP_GEX_PCs	integer	vector	!expr 1:30	FALSE		plotting/UMAP	GEX,WNN	PCs used as input for GEX UMAP.
+aggregation	aggregation_other_interesting_genes	character	vector	NULL	FALSE		other genes/features	GEX,ATAC,WNN	Additional genes to plot that are not used for cell type annotation.
+aggregation	aggregation_prop_threshold_contaminated_cluster_removal	numeric	scalar	NULL	FALSE		extras	subgroups	Fraction threshold to discard sub-clusters with mismatched module scores. NULL keeps all.
+aggregation	aggregation_tar_make_skip_regex_patterns	regex	vector	["^coverage_"]	FALSE		extras	graph	Regex patterns to skip targets in custom target selections.
+differential_analyses	differential_analyses_DCTC_plot_phenotype_vars	character	vector	NULL	FALSE		DCTC	differential_analyses	Phenotypes to plot in the differential cell type composition analysis.
+differential_analyses	differential_analyses_DCTC_formula_chr	character	scalar	NULL	FALSE		DCTC	differential_analyses	Formula for differential cell type composition models.
+differential_analyses	differential_analyses_DCTC_color_by_categorical_metadata_column	character	scalar	NULL	FALSE		DCTC	differential_analyses	Optional categorical metadata column for DCTC plot coloring.
+differential_analyses	differential_analyses_psbulk_DX_models	named_list	named_list	NULL	FALSE		pseudobulk DX	differential_analyses	Model specification list to run pseudobulk differential analyses.
+differential_analyses	differential_analyses_psbulk_DX_GSEA_custom_lists	named_list	named_list	NULL	FALSE		pseudobulk DX	differential_analyses	List of custom gene sets to use in pseudobulk analysis.
+differential_analyses	differential_analyses_psbulk_DX_OT_GWAS_efo_id	character	scalar	NULL	FALSE		pseudobulk DX	differential_analyses	Optional Open Targets EFO or MONDO disease ID for volcano plot GWAS-evidence coloring.
+differential_analyses	differential_analyses_DTFA_min_ATAC_counts	integer	scalar	5000	FALSE		pseudobulk DX	differential_analyses	Minimum pseudobulk ATAC counts per cluster-donor sample for differential TF activity.
+differential_analyses	differential_analyses_extended_donor_id_metadata_tsv	path	scalar	NULL	FALSE		metadata	differential_analyses	TSV with donor-level metadata of interest. If NULL, inherits aggregation_donor_id_metadata_tsv.
+differential_analyses	differential_analyses_OLINK_parquet_file_path	path	scalar	NULL	FALSE		external data	differential_analyses	Optional OLINK parquet file path.
+differential_analyses	differential_analyses_bulk_RNA_rds_file_path	path	scalar	NULL	FALSE		external data	differential_analyses	Optional bulk RNA RDS file path.
+genetic_enrichment	genetic_enrichment_open_targets_studies	named_list	named_list	NULL	TRUE		Open Targets	genetic_enrichment	Named Open Targets study mappings keyed by GWAS_ID.
+genetic_enrichment	genetic_enrichment_psbulk_GWAS_chromVAR_models	named_list	named_list	NULL	TRUE		pseudobulk genetic enrichment	genetic_enrichment	Model specification list for pseudobulk GWAS chromVAR differential activity.
+genetic_enrichment	genetic_enrichment_posterior_probability_cutoff	numeric	scalar	0.001	FALSE		gchromVAR	genetic_enrichment	posteriorProbability cutoff for gchromVAR. NULL applies no cutoff.
+genetic_enrichment	genetic_enrichment_posterior_probability_weighting_function_name	character	scalar	NULL	FALSE		gchromVAR	genetic_enrichment	Function expression used to weight Open Targets posteriorProbability values. NULL skips weighting.
+genetic_enrichment	genetic_enrichment_compartment_patterns	named_list	named_list	NULL	FALSE		plots	genetic_enrichment	Named regex patterns used to group cell types or contrasts into plot compartments.
+genetic_enrichment	genetic_enrichment_SCAVENGE_permutation_times	integer	scalar	100	FALSE		SCAVENGE	genetic_enrichment	Degree-matched random-walk permutations per GWAS/graph branch.
+genetic_enrichment	genetic_enrichment_SCAVENGE_restart_prob	numeric	scalar	0.05	FALSE		SCAVENGE	genetic_enrichment	Random-walk restart probability.
+genetic_enrichment	genetic_enrichment_SCAVENGE_seed_percent	numeric	scalar	0.05	FALSE		SCAVENGE	genetic_enrichment	Maximum fraction of cells used as random-walk seeds.
+genetic_enrichment	genetic_enrichment_psbulk_GWAS_chromVAR_min_ATAC_counts	integer	scalar	5000	FALSE		pseudobulk genetic enrichment	genetic_enrichment	Minimum pseudobulk ATAC counts per cluster-donor sample for GWAS chromVAR differential activity.
+genetic_enrichment	genetic_enrichment_psbulk_GWAS_gene_chromVAR_GWAS_IDs	character	vector	NULL	FALSE		gene chromVAR	genetic_enrichment	GWAS_IDs to run in the gene-level pseudobulk GWAS chromVAR extension. NULL skips the extension.
+genetic_enrichment	genetic_enrichment_psbulk_GWAS_gene_chromVAR_locus_plots_n_top	integer	scalar	10	FALSE		gene chromVAR	genetic_enrichment	Number of top significant GWAS-gene chromVAR effects to draw as locus tracks. Set to 0 to skip.
+genetic_enrichment	genetic_enrichment_psbulk_GWAS_gene_chromVAR_locus_plots_FDR_threshold	numeric	scalar	0.05	FALSE		gene chromVAR	genetic_enrichment	FDR cutoff for top GWAS-gene chromVAR locus-track plots.
+genetic_enrichment	genetic_enrichment_psbulk_GWAS_gene_chromVAR_locus_plots_flank	integer	scalar	50000	FALSE		gene chromVAR	genetic_enrichment	Bases added around the linked target/credible-set locus in GWAS-gene chromVAR locus-track plots.
+genetic_enrichment	genetic_enrichment_extended_donor_id_metadata_tsv	path	scalar	NULL	FALSE		metadata	genetic_enrichment	TSV with donor-level metadata of interest. If NULL, inherits aggregation_donor_id_metadata_tsv.

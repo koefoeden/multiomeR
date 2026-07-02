@@ -15,7 +15,6 @@ default:
     aggregation_GEX_PCA_backend: BPCells_native # GEX PCA backend: Seurat_SCT or BPCells_native.
     aggregation_SCT_regress_vars: [CC.Difference] # Metadata columns passed to Seurat::SCTransform(vars.to.regress). Cell-cycle scores are computed when requested.
     aggregation_max_scDblFinder_GEX_score_filter: 0.5 # Numeric 0-1: scDblFinder-predicted doublet score cutoff to remove. 1 keeps all.
-    aggregation_max_scDblFinder_ATAC_score_filter: 0.5 # Numeric 0-1: scDblFinder-predicted ATAC doublet score cutoff to remove. 1 keeps all.
     aggregation_scDblFinder_GEX_cell_type_collapse_list: NULL # Named list mapping collapsed group names to vectors of PCA_harmony_SNN_cluster_cell_type labels (e.g. {epithelial: [Hepatocytes, Cholangiocytes]}). NULL uses cell type labels as-is.
     aggregation_allow_multiple_cell_types: FALSE # If TRUE, clusters with tied module scores get combined labels (e.g. "TypeA&TypeB").
     aggregation_roadmap_EDACC_names: NULL # Roadmap Epigenomics tissue names for chromHMM peak annotation - only valid for human datasets. If NULL, chromHMMs are not added to the ATAC_GRanges.
@@ -25,6 +24,7 @@ default:
     aggregation_ATAC_peak_calling_method: macs3 # Per-cluster ATAC peak caller: `macs3` or `bpcells_tile`.
     aggregation_call_peaks_by_cluster_col: PCA_harmony_SNN_cluster # Metadata column defining groups for peak calling and DA testing.
     aggregation_extra_harmony_covars_ATAC: NULL # Additional metadata columns for ATAC-specific harmony (added to aggregation_harmony_correction_metadata_col_names).
+    aggregation_max_scDblFinder_ATAC_score_filter: 0.5 # Numeric 0-1: scDblFinder-predicted ATAC doublet score cutoff to remove. 1 keeps all.
     # Clustering
     aggregation_GEX_cluster_res: 0.3 # Leiden resolution for BPCells-native GEX clustering.
     aggregation_ATAC_cluster_res: 0.3 # Leiden resolution for BPCells-native ATAC clustering.
@@ -91,7 +91,7 @@ immune_human_2x:
     aggregation_GEX_marker_genes:
       B: [MS4A1, CD79A]
       Mono: [LYZ, S100A9]
-      NK: [KLDR1, GNLY]
+      NK: [KLRD1, GNLY]
       pDC: [LILRA4, CLEC4C]
       Plasma: [MZB1, JCHAIN]
       T: [TRAC, CD3D]

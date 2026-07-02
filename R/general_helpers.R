@@ -216,6 +216,273 @@ read_config_tibble <- function(config_file, key_col, verbose = FALSE) {
   dplyr::bind_rows(per_key_tibbles, .id = key_col)
 }
 
+read_config_parameter_manifest <- function(manifest_file, scope = NULL) {
+  manifest_tibble <- readr::read_tsv(
+    manifest_file,
+    col_types = readr::cols(.default = readr::col_character(), required = readr::col_logical()),
+    show_col_types = FALSE
+  )
+
+  duplicate_param_tibble <- manifest_tibble |>
+    dplyr::count(scope, param_name) |>
+    dplyr::filter(n > 1)
+  if (nrow(duplicate_param_tibble) > 0) {
+    stop(
+      manifest_file,
+      " contains duplicated scope/param_name value(s): ",
+      paste(
+        stringr::str_c(duplicate_param_tibble$scope, duplicate_param_tibble$param_name, sep = "/"),
+        collapse = ", "
+      ),
+      call. = FALSE
+    )
+  }
+
+  if (!is.null(scope)) {
+    manifest_tibble <- manifest_tibble |>
+      dplyr::filter(.data$scope == .env$scope)
+
+    if (nrow(manifest_tibble) == 0) {
+      stop(manifest_file, " does not define any parameters for scope: ", scope, call. = FALSE)
+    }
+  }
+
+  manifest_tibble |>
+    dplyr::mutate(
+      default_value = purrr::map(default_value, parse_manifest_default_value),
+      allowed_values = purrr::map(allowed_values, parse_manifest_allowed_values)
+    )
+}
+
+parse_manifest_default_value <- function(default_value_chr) {
+  yaml::read_yaml(text = paste0("value: ", default_value_chr), eval.expr = TRUE)$value
+}
+
+parse_manifest_allowed_values <- function(allowed_values_chr) {
+  if (is.na(allowed_values_chr) || allowed_values_chr == "") {
+    return(character())
+  }
+  stringr::str_split_1(allowed_values_chr, ",")
+}
+
+manifest_defaults <- function(manifest_tibble) {
+  defaults <- manifest_tibble$default_value
+  names(defaults) <- manifest_tibble$param_name
+  defaults
+}
+
+read_aggregation_config_tibble <- function(
+  config_file = "cfg_aggregations.yaml",
+  manifest_file = "cfg_pipeline_parameters.tsv",
+  verbose = FALSE
+) {
+  read_manifest_config_tibble(
+    config_file = config_file,
+    manifest_file = manifest_file,
+    scope = "aggregation",
+    key_col = "aggregation",
+    verbose = verbose
+  )
+}
+
+read_manifest_config_tibble <- function(config_file, manifest_file, scope, key_col, verbose = FALSE) {
+  manifest_tibble <- read_config_parameter_manifest(manifest_file, scope = scope)
+  raw_cfg <- suppressWarnings(yaml::read_yaml(config_file, eval.expr = TRUE))
+  raw_cfg$default <- manifest_default_config(manifest_tibble)
+  config_keys <- names(raw_cfg) |>
+    purrr::discard(~ .x %in% c("default"))
+
+  if (verbose) {
+    cat("Reading configs for ", key_col, ":\n", paste("-", config_keys, collapse = "\n"), "\n\n", sep = "")
+  }
+
+  validate_manifest_config_names(raw_cfg, config_keys, manifest_tibble, config_file, key_col = key_col)
+
+  cfg_list_per_key <- config_keys |>
+    purrr::set_names() |>
+    purrr::map(~ resolve_cfg_dataset_config(raw_cfg = raw_cfg, dataset = .x, config_file = config_file, key_col = key_col))
+
+  normalized_cfg_per_key <- purrr::imap(
+    cfg_list_per_key,
+    ~ normalize_cfg_dataset_config(
+      cfg_list = .x,
+      dataset = .y,
+      config_file = config_file,
+      key_col = key_col
+    )
+  )
+
+  per_key_tibbles <- purrr::imap(
+    normalized_cfg_per_key,
+    \(cfg_list, config_key) {
+      values <- cfg_list$values
+      validate_manifest_config_values(
+        values = values,
+        config_key = config_key,
+        config_file = config_file,
+        manifest_tibble = manifest_tibble,
+        key_col = key_col
+      )
+      values |>
+        tibble::enframe() |>
+        tidyr::pivot_wider()
+    }
+  )
+
+  dplyr::bind_rows(per_key_tibbles, .id = key_col)
+}
+
+manifest_default_config <- function(manifest_tibble) {
+  defaults <- manifest_defaults(manifest_tibble)
+  required_params <- manifest_tibble$param_name[manifest_tibble$required]
+  list(
+    mandatory = defaults[required_params],
+    optional = defaults[setdiff(names(defaults), required_params)]
+  )
+}
+
+validate_manifest_config_names <- function(raw_cfg, config_keys, manifest_tibble, config_file, key_col) {
+  purrr::walk(config_keys, \(config_key) {
+    entry_params <- c(names(raw_cfg[[config_key]]$mandatory), names(raw_cfg[[config_key]]$optional))
+    unknown_params <- setdiff(entry_params, manifest_tibble$param_name)
+    if (length(unknown_params) > 0) {
+      stop(
+        "Config ",
+        key_col,
+        " '",
+        config_key,
+        "' in ",
+        config_file,
+        " defines parameter(s) absent from the manifest: ",
+        paste(unknown_params, collapse = ", "),
+        call. = FALSE
+      )
+    }
+  })
+}
+
+validate_manifest_config_values <- function(values, config_key, config_file, manifest_tibble, key_col) {
+  purrr::pwalk(
+    manifest_tibble,
+    \(scope, param_name, data_type, cardinality, default_value, required, allowed_values, topic, part_of, description) {
+      value <- values[[param_name]]
+      if (is_manifest_missing_value(value)) {
+        if (isTRUE(required)) {
+          stop(
+            "Required parameter '",
+            param_name,
+            "' resolves to NULL/NA for config ",
+            key_col,
+            ": ",
+            config_key,
+            ". Please set this parameter in ",
+            config_file,
+            ".",
+            call. = FALSE
+          )
+        }
+        return(NULL)
+      }
+
+      validate_manifest_cardinality(value, cardinality, param_name, config_key, config_file, key_col)
+      validate_manifest_type(value, data_type, param_name, config_key, config_file, key_col)
+      validate_manifest_allowed_values(value, allowed_values, param_name, config_key, config_file, key_col)
+    }
+  )
+
+  invisible(values)
+}
+
+is_manifest_missing_value <- function(value) {
+  is.null(value) || (is.atomic(value) && length(value) > 0 && all(is.na(value)))
+}
+
+validate_manifest_cardinality <- function(value, cardinality, param_name, config_key, config_file, key_col) {
+  valid <- switch(cardinality,
+    scalar = length(value) == 1 && !is.list(value),
+    vector = is.atomic(value),
+    named_list = is.list(value) && !is.null(names(value)) && all(nzchar(names(value))),
+    list = is.list(value),
+    stop("Unknown manifest cardinality '", cardinality, "' for parameter '", param_name, "'.", call. = FALSE)
+  )
+
+  if (!isTRUE(valid)) {
+    stop(
+      "Parameter '",
+      param_name,
+      "' has invalid cardinality for config ",
+      key_col,
+      ": ",
+      config_key,
+      " in ",
+      config_file,
+      ". Expected ",
+      cardinality,
+      ".",
+      call. = FALSE
+    )
+  }
+}
+
+validate_manifest_type <- function(value, data_type, param_name, config_key, config_file, key_col) {
+  valid <- switch(data_type,
+    character = is.character(value),
+    path = is.character(value),
+    regex = is.character(value),
+    logical = is.logical(value),
+    numeric = is.numeric(value),
+    integer = is.numeric(value) && all(value == as.integer(value)),
+    named_list = is.list(value),
+    list = is.list(value),
+    stop("Unknown manifest data_type '", data_type, "' for parameter '", param_name, "'.", call. = FALSE)
+  )
+
+  if (!isTRUE(valid)) {
+    stop(
+      "Parameter '",
+      param_name,
+      "' has invalid type for config ",
+      key_col,
+      ": ",
+      config_key,
+      " in ",
+      config_file,
+      ". Expected ",
+      data_type,
+      ".",
+      call. = FALSE
+    )
+  }
+}
+
+validate_manifest_allowed_values <- function(value, allowed_values, param_name, config_key, config_file, key_col) {
+  if (length(allowed_values) == 0) {
+    return(invisible(NULL))
+  }
+
+  invalid_values <- setdiff(as.character(value), allowed_values)
+  if (length(invalid_values) > 0) {
+    stop(
+      "Parameter '",
+      param_name,
+      "' has invalid value(s) for config ",
+      key_col,
+      ": ",
+      config_key,
+      " in ",
+      config_file,
+      ": ",
+      paste(invalid_values, collapse = ", "),
+      ". Allowed values: ",
+      paste(allowed_values, collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  invisible(NULL)
+}
+
 
 get_cfg_per_dataset_tibble <- function(config_file = "cfg_datasets.yaml", verbose = TRUE) {
   cfg_tibble <- read_config_tibble(config_file = config_file, key_col = "dataset", verbose = verbose)

@@ -65,7 +65,7 @@ target_runtime_weights <- function(
 benchmark_aggregation_tibble <- function(aggregations) {
   dataset_tibble_from_yaml <- read_config_tibble(config_file = "cfg_datasets.yaml", key_col = "dataset")
   reaction_tibble <- build_reaction_tibble(dataset_tibble_from_yaml = dataset_tibble_from_yaml)
-  aggregation_tibble_all_from_yaml <- read_config_tibble(config_file = "cfg_aggregations.yaml", key_col = "aggregation")
+  aggregation_tibble_all_from_yaml <- read_aggregation_config_tibble(config_file = "cfg_aggregations.yaml")
   aggregation_tibble <- build_aggregation_tibble(
     aggregation_tibble_all_from_yaml = aggregation_tibble_all_from_yaml,
     reaction_tibble = reaction_tibble

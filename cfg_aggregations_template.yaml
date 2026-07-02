@@ -89,12 +89,12 @@ immune_human_2x:
     aggregation_reaction_ID_metadata_tsv: example_data/immune_human_dataset_reaction_id_metadata.tsv
     aggregation_reaction_IDs: [healthy_PBMC_human, lymphoma_lymph_human]
     aggregation_GEX_marker_genes:
-      T: [TRAC, CD3D]
-      NK: [KLDR1, GNLY]
-      Mono: [LYZ, S100A9]
       B: [MS4A1, CD79A]
+      Mono: [LYZ, S100A9]
+      NK: [KLDR1, GNLY]
       pDC: [LILRA4, CLEC4C]
       Plasma: [MZB1, JCHAIN]
+      T: [TRAC, CD3D]
   optional:
     modules: [differential_analyses, genetic_enrichment]
     aggregation_categorical_vars: [condition, tissue, cell_sorting, instrument, target_recovery]
@@ -103,12 +103,12 @@ immune_human_2x:
       - atac_peak_counts_frac < 0.1
       - atac_peak_counts_blacklist_frac > 0.01
     aggregation_ATAC_marker_TFs:
-      T: [BCL11B, TCF7, LEF1, RUNX3]
-      NK: [EOMES, TBX21, NFIL3]
-      Mono: [SPI1, IRF8, CEBPA, CEBPB]
       B: [PAX5, EBF1, TCF3, BCL6]
+      Mono: [SPI1, IRF8, CEBPA, CEBPB]
+      NK: [EOMES, TBX21, NFIL3]
       pDC: [IRF8, TCF4, SPIB]
       Plasma: [XBP1, PRDM1, IRF4]
+      T: [BCL11B, TCF7, LEF1, RUNX3]
     aggregation_roadmap_EDACC_names:
       - Peripheral_Blood_Mononuclear_Primary_Cells
       - CD4_Memory_Primary_Cells

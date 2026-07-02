@@ -44,7 +44,12 @@ collapse_duplicate_names <- function(input_list_object) {
 read_config_parameter_manifest <- function(manifest_file, scope = NULL) {
   manifest_tibble <- readr::read_tsv(
     manifest_file,
-    col_types = readr::cols(.default = readr::col_character(), required = readr::col_logical()),
+    col_types = readr::cols(
+      .default = readr::col_character(),
+      required = readr::col_logical(),
+      allow_missing_after_inheritance = readr::col_logical()
+    ),
+    na = character(),
     show_col_types = FALSE
   )
 
@@ -257,7 +262,7 @@ merge_manifest_config_values <- function(parent_values, child_values) {
 validate_manifest_config_values <- function(values, config_key, config_file, manifest_tibble, key_col) {
   purrr::pwalk(
     manifest_tibble,
-    \(scope, param_name, data_type, cardinality, default_value, required, allowed_values, topic, part_of, description) {
+    \(scope, param_name, data_type, cardinality, default_value, required, allowed_values, ...) {
       value <- values[[param_name]]
       if (is_manifest_missing_value(value)) {
         if (isTRUE(required)) {

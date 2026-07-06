@@ -443,7 +443,278 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-filename="YAML"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">modules</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">differential_analyses</span><span class="kw">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>The module config controls which variables are modelled, which metadata columns are used, and which contrasts are run. Defaults and validation rules for module parameters live in <code>cfg_pipeline_parameters.tsv</code>. Edit <code>module_differential_analyses/cfg.yaml</code>, keeping disabled or example rows available for reference until the corresponding aggregation is ready.</p>
+<p>The module config controls which variables are modelled, which metadata columns are used, and which contrasts are run. The manifest-backed overview below is the reference for differential-analysis module parameters.</p>
+<div class="parameter-overview" data-parameter-overview="">
+<input class="parameter-overview-search" type="search" placeholder="Search Differential analyses parameters">
+<div class="parameter-topic-list">
+
+</div>
+<div class="parameter-empty-state">
+No Differential analyses parameters match the current search.
+</div>
+<script type="application/json" class="parameter-overview-data">
+{
+  "parameters": [
+    {
+      "param_name": "differential_analyses_DCTC_color_by_categorical_metadata_column",
+      "data_type": "character",
+      "cardinality": "scalar",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "tissue",
+      "topic": "DCTC",
+      "part_of": "differential_analyses",
+      "description": "Optional categorical metadata column for DCTC plot coloring.",
+      "status": "Optional"
+    },
+    {
+      "param_name": "differential_analyses_DCTC_formula_chr",
+      "data_type": "character",
+      "cardinality": "scalar",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "cbind(n_nuclei, n_other_nuclei) ~ 0 + condition",
+      "topic": "DCTC",
+      "part_of": "differential_analyses",
+      "description": "Formula for differential cell type composition models. Parsed with stats::as.formula() and passed to glmmTMB::glmmTMB(formula = ...).",
+      "status": "Optional"
+    },
+    {
+      "param_name": "differential_analyses_DCTC_plot_phenotype_vars",
+      "data_type": "character",
+      "cardinality": "vector",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "[condition, tissue]",
+      "topic": "DCTC",
+      "part_of": "differential_analyses",
+      "description": "Phenotypes to plot in the differential cell type composition analysis.",
+      "status": "Optional"
+    },
+    {
+      "param_name": "differential_analyses_DTFA_min_ATAC_counts",
+      "data_type": "integer",
+      "cardinality": "scalar",
+      "default_value": "5000",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "pseudobulk DX",
+      "part_of": "differential_analyses",
+      "description": "Minimum pseudobulk ATAC counts per cluster-donor sample for differential TF activity.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "differential_analyses_psbulk_DX_GSEA_custom_lists",
+      "data_type": "named_list",
+      "cardinality": "named_list",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "{immune_activation: [CD69, IL7R, CXCR4]}",
+      "topic": "pseudobulk DX",
+      "part_of": "differential_analyses",
+      "description": "List of custom gene sets to use in pseudobulk analysis.",
+      "status": "Optional"
+    },
+    {
+      "param_name": "differential_analyses_psbulk_DX_OT_GWAS_efo_id",
+      "data_type": "character",
+      "cardinality": "scalar",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "EFO_0000540",
+      "topic": "pseudobulk DX",
+      "part_of": "differential_analyses",
+      "description": "Optional Open Targets EFO or MONDO disease ID for volcano plot GWAS-evidence coloring.",
+      "status": "Optional"
+    },
+    {
+      "param_name": "differential_analyses_psbulk_DX_models",
+      "data_type": "named_list",
+      "cardinality": "named_list",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "{condition_demo: {formula: ~ 0 + cluster + condition, contrast_specs_vec: {lymphoma_vs_healthy: conditionlymphoma}}}",
+      "topic": "pseudobulk DX",
+      "part_of": "differential_analyses",
+      "description": "Model specification list to run pseudobulk differential analyses. Model formulas are passed to stats::model.matrix().",
+      "status": "Optional"
+    },
+    {
+      "param_name": "differential_analyses_extended_donor_id_metadata_tsv",
+      "data_type": "path",
+      "cardinality": "scalar",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "metadata/extended_donor_metadata.tsv",
+      "topic": "metadata",
+      "part_of": "differential_analyses",
+      "description": "TSV with donor-level metadata of interest. If NULL, inherits aggregation_donor_id_metadata_tsv.",
+      "status": "Optional"
+    },
+    {
+      "param_name": "differential_analyses_OLINK_parquet_file_path",
+      "data_type": "path",
+      "cardinality": "scalar",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "external_data/olink.parquet",
+      "topic": "external data",
+      "part_of": "differential_analyses",
+      "description": "Optional OLINK parquet file path.",
+      "status": "Optional"
+    },
+    {
+      "param_name": "differential_analyses_bulk_RNA_rds_file_path",
+      "data_type": "path",
+      "cardinality": "scalar",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "external_data/bulk_rna.rds",
+      "topic": "external data",
+      "part_of": "differential_analyses",
+      "description": "Optional bulk RNA RDS file path.",
+      "status": "Optional"
+    }
+  ]
+}
+  </script>
+</div>
+<script>
+(() => {
+  const widget = document.currentScript.previousElementSibling;
+  const data = JSON.parse(widget.querySelector(".parameter-overview-data").textContent);
+  const parameters = data.parameters;
+  const searchInput = widget.querySelector(".parameter-overview-search");
+  const topicList = widget.querySelector(".parameter-topic-list");
+  const emptyState = widget.querySelector(".parameter-empty-state");
+
+  const text = (value) => value === null || value === undefined ? "" : String(value);
+  const hasValue = (value) => text(value).trim() !== "";
+  const escapeHtml = (value) => text(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+  function parameterSearchText(parameter) {
+    return [
+      parameter.param_name,
+      parameter.description,
+      parameter.topic,
+      parameter.part_of,
+      parameter.data_type,
+      parameter.cardinality,
+      parameter.default_value,
+      parameter.allowed_values,
+      parameter.examples,
+      parameter.status
+    ].map(text).join(" ").toLowerCase();
+  }
+
+  function badgeClass(status) {
+    if (status === "Must specify") return "must";
+    if (status === "Defaulted") return "defaulted";
+    return "optional";
+  }
+
+  function renderValue(value, fallback) {
+    return hasValue(value)
+      ? `<span class="parameter-detail-value">${escapeHtml(value)}</span>`
+      : `<span class="parameter-detail-value parameter-empty-value">${escapeHtml(fallback)}</span>`;
+  }
+
+  function renderParameterRow(parameter) {
+    const statusClass = badgeClass(parameter.status);
+
+    return `
+      <div class="parameter-row ${statusClass}" data-param="${escapeHtml(parameter.param_name)}">
+        <div class="parameter-head">
+          <span class="parameter-name">${escapeHtml(parameter.param_name)}</span>
+          <span class="parameter-description">${escapeHtml(parameter.description)}</span>
+        </div>
+        <div class="parameter-details">
+          <div class="parameter-detail">
+            <span class="parameter-detail-label">Default</span>
+            ${renderValue(parameter.default_value, "missing allowed")}
+          </div>
+          <div class="parameter-detail">
+            <span class="parameter-detail-label">Type</span>
+            <span class="parameter-detail-value">${escapeHtml(parameter.data_type)} / ${escapeHtml(parameter.cardinality)}</span>
+          </div>
+          <div class="parameter-detail">
+            <span class="parameter-detail-label">Allowed values</span>
+            ${renderValue(parameter.allowed_values, "any value matching the type")}
+          </div>
+          <div class="parameter-detail">
+            <span class="parameter-detail-label">Example</span>
+            ${renderValue(parameter.examples, "no example yet")}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderTopicGroup(topic, topicParameters, searchIsActive) {
+    return `
+      <details class="parameter-topic" ${searchIsActive ? "open" : ""}>
+        <summary>
+          <span class="parameter-topic-title">${escapeHtml(topic)}</span>
+          <span class="parameter-topic-count">${topicParameters.length} parameter${topicParameters.length === 1 ? "" : "s"}</span>
+        </summary>
+        <div class="parameter-list">
+          ${topicParameters.map(renderParameterRow).join("")}
+        </div>
+      </details>
+    `;
+  }
+
+  function render() {
+    const query = searchInput.value.trim().toLowerCase();
+    const visible = query
+      ? parameters.filter((parameter) => parameterSearchText(parameter).includes(query))
+      : parameters;
+    const topicGroups = new Map();
+
+    visible.forEach((parameter) => {
+      if (!topicGroups.has(parameter.topic)) topicGroups.set(parameter.topic, []);
+      topicGroups.get(parameter.topic).push(parameter);
+    });
+
+    topicList.innerHTML = Array.from(topicGroups)
+      .map(([topic, topicParameters]) => renderTopicGroup(topic, topicParameters, query.length > 0))
+      .join("");
+    emptyState.style.display = visible.length === 0 ? "block" : "none";
+  }
+
+  searchInput.addEventListener("input", render);
+  render();
+})();
+</script>
+<p>The public example below is rendered directly from <code>module_differential_analyses/cfg_template.yaml</code>:</p>
+<details>
+<summary>
+Show <code>immune_human_2x</code>
+</summary>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>YAML</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="YAML"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">immune_human_2x</span><span class="kw">:</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">differential_analyses_DCTC_plot_phenotype_vars</span><span class="kw">:</span><span class="at"> condition</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">differential_analyses_DCTC_formula_chr</span><span class="kw">:</span><span class="at"> cbind(n_nuclei, n_other_nuclei) ~ 0 + condition</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">differential_analyses_DCTC_color_by_categorical_metadata_column</span><span class="kw">:</span><span class="at"> tissue</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">differential_analyses_psbulk_DX_models</span><span class="kw">:</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">condition_demo</span><span class="kw">:</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">cell_type_subset</span><span class="kw">:</span><span class="at"> </span><span class="ch">NULL</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">design_matrix_func_name</span><span class="kw">:</span><span class="at"> </span><span class="ch">NULL</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">formula</span><span class="kw">:</span><span class="at"> ~ 0 + cluster + condition</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">random_effect</span><span class="kw">:</span><span class="at"> </span><span class="ch">NULL</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">contrast_specs_vec</span><span class="kw">:</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">lymphoma_vs_healthy</span><span class="kw">:</span><span class="at"> conditionlymphoma</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</details>
+<p>Edit <code>module_differential_analyses/cfg.yaml</code>, keeping disabled or example rows available for reference until the corresponding aggregation is ready.</p>
 </section>
 <section id="running-the-pipeline" class="level2" data-number="10.4">
 <h2 data-number="10.4" class="anchored" data-anchor-id="running-the-pipeline"><span class="header-section-number">10.4</span> Running the pipeline</h2>
@@ -454,10 +725,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-with-filename-file">
 <pre><strong>R</strong></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="R"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">names =</span> targets<span class="sc">::</span><span class="fu">tar_described_as</span>(tidyselect<span class="sc">::</span><span class="fu">contains</span>(<span class="st">"checkpoint:differential_analyses"</span>)) <span class="sc">&amp;</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    tidyselect<span class="sc">::</span><span class="fu">matches</span>(<span class="st">"your_aggregation"</span>)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-filename="R"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">names =</span> targets<span class="sc">::</span><span class="fu">tar_described_as</span>(tidyselect<span class="sc">::</span><span class="fu">contains</span>(<span class="st">"checkpoint:differential_analyses"</span>)) <span class="sc">&amp;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    tidyselect<span class="sc">::</span><span class="fu">matches</span>(<span class="st">"your_aggregation"</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This checkpoint writes the differential cell-type composition plots, pseudobulk model diagnostics, volcano plots, GSEA summaries, and cross-modality summaries configured for the aggregation. Runtime depends on the number of modelled variables, cell types, donors, and pseudobulk contrasts.</p>
 

@@ -399,12 +399,183 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 data-number="8.1" class="anchored" data-anchor-id="cfg_datasets.yaml"><span class="header-section-number">8.1</span> <code>cfg_datasets.yaml</code></h2>
 <p>Dataset-level settings live in <a href="https://github.com/koefoeden/multiomeR/tree/main/cfg_datasets.yaml"><code>cfg_datasets.yaml</code></a>. A dataset is the shared context for one or more 10x reactions, typically a genome/reference combination plus dataset-wide QC rules. Reactions in <code>cfg_reactions.tsv</code> refer to these dataset keys, so define datasets before adding reaction rows.</p>
 <p>In the public repository, <code>cfg_datasets.yaml</code>, <code>cfg_reactions.tsv</code>, and <code>cfg_aggregations.yaml</code> point to template files. Keep those public example entries as a reference, and use project-specific copies or downstream private config files for study-specific paths, metadata, and analysis settings.</p>
-<p>Defaults and validation rules for dataset, aggregation, and module YAML parameters live in <a href="https://github.com/koefoeden/multiomeR/tree/main/cfg_pipeline_parameters.tsv"><code>cfg_pipeline_parameters.tsv</code></a>. A YAML row only needs to list values that differ from the manifest defaults, plus any required parameters whose manifest default is <code>NULL</code>.</p>
-<p>Typical dataset-level settings include:</p>
-<ul>
-<li><code>dataset_cellranger_arc_refdata_dir</code>: Cell Ranger ARC reference directory for the dataset genome.</li>
-<li><code>dataset_QC_exclude_list_per_reaction</code>: reaction-level QC filters applied before aggregation.</li>
-</ul>
+<p>Defaults and validation rules for dataset, aggregation, and module YAML parameters live in <a href="https://github.com/koefoeden/multiomeR/tree/main/cfg_pipeline_parameters.tsv"><code>cfg_pipeline_parameters.tsv</code></a>. A YAML row only needs to list values that differ from the manifest defaults, plus any parameters where <code>allow_missing_after_inheritance</code> is <code>FALSE</code> and the manifest default is <code>NULL</code>.</p>
+<p>The manifest-backed overview below is the reference for dataset parameters. Open a topic to inspect defaults, data types, allowed values, and examples.</p>
+<div class="parameter-overview" data-parameter-overview="">
+<input class="parameter-overview-search" type="search" placeholder="Search Dataset parameters">
+<div class="parameter-topic-list">
+
+</div>
+<div class="parameter-empty-state">
+No Dataset parameters match the current search.
+</div>
+<script type="application/json" class="parameter-overview-data">
+{
+  "parameters": [
+    {
+      "param_name": "dataset_cellranger_arc_refdata_dir",
+      "data_type": "path",
+      "cardinality": "scalar",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "example_data/refdata-cellranger-arc-GRCh38-2024-A",
+      "topic": "required",
+      "part_of": "dataset",
+      "description": "Cell Ranger ARC reference directory for the dataset genome.",
+      "status": "Must specify"
+    },
+    {
+      "param_name": "dataset_run_amulet",
+      "data_type": "logical",
+      "cardinality": "scalar",
+      "default_value": "true",
+      "allowed_values": "TRUE,FALSE",
+      "examples": "",
+      "topic": "QC",
+      "part_of": "dataset",
+      "description": "Whether to run AMULET ATAC doublet detection for reactions in this dataset. TRUE enables scDblFinder::amulet().",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "dataset_QC_exclude_list_per_reaction",
+      "data_type": "character",
+      "cardinality": "vector",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "[nCount_RNA < 500, RNA_mito_percent > 20]",
+      "topic": "QC",
+      "part_of": "dataset",
+      "description": "Exclusion dplyr filter expressions to evaluate on per-barcode metadata before initial GEX-based clustering. Expressions are parsed and evaluated in dplyr::filter().",
+      "status": "Optional"
+    },
+    {
+      "param_name": "dataset_tar_make_skip_regex_patterns",
+      "data_type": "regex",
+      "cardinality": "vector",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "[\"^coverage_\", \"^cellranger_\"]",
+      "topic": "graph",
+      "part_of": "dataset",
+      "description": "Regex patterns to skip dataset-specific targets in custom target selections.",
+      "status": "Optional"
+    }
+  ]
+}
+  </script>
+</div>
+<script>
+(() => {
+  const widget = document.currentScript.previousElementSibling;
+  const data = JSON.parse(widget.querySelector(".parameter-overview-data").textContent);
+  const parameters = data.parameters;
+  const searchInput = widget.querySelector(".parameter-overview-search");
+  const topicList = widget.querySelector(".parameter-topic-list");
+  const emptyState = widget.querySelector(".parameter-empty-state");
+
+  const text = (value) => value === null || value === undefined ? "" : String(value);
+  const hasValue = (value) => text(value).trim() !== "";
+  const escapeHtml = (value) => text(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+  function parameterSearchText(parameter) {
+    return [
+      parameter.param_name,
+      parameter.description,
+      parameter.topic,
+      parameter.part_of,
+      parameter.data_type,
+      parameter.cardinality,
+      parameter.default_value,
+      parameter.allowed_values,
+      parameter.examples,
+      parameter.status
+    ].map(text).join(" ").toLowerCase();
+  }
+
+  function badgeClass(status) {
+    if (status === "Must specify") return "must";
+    if (status === "Defaulted") return "defaulted";
+    return "optional";
+  }
+
+  function renderValue(value, fallback) {
+    return hasValue(value)
+      ? `<span class="parameter-detail-value">${escapeHtml(value)}</span>`
+      : `<span class="parameter-detail-value parameter-empty-value">${escapeHtml(fallback)}</span>`;
+  }
+
+  function renderParameterRow(parameter) {
+    const statusClass = badgeClass(parameter.status);
+
+    return `
+      <div class="parameter-row ${statusClass}" data-param="${escapeHtml(parameter.param_name)}">
+        <div class="parameter-head">
+          <span class="parameter-name">${escapeHtml(parameter.param_name)}</span>
+          <span class="parameter-description">${escapeHtml(parameter.description)}</span>
+        </div>
+        <div class="parameter-details">
+          <div class="parameter-detail">
+            <span class="parameter-detail-label">Default</span>
+            ${renderValue(parameter.default_value, "missing allowed")}
+          </div>
+          <div class="parameter-detail">
+            <span class="parameter-detail-label">Type</span>
+            <span class="parameter-detail-value">${escapeHtml(parameter.data_type)} / ${escapeHtml(parameter.cardinality)}</span>
+          </div>
+          <div class="parameter-detail">
+            <span class="parameter-detail-label">Allowed values</span>
+            ${renderValue(parameter.allowed_values, "any value matching the type")}
+          </div>
+          <div class="parameter-detail">
+            <span class="parameter-detail-label">Example</span>
+            ${renderValue(parameter.examples, "no example yet")}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderTopicGroup(topic, topicParameters, searchIsActive) {
+    return `
+      <details class="parameter-topic" ${searchIsActive ? "open" : ""}>
+        <summary>
+          <span class="parameter-topic-title">${escapeHtml(topic)}</span>
+          <span class="parameter-topic-count">${topicParameters.length} parameter${topicParameters.length === 1 ? "" : "s"}</span>
+        </summary>
+        <div class="parameter-list">
+          ${topicParameters.map(renderParameterRow).join("")}
+        </div>
+      </details>
+    `;
+  }
+
+  function render() {
+    const query = searchInput.value.trim().toLowerCase();
+    const visible = query
+      ? parameters.filter((parameter) => parameterSearchText(parameter).includes(query))
+      : parameters;
+    const topicGroups = new Map();
+
+    visible.forEach((parameter) => {
+      if (!topicGroups.has(parameter.topic)) topicGroups.set(parameter.topic, []);
+      topicGroups.get(parameter.topic).push(parameter);
+    });
+
+    topicList.innerHTML = Array.from(topicGroups)
+      .map(([topic, topicParameters]) => renderTopicGroup(topic, topicParameters, query.length > 0))
+      .join("");
+    emptyState.style.display = visible.length === 0 ? "block" : "none";
+  }
+
+  searchInput.addEventListener("input", render);
+  render();
+})();
+</script>
 <p>The public human example uses the following dataset entry, rendered directly from <code>cfg_datasets.yaml</code>:</p>
 <details>
 <summary>
@@ -703,38 +874,626 @@ NA
 <section id="cfg_aggregations.yaml" class="level2" data-number="8.3">
 <h2 data-number="8.3" class="anchored" data-anchor-id="cfg_aggregations.yaml"><span class="header-section-number">8.3</span> <code>cfg_aggregations.yaml</code></h2>
 <p>Aggregation-level settings live in <a href="https://github.com/koefoeden/multiomeR/tree/main/cfg_aggregations.yaml"><code>cfg_aggregations.yaml</code></a>. An aggregation combines one or more configured reactions and controls merged RNA/ATAC processing, clustering, annotation, plotting, and optional downstream modules.</p>
-<p>At minimum, each aggregation needs:</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Field</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>aggregation_reaction_IDs</code></td>
-<td>Reaction IDs from <code>cfg_reactions.tsv</code> to include in the joint analysis.</td>
-</tr>
-<tr class="even">
-<td><code>aggregation_GEX_marker_genes</code></td>
-<td>Named marker-gene lists used for module scoring and cluster annotation.</td>
-</tr>
-<tr class="odd">
-<td><code>aggregation_donor_id_metadata_tsv</code></td>
-<td>Donor-level metadata table with a <code>donor_id</code> column.</td>
-</tr>
-<tr class="even">
-<td><code>aggregation_reaction_ID_metadata_tsv</code></td>
-<td>Reaction-level metadata table with a <code>TENX_reaction_ID</code> column.</td>
-</tr>
-</tbody>
-</table>
-<p>Optional aggregation settings control QC filters, RNA and ATAC dimensions, clustering resolution, UMAP parameters, subgroup analysis, plotting variables, track export, and enabled modules. Requiredness, defaults, and value validation are defined in <code>cfg_pipeline_parameters.tsv</code>. <code>NULL</code> values intentionally disable optional behavior.</p>
+<p>The manifest-backed overview below is the reference for aggregation parameters. Required rows must resolve to a non-missing value after inheritance and defaults are applied; optional rows can remain <code>NULL</code> when the corresponding behavior should be disabled.</p>
+<div class="parameter-overview" data-parameter-overview="">
+<input class="parameter-overview-search" type="search" placeholder="Search Aggregation parameters">
+<div class="parameter-topic-list">
+
+</div>
+<div class="parameter-empty-state">
+No Aggregation parameters match the current search.
+</div>
+<script type="application/json" class="parameter-overview-data">
+{
+  "parameters": [
+    {
+      "param_name": "aggregation_GEX_marker_genes",
+      "data_type": "named_list",
+      "cardinality": "named_list",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "{B: [MS4A1, CD79A], T: [TRAC, CD3D], Mono: [LYZ, S100A9]}",
+      "topic": "required",
+      "part_of": "GEX,WNN,seurat_export",
+      "description": "Named list of marker genes per cell type for module scoring and cluster annotation.",
+      "status": "Must specify"
+    },
+    {
+      "param_name": "aggregation_donor_id_metadata_tsv",
+      "data_type": "path",
+      "cardinality": "scalar",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "example_data/immune_human_dataset_donor_id_metadata.tsv",
+      "topic": "required",
+      "part_of": "all",
+      "description": "TSV with donor-level phenotypes and a donor_id column.",
+      "status": "Must specify"
+    },
+    {
+      "param_name": "aggregation_reaction_ID_metadata_tsv",
+      "data_type": "path",
+      "cardinality": "scalar",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "example_data/immune_human_dataset_reaction_id_metadata.tsv",
+      "topic": "required",
+      "part_of": "all",
+      "description": "TSV mapping reactions to metadata with a TENX_reaction_ID column.",
+      "status": "Must specify"
+    },
+    {
+      "param_name": "aggregation_reaction_IDs",
+      "data_type": "character",
+      "cardinality": "vector",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "[healthy_PBMC_human, lymphoma_lymph_human]",
+      "topic": "required",
+      "part_of": "all",
+      "description": "10X reaction IDs to aggregate.",
+      "status": "Must specify"
+    },
+    {
+      "param_name": "aggregation_GEX_PCA_backend",
+      "data_type": "character",
+      "cardinality": "scalar",
+      "default_value": "BPCells_native",
+      "allowed_values": "Seurat_SCT,BPCells_native",
+      "examples": "",
+      "topic": "GEX processing",
+      "part_of": "GEX",
+      "description": "GEX PCA backend. Selects Seurat::SCTransform() or BPCells-native BPCells::sctransform_pearson() and BPCells::svds().",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_GEX_cluster_res",
+      "data_type": "numeric",
+      "cardinality": "scalar",
+      "default_value": "0.3",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "GEX processing",
+      "part_of": "GEX",
+      "description": "Leiden resolution for BPCells-native GEX clustering. Passed to igraph::cluster_leiden(resolution = ...).",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_GEX_data_PCs",
+      "data_type": "integer",
+      "cardinality": "vector",
+      "default_value": "!expr 1:30",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "GEX processing",
+      "part_of": "GEX,WNN",
+      "description": "Sequence of PC integers for GEX PCA, harmony, NN-graph, and clustering. The largest value sets BPCells::svds(k = ...) for the BPCells-native backend.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_SCT_regress_vars",
+      "data_type": "character",
+      "cardinality": "vector",
+      "default_value": "[CC.Difference]",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "GEX processing",
+      "part_of": "GEX",
+      "description": "Metadata columns passed to Seurat::SCTransform(vars.to.regress = ...) or BPCells::regress_out(latent_data = ...).",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_allow_multiple_cell_types",
+      "data_type": "logical",
+      "cardinality": "scalar",
+      "default_value": "FALSE",
+      "allowed_values": "TRUE,FALSE",
+      "examples": "",
+      "topic": "GEX processing",
+      "part_of": "GEX",
+      "description": "If TRUE clusters with tied module scores get combined labels.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_max_scDblFinder_GEX_score_filter",
+      "data_type": "numeric",
+      "cardinality": "scalar",
+      "default_value": "0.5",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "GEX processing",
+      "part_of": "GEX",
+      "description": "Numeric 0-1 scDblFinder-predicted GEX doublet score cutoff to remove. 1 keeps all.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_scDblFinder_GEX_cell_type_collapse_list",
+      "data_type": "named_list",
+      "cardinality": "named_list",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "{Lymphoid: [B, T, NK], Myeloid: [Mono, pDC]}",
+      "topic": "GEX processing",
+      "part_of": "GEX",
+      "description": "Named list mapping collapsed group names to vectors of cell type labels. NULL uses cell type labels as-is. Collapsed labels are passed to scDblFinder::scDblFinder(clusters = ...).",
+      "status": "Optional"
+    },
+    {
+      "param_name": "aggregation_ATAC_cluster_res",
+      "data_type": "numeric",
+      "cardinality": "scalar",
+      "default_value": "0.3",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "ATAC processing",
+      "part_of": "ATAC",
+      "description": "Leiden resolution for BPCells-native ATAC clustering. Passed to igraph::cluster_leiden(resolution = ...).",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_ATAC_data_PCs",
+      "data_type": "integer",
+      "cardinality": "vector",
+      "default_value": "!expr 2:30",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "ATAC processing",
+      "part_of": "ATAC,WNN",
+      "description": "Sequence of LSI component integers for ATAC harmony, NN-graph, and clustering. The largest value sets BPCells::svds(k = ...) for ATAC LSI.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_ATAC_peak_calling_method",
+      "data_type": "character",
+      "cardinality": "scalar",
+      "default_value": "macs3",
+      "allowed_values": "macs3,bpcells_tile",
+      "examples": "",
+      "topic": "ATAC processing",
+      "part_of": "ATAC",
+      "description": "Per-cluster ATAC peak caller. Selects macs3 callpeak or BPCells::call_peaks_tile().",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_ATAC_peak_matrix_mode",
+      "data_type": "character",
+      "cardinality": "scalar",
+      "default_value": "insertions",
+      "allowed_values": "insertions,overlaps",
+      "examples": "",
+      "topic": "ATAC processing",
+      "part_of": "ATAC",
+      "description": "BPCells peak counting mode. Passed to BPCells::peak_matrix(mode = ...).",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_call_peaks_by_cluster_col",
+      "data_type": "character",
+      "cardinality": "scalar",
+      "default_value": "PCA_harmony_SNN_cluster",
+      "allowed_values": "",
+      "examples": "PCA_harmony_SNN_cluster; PCA_harmony_SNN_cluster_cell_type",
+      "topic": "ATAC processing",
+      "part_of": "ATAC",
+      "description": "Metadata column defining groups for peak calling and DA testing.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_max_scDblFinder_ATAC_score_filter",
+      "data_type": "numeric",
+      "cardinality": "scalar",
+      "default_value": "0.5",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "ATAC processing",
+      "part_of": "ATAC",
+      "description": "Numeric 0-1 scDblFinder-predicted ATAC doublet score cutoff to remove. 1 keeps all.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_ATAC_marker_TFs",
+      "data_type": "named_list",
+      "cardinality": "named_list",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "{B: [PAX5, EBF1], T: [BCL11B, TCF7], Mono: [SPI1, IRF8]}",
+      "topic": "ATAC processing",
+      "part_of": "ATAC,WNN,seurat_export",
+      "description": "Named list of TFs per cell type for chromVAR motif enrichment analysis.",
+      "status": "Optional"
+    },
+    {
+      "param_name": "aggregation_extra_harmony_covars_ATAC",
+      "data_type": "character",
+      "cardinality": "vector",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "[TENX_reaction_ID, donor_id]",
+      "topic": "ATAC processing",
+      "part_of": "ATAC",
+      "description": "Additional metadata columns for ATAC-specific harmony. Appended to harmony::RunHarmony(vars_use = ...) for ATAC.",
+      "status": "Optional"
+    },
+    {
+      "param_name": "aggregation_roadmap_EDACC_names",
+      "data_type": "character",
+      "cardinality": "vector",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "[Peripheral_Blood_Mononuclear_Primary_Cells, Monocytes-CD14+_RO01746]",
+      "topic": "ATAC processing",
+      "part_of": "ATAC",
+      "description": "Roadmap Epigenomics tissue names for chromHMM peak annotation. NULL skips chromHMM annotation.",
+      "status": "Optional"
+    },
+    {
+      "param_name": "aggregation_WNN_cluster_res",
+      "data_type": "numeric",
+      "cardinality": "scalar",
+      "default_value": "0.3",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "Multimodal processing",
+      "part_of": "WNN",
+      "description": "Leiden resolution for BPCells-native WNN clustering. Passed to igraph::cluster_leiden(resolution = ...).",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_cluster_min_barcodes",
+      "data_type": "integer",
+      "cardinality": "scalar",
+      "default_value": "100",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "Multimodal processing",
+      "part_of": "GEX,ATAC,WNN",
+      "description": "Minimum barcodes per Leiden cluster for downstream metadata.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_data_nNNs",
+      "data_type": "integer",
+      "cardinality": "scalar",
+      "default_value": "30",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "Multimodal processing",
+      "part_of": "GEX,ATAC,WNN",
+      "description": "k nearest neighbors for SNN graph construction. Passed to BPCells::knn_hnsw(k = ...).",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_QC_exclude_list_combined_object",
+      "data_type": "character",
+      "cardinality": "vector",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "[nCount_ATAC < 1000, atac_peak_counts_blacklist_frac > 0.01]",
+      "topic": "Multimodal processing",
+      "part_of": "all",
+      "description": "dplyr filter expressions for post-peak-calling QC. Expressions are parsed and evaluated in dplyr::filter().",
+      "status": "Optional"
+    },
+    {
+      "param_name": "aggregation_harmony_correction_metadata_col_names",
+      "data_type": "character",
+      "cardinality": "vector",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "[TENX_reaction_ID, donor_id]",
+      "topic": "Multimodal processing",
+      "part_of": "GEX,ATAC,WNN",
+      "description": "Cell metadata columns for harmony batch correction. NULL skips harmony. Passed to harmony::RunHarmony(vars_use = ...).",
+      "status": "Optional"
+    },
+    {
+      "param_name": "aggregation_prop_threshold_contaminated_cluster_removal",
+      "data_type": "numeric",
+      "cardinality": "scalar",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "0.5",
+      "topic": "Multimodal processing",
+      "part_of": "subgroups",
+      "description": "Fraction threshold to discard sub-clusters with mismatched module scores. NULL keeps all.",
+      "status": "Optional"
+    },
+    {
+      "param_name": "aggregation_subgroups_col",
+      "data_type": "character",
+      "cardinality": "scalar",
+      "default_value": "PCA_harmony_SNN_cluster_cell_type",
+      "allowed_values": "",
+      "examples": "PCA_harmony_SNN_cluster_cell_type; WNN_harmony_SNN_cluster_cell_type",
+      "topic": "subgroup analysis",
+      "part_of": "subgroups",
+      "description": "Metadata column to split by for per-cell-type reprocessing.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_subgroups_min_nuclei_filter",
+      "data_type": "integer",
+      "cardinality": "scalar",
+      "default_value": "300",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "subgroup analysis",
+      "part_of": "subgroups",
+      "description": "Minimum nuclei required per cluster to include in subgroup analysis.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_subgroups_res",
+      "data_type": "numeric",
+      "cardinality": "scalar",
+      "default_value": "0.3",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "subgroup analysis",
+      "part_of": "subgroups",
+      "description": "Leiden resolution for clustering within subgroup analysis. Passed to igraph::cluster_leiden(resolution = ...).",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_subgroups_SCT_regress_vars",
+      "data_type": "character",
+      "cardinality": "vector",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "[CC.Difference, nCount_RNA]",
+      "topic": "subgroup analysis",
+      "part_of": "subgroups",
+      "description": "Metadata columns regressed during subgroup GEX PCA. NULL disables subgroup regression. Passed to Seurat::SCTransform(vars.to.regress = ...) or BPCells::regress_out(latent_data = ...).",
+      "status": "Optional"
+    },
+    {
+      "param_name": "aggregation_subgroups_extra_harmony_covars",
+      "data_type": "character",
+      "cardinality": "vector",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "[TENX_reaction_ID, donor_id]",
+      "topic": "subgroup analysis",
+      "part_of": "subgroups",
+      "description": "Extra metadata columns for harmony in subgroup reprocessing. Appended to harmony::RunHarmony(vars_use = ...) for subgroup GEX/ATAC embeddings.",
+      "status": "Optional"
+    },
+    {
+      "param_name": "aggregation_UMAP_ATAC_PCs",
+      "data_type": "integer",
+      "cardinality": "vector",
+      "default_value": "!expr 2:30",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "plotting/UMAP",
+      "part_of": "ATAC,WNN",
+      "description": "LSI components selected before uwot::umap() for ATAC UMAP.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_UMAP_GEX_PCs",
+      "data_type": "integer",
+      "cardinality": "vector",
+      "default_value": "!expr 1:30",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "plotting/UMAP",
+      "part_of": "GEX,WNN",
+      "description": "PCs selected before uwot::umap() for GEX UMAP.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_UMAP_min_dist",
+      "data_type": "numeric",
+      "cardinality": "scalar",
+      "default_value": "0.001",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "plotting/UMAP",
+      "part_of": "GEX,ATAC,WNN",
+      "description": "UMAP min_dist parameter. Passed to uwot::umap(min_dist = ...).",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_UMAP_nNNs",
+      "data_type": "integer",
+      "cardinality": "scalar",
+      "default_value": "30",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "plotting/UMAP",
+      "part_of": "GEX,ATAC,WNN",
+      "description": "k nearest neighbors for UMAP embedding. Passed to uwot::umap(n_neighbors = ...).",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "aggregation_categorical_vars",
+      "data_type": "character",
+      "cardinality": "vector",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "[condition, tissue, cell_sorting, instrument]",
+      "topic": "plotting/UMAP",
+      "part_of": "GEX,ATAC,WNN",
+      "description": "Extra categorical metadata columns for UMAP coloring and bar plots.",
+      "status": "Optional"
+    },
+    {
+      "param_name": "aggregation_continuous_vars",
+      "data_type": "character",
+      "cardinality": "vector",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "[age, BMI, HbA1c]",
+      "topic": "plotting/UMAP",
+      "part_of": "GEX,ATAC,WNN",
+      "description": "Extra continuous metadata columns for UMAP coloring.",
+      "status": "Optional"
+    },
+    {
+      "param_name": "aggregation_other_interesting_genes",
+      "data_type": "character",
+      "cardinality": "vector",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "[MS4A1, TRAC, LYZ]",
+      "topic": "plotting/UMAP",
+      "part_of": "GEX,ATAC,WNN",
+      "description": "Additional genes to plot that are not used for cell type annotation.",
+      "status": "Optional"
+    },
+    {
+      "param_name": "aggregation_tar_make_skip_regex_patterns",
+      "data_type": "regex",
+      "cardinality": "vector",
+      "default_value": "[\"^coverage_\"]",
+      "allowed_values": "",
+      "examples": "[\"^coverage_\", \"^track_\"]",
+      "topic": "miscellaneous",
+      "part_of": "graph",
+      "description": "Regex patterns to skip targets in custom target selections.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "is_active",
+      "data_type": "logical",
+      "cardinality": "scalar",
+      "default_value": "true",
+      "allowed_values": "TRUE,FALSE",
+      "examples": "",
+      "topic": "miscellaneous",
+      "part_of": "graph",
+      "description": "Whether to construct targets for this aggregation.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "modules",
+      "data_type": "character",
+      "cardinality": "vector",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "[differential_analyses, genetic_enrichment]",
+      "topic": "miscellaneous",
+      "part_of": "graph",
+      "description": "Optional aggregation-level modules to add to the target graph.",
+      "status": "Optional"
+    }
+  ]
+}
+  </script>
+</div>
+<script>
+(() => {
+  const widget = document.currentScript.previousElementSibling;
+  const data = JSON.parse(widget.querySelector(".parameter-overview-data").textContent);
+  const parameters = data.parameters;
+  const searchInput = widget.querySelector(".parameter-overview-search");
+  const topicList = widget.querySelector(".parameter-topic-list");
+  const emptyState = widget.querySelector(".parameter-empty-state");
+
+  const text = (value) => value === null || value === undefined ? "" : String(value);
+  const hasValue = (value) => text(value).trim() !== "";
+  const escapeHtml = (value) => text(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+  function parameterSearchText(parameter) {
+    return [
+      parameter.param_name,
+      parameter.description,
+      parameter.topic,
+      parameter.part_of,
+      parameter.data_type,
+      parameter.cardinality,
+      parameter.default_value,
+      parameter.allowed_values,
+      parameter.examples,
+      parameter.status
+    ].map(text).join(" ").toLowerCase();
+  }
+
+  function badgeClass(status) {
+    if (status === "Must specify") return "must";
+    if (status === "Defaulted") return "defaulted";
+    return "optional";
+  }
+
+  function renderValue(value, fallback) {
+    return hasValue(value)
+      ? `<span class="parameter-detail-value">${escapeHtml(value)}</span>`
+      : `<span class="parameter-detail-value parameter-empty-value">${escapeHtml(fallback)}</span>`;
+  }
+
+  function renderParameterRow(parameter) {
+    const statusClass = badgeClass(parameter.status);
+
+    return `
+      <div class="parameter-row ${statusClass}" data-param="${escapeHtml(parameter.param_name)}">
+        <div class="parameter-head">
+          <span class="parameter-name">${escapeHtml(parameter.param_name)}</span>
+          <span class="parameter-description">${escapeHtml(parameter.description)}</span>
+        </div>
+        <div class="parameter-details">
+          <div class="parameter-detail">
+            <span class="parameter-detail-label">Default</span>
+            ${renderValue(parameter.default_value, "missing allowed")}
+          </div>
+          <div class="parameter-detail">
+            <span class="parameter-detail-label">Type</span>
+            <span class="parameter-detail-value">${escapeHtml(parameter.data_type)} / ${escapeHtml(parameter.cardinality)}</span>
+          </div>
+          <div class="parameter-detail">
+            <span class="parameter-detail-label">Allowed values</span>
+            ${renderValue(parameter.allowed_values, "any value matching the type")}
+          </div>
+          <div class="parameter-detail">
+            <span class="parameter-detail-label">Example</span>
+            ${renderValue(parameter.examples, "no example yet")}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderTopicGroup(topic, topicParameters, searchIsActive) {
+    return `
+      <details class="parameter-topic" ${searchIsActive ? "open" : ""}>
+        <summary>
+          <span class="parameter-topic-title">${escapeHtml(topic)}</span>
+          <span class="parameter-topic-count">${topicParameters.length} parameter${topicParameters.length === 1 ? "" : "s"}</span>
+        </summary>
+        <div class="parameter-list">
+          ${topicParameters.map(renderParameterRow).join("")}
+        </div>
+      </details>
+    `;
+  }
+
+  function render() {
+    const query = searchInput.value.trim().toLowerCase();
+    const visible = query
+      ? parameters.filter((parameter) => parameterSearchText(parameter).includes(query))
+      : parameters;
+    const topicGroups = new Map();
+
+    visible.forEach((parameter) => {
+      if (!topicGroups.has(parameter.topic)) topicGroups.set(parameter.topic, []);
+      topicGroups.get(parameter.topic).push(parameter);
+    });
+
+    topicList.innerHTML = Array.from(topicGroups)
+      .map(([topic, topicParameters]) => renderTopicGroup(topic, topicParameters, query.length > 0))
+      .join("");
+    emptyState.style.display = visible.length === 0 ? "block" : "none";
+  }
+
+  searchInput.addEventListener("input", render);
+  render();
+})();
+</script>
 <p>Each aggregation also points to metadata files:</p>
 <ul>
 <li><strong><code>aggregation_donor_id_metadata_tsv</code></strong>: donor-level metadata with a <code>donor_id</code> column matching the donor IDs assigned during per-reaction processing.</li>

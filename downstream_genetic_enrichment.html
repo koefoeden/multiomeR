@@ -443,7 +443,385 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-filename="YAML"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">modules</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">genetic_enrichment</span><span class="kw">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>The module config controls which Open Targets studies are used, how enrichment inputs are selected, and which trait-relevance summaries are produced. Defaults and validation rules for module parameters live in <code>cfg_pipeline_parameters.tsv</code>. Edit <code>module_genetic_enrichment/cfg.yaml</code>, keeping disabled or example rows available for reference until the corresponding human-data aggregation is ready.</p>
+<p>The module config controls which Open Targets studies are used, how enrichment inputs are selected, and which trait-relevance summaries are produced. The manifest-backed overview below is the reference for genetic-enrichment module parameters.</p>
+<div class="parameter-overview" data-parameter-overview="">
+<input class="parameter-overview-search" type="search" placeholder="Search Genetic enrichment parameters">
+<div class="parameter-topic-list">
+
+</div>
+<div class="parameter-empty-state">
+No Genetic enrichment parameters match the current search.
+</div>
+<script type="application/json" class="parameter-overview-data">
+{
+  "parameters": [
+    {
+      "param_name": "genetic_enrichment_open_targets_studies",
+      "data_type": "named_list",
+      "cardinality": "named_list",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "{IBD_Liu2023: {Category: immune_disease, studyId: GCST90292538, finemappingMethod: auto}}",
+      "topic": "Open Targets",
+      "part_of": "genetic_enrichment",
+      "description": "Named Open Targets study mappings keyed by GWAS_ID.",
+      "status": "Must specify"
+    },
+    {
+      "param_name": "genetic_enrichment_psbulk_GWAS_chromVAR_models",
+      "data_type": "named_list",
+      "cardinality": "named_list",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "{major_cell_type_contrasts: {cell_type_subset: [B, Mono, NK, T], formula: ~ 0 + cluster + donor_id}}",
+      "topic": "pseudobulk genetic enrichment",
+      "part_of": "genetic_enrichment",
+      "description": "Model specification list for pseudobulk GWAS chromVAR differential activity. Model formulas are passed to stats::model.matrix().",
+      "status": "Must specify"
+    },
+    {
+      "param_name": "genetic_enrichment_psbulk_GWAS_chromVAR_min_ATAC_counts",
+      "data_type": "integer",
+      "cardinality": "scalar",
+      "default_value": "5000",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "pseudobulk genetic enrichment",
+      "part_of": "genetic_enrichment",
+      "description": "Minimum pseudobulk ATAC counts per cluster-donor sample for GWAS chromVAR differential activity.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "genetic_enrichment_posterior_probability_cutoff",
+      "data_type": "numeric",
+      "cardinality": "scalar",
+      "default_value": "0.001",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "gchromVAR",
+      "part_of": "genetic_enrichment",
+      "description": "posteriorProbability cutoff for gchromVAR. NULL applies no cutoff.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "genetic_enrichment_posterior_probability_weighting_function_name",
+      "data_type": "character",
+      "cardinality": "scalar",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "sqrt",
+      "topic": "gchromVAR",
+      "part_of": "genetic_enrichment",
+      "description": "Function expression used to weight Open Targets posteriorProbability values. NULL skips weighting.",
+      "status": "Optional"
+    },
+    {
+      "param_name": "genetic_enrichment_compartment_patterns",
+      "data_type": "named_list",
+      "cardinality": "named_list",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "{lymphoid: B|T|NK, myeloid: Mono|pDC}",
+      "topic": "plots",
+      "part_of": "genetic_enrichment",
+      "description": "Named regex patterns used to group cell types or contrasts into plot compartments.",
+      "status": "Optional"
+    },
+    {
+      "param_name": "genetic_enrichment_SCAVENGE_permutation_times",
+      "data_type": "integer",
+      "cardinality": "scalar",
+      "default_value": "100",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "SCAVENGE",
+      "part_of": "genetic_enrichment",
+      "description": "Degree-matched random-walk permutations per GWAS/graph branch.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "genetic_enrichment_SCAVENGE_restart_prob",
+      "data_type": "numeric",
+      "cardinality": "scalar",
+      "default_value": "0.05",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "SCAVENGE",
+      "part_of": "genetic_enrichment",
+      "description": "Random-walk restart probability.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "genetic_enrichment_SCAVENGE_seed_percent",
+      "data_type": "numeric",
+      "cardinality": "scalar",
+      "default_value": "0.05",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "SCAVENGE",
+      "part_of": "genetic_enrichment",
+      "description": "Maximum fraction of cells used as random-walk seeds.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "genetic_enrichment_psbulk_GWAS_gene_chromVAR_locus_plots_FDR_threshold",
+      "data_type": "numeric",
+      "cardinality": "scalar",
+      "default_value": "0.05",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "gene chromVAR",
+      "part_of": "genetic_enrichment",
+      "description": "FDR cutoff for top GWAS-gene chromVAR locus-track plots.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "genetic_enrichment_psbulk_GWAS_gene_chromVAR_locus_plots_flank",
+      "data_type": "integer",
+      "cardinality": "scalar",
+      "default_value": "50000",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "gene chromVAR",
+      "part_of": "genetic_enrichment",
+      "description": "Bases added around the linked target/credible-set locus in GWAS-gene chromVAR locus-track plots.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "genetic_enrichment_psbulk_GWAS_gene_chromVAR_locus_plots_n_top",
+      "data_type": "integer",
+      "cardinality": "scalar",
+      "default_value": "10",
+      "allowed_values": "",
+      "examples": "",
+      "topic": "gene chromVAR",
+      "part_of": "genetic_enrichment",
+      "description": "Number of top significant GWAS-gene chromVAR effects to draw as locus tracks. Set to 0 to skip.",
+      "status": "Defaulted"
+    },
+    {
+      "param_name": "genetic_enrichment_psbulk_GWAS_gene_chromVAR_GWAS_IDs",
+      "data_type": "character",
+      "cardinality": "vector",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "[LymphocyteCount_Vuckovic2020, MonocyteCount_Vuckovic2020]",
+      "topic": "gene chromVAR",
+      "part_of": "genetic_enrichment",
+      "description": "GWAS_IDs to run in the gene-level pseudobulk GWAS chromVAR extension. NULL skips the extension.",
+      "status": "Optional"
+    },
+    {
+      "param_name": "genetic_enrichment_extended_donor_id_metadata_tsv",
+      "data_type": "path",
+      "cardinality": "scalar",
+      "default_value": "NULL",
+      "allowed_values": "",
+      "examples": "metadata/extended_donor_metadata.tsv",
+      "topic": "metadata",
+      "part_of": "genetic_enrichment",
+      "description": "TSV with donor-level metadata of interest. If NULL, inherits aggregation_donor_id_metadata_tsv.",
+      "status": "Optional"
+    }
+  ]
+}
+  </script>
+</div>
+<script>
+(() => {
+  const widget = document.currentScript.previousElementSibling;
+  const data = JSON.parse(widget.querySelector(".parameter-overview-data").textContent);
+  const parameters = data.parameters;
+  const searchInput = widget.querySelector(".parameter-overview-search");
+  const topicList = widget.querySelector(".parameter-topic-list");
+  const emptyState = widget.querySelector(".parameter-empty-state");
+
+  const text = (value) => value === null || value === undefined ? "" : String(value);
+  const hasValue = (value) => text(value).trim() !== "";
+  const escapeHtml = (value) => text(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+  function parameterSearchText(parameter) {
+    return [
+      parameter.param_name,
+      parameter.description,
+      parameter.topic,
+      parameter.part_of,
+      parameter.data_type,
+      parameter.cardinality,
+      parameter.default_value,
+      parameter.allowed_values,
+      parameter.examples,
+      parameter.status
+    ].map(text).join(" ").toLowerCase();
+  }
+
+  function badgeClass(status) {
+    if (status === "Must specify") return "must";
+    if (status === "Defaulted") return "defaulted";
+    return "optional";
+  }
+
+  function renderValue(value, fallback) {
+    return hasValue(value)
+      ? `<span class="parameter-detail-value">${escapeHtml(value)}</span>`
+      : `<span class="parameter-detail-value parameter-empty-value">${escapeHtml(fallback)}</span>`;
+  }
+
+  function renderParameterRow(parameter) {
+    const statusClass = badgeClass(parameter.status);
+
+    return `
+      <div class="parameter-row ${statusClass}" data-param="${escapeHtml(parameter.param_name)}">
+        <div class="parameter-head">
+          <span class="parameter-name">${escapeHtml(parameter.param_name)}</span>
+          <span class="parameter-description">${escapeHtml(parameter.description)}</span>
+        </div>
+        <div class="parameter-details">
+          <div class="parameter-detail">
+            <span class="parameter-detail-label">Default</span>
+            ${renderValue(parameter.default_value, "missing allowed")}
+          </div>
+          <div class="parameter-detail">
+            <span class="parameter-detail-label">Type</span>
+            <span class="parameter-detail-value">${escapeHtml(parameter.data_type)} / ${escapeHtml(parameter.cardinality)}</span>
+          </div>
+          <div class="parameter-detail">
+            <span class="parameter-detail-label">Allowed values</span>
+            ${renderValue(parameter.allowed_values, "any value matching the type")}
+          </div>
+          <div class="parameter-detail">
+            <span class="parameter-detail-label">Example</span>
+            ${renderValue(parameter.examples, "no example yet")}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderTopicGroup(topic, topicParameters, searchIsActive) {
+    return `
+      <details class="parameter-topic" ${searchIsActive ? "open" : ""}>
+        <summary>
+          <span class="parameter-topic-title">${escapeHtml(topic)}</span>
+          <span class="parameter-topic-count">${topicParameters.length} parameter${topicParameters.length === 1 ? "" : "s"}</span>
+        </summary>
+        <div class="parameter-list">
+          ${topicParameters.map(renderParameterRow).join("")}
+        </div>
+      </details>
+    `;
+  }
+
+  function render() {
+    const query = searchInput.value.trim().toLowerCase();
+    const visible = query
+      ? parameters.filter((parameter) => parameterSearchText(parameter).includes(query))
+      : parameters;
+    const topicGroups = new Map();
+
+    visible.forEach((parameter) => {
+      if (!topicGroups.has(parameter.topic)) topicGroups.set(parameter.topic, []);
+      topicGroups.get(parameter.topic).push(parameter);
+    });
+
+    topicList.innerHTML = Array.from(topicGroups)
+      .map(([topic, topicParameters]) => renderTopicGroup(topic, topicParameters, query.length > 0))
+      .join("");
+    emptyState.style.display = visible.length === 0 ? "block" : "none";
+  }
+
+  searchInput.addEventListener("input", render);
+  render();
+})();
+</script>
+<p>The public example below is rendered directly from <code>module_genetic_enrichment/cfg_template.yaml</code>:</p>
+<details>
+<summary>
+Show <code>immune_human_2x</code>
+</summary>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>YAML</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="YAML"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">immune_human_2x</span><span class="kw">:</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">genetic_enrichment_open_targets_studies</span><span class="kw">:</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">LymphocyteCount_Vuckovic2020</span><span class="kw">:</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Category</span><span class="kw">:</span><span class="at"> positive_control</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">studyId</span><span class="kw">:</span><span class="at"> GCST90002388</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">finemappingMethod</span><span class="kw">:</span><span class="at"> auto</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">MonocyteCount_Vuckovic2020</span><span class="kw">:</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Category</span><span class="kw">:</span><span class="at"> positive_control</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">studyId</span><span class="kw">:</span><span class="at"> GCST90002393</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">finemappingMethod</span><span class="kw">:</span><span class="at"> auto</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">IBD_Liu2023</span><span class="kw">:</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Category</span><span class="kw">:</span><span class="at"> immune_disease</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">studyId</span><span class="kw">:</span><span class="at"> GCST90292538</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">finemappingMethod</span><span class="kw">:</span><span class="at"> auto</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">Crohns_Liu2023</span><span class="kw">:</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Category</span><span class="kw">:</span><span class="at"> immune_disease</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">studyId</span><span class="kw">:</span><span class="at"> GCST90446792</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">finemappingMethod</span><span class="kw">:</span><span class="at"> auto</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">UlcerativeColitis_Liu2023</span><span class="kw">:</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Category</span><span class="kw">:</span><span class="at"> immune_disease</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">studyId</span><span class="kw">:</span><span class="at"> GCST90446794</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">finemappingMethod</span><span class="kw">:</span><span class="at"> auto</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">MultipleSclerosis_IMSGC2019</span><span class="kw">:</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Category</span><span class="kw">:</span><span class="at"> immune_disease</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">studyId</span><span class="kw">:</span><span class="at"> GCST009597</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">finemappingMethod</span><span class="kw">:</span><span class="at"> auto</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">SLE_Verma2024</span><span class="kw">:</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Category</span><span class="kw">:</span><span class="at"> immune_disease</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">studyId</span><span class="kw">:</span><span class="at"> GCST90480453</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">finemappingMethod</span><span class="kw">:</span><span class="at"> auto</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">Asthma_Zhou2022</span><span class="kw">:</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Category</span><span class="kw">:</span><span class="at"> immune_disease</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">studyId</span><span class="kw">:</span><span class="at"> GCST90399686</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">finemappingMethod</span><span class="kw">:</span><span class="at"> auto</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">AtopicDermatitis_Oliva2025</span><span class="kw">:</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Category</span><span class="kw">:</span><span class="at"> immune_disease</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">studyId</span><span class="kw">:</span><span class="at"> GCST90503109</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">finemappingMethod</span><span class="kw">:</span><span class="at"> auto</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">Height_DeWan2023</span><span class="kw">:</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Category</span><span class="kw">:</span><span class="at"> negative_control</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">studyId</span><span class="kw">:</span><span class="at"> GCST90302890</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">finemappingMethod</span><span class="kw">:</span><span class="at"> auto</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">BMI_Verma2024</span><span class="kw">:</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Category</span><span class="kw">:</span><span class="at"> negative_control</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">studyId</span><span class="kw">:</span><span class="at"> GCST90475159</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">finemappingMethod</span><span class="kw">:</span><span class="at"> auto</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">EducationalAttainment_Okbay2022</span><span class="kw">:</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Category</span><span class="kw">:</span><span class="at"> negative_control</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">studyId</span><span class="kw">:</span><span class="at"> GCST90105038</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">finemappingMethod</span><span class="kw">:</span><span class="at"> auto</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">HeelBMD_Mbatchou2021</span><span class="kw">:</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Category</span><span class="kw">:</span><span class="at"> negative_control</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">studyId</span><span class="kw">:</span><span class="at"> GCST90014022</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">finemappingMethod</span><span class="kw">:</span><span class="at"> auto</span></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">genetic_enrichment_psbulk_GWAS_chromVAR_models</span><span class="kw">:</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">major_pbmc_cell_type_contrasts</span><span class="kw">:</span></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">cell_type_subset</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">B</span><span class="kw">,</span><span class="at"> Mono</span><span class="kw">,</span><span class="at"> NK</span><span class="kw">,</span><span class="at"> pDC</span><span class="kw">,</span><span class="at"> T</span><span class="kw">]</span></span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">design_matrix_func_name</span><span class="kw">:</span><span class="at"> </span><span class="ch">NULL</span></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">formula</span><span class="kw">:</span><span class="at"> ~ 0 + cluster + donor_id</span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">random_effect</span><span class="kw">:</span><span class="at"> </span><span class="ch">NULL</span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">contrast_specs_vec</span><span class="kw">:</span></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">B_vs_other_PBMC</span><span class="kw">:</span><span class="at"> clusterB - (clusterT + clusterNK + clusterMono + clusterpDC) / 4</span></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">T_vs_other_PBMC</span><span class="kw">:</span><span class="at"> clusterT - (clusterB + clusterNK + clusterMono + clusterpDC) / 4</span></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">NK_vs_other_PBMC</span><span class="kw">:</span><span class="at"> clusterNK - (clusterB + clusterT + clusterMono + clusterpDC) / 4</span></span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">Mono_vs_other_PBMC</span><span class="kw">:</span><span class="at"> clusterMono - (clusterB + clusterT + clusterNK + clusterpDC) / 4</span></span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">pDC_vs_other_PBMC</span><span class="kw">:</span><span class="at"> clusterpDC - (clusterB + clusterT + clusterNK + clusterMono) / 4</span></span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">lymphoid_vs_innate_PBMC</span><span class="kw">:</span><span class="at"> (clusterT + clusterNK + clusterB) / 3 - (clusterMono + clusterpDC) / 2</span></span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">lymphoid_vs_mono</span><span class="kw">:</span><span class="at"> (clusterT + clusterNK + clusterB) / 3 - clusterMono</span></span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">genetic_enrichment_psbulk_GWAS_gene_chromVAR_GWAS_IDs</span><span class="kw">:</span></span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> LymphocyteCount_Vuckovic2020</span></span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> MonocyteCount_Vuckovic2020</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</details>
+<p>Edit <code>module_genetic_enrichment/cfg.yaml</code>, keeping disabled or example rows available for reference until the corresponding human-data aggregation is ready.</p>
 </section>
 <section id="running-the-pipeline" class="level2" data-number="11.4">
 <h2 data-number="11.4" class="anchored" data-anchor-id="running-the-pipeline"><span class="header-section-number">11.4</span> Running the pipeline</h2>
@@ -454,10 +832,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-with-filename-file">
 <pre><strong>R</strong></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="R"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">names =</span> targets<span class="sc">::</span><span class="fu">tar_described_as</span>(tidyselect<span class="sc">::</span><span class="fu">contains</span>(<span class="st">"checkpoint:genetic_enrichment"</span>)) <span class="sc">&amp;</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    tidyselect<span class="sc">::</span><span class="fu">matches</span>(<span class="st">"your_aggregation"</span>)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-filename="R"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>targets<span class="sc">::</span><span class="fu">tar_make</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">names =</span> targets<span class="sc">::</span><span class="fu">tar_described_as</span>(tidyselect<span class="sc">::</span><span class="fu">contains</span>(<span class="st">"checkpoint:genetic_enrichment"</span>)) <span class="sc">&amp;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    tidyselect<span class="sc">::</span><span class="fu">matches</span>(<span class="st">"your_aggregation"</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This checkpoint writes the configured pseudobulk and single-nucleus trait-relevance summaries, including gchromVAR and SCAVENGE outputs. Runtime depends on the number of configured GWAS studies, enrichment methods, cells, and pseudobulk contrasts.</p>
 

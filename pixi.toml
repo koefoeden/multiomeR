@@ -176,3 +176,6 @@ r-httpgd = "*"
 r-googlesheets4 = ">=1.1.2,<2"
 r-assertthat = ">=0.2.1,<0.3"
 r-nanoparquet = ">=0.5.1,<0.6" # doesn't work?
+nodejs = ">=26.3.1,<26.4"
+imagemagick = ">=7.1.2_26,<8"
+pngquant = ">=2.17.0,<3"

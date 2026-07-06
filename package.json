@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "htmlhint:docs": "htmlhint docs/main_inputs.html docs/downstream_differential_analyses.html docs/downstream_genetic_enrichment.html",
+    "html-validate:docs": "html-validate docs/main_inputs.html docs/downstream_differential_analyses.html docs/downstream_genetic_enrichment.html",
+    "check:docs-html": "npm run htmlhint:docs && npm run html-validate:docs",
+    "screenshot:docs-parameters": "PLAYWRIGHT_BROWSERS_PATH=.pixi/playwright-browsers playwright screenshot --full-page file://$PWD/docs/main_inputs.html /tmp/multiomeR-main-inputs-parameter-overviews.png"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "html-validate": "^11.5.5",
+    "htmlhint": "^1.9.2"
+  }
+}

@@ -731,14 +731,17 @@ summarize_SCAVENGE_TRS_by_groups <- function(
 #'   `score`, and significance columns.
 #' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
 #' @param umap_cols Two metadata columns used as UMAP x/y coordinates.
+#' @param label_col Optional metadata column used to label group centroids on
+#'   the UMAP.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for `save_plots_structured()` or composition.
 #' @keywords internal
 
-get_SCAVENGE_TRS_UMAP_plots <- function(TRS_tibble, metadata_tibble, umap_cols) {
+get_SCAVENGE_TRS_UMAP_plots <- function(TRS_tibble, metadata_tibble, umap_cols, label_col = NULL) {
   if (nrow(TRS_tibble) == 0) {
     return(structure(list(), class = c("empty_plot_list", "list")))
   }
 
+  umap_cols <- unlist(as.list(umap_cols), use.names = FALSE)
   GWAS_ID <- unique(TRS_tibble$GWAS_ID)
   score_col <- stringr::str_c("score_", GWAS_ID[[1]])
   SCAVENGE_metadata_tibble <- metadata_tibble |>
@@ -748,14 +751,54 @@ get_SCAVENGE_TRS_UMAP_plots <- function(TRS_tibble, metadata_tibble, umap_cols) 
   plot <- plot_UMAP_from_metadata(
     metadata_tibble = SCAVENGE_metadata_tibble,
     variable = score_col,
-    umap_cols = unlist(as.list(umap_cols), use.names = FALSE)
+    umap_cols = umap_cols
   )
 
   if (inherits(plot, "empty_plot_list")) {
     return(structure(list(), class = c("empty_plot_list", "list")))
   }
 
-  plot + ggplot2::scale_color_viridis_c()
+  plot <- plot + ggplot2::scale_color_viridis_c()
+
+  if (!is.null(label_col)) {
+    if (!is.character(label_col) || length(label_col) != 1 || is.na(label_col) || !nzchar(label_col)) {
+      stop("`label_col` must be NULL or a non-empty length-1 character vector.", call. = FALSE)
+    }
+    if (!label_col %in% colnames(SCAVENGE_metadata_tibble)) {
+      stop("Required label column not found: ", label_col, call. = FALSE)
+    }
+
+    label_tibble <- SCAVENGE_metadata_tibble |>
+      dplyr::filter(
+        !is.na(.data[[label_col]]),
+        is.finite(.data[[umap_cols[[1]]]]),
+        is.finite(.data[[umap_cols[[2]]]])
+      ) |>
+      dplyr::summarise(
+        label = dplyr::first(as.character(.data[[label_col]])),
+        UMAP_1 = stats::median(.data[[umap_cols[[1]]]]),
+        UMAP_2 = stats::median(.data[[umap_cols[[2]]]]),
+        .by = dplyr::all_of(label_col)
+      ) |>
+      dplyr::select(label, UMAP_1, UMAP_2)
+
+    if (nrow(label_tibble) > 0) {
+      plot <- plot +
+        ggrepel::geom_label_repel(
+          data = label_tibble,
+          ggplot2::aes(x = UMAP_1, y = UMAP_2, label = label),
+          inherit.aes = FALSE,
+          size = 2.4,
+          label.size = 0.15,
+          label.padding = grid::unit(0.08, "lines"),
+          min.segment.length = 0,
+          max.overlaps = Inf,
+          seed = 1
+        )
+    }
+  }
+
+  plot
 }
 
 #' Plot GWAS by group

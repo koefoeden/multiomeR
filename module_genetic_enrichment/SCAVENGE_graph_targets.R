@@ -54,7 +54,8 @@ rlang::list2(
       plot <- get_SCAVENGE_TRS_UMAP_plots(
         TRS_tibble = TRS_tibbles,
         metadata_tibble = metadata_w_cell_types_tibble.WNN,
-        umap_cols = map_SCAVENGE_umap_cols
+        umap_cols = map_SCAVENGE_umap_cols,
+        label_col = paste0(map_SCAVENGE_graph_name, "_cluster_named")
       )
       save_plots_structured(
         plot,

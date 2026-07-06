@@ -7,7 +7,7 @@ source("helpers/_setup.R")
 
 ## Purpose
 
-This workflow is defined in [`_targets.R`](`r pipeline_github_file`) and represents the main analysis pipeline after Cell Ranger output generation. It processes individual 10x reactions in parallel, combines selected reactions into aggregations, and runs several multimodal workflows.
+This workflow is defined in [`_targets.R`](`r pipeline_github_file`) and represents the main analysis pipeline after cellranger-arc count output generation. It processes individual cellranger-arc count outputs (reactions) in parallel, combines selected reactions into specified aggregations, and runs several multimodal workflows.
 
 Representative outputs from the public example workflow are collected in the [main pipeline output gallery](gallery_main.qmd).
 
@@ -20,9 +20,3 @@ Representative outputs from the public example workflow are collected in the [ma
 - **Multimodal integration**: native WNN construction from aligned GEX PCA and ATAC LSI embeddings, WNN clustering and UMAPs, RNA/ATAC modality-weight summaries, cross-modality cluster comparison plots, and final multimodal metadata.
 - **Regulatory feature outputs**: consensus peak tables, marker TF activity, differential accessibility BEDs, ArchR-style peak-gene correlation candidates/results, and pseudobulk GEX/ATAC matrices for downstream modules.
 - **Compatibility exports and focused reprocessing**: GEX-only review objects and final [`Seurat`](https://satijalab.org/seurat/)/[`Signac`](https://stuartlab.org/signac/) multimodal objects, while keeping BPCells-native targets as the primary pipeline state; optional subgroup reprocessing reruns GEX, ATAC, and WNN analyses within large parent cell groups.
-
-## Configuration layers
-
-The main pipeline is configured in three layers: datasets define shared genome and QC settings, reactions point to individual 10x outputs, and aggregations choose which reactions to process together.
-
-Defaults, missing-value rules, data types, and allowed values for YAML-backed configuration live in `cfg_pipeline_parameters.tsv`. Dataset, aggregation, and module YAML files contain concrete config rows and optional row-to-row inheritance with `inherits:`.

@@ -5,6 +5,15 @@ pipeline_name <- "processing_and_aggregation"
 source("helpers/_setup.R")
 ```
 
+## Three configuration layers
+
+The main pipeline is configured in three layers: 
+- **datasets** define shared genome and QC settings for a number of reactions
+- **reactions** point to individual cellranger-arc count outputs
+- **aggregations** choose which reactions to process together.
+
+Defaults, missing-value rules, data types, and allowed values for YAML-backed configuration live in `cfg_pipeline_parameters.tsv`. Dataset, aggregation, and module YAML files contain concrete config rows and optional row-to-row inheritance with `inherits:`.
+
 ## `cfg_datasets.yaml`
 
 Dataset-level settings live in [`cfg_datasets.yaml`](`r datasets_github_file`). A dataset is the shared context for one or more 10x reactions, typically a genome/reference combination plus dataset-wide QC rules. Reactions in `cfg_reactions.tsv` refer to these dataset keys, so define datasets before adding reaction rows.

@@ -12,6 +12,8 @@ repo_root <- if (file.exists("DESCRIPTION")) {
 }
 knitr::opts_knit$set(root.dir = repo_root)
 
+source(file.path(repo_root, "website", "helpers", "parameter_overview.R"))
+
 emit_mermaid <- function(path, theme_path = "website/figures/common_theme.mmd") {
   mermaid_lines <- readLines(path, warn = FALSE)
 

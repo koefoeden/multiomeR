@@ -44,7 +44,24 @@ For example, this aggregation setting enables the module:
 modules: [differential_analyses]
 ```
 
-The module config controls which variables are modelled, which metadata columns are used, and which contrasts are run. Defaults and validation rules for module parameters live in `cfg_pipeline_parameters.tsv`. Edit `module_differential_analyses/cfg.yaml`, keeping disabled or example rows available for reference until the corresponding aggregation is ready.
+The module config controls which variables are modelled, which metadata columns are used, and which contrasts are run. The manifest-backed overview below is the reference for differential-analysis module parameters.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_parameter_overview("differential_analyses")
+```
+
+The public example below is rendered directly from `module_differential_analyses/cfg_template.yaml`:
+
+<details>
+<summary>Show <code>immune_human_2x</code></summary>
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_yaml_template_entry(module_cfg_template_file, "immune_human_2x")
+```
+
+</details>
+
+Edit `module_differential_analyses/cfg.yaml`, keeping disabled or example rows available for reference until the corresponding aggregation is ready.
 
 ## Running the pipeline
 

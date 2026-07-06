@@ -44,7 +44,24 @@ For example, this aggregation setting enables the module:
 modules: [genetic_enrichment]
 ```
 
-The module config controls which Open Targets studies are used, how enrichment inputs are selected, and which trait-relevance summaries are produced. Defaults and validation rules for module parameters live in `cfg_pipeline_parameters.tsv`. Edit `module_genetic_enrichment/cfg.yaml`, keeping disabled or example rows available for reference until the corresponding human-data aggregation is ready.
+The module config controls which Open Targets studies are used, how enrichment inputs are selected, and which trait-relevance summaries are produced. The manifest-backed overview below is the reference for genetic-enrichment module parameters.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_parameter_overview("genetic_enrichment")
+```
+
+The public example below is rendered directly from `module_genetic_enrichment/cfg_template.yaml`:
+
+<details>
+<summary>Show <code>immune_human_2x</code></summary>
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_yaml_template_entry(module_cfg_template_file, "immune_human_2x")
+```
+
+</details>
+
+Edit `module_genetic_enrichment/cfg.yaml`, keeping disabled or example rows available for reference until the corresponding human-data aggregation is ready.
 
 ## Running the pipeline
 

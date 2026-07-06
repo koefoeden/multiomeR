@@ -11,12 +11,13 @@ Dataset-level settings live in [`cfg_datasets.yaml`](`r datasets_github_file`). 
 
 In the public repository, `cfg_datasets.yaml`, `cfg_reactions.tsv`, and `cfg_aggregations.yaml` point to template files. Keep those public example entries as a reference, and use project-specific copies or downstream private config files for study-specific paths, metadata, and analysis settings.
 
-Defaults and validation rules for dataset, aggregation, and module YAML parameters live in [`cfg_pipeline_parameters.tsv`](`r pipeline_parameters_github_file`). A YAML row only needs to list values that differ from the manifest defaults, plus any required parameters whose manifest default is `NULL`.
+Defaults and validation rules for dataset, aggregation, and module YAML parameters live in [`cfg_pipeline_parameters.tsv`](`r pipeline_parameters_github_file`). A YAML row only needs to list values that differ from the manifest defaults, plus any parameters where `allow_missing_after_inheritance` is `FALSE` and the manifest default is `NULL`.
 
-Typical dataset-level settings include:
+The manifest-backed overview below is the reference for dataset parameters. Open a topic to inspect defaults, data types, allowed values, and examples.
 
-- `dataset_cellranger_arc_refdata_dir`: Cell Ranger ARC reference directory for the dataset genome.
-- `dataset_QC_exclude_list_per_reaction`: reaction-level QC filters applied before aggregation.
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_parameter_overview("dataset")
+```
 
 The public human example uses the following dataset entry, rendered directly from `cfg_datasets.yaml`:
 
@@ -68,16 +69,11 @@ The reaction table columns are:
 
 Aggregation-level settings live in [`cfg_aggregations.yaml`](`r aggregations_github_file`). An aggregation combines one or more configured reactions and controls merged RNA/ATAC processing, clustering, annotation, plotting, and optional downstream modules.
 
-At minimum, each aggregation needs:
+The manifest-backed overview below is the reference for aggregation parameters. Required rows must resolve to a non-missing value after inheritance and defaults are applied; optional rows can remain `NULL` when the corresponding behavior should be disabled.
 
-| Field | Meaning |
-|---|---|
-| `aggregation_reaction_IDs` | Reaction IDs from `cfg_reactions.tsv` to include in the joint analysis. |
-| `aggregation_GEX_marker_genes` | Named marker-gene lists used for module scoring and cluster annotation. |
-| `aggregation_donor_id_metadata_tsv` | Donor-level metadata table with a `donor_id` column. |
-| `aggregation_reaction_ID_metadata_tsv` | Reaction-level metadata table with a `TENX_reaction_ID` column. |
-
-Optional aggregation settings control QC filters, RNA and ATAC dimensions, clustering resolution, UMAP parameters, subgroup analysis, plotting variables, track export, and enabled modules. Requiredness, defaults, and value validation are defined in `cfg_pipeline_parameters.tsv`. `NULL` values intentionally disable optional behavior.
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_parameter_overview("aggregation")
+```
 
 Each aggregation also points to metadata files:
 

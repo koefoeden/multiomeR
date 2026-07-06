@@ -12,15 +12,23 @@ book:
     collapse-level: 2
   chapters:
     - href: index.qmd
-      text: Overview
-    - href: background_philosophy.qmd
-      text: Background and design philosophy
-    - href: implementation_main.qmd
-      text: Main pipeline
-    - href: implementation_differential_analyses.qmd
-      text: Differential analyses
-    - href: implementation_genetic_enrichment.qmd
-      text: Genetic enrichment
+      text: Introduction
+    - part: "Background"
+      chapters:
+        - href: background_philosophy.qmd
+          text: Background and design philosophy
+    - href: implementation_conventions.qmd
+      text: Implementation conventions
+    - part: "Target graph methodology"
+      chapters:
+        - href: graph_methodology.qmd
+          text: Reading the graph views
+        - href: implementation_main.qmd
+          text: Main pipeline
+        - href: implementation_differential_analyses.qmd
+          text: Differential analyses
+        - href: implementation_genetic_enrichment.qmd
+          text: Genetic enrichment
 
 format:
   html:

@@ -38,6 +38,10 @@ book:
         - gallery_main.qmd
         - gallery_differential_analyses.qmd
         - gallery_genetic_enrichment.qmd
+    - part: "Reference"
+      chapters:
+        - href: implementation/
+          text: Implementation book
 format:
   html:
     theme: cosmo

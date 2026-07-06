@@ -1,1 +1,16 @@
-{{< include ../implementation_overview.qmd >}}
+# Introduction
+
+This book collects developer-facing details for readers who want to understand or modify the internals of multiomeR. It complements the [main user manual](../), which covers installation, configuration, checkpoint-based execution, and output inspection.
+
+Use this book when you need to reason about why the workflow is structured the way it is, how the simplified target graph views relate to the real `{targets}` graph, or where a change should fit into the main pipeline and optional downstream modules.
+
+## Where to start
+
+- **[Background and design philosophy](background_philosophy.qmd)**: Why multiomeR is organized as a configurable, editable workflow rather than a conventional high-level package interface.
+- **[Implementation conventions](implementation_conventions.qmd)**: The metadata, configuration, mapping, symbol, and runtime contracts used throughout the target graph.
+- **[Reading the graph views](graph_methodology.qmd)**: How the implementation diagrams are generated, simplified, and intended to be interpreted.
+- **[Main pipeline](implementation_main.qmd)**: Graph views for reaction-level preprocessing, GEX, ATAC, WNN integration, and subgroup reprocessing.
+- **[Differential analyses](implementation_differential_analyses.qmd)**: Graph view for the optional differential-analysis module.
+- **[Genetic enrichment](implementation_genetic_enrichment.qmd)**: Graph views for the optional genetic-enrichment module.
+
+If you are trying to run multiomeR rather than modify it, start with the [main manual](../).

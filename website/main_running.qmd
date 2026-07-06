@@ -21,7 +21,9 @@ Run the ATAC-processing checkpoint after the GEX review:
 
 ```{.r filename="R"}
 targets::tar_make(
-  names = targets::tar_described_as(tidyselect::contains("checkpoint:ATAC")) &
+  names = targets::tar_described_as(
+    tidyselect::contains("checkpoint:ATAC")
+    ) &
     tidyselect::matches("your_aggregation")
 )
 ```

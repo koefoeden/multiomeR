@@ -20,50 +20,6 @@ git clone https://github.com/koefoeden/multiomeR.git
 cd multiomeR
 ```
 
-
-## Create and launch the pixi environment
-
-If `pixi` is not installed yet, install it first:
-
-```{.bash filename="Bash"}
-curl -fsSL https://pixi.sh/install.sh | sh
-export PATH="$HOME/.pixi/bin:$PATH"
-```
-
-Install the locked pixi environment from the repository root (<5 mins):
-
-```{.bash filename="Bash"}
-pixi install --locked --run-post-link-scripts
-pixi run install-r-github-packages
-```
-
-Start an interactive R session inside the pixi environment:
-
-```{.bash filename="Bash"}
-pixi shell
-R
-```
-
-Use this repository-root R session as the evaluation environment for subsequent R commands in this manual.
-
-::: {.callout-note collapse="true"}
-## Why pixi?
-
-multiomeR depends on both R packages and command-line genomics tools. Pixi keeps those dependencies in one locked environment, so R, Bioconductor packages, and external tools such as `macs3`, `tabix`, and `cellsnp-lite` are resolved together instead of being installed manually across separate package managers.
-:::
-
-::: {.callout-note collapse="true"}
-## Why is `--run-post-link-scripts` needed?
-
-The `--locked` flag keeps installation aligned with `pixi.lock`. The `--run-post-link-scripts` flag is required for Bioconductor data packages such as the BSgenome genome packages. Pixi disables conda post-link scripts by default, but these packages use Bioconda's post-link scripts to materialize the actual R package directories in the pixi environment.
-:::
-
-::: {.callout-note collapse="true"}
-## Why is `pixi run install-r-github-packages` needed?
-
-A small number of R packages still need GitHub versions, since they are not currently available on conda-forge/bioconda. The `pixi run install-r-github-packages` task installs the pinned GitHub versions of BPCells, Signac, and betterChromVAR into the pixi R library. The pixi environment also preinstalls system libraries needed by these source installs, including `libhwy` for BPCells.
-:::
-
 ## Download public inputs
 
 Download the two public human `cellranger-arc count` outputs used by the `immune_human_2x` example aggregation from the repository root (3.9 GB).
@@ -102,3 +58,45 @@ refdata_url="https://cf.10xgenomics.com/supp/cell-arc"
 curl -fL -o "example_data/${refdata}.tar.gz" "${refdata_url}/${refdata}.tar.gz"
 tar -xzf "example_data/${refdata}.tar.gz" -C example_data
 ```
+
+## Create and launch the pixi environment
+
+If `pixi` is not installed yet, install it first:
+
+```{.bash filename="Bash"}
+curl -fsSL https://pixi.sh/install.sh | sh
+export PATH="$HOME/.pixi/bin:$PATH"
+```
+
+Install the locked pixi environment from the repository root (<5 mins):
+
+```{.bash filename="Bash"}
+pixi install --locked --run-post-link-scripts
+pixi run install-r-github-packages
+```
+
+```{.bash filename="Bash"}
+pixi shell
+R
+```
+
+Use this repository-root R session as the evaluation environment for subsequent R commands in this manual.
+
+::: {.callout-note collapse="true"}
+## Why pixi?
+
+multiomeR depends on both R packages and command-line genomics tools. Pixi keeps those dependencies in one locked environment, so R, Bioconductor packages, and external tools such as `macs3`, `tabix`, and `cellsnp-lite` are resolved together instead of being installed manually across separate package managers.
+:::
+
+::: {.callout-note collapse="true"}
+## Why is `--run-post-link-scripts` needed?
+
+The `--locked` flag keeps installation aligned with `pixi.lock`. The `--run-post-link-scripts` flag is required for Bioconductor data packages such as the BSgenome genome packages. Pixi disables conda post-link scripts by default, but these packages use Bioconda's post-link scripts to materialize the actual R package directories in the pixi environment.
+:::
+
+::: {.callout-note collapse="true"}
+## Why is `pixi run install-r-github-packages` needed?
+
+A small number of R packages still need GitHub versions, since they are not currently available on conda-forge/bioconda. The `pixi run install-r-github-packages` task installs the pinned GitHub versions of BPCells, Signac, and betterChromVAR into the pixi R library. The pixi environment also preinstalls system libraries needed by these source installs, including `libhwy` for BPCells.
+:::
+

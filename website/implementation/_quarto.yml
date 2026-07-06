@@ -1,0 +1,33 @@
+project:
+  type: book
+  output-dir: ../../docs/implementation
+
+book:
+  title: "multiomeR Implementation"
+  site-url: https://koefoeden.github.io/multiomeR/implementation/
+  repo-url: https://github.com/koefoeden/multiomeR
+  repo-actions: [source, issue]
+  page-navigation: true
+  sidebar:
+    collapse-level: 2
+  chapters:
+    - href: index.qmd
+      text: Overview
+    - href: background_philosophy.qmd
+      text: Background and design philosophy
+    - href: implementation_main.qmd
+      text: Main pipeline
+    - href: implementation_differential_analyses.qmd
+      text: Differential analyses
+    - href: implementation_genetic_enrichment.qmd
+      text: Genetic enrichment
+
+format:
+  html:
+    theme: cosmo
+    css: ../styles.css
+    toc: true
+    toc-depth: 3
+    code-copy: true
+    code-overflow: scroll
+    number-sections: true

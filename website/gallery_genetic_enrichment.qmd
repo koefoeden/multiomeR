@@ -1,4 +1,4 @@
-# Genetic enrichment
+# Genetic Enrichment
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(

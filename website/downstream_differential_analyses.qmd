@@ -1,4 +1,4 @@
-# Differential analyses
+# Differential Analyses
 
 ```{r setup, include = FALSE}
 pipeline_name <- "differential_analyses"

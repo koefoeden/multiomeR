@@ -38,6 +38,7 @@ jobs:
         run: |
           rm -rf docs
           quarto render website
+          quarto render website/implementation
 
       - name: Upload GitHub Pages artifact
         if: github.event_name != 'pull_request'

@@ -5,11 +5,47 @@ knitr::opts_chunk$set(
   eval = FALSE
 )
 
-repo_root <- if (file.exists("DESCRIPTION")) {
-  normalizePath(".", winslash = "/", mustWork = TRUE)
-} else {
-  normalizePath("..", winslash = "/", mustWork = TRUE)
+find_repo_root <- function(start_dir = ".") {
+  current_dir <- normalizePath(start_dir, winslash = "/", mustWork = TRUE)
+
+  repeat {
+    if (
+      dir.exists(file.path(current_dir, ".git")) ||
+        file.exists(file.path(current_dir, "cfg_pipeline_parameters.tsv"))
+    ) {
+      return(current_dir)
+    }
+
+    parent_dir <- dirname(current_dir)
+    if (identical(parent_dir, current_dir)) {
+      stop("Could not find repository root from ", start_dir, call. = FALSE)
+    }
+    current_dir <- parent_dir
+  }
 }
+
+current_source_file <- function() {
+  source_files <- vapply(
+    sys.frames(),
+    function(frame) {
+      if (is.null(frame$ofile)) {
+        NA_character_
+      } else {
+        frame$ofile
+      }
+    },
+    character(1)
+  )
+  source_files <- source_files[!is.na(source_files)]
+
+  if (length(source_files) == 0) {
+    return(".")
+  }
+
+  dirname(normalizePath(utils::tail(source_files, 1), winslash = "/", mustWork = TRUE))
+}
+
+repo_root <- find_repo_root(current_source_file())
 knitr::opts_knit$set(root.dir = repo_root)
 
 source(file.path(repo_root, "website", "helpers", "parameter_overview.R"))

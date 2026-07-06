@@ -1,4 +1,4 @@
-# Overview
+# Introduction to the main pipeline
 
 ```{r setup, include = FALSE}
 pipeline_name <- "processing_and_aggregation"

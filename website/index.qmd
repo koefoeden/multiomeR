@@ -1,6 +1,6 @@
 ![](figures/multiomeR-logo.svg){fig-alt="multiomeR logo" width="100%"}
 
-# Overview
+# Introduction
 
 ## What is multiomeR?
 multiomeR is a [targets](https://books.ropensci.org/targets/)-based workflow for processing and analyzing single-nucleus 10x Genomics Epi Multiome ATAC + Gene Expression datasets. It is meant to be adapted to your own data, compute setup, and biological questions.

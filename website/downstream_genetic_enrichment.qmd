@@ -1,4 +1,4 @@
-# Genetic enrichment
+# Genetic Enrichment
 
 ```{r setup, include = FALSE}
 pipeline_name <- "genetic_enrichment"

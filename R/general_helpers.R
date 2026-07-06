@@ -46,7 +46,6 @@ read_config_parameter_manifest <- function(manifest_file, scope = NULL) {
     manifest_file,
     col_types = readr::cols(
       .default = readr::col_character(),
-      required = readr::col_logical(),
       allow_missing_after_inheritance = readr::col_logical()
     ),
     na = character(),
@@ -262,20 +261,20 @@ merge_manifest_config_values <- function(parent_values, child_values) {
 validate_manifest_config_values <- function(values, config_key, config_file, manifest_tibble, key_col) {
   purrr::pwalk(
     manifest_tibble,
-    \(scope, param_name, data_type, cardinality, default_value, required, allowed_values, ...) {
+    \(scope, param_name, data_type, cardinality, default_value, allow_missing_after_inheritance, allowed_values, ...) {
       value <- values[[param_name]]
       if (is_manifest_missing_value(value)) {
-        if (isTRUE(required)) {
+        if (!isTRUE(allow_missing_after_inheritance)) {
           stop(
-            "Required parameter '",
+            "Parameter '",
             param_name,
-            "' resolves to NULL/NA for config ",
+            "' is not allowed to resolve to NULL/NA/empty for config ",
             key_col,
             ": ",
             config_key,
             ". Please set this parameter in ",
             config_file,
-            ".",
+            " or provide a non-missing default/inherited value.",
             call. = FALSE
           )
         }
@@ -292,7 +291,13 @@ validate_manifest_config_values <- function(values, config_key, config_file, man
 }
 
 is_manifest_missing_value <- function(value) {
-  is.null(value) || (is.atomic(value) && length(value) > 0 && all(is.na(value)))
+  if (is.null(value)) {
+    return(TRUE)
+  }
+  if (!is.atomic(value) || length(value) == 0) {
+    return(FALSE)
+  }
+  all(is.na(value) | trimws(as.character(value)) == "")
 }
 
 validate_manifest_cardinality <- function(value, cardinality, param_name, config_key, config_file, key_col) {

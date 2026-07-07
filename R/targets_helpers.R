@@ -9,8 +9,8 @@ tar_name_wo_suffixes <- function(target_name = targets::tar_name()) {
 #'
 #' Build a deterministic target-derived output path under the targets store for plots or file artifacts.
 #'
-#' @param kind Top-level output category, usually `plots`, `plot_objects`, `files`, or another structured-output directory.
-#' @param filetype Output file extension without a leading dot.
+#' @param kind Top-level output category, usually `plots`, `files`, or another structured-output directory.
+#' @param filetype Output file extension without a leading dot; currently constrained by the helper to supported graphics formats.
 #' @param override_suffix Optional replacement for the target-derived filename suffix; use `NULL` to keep the default target name.
 #' @param full_target_name Targets name, including branch suffix when present, used to derive output paths.
 #' @param suffix_in_subdir Logical; when TRUE, place target suffixes in subdirectories instead of appending them to filenames.
@@ -18,8 +18,8 @@ tar_name_wo_suffixes <- function(target_name = targets::tar_name()) {
 #' @return A length-one filesystem path, or a directory path when `list_output = TRUE`.
 #' @keywords internal
 
-get_structured_output_path <- function(
-  kind = c("files", "plots", "plot_objects"),
+get_structured_output_path <- skip_invalidate(function(
+  kind = c("files", "plots"),
   filetype = NULL,
   override_suffix = NULL,
   full_target_name = targets::tar_name(),
@@ -60,7 +60,7 @@ get_structured_output_path <- function(
     return(out_path)
   }
   paste0(out_path, ".", filetype)
-}
+})
 #' Return the preferred graphics device for a file type.
 #'
 #' @keywords internal
@@ -313,6 +313,17 @@ save_plots_structured <- skip_invalidate(function(
   ) {
     stop("`save_serialized_plot_objects` must be TRUE or FALSE.")
   }
+  get_plot_object_path <- function(image_path) {
+    relative_image_path <- fs::path_rel(
+      image_path,
+      start = file.path(targets::tar_config_get("store"), "plots")
+    )
+    file.path(
+      targets::tar_config_get("store"),
+      "plot_objects",
+      paste0(tools::file_path_sans_ext(relative_image_path), ".rds")
+    )
+  }
   save_one_plot <- function(plot, image_path, plot_object_path, plot_index = 1L) {
     plot_save_args <- save_args
     for (dimension_arg in c("width", "height")) {
@@ -362,24 +373,10 @@ save_plots_structured <- skip_invalidate(function(
       full_target_name = target_name,
       suffix_in_subdir = dyn_suffix_in_subdir
     )
-    object_path <- get_structured_output_path(
-      kind = "plot_objects",
-      filetype = "rds",
-      override_suffix = override_suffix,
-      full_target_name = target_name,
-      suffix_in_subdir = dyn_suffix_in_subdir
-    )
-    return(save_one_plot(plots, out_path, object_path))
+    return(save_one_plot(plots, out_path, get_plot_object_path(out_path)))
   }
   out_dir <- get_structured_output_path(
     kind = "plots",
-    override_suffix = override_suffix,
-    full_target_name = target_name,
-    suffix_in_subdir = dyn_suffix_in_subdir,
-    list_output = TRUE
-  )
-  object_dir <- get_structured_output_path(
-    kind = "plot_objects",
     override_suffix = override_suffix,
     full_target_name = target_name,
     suffix_in_subdir = dyn_suffix_in_subdir,
@@ -401,10 +398,11 @@ save_plots_structured <- skip_invalidate(function(
     list(plots, file_stems, plot_names, seq_along(plots)),
     \(plot, file_stem, plot_name, plot_index) {
       plot <- add_ggplot_title_if_missing(plot, plot_name)
+      image_path <- file.path(out_dir, paste0(file_stem, ".", filetype))
       save_one_plot(
         plot,
-        file.path(out_dir, paste0(file_stem, ".", filetype)),
-        file.path(object_dir, paste0(file_stem, ".rds")),
+        image_path,
+        get_plot_object_path(image_path),
         plot_index
       )
     }

@@ -9,8 +9,8 @@ tar_name_wo_suffixes <- function(target_name = targets::tar_name()) {
 #'
 #' Build a deterministic target-derived output path under the targets store for plots or file artifacts.
 #'
-#' @param kind Top-level output category, usually `plots`, `files`, or another structured-output directory.
-#' @param filetype Output file extension without a leading dot; currently constrained by the helper to supported graphics formats.
+#' @param kind Top-level output category, usually `plots`, `plot_objects`, `files`, or another structured-output directory.
+#' @param filetype Output file extension without a leading dot.
 #' @param override_suffix Optional replacement for the target-derived filename suffix; use `NULL` to keep the default target name.
 #' @param full_target_name Targets name, including branch suffix when present, used to derive output paths.
 #' @param suffix_in_subdir Logical; when TRUE, place target suffixes in subdirectories instead of appending them to filenames.
@@ -19,7 +19,7 @@ tar_name_wo_suffixes <- function(target_name = targets::tar_name()) {
 #' @keywords internal
 
 get_structured_output_path <- function(
-  kind = c("files", "plots"),
+  kind = c("files", "plots", "plot_objects"),
   filetype = NULL,
   override_suffix = NULL,
   full_target_name = targets::tar_name(),
@@ -239,6 +239,8 @@ cull_dense_discrete_legends <- function(plot, n_distinct_max) {
 #' @param dyn_suffix_in_subdir Logical; when TRUE, dynamic-branch suffixes are used as subdirectories instead of filename suffixes.
 #' @param target_name Full targets name used to derive structured output paths; defaults to the currently running target.
 #' @param discrete_legend_n_distinct_max Maximum number of discrete legend entries to keep before replacing dense legends with `guide = 'none'`.
+#' @param save_serialized_plot_objects Logical; when TRUE, save mirrored `.rds`
+#'   sidecars under `plot_objects`.
 #' @param ... Additional arguments forwarded to the graphics device or
 #'   `ggplot2::ggsave()`, depending on the plot object.
 #' @return A file path for a single plot, or an output directory path for a list of plots.
@@ -251,6 +253,7 @@ save_plots_structured <- skip_invalidate(function(
   dyn_suffix_in_subdir = FALSE,
   target_name = targets::tar_name(),
   discrete_legend_n_distinct_max = 20,
+  save_serialized_plot_objects = getOption("multiomeR.save_serialized_plot_objects", FALSE),
   ...
 ) {
   save_args <- list(...)
@@ -303,7 +306,14 @@ save_plots_structured <- skip_invalidate(function(
   if (dyn_suffix_in_subdir && is.na(dyn_suffix)) {
     stop("`dyn_suffix_in_subdir = TRUE` requires a dynamically suffixed target name.")
   }
-  save_one_plot <- function(plot, path, plot_index = 1L) {
+  if (
+    !is.logical(save_serialized_plot_objects) ||
+      length(save_serialized_plot_objects) != 1 ||
+      is.na(save_serialized_plot_objects)
+  ) {
+    stop("`save_serialized_plot_objects` must be TRUE or FALSE.")
+  }
+  save_one_plot <- function(plot, image_path, plot_object_path, plot_index = 1L) {
     plot_save_args <- save_args
     for (dimension_arg in c("width", "height")) {
       if (!is.null(plot_save_args[[dimension_arg]]) && length(plot_save_args[[dimension_arg]]) > 1) {
@@ -322,7 +332,7 @@ save_plots_structured <- skip_invalidate(function(
         ggplot2::ggsave,
         c(
           list(
-            filename = path,
+            filename = image_path,
             plot = plot,
             device = get_plot_device(filetype)
           ),
@@ -331,15 +341,18 @@ save_plots_structured <- skip_invalidate(function(
           plot_save_args
         )
       )
-      return(path)
     } else {
       plot_save_args$width <- dplyr::coalesce(plot_save_args$width, 10)
       plot_save_args$height <- dplyr::coalesce(plot_save_args$height, 10)
+      open_plot_graphics_device(image_path, filetype, plot_save_args)
+      on.exit(grDevices::dev.off(), add = TRUE)
+      draw_plot_object(plot)
     }
-    open_plot_graphics_device(path, filetype, plot_save_args)
-    on.exit(grDevices::dev.off(), add = TRUE)
-    draw_plot_object(plot)
-    path
+    if (save_serialized_plot_objects) {
+      fs::dir_create(dirname(plot_object_path))
+      saveRDS(plot, plot_object_path)
+    }
+    image_path
   }
   if (is_single_plot) {
     out_path <- get_structured_output_path(
@@ -349,10 +362,24 @@ save_plots_structured <- skip_invalidate(function(
       full_target_name = target_name,
       suffix_in_subdir = dyn_suffix_in_subdir
     )
-    return(save_one_plot(plots, out_path))
+    object_path <- get_structured_output_path(
+      kind = "plot_objects",
+      filetype = "rds",
+      override_suffix = override_suffix,
+      full_target_name = target_name,
+      suffix_in_subdir = dyn_suffix_in_subdir
+    )
+    return(save_one_plot(plots, out_path, object_path))
   }
   out_dir <- get_structured_output_path(
     kind = "plots",
+    override_suffix = override_suffix,
+    full_target_name = target_name,
+    suffix_in_subdir = dyn_suffix_in_subdir,
+    list_output = TRUE
+  )
+  object_dir <- get_structured_output_path(
+    kind = "plot_objects",
     override_suffix = override_suffix,
     full_target_name = target_name,
     suffix_in_subdir = dyn_suffix_in_subdir,
@@ -374,7 +401,12 @@ save_plots_structured <- skip_invalidate(function(
     list(plots, file_stems, plot_names, seq_along(plots)),
     \(plot, file_stem, plot_name, plot_index) {
       plot <- add_ggplot_title_if_missing(plot, plot_name)
-      save_one_plot(plot, file.path(out_dir, paste0(file_stem, ".", filetype)), plot_index)
+      save_one_plot(
+        plot,
+        file.path(out_dir, paste0(file_stem, ".", filetype)),
+        file.path(object_dir, paste0(file_stem, ".rds")),
+        plot_index
+      )
     }
   )
 })

@@ -114,6 +114,10 @@ apply_runtime_options <- function(force = FALSE) {
   ggplot2::theme_update(legend.position = "bottom")
   Sys.setenv("R_MSG_PKG_START_MSG" = "FALSE")
 
+  if (is.null(getOption("multiomeR.save_serialized_plot_objects"))) {
+    options(multiomeR.save_serialized_plot_objects = TRUE)
+  }
+
   targets::tar_option_set(
     error = "trim",
     iteration = "list",

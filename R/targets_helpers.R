@@ -429,48 +429,6 @@ get_structured_file_path <- function(filetype = NULL, override_suffix = NULL) {
   return(file_path)
 }
 
-# Helpers to retain provenance when dynamic mapping over targets
-# Should error if the thing is a tibble, as this will be unpacked.
-# or alternatively handle so it is added to the tibble as a column.
-#' Set name attr
-#'
-#' Attach a stable `name` attribute to vectors or list elements so dynamic branches keep provenance labels.
-#'
-#' @param x Object to annotate with a `name` attribute; lists are processed element-wise.
-#' @param name Attribute value to attach; defaults to the names of `x` for lists.
-#' @return The input object with a `name` attribute attached; lists are returned with attributes set element-wise.
-#' @keywords internal
-
-set_name_attr <- function(x, name = NULL) {
-  if (is.null(name)) {
-    name <- names(x)
-  }
-
-  # vectorize
-  if (is.list(x)) {
-    purrr::map2(
-      .x = x,
-      .y = name,
-      ~ {
-        attr(.x, "name") <- .y
-        .x
-      }
-    )
-  } else {
-    attr(x, "name") <- name
-    x
-  }
-}
-
-# This function should fail if it returns NULL, i.e. no name is set or the custom attribute is not set either.
-get_name_attr <- function(x) {
-  if (identical(class(x), "list")) {
-    purrr::map_chr(x, ~ attr(.x, "name"))
-  } else {
-    attr(x, "name")
-  }
-}
-
 skip_w_dummy_file_if <- function(condition_expr, targets_list, skip_expr = character(0)) {
   # capture (quote) both pieces without evaluating now
   condition_lang <- substitute(condition_expr)

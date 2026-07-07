@@ -8,7 +8,7 @@
 #' @return Character vector with the corresponding `.rds` path under
 #'   `plot_objects`.
 #' @keywords internal
-shared_plot_object_path <- function(image_path) {
+plot_object_path <- function(image_path) {
   image_path |>
     sub("/plots/", "/plot_objects/", x = _, fixed = TRUE) |>
     sub("[.](png|svg)$", ".rds", x = _)
@@ -23,7 +23,7 @@ shared_plot_object_path <- function(image_path) {
 #' @param tag Panel tag.
 #' @return A ggplot object with the requested panel tag.
 #' @keywords internal
-shared_tag_panel <- function(plot, tag) {
+tag_panel <- function(plot, tag) {
   ggplotify::as.ggplot(plot) +
     ggplot2::labs(tag = tag) +
     ggplot2::theme(
@@ -42,7 +42,7 @@ shared_tag_panel <- function(plot, tag) {
 #' @param exclude_regex Optional regular expression excluded from the basename.
 #' @return One image path.
 #' @keywords internal
-shared_pick_plot_path <- function(image_paths, pick_regex = NULL, exclude_regex = NULL) {
+pick_plot_path <- function(image_paths, pick_regex = NULL, exclude_regex = NULL) {
   image_paths <- sort(unlist(image_paths, use.names = FALSE))
 
   if (!is.null(pick_regex) && nzchar(pick_regex)) {
@@ -70,7 +70,7 @@ shared_pick_plot_path <- function(image_paths, pick_regex = NULL, exclude_regex 
 #' @param envir Evaluation environment for plot calls and modifiers.
 #' @return List with `plots` and `caption`.
 #' @keywords internal
-shared_prepare_plot_panels <- function(
+prepare_plot_panels <- function(
   panel_specs,
   figure_theme = ggplot2::theme(),
   show_tags = TRUE,
@@ -96,11 +96,11 @@ shared_prepare_plot_panels <- function(
     if (inherits(plot_or_paths, "ggplot")) {
       plot <- plot_or_paths
     } else {
-      image_path <- shared_pick_plot_path(
+      image_path <- pick_plot_path(
         plot_or_paths,
         pick_regex = pick_regex
       )
-      object_path <- shared_plot_object_path(image_path)
+      object_path <- plot_object_path(image_path)
       if (!file.exists(object_path)) {
         stop("Missing serialized plot object: ", object_path, call. = FALSE)
       }
@@ -128,7 +128,7 @@ shared_prepare_plot_panels <- function(
     }
 
     if (show_tags) {
-      shared_tag_panel(plot, tag)
+      tag_panel(plot, tag)
     } else {
       ggplotify::as.ggplot(plot)
     }
@@ -159,7 +159,7 @@ shared_prepare_plot_panels <- function(
 #' @param envir Evaluation environment for layouts and panel calls.
 #' @return Character vector of written PNG paths.
 #' @keywords internal
-shared_render_figures <- function(
+render_figures <- function(
   panel_specs,
   figure_specs,
   output_dir,
@@ -190,7 +190,7 @@ shared_render_figures <- function(
     ]
     figure_panel_specs$figure_number <- NULL
 
-    prepared_panels <- shared_prepare_plot_panels(
+    prepared_panels <- prepare_plot_panels(
       figure_panel_specs,
       figure_theme = figure_theme,
       show_tags = nrow(figure_panel_specs) > 1L,

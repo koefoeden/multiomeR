@@ -34,7 +34,7 @@ expected_pngs <- file.path(output_dir, paste0(figure_specs$figure_number, ".png"
 stale_pngs <- setdiff(list.files(output_dir, pattern = "[.]png$", full.names = TRUE), expected_pngs)
 unlink(stale_pngs)
 
-shared_render_figures(
+render_figures(
   panel_specs = panel_specs,
   figure_specs = figure_specs,
   output_dir = output_dir

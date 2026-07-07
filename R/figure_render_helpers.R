@@ -57,35 +57,6 @@ shared_pick_plot_path <- function(image_paths, pick_regex = NULL, exclude_regex 
   image_paths[[1]]
 }
 
-#' Read target plot object
-#'
-#' Load a serialized plot object from the structured plot-object sidecar path
-#' matching a target-tracked image path.
-#'
-#' @param target_call Expression that returns one or more target-tracked image
-#'   paths.
-#' @param pick_regex Optional basename regex passed to
-#'   `shared_pick_plot_path()`.
-#' @param exclude_regex Optional basename exclusion regex passed to
-#'   `shared_pick_plot_path()`.
-#' @return A plot object.
-#' @keywords internal
-shared_read_target_plot_object <- function(target_call, pick_regex = NULL, exclude_regex = NULL) {
-  image_paths <- eval.parent(substitute(target_call))
-  image_path <- shared_pick_plot_path(
-    image_paths,
-    pick_regex = pick_regex,
-    exclude_regex = exclude_regex
-  )
-
-  object_path <- shared_plot_object_path(image_path)
-  if (!file.exists(object_path)) {
-    stop("Missing serialized plot object: ", object_path, call. = FALSE)
-  }
-
-  readRDS(object_path)
-}
-
 #' Prepare manuscript figure panels
 #'
 #' Build tagged figure panels and captions from a compact panel specification

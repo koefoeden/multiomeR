@@ -442,36 +442,6 @@ skip_w_dummy_file_if <- function(condition_expr, targets_list, skip_expr = chara
 }
 
 
-#' Tar read inner filename
-#'
-#' Resolve file paths inside a file target, optionally expanding over selected dynamic branches.
-#'
-#' @param name File target name whose stored inner file paths should be read.
-#' @param branches Dynamic branch selection passed through to targets metadata/path resolution.
-#' @param meta Targets metadata table used to locate branch paths; defaults are usually read from the active store.
-#' @param path_store Targets store path containing metadata and file-target objects.
-#' @return Character vector of file paths stored inside the requested file target or branches.
-#' @keywords internal
-
-tar_read_inner_filename <- function(name, branches, meta, path_store) {
-  run_time <- targets:::tar_runtime
-  old_store <- run_time$store
-  run_time$store <- path_store
-  on.exit(run_time$store <- old_store)
-  index <- meta$name == name
-  if (!any(index)) {
-    targets::tar_throw_validate("target ", name, " not found")
-  }
-  row <- meta[max(which(index)), , drop = FALSE] # nolint
-  record <- targets:::record_from_row(row = row, path_store = path_store)
-  targets:::if_any(
-    record$type %in% c("stem", "branch"),
-    targets:::read_builder(record),
-    record$children
-  )
-}
-
-
 # Called by tar_load()
 w_def <- function(packages) {
   targets::tar_option_get("packages") %>%

@@ -45,27 +45,6 @@ get_blacklist_GRanges <- function(genome, annot_hub_interface = NULL) {
   hits[[hit_idx]]
 }
 
-generate_BW_from_bedgraph <- function(input_file_bedgraph, suffix, genome) {
-  output_BW_file <- get_structured_file_path(filetype = "bigWig", override_suffix = suffix)
-
-  chrom_sizes_file <- switch(
-    genome,
-    "mm10" = "resources/mm10.chrom.sizes",
-    "GRCh38" = "resources/GRCh38.chrom.sizes",
-    "GRCm39" = "resources/GRCm39.chrom.sizes",
-    stop("Invalid genome. Must be 'mm10','GRCh38' or 'GRCm39'.")
-  )
-
-  # convert and clean up
-  run_w_error_check(
-    command_string = "bedGraphToBigWig",
-    arguments_chr = c(input_file_bedgraph, chrom_sizes_file, output_BW_file)
-  )
-
-  return(output_BW_file)
-}
-
-
 # Peaks ----
 
 get_standard_chroms <- function(genome) {

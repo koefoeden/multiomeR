@@ -152,7 +152,3 @@ load_interactive_helpers <- function(full = FALSE, force = FALSE) {
 
   invisible(TRUE)
 }
-
-source_Rrofile <- function() {
-  source(file.path(get_project_root(), ".Rprofile"))
-}

@@ -381,31 +381,6 @@ validate_manifest_allowed_values <- function(value, allowed_values, param_name, 
 }
 
 
-get_cfg_per_dataset_tibble <- function(config_file = "cfg_datasets.yaml", verbose = TRUE) {
-  cfg_tibble <- read_dataset_config_tibble(config_file = config_file, verbose = verbose)
-
-  return(cfg_tibble)
-}
-
-
-load_CFG <- function(name) {
-  get_cfg_per_dataset_tibble(verbose = FALSE) %>%
-    dplyr::filter(dataset == name) %>%
-    as.list() %>%
-    purrr::flatten() %>%
-    list2env(envir = .GlobalEnv)
-}
-
-cfg_is_set <- function(x) {
-  !is.null(x) ## , msg = null_cfg_msg)
-}
-
-null_cfg_msg <- " - required cfg-variable not specified in config. Remaining targets are skipped."
-
-assertthat::on_failure(cfg_is_set) <- function(call, env) {
-  paste0(deparse(call$x), null_cfg_msg)
-}
-
 assert_cfg_is_set <- function(x, cfg_var_name = NULL) {
   # This
   cfg_var_name <- rlang::enexpr(x) %||% cfg_var_name
@@ -418,26 +393,10 @@ assert_cfg_is_set <- function(x, cfg_var_name = NULL) {
   }
   message <- stringr::str_glue(
     info_string,
-    "If you do not wish to run this target, specify this in tar_make(names = ...), or add it to cfg_tar_make_skip_regex_patterns and use tar_make_w_cfg_skip_patterns().",
+    "If you do not wish to run this target, exclude it explicitly with tar_make(names = ...).",
     .sep = "\n"
   )
   stop(message)
-}
-
-
-ask_to_continue <- function(type = c("stop", "bool", "break")[1]) {
-  answer <- readline(prompt = "Do you want to continue? (y/n): ")
-
-  if (tolower(answer) %in% c("y", "yes")) {
-    return(invisible(TRUE))
-  } else {
-    switch(
-      type,
-      "stop" = stop("Exiting R session..."),
-      "bool" = return(invisible(FALSE)),
-      "break" = break
-    )
-  }
 }
 
 
@@ -472,55 +431,6 @@ suppress_warnings_matching <- function(expr, pattern, fixed = FALSE, ignore_case
 
 '%!in%' <- function(x, y) !('%in%'(x, y))
 
-
-#' Run shell with glue
-#'
-#' Interpolate and execute an external command with optional clean-environment handling.
-#'
-#' @param command_string Shell command template. `{{...}}` expressions are
-#'   interpolated with `glue::glue()` in the caller environment before running.
-#' @param clean_env Logical; when `TRUE`, run through `clean_env_run.sh` to avoid
-#'   leaking the current R session environment into external tools.
-#' @return The processx result object, or the final command argument when called through `run_w_error_check()` wrappers.
-#' @keywords internal
-
-run_shell_with_glue <- function(command_string, clean_env = FALSE) {
-  command_string_formatted <- glue::glue(
-    stringr::str_replace_all(command_string, "\n", " "),
-    .open = "{{",
-    .close = "}}",
-    .envir = parent.frame()
-  )
-
-  if (clean_env) {
-    # Run in clean environment like run_w_error_check did
-    full_command <- stringr::str_glue("env -i HOME=$HOME bash -lc '{command_string_formatted}'")
-  } else {
-    full_command <- as.character(command_string_formatted)
-  }
-
-  result_list <- processx::run(
-    command = "bash",
-    args = c("-c", full_command),
-    error_on_status = FALSE,
-    stdout = "|",
-    stderr = "|"
-  )
-
-  # Check status manually
-  if (result_list$status != 0) {
-    base::stop(
-      "Command failed (exit code ",
-      result_list$status,
-      "):\n",
-      result_list$stderr,
-      "\nstdout:\n",
-      result_list$stdout
-    )
-  }
-
-  return(result_list)
-}
 
 get_embedding_matrix_from_metadata <- function(metadata_tibble, umap_cols) {
   embedding_matrix <- metadata_tibble |>
@@ -738,102 +648,42 @@ assert_command_on_path <- function(command) {
 run_w_error_check <- function(
   command_string,
   arguments_chr = character(),
-  in_shell = FALSE,
-  conda_env_path = NULL,
-  conda_bin = NULL,
-  in_clean_env = FALSE,
-  in_minimal_env = FALSE,
-  modules = character(),
-  inherited_unnamed_env_vars = c("HOME", "TMPDIR", "MODULEPATH"),
-  new_named_env_vars = character(),
   ...
 ) {
-    processx_inherited_env_vars <- Sys.getenv(inherited_unnamed_env_vars)
-    names(processx_inherited_env_vars) <- inherited_unnamed_env_vars
-    modules <- modules %||% character()
+  assert_command_on_path(command_string)
 
-    if (!is.null(conda_env_path)) {
-      arguments_chr <- c("run", "-p", conda_env_path, "--no-capture-output", command_string, arguments_chr)
-      command_string <- if (is.null(conda_bin)) "conda" else conda_bin
+  result_list <- processx::run(
+    command = command_string,
+    args = arguments_chr,
+    error_on_status = FALSE,
+    stdout_line_callback = function(line, proc) {
+      cat(line, "\n", file = stdout())
+      flush(stdout())
+    },
+    stderr_line_callback = function(line, proc) {
+      cat(line, "\n", file = stderr())
+      flush(stderr())
+    },
+    echo_cmd = TRUE,
+    ...
+  )
+
+  if (result_list$status != 0) {
+    format_process_stream <- function(x) {
+      if (is.null(x) || !nzchar(x)) "<empty>" else x
     }
 
-    use_shell_wrapper <- in_shell || in_minimal_env || length(modules) > 0
-    if (!use_shell_wrapper) {
-      assert_command_on_path(command_string)
-    }
-
-    if (use_shell_wrapper) {
-      wrapped_command_string <- if (in_shell) {
-        stringr::str_flatten(c(command_string, arguments_chr), " ")
-      } else {
-        c(command_string, arguments_chr) %>% shQuote() %>% stringr::str_flatten(" ")
-      }
-      shell_steps <- c(
-        "source /etc/profile.d/modules.sh 2>/dev/null || source /usr/share/Modules/init/bash 2>/dev/null",
-        if (in_minimal_env && length(modules) > 0) "module purge",
-        if (length(modules) > 0) paste("module load --auto", modules %>% shQuote() %>% stringr::str_flatten(" ")),
-        paste("exec", wrapped_command_string)
-      ) %>%
-        purrr::discard(is.null)
-    }
-
-    if (use_shell_wrapper && in_minimal_env) {
-      bash_inherited_env_vars <- processx_inherited_env_vars %>% purrr::imap_vec(~ stringr::str_c(.y, "=", .x))
-      bash_new_env_vars <- stringr::str_c(names(new_named_env_vars), "=", new_named_env_vars)
-      arguments_chr <- c(
-        "-i",
-        bash_inherited_env_vars,
-        bash_new_env_vars,
-        "bash",
-        "--noprofile",
-        "--norc",
-        "-lc",
-        stringr::str_flatten(shell_steps, " && ")
-      )
-      command_string <- stringr::str_c("env")
-    } else if (use_shell_wrapper) {
-      arguments_chr <- c("-lc", stringr::str_flatten(shell_steps, " && "))
-      command_string <- Sys.getenv("SHELL") %||% "bash"
-    }
-    # else if (in_clean_env) {
-    #   arguments_chr <- c("-i", evaluated_env_vars, command_string, arguments_chr)
-    #   command_string <- str_c("env")
-    # }
-
-    result_list <- processx::run(
-      command = command_string,
-      args = arguments_chr,
-      error_on_status = FALSE,
-      stdout_line_callback = function(line, proc) {
-        cat(line, "\n", file = stdout())
-        flush(stdout())
-      },
-      stderr_line_callback = function(line, proc) {
-        cat(line, "\n", file = stderr())
-        flush(stderr())
-      },
-      echo_cmd = TRUE,
-      env = if (in_clean_env && !use_shell_wrapper) c(processx_inherited_env_vars, new_named_env_vars) else NULL, # evaluated_env_vars e
-      ...
+    base::stop(
+      "Command failed (exit code ", result_list$status, "):\n",
+      "Command:\n",
+      stringr::str_flatten(c(command_string, shQuote(arguments_chr)), " "),
+      "\n\nstderr:\n",
+      format_process_stream(result_list$stderr),
+      "\n\nstdout:\n",
+      format_process_stream(result_list$stdout),
+      call. = FALSE
     )
+  }
 
-    # Check status manually
-    if (result_list$status != 0) {
-      format_process_stream <- function(x) {
-        if (is.null(x) || !nzchar(x)) "<empty>" else x
-      }
-
-      base::stop(
-        "Command failed (exit code ", result_list$status, "):\n",
-        "Command:\n",
-        stringr::str_flatten(c(command_string, shQuote(arguments_chr)), " "),
-        "\n\nstderr:\n",
-        format_process_stream(result_list$stderr),
-        "\n\nstdout:\n",
-        format_process_stream(result_list$stdout),
-        call. = FALSE
-      )
-    } else {
-      return(utils::tail(arguments_chr, 1)) # return last argument, which is often the output file)
-    }
+  utils::tail(arguments_chr, 1)
 }

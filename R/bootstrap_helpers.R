@@ -153,18 +153,6 @@ load_interactive_helpers <- function(full = FALSE, force = FALSE) {
   invisible(TRUE)
 }
 
-# TODO: Not cool to overwrite standard targets::tar_make() function - possible renaming?
-tar_make_v2 <- function(names = NULL, ...) {
-  load_project_runtime(force = TRUE)
-  if (base::missing(names)) {
-    tar_make_w_cfg_skip_patterns(...)
-  } else {
-    names_expr <- substitute(names)
-    base::eval(rlang::expr(tar_make_w_cfg_skip_patterns(names = !!names_expr, !!!list(...))))
-  }
-  # targets::tar_make(...)
-}
-
 source_Rrofile <- function() {
   source(file.path(get_project_root(), ".Rprofile"))
 }

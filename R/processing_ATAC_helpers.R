@@ -45,54 +45,6 @@ get_blacklist_GRanges <- function(genome, annot_hub_interface = NULL) {
   hits[[hit_idx]]
 }
 
-#' Get insertion frags awk
-#'
-#' Convert fragment intervals to cut-site insertion BED records and bgzip/index the result.
-#'
-#' @param in_file Input fragment BED/TSV path read by `bash/generate_insertion_frags.sh`.
-#' @param save_path Output bgzipped BED path; a tabix index is created beside it.
-#' @param extend_from_start Number of bases to extend from each fragment start
-#'   when creating insertion records.
-#' @param extend_from_end Number of bases to extend from each fragment end.
-#' @param cores Number of sort/bgzip worker threads requested.
-#' @param RAM_GB Total memory budget used to derive the per-thread GNU sort buffer.
-#' @return The `save_path` string after the bgzipped BED and tabix index have
-#'   been written.
-#' @keywords internal
-
-get_insertion_frags_awk <- function(in_file, save_path, extend_from_start = 25, extend_from_end = extend_from_start, cores, RAM_GB) {
-  tmp_start <- tempfile(fileext = ".tsv")
-  tmp_end <- tempfile(fileext = ".tsv")
-
-  message("Extending starts and ends in parallel...")
-  run_shell_with_glue("bash bash/generate_insertion_frags.sh {{in_file}} {{extend_from_start}} {{extend_from_end}} {{tmp_start}} {{tmp_end}}")
-
-  # sorting setup
-  Sys.setenv(LC_ALL = "C") # speeds up
-
-  buffer_size <- RAM_GB %>%
-    magrittr::divide_by(cores) %>%
-    magrittr::multiply_by(0.5) %>%
-    round() %>%
-    paste0("G") # per sort process, total 50 % of available memory
-
-  message("Concatenating, sorting, bgzipping...")
-  bgzip_bin <- "bgzip"
-  run_shell_with_glue(
-    "cat {{tmp_start}} {{tmp_end}} | sort -S{{buffer_size}} --parallel={{avail_cores}} -k 1,1 -k2,2n | {{bgzip_bin}} -@ {{avail_cores}} > {{save_path}}"
-  )
-
-  message("Indexing...")
-  tabix_bin <- "tabix"
-  run_w_error_check(command_string = tabix_bin, arguments_chr = c("-f", "-p", "bed", save_path))
-
-  # remove temp files
-  fs::file_delete(c(tmp_start, tmp_end))
-
-  return(save_path)
-}
-
-
 generate_BW_from_bedgraph <- function(input_file_bedgraph, suffix, genome) {
   output_BW_file <- get_structured_file_path(filetype = "bigWig", override_suffix = suffix)
 

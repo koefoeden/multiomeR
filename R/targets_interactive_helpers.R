@@ -4,6 +4,14 @@
     stringr::str_remove("_[a-f0-9]{16}$")
 }
 
+load_CFG <- function(name) {
+  read_dataset_config_tibble(verbose = FALSE) |>
+    dplyr::filter(.data$dataset == .env$name) |>
+    as.list() |>
+    purrr::flatten() |>
+    list2env(envir = .GlobalEnv)
+}
+
 .target_traceback <- function(name, store = targets::tar_config_get("store")) {
   if (!is.character(name) || length(name) != 1L) {
     stop("`name` must be a length-one character vector.", call. = FALSE)

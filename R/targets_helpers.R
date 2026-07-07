@@ -18,7 +18,7 @@ tar_name_wo_suffixes <- function(target_name = targets::tar_name()) {
 #' @return A length-one filesystem path, or a directory path when `list_output = TRUE`.
 #' @keywords internal
 
-get_structured_output_path <- skip_invalidate(function(
+get_structured_output_path <- function(
   kind = c("files", "plots"),
   filetype = NULL,
   override_suffix = NULL,
@@ -60,7 +60,7 @@ get_structured_output_path <- skip_invalidate(function(
     return(out_path)
   }
   paste0(out_path, ".", filetype)
-})
+}
 #' Return the preferred graphics device for a file type.
 #'
 #' @keywords internal

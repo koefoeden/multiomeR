@@ -1,11 +1,5 @@
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
-skip_invalidate <- function(fn) {
-  attr(fn, "skip_invalidate") <- TRUE
-  fn
-}
-# assign("skip_invalidate", skip_invalidate, envir = .GlobalEnv) # check if this is really needed.
-
 #' Collapse duplicate names
 #'
 #' Make duplicated list names unique by appending counters while preserving original ordering.
@@ -741,20 +735,19 @@ assert_command_on_path <- function(command) {
   )
 }
 
-run_w_error_check <- skip_invalidate(
-  function(
-    command_string,
-    arguments_chr = character(),
-    in_shell = FALSE,
-    conda_env_path = NULL,
-    conda_bin = NULL,
-    in_clean_env = FALSE,
-    in_minimal_env = FALSE,
-    modules = character(),
-    inherited_unnamed_env_vars = c("HOME", "TMPDIR", "MODULEPATH"),
-    new_named_env_vars = character(),
-    ...
-  ) {
+run_w_error_check <- function(
+  command_string,
+  arguments_chr = character(),
+  in_shell = FALSE,
+  conda_env_path = NULL,
+  conda_bin = NULL,
+  in_clean_env = FALSE,
+  in_minimal_env = FALSE,
+  modules = character(),
+  inherited_unnamed_env_vars = c("HOME", "TMPDIR", "MODULEPATH"),
+  new_named_env_vars = character(),
+  ...
+) {
     processx_inherited_env_vars <- Sys.getenv(inherited_unnamed_env_vars)
     names(processx_inherited_env_vars) <- inherited_unnamed_env_vars
     modules <- modules %||% character()
@@ -843,5 +836,4 @@ run_w_error_check <- skip_invalidate(
     } else {
       return(utils::tail(arguments_chr, 1)) # return last argument, which is often the output file)
     }
-  }
-)
+}

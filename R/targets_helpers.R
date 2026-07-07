@@ -229,6 +229,10 @@ cull_dense_discrete_legends <- function(plot, n_distinct_max) {
   plot + do.call(ggplot2::guides, guide_args)
 }
 
+# Changing this value invalidates plot-saving targets through
+# save_plots_structured()'s default argument.
+multiomeR_save_serialized_plot_objects <- TRUE
+
 #' Save plots structured
 #'
 #' Save one plot or a named list of plots to structured target-derived paths, adding titles and suppressing dense legends where needed.
@@ -246,14 +250,14 @@ cull_dense_discrete_legends <- function(plot, n_distinct_max) {
 #' @return A file path for a single plot, or an output directory path for a list of plots.
 #' @keywords internal
 
-save_plots_structured <- skip_invalidate(function(
+save_plots_structured <- function(
   plots,
   filetype = "png",
   override_suffix = NULL,
   dyn_suffix_in_subdir = FALSE,
   target_name = targets::tar_name(),
   discrete_legend_n_distinct_max = 20,
-  save_serialized_plot_objects = getOption("multiomeR.save_serialized_plot_objects", FALSE),
+  save_serialized_plot_objects = multiomeR_save_serialized_plot_objects,
   ...
 ) {
   save_args <- list(...)
@@ -407,7 +411,7 @@ save_plots_structured <- skip_invalidate(function(
       )
     }
   )
-})
+}
 
 
 get_structured_file_path <- function(filetype = NULL, override_suffix = NULL) {

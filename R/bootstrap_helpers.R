@@ -14,10 +14,6 @@ if (!exists("runtime_options_applied", envir = bootstrap_state_env, inherits = F
   bootstrap_state_env$runtime_options_applied <- FALSE
 }
 
-if (!exists("targets_patches_applied", envir = bootstrap_state_env, inherits = FALSE)) {
-  bootstrap_state_env$targets_patches_applied <- FALSE
-}
-
 if (!exists("controllers_loaded", envir = bootstrap_state_env, inherits = FALSE)) {
   bootstrap_state_env$controllers_loaded <- FALSE
 }
@@ -114,10 +110,6 @@ apply_runtime_options <- function(force = FALSE) {
   ggplot2::theme_update(legend.position = "bottom")
   Sys.setenv("R_MSG_PKG_START_MSG" = "FALSE")
 
-  if (is.null(getOption("multiomeR.save_serialized_plot_objects"))) {
-    options(multiomeR.save_serialized_plot_objects = TRUE)
-  }
-
   targets::tar_option_set(
     error = "trim",
     iteration = "list",
@@ -125,62 +117,6 @@ apply_runtime_options <- function(force = FALSE) {
   )
 
   bootstrap_state_env$runtime_options_applied <- TRUE
-  invisible(TRUE)
-}
-
-#' Apply targets monkey patches
-#'
-#' Patch selected targets internals used by the current workflow bootstrap.
-#'
-#' @param force Logical; TRUE reruns the setup step even when bootstrap state says it has already completed.
-#' @return Invisibly returns after the validation or setup side effect succeeds.
-#' @keywords internal
-
-apply_targets_monkey_patches <- function(force = FALSE) {
-  if (isTRUE(bootstrap_state_env$targets_patches_applied) && !force) {
-    return(invisible(FALSE))
-  }
-
-  tar_format_trace_chr <- deparse(targets:::tar_format_trace) |>
-    stringr::str_c(collapse = "\n") |>
-    stringr::str_replace(
-      stringr::fixed("width <- min(getOption(\"width\"), 79L) - 4L"),
-      "width <- 1000L"
-    )
-
-  tar_format_trace_modified <- parse(text = tar_format_trace_chr) |>
-    eval()
-
-  utils::assignInNamespace(
-    x = "tar_format_trace",
-    value = tar_format_trace_modified,
-    ns = "targets"
-  )
-
-  hash_import_object_modified <- function(value, name, hashes, graph) {
-    if (is.function(value) && (grepl("_noinval$", name) || isTRUE(attr(value, "skip_invalidate")))) {
-      meta <- targets:::meta_init(path_store = targets::tar_config_get("store"))
-      meta$database$ensure_storage()
-      data <- meta$database$read_condensed_data()
-      old_row <- data[data$name == name, , drop = FALSE]
-      meta$database$close()
-
-      if (nrow(old_row) == 1L && !is.na(old_row$data)) {
-        assign(x = name, value = old_row$data, envir = hashes)
-        return(invisible())
-      }
-    }
-
-    UseMethod("hash_import_object", value)
-  }
-
-  utils::assignInNamespace(
-    x = "hash_import_object",
-    value = hash_import_object_modified,
-    ns = "targets"
-  )
-
-  bootstrap_state_env$targets_patches_applied <- TRUE
   invisible(TRUE)
 }
 
@@ -202,7 +138,6 @@ load_project_runtime <- function(force = FALSE) {
   load_project_packages(force = force)
   source_shared_helpers(force = force)
   apply_runtime_options(force = force)
-  apply_targets_monkey_patches(force = force)
   source_crew_controllers(force = force)
   invisible(TRUE)
 }

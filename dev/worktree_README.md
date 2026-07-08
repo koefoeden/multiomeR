@@ -148,10 +148,37 @@ dev/worktree_finish --apply --no-ff
 
 This calls `dev/worktree_merge --no-ff`, then `dev/worktree_promote --apply`.
 
+## Tear Down
+
+After code has been merged and outputs have been promoted, check whether the
+linked worktree can be removed:
+
+```bash
+dev/worktree_teardown
+```
+
+Remove it only after reviewing the dry run:
+
+```bash
+dev/worktree_teardown --apply
+```
+
+Teardown refuses to run unless:
+
+- the worktree has no uncommitted Git changes
+- the experiment branch is already merged into the base checkout
+- base and worktree `outputs/meta/meta` match
+- the recorded base metadata checksum matches the current base store
+- no base or worktree target process appears active
+
+This removes the linked git worktree and releases the scratch active marker. It
+does not delete the scratch store itself.
+
 ## Safety Notes
 
 - Do not promote outputs while a base pipeline run is active.
-- Treat `dev/worktree_promote --apply` as the only destructive step.
+- Treat `dev/worktree_promote --apply` and `dev/worktree_teardown --apply` as
+  the destructive steps.
 - If promotion refuses because base metadata changed, refresh or create a new
   experiment worktree from the new base state.
 - `tar_read()` always reads stored state, even when targets are outdated. Use

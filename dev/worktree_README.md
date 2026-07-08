@@ -135,6 +135,8 @@ Promotion refuses to run if:
 The promotion sync excludes `meta/process` and `outputs/.worktree/`. It also
 does not promote permissions or directory mtimes, so scratch/worktree directory
 metadata does not overwrite shared base-store directory metadata.
+After a successful `--apply`, the recorded base metadata checksum is refreshed
+so the worktree can be reused for another promotion cycle.
 
 ## Convenience Wrapper
 

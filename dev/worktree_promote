@@ -64,6 +64,7 @@ rsync_args=(-a --no-perms --omit-dir-times --delete --delay-updates --exclude='/
 if [ "$apply" = true ]; then
   echo "Promoting worktree outputs into base outputs:"
   rsync "${rsync_args[@]}" "$worktree/outputs/" "$base/outputs/"
+  sha256sum "$base/outputs/meta/meta" >"$worktree/outputs/.worktree/base_outputs_meta.sha256"
 else
   echo "Dry run. Re-run with --apply to promote outputs."
   rsync -ni "${rsync_args[@]}" "$worktree/outputs/" "$base/outputs/"

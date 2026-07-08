@@ -779,7 +779,6 @@ rlang::list2(
       name = peak_TF_motif_matrix.ATAC, # TODO: this runs quite slowly for large peak sets - consider looking into faster alternatives.
       description = "Match TF motifs to ATAC peaks for reuse by betterChromVAR [part_of_graph:ATAC] [part_of_graph:seurat_export]",
       command = {
-        ATAC_marker_TFs_list
         get_motif_matrix_from_ATAC_peak_names(
           ATAC_peak_names = rownames(consensus_peak_BPCells_matrix.ATAC),
           ATAC_peak_GRanges = consensus_peak_GRanges.ATAC,
@@ -851,7 +850,6 @@ rlang::list2(
       name = motif_chromVAR_chunk_results.ATAC,
       description = "Compute per-cell TF motif accessibility scores for one reusable ATAC chunk",
       command = {
-        ATAC_marker_TFs_list
         compute_chromVAR_annotation_chunk_result(
           annotations = chromVAR_TF_motif_matrix.ATAC,
           chromVAR_obj = chromVAR_obj.ATAC,

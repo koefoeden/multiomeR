@@ -60,7 +60,7 @@ active_targets_process "$base/outputs" &&
 active_targets_process "$worktree/outputs" &&
   die "Worktree targets process appears active: $worktree/outputs/meta/process"
 
-rsync_args=(-a --delete --delay-updates --exclude='/meta/process' --exclude='/.worktree/')
+rsync_args=(-a --no-perms --omit-dir-times --delete --delay-updates --exclude='/meta/process' --exclude='/.worktree/')
 if [ "$apply" = true ]; then
   echo "Promoting worktree outputs into base outputs:"
   rsync "${rsync_args[@]}" "$worktree/outputs/" "$base/outputs/"

@@ -132,7 +132,9 @@ Promotion refuses to run if:
 - base `outputs/meta/process` appears to point to a live target process
 - worktree `outputs/meta/process` appears to point to a live target process
 
-The promotion sync excludes `meta/process` and `outputs/.worktree/`.
+The promotion sync excludes `meta/process` and `outputs/.worktree/`. It also
+does not promote permissions or directory mtimes, so scratch/worktree directory
+metadata does not overwrite shared base-store directory metadata.
 
 ## Convenience Wrapper
 

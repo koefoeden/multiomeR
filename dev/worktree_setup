@@ -6,7 +6,7 @@ usage() {
 Usage: dev/worktree_setup [label]
 
 Create a sibling worktree for pipeline experiments:
-  - refresh ../multiomeR_outputs_scratch_<label> from base outputs/
+  - refresh the first free ../multiomeR_outputs_scratch_* from base outputs/
   - hardlink that scratch store into worktree outputs/
   - symlink .pixi from the base checkout
 
@@ -46,6 +46,44 @@ first_free_slot() {
     slot=$((slot + 1))
   done
   printf '%s\n' "$slot"
+}
+
+scratch_active_worktree() {
+  local scratch_dir=$1
+  local marker=$scratch_dir/.worktree_active
+  [ -f "$marker" ] || return 1
+  sed -n '1p' "$marker"
+}
+
+scratch_worktree_is_active() {
+  local active_worktree=$1
+  git -C "$base" worktree list --porcelain | grep -Fxq "worktree $active_worktree"
+}
+
+first_free_scratch() {
+  local parent=$1
+  local base_name=$2
+  local scratch_dir active_worktree slot
+
+  for scratch_dir in "$parent/${base_name}_outputs_scratch_"*; do
+    [ -d "$scratch_dir" ] || continue
+    active_worktree=$(scratch_active_worktree "$scratch_dir" || true)
+    if [ -z "$active_worktree" ]; then
+      printf '%s\n' "$scratch_dir"
+      return
+    fi
+    if scratch_worktree_is_active "$active_worktree"; then
+      continue
+    fi
+    printf '%s\n' "$scratch_dir"
+    return
+  done
+
+  slot=1
+  while [ -e "$parent/${base_name}_outputs_scratch_${slot}" ]; do
+    slot=$((slot + 1))
+  done
+  printf '%s\n' "$parent/${base_name}_outputs_scratch_${slot}"
 }
 
 skip_tracked_path() {
@@ -91,16 +129,16 @@ slug=$(slugify "$label")
 branch=${WORKTREE_BRANCH:-codex/worktree-${slug}}
 base_ref=${WORKTREE_BASE_REF:-HEAD}
 worktree=${WORKTREE_PATH:-$parent/${base_name}_worktree_${slug}}
-scratch=${WORKTREE_SCRATCH:-$parent/${base_name}_outputs_scratch_${slug}}
+scratch=${WORKTREE_SCRATCH:-$(first_free_scratch "$parent" "$base_name")}
 active_marker=$scratch/.worktree_active
 
 [ -d "$base/outputs" ] || die "Base outputs store not found: $base/outputs"
 [ -d "$base/.pixi" ] || die "Base pixi environment not found: $base/.pixi"
 [ ! -e "$worktree" ] || die "Worktree path already exists: $worktree"
 
-if [ -f "$active_marker" ]; then
-  active_worktree=$(sed -n '1p' "$active_marker")
-  if git -C "$base" worktree list --porcelain | grep -Fxq "worktree $active_worktree"; then
+active_worktree=$(scratch_active_worktree "$scratch" || true)
+if [ -n "$active_worktree" ]; then
+  if scratch_worktree_is_active "$active_worktree"; then
     die "Scratch store is already assigned to active worktree: $active_worktree"
   fi
   echo "warning: ignoring stale scratch marker for missing worktree: $active_worktree" >&2

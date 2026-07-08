@@ -36,17 +36,22 @@ they are tracked by Git. This keeps local base wiring such as
 From the base checkout:
 
 ```bash
-dev/worktree_setup 1
+dev/worktree_setup marker-tfs
 ```
 
 This creates sibling paths such as:
 
 ```text
-../multiomeR_worktree_1
+../multiomeR_worktree_marker-tfs
 ../multiomeR_outputs_scratch_1
 ```
 
-The label is optional. Without a label, the first free numeric slot is used.
+The label names the worktree and default branch only. Scratch stores are a
+reusable pool: setup uses the first existing scratch directory whose active
+marker does not point to a live git worktree, regardless of the label. If no
+free scratch store exists, it creates the first free numeric scratch path.
+
+Without a label, the first free numeric worktree label is used.
 
 Useful overrides:
 

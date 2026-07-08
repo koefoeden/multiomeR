@@ -81,7 +81,12 @@ EOF
 
 if [ "$apply" = true ]; then
   cd "$base"
-  git worktree remove --force "$worktree"
+  git worktree remove --force "$worktree" || {
+    if git worktree list --porcelain | grep -Fxq "worktree $worktree"; then
+      exit 1
+    fi
+    rm -rf "$worktree"
+  }
   if [ -f "$active_marker" ] && [ "$(sed -n '1p' "$active_marker")" = "$worktree" ]; then
     rm -f "$active_marker"
   fi

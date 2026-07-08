@@ -19,7 +19,7 @@ This workflow keeps base outputs isolated:
 2. The worktree gets `outputs/` as hardlinks to that scratch store, not to base.
 3. The worktree gets `.pixi` as a symlink to the base environment.
 4. The worktree gets local runtime paths from the base checkout:
-   `example_data` is symlinked and `crew_controllers.R` is copied as-is.
+   `example_data` is hardlinked and `crew_controllers.R` is copied as-is.
 5. The worktree can run `targets::tar_make()` normally and only rerun outdated
    targets according to its own code and output metadata.
 6. Output promotion back to base is a separate guarded step.

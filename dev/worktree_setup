@@ -60,11 +60,7 @@ mirror_base_runtime_path() {
 
   rm -rf "$worktree/$rel"
   mkdir -p "$(dirname "$worktree/$rel")"
-  if [ -d "$base/$rel" ] && [ ! -L "$base/$rel" ]; then
-    ln -s "$base/$rel" "$worktree/$rel"
-  else
-    cp -a "$base/$rel" "$worktree/$rel"
-  fi
+  cp -al "$base/$rel" "$worktree/$rel"
   skip_tracked_path "$rel"
   printf '%s\n' "$rel" >>"$(git -C "$worktree" rev-parse --git-path info/exclude)"
 }

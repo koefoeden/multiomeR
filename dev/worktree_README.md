@@ -18,12 +18,18 @@ This workflow keeps base outputs isolated:
    `base/outputs/` with `rsync`.
 2. The worktree gets `outputs/` as hardlinks to that scratch store, not to base.
 3. The worktree gets `.pixi` as a symlink to the base environment.
-4. The worktree can run `targets::tar_make()` normally and only rerun outdated
+4. The worktree gets local runtime paths from the base checkout:
+   `example_data` is symlinked and `crew_controllers.R` is copied as-is.
+5. The worktree can run `targets::tar_make()` normally and only rerun outdated
    targets according to its own code and output metadata.
-5. Output promotion back to base is a separate guarded step.
+6. Output promotion back to base is a separate guarded step.
 
 If a worktree mutates hardlinked files in place, only the scratch store can be
 affected. The base store is touched only by `dev/worktree_promote --apply`.
+
+The runtime paths are marked `skip-worktree` in the experiment worktree when
+they are tracked by Git. This keeps local base wiring such as
+`crew_controllers.R` faithful without making the experiment branch dirty.
 
 ## Create A Worktree
 

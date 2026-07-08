@@ -48,6 +48,27 @@ first_free_slot() {
   printf '%s\n' "$slot"
 }
 
+skip_tracked_path() {
+  local rel=$1
+  git -C "$worktree" ls-files -z -- "$rel" |
+    xargs -0 -r git -C "$worktree" update-index --skip-worktree --
+}
+
+mirror_base_runtime_path() {
+  local rel=$1
+  [ -e "$base/$rel" ] || [ -L "$base/$rel" ] || return 0
+
+  rm -rf "$worktree/$rel"
+  mkdir -p "$(dirname "$worktree/$rel")"
+  if [ -d "$base/$rel" ] && [ ! -L "$base/$rel" ]; then
+    ln -s "$base/$rel" "$worktree/$rel"
+  else
+    cp -a "$base/$rel" "$worktree/$rel"
+  fi
+  skip_tracked_path "$rel"
+  printf '%s\n' "$rel" >>"$(git -C "$worktree" rev-parse --git-path info/exclude)"
+}
+
 if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
   usage
   exit 0
@@ -123,6 +144,8 @@ else
   git -C "$base" worktree add -b "$branch" "$worktree" "$base_ref"
 fi
 
+mirror_base_runtime_path example_data
+mirror_base_runtime_path crew_controllers.R
 ln -s "$base/.pixi" "$worktree/.pixi"
 printf '.pixi\n' >>"$(git -C "$worktree" rev-parse --git-path info/exclude)"
 cp -al "$scratch" "$worktree/outputs"

@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage: dev/worktree_promote [--apply]
+
+Run from an experiment worktree. Dry-runs by default. With --apply, rsyncs
+worktree outputs/ into the recorded base outputs/ if base outputs metadata has
+not changed and no base/worktree target run appears active.
+USAGE
+}
+
+die() {
+  echo "error: $*" >&2
+  exit 1
+}
+
+read_record() {
+  awk -F '\t' -v key="$1" '$1 == key {print $2; exit}' "$record"
+}
+
+active_targets_process() {
+  local store=$1
+  local process_file=$store/meta/process
+  local pid
+  [ -f "$process_file" ] || return 1
+  pid=$(awk -F '|' '$1 == "pid" {print $2; exit}' "$process_file")
+  [ -n "$pid" ] || return 1
+  kill -0 "$pid" 2>/dev/null
+}
+
+apply=false
+if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+  usage
+  exit 0
+elif [ "${1:-}" = "--apply" ]; then
+  apply=true
+  shift
+fi
+[ "$#" -eq 0 ] || die "Unexpected argument(s): $*"
+
+worktree=$(git rev-parse --show-toplevel)
+worktree=$(cd "$worktree" && pwd -P)
+record=$worktree/outputs/.worktree/setup.tsv
+[ -f "$record" ] || die "Missing worktree record: $record"
+
+base=$(read_record base)
+recorded_worktree=$(read_record worktree)
+
+[ "$worktree" = "$recorded_worktree" ] || die "Current checkout is not the recorded worktree: $recorded_worktree"
+[ -d "$base/outputs" ] || die "Base outputs store not found: $base/outputs"
+[ -f "$worktree/outputs/.worktree/base_outputs_meta.sha256" ] || die "Missing recorded base outputs checksum."
+
+sha256sum -c "$worktree/outputs/.worktree/base_outputs_meta.sha256" >/dev/null ||
+  die "Base outputs/meta/meta changed since setup; refusing to promote outputs."
+
+active_targets_process "$base/outputs" &&
+  die "Base targets process appears active: $base/outputs/meta/process"
+active_targets_process "$worktree/outputs" &&
+  die "Worktree targets process appears active: $worktree/outputs/meta/process"
+
+rsync_args=(-a --delete --delay-updates --exclude='/meta/process' --exclude='/.worktree/')
+if [ "$apply" = true ]; then
+  echo "Promoting worktree outputs into base outputs:"
+  rsync "${rsync_args[@]}" "$worktree/outputs/" "$base/outputs/"
+else
+  echo "Dry run. Re-run with --apply to promote outputs."
+  rsync -ni "${rsync_args[@]}" "$worktree/outputs/" "$base/outputs/"
+fi

@@ -1,0 +1,171 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage: dev/worktree_setup [label]
+
+Create a sibling worktree for pipeline experiments:
+  - refresh ../multiomeR_outputs_scratch_<label> from base outputs/
+  - hardlink that scratch store into worktree outputs/
+  - symlink .pixi from the base checkout
+
+LABEL defaults to the first free numeric slot.
+
+Environment overrides:
+  WORKTREE_BRANCH
+  WORKTREE_BASE_REF
+  WORKTREE_PATH
+  WORKTREE_SCRATCH
+  WORKTREE_RSYNC_BWLIMIT  default: 50M
+  WORKTREE_RSYNC_RUNNER  local|srun, default: local
+  WORKTREE_SRUN_ARGS     only used with WORKTREE_RSYNC_RUNNER=srun
+USAGE
+}
+
+die() {
+  echo "error: $*" >&2
+  exit 1
+}
+
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || die "Missing required command: $1"
+}
+
+slugify() {
+  printf '%s' "$1" |
+    tr '[:upper:]' '[:lower:]' |
+    sed -E 's/[^a-z0-9._-]+/-/g; s/^-+//; s/-+$//'
+}
+
+first_free_slot() {
+  local parent=$1
+  local base_name=$2
+  local slot=1
+  while [ -e "$parent/${base_name}_worktree_${slot}" ]; do
+    slot=$((slot + 1))
+  done
+  printf '%s\n' "$slot"
+}
+
+if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+  usage
+  exit 0
+fi
+
+require_command git
+require_command rsync
+require_command cp
+require_command sed
+require_command sha256sum
+
+base=$(git rev-parse --show-toplevel)
+base=$(cd "$base" && pwd -P)
+parent=$(dirname "$base")
+base_name=$(basename "$base")
+
+label=${1:-}
+if [ -z "$label" ]; then
+  label=$(first_free_slot "$parent" "$base_name")
+fi
+slug=$(slugify "$label")
+[ -n "$slug" ] || die "LABEL did not contain usable characters: $label"
+
+branch=${WORKTREE_BRANCH:-codex/worktree-${slug}}
+base_ref=${WORKTREE_BASE_REF:-HEAD}
+worktree=${WORKTREE_PATH:-$parent/${base_name}_worktree_${slug}}
+scratch=${WORKTREE_SCRATCH:-$parent/${base_name}_outputs_scratch_${slug}}
+active_marker=$scratch/.worktree_active
+
+[ -d "$base/outputs" ] || die "Base outputs store not found: $base/outputs"
+[ -d "$base/.pixi" ] || die "Base pixi environment not found: $base/.pixi"
+[ ! -e "$worktree" ] || die "Worktree path already exists: $worktree"
+
+if [ -f "$active_marker" ]; then
+  active_worktree=$(sed -n '1p' "$active_marker")
+  if git -C "$base" worktree list --porcelain | grep -Fxq "worktree $active_worktree"; then
+    die "Scratch store is already assigned to active worktree: $active_worktree"
+  fi
+  echo "warning: ignoring stale scratch marker for missing worktree: $active_worktree" >&2
+fi
+
+mkdir -p "$scratch"
+
+echo "Refreshing scratch outputs:"
+echo "  from: $base/outputs/"
+echo "  to:   $scratch/"
+rsync_bwlimit=${WORKTREE_RSYNC_BWLIMIT:-50M}
+echo "  bwlimit: $rsync_bwlimit"
+rsync_args=(
+  -a --delete --delete-excluded --delay-updates
+  --bwlimit="$rsync_bwlimit"
+  --exclude='/meta/process'
+  "$base/outputs/" "$scratch/"
+)
+case ${WORKTREE_RSYNC_RUNNER:-local} in
+  local)
+    rsync "${rsync_args[@]}"
+    ;;
+  srun)
+    require_command srun
+    srun_args=${WORKTREE_SRUN_ARGS:---cpus-per-task=1 --mem=8G --time=04:00:00}
+    read -r -a srun_args_array <<<"$srun_args"
+    srun "${srun_args_array[@]}" rsync "${rsync_args[@]}"
+    ;;
+  *)
+    die "WORKTREE_RSYNC_RUNNER must be local or srun"
+    ;;
+esac
+
+if git -C "$base" show-ref --verify --quiet "refs/heads/$branch"; then
+  git -C "$base" worktree add "$worktree" "$branch"
+else
+  git -C "$base" worktree add -b "$branch" "$worktree" "$base_ref"
+fi
+
+ln -s "$base/.pixi" "$worktree/.pixi"
+printf '.pixi\n' >>"$(git -C "$worktree" rev-parse --git-path info/exclude)"
+cp -al "$scratch" "$worktree/outputs"
+
+record_dir=$worktree/outputs/.worktree
+mkdir -p "$record_dir"
+{
+  printf 'label\t%s\n' "$label"
+  printf 'slug\t%s\n' "$slug"
+  printf 'created_at\t%s\n' "$(date --iso-8601=seconds)"
+  printf 'base\t%s\n' "$base"
+  printf 'worktree\t%s\n' "$worktree"
+  printf 'scratch\t%s\n' "$scratch"
+  printf 'branch\t%s\n' "$branch"
+  printf 'base_ref\t%s\n' "$base_ref"
+  printf 'base_head\t%s\n' "$(git -C "$base" rev-parse HEAD)"
+} >"$record_dir/setup.tsv"
+
+git -C "$base" status --short >"$record_dir/base_git_status.txt"
+git -C "$base" worktree list --porcelain >"$record_dir/base_worktrees.txt"
+if [ -f "$base/outputs/meta/meta" ]; then
+  sha256sum "$base/outputs/meta/meta" >"$record_dir/base_outputs_meta.sha256"
+fi
+if [ -f "$base/outputs/meta/process" ]; then
+  cp "$base/outputs/meta/process" "$record_dir/base_meta_process"
+  echo "warning: base outputs had meta/process; recorded it but did not copy it into scratch." >&2
+fi
+
+printf '%s\n' "$worktree" >"$active_marker"
+
+cat <<EOF
+
+Worktree ready.
+
+  worktree: $worktree
+  scratch:  $scratch
+  branch:   $branch
+
+Run:
+
+  cd "$worktree"
+  pixi run Rscript - <<'RSCRIPT'
+  targets::tar_make()
+  RSCRIPT
+
+EOF

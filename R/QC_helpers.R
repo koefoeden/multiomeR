@@ -267,8 +267,10 @@ plot_marker_expression_dot_BPCells <- function(feature_matrix, metadata_tibble, 
     source = log_norm_matrix,
     features = features,
     groups = metadata[[group_col]],
+    group_order = levels(as.factor(metadata[[group_col]])),
     gene_mapping = NULL
-  )
+  ) +
+    ggplot2::labs(y = group_col)
 }
 
 #' Plot marker gene activity dot BPCells
@@ -298,9 +300,10 @@ plot_marker_gene_activity_dot_BPCells <- function(feature_matrix, metadata_tibbl
     source = BPCells::log1p_slow(feature_matrix[, metadata$barcode_w_prefix, drop = FALSE]),
     features = features,
     groups = metadata[[group_col]],
-    group_order = unique(metadata[[group_col]]),
+    group_order = levels(as.factor(metadata[[group_col]])),
     gene_mapping = NULL
-  )
+  ) +
+    ggplot2::labs(y = group_col)
 }
 
 #' Plot module scores dot for metadata
@@ -331,7 +334,7 @@ plot_module_scores_dot_for_metadata <- function(metadata_tibble, marker_genes_li
     ) |>
     dplyr::mutate(
       module = factor(.data$module, levels = module_names),
-      cluster = factor(.data[[cluster_by]], levels = unique(metadata_tibble[[cluster_by]]))
+      cluster = factor(.data[[cluster_by]], levels = levels(as.factor(metadata_tibble[[cluster_by]])))
     )
 
   plot_tibble |>
@@ -344,19 +347,18 @@ plot_module_scores_dot_for_metadata <- function(metadata_tibble, marker_genes_li
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
 }
 
-#' Plot feature scores dot from matrix
+#' Plot feature scores heatmap from matrix
 #'
-#' Summarize feature-matrix scores by metadata group in a dot plot.
+#' Summarize feature-matrix scores by metadata group in a heatmap.
 #'
 #' @param feature_matrix Feature-by-cell matrix-like object with row names as feature IDs and column names as cell barcodes.
 #' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
 #' @param features Character vector of feature names to extract from the matrix row names; missing features are handled by the called helper.
 #' @param group_col Single metadata column name used to group cells, samples, or features.
-#' @param positive_threshold Value above which a feature/module score is counted as positive in dot-plot summaries.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
-plot_feature_scores_dot_from_matrix <- function(feature_matrix, metadata_tibble, features, group_col, positive_threshold = 0) {
+plot_feature_scores_heatmap_from_matrix <- function(feature_matrix, metadata_tibble, features, group_col) {
   requested_features <- features
   if (length(requested_features) == 0) {
     return(
@@ -386,20 +388,18 @@ plot_feature_scores_dot_from_matrix <- function(feature_matrix, metadata_tibble,
     tidyr::pivot_longer(cols = dplyr::all_of(features), names_to = "feature", values_to = "score") |>
     dplyr::summarise(
       mean_score = mean(.data$score),
-      pct_positive = 100 * mean(.data$score > positive_threshold),
       .by = c("group", "feature")
     ) |>
     dplyr::mutate(
       feature = factor(.data$feature, levels = features),
-      group = factor(.data$group, levels = unique(metadata[[group_col]]))
+      group = factor(.data$group, levels = levels(as.factor(metadata[[group_col]])))
     )
 
   plot_tibble |>
-    ggplot2::ggplot(ggplot2::aes(x = .data$feature, y = .data$group, color = .data$mean_score, size = .data$pct_positive)) +
-    ggplot2::geom_point() +
-    ggplot2::scale_size_area(limits = c(0, 100), max_size = 7) +
-    ggplot2::scale_color_gradient2(low = "#B2182B", mid = "white", high = "#2166AC", midpoint = 0) +
-    ggplot2::labs(x = "Feature", y = group_col, color = "Mean score", size = "% score > 0") +
+    ggplot2::ggplot(ggplot2::aes(x = .data$feature, y = .data$group, fill = .data$mean_score)) +
+    ggplot2::geom_tile(color = "grey90", linewidth = 0.2) +
+    ggplot2::scale_fill_gradient2(low = "#B2182B", mid = "white", high = "#2166AC", midpoint = 0) +
+    ggplot2::labs(x = "Feature", y = group_col, fill = "Mean score") +
     ggplot2::theme_classic() +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
 }

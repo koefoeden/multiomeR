@@ -6,28 +6,191 @@ load_project_runtime()
 
 library(patchwork)
 
-figure_2_UMAP_modifier <- NA
+minimal_UMAP_theme <- ggplot2::theme(
+  axis.title = ggplot2::element_blank(),
+  axis.text = ggplot2::element_blank(),
+  axis.ticks = ggplot2::element_blank(),
+  plot.title = ggplot2::element_blank()
+)
+
+read_minimal_UMAP <- function(plot_paths, pick_regex, title, show_legend = FALSE) {
+  image_path <- pick_plot_path(plot_paths, pick_regex = pick_regex)
+  plot <- readRDS(plot_object_path(image_path)) +
+    minimal_UMAP_theme +
+    ggplot2::labs(title = title) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(hjust = 0.5, size = 8, face = "bold"),
+      plot.margin = ggplot2::margin(1, 1, 1, 1)
+    )
+  if (show_legend) {
+    plot + ggplot2::guides(colour = ggplot2::guide_legend(nrow = 1, title = NULL))
+  } else {
+    plot + ggplot2::guides(colour = "none")
+  }
+}
+
+figure_2_UMAP_panel <- function() {
+  UMAPs <- read_minimal_UMAP(
+    targets::tar_read(harmony.categorical.UMAPs.GEX.PBMC_human_6x),
+    "PCA_harmony_SNN_cluster_cell_type",
+    "GEX"
+  ) |
+    read_minimal_UMAP(
+      targets::tar_read(categorical.UMAPs.ATAC.PBMC_human_6x),
+      "LSI_harmony_SNN_cluster_cell_type",
+      "ATAC"
+    ) |
+    read_minimal_UMAP(
+      targets::tar_read(categorical.UMAPs.WNN.PBMC_human_6x),
+      "WNN_harmony_SNN_cluster_cell_type",
+      "WNN",
+      show_legend = TRUE
+    )
+
+  (patchwork::guide_area() / UMAPs) +
+    patchwork::plot_layout(heights = c(0.12, 1), guides = "collect") &
+    ggplot2::theme(
+      legend.position = "top",
+      legend.direction = "horizontal",
+      legend.justification = "center",
+      legend.text = ggplot2::element_text(size = 7),
+      legend.key.size = grid::unit(3, "mm")
+    )
+}
+
+figure_2_TF_activity_panel <- function(plot) {
+  plot +
+    ggplot2::labs(y = "Cell type") +
+    ggplot2::scale_x_discrete(labels = \(labels) sub("_+MA.*$", "", labels)) +
+    ggplot2::guides(
+      fill = ggplot2::guide_colorbar(
+        title.position = "top",
+        barheight = grid::unit(18, "mm"),
+        barwidth = grid::unit(3, "mm")
+      )
+    ) +
+    ggplot2::theme(
+      legend.key.size = grid::unit(2.5, "mm"),
+      legend.text = ggplot2::element_text(size = 6),
+      legend.title = ggplot2::element_text(size = 6),
+      legend.spacing.y = grid::unit(0, "mm"),
+      legend.box.spacing = grid::unit(0, "mm"),
+      legend.margin = ggplot2::margin(0, 0, 0, 0)
+    )
+}
+
+figure_2_peak_gene_link_panel <- function(plot) {
+  plot +
+    ggplot2::labs(x = NULL, y = "Insertions") +
+    patchwork::plot_annotation(title = NULL) &
+    ggplot2::guides(colour = "none") &
+    ggplot2::theme(
+      axis.title.x = ggplot2::element_blank(),
+      axis.text.x = ggplot2::element_blank(),
+      axis.ticks.x = ggplot2::element_blank()
+    )
+}
+
+strip_GWAS_author_year_suffix <- function(GWAS_ID) {
+  sub("_[^_]+[0-9]{4}$", "", as.character(GWAS_ID))
+}
+
+figure_2_GWAS_heatmap_panel <- function(plot) {
+  score_data <- plot$data
+  category_data <- plot$patches$plots[[1]]$patches$plots[[1]]$data
+  row_levels <- levels(score_data$GWAS_ID)
+
+  category_data$GWAS_ID <- factor(as.character(category_data$GWAS_ID), levels = row_levels)
+
+  category_plot <- ggplot2::ggplot(
+    category_data,
+    ggplot2::aes(x = "Category", y = .data$GWAS_ID, fill = .data$Category)
+  ) +
+    ggplot2::geom_tile() +
+    ggplot2::scale_y_discrete(
+      drop = FALSE,
+      labels = strip_GWAS_author_year_suffix
+    ) +
+    ggplot2::scale_fill_manual(
+      values = make_named_heatmap_palette(category_data$Category, "Set3"),
+      name = "Category",
+      guide = ggplot2::guide_legend(
+        ncol = 1,
+        title.position = "top"
+      )
+    ) +
+    ggplot2::labs(x = NULL, y = NULL) +
+    ggplot2::theme_minimal(base_size = 7) +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_blank(),
+      axis.ticks.x = ggplot2::element_blank(),
+      axis.text.y = ggplot2::element_text(size = 6),
+      panel.grid = ggplot2::element_blank(),
+      legend.position = "bottom",
+      plot.margin = ggplot2::margin(1, 1, 1, 1)
+    )
+
+  score_plot <- ggplot2::ggplot(
+    score_data,
+    ggplot2::aes(x = .data$cluster, y = .data$GWAS_ID, fill = .data$median_score)
+  ) +
+    ggplot2::geom_tile(color = "grey90", linewidth = 0.15) +
+    ggplot2::scale_y_discrete(drop = FALSE) +
+    ggplot2::scale_fill_gradient2(
+      low = "#3B4CC0",
+      mid = "white",
+      high = "#B40426",
+      midpoint = 0,
+      name = "Score",
+      guide = ggplot2::guide_colorbar(
+        title.position = "top",
+        title.hjust = 0.5,
+        barwidth = grid::unit(18, "mm"),
+        barheight = grid::unit(3, "mm")
+      )
+    ) +
+    ggplot2::labs(x = NULL, y = NULL) +
+    ggplot2::theme_minimal(base_size = 7) +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, vjust = 1, size = 6),
+      axis.text.y = ggplot2::element_blank(),
+      axis.ticks.y = ggplot2::element_blank(),
+      panel.grid = ggplot2::element_blank(),
+      legend.position = "bottom",
+      plot.margin = ggplot2::margin(1, 1, 1, 1)
+    )
+
+  (category_plot | score_plot) +
+    patchwork::plot_layout(widths = c(0.9, 3), guides = "collect") &
+    ggplot2::theme(
+      legend.position = "bottom",
+      legend.direction = "horizontal",
+      legend.text = ggplot2::element_text(size = 6),
+      legend.title = ggplot2::element_text(size = 6),
+      legend.key.size = grid::unit(2.5, "mm"),
+      legend.box.spacing = grid::unit(0, "mm"),
+      legend.margin = ggplot2::margin(0, 0, 0, 0)
+    )
+}
 
 output_dir <- "manuscript_figures/outputs/combined_targets_output_figures"
 
 panel_specs <- tibble::tribble(
-  ~figure_number , ~tag , ~plot_call                                                                                                                  , ~pick_regex                          , ~title        , ~caption                                                                                                                              , ~plot_modifier                              ,
-  "S1"           , "A"  , quote(targets::tar_read(categorical.UMAPs.WNN.PBMC_human_6x))                                                               , "WNN_harmony_SNN_cluster_cell_type"  , NA_character_ , "UMAP embedding derived from native RNA+ATAC weighted-nearest-neighbor graph. Nuclei are colored by cluster-level cell type labels."  , NA                                          ,
-  "S1"           , "B"  , quote(targets::tar_read(markers_dot_plot.GEX.PBMC_human_6x))                                                                , NA_character_                        , NA_character_ , "Expression of canonical marker genes across cell types."                                                                             , quote(plot + ggplot2::labs(y = "celltype")) ,
-  "S1"           , "C"  , quote(targets::tar_read(coverage_tracks_plots.ATAC.PBMC_human_6x))                                                          , "MS4A1"                              , NA_character_ , "Chromatin accessibility track at the MS4A1 locus."                                                                                   , NA                                          ,
-  "2"            , "A"  , quote(targets::tar_read(harmony.categorical.UMAPs.GEX.PBMC_human_6x))                                                       , "PCA_harmony_SNN_cluster_cell_type"  , NA_character_ , "RNA UMAP colored by GEX-derived cluster-level cell type labels."                                                                     , figure_2_UMAP_modifier                      ,
-  "2"            , "B"  , quote(targets::tar_read(categorical.UMAPs.ATAC.PBMC_human_6x))                                                              , "LSI_harmony_SNN_cluster_cell_type"  , NA_character_ , "ATAC UMAP colored by ATAC-derived cluster-level cell type labels."                                                                   , figure_2_UMAP_modifier                      ,
-  "2"            , "C"  , quote(targets::tar_read(categorical.UMAPs.WNN.PBMC_human_6x))                                                               , "WNN_harmony_SNN_cluster_cell_type"  , NA_character_ , "WNN UMAP colored by multimodal cluster-level cell type labels."                                                                      , figure_2_UMAP_modifier                      ,
-  "2"            , "D"  , quote(targets::tar_read(TF_activity_dot_plot.ATAC.PBMC_human_6x))                                                           , NA_character_                        , NA_character_ , "ChromVAR transcription-factor activity scores for configured PBMC marker TFs."                                                        , NA                                          ,
-  "2"            , "E"  , quote(targets::tar_read(peak_gene_correlation_top_link_ATAC_tracks_plots.peak_gene_correlation.WNN.PBMC_human_6x))           , "B_rank001_ODF2[.]AS1_chr9"          , NA_character_ , "Example top peak-gene link with ATAC accessibility and loop track."                                                                  , NA                                          ,
-  "2"            , "F"  , quote(targets::tar_read(TRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x))                , "MultipleSclerosis_IMSGC2019"        , NA_character_ , "SCAVENGE trait relevance scores for multiple sclerosis projected onto the WNN UMAP."                                                 , figure_2_UMAP_modifier                      ,
-  "2"            , "G"  , quote(targets::tar_read(ZScores_heatmap.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x))                           , NA_character_                        , NA_character_ , "Pseudobulk GWAS chromVAR Z-scores across PBMC cell types and GWAS traits."                                                           , NA                                          ,
+  ~figure_number , ~tag , ~plot_call                                                                                                         , ~pick_regex                  , ~title        , ~caption                                                                                          , ~plot_modifier                             ,
+  # "S1"           , "A"  , quote(targets::tar_read(categorical.UMAPs.WNN.PBMC_human_6x))                                                      , "WNN_harmony_SNN_cluster_cell_type" , NA_character_ , "UMAP embedding derived from native RNA+ATAC weighted-nearest-neighbor graph. Nuclei are colored by cluster-level cell type labels." , NA                                          ,
+  # "S1"           , "B"  , quote(targets::tar_read(markers_dot_plot.GEX.PBMC_human_6x))                                                       , NA_character_                       , NA_character_ , "Expression of canonical marker genes across cell types."                                                                            , quote(plot + ggplot2::labs(y = "celltype")) ,
+  # "S1"           , "C"  , quote(targets::tar_read(coverage_tracks_plots.ATAC.PBMC_human_6x))                                                 , "MS4A1"                             , NA_character_ , "Chromatin accessibility track at the MS4A1 locus."                                                                                  , NA                                          ,
+  "2"            , "A"  , quote(figure_2_UMAP_panel())                                                                                       , NA_character_                , NA_character_ , "RNA, ATAC, and WNN UMAPs colored by GEX-, ATAC-, and multimodal cluster-level cell type labels." , NA                                         ,
+  "2"            , "B"  , quote(targets::tar_read(TF_activity_heatmap.ATAC.PBMC_human_6x))                                                   , NA_character_                , NA_character_ , "ChromVAR transcription-factor activity scores for configured PBMC marker TFs."                   , quote(figure_2_TF_activity_panel(plot))    ,
+  "2"            , "C"  , quote(targets::tar_read(peak_gene_correlation_top_link_ATAC_tracks_plots.peak_gene_correlation.WNN.PBMC_human_6x)) , "B_rank001_ODF2[.]AS1_chr9"  , NA_character_ , "Example top peak-gene link with ATAC accessibility and loop track."                              , quote(figure_2_peak_gene_link_panel(plot)) ,
+  "2"            , "D"  , quote(targets::tar_read(TRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x))       , "MonocyteCount_Vuckovic2020" , NA_character_ , "SCAVENGE trait relevance scores for monocyte count projected onto the WNN UMAP."                 , quote(plot + minimal_UMAP_theme)           ,
+  "2"            , "E"  , quote(targets::tar_read(ZScores_heatmap.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x))                  , NA_character_                , NA_character_ , "Pseudobulk GWAS chromVAR Z-scores across PBMC cell types and GWAS traits."                       , quote(figure_2_GWAS_heatmap_panel(plot))   ,
 )
 
 figure_specs <- tibble::tribble(
-  ~figure_number , ~height , ~layout                                , ~subtitle                                                                            ,
-  "S1"           ,       9 , quote((A / B / C))                     , "Visualization of the observed cell types and expected markers in the PBMC dataset." ,
-  "2"            ,       7 , quote((A | B | C) / (D | E) / (F | G)) , NA_character_                                                                        ,
+  ~figure_number , ~height , ~layout                      , ~subtitle     ,
+  # "S1"           ,       9 , quote((A / B / C))           , "Visualization of the observed cell types and expected markers in the PBMC dataset." ,
+  "2"            ,       7 , quote(A / (B | C) / (D | E)) , NA_character_ ,
 )
 
 expected_pngs <- file.path(output_dir, paste0(figure_specs$figure_number, ".png"))

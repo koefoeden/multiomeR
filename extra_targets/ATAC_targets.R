@@ -921,9 +921,9 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
-      name = TF_activity_dot_plot.ATAC,
-      description = "Dot plot of configured marker TF activity scores per ATAC cell type. [checkpoint:ATAC]",
-      command = plot_feature_scores_dot_from_matrix(
+      name = TF_activity_heatmap.ATAC,
+      description = "Heatmap of configured marker TF activity scores per ATAC cell type. [checkpoint:ATAC]",
+      command = plot_feature_scores_heatmap_from_matrix(
         feature_matrix = TF_activity_BPCells_matrix.ATAC,
         metadata_tibble = metadata_w_cell_types_tibble.ATAC,
         features = ATAC_marker_TFs_vec,

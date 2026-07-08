@@ -674,7 +674,7 @@ rlang::list2(
         loops = loop_track_tibble,
         region = region,
         color_by = "cell_group",
-        track_label = "Peak-gene links",
+        track_label = "Links",
         return_data = TRUE
       )
       loop_data_tibble <- loop_data_tibble |>

@@ -40,10 +40,10 @@
 
 - section: Main pipeline
   subsection: ATAC
-  title: TF activity dot plot
+  title: TF activity heatmap
   description: Summarizes transcription-factor activity patterns across cell groups.
-  target: TF_activity_dot_plot.ATAC.immune_human_2x
-  asset: gallery_assets/ATAC/tf_activity_dot_plot.png
+  target: TF_activity_heatmap.ATAC.immune_human_2x
+  asset: gallery_assets/ATAC/tf_activity_heatmap.png
   status: available
 
 - section: Main pipeline

@@ -751,14 +751,18 @@ get_SCAVENGE_TRS_UMAP_plots <- function(TRS_tibble, metadata_tibble, umap_cols, 
   plot <- plot_UMAP_from_metadata(
     metadata_tibble = SCAVENGE_metadata_tibble,
     variable = score_col,
-    umap_cols = umap_cols
+    umap_cols = umap_cols,
+    legend_continuous = "value",
+    quantile_range = c(0, 1)
   )
 
   if (inherits(plot, "empty_plot_list")) {
     return(structure(list(), class = c("empty_plot_list", "list")))
   }
 
-  plot <- plot + ggplot2::scale_color_viridis_c()
+  plot <- plot +
+    ggplot2::scale_color_viridis_c(name = "TRS score") +
+    ggplot2::labs(subtitle = NULL)
 
   if (!is.null(label_col)) {
     if (!is.character(label_col) || length(label_col) != 1 || is.na(label_col) || !nzchar(label_col)) {

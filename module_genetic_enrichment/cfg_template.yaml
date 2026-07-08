@@ -8,38 +8,6 @@ immune_human_2x:
       Category: positive_control
       studyId: GCST90002393
       finemappingMethod: auto
-    IBD_Liu2023:
-      Category: immune_disease
-      studyId: GCST90292538
-      finemappingMethod: auto
-    Crohns_Liu2023:
-      Category: immune_disease
-      studyId: GCST90446792
-      finemappingMethod: auto
-    UlcerativeColitis_Liu2023:
-      Category: immune_disease
-      studyId: GCST90446794
-      finemappingMethod: auto
-    MultipleSclerosis_IMSGC2019:
-      Category: immune_disease
-      studyId: GCST009597
-      finemappingMethod: auto
-    SLE_Verma2024:
-      Category: immune_disease
-      studyId: GCST90480453
-      finemappingMethod: auto
-    Asthma_Zhou2022:
-      Category: immune_disease
-      studyId: GCST90399686
-      finemappingMethod: auto
-    AtopicDermatitis_Oliva2025:
-      Category: immune_disease
-      studyId: GCST90503109
-      finemappingMethod: auto
-    Height_DeWan2023:
-      Category: negative_control
-      studyId: GCST90302890
-      finemappingMethod: auto
     BMI_Verma2024:
       Category: negative_control
       studyId: GCST90475159
@@ -47,10 +15,6 @@ immune_human_2x:
     EducationalAttainment_Okbay2022:
       Category: negative_control
       studyId: GCST90105038
-      finemappingMethod: auto
-    HeelBMD_Mbatchou2021:
-      Category: negative_control
-      studyId: GCST90014022
       finemappingMethod: auto
   genetic_enrichment_psbulk_GWAS_chromVAR_models:
     major_pbmc_cell_type_contrasts:

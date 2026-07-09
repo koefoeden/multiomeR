@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+die() {
+  echo "error: $*" >&2
+  exit 1
+}
+
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || die "Missing required command: $1"
+}
+
+scratch_active_worktree() {
+  local scratch_dir=$1
+  local marker=$scratch_dir/.worktree_active
+  [ -f "$marker" ] || return 1
+  sed -n '1p' "$marker"
+}
+
+scratch_worktree_is_active() {
+  local active_worktree=$1
+  git -C "$base" worktree list --porcelain | grep -Fxq "worktree $active_worktree"
+}
+
+first_free_scratch() {
+  local parent=$1
+  local base_name=$2
+  local scratch_dir active_worktree slot
+
+  for scratch_dir in "$parent/${base_name}_outputs_scratch_"*; do
+    [ -d "$scratch_dir" ] || continue
+    active_worktree=$(scratch_active_worktree "$scratch_dir" || true)
+    if [ -z "$active_worktree" ]; then
+      printf '%s\n' "$scratch_dir"
+      return
+    fi
+    if scratch_worktree_is_active "$active_worktree"; then
+      continue
+    fi
+    printf '%s\n' "$scratch_dir"
+    return
+  done
+
+  slot=1
+  while [ -e "$parent/${base_name}_outputs_scratch_${slot}" ]; do
+    slot=$((slot + 1))
+  done
+  printf '%s\n' "$parent/${base_name}_outputs_scratch_${slot}"
+}
+
+skip_tracked_path() {
+  local rel=$1
+  git -C "$worktree" ls-files -z -- "$rel" |
+    xargs -0 -r git -C "$worktree" update-index --skip-worktree --
+}
+
+exclude_path() {
+  local rel=$1
+  local exclude_file
+  exclude_file=$(git -C "$worktree" rev-parse --git-path info/exclude)
+  grep -Fxq "$rel" "$exclude_file" 2>/dev/null || printf '%s\n' "$rel" >>"$exclude_file"
+}
+
+mirror_base_runtime_path() {
+  local rel=$1
+  [ -e "$base/$rel" ] || [ -L "$base/$rel" ] || return 0
+
+  rm -rf "$worktree/$rel"
+  mkdir -p "$(dirname "$worktree/$rel")"
+  cp -al "$base/$rel" "$worktree/$rel"
+  skip_tracked_path "$rel"
+  exclude_path "$rel"
+}
+
+require_command git
+require_command rsync
+require_command cp
+require_command sed
+require_command sha256sum
+
+worktree=${CODEX_WORKTREE_PATH:-$(git rev-parse --show-toplevel)}
+worktree=$(cd "$worktree" && pwd -P)
+base=${WORKTREE_BASE:-/maps/projects/cbmr_shared/people/tqb695/non-GDPR/multiomeR}
+base=$(cd "$base" && pwd -P)
+parent=$(dirname "$base")
+base_name=$(basename "$base")
+scratch=${WORKTREE_SCRATCH:-$(first_free_scratch "$parent" "$base_name")}
+active_marker=$scratch/.worktree_active
+
+[ "$worktree" != "$base" ] || die "Refusing to configure base checkout as a Codex worktree."
+[ -d "$base/outputs" ] || die "Base outputs store not found: $base/outputs"
+[ -d "$base/.pixi" ] || die "Base pixi environment not found: $base/.pixi"
+[ -d "$worktree/.git" ] || [ -f "$worktree/.git" ] || die "Git worktree not found: $worktree"
+
+active_worktree=$(scratch_active_worktree "$scratch" || true)
+if [ -n "$active_worktree" ]; then
+  if scratch_worktree_is_active "$active_worktree"; then
+    die "Scratch store is already assigned to active worktree: $active_worktree"
+  fi
+  echo "warning: ignoring stale scratch marker for missing worktree: $active_worktree" >&2
+fi
+
+mkdir -p "$scratch"
+
+echo "Refreshing scratch outputs:"
+echo "  from: $base/outputs/"
+echo "  to:   $scratch/"
+rsync_bwlimit=${WORKTREE_RSYNC_BWLIMIT:-50M}
+echo "  bwlimit: $rsync_bwlimit"
+rsync -a --delete --delete-excluded --delay-updates \
+  --bwlimit="$rsync_bwlimit" \
+  --exclude='/meta/process' \
+  "$base/outputs/" "$scratch/"
+
+mirror_base_runtime_path example_data
+mirror_base_runtime_path crew_controllers.R
+rm -rf "$worktree/.pixi" "$worktree/outputs"
+ln -s "$base/.pixi" "$worktree/.pixi"
+exclude_path .pixi
+cp -al "$scratch" "$worktree/outputs"
+
+record_dir=$worktree/outputs/.worktree
+mkdir -p "$record_dir"
+{
+  printf 'created_at\t%s\n' "$(date --iso-8601=seconds)"
+  printf 'base\t%s\n' "$base"
+  printf 'worktree\t%s\n' "$worktree"
+  printf 'scratch\t%s\n' "$scratch"
+  printf 'base_head\t%s\n' "$(git -C "$base" rev-parse HEAD)"
+  printf 'worktree_head\t%s\n' "$(git -C "$worktree" rev-parse HEAD)"
+} >"$record_dir/setup.tsv"
+
+git -C "$base" status --short >"$record_dir/base_git_status.txt"
+git -C "$base" worktree list --porcelain >"$record_dir/base_worktrees.txt"
+if [ -f "$base/outputs/meta/meta" ]; then
+  sha256sum "$base/outputs/meta/meta" >"$record_dir/base_outputs_meta.sha256"
+fi
+if [ -f "$base/outputs/meta/process" ]; then
+  cp "$base/outputs/meta/process" "$record_dir/base_meta_process"
+  echo "warning: base outputs had meta/process; recorded it but did not copy it into scratch." >&2
+fi
+
+printf '%s\n' "$worktree" >"$active_marker"
+
+cat <<EOF
+Codex worktree ready.
+
+  worktree: $worktree
+  scratch:  $scratch
+  base:     $base
+
+EOF

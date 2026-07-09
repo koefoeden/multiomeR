@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+die() {
+  echo "error: $*" >&2
+  exit 1
+}
+
+read_record() {
+  awk -F '\t' -v key="$1" '$1 == key {print $2; exit}' "$record"
+}
+
+worktree=${CODEX_WORKTREE_PATH:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}
+worktree=$(cd "$worktree" && pwd -P)
+record=$worktree/outputs/.worktree/setup.tsv
+
+if [ ! -f "$record" ]; then
+  echo "No Codex worktree record found; nothing to release."
+  exit 0
+fi
+
+recorded_worktree=$(read_record worktree)
+scratch=$(read_record scratch)
+[ "$worktree" = "$recorded_worktree" ] || die "Current checkout is not the recorded worktree: $recorded_worktree"
+[ -n "$scratch" ] || die "Recorded scratch path is empty."
+
+active_marker=$scratch/.worktree_active
+if [ -f "$active_marker" ] && [ "$(sed -n '1p' "$active_marker")" = "$worktree" ]; then
+  rm -f "$active_marker"
+  echo "Released scratch marker: $scratch"
+else
+  echo "Scratch marker was already absent or assigned elsewhere: $scratch"
+fi

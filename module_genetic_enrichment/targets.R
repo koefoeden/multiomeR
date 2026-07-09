@@ -91,6 +91,7 @@ genetic_enrichment_tibble <- genetic_enrichment_tibble |>
     "metadata_w_cell_types_tibble.WNN",
     "combined_BPCells_fragment_obj.ATAC",
     "consensus_peak_GRanges.ATAC",
+    "peak_QC_filtered_BPCells_matrix.ATAC",
     "pseudobulk_counts_matrix.ATAC",
     "pseudobulk_depth_tibble.ATAC",
     "chromVAR_obj.ATAC",

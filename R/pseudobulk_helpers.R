@@ -31,6 +31,26 @@ get_BPCells_pseudobulk_matrix <- function(feature_matrix, metadata_tibble, clust
   )
 }
 
+get_BPCells_group_pseudobulk_matrix <- function(feature_matrix, metadata_tibble, group_col, threads = 1) {
+  cell_metadata <- metadata_tibble |>
+    dplyr::distinct(barcode_w_prefix, .keep_all = TRUE) |>
+    dplyr::transmute(
+      barcode_w_prefix,
+      group = stringr::str_replace_all(as.character(.data[[group_col]]), "_", "-")
+    ) |>
+    dplyr::filter(.data$barcode_w_prefix %in% colnames(feature_matrix)) |>
+    dplyr::arrange(match(.data$barcode_w_prefix, colnames(feature_matrix)))
+
+  aligned_feature_matrix <- feature_matrix[, cell_metadata$barcode_w_prefix, drop = FALSE]
+
+  BPCells::pseudobulk_matrix(
+    mat = aligned_feature_matrix,
+    cell_groups = cell_metadata$group,
+    method = "sum",
+    threads = threads
+  )
+}
+
 psbulk_rowSums <- function(x) {
   if (inherits(x, "IterableMatrix")) {
     BPCells::rowSums(x)
@@ -60,6 +80,28 @@ get_pseudobulk_depth_tibble <- function(psbulk_data_matrix, count_col = "n_count
       log10_n_features = log10(n_features),
       log10_counts_per_feature = log10(counts_per_feature)
     )
+}
+
+get_group_pseudobulk_depth_tibble <- function(psbulk_data_matrix, group_col = "cluster", count_col = "n_counts") {
+  n_counts <- as.numeric(psbulk_colSums(psbulk_data_matrix))
+  n_features <- as.numeric(psbulk_colSums(psbulk_data_matrix > 0))
+
+  tibble::tibble(
+    !!group_col := colnames(psbulk_data_matrix),
+    !!count_col := n_counts,
+    n_features = n_features,
+    counts_per_feature = n_counts / n_features,
+    log10_n_counts = log10(n_counts),
+    log10_n_features = log10(n_features),
+    log10_counts_per_feature = log10(n_counts / n_features)
+  )
+}
+
+get_group_cell_count_tibble <- function(metadata_tibble, group_col, output_col = "cluster") {
+  metadata_tibble |>
+    dplyr::distinct(barcode_w_prefix, .keep_all = TRUE) |>
+    dplyr::transmute(!!output_col := stringr::str_replace_all(as.character(.data[[group_col]]), "_", "-")) |>
+    dplyr::count(.data[[output_col]], name = "n_cells")
 }
 
 #' Plot pseudobulk depth distribution
@@ -251,11 +293,10 @@ filter_psbulk_data_matrix <- function(
 #' @return A named matrix-like object with rows and columns aligned to the input feature/cell identifiers.
 #' @keywords internal
 
-get_pseudobulk_chromVAR_activity_matrix <- function(
+get_pseudobulk_chromVAR_deviation_SE <- function(
   psbulk_ATAC_data_matrix,
   chromVAR_obj,
-  annotation_matrix,
-  normalize = TRUE
+  annotation_matrix
 ) {
   peaks_above_cut_off_names <- psbulk_ATAC_data_matrix |>
     psbulk_rowSums() |>
@@ -282,9 +323,22 @@ get_pseudobulk_chromVAR_activity_matrix <- function(
   )
   SummarizedExperiment::rowData(psbulk_chromVAR_obj) <- SummarizedExperiment::rowData(chromVAR_obj)[peak_range_idx, , drop = FALSE]
 
-  chromVAR_dev <- betterChromVAR::betterChromVAR(
+  betterChromVAR::betterChromVAR(
     object = psbulk_chromVAR_obj,
     annotations = annotation_matrix_peak_filtered
+  )
+}
+
+get_pseudobulk_chromVAR_activity_matrix <- function(
+  psbulk_ATAC_data_matrix,
+  chromVAR_obj,
+  annotation_matrix,
+  normalize = TRUE
+) {
+  chromVAR_dev <- get_pseudobulk_chromVAR_deviation_SE(
+    psbulk_ATAC_data_matrix = psbulk_ATAC_data_matrix,
+    chromVAR_obj = chromVAR_obj,
+    annotation_matrix = annotation_matrix
   )
   chromVAR_z_scores <- SummarizedExperiment::assay(chromVAR_dev, "z")
 
@@ -295,6 +349,66 @@ get_pseudobulk_chromVAR_activity_matrix <- function(
   chromVAR_z_scores |>
     sweep(2, colMeans(chromVAR_z_scores), FUN = "-") |>
     limma::normalizeBetweenArrays(method = "quantile")
+}
+
+scale_within_vector <- function(x) {
+  x_sd <- stats::sd(x, na.rm = TRUE)
+  if (is.na(x_sd) || x_sd == 0) {
+    return(rep(0, length(x)))
+  }
+  as.numeric((x - mean(x, na.rm = TRUE)) / x_sd)
+}
+
+format_cell_type_GWAS_chromVAR_deviations <- function(chromVAR_dev, GWAS_inputs_tibble, cell_type_support_tibble = NULL) {
+  deviation_tibble <- SummarizedExperiment::assay(chromVAR_dev, "deviations") |>
+    tibble::as_tibble(rownames = "GWAS_ID") |>
+    tidyr::pivot_longer(-GWAS_ID, names_to = "cluster", values_to = "deviation")
+
+  z_tibble <- SummarizedExperiment::assay(chromVAR_dev, "z") |>
+    tibble::as_tibble(rownames = "GWAS_ID") |>
+    tidyr::pivot_longer(-GWAS_ID, names_to = "cluster", values_to = "z")
+
+  out <- deviation_tibble |>
+    dplyr::left_join(z_tibble, by = c("GWAS_ID", "cluster")) |>
+    dplyr::group_by(.data$GWAS_ID) |>
+    dplyr::mutate(
+      relative_deviation = scale_within_vector(.data$deviation),
+      median_score = .data$relative_deviation
+    ) |>
+    dplyr::ungroup() |>
+    dplyr::mutate(
+      z_p = stats::pnorm(.data$z, lower.tail = FALSE),
+      z_q = stats::p.adjust(.data$z_p, method = "BH"),
+      support_label = dplyr::case_when(
+        .data$z >= 3 ~ "**",
+        .data$z >= 2 ~ "*",
+        .default = ""
+      ),
+      score = .data$deviation,
+      score_is_sig = .data$z >= 2
+    ) |>
+    add_GWAS_heatmap_categories(GWAS_tibble = GWAS_inputs_tibble)
+
+  if (!is.null(cell_type_support_tibble)) {
+    out <- out |>
+      dplyr::left_join(cell_type_support_tibble, by = "cluster")
+  }
+
+  out |>
+    dplyr::relocate(
+      GWAS_ID,
+      Category,
+      variant_weighting_mode,
+      cluster,
+      median_score,
+      deviation,
+      relative_deviation,
+      z,
+      z_p,
+      z_q,
+      support_label,
+      dplyr::any_of(c("n_cells", "n_counts", "n_features", "counts_per_feature"))
+    )
 }
 
 get_pseudobulk_activity_matrix.TFA <- function(

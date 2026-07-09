@@ -8,6 +8,41 @@ rlang::list2(
     ),
     resources = get_tar_resources(RAM_GB_req = 40)
   ),
+  tarchetypes::tar_file(
+    name = cell_type_pseudobulk_counts_BPCells_matrix_dir.ATAC,
+    description = "Write ATAC counts summed per WNN cell type to BPCells for descriptive GWAS chromVAR plots [part_of_graph:genetic_enrichment_pseudobulk]",
+    command = {
+      out_dir <- get_structured_file_path()
+      get_BPCells_group_pseudobulk_matrix(
+        feature_matrix = peak_QC_filtered_BPCells_matrix.ATAC,
+        metadata_tibble = metadata_w_cell_types_tibble.WNN,
+        group_col = "PCA_harmony_SNN_cluster_cell_type",
+        threads = 6
+      ) |>
+        methods::as("dgCMatrix") |>
+        BPCells::write_matrix_dir(out_dir, overwrite = TRUE)
+      out_dir
+    },
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
+  ),
+  targets::tar_target(
+    name = cell_type_pseudobulk_counts_matrix.ATAC,
+    description = "Open BPCells-backed ATAC counts summed per WNN cell type",
+    command = BPCells::open_matrix_dir(cell_type_pseudobulk_counts_BPCells_matrix_dir.ATAC)
+  ),
+  targets::tar_target(
+    name = cell_type_pseudobulk_support_tibble.ATAC,
+    description = "Compute cell counts and ATAC depth support per WNN cell type",
+    command = get_group_pseudobulk_depth_tibble(cell_type_pseudobulk_counts_matrix.ATAC) |>
+      dplyr::left_join(
+        get_group_cell_count_tibble(
+          metadata_tibble = metadata_w_cell_types_tibble.WNN,
+          group_col = "PCA_harmony_SNN_cluster_cell_type"
+        ),
+        by = "cluster"
+      ) |>
+      dplyr::mutate(modality = "ATAC")
+  ),
   targets::tar_target(
     name = activity_matrix.trait_level.pseudobulk,
     description = "Compute trait-level pseudobulk chromVAR activity scores from BPCells-backed pseudobulk ATAC counts [part_of_graph:genetic_enrichment_pseudobulk]",
@@ -20,16 +55,28 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 60)
   ),
   targets::tar_target(
-    name = ZScores_tibble.trait_level.pseudobulk,
-    description = "Format global trait-level pseudobulk chromVAR Z-scores for GWAS boxplots",
-    command = activity_matrix.trait_level.pseudobulk |>
-      format_psbulk_GWAS_chromVAR_ZScores(GWAS_inputs_tibble = GWAS_inputs_tibble)
+    name = activity_SE.trait_level.cell_type_pseudobulk,
+    description = "Compute trait-level GWAS chromVAR deviations from cell-type ATAC pseudobulk counts for descriptive plots [part_of_graph:genetic_enrichment_pseudobulk]",
+    command = get_pseudobulk_chromVAR_deviation_SE(
+      psbulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
+      chromVAR_obj = chromVAR_obj.ATAC,
+      annotation_matrix = peak_weight_matrix.trait_level.pseudobulk
+    ),
+    resources = get_tar_resources(RAM_GB_req = 60)
   ),
   targets::tar_target(
-    name = ZScores_heatmap_data.trait_level.pseudobulk,
-    description = "Prepare heatmap data from global trait-level pseudobulk chromVAR Z-scores grouped by GWAS and cluster",
-    command = ZScores_tibble.trait_level.pseudobulk |>
-      get_GWAS_heatmap_data(GWAS_tibble = GWAS_inputs_tibble)
+    name = chromVAR_deviation_tibble.trait_level.pseudobulk,
+    description = "Format cell-type pseudobulk GWAS chromVAR deviations and z-score support labels for descriptive plots",
+    command = activity_SE.trait_level.cell_type_pseudobulk |>
+      format_cell_type_GWAS_chromVAR_deviations(
+        GWAS_inputs_tibble = GWAS_inputs_tibble,
+        cell_type_support_tibble = cell_type_pseudobulk_support_tibble.ATAC
+      )
+  ),
+  targets::tar_target(
+    name = chromVAR_deviation_heatmap_data.trait_level.pseudobulk,
+    description = "Prepare heatmap data from cell-type pseudobulk GWAS chromVAR relative deviations",
+    command = chromVAR_deviation_tibble.trait_level.pseudobulk
   ),
   targets::tar_target(
     name = models.trait_level.pseudobulk,
@@ -120,28 +167,44 @@ rlang::list2(
     }
   ),
   tarchetypes::tar_file(
-    name = ZScores_heatmap.trait_level.pseudobulk,
-    description = "Save global trait-level pseudobulk chromVAR Z-score heatmap with Open Targets GWAS metadata annotations. [checkpoint:genetic_enrichment]",
+    name = chromVAR_deviation_heatmap.trait_level.pseudobulk,
+    description = "Save cell-type pseudobulk GWAS chromVAR relative-deviation heatmap with z-score support labels and nuclei counts. [checkpoint:genetic_enrichment]",
     command = {
       plot <- plot_GWAS_by_cluster_heatmap(
-        ZScores_heatmap_data.trait_level.pseudobulk,
+        chromVAR_deviation_heatmap_data.trait_level.pseudobulk,
         GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
-        compartments_patterns = genetic_enrichment_compartment_patterns
+        compartments_patterns = genetic_enrichment_compartment_patterns,
+        fill_col = "median_score",
+        fill_label = "Relative deviation",
+        support_label_col = "support_label"
       )
       save_plots_structured(
         plot,
         filetype = "png",
         width = 20,
-        height = max(7, 0.24 * dplyr::n_distinct(ZScores_heatmap_data.trait_level.pseudobulk$GWAS_ID) + 3)
+        height = max(7, 0.24 * dplyr::n_distinct(chromVAR_deviation_heatmap_data.trait_level.pseudobulk$GWAS_ID) + 3)
       )
     }
   ),
   tarchetypes::tar_file(
-    name = ZScores_boxplot.trait_level.pseudobulk,
-    description = "Save global trait-level pseudobulk chromVAR Z-score boxplots per cluster. [checkpoint:genetic_enrichment]",
-    command = ZScores_tibble.trait_level.pseudobulk |>
-      plot_GWAS_by_group() |>
-      save_plots_structured()
+    name = chromVAR_deviation_heatmap_unscaled.trait_level.pseudobulk,
+    description = "Save cell-type pseudobulk GWAS chromVAR raw-deviation heatmap with z-score support labels and nuclei counts. [checkpoint:genetic_enrichment]",
+    command = {
+      plot <- plot_GWAS_by_cluster_heatmap(
+        chromVAR_deviation_heatmap_data.trait_level.pseudobulk,
+        GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
+        compartments_patterns = genetic_enrichment_compartment_patterns,
+        fill_col = "deviation",
+        fill_label = "Deviation",
+        support_label_col = "support_label"
+      )
+      save_plots_structured(
+        plot,
+        filetype = "png",
+        width = 20,
+        height = max(7, 0.24 * dplyr::n_distinct(chromVAR_deviation_heatmap_data.trait_level.pseudobulk$GWAS_ID) + 3)
+      )
+    }
   ),
   tarchetypes::tar_file(
     name = QC_plots.trait_level.pseudobulk,

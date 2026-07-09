@@ -6,4 +6,5 @@ pbmc_10k_chromium_x	immune_human_dataset	pbmc3	1	example_data/pbmc_10k_chromium_
 pbmc_granulocyte_sorted_10k	immune_human_dataset	pbmc4	1	example_data/pbmc_granulocyte_sorted_10k	NA	NA
 pbmc_unsorted_10k	immune_human_dataset	pbmc5	1	example_data/pbmc_unsorted_10k	NA	NA
 pbmc_unsorted_3k	immune_human_dataset	pbmc6	1	example_data/pbmc_unsorted_3k	NA	NA
+healthy_brain_human	brain_human_dataset	brain1	1	example_data/healthy_brain_human	NA	NA
 lymphoma_lymph_human	immune_human_dataset	lymph1	1	example_data/lymphoma_lymph_human	NA	NA

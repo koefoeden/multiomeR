@@ -64,3 +64,46 @@ PBMC_human_6x:
     - pbmc_unsorted_3k
   modules: [genetic_enrichment]
   aggregation_categorical_vars: [cell_sorting, instrument, target_recovery]
+
+mixed_human_7x:
+  aggregation_donor_id_metadata_tsv: example_data/mixed_human_donor_id_metadata.tsv
+  aggregation_reaction_ID_metadata_tsv: example_data/mixed_human_reaction_id_metadata.tsv
+  aggregation_reaction_IDs:
+    - healthy_PBMC_human
+    - pbmc_10k_chromium_controller
+    - pbmc_10k_chromium_x
+    - pbmc_granulocyte_sorted_10k
+    - pbmc_unsorted_10k
+    - pbmc_unsorted_3k
+    - healthy_brain_human
+  aggregation_GEX_marker_genes:
+    B: [MS4A1, CD79A]
+    Brain: [SNAP25, AQP4, MBP]
+    Mono: [LYZ, S100A9]
+    NK: [KLRD1, GNLY]
+    pDC: [LILRA4, CLEC4C]
+    Plasma: [MZB1, JCHAIN]
+    T: [TRAC, CD3D]
+  modules: [genetic_enrichment]
+  aggregation_categorical_vars: [tissue, cell_sorting, instrument, target_recovery]
+  aggregation_QC_exclude_list_combined_object:
+    - nCount_ATAC < 1000
+    - atac_peak_counts_frac < 0.1
+    - atac_peak_counts_blacklist_frac > 0.01
+  aggregation_ATAC_marker_TFs:
+    B: [EBF1]
+    Brain: [BCL11B, SOX9, SOX10]
+    Mono: [CEBPA, CEBPB]
+    NK: [EOMES, TBX21]
+    pDC: [TCF4]
+    T: [TCF7, LEF1]
+  aggregation_roadmap_EDACC_names:
+    - Peripheral_Blood_Mononuclear_Primary_Cells
+    - CD4_Memory_Primary_Cells
+    - CD4_Naive_Primary_Cells
+    - CD8_Memory_Primary_Cells
+    - CD8_Naive_Primary_Cells
+    - Monocytes-CD14+_RO01746
+    - Brain_Hippocampus_Middle
+    - Brain_Inferior_Temporal_Lobe
+    - Brain_Mid_Frontal_Lobe

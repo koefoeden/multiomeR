@@ -15,3 +15,6 @@ immune_human_dataset:
     - nCount_RNA < 250
     - RNA_mito_percent > 10
   dataset_run_amulet: false
+
+brain_human_dataset:
+  inherits: immune_human_dataset

@@ -1,0 +1,8 @@
+reaction_ID	file_name	url
+healthy_brain_human	web_summary.html	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/human_brain_3k/human_brain_3k_web_summary.html
+healthy_brain_human	summary.csv	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/human_brain_3k/human_brain_3k_summary.csv
+healthy_brain_human	per_barcode_metrics.csv	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/human_brain_3k/human_brain_3k_per_barcode_metrics.csv
+healthy_brain_human	filtered_feature_bc_matrix.h5	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/human_brain_3k/human_brain_3k_filtered_feature_bc_matrix.h5
+healthy_brain_human	raw_feature_bc_matrix.h5	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/human_brain_3k/human_brain_3k_raw_feature_bc_matrix.h5
+healthy_brain_human	atac_fragments.tsv.gz	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/human_brain_3k/human_brain_3k_atac_fragments.tsv.gz
+healthy_brain_human	atac_fragments.tsv.gz.tbi	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/human_brain_3k/human_brain_3k_atac_fragments.tsv.gz.tbi

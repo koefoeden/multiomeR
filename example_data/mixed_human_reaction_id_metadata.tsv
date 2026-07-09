@@ -1,0 +1,8 @@
+TENX_reaction_ID	tissue	cell_sorting	target_recovery	instrument	n_recovered_nuclei
+healthy_PBMC_human	PBMC	granulocytes_removed	3k	Chromium_Controller	2711
+pbmc_10k_chromium_controller	PBMC	unspecified	10k	Chromium_Controller	10691
+pbmc_10k_chromium_x	PBMC	unspecified	10k	Chromium_X	10970
+pbmc_granulocyte_sorted_10k	PBMC	granulocytes_removed	10k	Chromium_Controller	11898
+pbmc_unsorted_10k	PBMC	unsorted	10k	Chromium_Controller	12012
+pbmc_unsorted_3k	PBMC	unsorted	3k	Chromium_Controller	3009
+healthy_brain_human	brain_cerebellum	7-AAD_positive_sorted_nuclei	3k	Chromium_Controller	3233

@@ -1,4 +1,4 @@
-# Installation
+# Install and prepare the demo
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -10,7 +10,12 @@ knitr::opts_chunk$set(
 
 ## System requirements
 
-- Linux system with at least 60 GB of RAM, preferably equipped with a job scheduler supported by the `crew.cluster` package: SLURM, PBS, SGE, or LSF.
+- Linux with `git`, `curl`, and `tar`, plus HTTPS access to GitHub, Pixi, and 10x Genomics downloads.
+- At least 60 GB of RAM. This is enough for one heavy target at a time; machines near the minimum should reduce concurrent workers in `crew_controllers.R`.
+- At least 60 GB of free disk space for the downloaded archives, extracted reference, pixi environment, and approximately 6 GB of demo outputs.
+- Multiple CPU cores are strongly recommended. The timing quoted in the next chapter was measured with 16 logical threads.
+
+The committed `crew_controllers.R` symlink points to the local controller template. That template assumes a 16-CPU, 256-GB workstation and can run several workers concurrently. Review [Distributed computing](performance_distributed_computing.qmd) before running on a smaller machine or a scheduler.
 
 
 ## Clone and enter the repository
@@ -22,7 +27,7 @@ cd multiomeR
 
 ## Download public inputs
 
-Download the two public human `cellranger-arc count` outputs used by the `immune_human_2x` example aggregation from the repository root (3.9 GB).
+Download the subset of two public human `cellranger-arc count` outputs required by the `immune_human_2x` example aggregation from the repository root (3.9 GB). For your own data, retain the complete `outs/` directories.
 
 ```{.bash filename="Bash"}
 pbmc_dir="example_data/healthy_PBMC_human/outs"
@@ -68,7 +73,7 @@ curl -fsSL https://pixi.sh/install.sh | sh
 export PATH="$HOME/.pixi/bin:$PATH"
 ```
 
-Install the locked pixi environment from the repository root (<5 mins):
+Install the locked pixi environment from the repository root. The duration depends on the package cache, network connection, and the source builds in the following step.
 
 ```{.bash filename="Bash"}
 pixi install --locked --run-post-link-scripts
@@ -81,6 +86,21 @@ R
 ```
 
 Use this repository-root R session as the evaluation environment for subsequent R commands in this manual.
+
+## Validate the setup
+
+Before starting a compute-intensive run, build the target manifest for the exact demo endpoint:
+
+```{.r filename="R"}
+targets::tar_manifest(
+  names = tidyselect::matches(
+    "^multimodal_Seurat_object[.]immune_human_2x$"
+  ),
+  callr_function = NULL
+)[, c("name", "description")]
+```
+
+The command should return one row named `multimodal_Seurat_object.immune_human_2x`. Constructing the manifest also evaluates the configuration and target graph, so configuration, controller, or startup errors appear before the data run begins. Continue to [Run the demo](demo_running.qmd) when this check succeeds.
 
 ::: {.callout-note collapse="true"}
 ## Why pixi?
@@ -99,4 +119,3 @@ The `--locked` flag keeps installation aligned with `pixi.lock`. The `--run-post
 
 A small number of R packages still need GitHub versions, since they are not currently available on conda-forge/bioconda. The `pixi run install-r-github-packages` task installs the pinned GitHub versions of BPCells, Signac, and betterChromVAR into the pixi R library. The pixi environment also preinstalls system libraries needed by these source installs, including `libhwy` for BPCells.
 :::
-

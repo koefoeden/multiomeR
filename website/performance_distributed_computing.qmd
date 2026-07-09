@@ -8,29 +8,57 @@ knitr::opts_chunk$set(
 )
 ```
 
-multiomeR runs targets through the [targets](https://books.ropensci.org/targets/crew.html) and `crew` backend. The public controller template, `crew_controllers_template.R`, defines a local-controller setup that is sufficient for the public demo.
-
-For larger datasets, adapt your active `crew_controllers.R` to match your scheduler, queue names, resource limits, and worker startup requirements.
+multiomeR runs `{targets}` through the [`crew` backend](https://books.ropensci.org/targets/crew.html). Check the active controller before the [first demo run](demo_running.qmd) and again before moving from a workstation to a scheduler.
 
 ## Controller contract
 
-`crew_controllers.R` must return a named list with:
+`crew_controllers.R` is sourced during `load_project_runtime()` and must return a named list containing these components:
 
-- `controller_list`: the list of `crew` controllers.
-- `controller_resources_tibble`: a table with `controller_name`, `cores`, `RAM_GB`, and `gpus`.
+- `controller_list`: a non-empty list of `crew` controllers with unique controller names.
+- `controller_resources_tibble`: a data frame with exactly `controller_name`, `cores`, `RAM_GB`, and `gpus`, in that order.
 
-Targets request resources by cores, RAM, and optionally GPUs through `get_tar_resources()`. The first row of `controller_resources_tibble` is the default controller, and row order controls which matching controller is preferred. GPU controllers are excluded unless `gpus_req > 0`.
+The resource columns must be numeric, non-missing, and contain one unique row per controller name represented in `controller_list`. The first resource-table row is the default controller. For explicit requests, `get_tar_resources()` selects the first compatible row after applying the requested CPU, RAM, and GPU constraints.
 
-## Local default
-
-The default template uses a local `crew` controller:
-
-```{.bash filename="Bash"}
-crew_controllers.R -> crew_controllers_template.R
+```r
+controller_resources_tibble <- tibble::tribble(
+  ~controller_name, ~cores, ~RAM_GB, ~gpus,
+  "local-light",        1,      16,     0,
+  "local-heavy",        6,      60,     0
+)
 ```
 
-Increase local workers, cores, and memory only after the example workflow succeeds on your machine.
+The table describes controller capacity for routing. A local controller does not create physical memory: its `workers` value must be low enough that concurrent jobs cannot exhaust the machine.
 
-## Cluster execution
+## Local execution
 
-For cluster execution, replace the local controller with a scheduler-backed controller such as `crew.cluster::crew_controller_slurm()`. Keep the `controller_resources_tibble` rows aligned with the controller names, because that table controls how target-level resource requests are routed.
+A fresh clone points `crew_controllers.R` to `crew_controllers_template.R`. The template is sized for a 16-CPU, 256-GB workstation, with four light workers and two heavy workers. A machine near the 60-GB minimum should reduce concurrency to one heavy worker and should not run several memory-intensive targets simultaneously.
+
+To create a machine-specific active file without editing the template in place:
+
+```{.bash filename="Bash"}
+cp --remove-destination crew_controllers_template.R crew_controllers.R
+```
+
+Then edit the worker counts and resource tiers in `crew_controllers.R`. Keep controller names identical between `controller_list` and `controller_resources_tibble`.
+
+After changing the file, restart R or reload the project runtime explicitly:
+
+```{.r filename="R"}
+load_project_runtime(force = TRUE)
+```
+
+Rebuild a narrow manifest selection before starting the data run to validate the controller contract.
+
+## Scheduler execution
+
+For SLURM, PBS, SGE, or LSF, replace the local controllers with the corresponding `crew.cluster` controllers. The commented SLURM section in `crew_controllers_template.R` shows the expected shape.
+
+For every scheduler tier:
+
+1. Match the controller name in both the controller object and resource table.
+2. Align scheduler CPU and memory requests with the capacity declared in the table.
+3. Set queue, account, wall-time, module, and worker-startup options required by the cluster.
+4. Keep GPU tiers separate; GPU controllers are considered only for targets requesting GPUs.
+5. Test one small checkpoint before increasing worker counts.
+
+Scheduler startup failures, resource-routing errors, and target failures are handled separately in [Troubleshooting](troubleshooting.qmd). Developer-facing details about runtime bootstrap and `get_tar_resources()` are in [Implementation conventions](implementation/implementation_conventions.html#runtime-bootstrap).

@@ -1,4 +1,4 @@
-# Genetic Enrichment
+# Genetic enrichment gallery
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -12,15 +12,19 @@ gallery_items <- check_output_gallery_assets(
 )
 ```
 
+These are curated outputs from the larger `PBMC_human_6x` aggregation, not from the minimal two-reaction quickstart. Reproducing them requires the completed main aggregation, the genetic-enrichment module, the configured Open Targets studies, and the relevant checkpoint targets.
+
+The cards currently show a selected SCAVENGE/WNN view rather than every cell-type, graph, locus, and variant attribution output described by the module. See [Genetic enrichment](downstream_genetic_enrichment.qmd) for prerequisites and interpretation guidance.
+
 ```{r, echo = FALSE, results = "asis"}
 render_gallery_section(
   gallery_items,
   "Genetic enrichment module",
   subsection_descriptions = c(
     "Single-nucleus chromVAR+SCAVENGE" = paste(
-      "These plots show SCAVENGE trait relevance scores.",
-      "The heatmap and boxplots summarize scores by cell type and GWAS trait,",
-      "while the UMAPs show raw GWAS-specific trait relevance scores across individual nuclei."
+      "These plots show graph-propagated SCAVENGE trait relevance scores.",
+      "The heatmap summarizes scores by cell type and GWAS trait, while the",
+      "UMAPs show per-cell scores across the WNN embedding."
     )
   )
 )

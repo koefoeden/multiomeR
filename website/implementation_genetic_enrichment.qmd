@@ -5,9 +5,13 @@ pipeline_name <- "genetic_enrichment"
 source("helpers/_setup.R")
 ```
 
+`module_genetic_enrichment/targets.R` filters enabled human aggregations, resolves one configured Open Targets study set per aggregation, and attaches symbols for WNN metadata, graphs, embeddings, consensus peaks, chromVAR state, and ATAC fragments.
+
+The main target fragments live in `setup_targets.R`, `gchromVAR_targets.R`, `SCAVENGE_graph_targets.R`, `SCAVENGE_group_targets.R`, `GWAS_chromVAR_cell_type_targets.R`, and `GWAS_chromVAR_contribution_targets.R`. The user-facing release, method-selection, and interpretation contracts are documented in [Genetic enrichment](../downstream_genetic_enrichment.html).
+
 ## Single-nucleus and graph-based enrichment
 
-This view covers across-gene enrichment outputs and downstream trait summaries.
+This view covers the configured GWAS inputs, single-nucleus enrichment state, graph propagation, and downstream trait summaries. Additional cell-type contribution and locus-attribution branches may be pruned from this compact orientation view; use the manifest for the complete graph.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_mermaid("website/figures/human_curated/genetic_enrichment_single_nucleus_v2.mmd")

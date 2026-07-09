@@ -1,59 +1,66 @@
-# Genetic Enrichment
+# Genetic enrichment
 
 ```{r setup, include = FALSE}
 pipeline_name <- "genetic_enrichment"
 source("helpers/_setup.R")
 ```
 
-## Purpose
+## When to use this module
 
-This optional module is relevant for human-data aggregations where GWAS or fine-mapped trait evidence should be integrated with chromatin accessibility data. It is defined inside the root [`_targets.R`](`r pipeline_github_file`) workflow, with module-specific target fragments and configuration in `module_genetic_enrichment/`.
+Use this optional module for a completed human aggregation when fine-mapped GWAS evidence should be integrated with chromatin accessibility. It maps Open Targets credible-set variants to consensus peaks, calculates GWAS chromVAR-style deviations with the pipeline's chromVAR/betterChromVAR machinery, propagates trait relevance with [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE), and attributes cell-type deviations back to loci and variants.
 
-Representative outputs from this module are shown in the [genetic enrichment output gallery](gallery_genetic_enrichment.qmd).
+Representative outputs are shown in the [genetic enrichment gallery](gallery_genetic_enrichment.qmd). The [implementation graph](implementation/implementation_genetic_enrichment.html) shows the upstream ATAC and WNN dependencies.
 
-## Features
+## Prerequisites
 
-The genetic enrichment module links processed human multiome aggregations to fine-mapped GWAS and Open Targets evidence.
+Before enabling the module, confirm that:
 
-- **GWAS input handling**
-  - Configured study metadata, credible sets, ancestry/sample metadata, and annotation tracks.
-  - Posterior-probability weighting of credible-set variants.
-  - Mapping of genetic evidence onto consensus ATAC peaks.
+- the aggregation is human and has passed the GEX, ATAC, and multimodal checkpoints;
+- WNN metadata and graph results, consensus peaks, ATAC counts, chromVAR objects, and GEX/ATAC embeddings are available;
+- each configured Open Targets `studyId` represents the intended trait and population;
+- the machine can download and retain the Open Targets study and credible-set Parquet datasets; and
+- the biological question justifies cell-level, graph-propagated, or cell-type-pseudobulk enrichment rather than treating those summaries as interchangeable.
 
-- **Single-nucleus enrichment**
-  - [`chromVAR`](https://greenleaflab.github.io/chromVAR/articles/Introduction.html) / [`gchromVAR`](https://caleblareau.github.io/gchromVAR/reference/index.html) z-scores retained as internal inputs for SCAVENGE seed selection.
-  - [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) trait relevance scores summarized across clusters and cell types.
-  - Per-nucleus UMAPs, cluster-level TRS heatmaps, score intervals, and significant-cell proportions.
+## What it produces
 
-- **Graph-based enrichment**
-  - Trait-score propagation across PCA, LSI, and WNN graph representations.
-  - TRS UMAPs, enrichment heatmaps, cluster-level boxplots, and significant-cell proportion summaries.
+- Open Targets study, credible-set, ancestry, sample-size, and fine-mapping metadata.
+- Posterior-probability-weighted mapping of credible variants to consensus ATAC peaks.
+- Single-nucleus GWAS deviation inputs and SCAVENGE trait-relevance summaries across configured graph representations.
+- Cell-type GWAS deviation heatmaps with nuclei support.
+- Peak-, locus-, and variant-level contribution summaries and accessibility tracks.
 
-- **Cell-type enrichment and attribution**
-  - GWAS chromVAR deviations from ATAC counts summed over each cell type, with nuclei support shown alongside the heatmap.
-  - Exact decomposition of each deviation into peak, credible-variant, and locus contributions.
-  - Relative-deviation heatmaps, locus waterfalls, and variant-level accessibility tracks.
+## Configure the module
 
-## Configuration
+First opt a human aggregation into the module:
 
-Enable the module for a human-data aggregation in `cfg_aggregations.yaml`, then configure Open Targets studies and module-specific settings in `module_genetic_enrichment/cfg.yaml`. Only edit module rows for aggregations that enable this module.
-
-For example, this aggregation setting enables the module:
-
-```{.yaml filename="YAML"}
-modules: [genetic_enrichment]
+```{.yaml filename="cfg_aggregations.yaml"}
+your_aggregation:
+  modules: [genetic_enrichment]
 ```
 
-The module config controls which Open Targets studies are used, how enrichment inputs are selected, and which trait-relevance summaries are produced. The manifest-backed overview below is the reference for genetic-enrichment module parameters.
+Then create a matching row in `module_genetic_enrichment/cfg.yaml`. The committed file is a symlink to the public template; keep that template as a reference and use a project-specific file for real studies.
+
+```{.yaml filename="module_genetic_enrichment/cfg.yaml"}
+your_aggregation:
+  genetic_enrichment_open_targets_studies:
+    lymphocyte_count:
+      Category: positive_control
+      studyId: GCST90002388
+      finemappingMethod: auto
+```
+
+The root workflow currently pins Open Targets release `26.03`. That release identifier is recorded in downstream metadata and determines the available studies, credible sets, and fine-mapping methods.
+
+For `finemappingMethod: auto`, multiomeR selects the first available supported method in this order: `SuSie`, `SuSiE-inf`, then `PICS`. Specify a method explicitly when the method itself is part of the analysis contract; the workflow fails if that method is unavailable for the study.
+
+### Parameter reference
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_parameter_overview("genetic_enrichment")
 ```
 
-The public example below is rendered directly from `module_genetic_enrichment/cfg_template.yaml`:
-
 <details>
-<summary>Show <code>immune_human_2x</code></summary>
+<summary>Show the public <code>immune_human_2x</code> example</summary>
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_yaml_template_entry(module_cfg_template_file, "immune_human_2x")
@@ -61,19 +68,29 @@ emit_yaml_template_entry(module_cfg_template_file, "immune_human_2x")
 
 </details>
 
-Edit `module_genetic_enrichment/cfg.yaml`, keeping disabled or example rows available for reference until the corresponding human-data aggregation is ready.
+## Run and review
 
-## Running the pipeline
+Preview the selected checkpoint targets:
 
-From the repository-root R session described in [Installation](demo_installation.qmd), first complete the main pipeline checkpoints for the human-data aggregation. Then run the module checkpoint. Replace `your_aggregation` with an aggregation that enables the module in `cfg_aggregations.yaml`.
+```{.r filename="R"}
+targets::tar_manifest(
+  names = targets::tar_described_as(
+    tidyselect::contains("checkpoint:genetic_enrichment")
+  ) & tidyselect::matches("your_aggregation"),
+  callr_function = NULL
+)[, c("name", "description")]
+```
 
-### Genetic enrichment checkpoint
+Then run the checkpoint:
 
 ```{.r filename="R"}
 targets::tar_make(
-  names = targets::tar_described_as(tidyselect::contains("checkpoint:genetic_enrichment")) &
-    tidyselect::matches("your_aggregation")
+  names = targets::tar_described_as(
+    tidyselect::contains("checkpoint:genetic_enrichment")
+  ) & tidyselect::matches("your_aggregation")
 )
 ```
 
-This checkpoint writes the configured cell-type, attribution, and single-nucleus trait-relevance summaries, including GWAS chromVAR and SCAVENGE outputs. Runtime depends on the number of configured GWAS studies, enrichment methods, cells, and attributed loci.
+Before interpreting trait scores, verify the resolved Open Targets release and fine-mapping method, the number of credible-set loci and variants retained, and the overlap with consensus peaks. Then compare direct deviation summaries with SCAVENGE-propagated scores and inspect whether apparent cell-type enrichment is supported by enough nuclei and loci.
+
+Runtime and disk use grow with the number of studies, cells, graph representations, permutations, and attributed loci. The [gallery](gallery_genetic_enrichment.qmd) is a curated visual reference and includes a larger six-reaction aggregation; it is not produced by the minimal quickstart.

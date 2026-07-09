@@ -1,4 +1,4 @@
-# Differential Analyses
+# Differential analyses gallery
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -12,6 +12,19 @@ gallery_items <- check_output_gallery_assets(
 )
 ```
 
+These cards are a curated subset of the outputs from the public `immune_human_2x` differential-analysis configuration. They illustrate presentation and diagnostic types; they do not define acceptable effect sizes or significance patterns for another study.
+
+Dynamic volcano-plot branches are displayed with their stable parent target name so the documentation does not depend on branch hashes. See [Differential analyses](downstream_differential_analyses.qmd) for prerequisites, model configuration, and the checkpoint command.
+
 ```{r, echo = FALSE, results = "asis"}
-render_gallery_section(gallery_items, "Differential analyses module")
+render_gallery_section(
+  gallery_items,
+  "Differential analyses module",
+  subsection_descriptions = c(
+    "Gene expression" = "Pseudobulk differential gene-expression results across configured models and contrasts.",
+    "Chromatin accessibility" = "Pseudobulk differential accessibility of consensus-peak features.",
+    "Transcription-factor activity" = "Pseudobulk differential TF-activity results derived from ATAC data.",
+    "Cell-type composition" = "Donor-level composition models with effect and uncertainty summaries."
+  )
+)
 ```

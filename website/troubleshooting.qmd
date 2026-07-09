@@ -1,0 +1,101 @@
+# Troubleshooting
+
+Start with the narrowest failing target or checkpoint. `{targets}` preserves successful work, so fixing the cause and rerunning the same selection is normally safer and faster than deleting `outputs/` or starting a broad workflow again.
+
+## The manifest does not build
+
+Run the project bootstrap and manifest in a repository-root R session:
+
+```{.r filename="R"}
+load_project_runtime(force = TRUE)
+targets::tar_manifest(callr_function = NULL)
+```
+
+Manifest-time failures usually indicate one of these contracts:
+
+- an unknown, misspelled, wrongly typed, or required YAML parameter;
+- an aggregation referencing a reaction absent from `cfg_reactions.tsv`;
+- an unknown module or a missing module-config row;
+- a malformed `crew_controllers.R` return value; or
+- an R package or startup problem.
+
+Fix the named configuration or controller boundary first. Do not launch `tar_make()` until the manifest builds.
+
+## A run reports errored targets
+
+The project runtime provides helpers that collapse repeated branch failures into a readable first triage:
+
+```{.r filename="R"}
+list_distinct_errored_targets()
+```
+
+For commands and stored tracebacks matching a target, aggregation, or module:
+
+```{.r filename="R"}
+list_distinct_errored_targets_w_tracebacks(
+  target_name_pattern = "your_target_or_aggregation"
+)
+```
+
+Use the full target or dynamic-branch name from that output. Inspect the saved target workspace before loading large dependencies into the interactive session:
+
+```{.r filename="R"}
+inspect_target_workspace("full_target_or_branch_name")
+```
+
+The inspection reports the target command, stored error and traceback, plus compact summaries of its dependencies. Empty tables, zero-dimensional matrices, missing model columns, or unexpected labels usually point to an upstream data or configuration problem.
+
+## Inspect one upstream value
+
+Read a target by its full stored name when a focused probe is necessary:
+
+```{.r filename="R"}
+value <- targets::tar_read_raw("full_target_or_branch_name")
+value
+```
+
+Prefer `head()`, `dim()`, `names()`, or a small subset over printing a large object.
+
+## A target is unexpectedly outdated
+
+Ask `{targets}` which part of a narrow endpoint needs rebuilding:
+
+```{.r filename="R"}
+targets::tar_outdated(
+  names = tidyselect::matches("your_target.*your_aggregation"),
+  callr_function = NULL
+)
+```
+
+Code, configuration, input files, controller-independent global objects, or an upstream invalidation can all make downstream targets outdated. Review the returned upstream names before assuming the final target itself is the cause.
+
+## Input and metadata failures
+
+Check the contracts in [Configuration and inputs](main_inputs.qmd):
+
+- `reaction_cellranger_count_dir` contains the required `outs/` files;
+- VCF-backed demultiplexing also has `atac_possorted_bam.bam`;
+- donor and reaction metadata keys are present and unique;
+- non-key metadata columns belong to only one metadata table; and
+- configured donor and reaction IDs match the metadata values exactly.
+
+## Controller and scheduler failures
+
+If a worker does not start or no controller can satisfy a target request:
+
+1. Validate the names, column order, numeric resource values, and controller membership described in [Distributed computing](performance_distributed_computing.qmd).
+2. Reload with `load_project_runtime(force = TRUE)` after edits.
+3. For scheduler controllers, inspect the scheduler output/error log and confirm queue, account, wall time, memory, CPU, module, and filesystem settings.
+4. Reduce concurrency when local workers are being killed for memory pressure.
+
+## Rerun safely
+
+After fixing the cause, rerun the same narrow target or checkpoint selector. Successful upstream targets remain cached.
+
+```{.r filename="R"}
+targets::tar_make(
+  names = tidyselect::matches("your_target.*your_aggregation")
+)
+```
+
+Use an unqualified `targets::tar_make()` only when every active aggregation and enabled module is intentionally in scope. Avoid deleting the target store as a debugging step: it removes evidence and forces unrelated recomputation.

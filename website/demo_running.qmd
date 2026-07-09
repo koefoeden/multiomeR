@@ -1,4 +1,4 @@
-# Run the main pipeline
+# Run the demo
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -8,10 +8,38 @@ knitr::opts_chunk$set(
 )
 ```
 
-Run the command below to process the example `immune_human_2x` aggregation and produce a multimodal Seurat object. This object is primarily a convenience export: the pipeline does not use Seurat for the core processing, and instead keeps BPCells-backed matrices as the primary state. Using 16 logical threads on an AMD EPYC 7543, this target selection takes <25 minutes to run and writes about 6 GB of data to disk.
+Run the command below to process the example `immune_human_2x` aggregation and produce its final multimodal Seurat/Signac compatibility object. The pipeline keeps BPCells-backed matrices as its primary state; the Seurat object is a convenience export and a clear end point for the quickstart.
+
+This selection builds the upstream objects and file targets needed by the final export. It does not request every sibling review plot in the GEX, ATAC, and WNN checkpoints. On one AMD EPYC 7543 system using 16 logical threads, a previous run of this example completed in under 25 minutes and wrote about 6 GB. Treat that as orientation, not a runtime guarantee.
 
 ```{.r filename="R"}
 targets::tar_make(
-  tidyselect::matches("multimodal_Seurat_object.immune_human_2x")
+  names = tidyselect::matches(
+    "^multimodal_Seurat_object[.]immune_human_2x$"
   )
+)
 ```
+
+## Confirm success
+
+After the run, the following command should return `character(0)`, meaning the requested endpoint and its dependencies are up to date:
+
+```{.r filename="R"}
+targets::tar_outdated(
+  names = tidyselect::matches(
+    "^multimodal_Seurat_object[.]immune_human_2x$"
+  ),
+  callr_function = NULL
+)
+```
+
+Confirm that the final object can be read:
+
+```{.r filename="R"}
+demo_object <- targets::tar_read(
+  multimodal_Seurat_object.immune_human_2x
+)
+demo_object
+```
+
+Continue to [Verify and inspect the outputs](demo_outputs.qmd). If the run stops with an error, use [Troubleshooting](troubleshooting.qmd) before broadening the target selection.

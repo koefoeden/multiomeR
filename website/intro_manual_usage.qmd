@@ -2,19 +2,25 @@
 
 ## Where to start
 
-Use the [public example quickstart](demo_installation.qmd) if you want to install multiomeR, run the focused `immune_human_2x` example, and inspect representative outputs before reading the full pipeline walkthroughs.
+Choose the path that matches what you are trying to accomplish.
 
-Then use the workflow pages as references for the parts of the analysis you plan to run:
+- **First successful run**: [install and prepare the public demo](demo_installation.qmd), [run the `immune_human_2x` target](demo_running.qmd), then [verify and inspect exactly what it produced](demo_outputs.qmd).
+- **Your own data**: understand the [main-pipeline stages](main_overview.qmd), create a minimum working [dataset, reaction, and aggregation configuration](main_inputs.qmd), then [run and review one checkpoint at a time](main_running.qmd).
+- **Optional analyses**: use the [differential analyses](downstream_differential_analyses.qmd) or [genetic enrichment](downstream_genetic_enrichment.qmd) module only after its stated prerequisites are met.
+- **Expected results**: compare your review outputs with the [main](gallery_main.qmd), [differential analyses](gallery_differential_analyses.qmd), and [genetic enrichment](gallery_genetic_enrichment.qmd) galleries.
+- **Operation and maintenance**: consult [performance](performance_overview.qmd), [distributed computing](performance_distributed_computing.qmd), and [troubleshooting](troubleshooting.qmd) guidance.
+- **Workflow development**: use the [implementation book](implementation/) for graph structure, repository conventions, and code-level tracing.
 
-- **[Running your own data](main_inputs.qmd)**: Main-pipeline inputs, checkpoint-based execution, implementation diagrams, per-reaction QC, dataset-level merging, BPCells-native RNA/ATAC processing, clustering, cell typing, and WNN integration.
-- **[Differential analyses module](downstream_differential_analyses.qmd)**: Optional aggregation module for datasets with experimental or phenotypic variables that should be modelled across cell type composition, pseudobulk expression, chromatin accessibility, and TF activity.
-- **[Genetic enrichment module](downstream_genetic_enrichment.qmd)**: Optional human-data module for GWAS-informed chromatin accessibility enrichment and trait-relevance analyses.
-- **[Implementation book](implementation/)**: Design philosophy, target graph methodology, and developer-facing details for readers modifying the workflow internals.
+## Before you start
+
+The workflow is designed for Linux and assumes basic familiarity with R, tabular metadata, and the idea of a `{targets}` dependency graph. The quickstart supplies a concrete public configuration. For your own analysis, you need complete `cellranger-arc count` output directories, matching reference data, donor and reaction metadata, and compute resources appropriate for your dataset.
+
+Tutorial pages show one safe path through the workflow. Searchable parameter overviews and the implementation book are reference material: use them when you need to change a default or understand how a target is constructed, rather than reading every entry before your first run.
 
 ## Terminology
 The following nomenclature is used in the documentation and code:
 
-- **'10x reaction' (or possibly just 'reaction')**: The experimental/computational outcome of a single lane on the 10x Genomics Controller chip, which might contain nuclei from multiple samples and/or multiple donors/individuals. One 10x reaction thus corresponds to a single output directory from [cellranger-arc count](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/running-pipelines/single-library-analysis).
-- **donor**: A single individual, subject, patient, participant, etc. that has a unique donor_id and specific genotype.
+- **10x reaction** (or **reaction**): One configured 10x Multiome library or run represented by one row in `cfg_reactions.tsv` and one output directory from [cellranger-arc count](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/running-pipelines/single-library-analysis). A reaction can contain nuclei from one or several donors.
+- **donor**: One individual, subject, patient, or participant identified by a stable `donor_id`.
 - **dataset**: A group of one or more reactions that share dataset-level processing settings, such as reference genome and reaction-level QC filters.
 - **aggregation**: A configured joint analysis of one or more reactions, including merged RNA/ATAC processing, clustering, cell typing, and optional downstream modules.

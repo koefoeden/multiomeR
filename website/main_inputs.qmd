@@ -5,33 +5,117 @@ pipeline_name <- "processing_and_aggregation"
 source("helpers/_setup.R")
 ```
 
-## Three configuration layers
+multiomeR uses three linked configuration layers. A **dataset** defines a shared reference and reaction-level QC policy, a **reaction** points to one `cellranger-arc count` output, and an **aggregation** selects reactions for joint GEX, ATAC, and WNN analysis.
 
-The main pipeline is configured in three layers: 
-- **datasets** define shared genome and QC settings for a number of reactions
-- **reactions** point to individual cellranger-arc count outputs
-- **aggregations** choose which reactions to process together.
+| Layer | Configuration | Key relationship |
+|---|---|---|
+| Dataset | `cfg_datasets.yaml` | Reactions refer to the dataset key. |
+| Reaction | `cfg_reactions.tsv` | Aggregations refer to one or more `reaction_ID` values. |
+| Aggregation | `cfg_aggregations.yaml` | Metadata tables must cover the configured donor and reaction IDs. |
 
-Defaults, missing-value rules, data types, and allowed values for YAML-backed configuration live in `cfg_pipeline_parameters.tsv`. Dataset, aggregation, and module YAML files contain concrete config rows and optional row-to-row inheritance with `inherits:`.
+The committed `cfg_datasets.yaml`, `cfg_reactions.tsv`, and `cfg_aggregations.yaml` files are symlinks to public templates. Keep those templates as examples. For a real project, replace the symlinks with project-specific files or provide them from a downstream private repository.
 
-## `cfg_datasets.yaml`
+## Start with one explicitly scoped analysis
 
-Dataset-level settings live in [`cfg_datasets.yaml`](`r datasets_github_file`). A dataset is the shared context for one or more 10x reactions, typically a genome/reference combination plus dataset-wide QC rules. Reactions in `cfg_reactions.tsv` refer to these dataset keys, so define datasets before adding reaction rows.
+`is_active` defaults to `true` for every aggregation. Before an unqualified `targets::tar_make()`, either remove unavailable template rows or add `is_active: false` to every aggregation you are not ready to run. During setup, always select one aggregation explicitly.
 
-In the public repository, `cfg_datasets.yaml`, `cfg_reactions.tsv`, and `cfg_aggregations.yaml` point to template files. Keep those public example entries as a reference, and use project-specific copies or downstream private config files for study-specific paths, metadata, and analysis settings.
+The following minimum example shows the relationship between the three layers. Replace the paths, identifiers, and marker genes with values appropriate for your study.
 
-Defaults and validation rules for dataset, aggregation, and module YAML parameters live in [`cfg_pipeline_parameters.tsv`](`r pipeline_parameters_github_file`). A YAML row only needs to list values that differ from the manifest defaults, plus any parameters where `allow_missing_after_inheritance` is `FALSE` and the manifest default is `NULL`.
+### 1. Define one dataset
 
-The manifest-backed overview below is the reference for dataset parameters. Open a topic to inspect defaults, data types, allowed values, and examples.
+```{.yaml filename="cfg_datasets.yaml"}
+your_dataset:
+  dataset_cellranger_arc_refdata_dir: /path/to/refdata-cellranger-arc
+  dataset_QC_exclude_list_per_reaction:
+    - TSS.enrichment < 4
+    - nucleosome_signal > 4
+    - nCount_RNA < 250
+  dataset_run_amulet: false
+```
+
+`dataset_cellranger_arc_refdata_dir` is required. The QC expressions are evaluated against per-barcode metadata. Starting with `dataset_run_amulet: false` avoids adding AMULET to the first data run; enable it deliberately after the basic input contract works.
+
+### 2. Define one reaction
+
+```{.text filename="cfg_reactions.tsv"}
+reaction_ID	dataset	reaction_donor_id	reaction_n_donors	reaction_cellranger_count_dir	reaction_cellbender_h5_file	reaction_donors_VCF_file
+your_reaction	your_dataset	donor_1	1	/path/to/your_reaction	NA	NA
+```
+
+`reaction_cellranger_count_dir` points to the directory containing `outs/`, not to `outs/` itself. The baseline pipeline requires:
+
+```{.text filename="Text"}
+<reaction_cellranger_count_dir>/outs/
+|-- summary.csv
+|-- filtered_feature_bc_matrix.h5
+|-- atac_fragments.tsv.gz
+|-- atac_fragments.tsv.gz.tbi
+`-- per_barcode_metrics.csv
+```
+
+If `reaction_donors_VCF_file` is configured, `atac_possorted_bam.bam` is also required for `cellsnp-lite`. Without a VCF, the pipeline skips genotype demultiplexing and assigns `reaction_donor_id` to every called nucleus. That donor ID must match the donor metadata table.
+
+### 3. Create keyed metadata
+
+The donor metadata table must contain one unique row per `donor_id`:
+
+```{.text filename="donor_metadata.tsv"}
+donor_id	condition
+donor_1	control
+```
+
+The reaction metadata table must contain one unique row per `TENX_reaction_ID`:
+
+```{.text filename="reaction_metadata.tsv"}
+TENX_reaction_ID	batch
+your_reaction	batch_1
+```
+
+Apart from their key columns, the donor and reaction tables must not reuse column names. Put donor-specific phenotypes and covariates in the donor table; put library-, run-, or batch-specific variables in the reaction table.
+
+### 4. Define one aggregation
+
+```{.yaml filename="cfg_aggregations.yaml"}
+your_aggregation:
+  aggregation_reaction_IDs: [your_reaction]
+  aggregation_donor_id_metadata_tsv: /path/to/donor_metadata.tsv
+  aggregation_reaction_ID_metadata_tsv: /path/to/reaction_metadata.tsv
+  aggregation_GEX_marker_genes:
+    Cell_type_A: [GENE1, GENE2]
+    Cell_type_B: [GENE3, GENE4]
+  is_active: true
+```
+
+Omit `modules` for the first main-pipeline run. Add optional module names and matching module-config rows only after the main aggregation has passed its review checkpoints.
+
+### 5. Validate before running
+
+From the repository-root R session, construct the graph and inspect the targets created for the aggregation:
+
+```{.r filename="R"}
+manifest <- targets::tar_manifest(callr_function = NULL)
+
+manifest |>
+  dplyr::filter(stringr::str_ends(name, ".your_aggregation")) |>
+  dplyr::select(name, description)
+```
+
+Manifest construction validates the YAML parameter schema, aggregation-to-reaction references, module names and rows, and controller setup. Metadata file contents are validated when their targets run. Fix manifest-time errors before calling `tar_make()`, then continue to [Running the workflow](main_running.qmd).
+
+## Configuration reference
+
+The searchable overviews below are generated from `cfg_pipeline_parameters.tsv`, the same manifest used for runtime defaults and validation. Use them to change a default after the minimum configuration works.
+
+### Dataset parameters
+
+Dataset-level settings live in [`cfg_datasets.yaml`](`r datasets_github_file`).
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_parameter_overview("dataset")
 ```
 
-The public human example uses the following dataset entry, rendered directly from `cfg_datasets.yaml`:
-
 <details>
-<summary>Show <code>immune_human_dataset</code></summary>
+<summary>Show the public <code>immune_human_dataset</code> example</summary>
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_yaml_template_entry(datasets_config_file, "immune_human_dataset")
@@ -39,21 +123,22 @@ emit_yaml_template_entry(datasets_config_file, "immune_human_dataset")
 
 </details>
 
-## `cfg_reactions.tsv`
+### Reaction columns
 
-Reaction-level configuration lives in [`cfg_reactions.tsv`](`r reactions_github_file`). Add one row per 10x reaction with a stable `reaction_ID`, the matching `dataset`, the `reaction_cellranger_count_dir`, and any donor demultiplexing fields relevant to that reaction.
+Reaction-level configuration lives in [`cfg_reactions.tsv`](`r reactions_github_file`).
 
-Each reaction should point to a [`cellranger-arc count`](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest/analysis/running-pipelines/single-library-analysis) output directory. The pipeline expects the configured `reaction_cellranger_count_dir` to contain the standard `outs/` files, including:
+| Column | Meaning |
+|---|---|
+| `reaction_ID` | Stable reaction identifier used in target names and aggregation config. |
+| `dataset` | Dataset key from `cfg_datasets.yaml`. |
+| `reaction_donor_id` | Donor assigned to a non-multiplexed reaction; use `NA` when donor identities are resolved from a VCF. |
+| `reaction_n_donors` | Expected donor count. |
+| `reaction_cellranger_count_dir` | Path to the directory containing `outs/`. |
+| `reaction_cellbender_h5_file` | Optional CellBender-corrected GEX H5 file; otherwise `NA`. |
+| `reaction_donors_VCF_file` | Optional donor-genotype VCF for `cellsnp-lite` and `vireo`; otherwise `NA`. |
 
-```{.text filename="Text"}
-<reaction_cellranger_count_dir>/outs/
-|-- raw_feature_bc_matrix.h5
-|-- filtered_feature_bc_matrix.h5
-|-- atac_fragments.tsv.gz
-|-- atac_fragments.tsv.gz.tbi
-|-- atac_possorted_bam.bam
-|-- per_barcode_metrics.csv
-```
+<details>
+<summary>Show the public reaction table</summary>
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 reaction_template <- readr::read_tsv("cfg_reactions.tsv", show_col_types = FALSE)
@@ -62,39 +147,18 @@ cat(knitr::kable(reaction_template, format = "html"))
 cat("\n</div>\n")
 ```
 
-The reaction table columns are:
+</details>
 
-| Column | Meaning |
-|---|---|
-| `reaction_ID` | Stable reaction identifier used throughout target names and downstream config. |
-| `dataset` | Dataset key used to join dataset-level settings from `cfg_datasets.yaml`. |
-| `reaction_donor_id` | Donor ID assigned to all nuclei in a non-multiplexed reaction. Use `NA` for multiplexed reactions. |
-| `reaction_n_donors` | Number of donors expected in the reaction. |
-| `reaction_cellranger_count_dir` | Path to the `cellranger-arc count` output directory. |
-| `reaction_cellbender_h5_file` | Optional CellBender-corrected GEX H5 file. Use `NA` when not used. |
-| `reaction_donors_VCF_file` | Optional VCF for donor demultiplexing. Use `NA` when not used. |
+### Aggregation parameters
 
-## `cfg_aggregations.yaml`
-
-Aggregation-level settings live in [`cfg_aggregations.yaml`](`r aggregations_github_file`). An aggregation combines one or more configured reactions and controls merged RNA/ATAC processing, clustering, annotation, plotting, and optional downstream modules.
-
-The manifest-backed overview below is the reference for aggregation parameters. Required rows must resolve to a non-missing value after inheritance and defaults are applied; optional rows can remain `NULL` when the corresponding behavior should be disabled.
+Aggregation-level settings live in [`cfg_aggregations.yaml`](`r aggregations_github_file`). Required parameters must resolve to a non-missing value after defaults and optional `inherits:` parents are applied. Optional parameters can remain `NULL` to disable the corresponding behavior.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_parameter_overview("aggregation")
 ```
 
-Each aggregation also points to metadata files:
-
-- **`aggregation_donor_id_metadata_tsv`**: donor-level metadata with a `donor_id` column matching the donor IDs assigned during per-reaction processing.
-- **`aggregation_reaction_ID_metadata_tsv`**: reaction-level metadata with a `TENX_reaction_ID` column matching the configured reaction IDs.
-
-These metadata tables are joined to the per-cell metadata before downstream correction, plotting, and modelling.
-
-The public `immune_human_2x` aggregation below is rendered directly from `cfg_aggregations.yaml`. It shows the required aggregation inputs plus the example-specific optional overrides; standard optional settings come from `cfg_pipeline_parameters.tsv`.
-
 <details>
-<summary>Show <code>immune_human_2x</code></summary>
+<summary>Show the public <code>immune_human_2x</code> example</summary>
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_yaml_template_entry(aggregations_config_file, "immune_human_2x")

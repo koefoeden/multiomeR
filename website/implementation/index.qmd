@@ -2,15 +2,28 @@
 
 This book collects developer-facing details for readers who want to understand or modify the internals of multiomeR. It complements the [main user manual](../), which covers installation, configuration, checkpoint-based execution, and output inspection.
 
-Use this book when you need to reason about why the workflow is structured the way it is, how the simplified target graph views relate to the real `{targets}` graph, or where a change should fit into the main pipeline and optional downstream modules.
+Use this book when you need to trace a configuration value into mapped targets, understand how the simplified graph views relate to the real `{targets}` graph, or decide where an implementation change belongs.
 
 ## Where to start
 
-- **[Background and design philosophy](background_philosophy.qmd)**: Why multiomeR is organized as a configurable, editable workflow rather than a conventional high-level package interface.
-- **[Implementation conventions](implementation_conventions.qmd)**: The metadata, configuration, mapping, symbol, and runtime contracts used throughout the target graph.
-- **[Reading the graph views](graph_methodology.qmd)**: How the implementation diagrams are generated, simplified, and intended to be interpreted.
-- **[Main pipeline](implementation_main.qmd)**: Graph views for reaction-level preprocessing, GEX, ATAC, WNN integration, and subgroup reprocessing.
-- **[Differential analyses](implementation_differential_analyses.qmd)**: Graph view for the optional differential-analysis module.
-- **[Genetic enrichment](implementation_genetic_enrichment.qmd)**: Graph views for the optional genetic-enrichment module.
+For a first implementation pass:
+
+1. Read [Reading the graph views](graph_methodology.qmd) and follow its configuration-to-target trace.
+2. Open the [main pipeline](implementation_main.qmd) graph for the modality or checkpoint you plan to change.
+3. Use [Implementation conventions](implementation_conventions.qmd) to understand the relevant manifest, mapping, symbol, tag, and runtime contracts.
+4. Read [Background and design philosophy](background_philosophy.qmd) when you need the rationale for the editable-workflow design.
+
+The [differential analyses](implementation_differential_analyses.qmd) and [genetic enrichment](implementation_genetic_enrichment.qmd) chapters cover the optional module graphs.
+
+## Common entry points
+
+| Change | Start with |
+|---|---|
+| Add or revise a YAML parameter | `cfg_pipeline_parameters.tsv`, then the owning config reader or target. |
+| Change reaction preprocessing | `_targets.R` mapping plus `extra_targets/per_reaction_targets.R`. |
+| Change aggregation GEX, ATAC, or WNN processing | The corresponding graph section and `extra_targets/*_targets.R` file. |
+| Add a review boundary | Existing `[checkpoint:<name>]` description tags and the user-manual selector contract. |
+| Add a graph-visible target | Existing `[part_of_graph:<graph_id>]` tags and graph-pruning rules. |
+| Change resource routing | `crew_controllers.R`, `R/resource_helpers.R`, and the runtime bootstrap convention. |
 
 If you are trying to run multiomeR rather than modify it, start with the [main manual](../).

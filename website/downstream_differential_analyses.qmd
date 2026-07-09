@@ -1,59 +1,76 @@
-# Differential Analyses
+# Differential analyses
 
 ```{r setup, include = FALSE}
 pipeline_name <- "differential_analyses"
 source("helpers/_setup.R")
 ```
 
-## Purpose
+## When to use this module
 
-This optional module is relevant when an aggregation has experimental, clinical, phenotypic, or technical variables that should be modelled across processed Multiome data. It is defined inside the root [`_targets.R`](`r pipeline_github_file`) workflow, with module-specific target fragments and configuration in `module_differential_analyses/`.
+Use this optional module when a completed aggregation contains replicated donor- or sample-level experimental, clinical, phenotypic, or technical variables that should be modelled across cell-type composition or pseudobulk molecular features.
 
-Representative outputs from this module are shown in the [differential analyses output gallery](gallery_differential_analyses.qmd).
+The module does not create biological replication. The donor structure, covariates, design formula, and contrasts must be defensible for the intended analysis before the workflow is run.
 
-## Features
+Representative outputs are shown in the [differential analyses gallery](gallery_differential_analyses.qmd), and the target structure is shown in the [implementation graph](implementation/implementation_differential_analyses.html).
 
-The differential analyses module extends a completed aggregation with configurable statistical models for composition and pseudobulk feature testing.
+## Prerequisites
 
-- **Differential modelling**
-  - Cell-type composition models for phenotype, clinical, technical, or experimental variables.
-  - Pseudobulk differential gene expression, chromatin accessibility, and transcription-factor activity.
-  - Model fitting with [`edgeR`](https://bioconductor.org/packages/release/bioc/html/edgeR.html) and [`limma`](https://bioconductor.org/packages/release/bioc/html/limma.html).
+Before enabling the module, confirm that:
 
-- **Configuration-driven contrasts**
-  - Dynamic model branches defined from module configuration.
-  - Shared donor metadata and modality-specific filtering.
-  - Reusable model specifications across GEX, ATAC, and TF-activity analyses.
+- the aggregation has passed the GEX, ATAC, and multimodal checkpoints;
+- WNN cell-type metadata and GEX, ATAC, and TF-activity pseudobulk matrices are available;
+- the donor metadata contains one unique row per `donor_id` and every variable used in a model;
+- model variables are donor- or pseudobulk-sample-level variables, not duplicated cell-level measurements; and
+- the number and distribution of donors support the specified design and contrasts.
 
-- **Result interpretation**
-  - Pseudobulk depth summaries and P-value density diagnostics.
-  - Volcano plots and significant-element summaries.
-  - Cross-modality summaries comparing significant signals across data layers.
+Use `differential_analyses_extended_donor_id_metadata_tsv` when the modelling table needs variables beyond the aggregation's normal donor metadata. It must retain the same unique `donor_id` key.
 
-- **Biological annotation**
-  - GSEA on DGE results using selected [`MSigDB`](https://www.gsea-msigdb.org/gsea/msigdb) collections and optional custom gene sets.
-  - Optional links between top features and [`Open Targets`](https://platform.opentargets.org/) GWAS evidence.
+## What it produces
 
-## Configuration
+- Differential cell-type-composition models and coefficient summaries.
+- Pseudobulk differential gene expression, chromatin accessibility, and TF activity using [`edgeR`](https://bioconductor.org/packages/release/bioc/html/edgeR.html) and [`limma`](https://bioconductor.org/packages/release/bioc/html/limma.html).
+- Depth and P-value diagnostics, volcano plots, significant-element counts, and cross-modality summaries.
+- GSEA of DGE results with selected [`MSigDB`](https://www.gsea-msigdb.org/gsea/msigdb) collections and optional custom gene sets.
+- Optional Open Targets evidence annotations for top features.
 
-Enable the module for an aggregation in `cfg_aggregations.yaml`, then configure the module-specific model settings in `module_differential_analyses/cfg.yaml`. Only edit module rows for aggregations that enable this module.
+## Configure the module
 
-For example, this aggregation setting enables the module:
+First opt the aggregation into the module:
 
-```{.yaml filename="YAML"}
-modules: [differential_analyses]
+```{.yaml filename="cfg_aggregations.yaml"}
+your_aggregation:
+  modules: [differential_analyses]
 ```
 
-The module config controls which variables are modelled, which metadata columns are used, and which contrasts are run. The manifest-backed overview below is the reference for differential-analysis module parameters.
+Then create a matching row in `module_differential_analyses/cfg.yaml`. The committed file is a symlink to the public template; preserve the template as a reference and use a project-specific file for a real analysis.
+
+```{.yaml filename="module_differential_analyses/cfg.yaml"}
+your_aggregation:
+  differential_analyses_DCTC_plot_phenotype_vars: condition
+  differential_analyses_DCTC_formula_chr: >-
+    cbind(n_nuclei, n_other_nuclei) ~ 0 + condition
+  differential_analyses_psbulk_DX_models:
+    condition_model:
+      cell_type_subset: NULL
+      design_matrix_func_name: NULL
+      formula: ~ 0 + cluster + condition
+      random_effect: NULL
+      contrast_specs_vec:
+        treated_vs_control: conditiontreated
+```
+
+The full module checkpoint requests both composition and pseudobulk review outputs. Configure the DCTC phenotype/formula and at least one pseudobulk model before using that broad selector. Formula terms and contrast coefficients must match columns produced by the model matrix.
+
+### Parameter reference
+
+The OLINK and bulk-RNA path fields are reserved optional integration inputs and are not consumed by the current public differential-analysis checkpoint. Leave them `NULL` unless the corresponding integration is implemented in your downstream workflow.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_parameter_overview("differential_analyses")
 ```
 
-The public example below is rendered directly from `module_differential_analyses/cfg_template.yaml`:
-
 <details>
-<summary>Show <code>immune_human_2x</code></summary>
+<summary>Show the public <code>immune_human_2x</code> example</summary>
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_yaml_template_entry(module_cfg_template_file, "immune_human_2x")
@@ -61,19 +78,29 @@ emit_yaml_template_entry(module_cfg_template_file, "immune_human_2x")
 
 </details>
 
-Edit `module_differential_analyses/cfg.yaml`, keeping disabled or example rows available for reference until the corresponding aggregation is ready.
+## Run and review
 
-## Running the pipeline
+Preview the selected targets first:
 
-From the repository-root R session described in [Installation](demo_installation.qmd), first complete the main pipeline checkpoints for the aggregation. Then run the module checkpoint. Replace `your_aggregation` with an aggregation that enables the module in `cfg_aggregations.yaml`.
+```{.r filename="R"}
+targets::tar_manifest(
+  names = targets::tar_described_as(
+    tidyselect::contains("checkpoint:differential_analyses")
+  ) & tidyselect::matches("your_aggregation"),
+  callr_function = NULL
+)[, c("name", "description")]
+```
 
-### Differential analyses checkpoint
+Then run the checkpoint:
 
 ```{.r filename="R"}
 targets::tar_make(
-  names = targets::tar_described_as(tidyselect::contains("checkpoint:differential_analyses")) &
-    tidyselect::matches("your_aggregation")
+  names = targets::tar_described_as(
+    tidyselect::contains("checkpoint:differential_analyses")
+  ) & tidyselect::matches("your_aggregation")
 )
 ```
 
-This checkpoint writes the differential cell-type composition plots, pseudobulk model diagnostics, volcano plots, GSEA summaries, and cross-modality summaries configured for the aggregation. Runtime depends on the number of modelled variables, cell types, donors, and pseudobulk contrasts.
+Review pseudobulk depths and retained donor counts before interpreting coefficients. Check model-matrix terms, P-value distributions, effect directions, and agreement or disagreement across DGE, DCA, and DTFA. Treat the [gallery](gallery_differential_analyses.qmd) as a visual reference, not as a statistical acceptance threshold.
+
+Runtime depends on the number of donors, cell types, model specifications, contrasts, and GSEA branches. Use [Troubleshooting](troubleshooting.qmd) if a formula, contrast, or metadata join fails.

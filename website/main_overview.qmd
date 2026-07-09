@@ -1,4 +1,4 @@
-# Introduction to the main pipeline
+# Main-pipeline overview
 
 ```{r setup, include = FALSE}
 pipeline_name <- "processing_and_aggregation"
@@ -7,16 +7,37 @@ source("helpers/_setup.R")
 
 ## Purpose
 
-This workflow is defined in [`_targets.R`](`r pipeline_github_file`) and represents the main analysis pipeline after cellranger-arc count output generation. It processes individual cellranger-arc count outputs (reactions) in parallel, combines selected reactions into specified aggregations, and runs several multimodal workflows.
+This page describes the main processing branch defined by [`_targets.R`](`r pipeline_github_file`) after `cellranger-arc count`. The root workflow also contains shared setup targets and any optional modules enabled by an aggregation.
 
 Representative outputs from the public example workflow are collected in the [main pipeline output gallery](gallery_main.qmd).
 
-## Features
+## Entry requirements
 
-- **Genotype-aware demultiplexing and metadata integration**: per-reaction barcode extraction, optional [`cellsnp-lite`](https://cellsnp-lite.readthedocs.io/) and [`vireo`](https://vireosnp.readthedocs.io/) donor assignment, donor/reaction metadata validation, and aggregation-level metadata joins.
-- **Extensive configurable QC**: RNA count/feature/mitochondrial/novelty metrics, ATAC TSS enrichment and nucleosome signal, Cell Ranger-only and full-metadata exclusion sets, [`AMULET`](https://github.com/UcarLab/AMULET) ATAC doublet metrics, GEX/ATAC [`scDblFinder`](https://www.bioconductor.org/packages/release/bioc/html/scDblFinder.html), and interpretable UpSet/violin/checkpoint plots across reaction, dataset, and aggregation levels.
-- **BPCells-native GEX processing**: optional CellBender input, BPCells-backed count matrices, SCTransform/PCA, [`Harmony`](https://portals.broadinstitute.org/harmony/) correction, UMAP, Leiden clustering, marker-gene module scoring, cell-type labelling, cluster marker testing, and marker/metadata review plots.
-- **BPCells-native ATAC processing**: fragment merging, genome blacklist handling, cluster-aware peak calling with MACS3 or BPCells tiling, consensus peak construction, peak annotation, BPCells peak matrices, TF-IDF/LSI, Harmony correction, UMAP, Leiden clustering, differential accessibility, motif/TF activity summaries, and coverage-track plots.
-- **Multimodal integration**: native WNN construction from aligned GEX PCA and ATAC LSI embeddings, WNN clustering and UMAPs, RNA/ATAC modality-weight summaries, cross-modality cluster comparison plots, and final multimodal metadata.
-- **Regulatory feature outputs**: consensus peak tables, marker TF activity, differential accessibility BEDs, ArchR-style peak-gene correlation candidates/results, and pseudobulk GEX/ATAC matrices for downstream modules.
-- **Compatibility exports and focused reprocessing**: GEX-only review objects and final [`Seurat`](https://satijalab.org/seurat/)/[`Signac`](https://stuartlab.org/signac/) multimodal objects, while keeping BPCells-native targets as the primary pipeline state; optional subgroup reprocessing reruns GEX, ATAC, and WNN analyses within large parent cell groups.
+Before configuring your own run, you need:
+
+- one complete `cellranger-arc count` output directory per reaction;
+- the matching Cell Ranger ARC reference directory;
+- stable reaction and donor identifiers plus keyed metadata tables;
+- marker genes for the expected cell populations; and
+- a local or scheduler-backed `crew` controller with sufficient memory.
+
+Start with [Configuration and inputs](main_inputs.qmd) once these inputs are available.
+
+## Processing stages
+
+1. **Reaction preprocessing** reads Cell Ranger matrices and fragments, calculates RNA and ATAC QC, optionally runs AMULET and genotype demultiplexing, and assigns stable reaction-prefixed barcodes.
+2. **Dataset-level review** compares reactions that share a reference genome and QC policy before they enter an aggregation.
+3. **GEX processing** merges selected reactions into BPCells-backed matrices, performs dimension reduction and clustering, assigns cell-type labels, and creates the first review checkpoint.
+4. **ATAC processing** merges fragments, calls or tiles peaks, creates the consensus peak matrix, performs LSI and clustering, and summarizes motif and regulatory activity.
+5. **Multimodal integration** combines aligned GEX and ATAC embeddings with WNN, produces integrated metadata and review plots, and optionally exports a [`Seurat`](https://satijalab.org/seurat/)/[`Signac`](https://stuartlab.org/signac/) compatibility object.
+
+When configured, the main branch can also perform genotype-aware donor assignment, CellBender input handling, Harmony correction, chromHMM annotation, peak-gene correlation, coverage tracks, and subgroup reprocessing. These are configuration-dependent capabilities, not requirements for every run.
+
+The [implementation graph](implementation/implementation_main.html) shows the target-level structure behind these stages.
+
+## Recommended path
+
+1. Create the minimum dataset, reaction, aggregation, and metadata entries in [Configuration and inputs](main_inputs.qmd).
+2. Validate the target graph without running data targets.
+3. Follow [Running the workflow](main_running.qmd) and review the GEX, ATAC, and multimodal checkpoints in order.
+4. Enable [differential analyses](downstream_differential_analyses.qmd) or [genetic enrichment](downstream_genetic_enrichment.qmd) only after the main aggregation is satisfactory.

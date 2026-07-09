@@ -6,6 +6,7 @@ book:
   title: "multiomeR Manual"
   site-url: https://koefoeden.github.io/multiomeR/
   repo-url: https://github.com/koefoeden/multiomeR
+  repo-subdir: website
   repo-actions: [source, issue]
   page-navigation: true
   sidebar:
@@ -15,7 +16,7 @@ book:
       chapters:
         - index.qmd
         - intro_manual_usage.qmd
-    - part: "Quickstart: Public PBMC data"
+    - part: "Quickstart: Public two-reaction demo"
       chapters:
         - demo_installation.qmd
         - demo_running.qmd
@@ -29,15 +30,16 @@ book:
       chapters:
         - downstream_differential_analyses.qmd
         - downstream_genetic_enrichment.qmd
-    - part: "Performance"
-      chapters:
-        - performance_overview.qmd
-        - performance_distributed_computing.qmd
     - part: "Output gallery"
       chapters:
         - gallery_main.qmd
         - gallery_differential_analyses.qmd
         - gallery_genetic_enrichment.qmd
+    - part: "Operation and scaling"
+      chapters:
+        - performance_overview.qmd
+        - performance_distributed_computing.qmd
+        - troubleshooting.qmd
     - part: "Reference"
       chapters:
         - href: implementation/

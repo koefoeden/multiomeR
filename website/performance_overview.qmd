@@ -1,7 +1,25 @@
-# Performance overview
+# Performance and scaling
 
-## Performance results
+multiomeR gains performance from two complementary mechanisms: `{targets}` exposes independent reactions, modalities, and analysis branches for concurrent execution, while BPCells keeps large matrices on disk and streams many operations instead of materializing dense objects.
 
-The initial example benchmark shows sub-linear scaling across the current 2- and 6-reaction example aggregations: the larger CellRanger input increases estimated wall time by only ~1.4-fold. In practice, this means that larger projects should benefit substantially from the pipeline's reaction-level and branch-level parallelism when sufficient compute resources are available, rather than scaling like a fully serial workflow.
+Actual wall time depends on input nuclei, retained cells, peak counts, enabled plots and modules, hardware, scheduler latency, controller concurrency, and which targets are already up to date. Treat benchmark results as workload descriptions, not promises for another machine or configuration.
 
-![Estimated wall time to each aggregation's final `multimodal_Seurat_object` target by total CellRanger input nuclei. Stacked bar segments show the largest critical-path target-step contributions, remaining steps are collapsed into `Other`, and the dashed line connects total critical-path wall time. Estimates are generated from recorded `targets` runtime metadata with `cache_multimodal_seurat_walltime()`, using the DAG critical path and treating dynamic branches as concurrently runnable. This interim figure will be replaced with the full 5-, 10-, 20-, and 40-reaction benchmark once those aggregations have been generated.](../outputs/benchmark/multimodal_seurat_walltime.png){#fig-multimodal-seurat-walltime}
+## Current example snapshot
+
+The current stored benchmark contains two public aggregations and estimates the critical path to each final `multimodal_Seurat_object` from recorded `{targets}` runtime metadata.
+
+| Aggregation | Reactions | Cell Ranger input nuclei | Estimated critical path | Sum if ancestor targets ran serially |
+|---|---:|---:|---:|---:|
+| `immune_human_2x` | 2 | 17,277 | 17.3 minutes | 31.4 minutes |
+| `PBMC_human_6x` | 6 | 51,291 | 23.8 minutes | 52.4 minutes |
+
+The critical-path estimate treats dynamic branches as concurrently runnable. The difference between that estimate and the serial sum illustrates available parallelism for these two runs; it does not establish a general scaling law from two observations.
+
+## How to use these numbers
+
+- Compare changes only when the pipeline version, configuration, target endpoint, and estimation method are recorded together.
+- Expect scheduler queue time and limited worker capacity to increase observed wall time beyond the graph-only critical-path estimate.
+- Inspect target-level runtime and memory on your own representative aggregation before sizing a production run.
+- Start with one narrow aggregation and checkpoint, then increase worker concurrency only when memory headroom is known.
+
+Configure execution capacity in [Distributed computing](performance_distributed_computing.qmd). If a run is unexpectedly slow or repeatedly rebuilds targets, use [Troubleshooting](troubleshooting.qmd).

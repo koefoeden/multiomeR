@@ -1,4 +1,4 @@
-# Understanding the outputs
+# Verify and inspect the outputs
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -8,7 +8,9 @@ knitr::opts_chunk$set(
 )
 ```
 
-The public `immune_human_2x` demo writes its `targets` store to `outputs`, as configured in `_targets.yaml`. That store contains three kinds of output that are useful to inspect after the run:
+The public `immune_human_2x` demo writes its `targets` store to `outputs`, as configured in `_targets.yaml`. The quickstart selection creates the objects and file targets required by the final compatibility export. Plot targets are separate review outputs and are not all dependencies of that endpoint.
+
+The store can contain three kinds of output:
 
 - `objects/`: serialized R objects managed by `targets`, returned by `targets::tar_target()` targets
 - `files/`: file and directory artifacts saved by `get_structured_file_path()` inside `tarchetypes::tar_file()` targets
@@ -21,7 +23,7 @@ Most intermediate and final result objects are saved automatically by `targets` 
 ```{.r filename="R"}
 targets::tar_read(UMAP_embeddings_tibble.WNN.immune_human_2x)
 targets::tar_read(metadata_w_cell_types_tibble.WNN.immune_human_2x)
-targets::tar_read(cell_type_marker_tibbles.GEX.immune_human_2x)
+targets::tar_read(multimodal_Seurat_object.immune_human_2x)
 ```
 
 See the official [`tar_read()` documentation](https://docs.ropensci.org/targets/reference/tar_read.html) for details on reading target values from storage.
@@ -33,16 +35,16 @@ Other targets in the pipeline explicitly write files to disk inside `tarchetypes
 ```{.r filename="R"}
 targets::tar_read(cellranger_barcodes_tsv.healthy_PBMC_human)
 targets::tar_read(aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x)
-targets::tar_read(consensus_peak_BED.ATAC.immune_human_2x)
+targets::tar_read(consensus_peak_BPCells_matrix_dir.ATAC.immune_human_2x)
 ```
 
-Internally, these paths are created with `get_structured_file_path()`. The helper derives a stable location from the active target name and writes it under `outputs/files`. Target name parts after dots become parent directories in reverse order, so a target like `aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x` is placed under:
+Internally, these paths are created with `get_structured_file_path()`. For example, `aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x` is placed under:
 
 ```text
 outputs/files/immune_human_2x/GEX/
 ```
 
-After the public demo run, you should therefore find produced files ordered separated by individual reactions, datasets, and the aggregation name:
+The resulting files are grouped by reaction, dataset, or aggregation:
 
 ```text
 outputs/files/
@@ -55,7 +57,9 @@ See the official [`targets` local data documentation](https://books.ropensci.org
 
 ## Plots
 
-Plots are saved in a very similar manner to files. The `save_plots_structured()` helper function derives paths from the target name, like `get_structured_file_path()`, but writes under `outputs/plots` instead:
+Plots are saved in a similar structure under `outputs/plots`, but the final-object quickstart selection does not request every checkpoint plot. To build and review those outputs, follow the GEX, ATAC, and multimodal selections in [Running the workflow](main_running.qmd).
+
+When plot targets have been requested, their layout follows this pattern:
 ```text
 outputs/plots/
 |-- healthy_PBMC_human/ (reaction 1 specific plots)
@@ -64,4 +68,10 @@ outputs/plots/
 `-- immune_human_2x/ (aggregation-level plots)
 ```
 
-See the [main pipeline output gallery](gallery_main.qmd) for selected plots.
+The [main pipeline output gallery](gallery_main.qmd) contains curated snapshots showing what representative checkpoint outputs look like. Gallery assets are documentation snapshots; they are not evidence that the corresponding target was built in your local store.
+
+## Next steps
+
+- To adopt the workflow, continue with the [main-pipeline overview](main_overview.qmd) and [configuration walkthrough](main_inputs.qmd).
+- To generate all checkpoint review outputs for an aggregation, use [Running the workflow](main_running.qmd).
+- To diagnose a failed or unexpectedly stale target, use [Troubleshooting](troubleshooting.qmd).

@@ -6,6 +6,7 @@ book:
   title: "multiomeR Implementation"
   site-url: https://koefoeden.github.io/multiomeR/implementation/
   repo-url: https://github.com/koefoeden/multiomeR
+  repo-subdir: website/implementation
   repo-actions: [source, issue]
   page-navigation: true
   sidebar:
@@ -13,16 +14,18 @@ book:
   chapters:
     - href: index.qmd
       text: Introduction
+    - part: "Orientation"
+      chapters:
+        - href: graph_methodology.qmd
+          text: Reading the graph views
+        - href: implementation_conventions.qmd
+          text: Implementation conventions
     - part: "Background"
       chapters:
         - href: background_philosophy.qmd
           text: Background and design philosophy
-    - href: implementation_conventions.qmd
-      text: Implementation conventions
-    - part: "Target graph methodology"
+    - part: "Target graph views"
       chapters:
-        - href: graph_methodology.qmd
-          text: Reading the graph views
         - href: implementation_main.qmd
           text: Main pipeline
         - href: implementation_differential_analyses.qmd

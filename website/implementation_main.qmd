@@ -5,6 +5,19 @@ pipeline_name <- "processing_and_aggregation"
 source("helpers/_setup.R")
 ```
 
+The root `_targets.R` creates dataset, reaction, and aggregation mapping rows, then maps target fragments from `extra_targets/`. Use the diagrams to find the relevant stage, then inspect the corresponding source file for the complete command and resource declaration.
+
+| Stage | Primary source |
+|---|---|
+| Reaction preprocessing | `extra_targets/per_reaction_targets.R` |
+| Dataset summaries | `extra_targets/per_dataset_targets.R` |
+| Aggregation setup and shared QC | `extra_targets/general_aggregation_targets.R` |
+| GEX | `extra_targets/GEX_merge_and_dim_reduc_targets.R`, `extra_targets/GEX_graph_and_cluster_targets.R` |
+| ATAC | `extra_targets/ATAC_targets.R` |
+| WNN | `extra_targets/WNN_targets.R` |
+| Compatibility export | `extra_targets/Seurat_Signac_export_targets.R` |
+| Subgroups | `extra_targets/subgroups.R` |
+
 ## Parallel pre-processing
 
 This view covers per-reaction processing and QC, including optional ambient RNA correction, donor demultiplexing, doublet detection, barcode filtering, and handoffs into aggregation-level GEX and ATAC objects.
@@ -44,3 +57,5 @@ This view covers optional subgroup-native GEX, ATAC, and WNN reprocessing for su
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_mermaid("website/figures/human_curated/full_subgroups_v2.mmd")
 ```
+
+Subgroup reprocessing is configuration-dependent and should not be treated as part of the minimum main-pipeline path.

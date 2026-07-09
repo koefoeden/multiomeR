@@ -1,52 +1,95 @@
-# Running the workflow
+# Run and review the workflow
 
-From the repository-root R session described in [Installation](demo_installation.qmd), run the main workflow in checkpoint-sized pieces. Replace `your_aggregation` with the aggregation name from `cfg_aggregations.yaml`, for example `immune_human_2x`.
+From the repository-root R session described in [Install and prepare the demo](demo_installation.qmd), run one aggregation in checkpoint-sized pieces. Replace `your_aggregation` with a configured aggregation name such as `immune_human_2x`.
+
+Before running, confirm that `crew_controllers.R` matches the machine or scheduler you intend to use. See [Distributed computing](performance_distributed_computing.qmd) for the controller contract.
+
+## Preview a checkpoint selection
+
+Use `tar_manifest()` with the same selector you plan to pass to `tar_make()`. This shows the requested checkpoint targets without executing them:
+
+```{.r filename="R"}
+targets::tar_manifest(
+  names = targets::tar_described_as(
+    tidyselect::contains("checkpoint:GEX")
+  ) & tidyselect::matches("your_aggregation"),
+  callr_function = NULL
+)[, c("name", "description")]
+```
+
+If the result is empty, check the aggregation spelling. If manifest construction fails, resolve the configuration or controller error before starting compute work.
 
 ## GEX checkpoint
 
-Run the RNA-processing checkpoint first:
-
 ```{.r filename="R"}
 targets::tar_make(
-  names = targets::tar_described_as(tidyselect::contains("checkpoint:GEX")) &
-    tidyselect::matches("your_aggregation")
+  names = targets::tar_described_as(
+    tidyselect::contains("checkpoint:GEX")
+  ) & tidyselect::matches("your_aggregation")
 )
 ```
 
-At this checkpoint, inspect the aggregation-level barcode exclusion summaries, RNA-only QC plots, marker summaries, and `GEX_Seurat_object.your_aggregation`. If the GEX filtering, clustering, and annotation look acceptable, continue to the ATAC checkpoint.
+Review before continuing:
+
+- reaction- and dataset-level barcode exclusion summaries for unexpected sample loss;
+- PCA, Harmony, UMAP, and metadata-association diagnostics for technical structure;
+- cluster markers and marker-module scores for coherent cell-type labels; and
+- `GEX_Seurat_object.your_aggregation` plus `metadata_w_cell_types_tibble.GEX.your_aggregation` for the cells entering ATAC processing.
+
+The [main gallery](gallery_main.qmd) shows representative GEX review plots. Change the dataset QC, aggregation dimensions, clustering, or marker configuration and rerun this checkpoint if the result is not biologically and technically credible.
 
 ## ATAC checkpoint
 
-Run the ATAC-processing checkpoint after the GEX review:
+Run this only after accepting the GEX checkpoint:
 
 ```{.r filename="R"}
 targets::tar_make(
   names = targets::tar_described_as(
     tidyselect::contains("checkpoint:ATAC")
-    ) &
-    tidyselect::matches("your_aggregation")
+  ) & tidyselect::matches("your_aggregation")
 )
 ```
 
-At this checkpoint, inspect ATAC QC plots, LSI diagnostics, peak and motif summaries, coverage tracks, and TF or gene activity plots. If the ATAC processing looks acceptable, continue to the multimodal checkpoint.
+Review before continuing:
+
+- peak-based QC exclusions and retained cell counts;
+- LSI dimensions, metadata associations, UMAPs, and cluster stability;
+- consensus peaks, motif matches, TF activity, and marker-gene activity; and
+- coverage tracks and differential-accessibility summaries where configured.
+
+Key objects include `consensus_peak_tibble.ATAC.your_aggregation`, `metadata_w_cell_types_tibble.ATAC.your_aggregation`, and the BPCells peak and TF-activity matrices. Revisit the peak-calling, ATAC dimensions, QC, or marker-TF settings if the review fails.
 
 ## Multimodal checkpoint
 
 ```{.r filename="R"}
 targets::tar_make(
-  names = targets::tar_described_as(tidyselect::contains("checkpoint:multimodal")) &
-    tidyselect::matches("your_aggregation")
+  names = targets::tar_described_as(
+    tidyselect::contains("checkpoint:multimodal")
+  ) & tidyselect::matches("your_aggregation")
 )
 ```
 
-At this checkpoint, inspect WNN UMAPs, modality-weight plots, multimodal cluster comparisons, and `multimodal_Seurat_object.your_aggregation`. Optional downstream modules are described in their own walkthroughs.
+Review before continuing:
 
-To run all configured aggregations for a checkpoint, omit the `& tidyselect::matches("your_aggregation")` part. To run the full workflow after checkpoint review, run:
+- WNN UMAPs and cluster identities against the accepted GEX and ATAC results;
+- RNA and ATAC modality weights for unexpected modality dominance;
+- cross-modality cluster comparisons and final integrated metadata; and
+- `multimodal_Seurat_object.your_aggregation` if a compatibility export is needed.
+
+Use [Verify and inspect the outputs](demo_outputs.qmd) for `tar_read()` and output-path examples.
+
+## Finish the intended scope
+
+To build the final main-pipeline endpoint for one aggregation after checkpoint review:
 
 ```{.r filename="R"}
-targets::tar_make()
+targets::tar_make(
+  names = tidyselect::matches(
+    "^multimodal_Seurat_object[.]your_aggregation$"
+  )
+)
 ```
 
-The full main pipeline can be computationally expensive. Start with the public example or a narrow target selection, then scale to larger datasets after local paths, metadata files, and controller settings are working.
+An unqualified `targets::tar_make()` runs every active aggregation and every enabled optional module in the root workflow. Use it only when that is the intended scope. Because `is_active` defaults to `true`, disable unavailable template aggregations before broad execution.
 
-The workflow output directory can be changed with the `store` field in [`_targets.yaml`](https://github.com/koefoeden/multiomeR/tree/main/_targets.yaml).
+Continue to the [differential analyses](downstream_differential_analyses.qmd) or [genetic enrichment](downstream_genetic_enrichment.qmd) module only after the main aggregation is accepted. If a target fails, follow [Troubleshooting](troubleshooting.qmd) and rerun the narrowest affected selection.

@@ -39,14 +39,6 @@
   status: available
 
 - section: Main pipeline
-  subsection: ATAC
-  title: TF activity heatmap
-  description: Summarizes transcription-factor activity patterns across cell groups.
-  target: TF_activity_heatmap.ATAC.immune_human_2x
-  asset: gallery_assets/ATAC/tf_activity_heatmap.png
-  status: available
-
-- section: Main pipeline
   subsection: WNN
   title: Harmony UMAP
   description: Combines RNA and ATAC information to show the integrated multimodal cell-state structure.
@@ -66,7 +58,7 @@
   subsection: Gene expression
   title: Volcano plot
   description: Highlights genes with the strongest expression differences for one comparison.
-  target: volcano_plots_files.DGE.differential_analyses.immune_human_2x_f38cff8e83d87033
+  target: volcano_plots_files.DGE.differential_analyses.immune_human_2x
   asset: gallery_assets/differential_analyses/gene_expression/volcano_plot.png
   status: available
 
@@ -82,7 +74,7 @@
   subsection: Chromatin accessibility
   title: Volcano plot
   description: Highlights regulatory regions with the strongest accessibility differences for one comparison.
-  target: volcano_plots_files.DCA.differential_analyses.immune_human_2x_dcd38387c49741f1
+  target: volcano_plots_files.DCA.differential_analyses.immune_human_2x
   asset: gallery_assets/differential_analyses/chromatin_accessibility/volcano_plot.png
   status: available
 
@@ -98,7 +90,7 @@
   subsection: Transcription-factor activity
   title: Volcano plot
   description: Highlights transcription factors with the strongest activity differences for one comparison.
-  target: volcano_plots_files.DTFA.differential_analyses.immune_human_2x_6eb8983d448a96ed
+  target: volcano_plots_files.DTFA.differential_analyses.immune_human_2x
   asset: gallery_assets/differential_analyses/transcription_factor_activity/volcano_plot.png
   status: available
 
@@ -132,14 +124,6 @@
   description: Summarizes graph-propagated trait relevance scores across cell groups and GWAS traits.
   target: TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x
   asset: gallery_assets/genetic_enrichment/single_nucleus_with_scavenge/TRS_heatmap.png
-  status: available
-
-- section: Genetic enrichment module
-  subsection: Single-nucleus chromVAR+SCAVENGE
-  title: Cell type by GWAS summaries
-  description: Compares graph-propagated trait relevance score medians and intervals across cell groups.
-  target: TRS_cluster_summary_plot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x
-  asset: gallery_assets/genetic_enrichment/TRS_cluster_summary_plot.png
   status: available
 
 - section: Genetic enrichment module

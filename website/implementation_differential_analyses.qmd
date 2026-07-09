@@ -5,6 +5,10 @@ pipeline_name <- "differential_analyses"
 source("helpers/_setup.R")
 ```
 
+`module_differential_analyses/targets.R` filters aggregations that enabled the module, joins their module config, attaches symbols for accepted WNN metadata and pseudobulk inputs, and maps the composition, pseudobulk, GSEA, and cross-modality target fragments.
+
+The graph below is an orientation view. Inspect `setup_and_DCTC_targets.R`, `psbulk_DX_targets.R`, `GSEA_targets.R`, and `cross_modality_targets.R` for the complete model and plotting commands. The user-facing prerequisites and checkpoint selector are documented in [Differential analyses](../downstream_differential_analyses.html).
+
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_mermaid("website/figures/human_curated/differential_analyses_v2.mmd")
 ```

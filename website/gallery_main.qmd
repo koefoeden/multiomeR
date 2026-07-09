@@ -1,4 +1,4 @@
-# Main Pipeline
+# Main pipeline gallery
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -12,10 +12,24 @@ gallery_items <- check_output_gallery_assets(
 )
 ```
 
-This gallery shows representative outputs produced by multiomeR on the public `immune_human_2x` demo. It is meant to give a quick sense of the QC summaries and multimodal embeddings that the main pipeline can produce before you run it on your own data.
+This curated gallery shows representative outputs from the public `immune_human_2x` configuration. The images are documentation snapshots, not files automatically installed with a local target store. Generate your own review plots with the checkpoint selectors in [Run and review the workflow](main_running.qmd).
 
-Each card includes the corresponding `targets` target name so you can connect the displayed output back to the workflow.
+The first cards summarize the shared `immune_human_dataset` across reactions. The GEX, ATAC, and WNN cards are aggregation-level outputs for `immune_human_2x`. Each card includes the corresponding stable `targets` name so you can connect the image to the workflow.
+
+Start with [Install and prepare the demo](demo_installation.qmd), [run the demo endpoint](demo_running.qmd), and then [inspect the outputs](demo_outputs.qmd). Request the broader checkpoints when you want to reproduce the review-plot families shown here.
 
 ```{r, echo = FALSE, results = "asis"}
-render_gallery_section(gallery_items, "Main pipeline")
+render_gallery_section(
+  gallery_items,
+  "Main pipeline",
+  subsection_descriptions = c(
+    "Parallel reaction pre-processing" = paste(
+      "Dataset-level summaries compare reactions before aggregation and help",
+      "identify reaction-specific QC problems."
+    ),
+    "GEX" = "Aggregation-level RNA dimension-reduction and cell-type review outputs.",
+    "ATAC" = "Aggregation-level chromatin-accessibility dimension-reduction outputs.",
+    "WNN" = "Integrated multimodal structure and modality-contribution outputs."
+  )
+)
 ```

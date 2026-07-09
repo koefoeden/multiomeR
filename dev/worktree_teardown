@@ -36,6 +36,48 @@ release_scratch_marker() {
   fi
 }
 
+reexec_from_temp_if_applying() {
+  [ "$apply" = true ] || return 0
+  if [ "${WORKTREE_TEARDOWN_TMP_EXEC:-}" = "1" ]; then
+    [ -n "${WORKTREE_TEARDOWN_TMP_SCRIPT:-}" ] &&
+      trap 'rm -f "$WORKTREE_TEARDOWN_TMP_SCRIPT"' EXIT
+    return 0
+  fi
+
+  local root script_path script_dir tmp_script
+  root=$(git rev-parse --show-toplevel 2>/dev/null || true)
+  [ -n "$root" ] || return 0
+  root=$(cd "$root" && pwd -P)
+  script_path=${BASH_SOURCE[0]}
+  script_dir=$(cd "$(dirname "$script_path")" && pwd -P)
+
+  case "$script_dir/" in
+    "$root"/*)
+      tmp_script=$(mktemp "${TMPDIR:-/tmp}/worktree_teardown.XXXXXX")
+      cp "$script_path" "$tmp_script"
+      chmod +x "$tmp_script"
+      export WORKTREE_TEARDOWN_TMP_EXEC=1
+      export WORKTREE_TEARDOWN_TMP_SCRIPT=$tmp_script
+      exec "$tmp_script" "$@"
+      ;;
+  esac
+}
+
+remove_physical_worktree() {
+  local attempt=1
+  local max_attempts=5
+
+  while [ "$attempt" -le "$max_attempts" ]; do
+    [ ! -e "$worktree" ] && return 0
+    rm -rf "$worktree" 2>/dev/null && return 0
+    sleep 2
+    attempt=$((attempt + 1))
+  done
+
+  rm -rf "$worktree"
+}
+
+original_args=("$@")
 apply=false
 if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
   usage
@@ -45,6 +87,8 @@ elif [ "${1:-}" = "--apply" ]; then
   shift
 fi
 [ "$#" -eq 0 ] || die "Unexpected argument(s): $*"
+
+reexec_from_temp_if_applying "${original_args[@]}"
 
 worktree=$(git rev-parse --show-toplevel)
 worktree=$(cd "$worktree" && pwd -P)
@@ -92,7 +136,7 @@ if [ "$apply" = true ]; then
       exit 1
     fi
     release_scratch_marker
-    rm -rf "$worktree" ||
+    remove_physical_worktree ||
       die "Git worktree was unregistered and scratch was released, but the physical directory remains: $worktree"
   }
   release_scratch_marker

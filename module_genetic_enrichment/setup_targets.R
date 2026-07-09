@@ -1,19 +1,7 @@
 rlang::list2(
-  tarchetypes::tar_file(
-    name = genetic_enrichment_donor_id_metadata_tsv.extended,
-    description = "Locate the extended donor ID metadata TSV for genetic enrichment pseudobulk analyses",
-    command = genetic_enrichment_extended_donor_id_metadata_tsv %||%
-      aggregation_donor_id_metadata_tsv,
-    deployment = "main"
-  ),
-  targets::tar_target(
-    name = genetic_enrichment_donor_id_metadata_tibble.extended,
-    description = "Read the genetic enrichment extended donor ID metadata TSV into a tibble",
-    command = read_keyed_metadata_tibble(genetic_enrichment_donor_id_metadata_tsv.extended, "donor_id")
-  ),
   targets::tar_target(
     name = GWAS_inputs_tibble,
-    description = "Resolve configured Open Targets GWAS metadata and fine-mapping methods for this aggregation [part_of_graph:genetic_enrichment_single_nucleus] [part_of_graph:genetic_enrichment_pseudobulk]",
+    description = "Resolve configured Open Targets GWAS metadata and fine-mapping methods for this aggregation [part_of_graph:genetic_enrichment_single_nucleus] [part_of_graph:genetic_enrichment_cell_type_attribution]",
     command = {
       study_ids <- unique(GWAS_inputs_config_tibble$studyId)
       available_methods_tibble <- arrow::open_dataset(open_targets_credible_set_dataset_path) |>

@@ -127,46 +127,6 @@
   status: available
 
 - section: Genetic enrichment module
-  subsection: Pseudobulk-first chromVAR (raw)
-  title: Trait-level Z-score heatmap
-  description: Summarizes global pseudobulk chromVAR Z-scores across cell groups and GWAS traits before differential modeling.
-  target: ZScores_heatmap.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x
-  asset: gallery_assets/genetic_enrichment/pseudobulk_first/trait_level_zscores_heatmap.png
-  status: available
-
-- section: Genetic enrichment module
-  subsection: Pseudobulk-first chromVAR (raw)
-  title: Trait-level Z-score boxplots
-  description: Shows global pseudobulk chromVAR Z-score distributions across cell groups before differential modeling.
-  target: ZScores_boxplot.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x
-  asset: gallery_assets/genetic_enrichment/pseudobulk_first/trait_level_zscores_boxplot.png
-  status: available
-
-- section: Genetic enrichment module
-  subsection: Pseudobulk-first chromVAR (modelled)
-  title: Trait-level coefficient ranges
-  description: Shows pseudobulk chromVAR model coefficients and approximate uncertainty intervals across contrasts within each GWAS.
-  target: coefficient_ranges.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x
-  asset: gallery_assets/genetic_enrichment/pseudobulk_first/trait_level_coefficient_ranges.png
-  status: available
-
-- section: Genetic enrichment module
-  subsection: Pseudobulk-first chromVAR (modelled)
-  title: Gene-level volcano plot
-  description: Highlights GWAS-gene chromVAR effects with the strongest pseudobulk differential activity.
-  target: volcano_plot_files.gene_level.pseudobulk.genetic_enrichment.PBMC_human_6x
-  asset: gallery_assets/genetic_enrichment/pseudobulk_first/gene_level_volcano_plot.png
-  status: available
-
-- section: Genetic enrichment module
-  subsection: Pseudobulk-first chromVAR (modelled)
-  title: Locus sanity-check tracks
-  description: Places top GWAS-gene chromVAR effects back into their local credible-set and accessibility context.
-  target: locus_tracks_plot_files.gene_level.pseudobulk.genetic_enrichment.PBMC_human_6x
-  asset: gallery_assets/genetic_enrichment/pseudobulk_first/locus_tracks.png
-  status: available
-
-- section: Genetic enrichment module
   subsection: Single-nucleus chromVAR
   title: Enrichment heatmap
   description: Connects genetic association evidence to cell groups through single-nucleus regulatory enrichment patterns.

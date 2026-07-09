@@ -5,15 +5,7 @@ pipeline_name <- "genetic_enrichment"
 source("helpers/_setup.R")
 ```
 
-## Pseudobulk GWAS
-
-This view covers GWAS and pseudobulk inputs used for trait-relevance analyses.
-
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_mermaid("website/figures/human_curated/genetic_enrichment_pseudobulk_v2.mmd")
-```
-
-## Genetic enrichment across genes
+## Single-nucleus and graph-based enrichment
 
 This view covers across-gene enrichment outputs and downstream trait summaries.
 

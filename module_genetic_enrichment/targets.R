@@ -1,17 +1,3 @@
-add_genetic_enrichment_module_target_syms <- function(module_tibble, target_names) {
-  target_sym_cols <- target_names |>
-    purrr::set_names() |>
-    purrr::map(\(target_name) {
-      purrr::map(
-        module_tibble$genetic_enrichment_target_suffix,
-        \(suffix) rlang::sym(stringr::str_c(target_name, suffix, sep = "."))
-      )
-    })
-
-  module_tibble |>
-    dplyr::mutate(!!!target_sym_cols)
-}
-
 genetic_enrichment_aggregation_tibble <- aggregation_tibble |>
   dplyr::filter(aggregation_has_module(modules, "genetic_enrichment"))
 
@@ -92,8 +78,6 @@ genetic_enrichment_tibble <- genetic_enrichment_tibble |>
     "combined_BPCells_fragment_obj.ATAC",
     "consensus_peak_GRanges.ATAC",
     "peak_QC_filtered_BPCells_matrix.ATAC",
-    "pseudobulk_counts_matrix.ATAC",
-    "pseudobulk_depth_tibble.ATAC",
     "chromVAR_obj.ATAC",
     "chromVAR_peak_expectation.ATAC",
     "chromVAR_background_bins.ATAC",
@@ -101,19 +85,6 @@ genetic_enrichment_tibble <- genetic_enrichment_tibble |>
     "harmony_embeddings_matrix.GEX",
     "harmony_embeddings_matrix.ATAC",
     "WNN_results"
-  ))
-
-genetic_enrichment_gene_chromVAR_tibble <- genetic_enrichment_tibble |>
-  dplyr::filter(purrr::map_lgl(
-    .data$genetic_enrichment_psbulk_GWAS_gene_chromVAR_GWAS_IDs,
-    \(x) !is.null(x) && length(x) > 0
-  )) |>
-  add_genetic_enrichment_module_target_syms(c(
-    "genetic_enrichment_donor_id_metadata_tibble.extended",
-    "GWAS_analysis_inputs_tibble",
-    "genetic_enrichment_peak_ranges",
-    "posterior_probability_weighting_function",
-    "model_tibble.trait_level.pseudobulk"
   ))
 
 rlang::list2(
@@ -124,7 +95,7 @@ rlang::list2(
     delimiter = ".",
     source("module_genetic_enrichment/setup_targets.R")$value,
     source("module_genetic_enrichment/gchromVAR_targets.R")$value,
-    source("module_genetic_enrichment/psbulk_GWAS_chromVAR_targets.R")$value,
+    source("module_genetic_enrichment/GWAS_chromVAR_cell_type_targets.R")$value,
     source("module_genetic_enrichment/GWAS_chromVAR_attribution_targets.R")$value,
     tarchetypes::tar_map(
       values = tibble::tibble(
@@ -158,12 +129,5 @@ rlang::list2(
       source("module_genetic_enrichment/SCAVENGE_graph_targets.R")$value,
       source("module_genetic_enrichment/SCAVENGE_group_targets.R")$value
     )
-  ),
-  tarchetypes::tar_map(
-    values = genetic_enrichment_gene_chromVAR_tibble,
-    names = genetic_enrichment_target_suffix,
-    descriptions = NULL,
-    delimiter = ".",
-    source("module_genetic_enrichment/psbulk_GWAS_gene_chromVAR_targets.R")$value
   )
 )

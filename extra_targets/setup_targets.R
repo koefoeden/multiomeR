@@ -9,16 +9,6 @@ rlang::list2(
     description = "Download the Open Targets 26.03 study Parquet dataset for shared GWAS metadata consumers",
     command = download_open_targets_dataset("https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.03/output/study/")
   ),
-  tarchetypes::tar_file(
-    name = open_targets_gwas_credible_sets_evidence_dataset_path,
-    description = "Download the Open Targets 26.03 GWAS credible-set evidence Parquet dataset for L2G consumers [part_of_graph:genetic_enrichment_pseudobulk]",
-    command = download_open_targets_dataset("https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.03/output/evidence_gwas_credible_sets/")
-  ),
-  tarchetypes::tar_file(
-    name = open_targets_target_dataset_path,
-    description = "Download the Open Targets 26.03 target Parquet dataset for target gene metadata",
-    command = download_open_targets_dataset("https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.03/output/target/")
-  ),
   targets::tar_target(
     name = Ensembl_gene_annotation_GRanges_list,
     description = "Download all supported Ensembl gene annotations once for downstream reference-specific lookup",

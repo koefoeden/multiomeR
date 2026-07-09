@@ -1,6 +1,6 @@
 Approach to generating graphs that are both human readable and still somewhat reflect the actual graph structure:
 
-1) Select a "topic" of interest, i.e. parallel processing, GEX-aggregation, ATAC, WNN, differential analyses, psbulked genetic enrichment and single-cell genetic-enrichment.
+1) Select a "topic" of interest, i.e. parallel processing, GEX aggregation, ATAC, WNN, differential analyses, cell-type genetic attribution, and single-cell genetic enrichment.
 2) Find downstream target(s) that capture this topic meaningfully
 3) Use tar_mermaid() to generate the draft .mmd file
 4) use 'python mermaid_gen_patterns.py' to draft a list of all current nodes
@@ -31,4 +31,4 @@ Current graph IDs are:
 - `seurat_export`
 - `differential_analyses`
 - `genetic_enrichment_single_nucleus`
-- `genetic_enrichment_pseudobulk`
+- `genetic_enrichment_cell_type_attribution`

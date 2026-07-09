@@ -20,24 +20,6 @@ immune_human_2x:
       Category: brain_cognition
       studyId: GCST90105038
       finemappingMethod: auto
-  genetic_enrichment_psbulk_GWAS_chromVAR_models:
-    major_pbmc_cell_type_contrasts:
-      cell_type_subset: [B, Mono, NK, pDC, T]
-      design_matrix_func_name: NULL
-      formula: ~ 0 + cluster + donor_id
-      random_effect: NULL
-      contrast_specs_vec:
-        B_vs_other_PBMC: clusterB - (clusterT + clusterNK + clusterMono + clusterpDC) / 4
-        T_vs_other_PBMC: clusterT - (clusterB + clusterNK + clusterMono + clusterpDC) / 4
-        NK_vs_other_PBMC: clusterNK - (clusterB + clusterT + clusterMono + clusterpDC) / 4
-        Mono_vs_other_PBMC: clusterMono - (clusterB + clusterT + clusterNK + clusterpDC) / 4
-        pDC_vs_other_PBMC: clusterpDC - (clusterB + clusterT + clusterNK + clusterMono) / 4
-        lymphoid_vs_innate_PBMC: (clusterT + clusterNK + clusterB) / 3 - (clusterMono + clusterpDC) / 2
-        lymphoid_vs_mono: (clusterT + clusterNK + clusterB) / 3 - clusterMono
-  genetic_enrichment_psbulk_GWAS_gene_chromVAR_GWAS_IDs:
-    - LymphocyteCount_Vuckovic2020
-    - MonocyteCount_Vuckovic2020
-
 PBMC_human_6x:
   inherits: immune_human_2x
 

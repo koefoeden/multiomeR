@@ -29,10 +29,10 @@ The genetic enrichment module links processed human multiome aggregations to fin
   - [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) trait-score propagation across PCA, LSI, and WNN graph representations.
   - TRS UMAPs, enrichment heatmaps, cluster-level boxplots, and significant-cell proportion summaries.
 
-- **Pseudobulk genetic enrichment**
-  - Trait-level GWAS chromVAR models fit on pseudobulk ATAC activity with `limma`.
-  - Optional gene-level GWAS chromVAR using L2G-weighted annotations.
-  - Volcano plots, coefficient summaries, QC plots, and locus-level sanity checks.
+- **Cell-type enrichment and attribution**
+  - GWAS chromVAR deviations from ATAC counts summed over each cell type, with nuclei support shown alongside the heatmap.
+  - Exact decomposition of each deviation into peak, credible-variant, and locus contributions.
+  - Relative-deviation heatmaps, locus waterfalls, and variant-level accessibility tracks.
 
 ## Configuration
 
@@ -76,4 +76,4 @@ targets::tar_make(
 )
 ```
 
-This checkpoint writes the configured pseudobulk and single-nucleus trait-relevance summaries, including gchromVAR and SCAVENGE outputs. Runtime depends on the number of configured GWAS studies, enrichment methods, cells, and pseudobulk contrasts.
+This checkpoint writes the configured cell-type, attribution, and single-nucleus trait-relevance summaries, including GWAS chromVAR and SCAVENGE outputs. Runtime depends on the number of configured GWAS studies, enrichment methods, cells, and attributed loci.

@@ -658,6 +658,36 @@ make_GWAS_variant_attribution_track <- function(variant_tibble, region) {
   )
 }
 
+#' Make consensus peak locus track
+#'
+#' Draw consensus ATAC peaks overlapping an attribution region.
+#'
+#' @param consensus_peak_GRanges Consensus peak ranges.
+#' @param region Genomic region accepted by BPCells trackplot helpers.
+#' @return A BPCells genome-annotation track.
+#' @keywords internal
+
+make_consensus_peak_locus_track <- function(consensus_peak_GRanges, region) {
+  peak_GRanges <- IRanges::subsetByOverlaps(consensus_peak_GRanges, region)
+  if (length(peak_GRanges) == 0L) {
+    return(BPCells:::trackplot_empty(region, "Consensus peaks"))
+  }
+
+  peak_tibble <- GenomicRanges::as.data.frame(peak_GRanges) |>
+    tibble::as_tibble() |>
+    dplyr::transmute(
+      chr = as.character(.data$seqnames),
+      start = .data$start,
+      end = .data$end
+    )
+
+  BPCells::trackplot_genome_annotation(
+    loci = peak_tibble,
+    region = region,
+    track_label = "Consensus peaks"
+  )
+}
+
 #' Plot variant-level attribution details for top loci
 #'
 #' @param variant_attribution_tibble Variant-level attribution.

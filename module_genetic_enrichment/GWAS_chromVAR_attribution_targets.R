@@ -19,7 +19,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = peak_attribution_tibble.trait_level.cell_type,
-    description = "Decompose each cell-type GWAS chromVAR heatmap value into exact peak contributions",
+    description = "Decompose each cell-type GWAS chromVAR heatmap value into exact peak contributions [part_of_graph:genetic_enrichment_cell_type_attribution]",
     command = get_GWAS_chromVAR_peak_attribution_tibble(
       chromVAR_background_record = chromVAR_background_record.trait_level.cell_type_pseudobulk,
       psbulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
@@ -31,7 +31,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = chromVAR_deviation_tibble.trait_level.pseudobulk,
-    description = "Sum peak contributions into the cell-type GWAS chromVAR heatmap table with z-score support labels",
+    description = "Sum peak contributions into the cell-type GWAS chromVAR heatmap table with z-score support labels [part_of_graph:genetic_enrichment_cell_type_attribution]",
     command = summarize_GWAS_chromVAR_peak_attribution(
       peak_attribution_tibble = peak_attribution_tibble.trait_level.cell_type,
       cell_type_support_tibble = cell_type_pseudobulk_support_tibble.ATAC
@@ -39,7 +39,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = variant_attribution_tibble.trait_level.cell_type,
-    description = "Allocate exact peak-level GWAS chromVAR contributions to credible-set variants",
+    description = "Allocate exact peak-level GWAS chromVAR contributions to credible-set variants [part_of_graph:genetic_enrichment_cell_type_attribution]",
     command = get_GWAS_chromVAR_variant_attribution_tibble(
       peak_attribution_tibble = peak_attribution_tibble.trait_level.cell_type,
       peak_variant_weight_tibble = peak_variant_weight_tibble.trait_level.attribution
@@ -48,7 +48,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = locus_attribution_tibble.trait_level.cell_type,
-    description = "Sum exact credible-set variant contributions into cell-type-by-GWAS locus attribution",
+    description = "Sum exact credible-set variant contributions into cell-type-by-GWAS locus attribution [part_of_graph:genetic_enrichment_cell_type_attribution]",
     command = get_GWAS_chromVAR_locus_attribution_tibble(
       variant_attribution_tibble.trait_level.cell_type
     )

@@ -15,14 +15,6 @@ targets::tar_glimpse(
   targets_graph_mermaid_lines() |>
   writeLines("website/figures/human_curated/genetic_enrichment_across_genes.mmd")
 
-# Genetic enrichment - per genes
-targets::tar_glimpse(
-  names = tidyselect::matches("^(ZScores_heatmap|coefficient_ranges|QC_plots|results_tibble|volcano_plot_files|locus_tracks_plot_files)[.](trait_level|gene_level)[.]pseudobulk.*immune_human_2x")
-) |>
-  targets_graph_mermaid_lines() |>
-  writeLines("website/figures/human_curated/psbulk_GWAS.immune_human_2x.mmd")
-
-
 # Differential analyses
 # Needs
 targets::tar_glimpse(

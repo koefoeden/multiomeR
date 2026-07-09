@@ -269,7 +269,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = pseudobulk_counts_matrix.ATAC,
-    description = "Open BPCells-backed pseudobulk ATAC counts per WNN cell-type-donor combination [part_of_graph:genetic_enrichment_pseudobulk]",
+    description = "Open BPCells-backed pseudobulk ATAC counts per WNN cell-type-donor combination",
     command = BPCells::open_matrix_dir(pseudobulk_counts_BPCells_matrix_dir.ATAC)
   ),
   targets::tar_target(

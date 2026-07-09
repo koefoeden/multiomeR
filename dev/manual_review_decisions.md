@@ -69,7 +69,6 @@ Status key:
 | D5 | pending | `website/downstream_genetic_enrichment.qmd` | Running prerequisite is too vague. | State dependency on GEX, ATAC, WNN checkpoints plus Open Targets study set and human aggregation. |
 | D6 | pending | `website/downstream_genetic_enrichment.qmd` | Open Targets release pin and `finemappingMethod: auto` behavior are hidden. | Add reproducibility sentence under configuration. |
 | D7 | pending | `website/downstream_genetic_enrichment.qmd` | `gchromVAR` wording reads like a direct external package claim. | Reword as GWAS-chromVAR-style scores using pipeline chromVAR/betterChromVAR machinery. |
-| D8 | pending | `website/downstream_genetic_enrichment.qmd` | Optional gene-level branch is not tied to enabling parameter. | Note it runs only when `genetic_enrichment_psbulk_GWAS_gene_chromVAR_GWAS_IDs` lists GWAS IDs. |
 | D9 | pending | `website/downstream_genetic_enrichment.qmd` | Missing implementation graph cross-link. | Add link to genetic enrichment implementation diagrams. |
 
 ## Batch E: Gallery And Output Presentation

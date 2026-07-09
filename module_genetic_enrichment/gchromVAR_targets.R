@@ -16,7 +16,7 @@ rlang::list2(
     command = SummarizedExperiment::rowRanges(chromVAR_obj.ATAC)
   ),
   targets::tar_target(
-    name = input_records.trait_level,
+    name = GWAS_input_records,
     description = "Convert one configured GWAS input to one record for dynamic trait-level chromVAR branching",
     command = get_GWAS_chromVAR_input_record(
       GWAS_input_tibble = GWAS_analysis_inputs_tibble,
@@ -27,22 +27,22 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 40)
   ),
   targets::tar_target(
-    name = peak_weight_records.trait_level,
+    name = GWAS_peak_weight_records,
     description = "Build capped peak posterior-probability weights for one GWAS [part_of_graph:genetic_enrichment_single_nucleus]",
     command = get_GWAS_chromVAR_peak_weight_record(
-      GWAS_input_record = input_records.trait_level,
+      GWAS_input_record = GWAS_input_records,
       peak_ranges = genetic_enrichment_peak_ranges,
       posterior_probability_cutoff = genetic_enrichment_posterior_probability_cutoff,
       posterior_probability_weighting_function = posterior_probability_weighting_function
     ),
-    pattern = map(input_records.trait_level),
+    pattern = map(GWAS_input_records),
     resources = get_tar_resources(RAM_GB_req = 40)
   ),
   tarchetypes::tar_file(
-    name = peak_weights_barplot.trait_level,
+    name = GWAS_peak_weights_barplot,
     description = "Plot summary bar plot of capped summed SNP PPs within peaks and save to file. [checkpoint:genetic_enrichment]",
     command = {
-      plot <- plot_GWAS_chromVAR_peak_weights_summary(peak_weight_records.trait_level)
+      plot <- plot_GWAS_chromVAR_peak_weights_summary(GWAS_peak_weight_records)
       save_plots_structured(plot)
     }
   ),
@@ -50,11 +50,11 @@ rlang::list2(
     name = ZScore_chunk_records.single_nucleus,
     description = "Compute single-nucleus chromVAR Z-scores for one GWAS and one reusable ATAC chunk",
     command = get_GWAS_chromVAR_ZScore_chunk_record(
-      peak_weight_record = peak_weight_records.trait_level,
+      peak_weight_record = GWAS_peak_weight_records,
       RSE_ATAC = chromVAR_obj.ATAC,
       chunk_context_record = chromVAR_chunk_context_records.ATAC
     ),
-    pattern = cross(peak_weight_records.trait_level, chromVAR_chunk_context_records.ATAC),
+    pattern = cross(GWAS_peak_weight_records, chromVAR_chunk_context_records.ATAC),
     iteration = "vector",
     resources = get_tar_resources(RAM_GB_req = 60)
   ),

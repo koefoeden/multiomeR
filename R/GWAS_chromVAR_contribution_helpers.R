@@ -81,7 +81,7 @@ scale_within_vector <- function(x) {
 #'   relative deviation, and z score for each GWAS and cell type.
 #' @keywords internal
 
-get_GWAS_chromVAR_peak_attribution_tibble <- function(
+get_GWAS_chromVAR_peak_contribution_tibble <- function(
   chromVAR_background_record,
   psbulk_ATAC_data_matrix,
   chromVAR_obj,
@@ -191,19 +191,19 @@ get_GWAS_chromVAR_peak_attribution_tibble <- function(
   })
 }
 
-#' Summarize peak attribution into the cell-type GWAS heatmap table
+#' Summarize peak contribution into the cell-type GWAS heatmap table
 #'
-#' @param peak_attribution_tibble Exact peak-level chromVAR contributions.
+#' @param peak_contribution_tibble Exact peak-level chromVAR contributions.
 #' @param cell_type_support_tibble Optional nuclei and ATAC-depth support by cell type.
 #' @return One row per GWAS and cell type with summed deviations, z-score support,
 #'   and optional cell-count annotations.
 #' @keywords internal
 
-summarize_GWAS_chromVAR_peak_attribution <- function(
-  peak_attribution_tibble,
+summarize_GWAS_chromVAR_peak_contributions <- function(
+  peak_contribution_tibble,
   cell_type_support_tibble = NULL
 ) {
-  out <- peak_attribution_tibble |>
+  out <- peak_contribution_tibble |>
     dplyr::distinct(
       .data$GWAS_ID,
       .data$Category,
@@ -246,12 +246,12 @@ summarize_GWAS_chromVAR_peak_attribution <- function(
 
 #' Allocate peak contributions to credible-set variants
 #'
-#' @param peak_attribution_tibble Exact peak-level chromVAR contributions.
+#' @param peak_contribution_tibble Exact peak-level chromVAR contributions.
 #' @param peak_variant_weight_tibble Peak-variant weights.
-#' @return Variant-level attribution rows, summed across overlapping peaks.
+#' @return Variant-level contribution rows, summed across overlapping peaks.
 #' @keywords internal
 
-get_GWAS_chromVAR_variant_attribution_tibble <- function(peak_attribution_tibble, peak_variant_weight_tibble) {
+get_GWAS_chromVAR_variant_contribution_tibble <- function(peak_contribution_tibble, peak_variant_weight_tibble) {
   contribution_cols <- c(
     "deviation_numerator_contribution",
     "deviation_contribution",
@@ -259,8 +259,8 @@ get_GWAS_chromVAR_variant_attribution_tibble <- function(peak_attribution_tibble
     "z_contribution"
   )
 
-  peak_variant_attribution_tibble <- peak_attribution_tibble |>
-    dplyr::rename(attribution_peak_weight = peak_weight) |>
+  peak_variant_contribution_tibble <- peak_contribution_tibble |>
+    dplyr::rename(contribution_peak_weight = peak_weight) |>
     dplyr::inner_join(
       peak_variant_weight_tibble |>
         dplyr::select(-dplyr::any_of(c("Category", "variant_weighting_mode"))) |>
@@ -269,14 +269,14 @@ get_GWAS_chromVAR_variant_attribution_tibble <- function(peak_attribution_tibble
       relationship = "many-to-many"
     )
   peak_weight_error <- max(
-    abs(peak_variant_attribution_tibble$attribution_peak_weight - peak_variant_attribution_tibble$mapped_peak_weight),
+    abs(peak_variant_contribution_tibble$contribution_peak_weight - peak_variant_contribution_tibble$mapped_peak_weight),
     na.rm = TRUE
   )
   if (peak_weight_error > 1e-10) {
     stop("Peak-variant weights do not reproduce the trait-level annotation matrix; maximum error: ", peak_weight_error)
   }
 
-  peak_variant_attribution_tibble |>
+  peak_variant_contribution_tibble |>
     dplyr::mutate(
       variant_share_of_peak_weight = .data$peak_variant_weight / .data$mapped_peak_weight,
       dplyr::across(dplyr::all_of(contribution_cols), \(value) value * .data$variant_share_of_peak_weight)
@@ -315,12 +315,12 @@ get_GWAS_chromVAR_variant_attribution_tibble <- function(peak_attribution_tibble
 
 #' Sum credible-set variant contributions by locus
 #'
-#' @param variant_attribution_tibble Variant-level chromVAR attribution.
+#' @param variant_contribution_tibble Variant-level chromVAR contribution.
 #' @return Exact locus-level contributions with lead-variant labels.
 #' @keywords internal
 
-get_GWAS_chromVAR_locus_attribution_tibble <- function(variant_attribution_tibble) {
-  lead_variant_tibble <- variant_attribution_tibble |>
+get_GWAS_chromVAR_locus_contribution_tibble <- function(variant_contribution_tibble) {
+  lead_variant_tibble <- variant_contribution_tibble |>
     dplyr::arrange(dplyr::desc(.data$posteriorProbability), .data$variantId) |>
     dplyr::slice_head(n = 1, by = c(GWAS_ID, studyLocusId)) |>
     dplyr::select(
@@ -331,7 +331,7 @@ get_GWAS_chromVAR_locus_attribution_tibble <- function(variant_attribution_tibbl
       lead_variant_PIP = posteriorProbability
     )
 
-  variant_attribution_tibble |>
+  variant_contribution_tibble |>
     dplyr::summarise(
       Category = dplyr::first(.data$Category),
       variant_weighting_mode = dplyr::first(.data$variant_weighting_mode),
@@ -353,7 +353,7 @@ get_GWAS_chromVAR_locus_attribution_tibble <- function(variant_attribution_tibbl
     dplyr::left_join(lead_variant_tibble, by = c("GWAS_ID", "studyLocusId")) |>
     dplyr::mutate(
       locus_label = .data$lead_variantId,
-      attribution_rank = dplyr::min_rank(dplyr::desc(abs(.data$relative_deviation_contribution))),
+      contribution_rank = dplyr::min_rank(dplyr::desc(abs(.data$relative_deviation_contribution))),
       .by = c(GWAS_ID, cluster)
     ) |>
     dplyr::relocate(
@@ -367,21 +367,21 @@ get_GWAS_chromVAR_locus_attribution_tibble <- function(variant_attribution_tibbl
     )
 }
 
-#' Validate additive GWAS chromVAR attribution
+#' Validate additive GWAS chromVAR contribution
 #'
-#' @param peak_attribution_tibble Peak-level attribution.
-#' @param variant_attribution_tibble Variant-level attribution.
-#' @param locus_attribution_tibble Locus-level attribution.
+#' @param peak_contribution_tibble Peak-level contribution.
+#' @param variant_contribution_tibble Variant-level contribution.
+#' @param locus_contribution_tibble Locus-level contribution.
 #' @return Reconciliation errors for each GWAS and cell type.
 #' @keywords internal
 
-get_GWAS_chromVAR_attribution_QC_tibble <- function(
-  peak_attribution_tibble,
-  variant_attribution_tibble,
-  locus_attribution_tibble
+get_GWAS_chromVAR_contribution_reconciliation_tibble <- function(
+  peak_contribution_tibble,
+  variant_contribution_tibble,
+  locus_contribution_tibble
 ) {
-  summarize_level <- function(attribution_tibble, level) {
-    attribution_tibble |>
+  summarize_level <- function(contribution_tibble, level) {
+    contribution_tibble |>
       dplyr::summarise(
         deviation_contribution_sum = sum(.data$deviation_contribution),
         relative_deviation_contribution_sum = sum(.data$relative_deviation_contribution),
@@ -395,23 +395,23 @@ get_GWAS_chromVAR_attribution_QC_tibble <- function(
   }
 
   dplyr::bind_rows(
-    summarize_level(peak_attribution_tibble, "peak"),
-    summarize_level(variant_attribution_tibble, "variant"),
-    summarize_level(locus_attribution_tibble, "locus")
+    summarize_level(peak_contribution_tibble, "peak"),
+    summarize_level(variant_contribution_tibble, "variant"),
+    summarize_level(locus_contribution_tibble, "locus")
   ) |>
     dplyr::mutate(
       deviation_error = .data$deviation_contribution_sum - .data$deviation,
       relative_deviation_error = .data$relative_deviation_contribution_sum - .data$relative_deviation,
       z_error = .data$z_contribution_sum - .data$z,
-      attribution_reconciles = abs(.data$deviation_error) < 1e-8 &
+      contribution_reconciles = abs(.data$deviation_error) < 1e-8 &
         abs(.data$relative_deviation_error) < 1e-8 &
         abs(.data$z_error) < 1e-8
     ) |>
     dplyr::relocate(GWAS_ID, cluster, level)
 }
 
-collapse_GWAS_locus_attribution_for_plot <- function(locus_attribution_tibble, n_top_loci = 12L) {
-  top_locus_ids <- locus_attribution_tibble |>
+collapse_GWAS_locus_contribution_for_plot <- function(locus_contribution_tibble, n_top_loci = 12L) {
+  top_locus_ids <- locus_contribution_tibble |>
     dplyr::summarise(
       max_abs_contribution = max(abs(.data$relative_deviation_contribution)),
       locus_label = dplyr::first(.data$locus_label),
@@ -420,10 +420,10 @@ collapse_GWAS_locus_attribution_for_plot <- function(locus_attribution_tibble, n
     dplyr::slice_max(.data$max_abs_contribution, n = n_top_loci, with_ties = FALSE) |>
     dplyr::arrange(dplyr::desc(.data$max_abs_contribution))
 
-  top_tibble <- locus_attribution_tibble |>
+  top_tibble <- locus_contribution_tibble |>
     dplyr::semi_join(top_locus_ids, by = "studyLocusId") |>
     dplyr::mutate(plot_locus = .data$locus_label)
-  other_tibble <- locus_attribution_tibble |>
+  other_tibble <- locus_contribution_tibble |>
     dplyr::anti_join(top_locus_ids, by = "studyLocusId") |>
     dplyr::mutate(plot_locus = dplyr::if_else(.data$relative_deviation_contribution >= 0, "Other positive", "Other negative")) |>
     dplyr::summarise(
@@ -447,22 +447,22 @@ collapse_GWAS_locus_attribution_for_plot <- function(locus_attribution_tibble, n
 
 #' Plot cell-type-by-locus chromVAR contributions
 #'
-#' @param locus_attribution_tibble Exact locus-level attribution.
+#' @param locus_contribution_tibble Exact locus-level contribution.
 #' @param chromVAR_deviation_tibble Original cell-type-by-GWAS heatmap data.
 #' @param n_top_loci Number of individually labelled loci per GWAS.
 #' @return Named list with one contribution heatmap per GWAS.
 #' @keywords internal
 
-plot_GWAS_locus_attribution_heatmaps <- function(
-  locus_attribution_tibble,
+plot_GWAS_locus_contribution_heatmaps <- function(
+  locus_contribution_tibble,
   chromVAR_deviation_tibble,
   n_top_loci = 12L
 ) {
-  GWAS_IDs <- unique(locus_attribution_tibble$GWAS_ID)
+  GWAS_IDs <- unique(locus_contribution_tibble$GWAS_ID)
   plots <- purrr::map(GWAS_IDs, \(GWAS_ID) {
-    locus_tibble <- locus_attribution_tibble |>
+    locus_tibble <- locus_contribution_tibble |>
       dplyr::filter(.data$GWAS_ID == .env$GWAS_ID)
-    heatmap_tibble <- collapse_GWAS_locus_attribution_for_plot(locus_tibble, n_top_loci = n_top_loci)
+    heatmap_tibble <- collapse_GWAS_locus_contribution_for_plot(locus_tibble, n_top_loci = n_top_loci)
     total_tibble <- chromVAR_deviation_tibble |>
       dplyr::filter(.data$GWAS_ID == .env$GWAS_ID)
     cluster_levels <- rev(unique(total_tibble$cluster))
@@ -513,7 +513,7 @@ plot_GWAS_locus_attribution_heatmaps <- function(
   plots
 }
 
-prepare_GWAS_locus_attribution_waterfall_tibble <- function(locus_tibble, n_top_loci = 12L) {
+prepare_GWAS_locus_contribution_waterfall_tibble <- function(locus_tibble, n_top_loci = 12L) {
   top_tibble <- locus_tibble |>
     dplyr::slice_max(abs(.data$relative_deviation_contribution), n = n_top_loci, with_ties = FALSE)
   other_tibble <- locus_tibble |>
@@ -556,21 +556,21 @@ prepare_GWAS_locus_attribution_waterfall_tibble <- function(locus_tibble, n_top_
   )
 }
 
-#' Plot locus-attribution waterfalls
+#' Plot locus-contribution waterfalls
 #'
-#' @param locus_attribution_tibble Exact locus-level attribution.
+#' @param locus_contribution_tibble Exact locus-level contribution.
 #' @param n_top_loci Number of individually labelled loci per plot.
 #' @return Named list with one waterfall per GWAS and cell type.
 #' @keywords internal
 
-plot_GWAS_locus_attribution_waterfalls <- function(locus_attribution_tibble, n_top_loci = 12L) {
+plot_GWAS_locus_contribution_waterfalls <- function(locus_contribution_tibble, n_top_loci = 12L) {
   split_tibbles <- split(
-    locus_attribution_tibble,
-    interaction(locus_attribution_tibble$GWAS_ID, locus_attribution_tibble$cluster, drop = TRUE, lex.order = TRUE)
+    locus_contribution_tibble,
+    interaction(locus_contribution_tibble$GWAS_ID, locus_contribution_tibble$cluster, drop = TRUE, lex.order = TRUE)
   )
 
   purrr::imap(split_tibbles, \(locus_tibble, plot_name) {
-    waterfall_tibble <- prepare_GWAS_locus_attribution_waterfall_tibble(locus_tibble, n_top_loci = n_top_loci)
+    waterfall_tibble <- prepare_GWAS_locus_contribution_waterfall_tibble(locus_tibble, n_top_loci = n_top_loci)
     connector_tibble <- waterfall_tibble |>
       dplyr::filter(.data$locus_label != "Total")
     connector_tibble <- connector_tibble |>
@@ -619,7 +619,7 @@ plot_GWAS_locus_attribution_waterfalls <- function(locus_attribution_tibble, n_t
     rlang::set_names(stringr::str_replace_all(names(split_tibbles), "[^A-Za-z0-9_.-]+", "_"))
 }
 
-make_GWAS_variant_attribution_track <- function(variant_tibble, region) {
+make_GWAS_variant_contribution_track <- function(variant_tibble, region) {
   region <- BPCells:::normalize_ranges(region)
   max_abs_contribution <- max(abs(variant_tibble$relative_deviation_contribution))
   variant_tibble <- variant_tibble |>
@@ -660,7 +660,7 @@ make_GWAS_variant_attribution_track <- function(variant_tibble, region) {
 
 #' Make consensus peak locus track
 #'
-#' Draw consensus ATAC peaks overlapping an attribution region.
+#' Draw consensus ATAC peaks overlapping an contribution region.
 #'
 #' @param consensus_peak_GRanges Consensus peak ranges.
 #' @param region Genomic region accepted by BPCells trackplot helpers.
@@ -688,10 +688,10 @@ make_consensus_peak_locus_track <- function(consensus_peak_GRanges, region) {
   )
 }
 
-#' Plot variant-level attribution details for top loci
+#' Plot variant-level contribution details for top loci
 #'
-#' @param variant_attribution_tibble Variant-level attribution.
-#' @param locus_attribution_tibble Locus-level attribution used to select loci.
+#' @param variant_contribution_tibble Variant-level contribution.
+#' @param locus_contribution_tibble Locus-level contribution used to select loci.
 #' @param consensus_peak_GRanges Consensus ATAC peaks.
 #' @param fragments BPCells fragment object.
 #' @param metadata_tibble Cell metadata with cell-type labels.
@@ -701,9 +701,9 @@ make_consensus_peak_locus_track <- function(consensus_peak_GRanges, region) {
 #' @return Named list of variant, accessibility, and peak track plots.
 #' @keywords internal
 
-plot_GWAS_variant_attribution_details <- function(
-  variant_attribution_tibble,
-  locus_attribution_tibble,
+plot_GWAS_variant_contribution_details <- function(
+  variant_contribution_tibble,
+  locus_contribution_tibble,
   consensus_peak_GRanges,
   fragments,
   metadata_tibble,
@@ -712,7 +712,7 @@ plot_GWAS_variant_attribution_details <- function(
   flank = 25000L,
   group_cells_by_col = "PCA_harmony_SNN_cluster_cell_type"
 ) {
-  selected_cell_type_tibble <- locus_attribution_tibble |>
+  selected_cell_type_tibble <- locus_contribution_tibble |>
     dplyr::distinct(.data$GWAS_ID, .data$cluster, .data$relative_deviation) |>
     dplyr::slice_max(
       .data$relative_deviation,
@@ -720,7 +720,7 @@ plot_GWAS_variant_attribution_details <- function(
       with_ties = FALSE,
       by = GWAS_ID
     )
-  selected_locus_tibble <- locus_attribution_tibble |>
+  selected_locus_tibble <- locus_contribution_tibble |>
     dplyr::semi_join(selected_cell_type_tibble, by = c("GWAS_ID", "cluster")) |>
     dplyr::slice_max(
       abs(.data$relative_deviation_contribution),
@@ -754,7 +754,7 @@ plot_GWAS_variant_attribution_details <- function(
       GWAS_ID <- locus_tibble$GWAS_ID[[1]]
       cluster <- locus_tibble$cluster[[1]]
       studyLocusId <- locus_tibble$studyLocusId[[1]]
-      variant_tibble <- variant_attribution_tibble |>
+      variant_tibble <- variant_contribution_tibble |>
         dplyr::filter(
           .data$GWAS_ID == .env$GWAS_ID,
           .data$cluster == .env$cluster,
@@ -785,7 +785,7 @@ plot_GWAS_variant_attribution_details <- function(
       )
       detail_plot <- BPCells::trackplot_combine(
         tracks = list(
-          make_GWAS_variant_attribution_track(variant_tibble, region),
+          make_GWAS_variant_contribution_track(variant_tibble, region),
           make_BPCells_ATAC_coverage_track_from_tibble(coverage_tibble, region, colors = coverage_colors),
           make_consensus_peak_locus_track(consensus_peak_GRanges, region)
         ),

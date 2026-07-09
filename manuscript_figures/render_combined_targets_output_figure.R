@@ -221,7 +221,7 @@ panel_specs <- tibble::tribble(
   "2"            , "B"  , quote(targets::tar_read(TF_activity_heatmap.ATAC.PBMC_human_6x))                                                   , NA_character_                , NA_character_ , "ChromVAR transcription-factor activity scores for configured PBMC marker TFs."                   , quote(figure_2_TF_activity_panel(plot))      ,
   "2"            , "C"  , quote(targets::tar_read(peak_gene_correlation_top_link_ATAC_tracks_plots.peak_gene_correlation.WNN.PBMC_human_6x)) , "B_rank001_ODF2[.]AS1_chr9"  , NA_character_ , "Example top peak-gene link with ATAC accessibility and loop track."                              , quote(figure_2_peak_gene_link_panel(plot))   ,
   "2"            , "D"  , quote(targets::tar_read(TRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x))       , "MonocyteCount_Vuckovic2020" , NA_character_ , "SCAVENGE trait relevance scores for monocyte count projected onto the WNN UMAP."                 , quote(figure_2_single_cell_GWAS_panel(plot)) ,
-  "2"            , "E"  , quote(targets::tar_read(chromVAR_deviation_heatmap.trait_level.pseudobulk.genetic_enrichment.PBMC_human_6x))       , NA_character_                , NA_character_ , "Cell-type GWAS chromVAR relative deviations with z-score support and nuclei counts."             , quote(figure_2_GWAS_heatmap_panel(plot))     ,
+  "2"            , "E"  , quote(targets::tar_read(chromVAR_deviation_heatmap.cell_type_pseudobulk.genetic_enrichment.PBMC_human_6x))         , NA_character_                , NA_character_ , "Cell-type GWAS chromVAR relative deviations with z-score support and nuclei counts."             , quote(figure_2_GWAS_heatmap_panel(plot))     ,
 )
 
 figure_specs <- tibble::tribble(

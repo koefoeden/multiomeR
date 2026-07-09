@@ -1,16 +1,16 @@
 rlang::list2(
   targets::tar_target(
-    name = peak_weight_matrix.trait_level.pseudobulk,
-    description = "Combine per-GWAS peak posterior-probability weights into one peak-by-GWAS annotation matrix [part_of_graph:genetic_enrichment_cell_type_attribution]",
+    name = GWAS_peak_weight_matrix,
+    description = "Combine per-GWAS peak posterior-probability weights into one peak-by-GWAS annotation matrix [part_of_graph:genetic_enrichment_cell_type_contributions]",
     command = get_GWAS_chromVAR_peak_weight_matrix(
-      peak_weight_records = peak_weight_records.trait_level,
+      peak_weight_records = GWAS_peak_weight_records,
       RSE_ATAC = chromVAR_obj.ATAC
     ),
     resources = get_tar_resources(RAM_GB_req = 40)
   ),
   tarchetypes::tar_file(
     name = cell_type_pseudobulk_counts_BPCells_matrix_dir.ATAC,
-    description = "Write ATAC counts summed per WNN cell type to BPCells for descriptive GWAS chromVAR plots [part_of_graph:genetic_enrichment_cell_type_attribution]",
+    description = "Write ATAC counts summed per WNN cell type to BPCells for descriptive GWAS chromVAR plots [part_of_graph:genetic_enrichment_cell_type_contributions]",
     command = {
       out_dir <- get_structured_file_path()
       get_BPCells_group_pseudobulk_matrix(
@@ -44,8 +44,8 @@ rlang::list2(
       dplyr::mutate(modality = "ATAC")
   ),
   targets::tar_target(
-    name = chromVAR_background_record.trait_level.cell_type_pseudobulk,
-    description = "Fit the cell-type pseudobulk betterChromVAR background used by GWAS score attribution [part_of_graph:genetic_enrichment_cell_type_attribution]",
+    name = chromVAR_background_record.cell_type_pseudobulk,
+    description = "Fit the cell-type pseudobulk betterChromVAR background used by GWAS score contributions [part_of_graph:genetic_enrichment_cell_type_contributions]",
     command = get_pseudobulk_chromVAR_background_record(
       psbulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
       chromVAR_obj = chromVAR_obj.ATAC
@@ -53,11 +53,11 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 60)
   ),
   tarchetypes::tar_file(
-    name = chromVAR_deviation_heatmap.trait_level.pseudobulk,
+    name = chromVAR_deviation_heatmap.cell_type_pseudobulk,
     description = "Save cell-type pseudobulk GWAS chromVAR relative-deviation heatmap with z-score support labels and nuclei counts. [checkpoint:genetic_enrichment]",
     command = {
       plot <- plot_GWAS_by_cluster_heatmap(
-        chromVAR_deviation_tibble.trait_level.pseudobulk,
+        chromVAR_deviation_tibble.cell_type_pseudobulk,
         GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
         compartments_patterns = genetic_enrichment_compartment_patterns,
         fill_col = "relative_deviation",
@@ -68,16 +68,16 @@ rlang::list2(
         plot,
         filetype = "png",
         width = 20,
-        height = max(7, 0.24 * dplyr::n_distinct(chromVAR_deviation_tibble.trait_level.pseudobulk$GWAS_ID) + 3)
+        height = max(7, 0.24 * dplyr::n_distinct(chromVAR_deviation_tibble.cell_type_pseudobulk$GWAS_ID) + 3)
       )
     }
   ),
   tarchetypes::tar_file(
-    name = chromVAR_deviation_heatmap_unscaled.trait_level.pseudobulk,
+    name = chromVAR_deviation_heatmap_unscaled.cell_type_pseudobulk,
     description = "Save cell-type pseudobulk GWAS chromVAR raw-deviation heatmap with z-score support labels and nuclei counts. [checkpoint:genetic_enrichment]",
     command = {
       plot <- plot_GWAS_by_cluster_heatmap(
-        chromVAR_deviation_tibble.trait_level.pseudobulk,
+        chromVAR_deviation_tibble.cell_type_pseudobulk,
         GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
         compartments_patterns = genetic_enrichment_compartment_patterns,
         fill_col = "deviation",
@@ -88,7 +88,7 @@ rlang::list2(
         plot,
         filetype = "png",
         width = 20,
-        height = max(7, 0.24 * dplyr::n_distinct(chromVAR_deviation_tibble.trait_level.pseudobulk$GWAS_ID) + 3)
+        height = max(7, 0.24 * dplyr::n_distinct(chromVAR_deviation_tibble.cell_type_pseudobulk$GWAS_ID) + 3)
       )
     }
   )

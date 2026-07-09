@@ -30,6 +30,12 @@ active_targets_process() {
   kill -0 "$pid" 2>/dev/null
 }
 
+release_scratch_marker() {
+  if [ -f "$active_marker" ] && [ "$(sed -n '1p' "$active_marker")" = "$worktree" ]; then
+    rm -f "$active_marker"
+  fi
+}
+
 apply=false
 if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
   usage
@@ -85,11 +91,11 @@ if [ "$apply" = true ]; then
     if git worktree list --porcelain | grep -Fxq "worktree $worktree"; then
       exit 1
     fi
-    rm -rf "$worktree"
+    release_scratch_marker
+    rm -rf "$worktree" ||
+      die "Git worktree was unregistered and scratch was released, but the physical directory remains: $worktree"
   }
-  if [ -f "$active_marker" ] && [ "$(sed -n '1p' "$active_marker")" = "$worktree" ]; then
-    rm -f "$active_marker"
-  fi
+  release_scratch_marker
   echo "Removed worktree and released scratch marker."
 else
   cat <<EOF

@@ -72,6 +72,24 @@ mirror_base_runtime_path() {
   exclude_path "$rel"
 }
 
+run_rsync() {
+  case ${WORKTREE_RSYNC_RUNNER:-srun} in
+    srun)
+      require_command srun
+      local srun_args=${WORKTREE_SRUN_ARGS:---cpus-per-task=1 --mem=8G --time=04:00:00}
+      local -a srun_args_array
+      read -r -a srun_args_array <<<"$srun_args"
+      srun "${srun_args_array[@]}" -- rsync "$@"
+      ;;
+    local)
+      rsync "$@"
+      ;;
+    *)
+      die "WORKTREE_RSYNC_RUNNER must be srun or local"
+      ;;
+  esac
+}
+
 require_command git
 require_command rsync
 require_command cp
@@ -105,10 +123,7 @@ mkdir -p "$scratch"
 echo "Refreshing scratch outputs:"
 echo "  from: $base/outputs/"
 echo "  to:   $scratch/"
-rsync_bwlimit=${WORKTREE_RSYNC_BWLIMIT:-50M}
-echo "  bwlimit: $rsync_bwlimit"
-rsync -a --delete --delete-excluded --delay-updates \
-  --bwlimit="$rsync_bwlimit" \
+run_rsync -a --delete --delete-excluded --delay-updates \
   --exclude='/meta/process' \
   "$base/outputs/" "$scratch/"
 

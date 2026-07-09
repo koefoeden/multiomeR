@@ -17,8 +17,7 @@ Environment overrides:
   WORKTREE_BASE_REF
   WORKTREE_PATH
   WORKTREE_SCRATCH
-  WORKTREE_RSYNC_BWLIMIT  default: 50M
-  WORKTREE_RSYNC_RUNNER  local|srun, default: local
+  WORKTREE_RSYNC_RUNNER  srun|local, default: srun
   WORKTREE_SRUN_ARGS     only used with WORKTREE_RSYNC_RUNNER=srun
 USAGE
 }
@@ -103,6 +102,24 @@ mirror_base_runtime_path() {
   printf '%s\n' "$rel" >>"$(git -C "$worktree" rev-parse --git-path info/exclude)"
 }
 
+run_rsync() {
+  case ${WORKTREE_RSYNC_RUNNER:-srun} in
+    srun)
+      require_command srun
+      local srun_args=${WORKTREE_SRUN_ARGS:---cpus-per-task=1 --mem=8G --time=04:00:00}
+      local -a srun_args_array
+      read -r -a srun_args_array <<<"$srun_args"
+      srun "${srun_args_array[@]}" -- rsync "$@"
+      ;;
+    local)
+      rsync "$@"
+      ;;
+    *)
+      die "WORKTREE_RSYNC_RUNNER must be srun or local"
+      ;;
+  esac
+}
+
 if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
   usage
   exit 0
@@ -149,28 +166,12 @@ mkdir -p "$scratch"
 echo "Refreshing scratch outputs:"
 echo "  from: $base/outputs/"
 echo "  to:   $scratch/"
-rsync_bwlimit=${WORKTREE_RSYNC_BWLIMIT:-50M}
-echo "  bwlimit: $rsync_bwlimit"
 rsync_args=(
   -a --delete --delete-excluded --delay-updates
-  --bwlimit="$rsync_bwlimit"
   --exclude='/meta/process'
   "$base/outputs/" "$scratch/"
 )
-case ${WORKTREE_RSYNC_RUNNER:-local} in
-  local)
-    rsync "${rsync_args[@]}"
-    ;;
-  srun)
-    require_command srun
-    srun_args=${WORKTREE_SRUN_ARGS:---cpus-per-task=1 --mem=8G --time=04:00:00}
-    read -r -a srun_args_array <<<"$srun_args"
-    srun "${srun_args_array[@]}" rsync "${rsync_args[@]}"
-    ;;
-  *)
-    die "WORKTREE_RSYNC_RUNNER must be local or srun"
-    ;;
-esac
+run_rsync "${rsync_args[@]}"
 
 if git -C "$base" show-ref --verify --quiet "refs/heads/$branch"; then
   git -C "$base" worktree add "$worktree" "$branch"

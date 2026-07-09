@@ -62,36 +62,23 @@ WORKTREE_SCRATCH=/path/to/scratch \
 dev/worktree_setup marker-tfs
 ```
 
-The scratch refresh runs locally by default with a bandwidth cap:
+The scratch refresh runs through Slurm by default:
 
 ```bash
-rsync --bwlimit=50M ...
-```
-
-Tune the cap when needed:
-
-```bash
-WORKTREE_RSYNC_BWLIMIT=25M dev/worktree_setup marker-tfs
-```
-
-To run the refresh through Slurm instead:
-
-```bash
-WORKTREE_RSYNC_RUNNER=srun dev/worktree_setup marker-tfs
-```
-
-This uses:
-
-```bash
-srun --cpus-per-task=1 --mem=8G --time=04:00:00 rsync --bwlimit=50M ...
+srun --cpus-per-task=1 --mem=8G --time=04:00:00 -- rsync ...
 ```
 
 Change the allocation flags with `WORKTREE_SRUN_ARGS`:
 
 ```bash
-WORKTREE_RSYNC_RUNNER=srun \
 WORKTREE_SRUN_ARGS="--partition=compute --cpus-per-task=1 --mem=16G --time=08:00:00" \
 dev/worktree_setup marker-tfs
+```
+
+Run the refresh locally only when needed:
+
+```bash
+WORKTREE_RSYNC_RUNNER=local dev/worktree_setup marker-tfs
 ```
 
 ## Run The Pipeline
@@ -130,6 +117,9 @@ Apply the output sync only after reviewing the dry run:
 ```bash
 dev/worktree_promote --apply
 ```
+
+Promotion rsyncs also run through Slurm by default. Use the same
+`WORKTREE_SRUN_ARGS` or `WORKTREE_RSYNC_RUNNER=local` overrides when needed.
 
 Promotion refuses to run if:
 

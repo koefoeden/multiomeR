@@ -8,6 +8,10 @@ Usage: dev/worktree_promote [--apply]
 Run from an experiment worktree. Dry-runs by default. With --apply, rsyncs
 worktree outputs/ into the recorded base outputs/ if base outputs metadata has
 not changed and no base/worktree target run appears active.
+
+Environment overrides:
+  WORKTREE_RSYNC_RUNNER  srun|local, default: srun
+  WORKTREE_SRUN_ARGS     only used with WORKTREE_RSYNC_RUNNER=srun
 USAGE
 }
 
@@ -28,6 +32,28 @@ active_targets_process() {
   pid=$(awk -F '|' '$1 == "pid" {print $2; exit}' "$process_file")
   [ -n "$pid" ] || return 1
   kill -0 "$pid" 2>/dev/null
+}
+
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || die "Missing required command: $1"
+}
+
+run_rsync() {
+  case ${WORKTREE_RSYNC_RUNNER:-srun} in
+    srun)
+      require_command srun
+      local srun_args=${WORKTREE_SRUN_ARGS:---cpus-per-task=1 --mem=8G --time=04:00:00}
+      local -a srun_args_array
+      read -r -a srun_args_array <<<"$srun_args"
+      srun "${srun_args_array[@]}" -- rsync "$@"
+      ;;
+    local)
+      rsync "$@"
+      ;;
+    *)
+      die "WORKTREE_RSYNC_RUNNER must be srun or local"
+      ;;
+  esac
 }
 
 apply=false
@@ -63,9 +89,9 @@ active_targets_process "$worktree/outputs" &&
 rsync_args=(-a --no-perms --omit-dir-times --delete --delay-updates --exclude='/meta/process' --exclude='/.worktree/')
 if [ "$apply" = true ]; then
   echo "Promoting worktree outputs into base outputs:"
-  rsync "${rsync_args[@]}" "$worktree/outputs/" "$base/outputs/"
+  run_rsync "${rsync_args[@]}" "$worktree/outputs/" "$base/outputs/"
   sha256sum "$base/outputs/meta/meta" >"$worktree/outputs/.worktree/base_outputs_meta.sha256"
 else
   echo "Dry run. Re-run with --apply to promote outputs."
-  rsync -ni "${rsync_args[@]}" "$worktree/outputs/" "$base/outputs/"
+  run_rsync -ni "${rsync_args[@]}" "$worktree/outputs/" "$base/outputs/"
 fi

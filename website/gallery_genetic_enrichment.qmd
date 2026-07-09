@@ -12,9 +12,7 @@ gallery_items <- check_output_gallery_assets(
 )
 ```
 
-These are curated outputs from the larger `PBMC_human_6x` aggregation, not from the minimal two-reaction quickstart. Reproducing them requires the completed main aggregation, the genetic-enrichment module, the configured Open Targets studies, and the relevant checkpoint targets.
-
-The cards currently show a selected SCAVENGE/WNN view rather than every cell-type, graph, locus, and variant attribution output described by the module. See [Genetic enrichment](downstream_genetic_enrichment.qmd) for prerequisites and interpretation guidance.
+These curated outputs use the larger `PBMC_human_6x` aggregation, not the two-reaction quickstart, and show selected SCAVENGE/WNN results rather than every attribution output. See [Genetic enrichment](downstream_genetic_enrichment.qmd) for prerequisites, checkpoint targets, and interpretation guidance.
 
 ```{r, echo = FALSE, results = "asis"}
 render_gallery_section(

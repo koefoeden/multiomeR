@@ -11,7 +11,7 @@ Use this optional module when a completed aggregation contains replicated donor-
 
 The module does not create biological replication. The donor structure, covariates, design formula, and contrasts must be defensible for the intended analysis before the workflow is run.
 
-Representative outputs are shown in the [differential analyses gallery](gallery_differential_analyses.qmd), and the target structure is shown in the [implementation graph](implementation/implementation_differential_analyses.html).
+See the [output gallery](gallery_differential_analyses.qmd) for representative diagnostics and the [implementation graph](implementation/implementation_differential_analyses.html) for target structure.
 
 ## Prerequisites
 
@@ -25,13 +25,9 @@ Before enabling the module, confirm that:
 
 Use `differential_analyses_extended_donor_id_metadata_tsv` when the modelling table needs variables beyond the aggregation's normal donor metadata. It must retain the same unique `donor_id` key.
 
-## What it produces
+## Outputs
 
-- Differential cell-type-composition models and coefficient summaries.
-- Pseudobulk differential gene expression, chromatin accessibility, and TF activity using [`edgeR`](https://bioconductor.org/packages/release/bioc/html/edgeR.html) and [`limma`](https://bioconductor.org/packages/release/bioc/html/limma.html).
-- Depth and P-value diagnostics, volcano plots, significant-element counts, and cross-modality summaries.
-- GSEA of DGE results with selected [`MSigDB`](https://www.gsea-msigdb.org/gsea/msigdb) collections and optional custom gene sets.
-- Optional Open Targets evidence annotations for top features.
+It produces cell-type-composition models; pseudobulk differential gene expression, accessibility, and TF activity; diagnostics and cross-modality summaries; and GSEA with selected MSigDB or custom gene sets. Open Targets evidence annotation is optional.
 
 ## Configure the module
 
@@ -103,4 +99,4 @@ targets::tar_make(
 
 Review pseudobulk depths and retained donor counts before interpreting coefficients. Check model-matrix terms, P-value distributions, effect directions, and agreement or disagreement across DGE, DCA, and DTFA. Treat the [gallery](gallery_differential_analyses.qmd) as a visual reference, not as a statistical acceptance threshold.
 
-Runtime depends on the number of donors, cell types, model specifications, contrasts, and GSEA branches. Use [Troubleshooting](troubleshooting.qmd) if a formula, contrast, or metadata join fails.
+Runtime depends on donors, cell types, models, contrasts, and GSEA branches. Use [Troubleshooting](troubleshooting.qmd) if a formula, contrast, or metadata join fails.

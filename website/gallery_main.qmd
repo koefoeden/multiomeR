@@ -12,11 +12,9 @@ gallery_items <- check_output_gallery_assets(
 )
 ```
 
-This curated gallery shows representative outputs from the public `immune_human_2x` configuration. The images are documentation snapshots, not files automatically installed with a local target store. Generate your own review plots with the checkpoint selectors in [Run and review the workflow](main_running.qmd).
+These documentation snapshots show representative outputs from the public `immune_human_2x` configuration. The first cards summarize its shared dataset; GEX, ATAC, and WNN cards are aggregation-level. Each card names its target.
 
-The first cards summarize the shared `immune_human_dataset` across reactions. The GEX, ATAC, and WNN cards are aggregation-level outputs for `immune_human_2x`. Each card includes the corresponding stable `targets` name so you can connect the image to the workflow.
-
-Start with [Install and prepare the demo](demo_installation.qmd), [run the demo endpoint](demo_running.qmd), and then [inspect the outputs](demo_outputs.qmd). Request the broader checkpoints when you want to reproduce the review-plot families shown here.
+To reproduce these plot families, [install](demo_installation.qmd) and [run](demo_running.qmd) the demo, then request the broader [review checkpoints](main_running.qmd). The endpoint-only quickstart does not build every gallery plot; [inspect its local outputs](demo_outputs.qmd) to see the distinction.
 
 ```{r, echo = FALSE, results = "asis"}
 render_gallery_section(

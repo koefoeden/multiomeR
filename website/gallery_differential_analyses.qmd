@@ -12,9 +12,7 @@ gallery_items <- check_output_gallery_assets(
 )
 ```
 
-These cards are a curated subset of the outputs from the public `immune_human_2x` differential-analysis configuration. They illustrate presentation and diagnostic types; they do not define acceptable effect sizes or significance patterns for another study.
-
-Dynamic volcano-plot branches are displayed with their stable parent target name so the documentation does not depend on branch hashes. See [Differential analyses](downstream_differential_analyses.qmd) for prerequisites, model configuration, and the checkpoint command.
+These cards are a curated subset from the public `immune_human_2x` configuration. They illustrate diagnostics, not acceptable effect sizes or significance patterns for another study. See [Differential analyses](downstream_differential_analyses.qmd) for prerequisites, models, and the checkpoint command.
 
 ```{r, echo = FALSE, results = "asis"}
 render_gallery_section(

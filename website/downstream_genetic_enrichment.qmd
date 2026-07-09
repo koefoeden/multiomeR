@@ -9,7 +9,7 @@ source("helpers/_setup.R")
 
 Use this optional module for a completed human aggregation when fine-mapped GWAS evidence should be integrated with chromatin accessibility. It maps Open Targets credible-set variants to consensus peaks, calculates GWAS chromVAR-style deviations with the pipeline's chromVAR/betterChromVAR machinery, propagates trait relevance with [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE), and attributes cell-type deviations back to loci and variants.
 
-Representative outputs are shown in the [genetic enrichment gallery](gallery_genetic_enrichment.qmd). The [implementation graph](implementation/implementation_genetic_enrichment.html) shows the upstream ATAC and WNN dependencies.
+See the [output gallery](gallery_genetic_enrichment.qmd) for representative results and the [implementation graph](implementation/implementation_genetic_enrichment.html) for upstream ATAC and WNN dependencies.
 
 ## Prerequisites
 
@@ -21,13 +21,9 @@ Before enabling the module, confirm that:
 - the machine can download and retain the Open Targets study and credible-set Parquet datasets; and
 - the biological question justifies cell-level, graph-propagated, or cell-type-pseudobulk enrichment rather than treating those summaries as interchangeable.
 
-## What it produces
+## Outputs
 
-- Open Targets study, credible-set, ancestry, sample-size, and fine-mapping metadata.
-- Posterior-probability-weighted mapping of credible variants to consensus ATAC peaks.
-- Single-nucleus GWAS deviation inputs and SCAVENGE trait-relevance summaries across configured graph representations.
-- Cell-type GWAS deviation heatmaps with nuclei support.
-- Peak-, locus-, and variant-level contribution summaries and accessibility tracks.
+It produces Open Targets and fine-mapping metadata, posterior-weighted variant-to-peak mappings, single-nucleus GWAS deviations, SCAVENGE trait-relevance summaries, cell-type heatmaps, and peak-, locus-, and variant-level attribution outputs.
 
 ## Configure the module
 
@@ -93,4 +89,4 @@ targets::tar_make(
 
 Before interpreting trait scores, verify the resolved Open Targets release and fine-mapping method, the number of credible-set loci and variants retained, and the overlap with consensus peaks. Then compare direct deviation summaries with SCAVENGE-propagated scores and inspect whether apparent cell-type enrichment is supported by enough nuclei and loci.
 
-Runtime and disk use grow with the number of studies, cells, graph representations, permutations, and attributed loci. The [gallery](gallery_genetic_enrichment.qmd) is a curated visual reference and includes a larger six-reaction aggregation; it is not produced by the minimal quickstart.
+Runtime and disk use grow with studies, cells, graph representations, permutations, and attributed loci. The [gallery](gallery_genetic_enrichment.qmd) uses a larger six-reaction aggregation and is not produced by the minimal quickstart.

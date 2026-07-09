@@ -15,7 +15,6 @@ book:
     - part: "Overview"
       chapters:
         - index.qmd
-        - intro_manual_usage.qmd
     - part: "Quickstart: Public two-reaction demo"
       chapters:
         - demo_installation.qmd

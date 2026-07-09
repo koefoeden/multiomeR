@@ -103,19 +103,7 @@ targets::tar_manifest(
 The command should return one row named `multimodal_Seurat_object.immune_human_2x`. Constructing the manifest also evaluates the configuration and target graph, so configuration, controller, or startup errors appear before the data run begins. Continue to [Run the demo](demo_running.qmd) when this check succeeds.
 
 ::: {.callout-note collapse="true"}
-## Why pixi?
+## Why are both installation commands needed?
 
-multiomeR depends on both R packages and command-line genomics tools. Pixi keeps those dependencies in one locked environment, so R, Bioconductor packages, and external tools such as `macs3`, `tabix`, and `cellsnp-lite` are resolved together instead of being installed manually across separate package managers.
-:::
-
-::: {.callout-note collapse="true"}
-## Why is `--run-post-link-scripts` needed?
-
-The `--locked` flag keeps installation aligned with `pixi.lock`. The `--run-post-link-scripts` flag is required for Bioconductor data packages such as the BSgenome genome packages. Pixi disables conda post-link scripts by default, but these packages use Bioconda's post-link scripts to materialize the actual R package directories in the pixi environment.
-:::
-
-::: {.callout-note collapse="true"}
-## Why is `pixi run install-r-github-packages` needed?
-
-A small number of R packages still need GitHub versions, since they are not currently available on conda-forge/bioconda. The `pixi run install-r-github-packages` task installs the pinned GitHub versions of BPCells, Signac, and betterChromVAR into the pixi R library. The pixi environment also preinstalls system libraries needed by these source installs, including `libhwy` for BPCells.
+Pixi resolves R, Bioconductor, and command-line tools in one locked environment. `--run-post-link-scripts` materializes Bioconductor data packages such as BSgenome, while `pixi run install-r-github-packages` installs the pinned GitHub versions of BPCells, Signac, and betterChromVAR that are not supplied by the locked conda environment.
 :::

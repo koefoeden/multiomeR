@@ -10,11 +10,7 @@ knitr::opts_chunk$set(
 
 The public `immune_human_2x` demo writes its `targets` store to `outputs`, as configured in `_targets.yaml`. The quickstart selection creates the objects and file targets required by the final compatibility export. Plot targets are separate review outputs and are not all dependencies of that endpoint.
 
-The store can contain three kinds of output:
-
-- `objects/`: serialized R objects managed by `targets`, returned by `targets::tar_target()` targets
-- `files/`: file and directory artifacts saved by `get_structured_file_path()` inside `tarchetypes::tar_file()` targets
-- `plots/`: PNG and SVG review plots saved by `save_plots_structured()` inside `tarchetypes::tar_file()` targets
+The store contains serialized R objects in `objects/`, file artifacts in `files/`, and requested review figures in `plots/`.
 
 ## Objects
 
@@ -26,11 +22,9 @@ targets::tar_read(metadata_w_cell_types_tibble.WNN.immune_human_2x)
 targets::tar_read(multimodal_Seurat_object.immune_human_2x)
 ```
 
-See the official [`tar_read()` documentation](https://docs.ropensci.org/targets/reference/tar_read.html) for details on reading target values from storage.
-
 ## Files
 
-Other targets in the pipeline explicitly write files to disk inside `tarchetypes::tar_file()` targets. These targets can still be loaded by `targets::tar_read()`, but their value is simply the file path rather than an in-memory analysis object.
+File targets also load with `targets::tar_read()`, but their value is a path rather than an in-memory result.
 
 ```{.r filename="R"}
 targets::tar_read(cellranger_barcodes_tsv.healthy_PBMC_human)
@@ -38,35 +32,19 @@ targets::tar_read(aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x)
 targets::tar_read(consensus_peak_BPCells_matrix_dir.ATAC.immune_human_2x)
 ```
 
-Internally, these paths are created with `get_structured_file_path()`. For example, `aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x` is placed under:
+For example, `aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x` is placed under:
 
 ```text
 outputs/files/immune_human_2x/GEX/
 ```
 
-The resulting files are grouped by reaction, dataset, or aggregation:
-
-```text
-outputs/files/
-|-- healthy_PBMC_human/ (reaction 1 specific files)
-|-- lymphoma_lymph_human/ (reaction 2 specific files)
-`-- immune_human_2x/ (aggregation-level files)
-```
-
-See the official [`targets` local data documentation](https://books.ropensci.org/targets/data.html#external-files) for more information on file targets.
+Other files are grouped under `outputs/files/<scope>/`, where the scope is a reaction, dataset, or aggregation.
 
 ## Plots
 
 Plots are saved in a similar structure under `outputs/plots`, but the final-object quickstart selection does not request every checkpoint plot. To build and review those outputs, follow the GEX, ATAC, and multimodal selections in [Running the workflow](main_running.qmd).
 
-When plot targets have been requested, their layout follows this pattern:
-```text
-outputs/plots/
-|-- healthy_PBMC_human/ (reaction 1 specific plots)
-|-- lymphoma_lymph_human/ (reaction 2 specific plots)
-|-- immune_human_dataset/ (dataset-level plots)
-`-- immune_human_2x/ (aggregation-level plots)
-```
+Requested plots use the same scope-based layout under `outputs/plots/`.
 
 The [main pipeline output gallery](gallery_main.qmd) contains curated snapshots showing what representative checkpoint outputs look like. Gallery assets are documentation snapshots; they are not evidence that the corresponding target was built in your local store.
 

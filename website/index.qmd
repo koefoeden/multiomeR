@@ -16,8 +16,6 @@ multiomeR is currently in beta. Expect breaking changes as the workflow is matur
 - **Efficient reruns**: `targets` reruns only the parts of the workflow affected by changed inputs, code, or config.
 - **Multimodal analysis**: The main pipeline covers RNA/ATAC processing, clustering, cell typing, WNN integration, and optional downstream modules.
 
-The framework assumes some familiarity with R and `targets`, but the public example workflow is intended to provide a concrete starting point.
-
 ## Choose your route
 
 | If you want to... | Start here |
@@ -28,14 +26,12 @@ The framework assumes some familiarity with R and `targets`, but the public exam
 | Add a downstream analysis | Check the prerequisites for [differential analyses](downstream_differential_analyses.qmd) or [genetic enrichment](downstream_genetic_enrichment.qmd). |
 | Understand or modify the internals | Use the separate [implementation book](implementation/). |
 
-If this is your first visit, read [Using this manual](intro_manual_usage.qmd) for prerequisites, terminology, and the distinction between tutorial and reference material.
+Before starting, you need Linux and basic familiarity with R, tabular metadata, and `targets`. The demo supplies a working configuration; your own analysis also needs complete `cellranger-arc count` outputs, a matching reference, and keyed reaction and donor metadata. Tutorial pages provide a safe route through the workflow; searchable parameter tables and the implementation book are references to consult as needed.
+
+In this manual, a **reaction** is one configured 10x library and output directory, a **dataset** groups reactions that share reference and QC settings, and an **aggregation** is a joint analysis of one or more reactions. A **donor** is the individual identified by `donor_id`; one reaction may contain multiple donors.
 
 ## Workflow at a glance
 
-multiomeR is organized around one main pipeline and two optional downstream modules.
-
-The **main pipeline** starts from `cellranger-arc count` outputs, processes each 10x reaction, aggregates selected reactions, and builds multimodal RNA/ATAC outputs for clustering, cell typing, and WNN integration.
-
-The **modules** are optional branches that run from completed, configured aggregations. They require additional metadata or genetic inputs and should be enabled only when their module-specific prerequisites are satisfied.
+The **main pipeline** processes each reaction, aggregates selected reactions, and builds multimodal RNA/ATAC outputs for clustering, cell typing, and WNN integration. Two optional modules extend completed aggregations with differential analyses or genetic enrichment.
 
 ![multiomeR workflow from Cell Ranger ARC reaction outputs through per-reaction processing, aggregation-level GEX and ATAC analysis, WNN integration, and optional downstream modules](figures/multiomeR_overview_simplified.drawio.svg)

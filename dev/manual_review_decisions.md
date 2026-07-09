@@ -107,3 +107,4 @@ Use this section to record decisions as we go.
 |---|---|---|
 | A1 | reject | Revalidated against the current commit: a fresh clone already points to the local template. |
 | Implementation | complete | Reader-journey revision implemented and rendered on `codex/revise-doc-reader-journey`. |
+| Concision pass | complete | Removed the redundant manual-routing chapter, compressed repeated summaries, and moved parameter details behind searchable disclosure controls. |

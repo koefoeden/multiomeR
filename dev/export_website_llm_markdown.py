@@ -247,7 +247,11 @@ def tracked_qmd_files(site_dir: Path) -> set[Path]:
     except (subprocess.CalledProcessError, FileNotFoundError):
         paths = list(site_dir.rglob("*.qmd"))
 
-    return {path.resolve() for path in paths if path.suffix == ".qmd"}
+    return {
+        path.resolve()
+        for path in paths
+        if path.suffix == ".qmd" and path.is_file()
+    }
 
 
 def render_orphans(site_dir: Path, repo_root: Path, used_sources: set[Path]) -> str:

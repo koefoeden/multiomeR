@@ -62,9 +62,17 @@ get_GWAS_chromVAR_peak_variant_weight_tibble <- function(
     )
 }
 
-#' Decompose cell-type chromVAR deviations into peak contributions
+scale_within_vector <- function(x) {
+  x_sd <- stats::sd(x, na.rm = TRUE)
+  if (is.na(x_sd) || x_sd == 0) {
+    return(rep(0, length(x)))
+  }
+  as.numeric((x - mean(x, na.rm = TRUE)) / x_sd)
+}
+
+#' Decompose cell-type chromVAR scores into peak contributions
 #'
-#' @param chromVAR_deviation_record Cell-type pseudobulk deviation record.
+#' @param chromVAR_background_record Cell-type pseudobulk background record.
 #' @param psbulk_ATAC_data_matrix Peak-by-cell-type count matrix.
 #' @param chromVAR_obj Template chromVAR object with peak ranges.
 #' @param annotation_matrix Peak-by-GWAS trait weight matrix.
@@ -74,20 +82,19 @@ get_GWAS_chromVAR_peak_variant_weight_tibble <- function(
 #' @keywords internal
 
 get_GWAS_chromVAR_peak_attribution_tibble <- function(
-  chromVAR_deviation_record,
+  chromVAR_background_record,
   psbulk_ATAC_data_matrix,
   chromVAR_obj,
   annotation_matrix,
   GWAS_inputs_tibble
 ) {
-  peak_names <- chromVAR_deviation_record$peak_names
+  peak_names <- chromVAR_background_record$peak_names
   counts_matrix <- psbulk_ATAC_data_matrix[peak_names, , drop = FALSE]
   if (inherits(counts_matrix, "IterableMatrix")) {
     counts_matrix <- methods::as(counts_matrix, "dgCMatrix")
   }
   annotation_matrix <- annotation_matrix[peak_names, , drop = FALSE]
-  deviation_SE <- chromVAR_deviation_record$deviation_SE
-  background <- chromVAR_deviation_record$background
+  background <- chromVAR_background_record$background
   peak_ranges <- SummarizedExperiment::rowRanges(chromVAR_obj)
   peak_ranges <- peak_ranges[match(peak_names, get_peak_names_from_GRanges(peak_ranges))]
   peak_metadata_tibble <- GenomicRanges::as.data.frame(peak_ranges) |>
@@ -99,7 +106,7 @@ get_GWAS_chromVAR_peak_attribution_tibble <- function(
       peak_end = .data$end
     )
 
-  GWAS_IDs <- rownames(SummarizedExperiment::assay(deviation_SE, "deviations"))
+  GWAS_IDs <- colnames(annotation_matrix)
   cluster_names <- colnames(counts_matrix)
   background_expectation_matrix <- methods::slot(background, "E")
   background_variance_matrix <- methods::slot(background, "V")
@@ -145,8 +152,8 @@ get_GWAS_chromVAR_peak_attribution_tibble <- function(
       FUN = "/"
     )
 
-    deviation_vec <- SummarizedExperiment::assay(deviation_SE, "deviations")[GWAS_ID, ]
-    z_vec <- SummarizedExperiment::assay(deviation_SE, "z")[GWAS_ID, ]
+    deviation_vec <- colSums(deviation_contribution_matrix)
+    z_vec <- colSums(z_contribution_matrix)
     deviation_sd <- stats::sd(deviation_vec)
     relative_deviation_vec <- scale_within_vector(deviation_vec)
     relative_contribution_matrix <- if (is.na(deviation_sd) || deviation_sd == 0) {
@@ -182,6 +189,59 @@ get_GWAS_chromVAR_peak_attribution_tibble <- function(
         .before = 1
       )
   })
+}
+
+#' Summarize peak attribution into the cell-type GWAS heatmap table
+#'
+#' @param peak_attribution_tibble Exact peak-level chromVAR contributions.
+#' @param cell_type_support_tibble Optional nuclei and ATAC-depth support by cell type.
+#' @return One row per GWAS and cell type with summed deviations, z-score support,
+#'   and optional cell-count annotations.
+#' @keywords internal
+
+summarize_GWAS_chromVAR_peak_attribution <- function(
+  peak_attribution_tibble,
+  cell_type_support_tibble = NULL
+) {
+  out <- peak_attribution_tibble |>
+    dplyr::distinct(
+      .data$GWAS_ID,
+      .data$Category,
+      .data$variant_weighting_mode,
+      .data$cluster,
+      .data$deviation,
+      .data$relative_deviation,
+      .data$z
+    ) |>
+    dplyr::mutate(
+      z_p = stats::pnorm(.data$z, lower.tail = FALSE),
+      z_q = stats::p.adjust(.data$z_p, method = "BH"),
+      support_label = dplyr::case_when(
+        .data$z >= 3 ~ "**",
+        .data$z >= 2 ~ "*",
+        .default = ""
+      )
+    )
+
+  if (!is.null(cell_type_support_tibble)) {
+    out <- out |>
+      dplyr::left_join(cell_type_support_tibble, by = "cluster")
+  }
+
+  out |>
+    dplyr::relocate(
+      GWAS_ID,
+      Category,
+      variant_weighting_mode,
+      cluster,
+      deviation,
+      relative_deviation,
+      z,
+      z_p,
+      z_q,
+      support_label,
+      dplyr::any_of(c("n_cells", "n_counts", "n_features", "counts_per_feature"))
+    )
 }
 
 #' Allocate peak contributions to credible-set variants

@@ -281,22 +281,18 @@ filter_psbulk_data_matrix <- function(
   filtered_psbulk_data_matrix
 }
 
-#' Get pseudobulk chromVAR activity matrix
+#' Get pseudobulk chromVAR background record
 #'
-#' Compute pseudobulk chromVAR activity from ATAC counts and peak annotations.
+#' Fit the betterChromVAR background model for a pseudobulk count matrix.
 #'
 #' @param psbulk_ATAC_data_matrix Peak-by-pseudobulk-sample ATAC count matrix.
 #' @param chromVAR_obj chromVAR SummarizedExperiment containing deviations, annotations, and background metadata.
-#' @param annotation_matrix Peak-by-feature annotation/weight matrix used by
-#'   chromVAR.
-#' @param normalize Logical; when TRUE, normalize activity/count matrices before returning them.
-#' @return A named matrix-like object with rows and columns aligned to the input feature/cell identifiers.
+#' @return A list containing the fitted background and retained peak names.
 #' @keywords internal
 
-get_pseudobulk_chromVAR_deviation_record <- function(
+get_pseudobulk_chromVAR_background_record <- function(
   psbulk_ATAC_data_matrix,
-  chromVAR_obj,
-  annotation_matrix
+  chromVAR_obj
 ) {
   peaks_above_cut_off_names <- psbulk_ATAC_data_matrix |>
     psbulk_rowSums() |>
@@ -315,8 +311,6 @@ get_pseudobulk_chromVAR_deviation_record <- function(
   if (inherits(peak_filtered_psbulk_ATAC_data_matrix, "IterableMatrix")) {
     peak_filtered_psbulk_ATAC_data_matrix <- methods::as(peak_filtered_psbulk_ATAC_data_matrix, "dgCMatrix")
   }
-  annotation_matrix_peak_filtered <- annotation_matrix[rownames(peak_filtered_psbulk_ATAC_data_matrix), , drop = FALSE]
-
   psbulk_chromVAR_obj <- SummarizedExperiment::SummarizedExperiment(
     assays = list(counts = peak_filtered_psbulk_ATAC_data_matrix),
     rowRanges = filtered_rowranges
@@ -336,19 +330,38 @@ get_pseudobulk_chromVAR_deviation_record <- function(
     expectation = expectation_vec,
     verbose = FALSE
   )
-  deviation_SE <- betterChromVAR::computeDeviationsAnalytic(
-    object = psbulk_chromVAR_obj,
+  list(
     background = background,
-    annotations = annotation_matrix_peak_filtered,
+    peak_names = rownames(peak_filtered_psbulk_ATAC_data_matrix)
+  )
+}
+
+compute_pseudobulk_chromVAR_deviation_SE <- function(
+  psbulk_ATAC_data_matrix,
+  chromVAR_obj,
+  annotation_matrix,
+  background_record
+) {
+  peak_names <- background_record$peak_names
+  counts_matrix <- psbulk_ATAC_data_matrix[peak_names, , drop = FALSE]
+  if (inherits(counts_matrix, "IterableMatrix")) {
+    counts_matrix <- methods::as(counts_matrix, "dgCMatrix")
+  }
+  rowranges <- SummarizedExperiment::rowRanges(chromVAR_obj)
+  peak_range_idx <- match(peak_names, get_peak_names_from_GRanges(rowranges))
+  psbulk_chromVAR_obj <- SummarizedExperiment::SummarizedExperiment(
+    assays = list(counts = counts_matrix),
+    rowRanges = rowranges[peak_range_idx]
+  )
+  SummarizedExperiment::rowData(psbulk_chromVAR_obj) <- SummarizedExperiment::rowData(chromVAR_obj)[peak_range_idx, , drop = FALSE]
+
+  betterChromVAR::computeDeviationsAnalytic(
+    object = psbulk_chromVAR_obj,
+    background = background_record$background,
+    annotations = annotation_matrix[peak_names, , drop = FALSE],
     verbose = FALSE,
     retSE = TRUE,
     compute = c("deviations", "z")
-  )
-
-  list(
-    deviation_SE = deviation_SE,
-    background = background,
-    peak_names = rownames(peak_filtered_psbulk_ATAC_data_matrix)
   )
 }
 
@@ -358,11 +371,16 @@ get_pseudobulk_chromVAR_activity_matrix <- function(
   annotation_matrix,
   normalize = TRUE
 ) {
-  chromVAR_dev <- get_pseudobulk_chromVAR_deviation_record(
+  background_record <- get_pseudobulk_chromVAR_background_record(
+    psbulk_ATAC_data_matrix = psbulk_ATAC_data_matrix,
+    chromVAR_obj = chromVAR_obj
+  )
+  chromVAR_dev <- compute_pseudobulk_chromVAR_deviation_SE(
     psbulk_ATAC_data_matrix = psbulk_ATAC_data_matrix,
     chromVAR_obj = chromVAR_obj,
-    annotation_matrix = annotation_matrix
-  )$deviation_SE
+    annotation_matrix = annotation_matrix,
+    background_record = background_record
+  )
   chromVAR_z_scores <- SummarizedExperiment::assay(chromVAR_dev, "z")
 
   if (isFALSE(normalize)) {
@@ -372,66 +390,6 @@ get_pseudobulk_chromVAR_activity_matrix <- function(
   chromVAR_z_scores |>
     sweep(2, colMeans(chromVAR_z_scores), FUN = "-") |>
     limma::normalizeBetweenArrays(method = "quantile")
-}
-
-scale_within_vector <- function(x) {
-  x_sd <- stats::sd(x, na.rm = TRUE)
-  if (is.na(x_sd) || x_sd == 0) {
-    return(rep(0, length(x)))
-  }
-  as.numeric((x - mean(x, na.rm = TRUE)) / x_sd)
-}
-
-format_cell_type_GWAS_chromVAR_deviations <- function(chromVAR_dev, GWAS_inputs_tibble, cell_type_support_tibble = NULL) {
-  deviation_tibble <- SummarizedExperiment::assay(chromVAR_dev, "deviations") |>
-    tibble::as_tibble(rownames = "GWAS_ID") |>
-    tidyr::pivot_longer(-GWAS_ID, names_to = "cluster", values_to = "deviation")
-
-  z_tibble <- SummarizedExperiment::assay(chromVAR_dev, "z") |>
-    tibble::as_tibble(rownames = "GWAS_ID") |>
-    tidyr::pivot_longer(-GWAS_ID, names_to = "cluster", values_to = "z")
-
-  out <- deviation_tibble |>
-    dplyr::left_join(z_tibble, by = c("GWAS_ID", "cluster")) |>
-    dplyr::group_by(.data$GWAS_ID) |>
-    dplyr::mutate(
-      relative_deviation = scale_within_vector(.data$deviation),
-      median_score = .data$relative_deviation
-    ) |>
-    dplyr::ungroup() |>
-    dplyr::mutate(
-      z_p = stats::pnorm(.data$z, lower.tail = FALSE),
-      z_q = stats::p.adjust(.data$z_p, method = "BH"),
-      support_label = dplyr::case_when(
-        .data$z >= 3 ~ "**",
-        .data$z >= 2 ~ "*",
-        .default = ""
-      ),
-      score = .data$deviation,
-      score_is_sig = .data$z >= 2
-    ) |>
-    add_GWAS_heatmap_categories(GWAS_tibble = GWAS_inputs_tibble)
-
-  if (!is.null(cell_type_support_tibble)) {
-    out <- out |>
-      dplyr::left_join(cell_type_support_tibble, by = "cluster")
-  }
-
-  out |>
-    dplyr::relocate(
-      GWAS_ID,
-      Category,
-      variant_weighting_mode,
-      cluster,
-      median_score,
-      deviation,
-      relative_deviation,
-      z,
-      z_p,
-      z_q,
-      support_label,
-      dplyr::any_of(c("n_cells", "n_counts", "n_features", "counts_per_feature"))
-    )
 }
 
 get_pseudobulk_activity_matrix.TFA <- function(

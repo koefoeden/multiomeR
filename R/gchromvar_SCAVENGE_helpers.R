@@ -1252,11 +1252,16 @@ order_GWAS_score_plot_ids <- function(score_data, row_metadata, cluster_col = "c
   list(row_order = row_order, cluster_order = cluster_order, cluster_metadata = cluster_metadata)
 }
 
-get_ordered_GWAS_score_plot_data <- function(data_per_GWAS_and_cluster_df, compartments_patterns) {
+get_ordered_GWAS_score_plot_data <- function(data_per_GWAS_and_cluster_df, compartments_patterns, score_col = "median_score") {
   row_metadata <- data_per_GWAS_and_cluster_df |>
     dplyr::distinct(Category, GWAS_ID) |>
     dplyr::distinct(GWAS_ID, .keep_all = TRUE)
-  axes <- order_GWAS_score_plot_ids(data_per_GWAS_and_cluster_df, row_metadata, compartments_patterns = compartments_patterns)
+  axes <- order_GWAS_score_plot_ids(
+    data_per_GWAS_and_cluster_df,
+    row_metadata,
+    score_col = score_col,
+    compartments_patterns = compartments_patterns
+  )
   row_levels <- rev(axes$row_order)
   cluster_levels <- axes$cluster_order
   cluster_support <- data_per_GWAS_and_cluster_df |>
@@ -1509,7 +1514,11 @@ plot_GWAS_by_cluster_heatmap <- function(
     return(structure(list(), class = c("empty_plot_list", "list")))
   }
 
-  ordered_data <- get_ordered_GWAS_score_plot_data(data_per_GWAS_and_cluster_df, compartments_patterns)
+  ordered_data <- get_ordered_GWAS_score_plot_data(
+    data_per_GWAS_and_cluster_df,
+    compartments_patterns,
+    score_col = fill_col
+  )
 
   heatmap <- plot_GWAS_feature_heatmap(
     score_plot_data = ordered_data$scores,

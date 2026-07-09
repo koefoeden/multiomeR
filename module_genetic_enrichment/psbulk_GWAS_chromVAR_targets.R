@@ -55,28 +55,13 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 60)
   ),
   targets::tar_target(
-    name = chromVAR_deviation_record.trait_level.cell_type_pseudobulk,
-    description = "Compute trait-level GWAS chromVAR deviations and retain their exact cell-type background model [part_of_graph:genetic_enrichment_pseudobulk]",
-    command = get_pseudobulk_chromVAR_deviation_record(
+    name = chromVAR_background_record.trait_level.cell_type_pseudobulk,
+    description = "Fit the cell-type pseudobulk betterChromVAR background used by GWAS score attribution [part_of_graph:genetic_enrichment_pseudobulk]",
+    command = get_pseudobulk_chromVAR_background_record(
       psbulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
-      chromVAR_obj = chromVAR_obj.ATAC,
-      annotation_matrix = peak_weight_matrix.trait_level.pseudobulk
+      chromVAR_obj = chromVAR_obj.ATAC
     ),
     resources = get_tar_resources(RAM_GB_req = 60)
-  ),
-  targets::tar_target(
-    name = chromVAR_deviation_tibble.trait_level.pseudobulk,
-    description = "Format cell-type pseudobulk GWAS chromVAR deviations and z-score support labels for descriptive plots",
-    command = chromVAR_deviation_record.trait_level.cell_type_pseudobulk$deviation_SE |>
-      format_cell_type_GWAS_chromVAR_deviations(
-        GWAS_inputs_tibble = GWAS_inputs_tibble,
-        cell_type_support_tibble = cell_type_pseudobulk_support_tibble.ATAC
-      )
-  ),
-  targets::tar_target(
-    name = chromVAR_deviation_heatmap_data.trait_level.pseudobulk,
-    description = "Prepare heatmap data from cell-type pseudobulk GWAS chromVAR relative deviations",
-    command = chromVAR_deviation_tibble.trait_level.pseudobulk
   ),
   targets::tar_target(
     name = models.trait_level.pseudobulk,
@@ -171,10 +156,10 @@ rlang::list2(
     description = "Save cell-type pseudobulk GWAS chromVAR relative-deviation heatmap with z-score support labels and nuclei counts. [checkpoint:genetic_enrichment]",
     command = {
       plot <- plot_GWAS_by_cluster_heatmap(
-        chromVAR_deviation_heatmap_data.trait_level.pseudobulk,
+        chromVAR_deviation_tibble.trait_level.pseudobulk,
         GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
         compartments_patterns = genetic_enrichment_compartment_patterns,
-        fill_col = "median_score",
+        fill_col = "relative_deviation",
         fill_label = "Relative deviation",
         support_label_col = "support_label"
       )
@@ -182,7 +167,7 @@ rlang::list2(
         plot,
         filetype = "png",
         width = 20,
-        height = max(7, 0.24 * dplyr::n_distinct(chromVAR_deviation_heatmap_data.trait_level.pseudobulk$GWAS_ID) + 3)
+        height = max(7, 0.24 * dplyr::n_distinct(chromVAR_deviation_tibble.trait_level.pseudobulk$GWAS_ID) + 3)
       )
     }
   ),
@@ -191,7 +176,7 @@ rlang::list2(
     description = "Save cell-type pseudobulk GWAS chromVAR raw-deviation heatmap with z-score support labels and nuclei counts. [checkpoint:genetic_enrichment]",
     command = {
       plot <- plot_GWAS_by_cluster_heatmap(
-        chromVAR_deviation_heatmap_data.trait_level.pseudobulk,
+        chromVAR_deviation_tibble.trait_level.pseudobulk,
         GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
         compartments_patterns = genetic_enrichment_compartment_patterns,
         fill_col = "deviation",
@@ -202,7 +187,7 @@ rlang::list2(
         plot,
         filetype = "png",
         width = 20,
-        height = max(7, 0.24 * dplyr::n_distinct(chromVAR_deviation_heatmap_data.trait_level.pseudobulk$GWAS_ID) + 3)
+        height = max(7, 0.24 * dplyr::n_distinct(chromVAR_deviation_tibble.trait_level.pseudobulk$GWAS_ID) + 3)
       )
     }
   ),

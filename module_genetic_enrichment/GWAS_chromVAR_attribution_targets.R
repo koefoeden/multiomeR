@@ -21,13 +21,21 @@ rlang::list2(
     name = peak_attribution_tibble.trait_level.cell_type,
     description = "Decompose each cell-type GWAS chromVAR heatmap value into exact peak contributions",
     command = get_GWAS_chromVAR_peak_attribution_tibble(
-      chromVAR_deviation_record = chromVAR_deviation_record.trait_level.cell_type_pseudobulk,
+      chromVAR_background_record = chromVAR_background_record.trait_level.cell_type_pseudobulk,
       psbulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
       chromVAR_obj = chromVAR_obj.ATAC,
       annotation_matrix = peak_weight_matrix.trait_level.pseudobulk,
       GWAS_inputs_tibble = GWAS_inputs_tibble
     ),
     resources = get_tar_resources(RAM_GB_req = 60)
+  ),
+  targets::tar_target(
+    name = chromVAR_deviation_tibble.trait_level.pseudobulk,
+    description = "Sum peak contributions into the cell-type GWAS chromVAR heatmap table with z-score support labels",
+    command = summarize_GWAS_chromVAR_peak_attribution(
+      peak_attribution_tibble = peak_attribution_tibble.trait_level.cell_type,
+      cell_type_support_tibble = cell_type_pseudobulk_support_tibble.ATAC
+    )
   ),
   targets::tar_target(
     name = variant_attribution_tibble.trait_level.cell_type,

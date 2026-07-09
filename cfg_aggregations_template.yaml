@@ -39,12 +39,12 @@ immune_human_2x:
     - atac_peak_counts_frac < 0.1
     - atac_peak_counts_blacklist_frac > 0.01
   aggregation_ATAC_marker_TFs:
-    B: [PAX5, EBF1, TCF3, BCL6]
-    Mono: [SPI1, IRF8, CEBPA, CEBPB]
-    NK: [EOMES, TBX21, NFIL3]
-    pDC: [IRF8, TCF4, SPIB]
-    Plasma: [XBP1, PRDM1, IRF4]
-    T: [BCL11B, TCF7, LEF1, RUNX3]
+    B: [EBF1]
+    Mono: [CEBPA, CEBPB]
+    NK: [EOMES, TBX21]
+    pDC: [TCF4]
+    Plasma: [PRDM1, IRF4]
+    T: [TCF7, LEF1]
   aggregation_roadmap_EDACC_names:
     - Peripheral_Blood_Mononuclear_Primary_Cells
     - CD4_Memory_Primary_Cells

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+die() {
+  echo "error: $*" >&2
+  exit 1
+}
+
+worktree=${CODEX_WORKTREE_PATH:-$(git rev-parse --show-toplevel)}
+worktree=$(cd "$worktree" && pwd -P)
+base=${WORKTREE_BASE:-/maps/projects/cbmr_shared/people/tqb695/non-GDPR/multiomeR}
+base=$(cd "$base" && pwd -P)
+
+[ "$worktree" != "$base" ] || die "Refusing to configure the base checkout as a Codex worktree."
+[ -d "$worktree/.git" ] || [ -f "$worktree/.git" ] || die "Git worktree not found: $worktree"
+[ -d "$base/.pixi" ] || die "Base pixi environment not found: $base/.pixi"
+
+rm -rf "$worktree/.pixi"
+ln -s "$base/.pixi" "$worktree/.pixi"
+
+echo "Linked $worktree/.pixi -> $base/.pixi"

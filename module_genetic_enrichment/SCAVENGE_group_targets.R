@@ -9,7 +9,7 @@ rlang::list2(
     name = TRS_heatmap_data,
     description = "Prepare SCAVENGE TRS heatmap data from per-GWAS group summaries",
     command = TRS_summary_tibble |>
-      get_SCAVENGE_heatmap_data(GWAS_tibble = GWAS_inputs_tibble),
+      add_GWAS_heatmap_categories(GWAS_tibble = GWAS_inputs_tibble),
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   targets::tar_target(
@@ -68,8 +68,8 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   tarchetypes::tar_file(
-    name = TRS_by_cluster_boxplot,
-    description = "Plot per-group SCAVENGE TRS summary intervals and save to file. [checkpoint:genetic_enrichment]",
+    name = TRS_cluster_summary_plot,
+    description = "Plot per-group SCAVENGE TRS medians, interquartile ranges, and full ranges. [checkpoint:genetic_enrichment]",
     command = {
       plot <- plot_SCAVENGE_summary_score_intervals(TRS_summary_tibble)
       save_plots_structured(plot)

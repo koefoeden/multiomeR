@@ -10,7 +10,7 @@ targets::tar_glimpse(
 
 # Genetic enrichment - across genes
 targets::tar_glimpse(
-  names = tidyselect::matches("^(ZScores_tibble[.]summarized[.]single_nucleus|TRS_summary_tibble).*immune_human_2x")
+  names = tidyselect::matches("^TRS_summary_tibble.*immune_human_2x")
 ) |>
   targets_graph_mermaid_lines() |>
   writeLines("website/figures/human_curated/genetic_enrichment_across_genes.mmd")

@@ -127,22 +127,6 @@
   status: available
 
 - section: Genetic enrichment module
-  subsection: Single-nucleus chromVAR
-  title: Enrichment heatmap
-  description: Connects genetic association evidence to cell groups through single-nucleus regulatory enrichment patterns.
-  target: ZScores_heatmap.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x
-  asset: gallery_assets/genetic_enrichment/gwas_chromvar_heatmap.png
-  status: available
-
-- section: Genetic enrichment module
-  subsection: Single-nucleus chromVAR
-  title: Enrichment score boxplots
-  description: Shows the distribution of summarized single-nucleus chromVAR enrichment scores across cell groups.
-  target: ZScores_boxplot.summarized.single_nucleus.genetic_enrichment.PBMC_human_6x
-  asset: gallery_assets/genetic_enrichment/single_nucleus_without_scavenge/zscores_boxplot.png
-  status: available
-
-- section: Genetic enrichment module
   subsection: Single-nucleus chromVAR+SCAVENGE
   title: Celltype by GWAS heatmap
   description: Summarizes graph-propagated trait relevance scores across cell groups and GWAS traits.
@@ -152,10 +136,10 @@
 
 - section: Genetic enrichment module
   subsection: Single-nucleus chromVAR+SCAVENGE
-  title: Celltype by GWAS boxplots
-  description: Shows how trait relevance scores vary across cell groups for selected genetic traits.
-  target: TRS_by_cluster_boxplot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x
-  asset: gallery_assets/genetic_enrichment/TRS_by_cluster_boxplot.png
+  title: Cell type by GWAS summaries
+  description: Compares graph-propagated trait relevance score medians and intervals across cell groups.
+  target: TRS_cluster_summary_plot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x
+  asset: gallery_assets/genetic_enrichment/TRS_cluster_summary_plot.png
   status: available
 
 - section: Genetic enrichment module

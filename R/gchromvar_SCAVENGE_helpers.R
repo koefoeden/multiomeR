@@ -245,7 +245,7 @@ align_peak_weights_to_RSE <- function(peak_weights_matrix, RSE_ATAC) {
   peak_weights_matrix[peak_names, , drop = FALSE]
 }
 
-#' Get GWAS chromVAR ZScore chunk record
+#' Get GWAS chromVAR z-score chunk record
 #'
 #' Compute one GWAS chromVAR z-score vector for one cell chunk.
 #'
@@ -257,7 +257,7 @@ align_peak_weights_to_RSE <- function(peak_weights_matrix, RSE_ATAC) {
 #' @return A single branch record, usually a list or one-row tibble, carrying all inputs needed by a dynamic target branch.
 #' @keywords internal
 
-get_GWAS_chromVAR_ZScore_chunk_record <- function(peak_weight_record, chunk_context_record, RSE_ATAC) {
+get_GWAS_chromVAR_z_score_chunk_record <- function(peak_weight_record, chunk_context_record, RSE_ATAC) {
   peak_weights_matrix <- matrix(peak_weight_record$peak_weights_vec, ncol = 1)
   rownames(peak_weights_matrix) <- names(peak_weight_record$peak_weights_vec)
   colnames(peak_weights_matrix) <- peak_weight_record$GWAS_ID
@@ -273,7 +273,7 @@ get_GWAS_chromVAR_ZScore_chunk_record <- function(peak_weight_record, chunk_cont
   )
   SummarizedExperiment::rowData(chunk_obj) <- SummarizedExperiment::rowData(RSE_ATAC)
 
-  ZScores_matrix <- betterChromVAR::computeDeviationsAnalytic(
+  z_score_matrix <- betterChromVAR::computeDeviationsAnalytic(
     object = chunk_obj,
     background = chunk_context_record$background,
     annotations = peak_weights_matrix,
@@ -282,96 +282,43 @@ get_GWAS_chromVAR_ZScore_chunk_record <- function(peak_weight_record, chunk_cont
     compute = "z"
   )$z
 
-  ZScore_vec <- ZScores_matrix[peak_weight_record$GWAS_ID, ]
-  names(ZScore_vec) <- chunk_context_record$cell_names
+  z_score_vec <- z_score_matrix[peak_weight_record$GWAS_ID, ]
+  names(z_score_vec) <- chunk_context_record$cell_names
   tibble::tibble(
     GWAS_ID = peak_weight_record$GWAS_ID,
     chunk_id = chunk_context_record$chunk_id,
-    ZScore_vec = list(ZScore_vec)
+    z_score_vec = list(z_score_vec)
   )
 }
 
-combine_GWAS_chromVAR_ZScore_chunk_records <- function(ZScore_chunk_records) {
-  ZScore_chunk_records <- dplyr::arrange(ZScore_chunk_records, chunk_id)
+combine_GWAS_chromVAR_z_score_chunk_records <- function(chromVAR_z_score_chunk_records) {
+  chromVAR_z_score_chunk_records <- dplyr::arrange(chromVAR_z_score_chunk_records, chunk_id)
   list(
-    GWAS_ID = ZScore_chunk_records$GWAS_ID[[1]],
-    ZScore_vec = unlist(ZScore_chunk_records$ZScore_vec, use.names = TRUE)
+    GWAS_ID = chromVAR_z_score_chunk_records$GWAS_ID[[1]],
+    z_score_vec = unlist(chromVAR_z_score_chunk_records$z_score_vec, use.names = TRUE)
   )
 }
 
-combine_GWAS_chromVAR_ZScore_records_tibble <- function(ZScore_records) {
-  if (length(ZScore_records) == 0) {
-    return(tibble::tibble(
-      GWAS_ID = character(),
-      barcode_w_prefix = character(),
-      score = numeric(),
-      score_is_sig = logical()
-    ))
-  }
-
-  purrr::map_dfr(ZScore_records, \(ZScore_record) {
-    tibble::tibble(
-      GWAS_ID = ZScore_record$GWAS_ID,
-      barcode_w_prefix = names(ZScore_record$ZScore_vec),
-      score = as.numeric(ZScore_record$ZScore_vec),
-      score_is_sig = abs(score) > 1.95
-    )
-  })
-}
-
-#' Summarize GWAS chromVAR ZScores
-#'
-#' Summarize cell-level GWAS chromVAR z scores by cluster and donor groups.
-#'
-#' @param ZScore_tibble Long cell-level tibble with `GWAS_ID`,
-#'   `barcode_w_prefix`, and `score`.
-#' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
-#' @param cluster_col Single metadata column name used as the cluster/grouping variable.
-#' @return A long summary tibble of GWAS z-score distributions by configured
-#'   cluster/donor grouping.
-#' @keywords internal
-
-summarize_GWAS_chromVAR_ZScores <- function(
-  ZScore_tibble,
-  metadata_tibble,
-  cluster_col = "PCA_harmony_SNN_cluster_cell_type"
-) {
-  cell_group_tibble <- metadata_tibble |>
-    dplyr::distinct(barcode_w_prefix, .keep_all = TRUE) |>
-    dplyr::transmute(
-      barcode_w_prefix,
-      cluster = stringr::str_replace_all(as.character(.data[[cluster_col]]), "_", "-"),
-      donor_id = stringr::str_replace_all(as.character(donor_id), "_", "-"),
-      cluster_donor_id = stringr::str_c(cluster, donor_id, sep = "_")
-    )
-
-  ZScore_tibble |>
-    dplyr::inner_join(cell_group_tibble, by = "barcode_w_prefix") |>
-    dplyr::group_by(cluster_donor_id, cluster, donor_id, GWAS_ID) |>
-    dplyr::summarise(score = mean(score), .groups = "drop") |>
-    dplyr::mutate(score_is_sig = abs(score) > 1.95)
-}
-
-get_SCAVENGE_seed_index <- function(ZScore_vec, seed_percent = 0.05, p_value_cutoff = 0.05) {
+get_SCAVENGE_seed_index <- function(z_score_vec, seed_percent = 0.05, p_value_cutoff = 0.05) {
   if (seed_percent <= 0 || seed_percent >= 1) {
     stop("seed_percent must be between 0 and 1.")
   }
 
-  seed_idx <- stats::pnorm(ZScore_vec, lower.tail = FALSE) <= p_value_cutoff
-  max_seed_count <- max(1L, floor(seed_percent * length(ZScore_vec)))
+  seed_idx <- stats::pnorm(z_score_vec, lower.tail = FALSE) <= p_value_cutoff
+  max_seed_count <- max(1L, floor(seed_percent * length(z_score_vec)))
   if (sum(seed_idx) > max_seed_count) {
-    seed_idx <- rank(-ZScore_vec, ties.method = "first") <= max_seed_count
+    seed_idx <- rank(-z_score_vec, ties.method = "first") <= max_seed_count
   }
   seed_idx
 }
 
-get_SCAVENGE_scale_factor <- function(ZScore_vec, scale_percent = 0.01) {
+get_SCAVENGE_scale_factor <- function(z_score_vec, scale_percent = 0.01) {
   if (scale_percent <= 0 || scale_percent >= 1) {
     stop("scale_percent must be between 0 and 1.")
   }
 
-  top_count <- max(1L, floor(scale_percent * length(ZScore_vec)))
-  mean(sort(ZScore_vec, decreasing = TRUE)[seq_len(top_count)])
+  top_count <- max(1L, floor(scale_percent * length(z_score_vec)))
+  mean(sort(z_score_vec, decreasing = TRUE)[seq_len(top_count)])
 }
 
 cap_values_by_quantile <- function(x, q_ceiling = 0.95) {
@@ -533,15 +480,16 @@ get_empty_TRS_tibble <- function() {
   )
 }
 
-#' Get SCAVENGE TRS from ZScore record
+#' Get SCAVENGE TRS from a chromVAR z-score record
 #'
 #' Convert one GWAS chromVAR z-score record into SCAVENGE TRS scores.
 #'
-#' @param ZScore_record List containing `GWAS_ID` and named cell-level `ZScore_vec`.
+#' @param chromVAR_z_score_record List containing `GWAS_ID` and named cell-level
+#'   `z_score_vec`.
 #' @param NN_graph Sparse cell-by-cell neighbor graph; cells are intersected with
 #'   the z-score vector before scoring.
 #' @param cores Number of CPU cores requested for external tools or parallel work.
-#' @param max_ZScore Upper z-score cap for finite-cell filtering before seed selection.
+#' @param max_z_score Upper z-score cap for finite-cell filtering before seed selection.
 #' @param permutation_times Number of degree-matched permutations used for cell
 #'   p values.
 #' @param restart_prob Restart probability for random-walk propagation.
@@ -552,39 +500,37 @@ get_empty_TRS_tibble <- function() {
 #'   p value, `-log10(p)`, and significance flag.
 #' @keywords internal
 
-get_SCAVENGE_TRS_from_ZScore_record <- function(
-  ZScore_record,
+get_SCAVENGE_TRS_from_chromVAR_z_score_record <- function(
+  chromVAR_z_score_record,
   NN_graph,
   cores,
-  max_ZScore = 1000,
+  max_z_score = 1000,
   permutation_times = 1000,
   restart_prob = 0.05,
   seed_percent = 0.05,
   scale_percent = 0.01
 ) {
-  ZScore_vec <- ZScore_record$ZScore_vec
-  GWAS_ID <- ZScore_record$GWAS_ID
+  z_score_vec <- chromVAR_z_score_record$z_score_vec
+  GWAS_ID <- chromVAR_z_score_record$GWAS_ID
 
-  shared_cells <- intersect(names(ZScore_vec), rownames(NN_graph))
-  ZScore_vec <- ZScore_vec[shared_cells]
+  shared_cells <- intersect(names(z_score_vec), rownames(NN_graph))
+  z_score_vec <- z_score_vec[shared_cells]
   NN_graph <- NN_graph[shared_cells, shared_cells]
 
-  # Filter out NA ZScores and graph
-  finite_ZScore_cell_idx <- (is.finite(ZScore_vec) & ZScore_vec <= max_ZScore) %>% which()
-  ZScore_vec_filtered <- ZScore_vec[finite_ZScore_cell_idx]
-  z_score_filtered_graph <- NN_graph[finite_ZScore_cell_idx, finite_ZScore_cell_idx]
+  finite_z_score_cell_idx <- which(is.finite(z_score_vec) & z_score_vec <= max_z_score)
+  z_score_vec_filtered <- z_score_vec[finite_z_score_cell_idx]
+  z_score_filtered_graph <- NN_graph[finite_z_score_cell_idx, finite_z_score_cell_idx]
 
   deg0_filtered_graph <- drop_SCAVENGE_degree_zero_cells(z_score_filtered_graph)
-  deg0_ZScore_vec_filtered <- ZScore_vec_filtered[rownames(deg0_filtered_graph)]
-  if (length(deg0_ZScore_vec_filtered) == 0) {
+  deg0_z_score_vec_filtered <- z_score_vec_filtered[rownames(deg0_filtered_graph)]
+  if (length(deg0_z_score_vec_filtered) == 0) {
     return(get_empty_TRS_tibble())
   }
 
-  # Get seed cells from filtered ZScores
-  is_seed_bool_vec <- get_SCAVENGE_seed_index(deg0_ZScore_vec_filtered, seed_percent = seed_percent)
+  is_seed_bool_vec <- get_SCAVENGE_seed_index(deg0_z_score_vec_filtered, seed_percent = seed_percent)
   if (!any(is_seed_bool_vec)) {
     return(tibble::tibble(
-      barcode_w_prefix = names(deg0_ZScore_vec_filtered),
+      barcode_w_prefix = names(deg0_z_score_vec_filtered),
       score = 0,
       GWAS_ID = GWAS_ID,
       seed_idx = FALSE,
@@ -615,7 +561,7 @@ get_SCAVENGE_TRS_from_ZScore_record <- function(
   }
 
   # Cap, scale, and multiply by scale factor
-  scale_factor <- get_SCAVENGE_scale_factor(deg0_ZScore_vec_filtered, scale_percent = scale_percent)
+  scale_factor <- get_SCAVENGE_scale_factor(deg0_z_score_vec_filtered, scale_percent = scale_percent)
 
   cell_named_TRS_vec <- net_prop_score_named_vec_filtered %>%
     cap_values_by_quantile(q_ceiling = 0.95) %>%
@@ -911,187 +857,9 @@ plot_SCAVENGE_summary_score_intervals <- function(summary_tibble) {
     })
 }
 
-#' Get chisq results per GWAS per cluster
-#'
-#' Test whether significant SCAVENGE cells are enriched in each cluster.
-#'
-#' @param cell_by_GWAS_score_tibble_long Long cell-level GWAS score tibble with
-#'   `GWAS_ID`, `score_is_sig`, and the grouping column.
-#' @param group_by_col Cluster/group column tested against all other cells for
-#'   the same GWAS.
-#' @return Tibble of per-GWAS/per-cluster chi-square p values, FDR, and
-#'   enrichment/depletion direction.
-#' @keywords internal
-
-get_chisq_results_per_GWAS_per_cluster <- function(cell_by_GWAS_score_tibble_long, group_by_col) {
-  chisq_results_per_GWAS_per_cluster <- cell_by_GWAS_score_tibble_long %>%
-    dplyr::group_by(GWAS_ID) %>%
-    dplyr::group_map(
-      ~ {
-        n_sig_for_GWAS <- sum(.x$score_is_sig)
-        n_cells_for_GWAS <- nrow(.x)
-
-        contingency_table <- .x %>%
-          dplyr::group_by(.data[[group_by_col]]) %>%
-          dplyr::summarise(n_sig_per_cluster = sum(score_is_sig), n_cells_per_cluster = dplyr::n(), .groups = "drop") %>%
-          dplyr::rowwise() %>%
-          dplyr::mutate(other_sig = n_sig_for_GWAS - n_sig_per_cluster, other_cells = n_cells_for_GWAS - n_cells_per_cluster)
-
-        stats <- contingency_table %>%
-          dplyr::mutate(
-            p = stats::chisq.test(
-              matrix(c(n_sig_per_cluster, n_cells_per_cluster - n_sig_per_cluster, other_sig, other_cells - other_sig), nrow = 2),
-              correct = FALSE
-            )$p.value
-          ) %>%
-          dplyr::ungroup() %>%
-          dplyr::mutate(
-            GWAS_ID = .y$GWAS_ID,
-            direction = dplyr::case_when((n_sig_per_cluster / n_cells_per_cluster) > (other_sig / other_cells) ~ "enrichment", TRUE ~ "depletion"),
-            q = p %>% stats::p.adjust(method = "fdr"),
-            sig_label = dplyr::case_when(
-              direction == "enrichment" & q < 0.05 ~ "**",
-              direction == "enrichment" & p < 0.05 ~ "*",
-              .default = ""
-            )
-          )
-        return(stats)
-      }
-    ) %>%
-    dplyr::bind_rows()
-
-  return(chisq_results_per_GWAS_per_cluster)
-}
-
-#' Get SCAVENGE chisq results from summary
-#'
-#' Derive chi-square enrichment labels from grouped SCAVENGE summaries.
-#'
-#' @param summary_tibble Group-level SCAVENGE summary with `n_sig`, `n_cells`,
-#'   `GWAS_ID`, `grouping_col`, and `cluster`.
-#' @return Tibble with cluster-vs-other significant-cell tests, FDR-adjusted q
-#'   values, direction, and plot significance label.
-#' @keywords internal
-
-get_SCAVENGE_chisq_results_from_summary <- function(summary_tibble) {
-  if (nrow(summary_tibble) == 0) {
-    return(tibble::tibble(
-      GWAS_ID = character(),
-      grouping_col = character(),
-      cluster = character(),
-      other_sig = integer(),
-      other_cells = integer(),
-      p = numeric(),
-      direction = character(),
-      q = numeric(),
-      sig_label = character()
-    ))
-  }
-
-  summary_tibble |>
-    dplyr::group_by(GWAS_ID, grouping_col) |>
-    dplyr::mutate(
-      n_sig_for_GWAS = sum(n_sig),
-      n_cells_for_GWAS = sum(n_cells),
-      other_sig = n_sig_for_GWAS - n_sig,
-      other_cells = n_cells_for_GWAS - n_cells
-    ) |>
-    dplyr::rowwise() |>
-    dplyr::mutate(
-      p = {
-        contingency_table <- matrix(
-          c(n_sig, n_cells - n_sig, other_sig, other_cells - other_sig),
-          nrow = 2
-        )
-        if (
-          n_cells == 0 ||
-            other_cells == 0 ||
-            n_sig_for_GWAS == 0 ||
-            n_sig_for_GWAS == n_cells_for_GWAS ||
-            sum(contingency_table) == 0
-        ) {
-          1
-        } else {
-          stats::chisq.test(contingency_table, correct = FALSE)$p.value
-        }
-      },
-      direction = dplyr::case_when(
-        other_cells == 0 ~ "none",
-        prop_sig > (other_sig / other_cells) ~ "enrichment",
-        TRUE ~ "depletion"
-      )
-    ) |>
-    dplyr::ungroup() |>
-    dplyr::group_by(GWAS_ID, grouping_col) |>
-    dplyr::mutate(
-      q = stats::p.adjust(p, method = "fdr"),
-      sig_label = dplyr::case_when(
-        direction == "enrichment" & q < 0.05 ~ "**",
-        direction == "enrichment" & p < 0.05 ~ "*",
-        .default = ""
-      )
-    ) |>
-    dplyr::ungroup() |>
-    dplyr::select(GWAS_ID, grouping_col, cluster, other_sig, other_cells, p, direction, q, sig_label)
-}
-
 add_GWAS_heatmap_categories <- function(heatmap_data, GWAS_tibble) {
   heatmap_data |>
     dplyr::inner_join(GWAS_tibble |> dplyr::select(GWAS_ID, Category, dplyr::any_of("variant_weighting_mode")), by = "GWAS_ID")
-}
-
-get_SCAVENGE_heatmap_data <- function(summary_tibble, GWAS_tibble) {
-  summary_tibble |>
-    add_GWAS_heatmap_categories(GWAS_tibble) |>
-    dplyr::left_join(
-      get_SCAVENGE_chisq_results_from_summary(summary_tibble),
-      by = c("GWAS_ID", "grouping_col", "cluster")
-    )
-}
-
-summarize_GWAS_score_heatmap_data <- function(cell_by_GWAS_score_tibble_long, score_col = "score", group_by_col = "cluster") {
-  cell_by_GWAS_score_tibble_long |>
-    dplyr::group_by(GWAS_ID, .data[[group_by_col]]) |>
-    dplyr::summarise(median_score = stats::median(.data[[score_col]]), .groups = "drop")
-}
-
-#' Get GWAS heatmap data
-#'
-#' Summarize cell-level GWAS scores into cluster-by-GWAS heatmap data.
-#'
-#' @param cell_by_GWAS_score_tibble_long Long cell-level score tibble containing
-#'   `GWAS_ID`, score, significance flag, and grouping column.
-#' @param GWAS_tibble GWAS metadata tibble used to order and annotate GWAS plots.
-#' @param score_col Numeric score column summarized by median.
-#' @param group_by_col Grouping column used as the heatmap feature axis.
-#' @return Heatmap input tibble with median score, GWAS metadata, chi-square
-#'   results, and significance labels.
-#' @keywords internal
-
-get_GWAS_heatmap_data <- function(cell_by_GWAS_score_tibble_long, GWAS_tibble, score_col = "score", group_by_col = "cluster") {
-  if (nrow(cell_by_GWAS_score_tibble_long) == 0) {
-    return(tibble::tibble(
-      GWAS_ID = character(),
-      cluster = character(),
-      median_score = numeric(),
-      Category = character(),
-      variant_weighting_mode = character(),
-      p = numeric(),
-      direction = character(),
-      q = numeric(),
-      sig_label = character()
-    ))
-  }
-
-  cluster_by_GWAS_median_score_tibble <- cell_by_GWAS_score_tibble_long |>
-    summarize_GWAS_score_heatmap_data(score_col = score_col, group_by_col = group_by_col) |>
-    add_GWAS_heatmap_categories(GWAS_tibble) # inner join enables filtering out GWASs if prefiltered tibble given, if not all are desired to be plotted.
-
-  # join chiqsq results
-  chisq_test_per_GWAS_and_cluster_results <- cell_by_GWAS_score_tibble_long %>%
-    get_chisq_results_per_GWAS_per_cluster(group_by_col)
-
-  cluster_by_GWAS_median_score_tibble %>% dplyr::left_join(chisq_test_per_GWAS_and_cluster_results, by = c("GWAS_ID", group_by_col))
 }
 
 #' Assign compartment

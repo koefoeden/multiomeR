@@ -1,9 +1,8 @@
 ^chromVAR_background_bins\.ATAC\.
 ^chromVAR_obj\.ATAC\.
 ^chromVAR_peak_expectation\.ATAC\.
-^peak_weight_records\.trait_level\.
-^ZScores_tibble\.summarized\.single_nucleus\.
-^ZScore_records\.single_nucleus\.
+^GWAS_peak_weight_records\.
+^chromVAR_z_score_records\.single_nucleus\.
 ^GWAS_inputs_tibble\.
 ^open_targets_credible_set_dataset_path$
 ^graph_matrix\.WNN_harmony_SNN\.SCAVENGE\.single_nucleus\.

@@ -21,12 +21,12 @@ The genetic enrichment module links processed human multiome aggregations to fin
   - Mapping of genetic evidence onto consensus ATAC peaks.
 
 - **Single-nucleus enrichment**
-  - [`chromVAR`](https://greenleaflab.github.io/chromVAR/articles/Introduction.html) / [`gchromVAR`](https://caleblareau.github.io/gchromVAR/reference/index.html) Z-scores for configured traits.
-  - Summaries by clusters, donors, and cell types.
-  - Heatmaps, boxplots, and metadata-linked review plots.
+  - [`chromVAR`](https://greenleaflab.github.io/chromVAR/articles/Introduction.html) / [`gchromVAR`](https://caleblareau.github.io/gchromVAR/reference/index.html) z-scores retained as internal inputs for SCAVENGE seed selection.
+  - [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) trait relevance scores summarized across clusters and cell types.
+  - Per-nucleus UMAPs, cluster-level TRS heatmaps, score intervals, and significant-cell proportions.
 
 - **Graph-based enrichment**
-  - [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) trait-score propagation across PCA, LSI, and WNN graph representations.
+  - Trait-score propagation across PCA, LSI, and WNN graph representations.
   - TRS UMAPs, enrichment heatmaps, cluster-level boxplots, and significant-cell proportion summaries.
 
 - **Cell-type enrichment and attribution**

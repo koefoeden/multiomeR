@@ -30,6 +30,14 @@ active_targets_process() {
   kill -0 "$pid" 2>/dev/null
 }
 
+merged_code_ref() {
+  if [ -n "$branch" ] && git -C "$base" rev-parse --verify --quiet "$branch^{commit}" >/dev/null; then
+    printf '%s\n' "$branch"
+  else
+    git -C "$worktree" rev-parse HEAD
+  fi
+}
+
 release_scratch_marker() {
   if [ -f "$active_marker" ] && [ "$(sed -n '1p' "$active_marker")" = "$worktree" ]; then
     rm -f "$active_marker"
@@ -107,8 +115,9 @@ active_marker=$scratch/.worktree_active
 [ -d "$scratch" ] || die "Scratch store not found: $scratch"
 
 [ -z "$(git -C "$worktree" status --porcelain)" ] || die "Worktree has uncommitted Git changes."
-git -C "$base" merge-base --is-ancestor "$branch" HEAD ||
-  die "Branch is not merged into base HEAD: $branch"
+code_ref=$(merged_code_ref)
+git -C "$base" merge-base --is-ancestor "$code_ref" HEAD ||
+  die "Worktree code is not merged into base HEAD: $code_ref"
 
 sha256sum -c "$worktree/outputs/.worktree/base_outputs_meta.sha256" >/dev/null ||
   die "Recorded base outputs metadata checksum does not match current base."
@@ -125,7 +134,7 @@ Teardown is safe.
 
   worktree: $worktree
   scratch:  $scratch
-  branch:   $branch
+  code ref: $code_ref
 
 EOF
 

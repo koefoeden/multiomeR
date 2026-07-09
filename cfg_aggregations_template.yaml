@@ -43,7 +43,6 @@ immune_human_2x:
     Mono: [CEBPA, CEBPB]
     NK: [EOMES, TBX21]
     pDC: [TCF4]
-    Plasma: [PRDM1, IRF4]
     T: [TCF7, LEF1]
   aggregation_roadmap_EDACC_names:
     - Peripheral_Blood_Mononuclear_Primary_Cells

@@ -27,8 +27,9 @@ tag_panel <- function(plot, tag) {
   ggplotify::as.ggplot(plot) +
     ggplot2::labs(tag = tag) +
     ggplot2::theme(
-      plot.tag = ggplot2::element_text(face = "bold", size = 14),
-      plot.tag.position = c(0.01, 0.99)
+      plot.tag = ggplot2::element_text(face = "bold", size = 16),
+      plot.tag.position = c(0.01, 1.03),
+      plot.margin = ggplot2::margin(t = 4)
     )
 }
 
@@ -233,6 +234,7 @@ render_figures <- function(
     ggplot2::ggsave(
       filename = output_png,
       plot = combined_plot,
+      device = ragg::agg_png,
       width = width,
       height = figure_spec$height[[1]],
       dpi = dpi,

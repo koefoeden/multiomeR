@@ -268,7 +268,8 @@ plot_marker_expression_dot_BPCells <- function(feature_matrix, metadata_tibble, 
     features = features,
     groups = metadata[[group_col]],
     group_order = levels(as.factor(metadata[[group_col]])),
-    gene_mapping = NULL
+    gene_mapping = NULL,
+    colors = c("#2166AC", "white", "#B2182B")
   ) +
     ggplot2::labs(y = group_col)
 }
@@ -301,7 +302,8 @@ plot_marker_gene_activity_dot_BPCells <- function(feature_matrix, metadata_tibbl
     features = features,
     groups = metadata[[group_col]],
     group_order = levels(as.factor(metadata[[group_col]])),
-    gene_mapping = NULL
+    gene_mapping = NULL,
+    colors = c("#2166AC", "white", "#B2182B")
   ) +
     ggplot2::labs(y = group_col)
 }
@@ -341,7 +343,7 @@ plot_module_scores_dot_for_metadata <- function(metadata_tibble, marker_genes_li
     ggplot2::ggplot(ggplot2::aes(x = .data$module, y = .data$cluster, color = .data$mean_score, size = .data$pct_positive)) +
     ggplot2::geom_point() +
     ggplot2::scale_size_area(limits = c(0, 100), max_size = 7) +
-    ggplot2::scale_color_gradient2(low = "#B2182B", mid = "white", high = "#2166AC", midpoint = 0) +
+    ggplot2::scale_color_gradient2(low = "#2166AC", mid = "white", high = "#B2182B", midpoint = 0) +
     ggplot2::labs(x = "Marker module", y = cluster_by, color = "Mean score", size = "% score > 0") +
     ggplot2::theme_classic() +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
@@ -398,7 +400,7 @@ plot_feature_scores_heatmap_from_matrix <- function(feature_matrix, metadata_tib
   plot_tibble |>
     ggplot2::ggplot(ggplot2::aes(x = .data$feature, y = .data$group, fill = .data$mean_score)) +
     ggplot2::geom_tile(color = "grey90", linewidth = 0.2) +
-    ggplot2::scale_fill_gradient2(low = "#B2182B", mid = "white", high = "#2166AC", midpoint = 0) +
+    ggplot2::scale_fill_gradient2(low = "#2166AC", mid = "white", high = "#B2182B", midpoint = 0) +
     ggplot2::labs(x = "Feature", y = group_col, fill = "Mean score") +
     ggplot2::theme_classic() +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))

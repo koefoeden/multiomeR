@@ -55,9 +55,9 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 60)
   ),
   targets::tar_target(
-    name = activity_SE.trait_level.cell_type_pseudobulk,
-    description = "Compute trait-level GWAS chromVAR deviations from cell-type ATAC pseudobulk counts for descriptive plots [part_of_graph:genetic_enrichment_pseudobulk]",
-    command = get_pseudobulk_chromVAR_deviation_SE(
+    name = chromVAR_deviation_record.trait_level.cell_type_pseudobulk,
+    description = "Compute trait-level GWAS chromVAR deviations and retain their exact cell-type background model [part_of_graph:genetic_enrichment_pseudobulk]",
+    command = get_pseudobulk_chromVAR_deviation_record(
       psbulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
       chromVAR_obj = chromVAR_obj.ATAC,
       annotation_matrix = peak_weight_matrix.trait_level.pseudobulk
@@ -67,7 +67,7 @@ rlang::list2(
   targets::tar_target(
     name = chromVAR_deviation_tibble.trait_level.pseudobulk,
     description = "Format cell-type pseudobulk GWAS chromVAR deviations and z-score support labels for descriptive plots",
-    command = activity_SE.trait_level.cell_type_pseudobulk |>
+    command = chromVAR_deviation_record.trait_level.cell_type_pseudobulk$deviation_SE |>
       format_cell_type_GWAS_chromVAR_deviations(
         GWAS_inputs_tibble = GWAS_inputs_tibble,
         cell_type_support_tibble = cell_type_pseudobulk_support_tibble.ATAC

@@ -125,6 +125,7 @@ rlang::list2(
     source("module_genetic_enrichment/setup_targets.R")$value,
     source("module_genetic_enrichment/gchromVAR_targets.R")$value,
     source("module_genetic_enrichment/psbulk_GWAS_chromVAR_targets.R")$value,
+    source("module_genetic_enrichment/GWAS_chromVAR_attribution_targets.R")$value,
     tarchetypes::tar_map(
       values = tibble::tibble(
         map_SCAVENGE_tar_suffix = c(

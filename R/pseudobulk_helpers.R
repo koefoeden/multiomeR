@@ -293,7 +293,7 @@ filter_psbulk_data_matrix <- function(
 #' @return A named matrix-like object with rows and columns aligned to the input feature/cell identifiers.
 #' @keywords internal
 
-get_pseudobulk_chromVAR_deviation_SE <- function(
+get_pseudobulk_chromVAR_deviation_record <- function(
   psbulk_ATAC_data_matrix,
   chromVAR_obj,
   annotation_matrix
@@ -323,9 +323,32 @@ get_pseudobulk_chromVAR_deviation_SE <- function(
   )
   SummarizedExperiment::rowData(psbulk_chromVAR_obj) <- SummarizedExperiment::rowData(chromVAR_obj)[peak_range_idx, , drop = FALSE]
 
-  betterChromVAR::betterChromVAR(
+  expectation_vec <- betterChromVAR::getExpectation(psbulk_chromVAR_obj)
+  background_bins <- betterChromVAR::getBackgroundBins(
+    x = expectation_vec,
+    bias = SummarizedExperiment::rowData(psbulk_chromVAR_obj)$bias,
+    flbias = SummarizedExperiment::rowData(psbulk_chromVAR_obj)$flbias,
+    verbose = FALSE
+  )
+  background <- betterChromVAR::computeBackgrounds(
+    object = peak_filtered_psbulk_ATAC_data_matrix,
+    bins = background_bins,
+    expectation = expectation_vec,
+    verbose = FALSE
+  )
+  deviation_SE <- betterChromVAR::computeDeviationsAnalytic(
     object = psbulk_chromVAR_obj,
-    annotations = annotation_matrix_peak_filtered
+    background = background,
+    annotations = annotation_matrix_peak_filtered,
+    verbose = FALSE,
+    retSE = TRUE,
+    compute = c("deviations", "z")
+  )
+
+  list(
+    deviation_SE = deviation_SE,
+    background = background,
+    peak_names = rownames(peak_filtered_psbulk_ATAC_data_matrix)
   )
 }
 
@@ -335,11 +358,11 @@ get_pseudobulk_chromVAR_activity_matrix <- function(
   annotation_matrix,
   normalize = TRUE
 ) {
-  chromVAR_dev <- get_pseudobulk_chromVAR_deviation_SE(
+  chromVAR_dev <- get_pseudobulk_chromVAR_deviation_record(
     psbulk_ATAC_data_matrix = psbulk_ATAC_data_matrix,
     chromVAR_obj = chromVAR_obj,
     annotation_matrix = annotation_matrix
-  )
+  )$deviation_SE
   chromVAR_z_scores <- SummarizedExperiment::assay(chromVAR_dev, "z")
 
   if (isFALSE(normalize)) {

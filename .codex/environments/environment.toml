@@ -3,13 +3,7 @@ version = 1
 name = "multiomeR"
 
 [setup]
-script = '''
-cd "$CODEX_WORKTREE_PATH"
-dev/worktree_codex_setup
-'''
+script = "dev/worktree_codex_setup"
 
 [cleanup]
-script = '''
-cd "$CODEX_WORKTREE_PATH"
-dev/worktree_codex_delete
-'''
+script = "dev/worktree_codex_delete"

@@ -1,0 +1,92 @@
+# Algorithmic implementations, deviations and validation
+
+multiomeR reimplements a small number of reference algorithms so they can operate on the workflow's native matrices and graph state. This page is the maintained record of what those implementations preserve, where they deliberately differ, and what the executable validation establishes.
+
+The evidence labels used below are intentionally narrow:
+
+- **Reference-parity tested** means the repository and named reference implementation run on the same deterministic fixture and their returned values are compared directly.
+- **Reference-similarity tested** means exact equality is not an appropriate contract, so predefined similarity thresholds are checked against the named reference implementation.
+- **Algorithmically derived** means the implementation is checked against an independent mathematical result, not against another software implementation.
+- **Internally checked** means a deterministic repository fixture exercises an internal contract without establishing reference parity.
+
+Passing these fixtures does not validate every dataset, parameter regime, approximate-neighbor realization, biological interpretation, or downstream target. The [CI workflow](https://github.com/koefoeden/multiomeR/blob/main/.github/workflows/algorithm-validation.yaml) reruns the checks when the validation scripts, relevant helpers, or Pixi environment change.
+
+| Implementation | Evidence status | Maintained reference | Current fixed-fixture result |
+|---|---|---|---|
+| BPCells-native UCell | Reference-parity tested | UCell 2.14.0 | Exact values, dimensions, and dimnames |
+| Native WNN | Reference-similarity tested | Seurat 5.5.0 | Production-like fixture: weight Spearman 0.925; mean neighbor overlap 0.952 |
+| Sparse SCAVENGE propagation | Algorithmically derived and reference-similarity tested | SCAVENGE 1.0.2 at `8ee8b173d965` | Closed-form delta 3.55e-13; score-rank Spearman 0.9966; significant-cell Jaccard 1.0 |
+
+## BPCells-native UCell scoring
+
+**Reference algorithm.** [`UCell::ScoreSignatures_UCell()`](https://bioconductor.org/packages/release/bioc/html/UCell.html) calculates per-cell signature scores from descending feature ranks, caps ranks at `maxRank`, combines positive and negative signatures, and clips negative combined scores to zero. The maintained comparison also covers `UCell::AddModuleScore_UCell()`.
+
+**Reason for reimplementation.** The workflow keeps gene-by-cell counts in BPCells-backed matrices. Materializing the complete matrix in memory or building a Seurat object solely for marker scoring would discard that storage contract, so multiomeR ranks bounded cell chunks and returns metadata-ready scores directly.
+
+**Behavior preserved.** The implementation preserves UCell signature syntax (`+` and `-` suffixes), descending per-cell ranks, configurable tie handling, `maxRank` capping, impute/skip behavior for missing genes, negative-signature weighting, lower-bound clipping, signature names, and cell order.
+
+**Deliberate deviations and consequences.** Matrix materialization is limited to one cell chunk at a time, and optional fork workers operate across chunks. This changes memory and execution behavior but not the tested score values. The helper returns a data frame instead of mutating a Seurat object. The target-level marker validator rejects configured genes missing from the Cell Ranger reference before normal pipeline scoring, whereas the lower-level helper still exposes UCell's impute/skip modes for explicit use.
+
+**Implementation and wiring.** The scorer is [`calculate_BPCells_UCell_scores_from_matrix()` in `R/processing_GEX_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_GEX_helpers.R). [`extra_targets/general_aggregation_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/general_aggregation_targets.R) validates `UCell_GEX_marker_genes_list`, and [`extra_targets/GEX_graph_and_cluster_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/GEX_graph_and_cluster_targets.R) computes cell-level scores before GEX cell-type assignment. ATAC and WNN cell-type targets reuse those metadata scores.
+
+**Validation.** [`scripts/validate_scoring_parity.R`](https://github.com/koefoeden/multiomeR/blob/main/scripts/validate_scoring_parity.R) creates a deterministic 500-gene by 37-cell matrix, writes the project input as BPCells, and compares signed signatures with imputed and skipped missing genes. It requires `identical()` values, dimensions, and dimnames against UCell 2.14.0. It also retains exact Seurat `AddModuleScore` and cell-cycle helper checks plus a metadata-join contract.
+
+The UCell 2.14.0 reference call with imputed missing genes can emit non-fatal R stack-imbalance warnings under the repository's R 4.5 environment. A narrow diagnostic reproduced them in the UCell reference call but not in the repository scorer. The validation therefore runs the reference call in a disposable `callr` process and compares its returned matrix in the clean parent session; this isolates the package warning without weakening the equality assertion or changing the runtime.
+
+**Status and rerun.** Reference-parity tested against UCell 2.14.0 with exact equality; passing in the current locked environment.
+
+```bash
+pixi run test-scoring-parity
+```
+
+## Native weighted nearest neighbors
+
+**Reference algorithm.** [`Seurat::FindMultiModalNeighbors()`](https://satijalab.org/seurat/reference/findmultimodalneighbors) constructs cell-specific modality weights from within- and cross-modality neighborhood prediction, collects candidate neighbors across modalities, and selects a weighted multimodal neighbor set.
+
+**Reason for reimplementation.** The pipeline already has aligned RNA PCA/Harmony and ATAC LSI/Harmony matrices and needs reusable neighbor indices, distances, and modality weights without creating a Seurat object. Native graph state also feeds UMAP, Leiden clustering, SCAVENGE, and the optional Seurat/Signac export.
+
+**Behavior preserved.** [`weighted_nearest_neighbors_BPCells()`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_multimodal_helpers.R) preserves row-wise L2 normalization, per-modality nearest neighbors, nearest-distance correction, within/cross prediction kernels, capped modality affinity ratios, normalized cell-specific modality weights, candidate-set union, weighted neighbor ranking, and Seurat's transformation from weighted affinity to neighbor distance.
+
+**Deliberate deviations and consequences.** BPCells HNSW replaces Seurat's Annoy search, so approximate candidate sets need not be identical. Adaptive bandwidth uses the corrected distance to the configured `k`th neighbor rather than Seurat 5.5.0's default SNN-derived far-neighbor bandwidth. The helper does not expose Seurat's optional smoothing or cross-constant list, and BPCells builds downstream SNN state rather than storing Seurat `Neighbor` and `Graph` objects. Its current `seed` argument is not consulted by the HNSW calls, so it must not be interpreted as controlling neighbor-search randomness. These choices can change weights, selected neighbors, SNN edges, clusters, and UMAP coordinates; correlation and overlap are therefore the validation contract, not exact equality.
+
+**Implementation and wiring.** The implementation and graph consumers are in [`R/processing_multimodal_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_multimodal_helpers.R). [`extra_targets/WNN_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/WNN_targets.R) aligns modality embeddings, creates `WNN_results_raw`, filters small clusters, optionally recomputes `WNN_results`, and wires that state into WNN UMAP, clustering, metadata, and cell-type targets.
+
+**Validation.** [`scripts/validate_algorithm_deviations.R`](https://github.com/koefoeden/multiomeR/blob/main/scripts/validate_algorithm_deviations.R) compares two deterministic RNA/ATAC fixtures with Seurat 5.5.0. The headline production-like fixture uses 400 cells, 12 dimensions, `k = 30`, and candidate range 200, matching the pipeline's configured neighbor count and native WNN candidate range. It requires Spearman correlation at least 0.90 for each modality weight, mean neighbor-set overlap at least 0.94, and first-quartile overlap at least 0.90; observed values are 0.925, 0.952, and 0.933. A smaller 160-cell stress fixture retains opposing per-cell noise gradients at `k = 15` and candidate range 50. Its deliberately looser thresholds are 0.80, 0.85, and 0.75; observed values are 0.851, 0.924, and 0.867. The current locked BPCells 0.3.1 build is pinned at `28759cdd5125`.
+
+**Status and rerun.** Reference-similarity tested against Seurat 5.5.0; passing. This does not assert parity of SNN weights, clustering, or UMAP.
+
+```bash
+pixi run Rscript scripts/validate_algorithm_deviations.R
+```
+
+## Sparse SCAVENGE propagation and significance
+
+**Reference algorithm.** [SCAVENGE 1.0.2 at commit `8ee8b173d965`](https://github.com/sankaranlab/SCAVENGE/tree/8ee8b173d965009a696b2a590d5b17b28b7cf851) selects high chromVAR Z-score seed cells, performs a column-normalized random walk with restart, caps and rescales the propagation score into a trait relevance score (TRS), and uses degree-matched seed permutations to identify significant cells.
+
+**Reason for reimplementation.** The reference package's last commit and dependency stack predate the pipeline's current R/Bioconductor environment. multiomeR needs sparse propagation over native RNA, ATAC, and WNN SNN matrices and must avoid materializing a cell-by-permutation score matrix for large cell sets.
+
+**Behavior preserved.** The implementation preserves the one-sided Z-score seed threshold and top-percent cap, column-normalized transition matrix, equal seed restart mass, iterative random walk, 0.95 propagation-score cap, min-max scaling, Z-score scale factor, degree-matched seed sampling, and per-cell comparison with permuted propagation scores.
+
+**Deliberate deviations and consequences.** The reference workflow normally uses a mutual-kNN graph; multiomeR propagates over BPCells-derived SNN graphs from RNA, ATAC, or WNN state. Seed and scale-factor helpers guarantee at least one selected cell for small inputs and break boundary ties deterministically. The random walk validates graph inputs and has a maximum-iteration guard. Permutations accumulate exceedance counts rather than retaining every score vector, and report add-one empirical p-values, `(exceedances + 1) / (permutations + 1)`, with `p < 0.05`; the reference thresholds raw exceedance counts. These graph, boundary, and p-value choices can alter TRS values and significant-cell calls, especially near thresholds.
+
+**Implementation and wiring.** Seed selection, sparse random walk, streaming degree-matched permutations, and TRS construction are in [`R/gchromvar_SCAVENGE_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/gchromvar_SCAVENGE_helpers.R). [`module_genetic_enrichment/SCAVENGE_graph_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/module_genetic_enrichment/SCAVENGE_graph_targets.R) constructs each graph and maps chromVAR Z-score records into `TRS_tibbles`; [`SCAVENGE_group_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/module_genetic_enrichment/SCAVENGE_group_targets.R) wires group summaries and plots.
+
+**Validation.** The deterministic 60-cell fixture contains three disconnected, regular graph blocks and three enriched seeds. First, the iterative sparse random walk is compared with the closed-form solution
+
+\[
+s = r\left(I - (1-r)P\right)^{-1}p_0,
+\]
+
+with a maximum absolute tolerance of 1e-10; the current delta is 3.55e-13. Second, compact local reference functions reproduce the relevant SCAVENGE 1.0.2 code at the pinned commit without installing its historical dependency stack. With 199 fixed-RNG permutations, the test requires TRS rank Spearman correlation at least 0.99 and significant-cell Jaccard overlap at least 0.80. Current values are 0.9966 and 1.0.
+
+**Status and rerun.** Random-walk propagation is algorithmically derived against the closed form, and score ranks/significant-cell calls are reference-similarity tested on one small deterministic fixture. This is not full reference-package parity and does not validate graph construction, chromVAR inputs, or genome-scale permutation stability.
+
+```bash
+pixi run Rscript scripts/validate_algorithm_deviations.R
+```
+
+Run the complete maintained set, including UCell, with:
+
+```bash
+pixi run test-algorithm-validation
+```

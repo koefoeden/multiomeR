@@ -6,7 +6,7 @@ load_project_runtime()
 
 library(patchwork)
 
-figure_text_family <- "sans"
+figure_text_family <- "Nimbus Sans"
 ggplot2::theme_update(text = ggplot2::element_text(family = figure_text_family))
 
 minimal_UMAP_theme <- ggplot2::theme(

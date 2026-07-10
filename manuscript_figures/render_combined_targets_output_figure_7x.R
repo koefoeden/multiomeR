@@ -95,8 +95,8 @@ figure_2_UMAP_panel <- function() {
 figure_2_TF_activity_panel <- function(plot) {
   plot +
     ggplot2::labs(
-      title = "TF activity",
-      x = "Transcription Factor",
+      title = "Transcription factor activity",
+      x = NULL,
       y = "Cell type",
       fill = "Mean Z-score"
     ) +
@@ -145,26 +145,47 @@ figure_2_peak_gene_link_panel <- function(plot, group = "B") {
 figure_2_single_cell_GWAS_panel <- function(plot) {
   set_text_layer_family(plot) +
     minimal_UMAP_theme +
+    ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0.08, 0.08))) +
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.08, 0.18))) +
     ggplot2::labs(
       title = "Single-nucleus GWAS enrichment",
       subtitle = "Monocyte count"
     ) +
     figure_text_theme +
-    panel_title_theme
+    panel_title_theme +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = 10.5),
+      plot.subtitle = ggplot2::element_text(size = 8.5, margin = ggplot2::margin(b = 3)),
+      plot.margin = ggplot2::margin(2, 5, 2, 5),
+      legend.title = ggplot2::element_text(size = 8),
+      legend.text = ggplot2::element_text(size = 7)
+    )
 }
 
 strip_GWAS_author_year_suffix <- function(GWAS_ID) {
-  sub("_[^_]+[0-9]{4}$", "", as.character(GWAS_ID))
+  sub("_[^_]+[0-9]{4}$", "", as.character(GWAS_ID)) |>
+    gsub("([a-z])([A-Z])", "\\1 \\2", x = _) |>
+    sub("^BCell", "B-cell", x = _)
 }
 
 figure_2_GWAS_heatmap_panel <- function(plot) {
-  score_data <- plot$data
+  score_data <- plot$patches$plots[[2]]$data
+  required_columns <- c("cluster", "GWAS_ID", "relative_deviation", "support_label")
+  missing_columns <- setdiff(required_columns, colnames(score_data))
+  if (!is.data.frame(score_data) || length(missing_columns)) {
+    stop(
+      "Unexpected chromVAR deviation heatmap plot-object structure; missing score columns: ",
+      paste(missing_columns, collapse = ", "),
+      call. = FALSE
+    )
+  }
 
   score_plot <- ggplot2::ggplot(
     score_data,
-    ggplot2::aes(x = .data$cluster, y = .data$GWAS_ID, fill = .data$median_score)
+    ggplot2::aes(x = .data$cluster, y = .data$GWAS_ID, fill = .data$relative_deviation)
   ) +
     ggplot2::geom_tile(color = "grey90", linewidth = 0.15) +
+    ggplot2::geom_text(ggplot2::aes(label = .data$support_label), size = 2.8, na.rm = TRUE) +
     ggplot2::scale_y_discrete(
       drop = FALSE,
       labels = strip_GWAS_author_year_suffix
@@ -174,7 +195,7 @@ figure_2_GWAS_heatmap_panel <- function(plot) {
       mid = "white",
       high = "#B40426",
       midpoint = 0,
-      name = "Median Z-score",
+      name = "Relative deviation",
       guide = ggplot2::guide_colorbar(
         title.position = "top",
         title.hjust = 0.5,
@@ -182,20 +203,21 @@ figure_2_GWAS_heatmap_panel <- function(plot) {
         barheight = grid::unit(3, "mm")
       )
     ) +
+    ggplot2::coord_fixed(ratio = 0.62) +
     ggplot2::labs(x = NULL, y = NULL) +
     ggplot2::theme_minimal(base_size = 7, base_family = figure_text_family) +
     ggplot2::theme(
-      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, vjust = 1, size = 6),
-      axis.text.y = ggplot2::element_text(size = 6),
+      axis.text.x = ggplot2::element_text(angle = 40, hjust = 1, vjust = 1, size = 6.5),
+      axis.text.y = ggplot2::element_text(size = 6.5),
       axis.ticks.y = ggplot2::element_blank(),
       panel.grid = ggplot2::element_blank(),
       legend.position = "top",
-      plot.margin = ggplot2::margin(1, 1, 1, 1)
+      plot.margin = ggplot2::margin(2, 3, 1, 2)
     )
 
   patchwork::wrap_plots(score_plot) +
     patchwork::plot_annotation(
-      title = "Pseudo-bulk GWAS enrichment",
+      title = "Cell-type GWAS enrichment",
       theme = panel_title_theme
     ) &
     ggplot2::theme(
@@ -213,21 +235,22 @@ figure_2_GWAS_heatmap_panel <- function(plot) {
 output_dir <- "manuscript_figures/outputs/combined_targets_output_figures_7x"
 
 panel_specs <- tibble::tribble(
-  ~figure_number , ~tag , ~plot_call                                                                                                          , ~pick_regex                  , ~title        , ~caption                                                                                          , ~plot_modifier                               ,
+  ~figure_number , ~tag , ~plot_call                                                                                                          , ~pick_regex                  , ~title        , ~caption                                                                                          , ~plot_modifier                                              ,
   # "S1"           , "A"  , quote(targets::tar_read(categorical.UMAPs.WNN.mixed_human_7x))                                                      , "WNN_harmony_SNN_cluster_cell_type" , NA_character_ , "UMAP embedding derived from native RNA+ATAC weighted-nearest-neighbor graph. Nuclei are colored by cluster-level cell type labels." , NA                                          ,
   # "S1"           , "B"  , quote(targets::tar_read(markers_dot_plot.GEX.mixed_human_7x))                                                       , NA_character_                       , NA_character_ , "Expression of canonical marker genes across cell types."                                                                            , quote(plot + ggplot2::labs(y = "celltype")) ,
   # "S1"           , "C"  , quote(targets::tar_read(coverage_tracks_plots.ATAC.mixed_human_7x))                                                 , "MS4A1"                             , NA_character_ , "Chromatin accessibility track at the MS4A1 locus."                                                                                  , NA                                          ,
-  "2"            , "A"  , quote(figure_2_UMAP_panel())                                                                                        , NA_character_                , NA_character_ , "RNA, ATAC, and WNN UMAPs colored by GEX-, ATAC-, and multimodal cluster-level cell type labels." , NA                                           ,
-  "2"            , "B"  , quote(targets::tar_read(TF_activity_heatmap.ATAC.mixed_human_7x))                                                   , NA_character_                , NA_character_ , "ChromVAR transcription-factor activity scores for configured marker TFs."                        , quote(figure_2_TF_activity_panel(plot))      ,
-  "2"            , "C"  , quote(targets::tar_read(peak_gene_correlation_top_link_ATAC_tracks_plots.peak_gene_correlation.WNN.mixed_human_7x)) , "Brain_rank001_"            , NA_character_ , "Example top brain peak-gene link with ATAC accessibility and loop track."                        , quote(figure_2_peak_gene_link_panel(plot, group = "Brain"))   ,
-  "2"            , "D"  , quote(targets::tar_read(TRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.mixed_human_7x))       , "MonocyteCount_Vuckovic2020" , NA_character_ , "SCAVENGE trait relevance scores for monocyte count projected onto the WNN UMAP."                 , quote(figure_2_single_cell_GWAS_panel(plot)) ,
-  "2"            , "E"  , quote(targets::tar_read(chromVAR_deviation_heatmap.cell_type_pseudobulk.genetic_enrichment.mixed_human_7x))         , NA_character_                , NA_character_ , "Cell-type GWAS chromVAR relative deviations with z-score support and nuclei counts."             , quote(figure_2_GWAS_heatmap_panel(plot))     ,
+  "2"            , "A"  , quote(figure_2_UMAP_panel())                                                                                        , NA_character_                , NA_character_ , "RNA, ATAC, and WNN UMAPs colored by GEX-, ATAC-, and multimodal cluster-level cell type labels." , NA                                                          ,
+  "2"            , "B"  , quote(targets::tar_read(TF_activity_heatmap.ATAC.mixed_human_7x))                                                   , NA_character_                , NA_character_ , "chromVAR transcription-factor activity scores for configured marker TFs."                        , quote(figure_2_TF_activity_panel(plot))                     ,
+  "2"            , "C"  , quote(targets::tar_read(peak_gene_correlation_top_link_ATAC_tracks_plots.peak_gene_correlation.WNN.mixed_human_7x)) , "Brain_rank001_"             , NA_character_ , "Example top brain peak-gene link with ATAC accessibility and loop track."                        , quote(figure_2_peak_gene_link_panel(plot, group = "Brain")) ,
+  "2"            , "D"  , quote(targets::tar_read(TRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.mixed_human_7x))       , "MonocyteCount_Vuckovic2020" , NA_character_ , "SCAVENGE trait relevance scores for monocyte count projected onto the WNN UMAP."                 , quote(figure_2_single_cell_GWAS_panel(plot))                ,
+  "2"            , "E"  , quote(targets::tar_read(chromVAR_deviation_heatmap.cell_type_pseudobulk.genetic_enrichment.mixed_human_7x))         , NA_character_                , NA_character_ , "Cell-type GWAS chromVAR relative deviations with z-score support."                               , quote(figure_2_GWAS_heatmap_panel(plot))                    ,
+  "3"            , NA, quote(readRDS(""))
 )
 
 figure_specs <- tibble::tribble(
   ~figure_number , ~height , ~layout                      , ~subtitle     ,
   # "S1"           ,       9 , quote((A / B / C))           , "Visualization of the observed cell types and expected markers in the PBMC dataset." ,
-  "2"            ,       7 , quote(A / (B | C) / (D | E)) , NA_character_ ,
+  "2"            , 7.25    , quote(A / (B | C) / (D | E)) , NA_character_ ,
 )
 
 expected_pngs <- file.path(output_dir, paste0(figure_specs$figure_number, ".png"))

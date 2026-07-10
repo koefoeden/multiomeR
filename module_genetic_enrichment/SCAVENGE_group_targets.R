@@ -26,13 +26,15 @@ rlang::list2(
         TRS_heatmap_data,
         split_col = "grouping_col",
         GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
-        compartments_patterns = genetic_enrichment_compartment_patterns
+        compartments_patterns = genetic_enrichment_compartment_patterns,
+        fill_label = "Median TRS",
+        fill_scale = "sequential"
       )
       save_plots_structured(
         plots,
         filetype = "png",
-        width = 20,
-        height = max(7, 0.24 * dplyr::n_distinct(TRS_heatmap_data$GWAS_ID) + 3)
+        width = 17,
+        height = max(5.5, 0.3 * dplyr::n_distinct(TRS_heatmap_data$GWAS_ID) + 3.5)
       )
     },
     resources = get_tar_resources(RAM_GB_req = 32)
@@ -47,13 +49,16 @@ rlang::list2(
         name_suffix = "scaled",
         GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
         compartments_patterns = genetic_enrichment_compartment_patterns,
-        scaled = TRUE
+        scaled = TRUE,
+        fill_label = "Relative TRS",
+        fill_scale = "sequential",
+        fill_limits = c(0, 1)
       )
       save_plots_structured(
         plots,
         filetype = "png",
-        width = 20,
-        height = max(7, 0.24 * dplyr::n_distinct(TRS_heatmap_scaled_data$GWAS_ID) + 3)
+        width = 17,
+        height = max(5.5, 0.3 * dplyr::n_distinct(TRS_heatmap_scaled_data$GWAS_ID) + 3.5)
       )
     },
     resources = get_tar_resources(RAM_GB_req = 32)

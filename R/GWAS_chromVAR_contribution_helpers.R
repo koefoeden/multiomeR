@@ -313,13 +313,126 @@ get_GWAS_chromVAR_variant_contribution_tibble <- function(peak_contribution_tibb
     )
 }
 
+#' Get Open Targets locus-to-gene predictions
+#'
+#' Read and rank Open Targets L2G predictions for the credible sets represented
+#' in the chromVAR attribution input.
+#'
+#' @param GWAS_locus_tibble Distinct GWAS and credible-set locus identifiers.
+#' @param open_targets_gwas_credible_sets_evidence_dataset_path Local Open
+#'   Targets `evidence_gwas_credible_sets` Parquet dataset.
+#' @param open_targets_target_dataset_path Local Open Targets `target` Parquet
+#'   dataset.
+#' @return One row per credible-set gene prediction, ranked by decreasing L2G
+#'   score within each GWAS locus.
+#' @keywords internal
+
+get_open_targets_GWAS_locus_to_gene_tibble <- function(
+  GWAS_locus_tibble,
+  open_targets_gwas_credible_sets_evidence_dataset_path,
+  open_targets_target_dataset_path
+) {
+  required_cols <- c("GWAS_ID", "studyId", "studyLocusId", "open_targets_release")
+  missing_cols <- setdiff(required_cols, colnames(GWAS_locus_tibble))
+  if (length(missing_cols) > 0L) {
+    stop("GWAS_locus_tibble is missing required columns: ", paste(missing_cols, collapse = ", "))
+  }
+
+  selected_loci_tibble <- GWAS_locus_tibble |>
+    dplyr::distinct(dplyr::across(dplyr::all_of(required_cols)))
+  empty_tibble <- tibble::tibble(
+    GWAS_ID = character(),
+    studyId = character(),
+    studyLocusId = character(),
+    targetId = character(),
+    gene_symbol = character(),
+    gene_name = character(),
+    L2G_score = numeric(),
+    L2G_rank = integer(),
+    open_targets_release = character()
+  )
+  if (nrow(selected_loci_tibble) == 0L) {
+    return(empty_tibble)
+  }
+
+  evidence_release <- basename(dirname(open_targets_gwas_credible_sets_evidence_dataset_path))
+  target_release <- basename(dirname(open_targets_target_dataset_path))
+  selected_releases <- unique(selected_loci_tibble$open_targets_release)
+  if (
+    length(selected_releases) != 1L ||
+      !identical(selected_releases, evidence_release) ||
+      !identical(selected_releases, target_release)
+  ) {
+    stop(
+      "Open Targets releases must match across GWAS loci, L2G evidence, and target metadata: ",
+      "loci=", paste(selected_releases, collapse = ", "),
+      ", evidence=", evidence_release,
+      ", target=", target_release
+    )
+  }
+
+  evidence_tibble <- arrow::open_dataset(open_targets_gwas_credible_sets_evidence_dataset_path) |>
+    dplyr::filter(studyLocusId %in% selected_loci_tibble$studyLocusId) |>
+    dplyr::select(studyLocusId, targetId, resourceScore, score) |>
+    dplyr::collect()
+  score_delta <- abs(evidence_tibble$score - evidence_tibble$resourceScore)
+  if (any(score_delta > sqrt(.Machine$double.eps), na.rm = TRUE)) {
+    stop("Open Targets evidence_gwas_credible_sets score and resourceScore are not equivalent.")
+  }
+
+  evidence_tibble <- evidence_tibble |>
+    dplyr::filter(!is.na(.data$score), .data$score >= 0.05) |>
+    dplyr::transmute(
+      studyLocusId = .data$studyLocusId,
+      targetId = stringr::str_remove(.data$targetId, "\\.[0-9]+$"),
+      L2G_score = .data$score
+    ) |>
+    dplyr::distinct()
+  if (nrow(evidence_tibble) == 0L) {
+    return(empty_tibble)
+  }
+
+  target_metadata_tibble <- arrow::open_dataset(open_targets_target_dataset_path) |>
+    dplyr::filter(id %in% evidence_tibble$targetId) |>
+    dplyr::select(id, approvedSymbol, approvedName) |>
+    dplyr::collect() |>
+    dplyr::transmute(
+      targetId = .data$id,
+      gene_symbol = dplyr::na_if(stringr::str_squish(.data$approvedSymbol), ""),
+      gene_name = dplyr::na_if(stringr::str_squish(.data$approvedName), "")
+    )
+  missing_target_ids <- setdiff(evidence_tibble$targetId, target_metadata_tibble$targetId)
+  if (length(missing_target_ids) > 0L) {
+    stop("Open Targets target metadata is missing L2G target IDs: ", paste(missing_target_ids, collapse = ", "))
+  }
+
+  evidence_tibble |>
+    dplyr::inner_join(selected_loci_tibble, by = "studyLocusId", relationship = "many-to-many") |>
+    dplyr::left_join(target_metadata_tibble, by = "targetId", relationship = "many-to-one") |>
+    dplyr::mutate(gene_symbol = dplyr::coalesce(.data$gene_symbol, .data$targetId)) |>
+    dplyr::arrange(.data$GWAS_ID, .data$studyLocusId, dplyr::desc(.data$L2G_score), .data$gene_symbol, .data$targetId) |>
+    dplyr::mutate(L2G_rank = dplyr::row_number(), .by = c(GWAS_ID, studyLocusId)) |>
+    dplyr::select(
+      GWAS_ID,
+      studyId,
+      studyLocusId,
+      targetId,
+      gene_symbol,
+      gene_name,
+      L2G_score,
+      L2G_rank,
+      open_targets_release
+    )
+}
+
 #' Sum credible-set variant contributions by locus
 #'
 #' @param variant_contribution_tibble Variant-level chromVAR contribution.
+#' @param locus_to_gene_tibble Ranked Open Targets L2G predictions.
 #' @return Exact locus-level contributions with lead-variant labels.
 #' @keywords internal
 
-get_GWAS_chromVAR_locus_contribution_tibble <- function(variant_contribution_tibble) {
+get_GWAS_chromVAR_locus_contribution_tibble <- function(variant_contribution_tibble, locus_to_gene_tibble) {
   lead_variant_tibble <- variant_contribution_tibble |>
     dplyr::arrange(dplyr::desc(.data$posteriorProbability), .data$variantId) |>
     dplyr::slice_head(n = 1, by = c(GWAS_ID, studyLocusId)) |>
@@ -329,6 +442,21 @@ get_GWAS_chromVAR_locus_contribution_tibble <- function(variant_contribution_tib
       lead_variantId = variantId,
       lead_variant_position = position,
       lead_variant_PIP = posteriorProbability
+    )
+
+  locus_gene_summary_tibble <- locus_to_gene_tibble |>
+    dplyr::summarise(
+      top_L2G_gene = dplyr::first(.data$gene_symbol),
+      top_L2G_score = dplyr::first(.data$L2G_score),
+      likely_genes_label = paste0(
+        .data$gene_symbol[.data$L2G_rank <= 3L],
+        " (",
+        sprintf("%.2f", .data$L2G_score[.data$L2G_rank <= 3L]),
+        ")",
+        collapse = ", "
+      ),
+      n_L2G_genes = dplyr::n(),
+      .by = c(GWAS_ID, studyLocusId)
     )
 
   variant_contribution_tibble |>
@@ -351,8 +479,11 @@ get_GWAS_chromVAR_locus_contribution_tibble <- function(variant_contribution_tib
       .by = c(GWAS_ID, cluster, studyLocusId)
     ) |>
     dplyr::left_join(lead_variant_tibble, by = c("GWAS_ID", "studyLocusId")) |>
+    dplyr::left_join(locus_gene_summary_tibble, by = c("GWAS_ID", "studyLocusId"), relationship = "many-to-one") |>
     dplyr::mutate(
       locus_label = .data$lead_variantId,
+      likely_genes_label = dplyr::coalesce(.data$likely_genes_label, "No L2G prediction >= 0.05"),
+      n_L2G_genes = dplyr::coalesce(.data$n_L2G_genes, 0L),
       contribution_rank = dplyr::min_rank(dplyr::desc(abs(.data$relative_deviation_contribution))),
       .by = c(GWAS_ID, cluster)
     ) |>
@@ -410,19 +541,32 @@ get_GWAS_chromVAR_contribution_reconciliation_tibble <- function(
     dplyr::relocate(GWAS_ID, cluster, level)
 }
 
-collapse_GWAS_locus_contribution_for_plot <- function(locus_contribution_tibble, n_top_loci = 12L) {
+collapse_GWAS_locus_contribution_for_plot <- function(locus_contribution_tibble, n_top_loci = 15L) {
   top_locus_ids <- locus_contribution_tibble |>
     dplyr::summarise(
       max_abs_contribution = max(abs(.data$relative_deviation_contribution)),
       locus_label = dplyr::first(.data$locus_label),
+      top_L2G_gene = dplyr::first(.data$top_L2G_gene),
       .by = studyLocusId
     ) |>
     dplyr::slice_max(.data$max_abs_contribution, n = n_top_loci, with_ties = FALSE) |>
-    dplyr::arrange(dplyr::desc(.data$max_abs_contribution))
+    dplyr::arrange(dplyr::desc(.data$max_abs_contribution)) |>
+    dplyr::mutate(
+      plot_locus = dplyr::if_else(
+        is.na(.data$top_L2G_gene),
+        .data$locus_label,
+        stringr::str_c(.data$locus_label, .data$top_L2G_gene, sep = "\n")
+      )
+    )
 
   top_tibble <- locus_contribution_tibble |>
     dplyr::semi_join(top_locus_ids, by = "studyLocusId") |>
-    dplyr::mutate(plot_locus = .data$locus_label)
+    dplyr::left_join(
+      top_locus_ids |>
+        dplyr::select(studyLocusId, plot_locus),
+      by = "studyLocusId",
+      relationship = "many-to-one"
+    )
   other_tibble <- locus_contribution_tibble |>
     dplyr::anti_join(top_locus_ids, by = "studyLocusId") |>
     dplyr::mutate(plot_locus = dplyr::if_else(.data$relative_deviation_contribution >= 0, "Other positive", "Other negative")) |>
@@ -430,7 +574,7 @@ collapse_GWAS_locus_contribution_for_plot <- function(locus_contribution_tibble,
       relative_deviation_contribution = sum(.data$relative_deviation_contribution),
       .by = c(cluster, plot_locus)
     )
-  locus_order <- c(top_locus_ids$locus_label, "Other positive", "Other negative")
+  locus_order <- c(top_locus_ids$plot_locus, "Other positive", "Other negative")
 
   dplyr::bind_rows(
     top_tibble |>
@@ -456,7 +600,7 @@ collapse_GWAS_locus_contribution_for_plot <- function(locus_contribution_tibble,
 plot_GWAS_locus_contribution_heatmaps <- function(
   locus_contribution_tibble,
   chromVAR_deviation_tibble,
-  n_top_loci = 12L
+  n_top_loci = 15L
 ) {
   GWAS_IDs <- unique(locus_contribution_tibble$GWAS_ID)
   plots <- purrr::map(GWAS_IDs, \(GWAS_ID) {
@@ -513,7 +657,7 @@ plot_GWAS_locus_contribution_heatmaps <- function(
   plots
 }
 
-prepare_GWAS_locus_contribution_waterfall_tibble <- function(locus_tibble, n_top_loci = 12L) {
+prepare_GWAS_locus_contribution_waterfall_tibble <- function(locus_tibble, n_top_loci = 15L) {
   top_tibble <- locus_tibble |>
     dplyr::slice_max(abs(.data$relative_deviation_contribution), n = n_top_loci, with_ties = FALSE)
   other_tibble <- locus_tibble |>
@@ -525,7 +669,14 @@ prepare_GWAS_locus_contribution_waterfall_tibble <- function(locus_tibble, n_top
     )
   step_tibble <- dplyr::bind_rows(
     top_tibble |>
-      dplyr::select(locus_label, relative_deviation_contribution),
+      dplyr::select(
+        studyLocusId,
+        locus_label,
+        top_L2G_gene,
+        top_L2G_score,
+        likely_genes_label,
+        relative_deviation_contribution
+      ),
     other_tibble
   ) |>
     dplyr::filter(.data$relative_deviation_contribution != 0) |>
@@ -539,7 +690,12 @@ prepare_GWAS_locus_contribution_waterfall_tibble <- function(locus_tibble, n_top
       plot_index = dplyr::row_number(),
       start = dplyr::lag(cumsum(.data$relative_deviation_contribution), default = 0),
       end = .data$start + .data$relative_deviation_contribution,
-      direction = dplyr::if_else(.data$relative_deviation_contribution >= 0, "Positive", "Negative")
+      direction = dplyr::if_else(.data$relative_deviation_contribution >= 0, "Positive", "Negative"),
+      gene_label = dplyr::if_else(
+        is.na(.data$top_L2G_gene),
+        "",
+        stringr::str_glue("{.data$top_L2G_gene}\nL2G {sprintf('%.2f', .data$top_L2G_score)}")
+      )
     )
   total <- sum(step_tibble$relative_deviation_contribution)
 
@@ -551,7 +707,8 @@ prepare_GWAS_locus_contribution_waterfall_tibble <- function(locus_tibble, n_top
       plot_index = nrow(step_tibble) + 1L,
       start = 0,
       end = total,
-      direction = "Total"
+      direction = "Total",
+      gene_label = ""
     )
   )
 }
@@ -563,7 +720,7 @@ prepare_GWAS_locus_contribution_waterfall_tibble <- function(locus_tibble, n_top
 #' @return Named list with one waterfall per GWAS and cell type.
 #' @keywords internal
 
-plot_GWAS_locus_contribution_waterfalls <- function(locus_contribution_tibble, n_top_loci = 12L) {
+plot_GWAS_locus_contribution_waterfalls <- function(locus_contribution_tibble, n_top_loci = 15L) {
   split_tibbles <- split(
     locus_contribution_tibble,
     interaction(locus_contribution_tibble$GWAS_ID, locus_contribution_tibble$cluster, drop = TRUE, lex.order = TRUE)
@@ -598,6 +755,20 @@ plot_GWAS_locus_contribution_waterfalls <- function(locus_contribution_tibble, n
         linewidth = 0.3
       ) +
       ggplot2::geom_hline(yintercept = 0, color = "grey35", linewidth = 0.3) +
+      ggrepel::geom_label_repel(
+        data = dplyr::filter(waterfall_tibble, .data$gene_label != ""),
+        ggplot2::aes(x = .data$plot_index, y = .data$end, label = .data$gene_label),
+        direction = "y",
+        seed = 1,
+        size = 2.2,
+        min.segment.length = 0,
+        box.padding = 0.2,
+        point.padding = 0.1,
+        max.overlaps = Inf,
+        fill = scales::alpha("white", 0.9),
+        color = "grey15",
+        linewidth = 0.15
+      ) +
       ggplot2::scale_x_continuous(
         breaks = waterfall_tibble$plot_index,
         labels = waterfall_tibble$locus_label,
@@ -607,7 +778,8 @@ plot_GWAS_locus_contribution_waterfalls <- function(locus_contribution_tibble, n
       ggplot2::labs(
         x = "Credible-set locus (lead variant)",
         y = "Cumulative relative deviation",
-        title = stringr::str_glue("{locus_tibble$GWAS_ID[[1]]} - {locus_tibble$cluster[[1]]}")
+        title = stringr::str_glue("{locus_tibble$GWAS_ID[[1]]} - {locus_tibble$cluster[[1]]}"),
+        caption = "Labels show the top Open Targets L2G gene and score for each locus."
       ) +
       ggplot2::theme_minimal(base_size = 9) +
       ggplot2::theme(

@@ -959,12 +959,17 @@ gwas_heatmap_metadata_theme <- function(show_y = FALSE, show_x = FALSE) {
   ggplot2::theme_minimal(base_size = 9) +
     ggplot2::theme(
       axis.text.x = if (show_x) ggplot2::element_text(angle = 45, hjust = 1) else ggplot2::element_blank(),
-      axis.text.y = if (show_y) ggplot2::element_text(size = 7) else ggplot2::element_blank(),
+      axis.text.y = if (show_y) ggplot2::element_text(size = 8, color = "grey20") else ggplot2::element_blank(),
       axis.ticks.x = if (show_x) ggplot2::element_line() else ggplot2::element_blank(),
       axis.ticks.y = ggplot2::element_blank(),
       panel.grid = ggplot2::element_blank(),
       legend.position = "bottom",
-      plot.margin = ggplot2::margin(t = 10, r = 8, b = 2, l = 2),
+      legend.key.height = grid::unit(3, "mm"),
+      legend.key.width = grid::unit(3, "mm"),
+      legend.spacing.y = grid::unit(1, "mm"),
+      legend.text = ggplot2::element_text(size = 7),
+      legend.title = ggplot2::element_text(size = 8),
+      plot.margin = ggplot2::margin(t = 4, r = 5, b = 0, l = 2),
       strip.clip = "off",
       strip.placement = "outside",
       strip.text.x = ggplot2::element_text(angle = 45, hjust = 0, size = 8, margin = ggplot2::margin(b = 2)),
@@ -1034,7 +1039,10 @@ get_ordered_GWAS_score_plot_data <- function(data_per_GWAS_and_cluster_df, compa
   cluster_levels <- axes$cluster_order
   cluster_support <- data_per_GWAS_and_cluster_df |>
     dplyr::select(cluster, dplyr::any_of(c("n_cells", "n_counts", "n_features", "counts_per_feature"))) |>
-    dplyr::distinct(cluster, .keep_all = TRUE)
+    dplyr::summarise(
+      dplyr::across(dplyr::everything(), \(x) max(x, na.rm = TRUE)),
+      .by = cluster
+    )
 
   list(
     metadata = row_metadata |> dplyr::mutate(GWAS_ID = factor(GWAS_ID, levels = row_levels)) |> dplyr::arrange(GWAS_ID),
@@ -1067,6 +1075,9 @@ get_plot_group_breaks <- function(ordered_values) {
 #' @param fill_col Numeric column mapped to tile fill.
 #' @param fill_label Legend label for the fill scale.
 #' @param fill_midpoint Midpoint for the diverging fill scale.
+#' @param fill_scale Color-scale type. Use `sequential` for nonnegative scores
+#'   and `diverging` for signed deviations.
+#' @param fill_limits Optional numeric fill-scale limits.
 #' @param title Optional plot title.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
@@ -1078,9 +1089,12 @@ plot_GWAS_feature_heatmap <- function(
   fill_col,
   fill_label,
   fill_midpoint = 0,
+  fill_scale = c("diverging", "sequential"),
+  fill_limits = NULL,
   title = NULL,
   support_label_col = NULL
 ) {
+  fill_scale <- match.arg(fill_scale)
   row_categories <- score_plot_data |>
     dplyr::distinct(GWAS_ID, Category) |>
     dplyr::mutate(GWAS_ID = as.character(GWAS_ID))
@@ -1092,7 +1106,11 @@ plot_GWAS_feature_heatmap <- function(
 
   heatmap <- score_plot_data |>
     ggplot2::ggplot(ggplot2::aes(x = .data[[feature_col]], y = GWAS_ID, fill = .data[[fill_col]])) +
-    ggplot2::geom_tile(color = "grey90", linewidth = 0.15)
+    ggplot2::geom_tile(color = "white", linewidth = 0.3) +
+    ggplot2::geom_hline(yintercept = row_breaks, color = "grey30", linewidth = 0.35) +
+    ggplot2::geom_vline(xintercept = feature_breaks, color = "grey30", linewidth = 0.35) +
+    ggplot2::scale_x_discrete(drop = FALSE, expand = c(0, 0)) +
+    ggplot2::scale_y_discrete(drop = FALSE, expand = c(0, 0))
 
   if (!is.null(support_label_col) && support_label_col %in% colnames(score_plot_data)) {
     heatmap <- heatmap +
@@ -1104,28 +1122,53 @@ plot_GWAS_feature_heatmap <- function(
       )
   }
 
-  heatmap +
-    ggplot2::geom_hline(yintercept = row_breaks, color = "grey25", linewidth = 0.35) +
-    ggplot2::geom_vline(xintercept = feature_breaks, color = "grey25", linewidth = 0.35) +
-    ggplot2::scale_y_discrete(drop = FALSE, expand = c(0, 0)) +
-    ggplot2::scale_fill_gradient2(
+  fill_guide <- ggplot2::guide_colorbar(
+    title.position = "top",
+    barwidth = grid::unit(32, "mm"),
+    barheight = grid::unit(3, "mm")
+  )
+  if (fill_scale == "sequential") {
+    heatmap <- heatmap +
+      ggplot2::scale_fill_gradient(
+        low = "#F7FBFF",
+        high = "#08519C",
+        limits = fill_limits,
+        name = fill_label,
+        guide = fill_guide
+      )
+  } else {
+    heatmap <- heatmap +
+      ggplot2::scale_fill_gradient2(
       low = "#3B4CC0",
       mid = "white",
       high = "#B40426",
       midpoint = fill_midpoint,
+      limits = fill_limits,
       name = fill_label,
-      guide = ggplot2::guide_colorbar(title.position = "top")
-    ) +
+      guide = fill_guide
+    )
+  }
+
+  compact_x_axis <- dplyr::n_distinct(score_plot_data[[feature_col]]) <= 8
+  heatmap +
     ggplot2::labs(x = NULL, y = NULL, title = title) +
     ggplot2::theme_minimal(base_size = 9) +
     ggplot2::theme(
-      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, vjust = 1),
+      axis.text.x = ggplot2::element_text(
+        angle = if (compact_x_axis) 0 else 45,
+        hjust = if (compact_x_axis) 0.5 else 1,
+        vjust = if (compact_x_axis) 0.5 else 1,
+        color = "grey20"
+      ),
       axis.text.y = ggplot2::element_blank(),
       axis.ticks.y = ggplot2::element_blank(),
       panel.grid = ggplot2::element_blank(),
       legend.position = "bottom",
       legend.justification = "right",
       legend.box.just = "right",
+      legend.text = ggplot2::element_text(size = 7),
+      legend.title = ggplot2::element_text(size = 8),
+      plot.margin = ggplot2::margin(t = 0, r = 5, b = 0, l = 2),
       strip.text.x = ggplot2::element_text(size = 8, margin = ggplot2::margin(b = 2))
     )
 }
@@ -1138,14 +1181,22 @@ plot_GWAS_feature_support_tracks <- function(feature_metadata, feature_col = "cl
   feature_metadata |>
     dplyr::arrange(.data[[feature_col]]) |>
     ggplot2::ggplot(ggplot2::aes(x = .data[[feature_col]], y = n_cells)) +
-    ggplot2::geom_col(fill = "grey45", width = 0.8, na.rm = TRUE) +
+    ggplot2::geom_col(fill = "#6B7280", color = "white", linewidth = 0.3, width = 1, na.rm = TRUE) +
     ggplot2::scale_x_discrete(drop = FALSE, expand = c(0, 0)) +
     ggplot2::scale_y_log10(
       position = "right",
+      breaks = scales::breaks_log(n = 3),
       labels = scales::label_number(scale_cut = scales::cut_short_scale()),
       expand = ggplot2::expansion(mult = c(0, 0.08))
     ) +
-    ggplot2::annotation_logticks(sides = "r") +
+    ggplot2::annotation_logticks(
+      sides = "r",
+      short = grid::unit(0.5, "mm"),
+      mid = grid::unit(1, "mm"),
+      long = grid::unit(1.5, "mm"),
+      color = "grey45",
+      linewidth = 0.2
+    ) +
     ggplot2::coord_cartesian(clip = "off") +
     ggplot2::labs(x = NULL, y = "Nuclei") +
     ggplot2::theme_minimal(base_size = 8) +
@@ -1155,9 +1206,10 @@ plot_GWAS_feature_support_tracks <- function(feature_metadata, feature_col = "cl
       axis.title.y = ggplot2::element_blank(),
       axis.title.y.right = ggplot2::element_text(angle = 90),
       panel.grid.major.x = ggplot2::element_blank(),
+      panel.grid.major.y = ggplot2::element_line(color = "grey90", linewidth = 0.25),
       panel.grid.minor = ggplot2::element_blank(),
       legend.position = "none",
-      plot.margin = ggplot2::margin(t = 10, r = 8, b = 0, l = 2)
+      plot.margin = ggplot2::margin(t = 2, r = 5, b = 0, l = 2)
     )
 }
 
@@ -1197,9 +1249,14 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
     ggplot2::geom_tile() +
     ggplot2::geom_hline(yintercept = row_breaks, color = "grey25", linewidth = 0.35) +
     ggplot2::scale_x_continuous(expand = c(0, 0)) +
-    ggplot2::scale_y_discrete(drop = FALSE, expand = c(0, 0)) +
+    ggplot2::scale_y_discrete(
+      labels = \(x) stringr::str_replace_all(x, "_", " "),
+      drop = FALSE,
+      expand = c(0, 0)
+    ) +
     ggplot2::scale_fill_manual(
       values = make_named_heatmap_palette(ordered_metadata$Category, "Set3"),
+      labels = \(x) stringr::str_replace_all(x, "_", " "),
       name = "Category",
       guide = ggplot2::guide_legend(ncol = 1, title.position = "top")
     ) +
@@ -1244,7 +1301,7 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
     ggplot2::labs(x = NULL, y = NULL) +
     gwas_heatmap_metadata_theme(show_x = TRUE)
 
-  patchwork::wrap_plots(category_plot, method_plot, bar_plot, ancestry_plot, nrow = 1, widths = c(0.55, 0.55, 1.4, 1.45), guides = "collect") &
+  patchwork::wrap_plots(category_plot, method_plot, bar_plot, ancestry_plot, nrow = 1, widths = c(0.48, 0.48, 1.25, 1.15), guides = "collect") &
     ggplot2::theme(legend.justification = "left", legend.box.just = "left")
 }
 
@@ -1262,6 +1319,8 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
 #'   for min-max scaled scores.
 #' @param fill_col Numeric column mapped to heatmap fill.
 #' @param fill_label Legend label for the heatmap fill.
+#' @param fill_scale Color-scale type passed to `plot_GWAS_feature_heatmap()`.
+#' @param fill_limits Optional numeric fill-scale limits.
 #' @param support_label_col Optional text column drawn on top of heatmap tiles.
 #' @param show_feature_support Logical; when `TRUE`, draw a nuclei-count support
 #'   annotation if `n_cells` is available.
@@ -1275,12 +1334,15 @@ plot_GWAS_by_cluster_heatmap <- function(
   scaled = FALSE,
   fill_col = "median_score",
   fill_label = "Score",
+  fill_scale = c("diverging", "sequential"),
+  fill_limits = NULL,
   support_label_col = NULL,
   show_feature_support = TRUE
 ) {
   if (nrow(data_per_GWAS_and_cluster_df) == 0) {
     return(structure(list(), class = c("empty_plot_list", "list")))
   }
+  fill_scale <- match.arg(fill_scale)
 
   ordered_data <- get_ordered_GWAS_score_plot_data(
     data_per_GWAS_and_cluster_df,
@@ -1295,16 +1357,18 @@ plot_GWAS_by_cluster_heatmap <- function(
     fill_col = fill_col,
     fill_label = fill_label,
     fill_midpoint = if (scaled) 0.5 else 0,
+    fill_scale = fill_scale,
+    fill_limits = fill_limits,
     support_label_col = support_label_col
   )
 
   if (isTRUE(show_feature_support) && "n_cells" %in% colnames(ordered_data$clusters) && any(!is.na(ordered_data$clusters$n_cells))) {
-    left_panel <- patchwork::plot_spacer() / GWAS_metadata_tracks_plot + patchwork::plot_layout(heights = c(0.18, 1))
-    right_panel <- plot_GWAS_feature_support_tracks(ordered_data$clusters) / heatmap + patchwork::plot_layout(heights = c(0.18, 1))
-    return(patchwork::wrap_plots(left_panel, right_panel, nrow = 1, widths = c(5.8, 9)))
+    left_panel <- patchwork::plot_spacer() / GWAS_metadata_tracks_plot + patchwork::plot_layout(heights = c(0.14, 1))
+    right_panel <- plot_GWAS_feature_support_tracks(ordered_data$clusters) / heatmap + patchwork::plot_layout(heights = c(0.14, 1))
+    return(patchwork::wrap_plots(left_panel, right_panel, nrow = 1, widths = c(4.8, 9)))
   }
 
-  patchwork::wrap_plots(GWAS_metadata_tracks_plot, heatmap, nrow = 1, widths = c(5.8, 9))
+  patchwork::wrap_plots(GWAS_metadata_tracks_plot, heatmap, nrow = 1, widths = c(4.8, 9))
 }
 
 #' Plot grouped GWAS by cluster heatmaps
@@ -1321,6 +1385,9 @@ plot_GWAS_by_cluster_heatmap <- function(
 #' @param compartments_patterns Optional named regex patterns used to group
 #'   clusters into compartments.
 #' @param scaled Logical; when `TRUE`, use scaled-score color midpoint behavior.
+#' @param fill_label Legend label for the heatmap fill.
+#' @param fill_scale Color-scale type passed to `plot_GWAS_by_cluster_heatmap()`.
+#' @param fill_limits Optional numeric fill-scale limits.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
@@ -1330,11 +1397,15 @@ plot_grouped_GWAS_by_cluster_heatmaps <- function(
   GWAS_metadata_tracks_plot,
   name_suffix = NULL,
   compartments_patterns = NULL,
-  scaled = FALSE
+  scaled = FALSE,
+  fill_label = "Score",
+  fill_scale = c("diverging", "sequential"),
+  fill_limits = NULL
 ) {
   if (nrow(data_per_GWAS_and_cluster_df) == 0) {
     return(structure(list(), class = c("empty_plot_list", "list")))
   }
+  fill_scale <- match.arg(fill_scale)
 
   grouped_heatmap_data <- dplyr::group_by(data_per_GWAS_and_cluster_df, .data[[split_col]])
   plot_names <- dplyr::group_keys(grouped_heatmap_data)[[split_col]]
@@ -1350,7 +1421,10 @@ plot_grouped_GWAS_by_cluster_heatmaps <- function(
         group_data |> dplyr::select(-dplyr::all_of(split_col)),
         GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
         compartments_patterns = compartments_patterns,
-        scaled = scaled
+        scaled = scaled,
+        fill_label = fill_label,
+        fill_scale = fill_scale,
+        fill_limits = fill_limits
       )
     })
 }

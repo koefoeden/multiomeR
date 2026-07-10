@@ -18,6 +18,17 @@ rlang::list2(
     command = dplyr::bind_rows(GWAS_peak_variant_weight_records)
   ),
   targets::tar_target(
+    name = GWAS_locus_to_gene_tibble,
+    description = "Rank Open Targets L2G gene predictions for all enabled GWAS credible-set loci",
+    command = get_open_targets_GWAS_locus_to_gene_tibble(
+      GWAS_locus_tibble = GWAS_peak_variant_weight_tibble |>
+        dplyr::distinct(GWAS_ID, studyId, studyLocusId, open_targets_release),
+      open_targets_gwas_credible_sets_evidence_dataset_path = open_targets_gwas_credible_sets_evidence_dataset_path,
+      open_targets_target_dataset_path = open_targets_target_dataset_path
+    ),
+    resources = get_tar_resources(RAM_GB_req = 16)
+  ),
+  targets::tar_target(
     name = chromVAR_peak_contribution_tibble.cell_type_pseudobulk,
     description = "Decompose each cell-type GWAS chromVAR heatmap value into exact peak contributions [part_of_graph:genetic_enrichment_cell_type_contributions]",
     command = get_GWAS_chromVAR_peak_contribution_tibble(
@@ -50,7 +61,8 @@ rlang::list2(
     name = chromVAR_locus_contribution_tibble.cell_type_pseudobulk,
     description = "Sum exact credible-set variant contributions into cell-type-by-GWAS locus contribution [part_of_graph:genetic_enrichment_cell_type_contributions]",
     command = get_GWAS_chromVAR_locus_contribution_tibble(
-      chromVAR_variant_contribution_tibble.cell_type_pseudobulk
+      variant_contribution_tibble = chromVAR_variant_contribution_tibble.cell_type_pseudobulk,
+      locus_to_gene_tibble = GWAS_locus_to_gene_tibble
     )
   ),
   targets::tar_target(
@@ -67,16 +79,17 @@ rlang::list2(
     description = "Save one cell-type-by-locus contribution heatmap per enabled GWAS. [checkpoint:genetic_enrichment]",
     command = plot_GWAS_locus_contribution_heatmaps(
       locus_contribution_tibble = chromVAR_locus_contribution_tibble.cell_type_pseudobulk,
-      chromVAR_deviation_tibble = chromVAR_deviation_tibble.cell_type_pseudobulk
+      chromVAR_deviation_tibble = chromVAR_deviation_tibble.cell_type_pseudobulk,
+      n_top_loci = 15L
     ) |>
-      save_plots_structured(width = 14, height = 8)
+      save_plots_structured(width = 16, height = 8)
   ),
   tarchetypes::tar_file(
     name = chromVAR_locus_contribution_waterfalls.cell_type_pseudobulk,
     description = "Save locus-contribution waterfalls for every enabled GWAS and cell type. [checkpoint:genetic_enrichment]",
     command = chromVAR_locus_contribution_tibble.cell_type_pseudobulk |>
-      plot_GWAS_locus_contribution_waterfalls() |>
-      save_plots_structured(width = 12, height = 7)
+      plot_GWAS_locus_contribution_waterfalls(n_top_loci = 15L) |>
+      save_plots_structured(width = 15, height = 8)
   ),
   tarchetypes::tar_file(
     name = chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk,

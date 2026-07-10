@@ -67,8 +67,8 @@ rlang::list2(
       save_plots_structured(
         plot,
         filetype = "png",
-        width = 20,
-        height = max(7, 0.24 * dplyr::n_distinct(chromVAR_deviation_tibble.cell_type_pseudobulk$GWAS_ID) + 3)
+        width = 17,
+        height = max(5.5, 0.3 * dplyr::n_distinct(chromVAR_deviation_tibble.cell_type_pseudobulk$GWAS_ID) + 3.5)
       )
     }
   ),
@@ -87,8 +87,8 @@ rlang::list2(
       save_plots_structured(
         plot,
         filetype = "png",
-        width = 20,
-        height = max(7, 0.24 * dplyr::n_distinct(chromVAR_deviation_tibble.cell_type_pseudobulk$GWAS_ID) + 3)
+        width = 17,
+        height = max(5.5, 0.3 * dplyr::n_distinct(chromVAR_deviation_tibble.cell_type_pseudobulk$GWAS_ID) + 3.5)
       )
     }
   )

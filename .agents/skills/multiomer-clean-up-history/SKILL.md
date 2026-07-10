@@ -12,7 +12,8 @@ Use this skill when the goal is to improve branch history, not to change the fin
 Before rewriting:
 - Ensure the worktree is clean with `git status --short --branch`.
 - If there are unrelated tracked changes, stop and ask the user how to proceed.
-- Ignore untracked build artifacts such as `slurm-*` or generated vignette figures unless the branch intentionally adds them.
+- Identify untracked artifacts separately; do not let them influence commit
+  grouping unless the branch intentionally adds them.
 
 ## Inspect The Branch
 
@@ -28,7 +29,7 @@ git diff --stat <base>..HEAD
 Use that survey to identify:
 - coherent topics that should become separate commits
 - files touched by multiple topics
-- generated outputs that should be dropped or isolated
+- derived outputs that should be dropped or regenerated
 - whether the branch is simple enough for `git rebase -i`
 
 ## Choose A Rewrite Strategy
@@ -44,11 +45,13 @@ Prefer rebuild-from-base when:
 - a few files span several topics
 - generated docs or outputs were committed and later removed
 
-For the multiomeR repository, rebuild-from-base is often the safer option.
+Choose from the branch evidence; do not rebuild a branch that only needs a few
+fixups or rewords.
 
 ## Rebuild From Base
 
-Always create a safety ref first:
+Only after the user has requested a rewrite, the worktree is clean, and the
+rebuild strategy is selected, create a safety ref before resetting:
 
 ```bash
 git branch backup/<branch>-pre-rewrite-<yyyymmdd> HEAD
@@ -67,7 +70,8 @@ EOF
 Guidelines:
 - Group by user-facing change or durable topic, not by original commit order.
 - Keep workflow/skill/docs metadata separate from pipeline behavior changes.
-- Keep generated docs separate from docs source changes; usually drop generated docs entirely.
+- Keep `website/multiomeR-manual-llm.md` with the documentation source changes
+  that regenerate it. Do not commit ignored `docs/` render output.
 - Keep deployment helpers separate from the content they deploy.
 - Keep plot-only targets as `contained_target_breaking` commits when possible.
 
@@ -99,8 +103,8 @@ Do not guess lazily. If the commit changes pipeline behavior, inspect the releva
 Helpful checks:
 
 ```bash
-rg -n "tar_target\\(|tarchetypes::tar_" pipelines
-rg -n "<target-or-helper-name>" R pipelines
+rg -n "tar_target\\(|tarchetypes::tar_" _targets.R extra_targets module_*
+rg -n "<target-or-helper-name>" _targets.R R extra_targets module_*
 ```
 
 ## Verify The Rewrite
@@ -131,7 +135,7 @@ git push --force-with-lease origin <branch>
 
 ## Heuristics
 
-- Aim for 3-8 commits, not dozens of tiny fixups.
+- Prefer the smallest commit stack that still separates durable topics.
 - Separate pipeline code, docs cleanup, deployment tooling, and skill/workflow docs unless they are inseparable.
 - Prefer a slightly larger coherent commit over a misleadingly narrow one.
 - Never delete the backup branch until the user is satisfied with the rewritten history.

@@ -1,11 +1,12 @@
 ---
 name: multiomer-run-r-code
-description: Public-reusable guidance for executing R code in multiomeR through the pixi-managed R environment. Use whenever you need to run R code, test a snippet, or execute an R script for multiomeR in a public or local checkout.
+description: Execute R code in multiomeR through the Pixi-managed environment. Use whenever a task requires evaluating an R snippet or script. This skill does not itself authorize running targets; use multiomer-run-pipeline when target execution is requested.
 ---
 
 # multiomeR Run R Code
 
-Run R through pixi in the multiomeR repository. Do not use bare `R`, bare `Rscript`, or `renv`.
+Run R through Pixi from the repository root. Do not use bare `R`, bare
+`Rscript`, or `renv`.
 
 ## Default Pattern
 
@@ -28,4 +29,6 @@ cat("parse ok\n")
 EOF
 ```
 
-The active repo is a root `targets` project. Do not set `TAR_PROJECT` or call `activate_*()` for current multiomeR work. Call `load_CFG("<dataset>")` explicitly inside the script only when you need dataset-level config values in the global environment.
+The repository is one root `targets` project. Do not set `TAR_PROJECT` or call
+legacy `activate_*()` helpers. Call `load_CFG("<dataset>")` only when an
+interactive probe explicitly needs resolved dataset-level configuration.

@@ -1,13 +1,59 @@
 ---
 name: multiomer-run-pipeline
-description: Run the active multiomeR root targets workflow with the correct pixi R environment. Use when the user asks to run, execute, re-run, or check multiomeR targets, datasets, target families, or target locks.
+description: Inspect or run the active multiomeR root targets workflow through Pixi. Use for explicit requests to run or rerun targets and for read-only target status, progress, outdatedness, or process-lock checks. Do not start target execution for a request that only asks for inspection.
 ---
 
 # multiomeR Run Pipeline
 
-Read `.agents/wiki/articles/root-targets-workflow.md` first if you need current layout details. Run R through pixi; see `multiomer-run-r-code`.
+The active project is `_targets.R`; `_targets.yaml` currently resolves the store
+to `outputs`. Differential analyses and genetic enrichment are aggregation-level
+modules in this same graph. Run R through Pixi; see `multiomer-run-r-code`.
 
-## Run Patterns
+## Read-only inspection
+
+Use the live configuration instead of a hardcoded store. `tar_pid()` can retain
+the PID of a completed run, so verify it with `ps` before reporting that a run is
+active.
+
+```bash
+pixi run Rscript - <<'EOF'
+cat("store:", targets::tar_config_get("store"), "\n")
+cat("recorded pid:", targets::tar_pid(), "\n")
+print(targets::tar_progress_summary())
+EOF
+```
+
+For a target family, keep outdatedness checks narrow:
+
+```bash
+pixi run Rscript - <<'EOF'
+targets::tar_outdated(
+  names = tidyselect::matches("<target-or-dataset-pattern>"),
+  callr_function = NULL
+)
+EOF
+```
+
+## Run patterns
+
+Preview a new or regex-based selection before running it. Fail if it matches no
+defined targets.
+
+```bash
+pixi run Rscript - <<'EOF'
+selection <- targets::tar_manifest(
+  names = tidyselect::matches("<target-or-dataset-pattern>"),
+  fields = c(name, description),
+  callr_function = NULL
+)
+stopifnot(nrow(selection) > 0L)
+print(selection)
+
+targets::tar_make(
+  names = tidyselect::matches("<target-or-dataset-pattern>")
+)
+EOF
+```
 
 Run all targets only when explicitly requested:
 
@@ -17,29 +63,12 @@ targets::tar_make()
 EOF
 ```
 
-Run specific datasets:
-
-```bash
-pixi run Rscript - <<'EOF'
-targets::tar_make(names = matches("muscle_test|blood_human"))
-EOF
-```
-
-Run specific target families or target/dataset combinations:
-
-```bash
-pixi run Rscript - <<'EOF'
-targets::tar_make(names = matches("metadata_w_cell_types_tibble\\.ATAC.*muscle_test"))
-EOF
-```
-
-Prefer narrow runs after edits. For dynamic or mapped targets, match the defined target stem plus dataset suffix rather than guessing branch hashes.
+For mapped targets, select the defined target stem and configured suffix rather
+than a dynamic branch hash. Use names from `tar_manifest()` or `tar_meta()` and
+prefer checkpoint description tags when they express the requested endpoint.
 
 ## Practical Notes
 
-- Call `load_CFG("<dataset>")` inside the script only when you need dataset-level config values outside target commands.
-- Use current target names from the code or `tar_meta()`, not old Seurat-era names.
-- Run optional `differential_analyses` and `genetic_enrichment` work through the root workflow; they are aggregation-level modules selected by the `modules` field in `cfg_aggregations.yaml`.
-- The active store remains `pipelines/processing_and_aggregation/outputs` during the root migration.
-- Keep commands visible to the user for long or heavy runs.
-- If targets error, switch to `multiomer-fix-errors` and inspect with `list_distinct_errored_targets()` / `inspect_target_workspace()`.
+- Use `load_CFG("<dataset>")` only for interactive configuration probes outside
+  target commands.
+- If targets error, switch to `multiomer-fix-errors`.

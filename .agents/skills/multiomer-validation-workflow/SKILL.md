@@ -5,7 +5,8 @@ description: Efficient validation workflow for multiomeR R helper and targets ed
 
 # multiomeR Validation Workflow
 
-Run R through pixi only. Use this as the default validation path after code edits; add target execution only when the change needs runtime proof.
+Run R through Pixi. Use this default path after code edits and add target
+execution only when static graph construction cannot prove the behavior.
 
 ## Fast Default
 
@@ -30,7 +31,7 @@ cat("manifest ok\n")
 EOF
 ```
 
-Always finish substantive edits with:
+Finish code edits with:
 
 ```bash
 git diff --check
@@ -38,14 +39,28 @@ git diff --check
 
 ## Target Execution
 
-Run targets only when parsing and graph construction cannot prove the behavior. Keep the run narrow:
+Run targets only when the changed behavior needs runtime proof. Preview the
+selection and fail on an empty match:
 
-```r
-tar_make(names = matches("<target_name>.*muscle_test"))
+```bash
+pixi run Rscript - <<'EOF'
+selection <- targets::tar_manifest(
+  names = tidyselect::matches("<target-and-scope-pattern>"),
+  fields = c(name, description),
+  callr_function = NULL
+)
+stopifnot(nrow(selection) > 0L)
+print(selection)
+targets::tar_make(
+  names = tidyselect::matches("<target-and-scope-pattern>")
+)
+EOF
 ```
 
 If the target is not dataset-suffixed, run the smallest target that exercises the changed code. Avoid setup/download targets unless the edit directly changed download/setup behavior.
 
 ## Known Waste
 
-Do not use `tar_validate()` as a routine check while this project has `settings$error = "trim"` and the installed `targets` version rejects it. It fails before useful validation. Prefer manifest construction plus direct in-memory target inspection.
+Do not use `tar_validate()` while the project sets `error = "trim"`: the
+installed `targets` version rejects that option before useful validation.
+Prefer manifest construction and targeted runtime checks.

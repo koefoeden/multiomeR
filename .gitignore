@@ -50,6 +50,5 @@ node_modules/
 /.quarto/
 **/*.quarto_ipynb
 .pixi/
-AGENTS.md
 outputs
 manuscript_figures/outputs/

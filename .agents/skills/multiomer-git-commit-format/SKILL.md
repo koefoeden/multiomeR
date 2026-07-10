@@ -7,7 +7,25 @@ description: Create git commits for multiomeR with the correct message format, i
 
 ## Workflow
 
-Use standard workflow to commit changes. However, be sure to follow the format below, by passing the message via a HEREDOC to `git commit -m` to preserve newlines:
+Inspect the staged diff and write the message through stdin so line breaks are
+preserved exactly:
+
+```bash
+git commit -F - <<'EOF'
+<short imperative summary>
+
+[optional body: what changed and why]
+
+<mandatory impact keyword line(s)>
+EOF
+```
+
+Use `multiomer-impact-keyword-lines` to classify the commit. Every commit gets
+at least one impact line; use `non_target_breaking` for changes that invalidate
+no existing target.
+
+Message shape:
+
 ```
 <short imperative summary>
 
@@ -25,22 +43,20 @@ add continuous SNN UMAP plot target
 non_target_breaking
 ```
 
-**Bug fix — changes output of one plot target:**
+**Bug fix — changes one terminal plot target:**
 ```
-fix SCAVENGE UMAP column filter
+fix ATAC UMAP column filter
 
 str_starts("score_") returns logical; replace with str_subset("^score_")
 
-contained_target_breaking: SCAVENGE_UMAP_plots
+contained_target_breaking: categorical.UMAPs.ATAC
 ```
 
 **Refactor — changes an intermediate target whose output flows downstream:**
 ```
-replace SingleFeatureMatrix with BPCells peak matrix generation
+revise accepted ATAC cell metadata
 
-Switches per-cluster ATAC peak matrix computation to the BPCells
-backend; coerces to dgCMatrix at the ChromatinAssay boundary so all
-downstream Signac code is unchanged.
+Change the accepted barcode set used by downstream ATAC processing.
 
-cascading_target_breaking: ATAC_per_cluster_peak_BPCells_matrix_dir
+cascading_target_breaking: metadata_w_cell_types_tibble.ATAC
 ```

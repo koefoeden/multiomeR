@@ -235,22 +235,23 @@ figure_2_GWAS_heatmap_panel <- function(plot) {
 output_dir <- "manuscript_figures/outputs/combined_targets_output_figures_7x"
 
 panel_specs <- tibble::tribble(
-  ~figure_number , ~tag , ~plot_call                                                                                                          , ~pick_regex                  , ~title        , ~caption                                                                                          , ~plot_modifier                                              ,
+  ~figure_number , ~tag , ~plot_call                                                                                                                                                                       , ~pick_regex                  , ~title        , ~caption , ~plot_modifier                                                   ,
   # "S1"           , "A"  , quote(targets::tar_read(categorical.UMAPs.WNN.mixed_human_7x))                                                      , "WNN_harmony_SNN_cluster_cell_type" , NA_character_ , "UMAP embedding derived from native RNA+ATAC weighted-nearest-neighbor graph. Nuclei are colored by cluster-level cell type labels." , NA                                          ,
   # "S1"           , "B"  , quote(targets::tar_read(markers_dot_plot.GEX.mixed_human_7x))                                                       , NA_character_                       , NA_character_ , "Expression of canonical marker genes across cell types."                                                                            , quote(plot + ggplot2::labs(y = "celltype")) ,
   # "S1"           , "C"  , quote(targets::tar_read(coverage_tracks_plots.ATAC.mixed_human_7x))                                                 , "MS4A1"                             , NA_character_ , "Chromatin accessibility track at the MS4A1 locus."                                                                                  , NA                                          ,
-  "2"            , "A"  , quote(figure_2_UMAP_panel())                                                                                        , NA_character_                , NA_character_ , "RNA, ATAC, and WNN UMAPs colored by GEX-, ATAC-, and multimodal cluster-level cell type labels." , NA                                                          ,
-  "2"            , "B"  , quote(targets::tar_read(TF_activity_heatmap.ATAC.mixed_human_7x))                                                   , NA_character_                , NA_character_ , "chromVAR transcription-factor activity scores for configured marker TFs."                        , quote(figure_2_TF_activity_panel(plot))                     ,
-  "2"            , "C"  , quote(targets::tar_read(peak_gene_correlation_top_link_ATAC_tracks_plots.peak_gene_correlation.WNN.mixed_human_7x)) , "Brain_rank001_"             , NA_character_ , "Example top brain peak-gene link with ATAC accessibility and loop track."                        , quote(figure_2_peak_gene_link_panel(plot, group = "Brain")) ,
-  "2"            , "D"  , quote(targets::tar_read(TRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.mixed_human_7x))       , "MonocyteCount_Vuckovic2020" , NA_character_ , "SCAVENGE trait relevance scores for monocyte count projected onto the WNN UMAP."                 , quote(figure_2_single_cell_GWAS_panel(plot))                ,
-  "2"            , "E"  , quote(targets::tar_read(chromVAR_deviation_heatmap.cell_type_pseudobulk.genetic_enrichment.mixed_human_7x))         , NA_character_                , NA_character_ , "Cell-type GWAS chromVAR relative deviations with z-score support."                               , quote(figure_2_GWAS_heatmap_panel(plot))                    ,
-  "3"            , NA, quote(readRDS(""))
+  "2"            , "A"  , quote(figure_2_UMAP_panel())                                                                                                                                                     , NA_character_                , NA_character_ , NA       , NA                                                               ,
+  "2"            , "B"  , quote(targets::tar_read(TF_activity_heatmap.ATAC.mixed_human_7x))                                                                                                                , NA_character_                , NA_character_ , NA       , quote(figure_2_TF_activity_panel(plot))                          ,
+  "2"            , "C"  , quote(targets::tar_read(peak_gene_correlation_top_link_ATAC_tracks_plots.peak_gene_correlation.WNN.mixed_human_7x))                                                              , "Brain_rank001_"             , NA_character_ , NA       , quote(figure_2_peak_gene_link_panel(plot, group = "Brain"))      ,
+  "2"            , "D"  , quote(targets::tar_read(TRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.mixed_human_7x))                                                                    , "MonocyteCount_Vuckovic2020" , NA_character_ , NA       , quote(figure_2_single_cell_GWAS_panel(plot))                     ,
+  "2"            , "E"  , quote(targets::tar_read(chromVAR_deviation_heatmap.cell_type_pseudobulk.genetic_enrichment.mixed_human_7x))                                                                      , NA_character_                , NA_character_ , NA       , quote(figure_2_GWAS_heatmap_panel(plot))                         ,
+  "3"            , "A"  , quote(readRDS("/maps/projects/cbmr_shared/people/tqb695/non-GDPR/multiome-pipeline/pipelines/processing_and_aggregation/outputs/benchmark/multimodal_seurat_walltime_plot.rds")) , NA_character_                , NA_character_ , NA       , NA                                                               ,
 )
 
 figure_specs <- tibble::tribble(
-  ~figure_number , ~height , ~layout                      , ~subtitle     ,
+  ~figure_number , ~height , ~layout                      , ~caption      ,
   # "S1"           ,       9 , quote((A / B / C))           , "Visualization of the observed cell types and expected markers in the PBMC dataset." ,
   "2"            , 7.25    , quote(A / (B | C) / (D | E)) , NA_character_ ,
+  "3"            , 2.5     , quote(A)                     , NA_character_ ,
 )
 
 expected_pngs <- file.path(output_dir, paste0(figure_specs$figure_number, ".png"))

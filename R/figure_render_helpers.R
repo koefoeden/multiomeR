@@ -77,13 +77,21 @@ prepare_plot_panels <- function(
   show_tags = TRUE,
   envir = parent.frame()
 ) {
-  fig_caption <- if (show_tags) {
+  caption_is_present <- !is.na(panel_specs$caption) & nzchar(panel_specs$caption)
+  fig_caption <- if (!any(caption_is_present)) {
+    NULL
+  } else if (show_tags) {
     paste(
-      paste0("<b>", panel_specs$tag, ")</b> ", panel_specs$caption),
+      paste0(
+        "<b>",
+        panel_specs$tag[caption_is_present],
+        ")</b> ",
+        panel_specs$caption[caption_is_present]
+      ),
       collapse = " "
     )
   } else {
-    panel_specs$caption[[1]]
+    panel_specs$caption[[which(caption_is_present)[[1]]]]
   }
   if (!"plot_modifier" %in% names(panel_specs)) {
     panel_specs$plot_modifier <- rep(list(NA), nrow(panel_specs))
@@ -151,7 +159,7 @@ prepare_plot_panels <- function(
 #'
 #' @param panel_specs Panel specification tibble.
 #' @param figure_specs Figure specification tibble with `figure_number`,
-#'   `height`, `layout`, and `subtitle`.
+#'   `height`, `layout`, and `caption`.
 #' @param output_dir Output directory for PNG files.
 #' @param figure_theme Theme added to each panel.
 #' @param figure_label Figure caption label.
@@ -199,8 +207,8 @@ render_figures <- function(
     )
 
     layout_env <- list2env(as.list(prepared_panels$plots), parent = envir)
-    subtitle <- figure_spec$subtitle[[1]]
-    caption_text <- c(subtitle, prepared_panels$caption)
+    figure_caption <- figure_spec$caption[[1]]
+    caption_text <- c(figure_caption, prepared_panels$caption)
     caption_text <- caption_text[!is.na(caption_text) & nzchar(caption_text)]
     fig_caption <- if (length(caption_text)) {
       paste0(

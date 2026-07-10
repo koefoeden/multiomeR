@@ -31,6 +31,18 @@ The runtime paths are marked `skip-worktree` in the experiment worktree when
 they are tracked by Git. This keeps local base wiring such as
 `crew_controllers.R` faithful without making the experiment branch dirty.
 
+## Read-Only Introspection Worktrees
+
+The Codex `read_only_introspection` environment configures a worktree for
+inspection without copying the targets store. It links `example_data` and
+`outputs/` to the newest daily read-only filesystem snapshot, copies the base
+`crew_controllers.R` symlink, and links the base `.pixi` environment.
+
+The snapshot supports normal reads such as `targets::tar_meta()` and
+`targets::tar_read()`, but rejects pipeline writes. Daily snapshots can lag the
+live store and expire after 20 days; rerun `dev/worktree_codex_read_only` to
+refresh a long-lived worktree.
+
 ## Create A Worktree
 
 From the base checkout:

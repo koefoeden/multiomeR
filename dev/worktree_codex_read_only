@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+die() {
+  echo "error: $*" >&2
+  exit 1
+}
+
+latest_outputs_snapshot() {
+  local snapshot latest=
+
+  for snapshot in "$base/outputs/.snapshot"/60-Research-daily-20D-*; do
+    [ -d "$snapshot" ] || continue
+    latest=$snapshot
+  done
+
+  [ -n "$latest" ] || die "No daily outputs snapshot found under $base/outputs/.snapshot"
+  printf '%s\n' "$latest"
+}
+
+skip_tracked_path() {
+  local rel=$1
+  git -C "$worktree" ls-files -z -- "$rel" |
+    xargs -0 -r git -C "$worktree" update-index --skip-worktree --
+}
+
+exclude_path() {
+  local rel=$1
+  local exclude_file
+  exclude_file=$(git -C "$worktree" rev-parse --git-path info/exclude)
+  grep -Fxq "$rel" "$exclude_file" 2>/dev/null || printf '%s\n' "$rel" >>"$exclude_file"
+}
+
+copy_base_runtime_path() {
+  local rel=$1
+  [ -e "$base/$rel" ] || [ -L "$base/$rel" ] || return 0
+
+  rm -rf "${worktree:?}/$rel"
+  mkdir -p "$(dirname "$worktree/$rel")"
+  cp -a "$base/$rel" "$worktree/$rel"
+  skip_tracked_path "$rel"
+  exclude_path "$rel"
+}
+
+link_snapshot_runtime_path() {
+  local rel=$1
+  local target=$2
+
+  [ -e "$target" ] || [ -L "$target" ] || die "Snapshot runtime path not found: $target"
+  rm -rf "${worktree:?}/$rel"
+  ln -s "$target" "$worktree/$rel"
+  skip_tracked_path "$rel"
+  exclude_path "$rel"
+}
+
+link_runtime_path() {
+  local rel=$1
+  local target=$2
+  local path=$worktree/$rel
+
+  if [ -L "$path" ]; then
+    rm "$path"
+  elif [ -e "$path" ]; then
+    die "Refusing to replace non-symlink path: $path"
+  fi
+  ln -s "$target" "$path"
+}
+
+worktree=${CODEX_WORKTREE_PATH:-$(git rev-parse --show-toplevel)}
+worktree=$(cd "$worktree" && pwd -P)
+base=${WORKTREE_BASE:-/maps/projects/cbmr_shared/people/tqb695/non-GDPR/multiomeR}
+base=$(cd "$base" && pwd -P)
+
+[ "$worktree" != "$base" ] || die "Refusing to configure the base checkout as a Codex worktree."
+[ -d "$worktree/.git" ] || [ -f "$worktree/.git" ] || die "Git worktree not found: $worktree"
+[ -d "$base/.pixi" ] || die "Base pixi environment not found: $base/.pixi"
+[ -d "$base/outputs/.snapshot" ] || die "Base outputs snapshots not found: $base/outputs/.snapshot"
+
+snapshot=$(latest_outputs_snapshot)
+[ -f "$snapshot/meta/meta" ] || die "Targets metadata not found in snapshot: $snapshot/meta/meta"
+snapshot=$(cd "$snapshot" && pwd -P)
+snapshot_name=$(basename "$snapshot")
+snapshot_example_data=$base/.snapshot/$snapshot_name/example_data
+
+link_snapshot_runtime_path example_data "$snapshot_example_data"
+copy_base_runtime_path crew_controllers.R
+link_runtime_path .pixi "$base/.pixi"
+link_runtime_path outputs "$snapshot"
+
+cat <<EOF
+Codex read-only introspection worktree ready.
+
+  worktree: $worktree
+  outputs:  $snapshot
+  base:     $base
+
+The outputs snapshot supports targets introspection but rejects writes.
+EOF

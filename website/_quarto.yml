@@ -15,7 +15,7 @@ book:
     - part: "Overview"
       chapters:
         - index.qmd
-    - part: "Quickstart: Public two-reaction demo"
+    - part: "Quickstart: Public demo with two GEM wells"
       chapters:
         - demo_installation.qmd
         - demo_running.qmd

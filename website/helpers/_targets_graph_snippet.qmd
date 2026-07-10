@@ -1,6 +1,6 @@
 ## Inspecting the target graph
 
-Target names and graph size depend on your local reaction, dataset, aggregation, and module config files. After editing those files, start R from the repository root with `pixi shell` followed by `R`, then inspect your own graph:
+Target names and graph size depend on your local GEM well, dataset, aggregation, and module config files. After editing those files, start R from the repository root with `pixi shell` followed by `R`, then inspect your own graph:
 
 ```{.r filename="R"}
 targets::tar_manifest(callr_function = NULL)

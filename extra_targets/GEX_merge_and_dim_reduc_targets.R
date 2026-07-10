@@ -1,7 +1,7 @@
 rlang::list2(
   tarchetypes::tar_file(
     name = aggregated_GEX_BPCells_matrix_dir.GEX,
-    description = "Write the combined GEX BPCells count matrix for all reactions in the dataset [part_of_graph:GEX] [part_of_graph:parallel] [part_of_graph:seurat_export]",
+    description = "Write the combined GEX BPCells count matrix for all GEM wells in the dataset [part_of_graph:GEX] [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = {
       combined_counts_matrix <- purrr::reduce(aggregation_GEX_counts_BPCells_matrix_syms, cbind)
 
@@ -24,7 +24,7 @@ rlang::list2(
       GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX,
       metadata_tibble = GEX_cellranger_kept_metadata_tibble |>
         dplyr::left_join(donor_id_metadata_tibble, by = "donor_id") |>
-        dplyr::left_join(reaction_ID_metadata_tibble, by = "TENX_reaction_ID"),
+        dplyr::left_join(GEM_well_metadata_tibble, by = "GEM_well_ID"),
       organism_chr = organism_chr,
       GEX_PCA_backend = aggregation_GEX_PCA_backend,
       SCT_regress_vars = aggregation_SCT_regress_vars,
@@ -40,7 +40,7 @@ rlang::list2(
       metadata_tibble = GEX_cellranger_kept_metadata_tibble,
       barcode_vec = rownames(PCA_BPCells.GEX$cell_embeddings),
       donor_id_metadata_tibble = donor_id_metadata_tibble,
-      reaction_ID_metadata_tibble = reaction_ID_metadata_tibble
+      GEM_well_metadata_tibble = GEM_well_metadata_tibble
     )
   ),
   targets::tar_target(
@@ -180,7 +180,7 @@ rlang::list2(
           "pre_amp_cycles"
         ),
         categorical_technical_cols = c(
-          "TENX_reaction_ID",
+          "GEM_well_ID",
           "multiplex_batch",
           "multiplex_pool",
           "run_harmony",

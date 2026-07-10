@@ -47,7 +47,7 @@ benchmark_results <- cache_multimodal_seurat_walltime(
 
 summary_tibble <- benchmark_results[, c(
   "aggregation",
-  "reaction_count",
+  "GEM_well_count",
   "cellranger_input_nuclei",
   "critical_path_minutes",
   "serial_sum_minutes",

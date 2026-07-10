@@ -13,7 +13,7 @@
 
 multiomeR is a targets-based workflow for processing and analyzing single-nucleus 10x Genomics Multiome data. It is designed as a lean, readable framework that users can adapt to their own studies rather than as a black-box command-line pipeline.
 
-The active workflow is a single root `targets` project driven by `_targets.R`, `cfg_reactions.tsv`, `cfg_datasets.yaml`, and `cfg_aggregations.yaml`.
+The active workflow is a single root `targets` project driven by `_targets.R`, `cfg_GEM_wells.tsv`, `cfg_datasets.yaml`, and `cfg_aggregations.yaml`.
 
 ## Development status
 

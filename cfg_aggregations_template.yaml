@@ -1,7 +1,7 @@
 brain_mouse:
   aggregation_donor_id_metadata_tsv: example_data/brain_mouse_donor_id_metadata.tsv
-  aggregation_reaction_ID_metadata_tsv: example_data/brain_mouse_reaction_metadata.tsv
-  aggregation_reaction_IDs: [embryonic_brain_mouse]
+  aggregation_GEM_well_metadata_tsv: example_data/brain_mouse_GEM_well_metadata.tsv
+  aggregation_GEM_well_IDs: [embryonic_brain_mouse]
   aggregation_GEX_marker_genes:
     Neuron: [Rbfox3, Snap25, Syt1, Tubb3]
     Astrocyte: [Gfap, Aqp4, Aldh1l1, S100b]
@@ -23,8 +23,8 @@ brain_mouse:
 
 immune_human_2x:
   aggregation_donor_id_metadata_tsv: example_data/immune_human_dataset_donor_id_metadata.tsv
-  aggregation_reaction_ID_metadata_tsv: example_data/immune_human_dataset_reaction_id_metadata.tsv
-  aggregation_reaction_IDs: [healthy_PBMC_human, lymphoma_lymph_human]
+  aggregation_GEM_well_metadata_tsv: example_data/immune_human_dataset_GEM_well_metadata.tsv
+  aggregation_GEM_well_IDs: [healthy_PBMC_human, lymphoma_lymph_human]
   aggregation_GEX_marker_genes:
     B: [MS4A1, CD79A]
     Mono: [LYZ, S100A9]
@@ -54,7 +54,7 @@ immune_human_2x:
 
 PBMC_human_6x:
   inherits: immune_human_2x
-  aggregation_reaction_IDs:
+  aggregation_GEM_well_IDs:
     - healthy_PBMC_human
     - pbmc_10k_chromium_controller
     - pbmc_10k_chromium_x
@@ -66,8 +66,8 @@ PBMC_human_6x:
 
 mixed_human_7x:
   aggregation_donor_id_metadata_tsv: example_data/mixed_human_donor_id_metadata.tsv
-  aggregation_reaction_ID_metadata_tsv: example_data/mixed_human_reaction_id_metadata.tsv
-  aggregation_reaction_IDs:
+  aggregation_GEM_well_metadata_tsv: example_data/mixed_human_GEM_well_metadata.tsv
+  aggregation_GEM_well_IDs:
     - healthy_PBMC_human
     - pbmc_10k_chromium_controller
     - pbmc_10k_chromium_x

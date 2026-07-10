@@ -1,6 +1,6 @@
 brain_mouse_dataset:
   dataset_cellranger_arc_refdata_dir: example_data/refdata-cellranger-arc-GRCm39-2024-A
-  dataset_QC_exclude_list_per_reaction:
+  dataset_QC_exclude_list_per_GEM_well:
     - TSS.enrichment < 4
     - nucleosome_signal > 4
     - nCount_RNA < 250
@@ -9,7 +9,7 @@ brain_mouse_dataset:
 
 immune_human_dataset:
   dataset_cellranger_arc_refdata_dir: example_data/refdata-cellranger-arc-GRCh38-2024-A
-  dataset_QC_exclude_list_per_reaction:
+  dataset_QC_exclude_list_per_GEM_well:
     - TSS.enrichment < 4
     - nucleosome_signal > 4
     - nCount_RNA < 250

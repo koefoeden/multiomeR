@@ -13,18 +13,18 @@
     </marker>
   </defs>
 
-  <text x="30" y="38" class="title">Parallel reaction pre-processing overview</text>
+  <text x="30" y="38" class="title">Parallel GEM well pre-processing overview</text>
 
   <rect x="30" y="80" width="180" height="90" class="box"/>
-  <text x="120" y="112" text-anchor="middle" class="label">Input reactions</text>
+  <text x="120" y="112" text-anchor="middle" class="label">Input GEM wells</text>
   <text x="120" y="136" text-anchor="middle" class="body">cellranger-arc output dirs</text>
   <text x="120" y="154" text-anchor="middle" class="body">and optional donor VCFs</text>
 
   <rect x="250" y="60" width="220" height="130" class="group"/>
-  <text x="360" y="98" text-anchor="middle" class="label">parallel_reaction_preprocessing</text>
+  <text x="360" y="98" text-anchor="middle" class="label">parallel_GEM_well_preprocessing</text>
   <text x="360" y="124" text-anchor="middle" class="body">QC filtering</text>
   <text x="360" y="144" text-anchor="middle" class="body">doublet detection and demultiplexing</text>
-  <text x="360" y="164" text-anchor="middle" class="body">reaction-level Seurat objects</text>
+  <text x="360" y="164" text-anchor="middle" class="body">GEM well-level Seurat objects</text>
 
   <rect x="510" y="80" width="180" height="90" class="box"/>
   <text x="600" y="112" text-anchor="middle" class="label">Outputs</text>

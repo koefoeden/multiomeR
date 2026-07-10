@@ -104,7 +104,7 @@ datasets_config_file <- "cfg_datasets.yaml"
 aggregations_config_file <- "cfg_aggregations.yaml"
 pipeline_parameters_file <- "cfg_pipeline_parameters.tsv"
 datasets_github_file <- file.path(github_repo, "cfg_datasets.yaml")
-reactions_github_file <- file.path(github_repo, "cfg_reactions.tsv")
+GEM_wells_github_file <- file.path(github_repo, "cfg_GEM_wells.tsv")
 aggregations_github_file <- file.path(github_repo, "cfg_aggregations.yaml")
 pipeline_parameters_github_file <- file.path(github_repo, "cfg_pipeline_parameters.tsv")
 

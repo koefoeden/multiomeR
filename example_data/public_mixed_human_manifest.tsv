@@ -1,4 +1,4 @@
-reaction_ID	file_name	url
+GEM_well_ID	file_name	url
 healthy_brain_human	web_summary.html	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/human_brain_3k/human_brain_3k_web_summary.html
 healthy_brain_human	summary.csv	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/human_brain_3k/human_brain_3k_summary.csv
 healthy_brain_human	per_barcode_metrics.csv	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/human_brain_3k/human_brain_3k_per_barcode_metrics.csv

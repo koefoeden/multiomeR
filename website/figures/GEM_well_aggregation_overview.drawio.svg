@@ -13,16 +13,16 @@
     </marker>
   </defs>
 
-  <text x="30" y="38" class="title">Reaction aggregation overview</text>
+  <text x="30" y="38" class="title">GEM well aggregation overview</text>
 
   <rect x="30" y="80" width="180" height="90" class="box"/>
   <text x="120" y="112" text-anchor="middle" class="label">Input objects</text>
-  <text x="120" y="136" text-anchor="middle" class="body">Filtered reaction-level</text>
+  <text x="120" y="136" text-anchor="middle" class="body">Filtered GEM well-level</text>
   <text x="120" y="154" text-anchor="middle" class="body">Seurat objects and metadata</text>
 
   <rect x="250" y="60" width="220" height="130" class="group"/>
-  <text x="360" y="98" text-anchor="middle" class="label">reaction_aggregation</text>
-  <text x="360" y="124" text-anchor="middle" class="body">Merge reactions</text>
+  <text x="360" y="98" text-anchor="middle" class="label">GEM_well_aggregation</text>
+  <text x="360" y="124" text-anchor="middle" class="body">Merge GEM wells</text>
   <text x="360" y="144" text-anchor="middle" class="body">RNA, ATAC, and WNN processing</text>
   <text x="360" y="164" text-anchor="middle" class="body">cell typing and QC outputs</text>
 

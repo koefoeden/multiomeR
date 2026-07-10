@@ -223,7 +223,7 @@ get_psbulk_sample_tibble <- function(psbulk_data_matrix) {
 #'
 #' @param psbulk_data_matrix Feature-by-pseudobulk-sample count/activity matrix.
 #' @param psbulk_feature_dynamic_tibble Dynamic-branch metadata row describing the model, contrast, and feature matrix being processed.
-#' @param extended_donor_id_metadata_tibble Donor metadata after reaction/sample-level covariates have been added for model design.
+#' @param extended_donor_id_metadata_tibble Donor metadata after GEM well/sample-level covariates have been added for model design.
 #' @param sample_depth_tibble Optional sample depth tibble used to remove low
 #'   count pseudobulk columns before modeling.
 #' @param min_sample_counts Minimum sample counts required when
@@ -1332,7 +1332,7 @@ get_MSigDB_genesets_split_by_subcollection_list_list <- function(
 #' Fit donor cell-type composition models from cell metadata and donor covariates.
 #'
 #' @param metadata_w_cell_types_tibble Cell metadata tibble after cell-type labels have been joined; used for composition or export helpers.
-#' @param extended_donor_id_metadata_tibble Donor metadata after reaction/sample-level covariates have been added for model design.
+#' @param extended_donor_id_metadata_tibble Donor metadata after GEM well/sample-level covariates have been added for model design.
 #' @param cluster_col Single metadata column name used as the cluster/grouping variable.
 #' @param DCTC_formula_chr Model formula string used for donor/cell-type composition testing.
 #' @return Donor cell-type composition model results for the requested formula

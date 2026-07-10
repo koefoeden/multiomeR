@@ -1,4 +1,4 @@
-TENX_reaction_ID	tissue	cell_sorting	target_recovery	instrument	n_recovered_nuclei
+GEM_well_ID	tissue	cell_sorting	target_recovery	instrument	n_recovered_nuclei
 healthy_PBMC_human	PBMC	granulocytes_removed	3k	Chromium_Controller	2711
 pbmc_10k_chromium_controller	PBMC	unspecified	10k	Chromium_Controller	10691
 pbmc_10k_chromium_x	PBMC	unspecified	10k	Chromium_X	10970

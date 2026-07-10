@@ -30,7 +30,7 @@
                                 <div style="display: inline-block; font-size: 27px; font-family: &quot;Helvetica&quot;; color: light-dark(#000000, #ffffff); line-height: 1.2; pointer-events: all; font-style: italic; white-space: normal; word-wrap: normal; ">
                                     <span style="border-color: light-dark(rgb(218, 220, 224), rgb(46, 48, 51)); color: light-dark(rgb(0, 0, 0), rgb(237, 237, 237)); font-family: Helvetica; font-variant-ligatures: normal; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;">
                                         <font style="border-color: light-dark(rgb(218, 220, 224), rgb(46, 48, 51));">
-                                            Reaction-level preprocessing
+                                            GEM well-level preprocessing
                                         </font>
                                     </span>
                                 </div>
@@ -38,7 +38,7 @@
                         </div>
                     </foreignObject>
                     <text x="228" y="97" fill="light-dark(#000000, #ffffff)" font-family="&quot;Helvetica&quot;" font-size="27px" text-anchor="end" font-style="italic">
-                        Reaction-level p...
+                        GEM well-level p...
                     </text>
                 </switch>
             </g>

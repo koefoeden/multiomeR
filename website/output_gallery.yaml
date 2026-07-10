@@ -1,17 +1,17 @@
 - section: Main pipeline
-  subsection: Parallel reaction pre-processing
+  subsection: Parallel GEM well pre-processing
   title: QC metric distributions
-  description: Compares QC metric distributions across reactions to reveal outliers before aggregation.
+  description: Compares QC metric distributions across GEM wells to reveal outliers before aggregation.
   target: per_dataset_QC_violins.immune_human_dataset
-  asset: gallery_assets/parallel_reaction_preprocessing/qc_violins.png
+  asset: gallery_assets/parallel_GEM_well_preprocessing/qc_violins.png
   status: available
 
 - section: Main pipeline
-  subsection: Parallel reaction pre-processing
+  subsection: Parallel GEM well pre-processing
   title: QC exclusion overlaps
   description: Shows how different QC filters overlap when excluding low-quality cells.
   target: per_dataset_excluded_upset.immune_human_dataset
-  asset: gallery_assets/parallel_reaction_preprocessing/qc_excluded_upset.png
+  asset: gallery_assets/parallel_GEM_well_preprocessing/qc_excluded_upset.png
   status: available
 
 - section: Main pipeline

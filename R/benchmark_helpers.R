@@ -64,11 +64,11 @@ target_runtime_weights <- function(
 
 benchmark_aggregation_tibble <- function(aggregations) {
   dataset_tibble_from_yaml <- read_dataset_config_tibble(config_file = "cfg_datasets.yaml")
-  reaction_tibble <- build_reaction_tibble(dataset_tibble_from_yaml = dataset_tibble_from_yaml)
+  GEM_well_tibble <- build_GEM_well_tibble(dataset_tibble_from_yaml = dataset_tibble_from_yaml)
   aggregation_tibble_all_from_yaml <- read_aggregation_config_tibble(config_file = "cfg_aggregations.yaml")
   aggregation_tibble <- build_aggregation_tibble(
     aggregation_tibble_all_from_yaml = aggregation_tibble_all_from_yaml,
-    reaction_tibble = reaction_tibble
+    GEM_well_tibble = GEM_well_tibble
   )
 
   missing_aggregations <- setdiff(aggregations, aggregation_tibble$aggregation)
@@ -83,18 +83,18 @@ benchmark_aggregation_tibble <- function(aggregations) {
   aggregation_tibble |>
     dplyr::mutate(
       benchmark_cellranger_count_dirs = purrr::map(
-        .data$aggregation_reaction_IDs,
-        \(reaction_ids) reaction_tibble$reaction_cellranger_count_dir[match(reaction_ids, reaction_tibble$reaction_ID)]
+        .data$aggregation_GEM_well_IDs,
+        \(GEM_well_IDs) GEM_well_tibble$GEM_well_cellranger_arc_count_dir[match(GEM_well_IDs, GEM_well_tibble$GEM_well_ID)]
       )
     ) |>
     dplyr::slice(match(aggregations, .data$aggregation))
 }
 
 
-benchmark_aggregation_reaction_counts <- function(aggregations) {
+benchmark_aggregation_GEM_well_counts <- function(aggregations) {
   aggregation_tibble <- benchmark_aggregation_tibble(aggregations)
-  reaction_counts <- lengths(aggregation_tibble$aggregation_reaction_IDs)
-  stats::setNames(reaction_counts, aggregation_tibble$aggregation)[aggregations]
+  GEM_well_counts <- lengths(aggregation_tibble$aggregation_GEM_well_IDs)
+  stats::setNames(GEM_well_counts, aggregation_tibble$aggregation)[aggregations]
 }
 
 
@@ -296,11 +296,11 @@ estimate_multimodal_seurat_walltime <- function(
       dplyr::mutate(estimate$summary, aggregation = aggregation, .before = "target")
     }
   )
-  reaction_counts <- benchmark_aggregation_reaction_counts(summary$aggregation)
+  GEM_well_counts <- benchmark_aggregation_GEM_well_counts(summary$aggregation)
   cellranger_input_nuclei <- benchmark_aggregation_cellranger_input_nuclei(summary$aggregation)
   summary <- dplyr::mutate(
     summary,
-    reaction_count = unname(reaction_counts[.data$aggregation]),
+    GEM_well_count = unname(GEM_well_counts[.data$aggregation]),
     cellranger_input_nuclei = unname(cellranger_input_nuclei[.data$aggregation]),
     critical_path_minutes = .data$critical_path_seconds / 60,
     serial_sum_minutes = .data$serial_sum_seconds / 60,
@@ -363,15 +363,15 @@ cache_multimodal_seurat_walltime <- function(
 
 
 benchmark_plot_label_suffixes <- function(benchmark_results) {
-  reaction_IDs <- tryCatch(
+  GEM_well_IDs <- tryCatch(
     {
       aggregation_tibble <- benchmark_aggregation_tibble(benchmark_results$aggregation)
-      unlist(aggregation_tibble$aggregation_reaction_IDs, use.names = FALSE)
+      unlist(aggregation_tibble$aggregation_GEM_well_IDs, use.names = FALSE)
     },
     error = \(condition) character()
   )
 
-  unique(c(benchmark_results$aggregation, reaction_IDs))
+  unique(c(benchmark_results$aggregation, GEM_well_IDs))
 }
 
 
@@ -438,7 +438,7 @@ benchmark_walltime_composition_tibble <- function(benchmark_results, top_n_targe
     dplyr::summarise(runtime_minutes = sum(.data$runtime_minutes), .by = c("aggregation", "target_step")) |>
     dplyr::left_join(
       benchmark_results |>
-        dplyr::select("aggregation", "cellranger_input_nuclei", "reaction_count", "critical_path_minutes"),
+        dplyr::select("aggregation", "cellranger_input_nuclei", "GEM_well_count", "critical_path_minutes"),
       by = "aggregation"
     )
 }
@@ -465,7 +465,7 @@ plot_multimodal_seurat_walltime <- function(
     stop("The composition plot only supports time_col = 'critical_path_minutes'.", call. = FALSE)
   }
 
-  required_cols <- c("aggregation", "reaction_count", "cellranger_input_nuclei", time_col)
+  required_cols <- c("aggregation", "GEM_well_count", "cellranger_input_nuclei", time_col)
   missing_cols <- setdiff(required_cols, names(benchmark_results))
   if (length(missing_cols)) {
     stop(

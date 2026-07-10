@@ -1,8 +1,8 @@
 rlang::list2(
   tarchetypes::tar_file(
     name = cellranger_summary_file,
-    description = "Track the CellRanger summary CSV file as a sentinel for the completed reaction output directory",
-    command = file.path(reaction_cellranger_count_dir, "outs", "summary.csv")
+    description = "Track the CellRanger summary CSV file as a sentinel for the completed GEM well output directory",
+    command = file.path(GEM_well_cellranger_arc_count_dir, "outs", "summary.csv")
   ),
   tarchetypes::tar_file(
     name = cellranger_barcodes_tsv,
@@ -83,16 +83,16 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = cellbender_h5_file,
-    description = "Track the CellBender output h5 file for this reaction, or no files if not configured [part_of_graph:parallel] [part_of_graph:seurat_export]",
-    command = if (is.na(reaction_cellbender_h5_file) || reaction_cellbender_h5_file == "") {
+    description = "Track the CellBender output h5 file for this GEM well, or no files if not configured [part_of_graph:parallel] [part_of_graph:seurat_export]",
+    command = if (is.na(GEM_well_cellbender_h5_file) || GEM_well_cellbender_h5_file == "") {
       character(0)
     } else {
-      reaction_cellbender_h5_file
+      GEM_well_cellbender_h5_file
     }
   ),
   tarchetypes::tar_file(
     name = GEX_counts_BPcells_matrix_dir,
-    description = "Convert the CellBender or CellRanger GEX h5 matrix to a BPCells directory with reaction-prefixed barcodes [part_of_graph:parallel] [part_of_graph:seurat_export]",
+    description = "Convert the CellBender or CellRanger GEX h5 matrix to a BPCells directory with GEM well-prefixed barcodes [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = {
       out_dir <- get_structured_file_path()
 
@@ -131,7 +131,7 @@ rlang::list2(
       }
 
       rownames(gene_expression_matrix) <- gene_features_df$gene_name_unique
-      colnames(gene_expression_matrix) <- paste0(reaction_ID, "_", colnames(gene_expression_matrix))
+      colnames(gene_expression_matrix) <- paste0(GEM_well_ID, "_", colnames(gene_expression_matrix))
 
       BPCells::write_matrix_dir(gene_expression_matrix, out_dir, overwrite = TRUE)
       out_dir
@@ -144,13 +144,13 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = fragments_w_prefix_bpcells_dir,
-    description = "Convert the CellRanger fragment file to a BPCells directory with reaction-prefixed barcodes [part_of_graph:parallel] [part_of_graph:seurat_export]",
+    description = "Convert the CellRanger fragment file to a BPCells directory with GEM well-prefixed barcodes [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = {
       out_dir <- get_structured_file_path()
 
       fragment_file <- file.path(dirname(cellranger_summary_file), "atac_fragments.tsv.gz")
       fragments <- BPCells::open_fragments_10x(fragment_file)
-      fragments <- BPCells::prefix_cell_names(fragments, paste0(reaction_ID, "_"))
+      fragments <- BPCells::prefix_cell_names(fragments, paste0(GEM_well_ID, "_"))
       BPCells::write_fragments_dir(fragments, out_dir, overwrite = TRUE)
 
       out_dir
@@ -158,14 +158,14 @@ rlang::list2(
   ),
   targets::tar_target(
     name = fragments_w_prefix_bpcells,
-    description = "Convert the CellRanger fragment file to a BPCells directory with reaction-prefixed barcodes",
+    description = "Convert the CellRanger fragment file to a BPCells directory with GEM well-prefixed barcodes",
     command = BPCells::open_fragments_dir(fragments_w_prefix_bpcells_dir)
   ),
   targets::tar_target(
     name = ATAC_qc_metrics_tibble,
     description = "Compute TSS enrichment and nucleosome signal from BPCells ATAC fragments [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = {
-      barcode_prefix <- paste0(reaction_ID, "_")
+      barcode_prefix <- paste0(GEM_well_ID, "_")
 
       ATAC_qc_metrics_tibble <-
         BPCells::qc_scATAC(
@@ -176,7 +176,7 @@ rlang::list2(
         tibble::as_tibble()
 
       if (!all(startsWith(ATAC_qc_metrics_tibble$cellName, barcode_prefix))) {
-        stop("All BPCells ATAC QC cell names must start with reaction prefix: ", barcode_prefix)
+        stop("All BPCells ATAC QC cell names must start with GEM well prefix: ", barcode_prefix)
       }
 
       ATAC_qc_metrics_tibble |>
@@ -191,10 +191,10 @@ rlang::list2(
     name = GEX_basic_metadata_tibble,
     description = "Compute basic per-cell RNA QC metadata from the BPCells GEX matrix",
     command = {
-      barcode_prefix <- paste0(reaction_ID, "_")
+      barcode_prefix <- paste0(GEM_well_ID, "_")
 
       if (!all(startsWith(colnames(GEX_counts_BPCells_matrix), barcode_prefix))) {
-        stop("All GEX BPCells matrix column names must start with reaction prefix: ", barcode_prefix)
+        stop("All GEX BPCells matrix column names must start with GEM well prefix: ", barcode_prefix)
       }
 
       col_stats <- BPCells::matrix_stats(GEX_counts_BPCells_matrix, col_stats = "mean")$col_stats
@@ -209,7 +209,7 @@ rlang::list2(
       }
 
       tibble::tibble(
-        orig.ident = reaction_ID,
+        orig.ident = GEM_well_ID,
         barcode = substring(colnames(GEX_counts_BPCells_matrix), nchar(barcode_prefix) + 1),
         nCount_RNA = unname(nCount_RNA),
         nFeature_RNA = unname(nFeature_RNA),
@@ -260,12 +260,12 @@ rlang::list2(
   tarchetypes::tar_file(
     name = cellsnp_dir,
     description = "Run cellsnp-lite to genotype each barcode at SNP positions, or return no files if no VCF is configured [part_of_graph:parallel] [part_of_graph:seurat_export]",
-    command = if (!is.na(reaction_donors_VCF_file)) {
+    command = if (!is.na(GEM_well_donors_VCF_file)) {
       ATAC_bam_file <- file.path(dirname(cellranger_summary_file), "atac_possorted_bam.bam")
       get_cellsnp_dir(
         bam_file = ATAC_bam_file,
         cellranger_barcodes_tsv = cellranger_barcodes_tsv,
-        reaction_donors_VCF_file = reaction_donors_VCF_file,
+        GEM_well_donors_VCF_file = GEM_well_donors_VCF_file,
         cores = 6
       )
     } else {
@@ -278,9 +278,9 @@ rlang::list2(
     description = "Run vireo to demultiplex donors from cellsnp-lite genotypes and return per-barcode donor assignments [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = get_vireo_donor_ids_tibble(
       cellsnp_dir,
-      reaction_donors_VCF_file = reaction_donors_VCF_file,
-      reaction_n_donors = reaction_n_donors,
-      reaction_donor_id = reaction_donor_id,
+      GEM_well_donors_VCF_file = GEM_well_donors_VCF_file,
+      GEM_well_n_donors = GEM_well_n_donors,
+      GEM_well_donor_id = GEM_well_donor_id,
       cellranger_barcodes_tsv = cellranger_barcodes_tsv,
       cores = 4 # consider decreasing this if increasing memory from 60 > 120 GB doesn't fix the issue.
     ),
@@ -288,7 +288,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = unfiltered_cells_n_vecs,
-    description = "Count barcodes in the full metadata table used by per-reaction QC exclusion filters",
+    description = "Count barcodes in the full metadata table used by per GEM well QC exclusion filters",
     command = nrow(full_metadata_tibble)
   ),
   targets::tar_target(
@@ -303,9 +303,9 @@ rlang::list2(
         discarded_by_cellranger = is.na(is_cell),
         discarded_by_amulet = if (isTRUE(dataset_run_amulet)) is.na(amulet_uniqFrags) else FALSE,
         not_found_in_GEX_matrix = is.na(orig.ident),
-        TENX_reaction_ID = reaction_ID,
+        GEM_well_ID = GEM_well_ID,
         dataset = dataset,
-        barcode_w_prefix = paste0(reaction_ID, "_", barcode),
+        barcode_w_prefix = paste0(GEM_well_ID, "_", barcode),
         vireo_type = tidyr::replace_na(vireo_type, "discarded_by_cellranger"),
         ATAC_TSS_fragments_frac = atac_TSS_fragments / atac_fragments,
         ATAC_peak_region_frac = atac_peak_region_fragments / atac_fragments,
@@ -316,12 +316,12 @@ rlang::list2(
   ),
   targets::tar_target(
     name = excluded_barcodes_by_type_list,
-    description = "Identify barcodes failing per-reaction QC thresholds and group them by exclusion reason",
-    command = get_excluded_BCs(full_metadata_tibble, QC_exclude_vector = dataset_QC_exclude_list_per_reaction)
+    description = "Identify barcodes failing per GEM well QC thresholds and group them by exclusion reason",
+    command = get_excluded_BCs(full_metadata_tibble, QC_exclude_vector = dataset_QC_exclude_list_per_GEM_well)
   ),
   tarchetypes::tar_file(
     name = excluded_barcodes_by_type_upset,
-    description = "Plot an UpSet plot of per-reaction QC exclusion overlaps and save to file",
+    description = "Plot an UpSet plot of per GEM well QC exclusion overlaps and save to file",
     command = plot_upset_from_excluded_BCs_list(
       QC_excluded_BCs_list = excluded_barcodes_by_type_list,
       n_total = unfiltered_cells_n_vecs
@@ -330,10 +330,10 @@ rlang::list2(
   ),
   targets::tar_target(
     name = excluded_cellranger_only_barcodes_by_type_list,
-    description = "Identify CellRanger-only barcodes failing per-reaction QC and group by exclusion reason [part_of_graph:parallel] [part_of_graph:seurat_export]",
+    description = "Identify CellRanger-only barcodes failing per GEM well QC and group by exclusion reason [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = full_metadata_tibble |>
       dplyr::filter(!discarded_by_cellranger) |>
-      get_excluded_BCs(QC_exclude_vector = dataset_QC_exclude_list_per_reaction)
+      get_excluded_BCs(QC_exclude_vector = dataset_QC_exclude_list_per_GEM_well)
   ),
   tarchetypes::tar_file(
     name = excluded_cellranger_only_barcodes_by_type_upset,

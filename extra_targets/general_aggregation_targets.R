@@ -11,19 +11,19 @@ rlang::list2(
   ),
   targets::tar_target(
     name = aggregation_unfiltered_cells_n,
-    description = "Sum full QC metadata barcode counts across all reactions in this aggregation",
+    description = "Sum full QC metadata barcode counts across all GEM wells in this aggregation",
     command = sum(unlist(aggregation_unfiltered_cells_n_vecs_syms))
   ),
   targets::tar_target(
     name = aggregation_excluded_BCs_list,
-    description = "Combine per-reaction QC exclusion lists into a single aggregation-level list",
+    description = "Combine per GEM well QC exclusion lists into a single aggregation-level list",
     command = collapse_duplicate_names(purrr::flatten(
       aggregation_excluded_barcodes_by_type_list_syms
     ))
   ),
   tarchetypes::tar_file(
     name = aggregation_excluded_barcodes_by_type_upset,
-    description = "Plot an UpSet plot of aggregation-level QC exclusion overlaps across all reactions and save to file. [checkpoint:GEX]",
+    description = "Plot an UpSet plot of aggregation-level QC exclusion overlaps across all GEM wells and save to file. [checkpoint:GEX]",
     command = plot_upset_from_excluded_BCs_list(
       QC_excluded_BCs_list = aggregation_excluded_BCs_list,
       n_total = aggregation_unfiltered_cells_n
@@ -32,14 +32,14 @@ rlang::list2(
   ),
   targets::tar_target(
     name = aggregation_excluded_cellranger_only_BCs_list,
-    description = "Combine per-reaction CellRanger-only QC exclusion lists into a single aggregation-level list",
+    description = "Combine per GEM well CellRanger-only QC exclusion lists into a single aggregation-level list",
     command = collapse_duplicate_names(purrr::flatten(
       aggregation_excluded_cellranger_only_barcodes_by_type_list_syms
     ))
   ),
   tarchetypes::tar_file(
     name = aggregation_excluded_cellranger_only_barcodes_by_type_upset,
-    description = "Plot an UpSet plot of aggregation-level CellRanger-only QC exclusion overlaps across all reactions and save to file. [checkpoint:GEX]",
+    description = "Plot an UpSet plot of aggregation-level CellRanger-only QC exclusion overlaps across all GEM wells and save to file. [checkpoint:GEX]",
     command = plot_upset_from_excluded_BCs_list(
       QC_excluded_BCs_list = aggregation_excluded_cellranger_only_BCs_list,
       n_total = nrow(dplyr::bind_rows(aggregation_cellranger_kept_metadata_tibble_syms))
@@ -149,7 +149,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = GEX_cellranger_kept_metadata_tibble,
-    description = "Combine CellRanger-kept metadata for cells that pass per-reaction QC in this aggregation",
+    description = "Combine CellRanger-kept metadata for cells that pass per GEM well QC in this aggregation",
     command = {
       excluded_barcodes_vec <- unique(unlist(
         aggregation_excluded_cellranger_only_barcodes_by_type_list_syms
@@ -188,9 +188,9 @@ rlang::list2(
     deployment = "main"
   ),
   tarchetypes::tar_file(
-    name = reaction_ID_metadata_tsv,
-    description = "Track the reaction ID metadata TSV file for change detection",
-    command = aggregation_reaction_ID_metadata_tsv,
+    name = GEM_well_metadata_tsv,
+    description = "Track the GEM well metadata TSV file for change detection",
+    command = aggregation_GEM_well_metadata_tsv,
     deployment = "main"
   ),
   targets::tar_target(
@@ -199,12 +199,12 @@ rlang::list2(
     command = read_keyed_metadata_tibble(donor_id_metadata_tsv, "donor_id")
   ),
   targets::tar_target(
-    name = reaction_ID_metadata_tibble,
-    description = "Read the reaction ID metadata TSV into a tibble with TENX_reaction_ID coerced to character [part_of_graph:GEX] [part_of_graph:parallel] [part_of_graph:seurat_export]",
+    name = GEM_well_metadata_tibble,
+    description = "Read the GEM well metadata TSV into a tibble with GEM_well_ID coerced to character [part_of_graph:GEX] [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = {
-      reaction_metadata <- read_keyed_metadata_tibble(reaction_ID_metadata_tsv, "TENX_reaction_ID")
-      assert_donor_reaction_metadata_column_ownership(donor_id_metadata_tibble, reaction_metadata)
-      reaction_metadata
+      GEM_well_metadata <- read_keyed_metadata_tibble(GEM_well_metadata_tsv, "GEM_well_ID")
+      assert_donor_GEM_well_metadata_column_ownership(donor_id_metadata_tibble, GEM_well_metadata)
+      GEM_well_metadata
     }
   ),
   targets::tar_target(

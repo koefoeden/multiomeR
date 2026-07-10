@@ -1,4 +1,4 @@
-reaction_ID	file_name	url
+GEM_well_ID	file_name	url
 embryonic_brain_mouse	web_summary.html	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/e18_mouse_brain_fresh_5k/e18_mouse_brain_fresh_5k_web_summary.html
 embryonic_brain_mouse	summary.csv	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/e18_mouse_brain_fresh_5k/e18_mouse_brain_fresh_5k_summary.csv
 embryonic_brain_mouse	per_barcode_metrics.csv	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/e18_mouse_brain_fresh_5k/e18_mouse_brain_fresh_5k_per_barcode_metrics.csv

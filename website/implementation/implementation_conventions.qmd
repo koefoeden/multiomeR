@@ -1,6 +1,6 @@
 # Implementation conventions
 
-The implementation book assumes a few repository conventions that are easy to miss when reading individual target files in isolation. These conventions are not separate framework features; they are the small contracts that make the `{targets}` graph configurable, inspectable, and readable across reaction-level preprocessing, aggregation-level analysis, and optional downstream modules.
+The implementation book assumes a few repository conventions that are easy to miss when reading individual target files in isolation. These conventions are not separate framework features; they are the small contracts that make the `{targets}` graph configurable, inspectable, and readable across GEM well-level preprocessing, aggregation-level analysis, and optional downstream modules.
 
 This chapter records the conventions that currently carry the most structural weight: target description tags, the parameter manifest, mapping tibbles, target-symbol columns, and the runtime bootstrap contract.
 
@@ -66,14 +66,14 @@ The resolution order is:
 
 ```yaml
 immune_human_2x:
-  aggregation_reaction_IDs: [healthy_PBMC_human, lymphoma_lymph_human]
+  aggregation_GEM_well_IDs: [healthy_PBMC_human, lymphoma_lymph_human]
   aggregation_GEX_marker_genes:
     B: [MS4A1, CD79A]
     T: [TRAC, CD3D]
 
 PBMC_human_6x:
   inherits: immune_human_2x
-  aggregation_reaction_IDs:
+  aggregation_GEM_well_IDs:
     - healthy_PBMC_human
     - pbmc_10k_chromium_controller
   modules: [genetic_enrichment]
@@ -101,25 +101,25 @@ The root `_targets.R` builds the target graph from mapping tibbles. Each mapping
 The core mapping flow is:
 
 1. `dataset_tibble_from_yaml` is read from `cfg_datasets.yaml`.
-2. `reaction_tibble` is read from `cfg_reactions.tsv` and joined to dataset-level config.
+2. `GEM_well_tibble` is read from `cfg_GEM_wells.tsv` and joined to dataset-level config.
 3. `aggregation_tibble_all_from_yaml` is read from `cfg_aggregations.yaml`.
 4. `aggregation_tibble` keeps active aggregations and adds upstream target-symbol columns.
-5. `dataset_tibble` collapses reaction rows back to one row per dataset.
-6. `_targets.R` expands reactions, datasets, and aggregations with `tar_map()`, then appends module target files.
+5. `dataset_tibble` collapses GEM well rows back to one row per dataset.
+6. `_targets.R` expands GEM wells, datasets, and aggregations with `tar_map()`, then appends module target files.
 
 ```r
 tarchetypes::tar_map(
-  values = reaction_tibble,
-  names = reaction_ID,
+  values = GEM_well_tibble,
+  names = GEM_well_ID,
   delimiter = ".",
-  source("extra_targets/per_reaction_targets.R")$value
+  source("extra_targets/per_GEM_well_targets.R")$value
 )
 ```
 
-With `reaction_ID = "healthy_PBMC_human"`, a target named `cellranger_summary_file` becomes `cellranger_summary_file.healthy_PBMC_human`. The same dot-delimited suffix convention is used for datasets, aggregations, module targets, and nested module maps.
+With `GEM_well_ID = "healthy_PBMC_human"`, a target named `cellranger_summary_file` becomes `cellranger_summary_file.healthy_PBMC_human`. The same dot-delimited suffix convention is used for datasets, aggregations, module targets, and nested module maps.
 
 ```text
-cfg_reactions.tsv row       -> reaction_tibble row    -> per-reaction targets
+cfg_GEM_wells.tsv row       -> GEM_well_tibble row    -> per GEM well targets
 cfg_datasets.yaml key       -> dataset_tibble row     -> per-dataset targets
 cfg_aggregations.yaml key   -> aggregation_tibble row -> per-aggregation targets
 ```
@@ -129,14 +129,14 @@ Aggregation rows may opt into optional modules through `modules`. `_targets.R` v
 The naming convention is therefore compositional:
 
 ```text
-<target>.<reaction_ID>
+<target>.<GEM_well_ID>
 <target>.<dataset_name>
 <target>.<aggregation_name>
 <module_target>.<module_name>.<aggregation_name>
 <nested_module_target>.<nested_suffix>.<module_name>.<aggregation_name>
 ```
 
-Because these suffixes become target names and cache identity, config keys should be stable, human-readable, and free of unnecessary punctuation. In particular, avoid dots in reaction, dataset, aggregation, and module IDs unless there is a compelling reason.
+Because these suffixes become target names and cache identity, config keys should be stable, human-readable, and free of unnecessary punctuation. In particular, avoid dots in GEM well, dataset, aggregation, and module IDs unless there is a compelling reason.
 
 ## Target-symbol columns
 
@@ -148,11 +148,11 @@ The compact constructor is `target_sym_col()`. It records a base target name, th
 aggregation_tibble |>
   add_target_sym_cols(
     aggregation_GEX_counts_BPCells_matrix_syms =
-      target_sym_col("GEX_counts_BPCells_matrix", "aggregation_reaction_IDs")
+      target_sym_col("GEX_counts_BPCells_matrix", "aggregation_GEM_well_IDs")
   )
 ```
 
-For an aggregation whose `aggregation_reaction_IDs` are `c("rx1", "rx2")`, this creates a row value equivalent to:
+For an aggregation whose `aggregation_GEM_well_IDs` are `c("rx1", "rx2")`, this creates a row value equivalent to:
 
 ```r
 rlang::syms(c(
@@ -174,8 +174,8 @@ Column names should describe the downstream scope, the upstream target, and the 
 
 The shared pattern appears at three boundaries:
 
-- `aggregation_*_syms` columns splice per-reaction targets into aggregation-level targets.
-- `dataset_*_syms` columns splice per-reaction targets into dataset-level targets.
+- `aggregation_*_syms` columns splice per GEM well targets into aggregation-level targets.
+- `dataset_*_syms` columns splice per GEM well targets into dataset-level targets.
 - `per_dataset_*_syms` columns splice per-dataset targets into aggregation-level summary targets.
 
 Module target files also need aggregation-specific references to main-pipeline targets. For this, `add_aggregation_target_syms()` creates one symbol per row, suffixed by the aggregation name. These columns are named like the target they replace rather than with `*_syms`, because each cell is a single symbol rather than a list.

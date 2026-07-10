@@ -174,14 +174,14 @@ targets_graph_part_of_graph_names <- function(graph_id, manifest = targets::tar_
 
 targets_graph_default_label_suffixes <- function() {
   suffixes <- data.frame(suffix = character(), placeholder = character())
-  if (exists("reaction_tibble", inherits = TRUE)) {
-    reaction_tibble_obj <- get("reaction_tibble", inherits = TRUE)
-    if ("reaction_ID" %in% names(reaction_tibble_obj)) {
+  if (exists("GEM_well_tibble", inherits = TRUE)) {
+    GEM_well_tibble_obj <- get("GEM_well_tibble", inherits = TRUE)
+    if ("GEM_well_ID" %in% names(GEM_well_tibble_obj)) {
       suffixes <- rbind(
         suffixes,
         data.frame(
-          suffix = reaction_tibble_obj$reaction_ID,
-          placeholder = "<reaction_ID>"
+          suffix = GEM_well_tibble_obj$GEM_well_ID,
+          placeholder = "<GEM_well_ID>"
         )
       )
     }

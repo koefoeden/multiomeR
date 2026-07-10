@@ -56,9 +56,9 @@ flowchart TB
   cellbender_h5_file.pbmc_granulocyte_sorted_10k(["cellbender_h5_file"]):::none --> GEX_counts_BPcells_matrix_dir.pbmc_granulocyte_sorted_10k(["GEX_counts_BPcells_matrix_dir"]):::none
   cellbender_h5_file.pbmc_unsorted_10k(["cellbender_h5_file"]):::none --> GEX_counts_BPcells_matrix_dir.pbmc_unsorted_10k(["GEX_counts_BPcells_matrix_dir"]):::none
   cellbender_h5_file.pbmc_unsorted_3k(["cellbender_h5_file"]):::none --> GEX_counts_BPcells_matrix_dir.pbmc_unsorted_3k(["GEX_counts_BPcells_matrix_dir"]):::none
-  donor_id_metadata_tibble.brain_mouse(["donor_id_metadata_tibble"]):::none --> reaction_ID_metadata_tibble.brain_mouse(["reaction_ID_metadata_tibble"]):::none
-  donor_id_metadata_tibble.immune_human_2x(["donor_id_metadata_tibble"]):::none --> reaction_ID_metadata_tibble.immune_human_2x(["reaction_ID_metadata_tibble"]):::none
-  donor_id_metadata_tibble.PBMC_human_6x(["donor_id_metadata_tibble"]):::none --> reaction_ID_metadata_tibble.PBMC_human_6x(["reaction_ID_metadata_tibble"]):::none
+  donor_id_metadata_tibble.brain_mouse(["donor_id_metadata_tibble"]):::none --> GEM_well_metadata_tibble.brain_mouse(["GEM_well_metadata_tibble"]):::none
+  donor_id_metadata_tibble.immune_human_2x(["donor_id_metadata_tibble"]):::none --> GEM_well_metadata_tibble.immune_human_2x(["GEM_well_metadata_tibble"]):::none
+  donor_id_metadata_tibble.PBMC_human_6x(["donor_id_metadata_tibble"]):::none --> GEM_well_metadata_tibble.PBMC_human_6x(["GEM_well_metadata_tibble"]):::none
   cellranger_barcodes_tsv.embryonic_brain_mouse(["cellranger_barcodes_tsv"]):::none --> vireo_donor_ids_tibble.embryonic_brain_mouse(["vireo_donor_ids_tibble"]):::none
   cellsnp_dir.embryonic_brain_mouse(["cellsnp_dir"]):::none --> vireo_donor_ids_tibble.embryonic_brain_mouse(["vireo_donor_ids_tibble"]):::none
   cellsnp_dir.healthy_PBMC_human(["cellsnp_dir"]):::none --> vireo_donor_ids_tibble.healthy_PBMC_human(["vireo_donor_ids_tibble"]):::none

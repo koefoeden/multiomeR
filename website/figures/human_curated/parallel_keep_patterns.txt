@@ -11,6 +11,6 @@
 ^fragments_w_prefix_bpcells_dir\.embryonic_brain_mouse$
 ^full_metadata_tibble\.embryonic_brain_mouse$
 ^GEX_counts_BPcells_matrix_dir\.embryonic_brain_mouse$
-^reaction_ID_metadata_tibble\.brain_mouse$
+^GEM_well_metadata_tibble\.brain_mouse$
 ^vireo_donor_ids_tibble\.embryonic_brain_mouse$
 

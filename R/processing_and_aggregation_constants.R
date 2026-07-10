@@ -1,7 +1,7 @@
 PROCESSING_QC_FEATURE_SETS <- list(
-  # Per-reaction and per-dataset QC plots use the metadata available before
+  # per GEM well and per-dataset QC plots use the metadata available before
   # aggregation-level GEX/ATAC processing has added modality-specific metrics.
-  per_reaction = c(
+  per_GEM_well = c(
     "nCount_RNA",
     "log10_nCount_RNA",
     "RNA_mito_percent",
@@ -61,4 +61,4 @@ PROCESSING_QC_FEATURE_SETS <- list(
 )
 
 PROCESSING_CONTINUOUS_QC_FEATURES <- PROCESSING_QC_FEATURE_SETS$continuous
-PROCESSING_PER_REACTION_QC_VARS <- PROCESSING_QC_FEATURE_SETS$per_reaction
+PROCESSING_PER_GEM_well_QC_VARS <- PROCESSING_QC_FEATURE_SETS$per_GEM_well

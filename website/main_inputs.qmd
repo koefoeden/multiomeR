@@ -87,6 +87,10 @@ your_GEM_well	batch_1
 
 Apart from their key columns, the donor and GEM well tables must not reuse column names. Put donor-specific phenotypes and covariates in the donor table; put library-, run-, or batch-specific variables in the GEM well table.
 
+The GEM well table may contain rows for multiple aggregations. Each aggregation
+subsets it to `aggregation_GEM_well_IDs` before expensive targets consume it,
+so metadata changes for unrelated GEM wells do not propagate downstream.
+
 ### 4. Define one aggregation
 
 ```{.yaml filename="cfg_aggregations.yaml"}

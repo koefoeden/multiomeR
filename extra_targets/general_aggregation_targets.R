@@ -200,9 +200,23 @@ rlang::list2(
   ),
   targets::tar_target(
     name = GEM_well_metadata_tibble,
-    description = "Read the GEM well metadata TSV into a tibble with GEM_well_ID coerced to character [part_of_graph:GEX] [part_of_graph:parallel] [part_of_graph:seurat_export]",
+    description = "Read and subset GEM well metadata to the configured aggregation IDs [part_of_graph:GEX] [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = {
       GEM_well_metadata <- read_keyed_metadata_tibble(GEM_well_metadata_tsv, "GEM_well_ID")
+      missing_GEM_well_IDs <- setdiff(aggregation_GEM_well_IDs, GEM_well_metadata$GEM_well_ID)
+      if (length(missing_GEM_well_IDs) > 0) {
+        stop(
+          GEM_well_metadata_tsv,
+          " is missing configured GEM_well_ID value(s): ",
+          paste(missing_GEM_well_IDs, collapse = ", "),
+          call. = FALSE
+        )
+      }
+      GEM_well_metadata <- GEM_well_metadata[
+        match(aggregation_GEM_well_IDs, GEM_well_metadata$GEM_well_ID),
+        ,
+        drop = FALSE
+      ]
       assert_donor_GEM_well_metadata_column_ownership(donor_id_metadata_tibble, GEM_well_metadata)
       GEM_well_metadata
     }

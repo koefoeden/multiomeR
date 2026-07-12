@@ -1,11 +1,11 @@
 # Demultiplexing by genotype ----
 #' Get cellsnp dir
 #'
-#' Run cellsnp-lite on one reaction BAM using CellRanger-called barcodes and donor VCF variants.
+#' Run cellsnp-lite on one GEM well BAM using CellRanger-called barcodes and donor VCF variants.
 #'
-#' @param bam_file Input BAM path for one 10x reaction.
+#' @param bam_file Input BAM path for one 10x Genomics GEM well.
 #' @param cellranger_barcodes_tsv Path to a TSV containing CellRanger-called barcodes, used as the cellsnp-lite sample whitelist.
-#' @param reaction_donors_VCF_file VCF path containing donor genotypes for the reaction.
+#' @param GEM_well_donors_VCF_file VCF path containing donor genotypes for the GEM well.
 #' @param cores Number of CPU cores requested for external tools or parallel work.
 #' @param minMAF Minimum minor allele frequency threshold passed to cellsnp-lite.
 #' @param minCOUNT Minimum SNP read-count threshold passed to cellsnp-lite.
@@ -15,7 +15,7 @@
 get_cellsnp_dir <- function(
   bam_file,
   cellranger_barcodes_tsv,
-  reaction_donors_VCF_file,
+  GEM_well_donors_VCF_file,
   cores,
   minMAF = 0.1,
   minCOUNT = 20
@@ -28,7 +28,7 @@ get_cellsnp_dir <- function(
       c("-s", bam_file),
       c("-b", cellranger_barcodes_tsv),
       c("-O", cellsnp_out_dir),
-      c("-R", reaction_donors_VCF_file),
+      c("-R", GEM_well_donors_VCF_file),
       c("-p", cores),
       c("--minMAF", minMAF),
       c("--minCOUNT", minCOUNT),
@@ -51,9 +51,9 @@ get_cellsnp_dir <- function(
 #' Run vireo on cellsnp-lite output and return donor-probability metadata keyed by barcode.
 #'
 #' @param cellsnp_dir Directory produced by cellsnp-lite, containing genotype likelihood files consumed by vireo.
-#' @param reaction_donors_VCF_file VCF path containing donor genotypes for the reaction.
-#' @param reaction_n_donors Expected donor count passed to vireo.
-#' @param reaction_donor_id Configured donor IDs used to name vireo probability columns.
+#' @param GEM_well_donors_VCF_file VCF path containing donor genotypes for the GEM well.
+#' @param GEM_well_n_donors Expected donor count passed to vireo.
+#' @param GEM_well_donor_id Configured donor IDs used to name vireo probability columns.
 #' @param cellranger_barcodes_tsv Path to a TSV containing CellRanger-called barcodes, used as the cellsnp-lite sample whitelist.
 #' @param cores Number of CPU cores requested for external tools or parallel work.
 #' @param do_learn Logical; when TRUE, let vireo learn donor genotypes instead of only using supplied priors.
@@ -63,9 +63,9 @@ get_cellsnp_dir <- function(
 
 get_vireo_donor_ids_tibble <- function(
   cellsnp_dir,
-  reaction_donors_VCF_file,
-  reaction_n_donors,
-  reaction_donor_id,
+  GEM_well_donors_VCF_file,
+  GEM_well_n_donors,
+  GEM_well_donor_id,
   cellranger_barcodes_tsv,
   cores,
   do_learn = FALSE,
@@ -77,7 +77,7 @@ get_vireo_donor_ids_tibble <- function(
     # skip demultiplexing and generate dummy donor_id tibble
     vireo_donor_ids_tibble <- tibble::tibble(
       cell = cellranger_barcodes_tsv %>% readr::read_tsv(col_names = FALSE) %>% dplyr::pull(),
-      donor_id = reaction_donor_id,
+      donor_id = GEM_well_donor_id,
       prob_max = NA,
       prob_doublet = NA,
       n_vars = NA,
@@ -93,15 +93,15 @@ get_vireo_donor_ids_tibble <- function(
       NULL
     }
 
-    genotype_args <- if (!is.na(reaction_donors_VCF_file)) {
-      c("-d", reaction_donors_VCF_file, "-t", "GT")
+    genotype_args <- if (!is.na(GEM_well_donors_VCF_file)) {
+      c("-d", GEM_well_donors_VCF_file, "-t", "GT")
     } else {
       NULL
     }
 
     run_w_error_check(
       command_string = "vireo",
-      arguments_chr = c("-p", cores, "-c", cellsnp_dir, "-N", reaction_n_donors, "-o", vireo_out_dir, genotype_args, learn_args)
+      arguments_chr = c("-p", cores, "-c", cellsnp_dir, "-N", GEM_well_n_donors, "-o", vireo_out_dir, genotype_args, learn_args)
     )
 
     # read vireo output

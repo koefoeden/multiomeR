@@ -4,12 +4,12 @@ flowchart TB
   metadata_tibble.GEX.brain_mouse(["metadata_tibble.GEX.&lt;aggregation_name&gt;"]):::none --> harmony_embeddings_matrix.GEX.brain_mouse(["harmony_embeddings_matrix.GEX.&lt;aggregation_name&gt;"]):::none
   PCA_BPCells.GEX.brain_mouse(["PCA_BPCells.GEX.&lt;aggregation_name&gt;"]):::none --> metadata_tibble.GEX.brain_mouse(["metadata_tibble.GEX.&lt;aggregation_name&gt;"]):::none
   donor_id_metadata_tibble.brain_mouse(["donor_id_metadata_tibble.&lt;aggregation_name&gt;"]):::none --> metadata_tibble.GEX.brain_mouse(["metadata_tibble.GEX.&lt;aggregation_name&gt;"]):::none
-  reaction_ID_metadata_tibble.brain_mouse(["reaction_ID_metadata_tibble.&lt;aggregation_name&gt;"]):::none --> metadata_tibble.GEX.brain_mouse(["metadata_tibble.GEX.&lt;aggregation_name&gt;"]):::none
+  GEM_well_metadata_tibble.brain_mouse(["GEM_well_metadata_tibble.&lt;aggregation_name&gt;"]):::none --> metadata_tibble.GEX.brain_mouse(["metadata_tibble.GEX.&lt;aggregation_name&gt;"]):::none
   scDblFinder_results_df.GEX.brain_mouse(["scDblFinder_results_df.GEX.&lt;aggregation_name&gt;"]):::none --> metadata_w_cell_types_tibble.GEX.brain_mouse(["metadata_w_cell_types_tibble.GEX.&lt;aggregation_name&gt;"]):::none
   donor_id_metadata_tibble.brain_mouse(["donor_id_metadata_tibble.&lt;aggregation_name&gt;"]):::none --> PCA_BPCells.GEX.brain_mouse(["PCA_BPCells.GEX.&lt;aggregation_name&gt;"]):::none
-  reaction_ID_metadata_tibble.brain_mouse(["reaction_ID_metadata_tibble.&lt;aggregation_name&gt;"]):::none --> PCA_BPCells.GEX.brain_mouse(["PCA_BPCells.GEX.&lt;aggregation_name&gt;"]):::none
+  GEM_well_metadata_tibble.brain_mouse(["GEM_well_metadata_tibble.&lt;aggregation_name&gt;"]):::none --> PCA_BPCells.GEX.brain_mouse(["PCA_BPCells.GEX.&lt;aggregation_name&gt;"]):::none
   harmony_embeddings_matrix.GEX.brain_mouse(["harmony_embeddings_matrix.GEX.&lt;aggregation_name&gt;"]):::none --> PCA_clusters.GEX.brain_mouse(["PCA_clusters.GEX.&lt;aggregation_name&gt;"]):::none
-  donor_id_metadata_tibble.brain_mouse(["donor_id_metadata_tibble.&lt;aggregation_name&gt;"]):::none --> reaction_ID_metadata_tibble.brain_mouse(["reaction_ID_metadata_tibble.&lt;aggregation_name&gt;"]):::none
+  donor_id_metadata_tibble.brain_mouse(["donor_id_metadata_tibble.&lt;aggregation_name&gt;"]):::none --> GEM_well_metadata_tibble.brain_mouse(["GEM_well_metadata_tibble.&lt;aggregation_name&gt;"]):::none
   PCA_BPCells.GEX.brain_mouse(["PCA_BPCells.GEX.&lt;aggregation_name&gt;"]):::none --> UMAP_embeddings_tibble.GEX_non_harmony.brain_mouse(["UMAP_embeddings_tibble.GEX_non_harmony.&lt;aggregation_name&gt;"]):::none
   harmony_embeddings_matrix.GEX.brain_mouse(["harmony_embeddings_matrix.GEX.&lt;aggregation_name&gt;"]):::none --> UMAP_embeddings_tibble.GEX.brain_mouse(["UMAP_embeddings_tibble.GEX.&lt;aggregation_name&gt;"]):::none
   aggregated_GEX_BPCells_matrix_dir.GEX.brain_mouse(["aggregated_GEX_BPCells_matrix_dir.GEX.&lt;aggregation_name&gt;"]):::none --> PCA_BPCells.GEX.brain_mouse(["PCA_BPCells.GEX.&lt;aggregation_name&gt;"]):::none

@@ -1,48 +1,48 @@
 #' Validate processing and aggregation config
 #'
-#' Check that aggregation YAML rows reference valid, non-empty reaction sets.
+#' Check that aggregation YAML rows reference valid, non-empty GEM well sets.
 #'
-#' @param reaction_tibble Reaction config tibble containing the valid `reaction_ID`
+#' @param GEM_well_tibble GEM well config tibble containing the valid `GEM_well_ID`
 #'   values.
 #' @param aggregation_tibble_from_yaml Aggregation config tibble with
-#'   `aggregation` labels and list-column `aggregation_reaction_IDs`.
-#' @param reaction_config_file Path to the reaction TSV config.
+#'   `aggregation` labels and list-column `aggregation_GEM_well_IDs`.
+#' @param GEM_well_config_file Path to the GEM well TSV config.
 #' @param aggregation_config_file Path to the aggregation YAML config.
 #' @return Invisibly returns after the validation or setup side effect succeeds.
 #' @keywords internal
 
 validate_processing_and_aggregation_config <- function(
-  reaction_tibble,
+  GEM_well_tibble,
   aggregation_tibble_from_yaml,
-  reaction_config_file = "cfg_reactions.tsv",
+  GEM_well_config_file = "cfg_GEM_wells.tsv",
   aggregation_config_file = "cfg_aggregations.yaml"
 ) {
-  configured_aggregation_reaction_IDs <- unique(unlist(
-    aggregation_tibble_from_yaml$aggregation_reaction_IDs
+  configured_aggregation_GEM_well_IDs <- unique(unlist(
+    aggregation_tibble_from_yaml$aggregation_GEM_well_IDs
   ))
 
-  unknown_aggregation_reactions_vec <- base::setdiff(
-    configured_aggregation_reaction_IDs,
-    reaction_tibble$reaction_ID
+  unknown_aggregation_GEM_wells_vec <- base::setdiff(
+    configured_aggregation_GEM_well_IDs,
+    GEM_well_tibble$GEM_well_ID
   )
-  if (length(unknown_aggregation_reactions_vec) > 0) {
+  if (length(unknown_aggregation_GEM_wells_vec) > 0) {
     stop(
       aggregation_config_file,
-      " references reaction ID(s) not defined in ",
-      reaction_config_file,
+      " references GEM_well_ID value(s) not defined in ",
+      GEM_well_config_file,
       ": ",
-      paste(unknown_aggregation_reactions_vec, collapse = ", "),
+      paste(unknown_aggregation_GEM_wells_vec, collapse = ", "),
       call. = FALSE
     )
   }
 
   empty_aggregation_vec <- aggregation_tibble_from_yaml$aggregation[
-    lengths(aggregation_tibble_from_yaml$aggregation_reaction_IDs) == 0
+    lengths(aggregation_tibble_from_yaml$aggregation_GEM_well_IDs) == 0
   ]
   if (length(empty_aggregation_vec) > 0) {
     stop(
       aggregation_config_file,
-      " contains aggregation(s) without reaction IDs: ",
+      " contains aggregation(s) without GEM_well_ID values: ",
       paste(empty_aggregation_vec, collapse = ", "),
       call. = FALSE
     )
@@ -77,15 +77,15 @@ read_keyed_metadata_tibble <- function(metadata_tsv, key_col) {
     dplyr::mutate(dplyr::across(dplyr::all_of(key_col), as.character))
 }
 
-assert_donor_reaction_metadata_column_ownership <- function(donor_id_metadata_tibble, reaction_ID_metadata_tibble) {
+assert_donor_GEM_well_metadata_column_ownership <- function(donor_id_metadata_tibble, GEM_well_metadata_tibble) {
   overlapping_cols <- intersect(
     setdiff(colnames(donor_id_metadata_tibble), "donor_id"),
-    setdiff(colnames(reaction_ID_metadata_tibble), "TENX_reaction_ID")
+    setdiff(colnames(GEM_well_metadata_tibble), "GEM_well_ID")
   )
 
   if (length(overlapping_cols) > 0) {
     stop(
-      "Donor and reaction metadata contain overlapping non-key column(s): ",
+      "Donor and GEM well metadata contain overlapping non-key column(s): ",
       paste(overlapping_cols, collapse = ", "),
       ". Each metadata column must belong to exactly one table.",
       call. = FALSE
@@ -95,30 +95,30 @@ assert_donor_reaction_metadata_column_ownership <- function(donor_id_metadata_ti
   invisible(TRUE)
 }
 
-#' Build reaction mapping tibble
+#' Build GEM well mapping tibble
 #'
-#' Read reaction-level config and attach dataset-level YAML config values for
-#' use by the reaction `tar_map()`.
+#' Read GEM well-level config and attach dataset-level YAML config values for
+#' use by the GEM well `tar_map()`.
 #'
 #' @param dataset_tibble_from_yaml Dataset config tibble created from
 #'   `cfg_datasets.yaml`.
-#' @param reaction_config_file Path to the reaction TSV config.
+#' @param GEM_well_config_file Path to the GEM well TSV config.
 #' @param dataset_config_file Path to the dataset YAML config.
-#' @return A tibble with one row per reaction and joined dataset config columns.
+#' @return A tibble with one row per GEM well and joined dataset config columns.
 #' @keywords internal
 
-build_reaction_tibble <- function(
+build_GEM_well_tibble <- function(
   dataset_tibble_from_yaml,
-  reaction_config_file = "cfg_reactions.tsv",
+  GEM_well_config_file = "cfg_GEM_wells.tsv",
   dataset_config_file = "cfg_datasets.yaml"
 ) {
-  reaction_tibble <- readr::read_tsv(reaction_config_file, show_col_types = FALSE) |>
-    dplyr::mutate(dplyr::across(c(reaction_ID, reaction_donor_id), as.character))
+  GEM_well_tibble <- readr::read_tsv(GEM_well_config_file, show_col_types = FALSE) |>
+    dplyr::mutate(dplyr::across(c(GEM_well_ID, GEM_well_donor_id), as.character))
 
-  unknown_datasets <- setdiff(reaction_tibble$dataset, dataset_tibble_from_yaml$dataset)
+  unknown_datasets <- setdiff(GEM_well_tibble$dataset, dataset_tibble_from_yaml$dataset)
   if (length(unknown_datasets) > 0) {
     stop(
-      reaction_config_file,
+      GEM_well_config_file,
       " references dataset(s) not defined in ",
       dataset_config_file,
       ": ",
@@ -127,45 +127,45 @@ build_reaction_tibble <- function(
     )
   }
 
-  reaction_tibble |>
+  GEM_well_tibble |>
     dplyr::left_join(dataset_tibble_from_yaml, by = "dataset")
 }
 
 #' Build aggregation mapping tibble
 #'
-#' Filter active aggregations, validate their reaction references, and add the
+#' Filter active aggregations, validate their GEM well references, and add the
 #' list-columns used to splice upstream target symbols into aggregation targets.
 #'
 #' @param aggregation_tibble_all_from_yaml Aggregation config tibble created
 #'   from `cfg_aggregations.yaml`.
-#' @param reaction_tibble Reaction mapping tibble created by
-#'   `build_reaction_tibble()`.
+#' @param GEM_well_tibble GEM well mapping tibble created by
+#'   `build_GEM_well_tibble()`.
 #' @param aggregation_config_file Path to the aggregation YAML config.
-#' @param reaction_config_file Path to the reaction TSV config.
+#' @param GEM_well_config_file Path to the GEM well TSV config.
 #' @return A tibble with one row per active aggregation, QC feature columns, and
 #'   target symbol list-columns.
 #' @keywords internal
 
 build_aggregation_tibble <- function(
   aggregation_tibble_all_from_yaml,
-  reaction_tibble,
+  GEM_well_tibble,
   aggregation_config_file = "cfg_aggregations.yaml",
-  reaction_config_file = "cfg_reactions.tsv"
+  GEM_well_config_file = "cfg_GEM_wells.tsv"
 ) {
   aggregation_tibble_from_yaml <- aggregation_tibble_all_from_yaml |>
     dplyr::filter(purrr::map_lgl(is_active, isTRUE))
 
   aggregation_tibble <- aggregation_tibble_from_yaml |>
     add_target_sym_cols(
-      aggregation_GEX_counts_BPCells_matrix_syms = target_sym_col("GEX_counts_BPCells_matrix", "aggregation_reaction_IDs"),
-      aggregation_fragments_w_prefix_bpcells_syms = target_sym_col("fragments_w_prefix_bpcells", "aggregation_reaction_IDs"),
-      aggregation_cellranger_summary_file_syms = target_sym_col("cellranger_summary_file", "aggregation_reaction_IDs"),
-      aggregation_cellranger_kept_metadata_tibble_syms = target_sym_col("cellranger_kept_metadata_tibble", "aggregation_reaction_IDs"),
-      aggregation_unfiltered_cells_n_vecs_syms = target_sym_col("unfiltered_cells_n_vecs", "aggregation_reaction_IDs"),
-      aggregation_excluded_barcodes_by_type_list_syms = target_sym_col("excluded_barcodes_by_type_list", "aggregation_reaction_IDs"),
-      aggregation_excluded_cellranger_only_barcodes_by_type_list_syms = target_sym_col("excluded_cellranger_only_barcodes_by_type_list", "aggregation_reaction_IDs"),
-      aggregation_cellranger_ref_list_syms = target_sym_col("cellranger_ref_list", "aggregation_reaction_IDs", transform = \(ids) utils::head(ids, 1)),
-      aggregation_gene_features_df_syms = target_sym_col("gene_features_df", "aggregation_reaction_IDs", transform = \(ids) utils::head(ids, 1))
+      aggregation_GEX_counts_BPCells_matrix_syms = target_sym_col("GEX_counts_BPCells_matrix", "aggregation_GEM_well_IDs"),
+      aggregation_fragments_w_prefix_bpcells_syms = target_sym_col("fragments_w_prefix_bpcells", "aggregation_GEM_well_IDs"),
+      aggregation_cellranger_summary_file_syms = target_sym_col("cellranger_summary_file", "aggregation_GEM_well_IDs"),
+      aggregation_cellranger_kept_metadata_tibble_syms = target_sym_col("cellranger_kept_metadata_tibble", "aggregation_GEM_well_IDs"),
+      aggregation_unfiltered_cells_n_vecs_syms = target_sym_col("unfiltered_cells_n_vecs", "aggregation_GEM_well_IDs"),
+      aggregation_excluded_barcodes_by_type_list_syms = target_sym_col("excluded_barcodes_by_type_list", "aggregation_GEM_well_IDs"),
+      aggregation_excluded_cellranger_only_barcodes_by_type_list_syms = target_sym_col("excluded_cellranger_only_barcodes_by_type_list", "aggregation_GEM_well_IDs"),
+      aggregation_cellranger_ref_list_syms = target_sym_col("cellranger_ref_list", "aggregation_GEM_well_IDs", transform = \(ids) utils::head(ids, 1)),
+      aggregation_gene_features_df_syms = target_sym_col("gene_features_df", "aggregation_GEM_well_IDs", transform = \(ids) utils::head(ids, 1))
     )
 
   project_categorical_vars <- purrr::map(
@@ -173,7 +173,7 @@ build_aggregation_tibble <- function(
     \(aggregation_categorical_vars) {
       c(
         aggregation_categorical_vars,
-        "TENX_reaction_ID",
+        "GEM_well_ID",
         "donor_id"
       )
     }
@@ -227,17 +227,17 @@ build_aggregation_tibble <- function(
   )
 
   validate_processing_and_aggregation_config(
-    reaction_tibble = reaction_tibble,
+    GEM_well_tibble = GEM_well_tibble,
     aggregation_tibble_from_yaml = aggregation_tibble_from_yaml,
-    reaction_config_file = reaction_config_file,
+    GEM_well_config_file = GEM_well_config_file,
     aggregation_config_file = aggregation_config_file
   )
 
   aggregation_tibble |>
     dplyr::mutate(
       aggregation_dataset_vec = purrr::map(
-        aggregation_reaction_IDs,
-        \(ids) reaction_tibble$dataset[match(ids, reaction_tibble$reaction_ID)] |>
+        aggregation_GEM_well_IDs,
+        \(ids) GEM_well_tibble$dataset[match(ids, GEM_well_tibble$GEM_well_ID)] |>
           unique()
       )
     ) |>
@@ -250,28 +250,28 @@ build_aggregation_tibble <- function(
 
 #' Build dataset mapping tibble
 #'
-#' Collapse reaction rows by dataset and attach dataset-level YAML config values
+#' Collapse GEM well rows by dataset and attach dataset-level YAML config values
 #' for use by the dataset `tar_map()`.
 #'
-#' @param reaction_tibble Reaction mapping tibble created by
-#'   `build_reaction_tibble()`.
+#' @param GEM_well_tibble GEM well mapping tibble created by
+#'   `build_GEM_well_tibble()`.
 #' @param dataset_tibble_from_yaml Dataset config tibble created from
 #'   `cfg_datasets.yaml`.
-#' @return A tibble with one row per dataset and per-reaction target symbol
+#' @return A tibble with one row per dataset and GEM well target symbol
 #'   list-columns.
 #' @keywords internal
 
-build_dataset_tibble <- function(reaction_tibble, dataset_tibble_from_yaml) {
-  reaction_tibble |>
+build_dataset_tibble <- function(GEM_well_tibble, dataset_tibble_from_yaml) {
+  GEM_well_tibble |>
     dplyr::summarise(
-      dataset_reaction_IDs = list(reaction_ID),
+      dataset_GEM_well_IDs = list(GEM_well_ID),
       .by = dataset
     ) |>
     add_target_sym_cols(
-      dataset_unfiltered_cells_n_vecs_syms = target_sym_col("unfiltered_cells_n_vecs", "dataset_reaction_IDs"),
-      dataset_cellranger_kept_metadata_tibble_syms = target_sym_col("cellranger_kept_metadata_tibble", "dataset_reaction_IDs"),
-      dataset_excluded_cellranger_only_barcodes_by_type_list_syms = target_sym_col("excluded_cellranger_only_barcodes_by_type_list", "dataset_reaction_IDs"),
-      dataset_excluded_barcodes_by_type_list_syms = target_sym_col("excluded_barcodes_by_type_list", "dataset_reaction_IDs")
+      dataset_unfiltered_cells_n_vecs_syms = target_sym_col("unfiltered_cells_n_vecs", "dataset_GEM_well_IDs"),
+      dataset_cellranger_kept_metadata_tibble_syms = target_sym_col("cellranger_kept_metadata_tibble", "dataset_GEM_well_IDs"),
+      dataset_excluded_cellranger_only_barcodes_by_type_list_syms = target_sym_col("excluded_cellranger_only_barcodes_by_type_list", "dataset_GEM_well_IDs"),
+      dataset_excluded_barcodes_by_type_list_syms = target_sym_col("excluded_barcodes_by_type_list", "dataset_GEM_well_IDs")
     ) |>
     dplyr::left_join(dataset_tibble_from_yaml, by = "dataset")
 }

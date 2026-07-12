@@ -40,18 +40,18 @@ multiomeR is currently in beta. Expect breaking changes as the workflow is matur
 | Add a downstream analysis | Check the prerequisites for [differential analyses](downstream_differential_analyses.qmd) or [genetic enrichment](downstream_genetic_enrichment.qmd). |
 | Understand or modify the internals | Use the separate [implementation book](implementation/). |
 
-Before starting, you need Linux and basic familiarity with R, tabular metadata, and `targets`. The demo supplies a working configuration; your own analysis also needs complete `cellranger-arc count` outputs, a matching reference, and keyed reaction and donor metadata. Tutorial pages provide a safe route through the workflow; searchable parameter tables and the implementation book are references to consult as needed.
+Before starting, you need Linux and basic familiarity with R, tabular metadata, and `targets`. The demo supplies a working configuration; your own analysis also needs complete `cellranger-arc count` outputs, a matching reference, and keyed GEM well and donor metadata. Tutorial pages provide a safe route through the workflow; searchable parameter tables and the implementation book are references to consult as needed.
 
-In this manual, a **reaction** is one configured 10x library and output directory, a **dataset** groups reactions that share reference and QC settings, and an **aggregation** is a joint analysis of one or more reactions. A **donor** is the individual identified by `donor_id`; one reaction may contain multiple donors.
+In this manual, a **GEM well** is one configured 10x library and output directory, a **dataset** groups GEM wells that share reference and QC settings, and an **aggregation** is a joint analysis of one or more GEM wells. A **donor** is the individual identified by `donor_id`; one GEM well may contain multiple donors.
 
 ## Workflow at a glance
 
-The **main pipeline** processes each reaction, aggregates selected reactions, and builds multimodal RNA/ATAC outputs for clustering, cell typing, and WNN integration. Two optional modules extend completed aggregations with differential analyses or genetic enrichment.
+The **main pipeline** processes each GEM well, aggregates selected GEM wells, and builds multimodal RNA/ATAC outputs for clustering, cell typing, and WNN integration. Two optional modules extend completed aggregations with differential analyses or genetic enrichment.
 
-[Image omitted; source: `figures/multiomeR_overview_simplified.drawio.svg`; alt: multiomeR workflow from Cell Ranger ARC reaction outputs through per-reaction processing, aggregation-level GEX and A...]
+[Image omitted; source: `figures/multiomeR_overview_simplified.drawio.svg`; alt: multiomeR workflow from Cell Ranger ARC GEM well outputs through per GEM well processing, aggregation-level GEX and A...]
 
 
-## Part: Quickstart: Public two-reaction demo
+## Part: Quickstart: Public demo with two GEM wells
 
 
 <!-- source: website/demo_installation.qmd -->
@@ -240,7 +240,7 @@ For example, `aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x` is placed u
 outputs/files/immune_human_2x/GEX/
 ```
 
-Other files are grouped under `outputs/files/<scope>/`, where the scope is a reaction, dataset, or aggregation.
+Other files are grouped under `outputs/files/<scope>/`, where the scope is a GEM well, dataset, or aggregation.
 
 ## Plots
 
@@ -270,9 +270,9 @@ This page maps the stable stages of the main processing branch after `cellranger
 
 ## Processing stages
 
-1. **Reaction preprocessing** reads Cell Ranger matrices and fragments, calculates RNA and ATAC QC, and assigns stable reaction-prefixed barcodes.
-2. **Dataset-level review** compares reactions that share a reference genome and QC policy before they enter an aggregation.
-3. **GEX processing** merges selected reactions into BPCells-backed matrices, performs dimension reduction and clustering, assigns cell-type labels, and creates the first review checkpoint.
+1. **GEM well preprocessing** reads Cell Ranger matrices and fragments, calculates RNA and ATAC QC, and assigns stable GEM well-prefixed barcodes.
+2. **Dataset-level review** compares GEM wells that share a reference genome and QC policy before they enter an aggregation.
+3. **GEX processing** merges selected GEM wells into BPCells-backed matrices, performs dimension reduction and clustering, assigns cell-type labels, and creates the first review checkpoint.
 4. **ATAC processing** merges fragments, calls or tiles peaks, creates the consensus peak matrix, performs LSI and clustering, and summarizes motif and regulatory activity.
 5. **Multimodal integration** combines aligned GEX and ATAC embeddings with WNN, produces integrated metadata and review plots, and optionally exports a [`Seurat`](https://satijalab.org/seurat/)/[`Signac`](https://stuartlab.org/signac/) compatibility object.
 
@@ -287,15 +287,29 @@ The [implementation graph](implementation/implementation_main.html) expands thes
 
 
 
-multiomeR uses three linked configuration layers. A **dataset** defines a shared reference and reaction-level QC policy, a **reaction** points to one `cellranger-arc count` output, and an **aggregation** selects reactions for joint GEX, ATAC, and WNN analysis.
+multiomeR uses three linked configuration layers. A **dataset** defines a shared reference and GEM well-level QC policy, a **GEM well** points to one `cellranger-arc count` output, and an **aggregation** selects GEM wells for joint GEX, ATAC, and WNN analysis.
 
 | Layer | Configuration | Key relationship |
 |---|---|---|
-| Dataset | `cfg_datasets.yaml` | Reactions refer to the dataset key. |
-| Reaction | `cfg_reactions.tsv` | Aggregations refer to one or more `reaction_ID` values. |
-| Aggregation | `cfg_aggregations.yaml` | Metadata tables must cover the configured donor and reaction IDs. |
+| Dataset | `cfg_datasets.yaml` | GEM wells refer to the dataset key. |
+| GEM well | `cfg_GEM_wells.tsv` | Aggregations refer to one or more `GEM_well_ID` values. |
+| Aggregation | `cfg_aggregations.yaml` | Metadata tables must cover the configured donor and GEM well IDs. |
 
-The committed `cfg_datasets.yaml`, `cfg_reactions.tsv`, and `cfg_aggregations.yaml` files are symlinks to public templates. Keep those templates as examples. For a real project, replace the symlinks with project-specific files or provide them from a downstream private repository.
+The committed `cfg_datasets.yaml`, `cfg_GEM_wells.tsv`, and `cfg_aggregations.yaml` files are symlinks to public templates. Keep those templates as examples. For a real project, replace the symlinks with project-specific files or provide them from a downstream private repository.
+
+## Migration to GEM well terminology
+
+This release makes a breaking terminology transition to the 10x Genomics term **GEM well**. There are no compatibility aliases: update configuration, metadata, and any code that calls the renamed helpers together. Existing identifier values do not need to change.
+
+| Previous name | Current name |
+|---|---|
+| `cfg_reactions.tsv` / `cfg_reactions_template.tsv` | `cfg_GEM_wells.tsv` / `cfg_GEM_wells_template.tsv` |
+| `reaction_ID` or `TENX_reaction_ID` | `GEM_well_ID` |
+| `aggregation_reaction_IDs` | `aggregation_GEM_well_IDs` |
+| `aggregation_reaction_ID_metadata_tsv` | `aggregation_GEM_well_metadata_tsv` |
+| `reaction_donor_id`, `reaction_n_donors`, `reaction_cellbender_h5_file`, `reaction_donors_VCF_file` | The corresponding `GEM_well_*` columns |
+| `reaction_cellranger_count_dir` | `GEM_well_cellranger_arc_count_dir` |
+| `per_reaction_targets.R` | `per_GEM_well_targets.R` |
 
 ## Start with one explicitly scoped analysis
 
@@ -308,7 +322,7 @@ The following minimum example shows the relationship between the three layers. R
 ```{.yaml filename="cfg_datasets.yaml"}
 your_dataset:
   dataset_cellranger_arc_refdata_dir: /path/to/refdata-cellranger-arc
-  dataset_QC_exclude_list_per_reaction:
+  dataset_QC_exclude_list_per_GEM_well:
     - TSS.enrichment < 4
     - nucleosome_signal > 4
     - nCount_RNA < 250
@@ -317,17 +331,17 @@ your_dataset:
 
 `dataset_cellranger_arc_refdata_dir` is required. The QC expressions are evaluated against per-barcode metadata. Starting with `dataset_run_amulet: false` avoids adding AMULET to the first data run; enable it deliberately after the basic input contract works.
 
-### 2. Define one reaction
+### 2. Define one GEM well
 
-```{.text filename="cfg_reactions.tsv"}
-reaction_ID	dataset	reaction_donor_id	reaction_n_donors	reaction_cellranger_count_dir	reaction_cellbender_h5_file	reaction_donors_VCF_file
-your_reaction	your_dataset	donor_1	1	/path/to/your_reaction	NA	NA
+```{.text filename="cfg_GEM_wells.tsv"}
+GEM_well_ID	dataset	GEM_well_donor_id	GEM_well_n_donors	GEM_well_cellranger_arc_count_dir	GEM_well_cellbender_h5_file	GEM_well_donors_VCF_file
+your_GEM_well	your_dataset	donor_1	1	/path/to/your_GEM_well	NA	NA
 ```
 
-`reaction_cellranger_count_dir` points to the directory containing `outs/`, not to `outs/` itself. The baseline pipeline requires:
+`GEM_well_cellranger_arc_count_dir` points to the directory containing `outs/`, not to `outs/` itself. The baseline pipeline requires:
 
 ```{.text filename="Text"}
-<reaction_cellranger_count_dir>/outs/
+<GEM_well_cellranger_arc_count_dir>/outs/
 |-- summary.csv
 |-- filtered_feature_bc_matrix.h5
 |-- atac_fragments.tsv.gz
@@ -335,7 +349,7 @@ your_reaction	your_dataset	donor_1	1	/path/to/your_reaction	NA	NA
 `-- per_barcode_metrics.csv
 ```
 
-If `reaction_donors_VCF_file` is configured, `atac_possorted_bam.bam` is also required for `cellsnp-lite`. Without a VCF, the pipeline skips genotype demultiplexing and assigns `reaction_donor_id` to every called nucleus. That donor ID must match the donor metadata table.
+If `GEM_well_donors_VCF_file` is configured, `atac_possorted_bam.bam` is also required for `cellsnp-lite`. Without a VCF, the pipeline skips genotype demultiplexing and assigns `GEM_well_donor_id` to every called nucleus. That donor ID must match the donor metadata table.
 
 ### 3. Create keyed metadata
 
@@ -346,22 +360,26 @@ donor_id	condition
 donor_1	control
 ```
 
-The reaction metadata table must contain one unique row per `TENX_reaction_ID`:
+The GEM well metadata table must contain one unique row per `GEM_well_ID`:
 
-```{.text filename="reaction_metadata.tsv"}
-TENX_reaction_ID	batch
-your_reaction	batch_1
+```{.text filename="GEM_well_metadata.tsv"}
+GEM_well_ID	batch
+your_GEM_well	batch_1
 ```
 
-Apart from their key columns, the donor and reaction tables must not reuse column names. Put donor-specific phenotypes and covariates in the donor table; put library-, run-, or batch-specific variables in the reaction table.
+Apart from their key columns, the donor and GEM well tables must not reuse column names. Put donor-specific phenotypes and covariates in the donor table; put library-, run-, or batch-specific variables in the GEM well table.
+
+The GEM well table may contain rows for multiple aggregations. Each aggregation
+subsets it to `aggregation_GEM_well_IDs` before expensive targets consume it,
+so metadata changes for unrelated GEM wells do not propagate downstream.
 
 ### 4. Define one aggregation
 
 ```{.yaml filename="cfg_aggregations.yaml"}
 your_aggregation:
-  aggregation_reaction_IDs: [your_reaction]
+  aggregation_GEM_well_IDs: [your_GEM_well]
   aggregation_donor_id_metadata_tsv: /path/to/donor_metadata.tsv
-  aggregation_reaction_ID_metadata_tsv: /path/to/reaction_metadata.tsv
+  aggregation_GEM_well_metadata_tsv: /path/to/GEM_well_metadata.tsv
   aggregation_GEX_marker_genes:
     Cell_type_A: [GENE1, GENE2]
     Cell_type_B: [GENE3, GENE4]
@@ -382,7 +400,7 @@ manifest |>
   dplyr::select(name, description)
 ```
 
-Manifest construction validates the YAML parameter schema, aggregation-to-reaction references, module names and rows, and controller setup. Metadata file contents are validated when their targets run. Fix manifest-time errors before calling `tar_make()`, then continue to [Running the workflow](main_running.qmd).
+Manifest construction validates the YAML parameter schema, aggregation references to GEM wells, module names and rows, and controller setup. Metadata file contents are validated when their targets run. Fix manifest-time errors before calling `tar_make()`, then continue to [Running the workflow](main_running.qmd).
 
 ## Configuration reference
 
@@ -401,24 +419,24 @@ Dataset-level settings live in `cfg_datasets.yaml`.
 
 </details>
 
-### Reaction columns
+### GEM well columns
 
-Reaction-level configuration lives in `cfg_reactions.tsv`.
+GEM well-level configuration lives in `cfg_GEM_wells.tsv`.
 
 | Column | Meaning |
 |---|---|
-| `reaction_ID` | Stable reaction identifier used in target names and aggregation config. |
+| `GEM_well_ID` | Stable GEM well identifier used in target names and aggregation config. |
 | `dataset` | Dataset key from `cfg_datasets.yaml`. |
-| `reaction_donor_id` | Donor assigned to a non-multiplexed reaction; use `NA` when donor identities are resolved from a VCF. |
-| `reaction_n_donors` | Expected donor count. |
-| `reaction_cellranger_count_dir` | Path to the directory containing `outs/`. |
-| `reaction_cellbender_h5_file` | Optional CellBender-corrected GEX H5 file; otherwise `NA`. |
-| `reaction_donors_VCF_file` | Optional donor-genotype VCF for `cellsnp-lite` and `vireo`; otherwise `NA`. |
+| `GEM_well_donor_id` | Donor assigned to a non-multiplexed GEM well; use `NA` when donor identities are resolved from a VCF. |
+| `GEM_well_n_donors` | Expected donor count. |
+| `GEM_well_cellranger_arc_count_dir` | Path to the directory containing `outs/`. |
+| `GEM_well_cellbender_h5_file` | Optional CellBender-corrected GEX H5 file; otherwise `NA`. |
+| `GEM_well_donors_VCF_file` | Optional donor-genotype VCF for `cellsnp-lite` and `vireo`; otherwise `NA`. |
 
 <details>
-<summary>Show the public reaction table</summary>
+<summary>Show the public GEM well table</summary>
 
-[Generated Quarto chunk omitted: `reaction_template <- readr::read_tsv("cfg_reactions.tsv", show_col_types = FALSE) cat('<div class="scrollable-table">...`]
+[Generated Quarto chunk omitted: `GEM_well_template <- readr::read_tsv("cfg_GEM_wells.tsv", show_col_types = FALSE) cat('<div class="scrollable-table">...`]
 
 </details>
 
@@ -471,7 +489,7 @@ targets::tar_make(
 
 Review before continuing:
 
-- reaction- and dataset-level barcode exclusion summaries for unexpected sample loss;
+- GEM well- and dataset-level barcode exclusion summaries for unexpected sample loss;
 - PCA, Harmony, UMAP, and metadata-association diagnostics for technical structure;
 - cluster markers and marker-module scores for coherent cell-type labels; and
 - `GEX_Seurat_object.your_aggregation` plus `metadata_w_cell_types_tibble.GEX.your_aggregation` for the cells entering ATAC processing.
@@ -723,7 +741,7 @@ targets::tar_make(
 
 Before interpreting trait scores, verify the resolved Open Targets release and fine-mapping method, the number of credible-set loci and variants retained, and the overlap with consensus peaks. Then compare direct deviation summaries with SCAVENGE-propagated scores and inspect whether apparent cell-type enrichment is supported by enough nuclei and loci.
 
-Runtime and disk use grow with studies, cells, graph representations, permutations, and attributed loci. The [gallery](gallery_genetic_enrichment.qmd) uses a larger six-reaction aggregation and is not produced by the minimal quickstart.
+Runtime and disk use grow with studies, cells, graph representations, permutations, and attributed loci. The [gallery](gallery_genetic_enrichment.qmd) uses a larger aggregation with six GEM wells and is not produced by the minimal quickstart.
 
 
 ## Part: Output gallery
@@ -739,7 +757,7 @@ These documentation snapshots show representative outputs from the public `immun
 
 To reproduce these plot families, [install](demo_installation.qmd) and [run](demo_running.qmd) the demo, then request the broader [review checkpoints](main_running.qmd). The endpoint-only quickstart does not build every gallery plot; [inspect its local outputs](demo_outputs.qmd) to see the distinction.
 
-[Generated Quarto chunk omitted: `render_gallery_section( gallery_items, "Main pipeline", subsection_descriptions = c( "Parallel reaction pre-processin...`]
+[Generated Quarto chunk omitted: `render_gallery_section( gallery_items, "Main pipeline", subsection_descriptions = c( "Parallel GEM well pre-processin...`]
 
 
 <!-- source: website/gallery_differential_analyses.qmd -->
@@ -759,7 +777,7 @@ These cards are a curated subset from the public `immune_human_2x` configuration
 
 
 
-These curated outputs use the larger `PBMC_human_6x` aggregation, not the two-reaction quickstart, and show selected SCAVENGE/WNN results rather than every attribution output. See [Genetic enrichment](downstream_genetic_enrichment.qmd) for prerequisites, checkpoint targets, and interpretation guidance.
+These curated outputs use the larger `PBMC_human_6x` aggregation, not the quickstart with two GEM wells, and show selected SCAVENGE/WNN results rather than every attribution output. See [Genetic enrichment](downstream_genetic_enrichment.qmd) for prerequisites, checkpoint targets, and interpretation guidance.
 
 [Generated Quarto chunk omitted: `render_gallery_section( gallery_items, "Genetic enrichment module", subsection_descriptions = c( "Single-nucleus chro...`]
 
@@ -771,7 +789,7 @@ These curated outputs use the larger `PBMC_human_6x` aggregation, not the two-re
 
 # Performance and scaling
 
-multiomeR gains performance from two complementary mechanisms: `{targets}` exposes independent reactions, modalities, and analysis branches for concurrent execution, while BPCells keeps large matrices on disk and streams many operations instead of materializing dense objects.
+multiomeR gains performance from two complementary mechanisms: `{targets}` exposes independent GEM wells, modalities, and analysis branches for concurrent execution, while BPCells keeps large matrices on disk and streams many operations instead of materializing dense objects.
 
 Actual wall time depends on input nuclei, retained cells, peak counts, enabled plots and modules, hardware, scheduler latency, controller concurrency, and which targets are already up to date. Treat benchmark results as workload descriptions, not promises for another machine or configuration.
 
@@ -779,7 +797,7 @@ Actual wall time depends on input nuclei, retained cells, peak counts, enabled p
 
 The current stored benchmark contains two public aggregations and estimates the critical path to each final `multimodal_Seurat_object` from recorded `{targets}` runtime metadata.
 
-| Aggregation | Reactions | Cell Ranger input nuclei | Estimated critical path | Sum if ancestor targets ran serially |
+| Aggregation | GEM wells | Cell Ranger input nuclei | Estimated critical path | Sum if ancestor targets ran serially |
 |---|---:|---:|---:|---:|
 | `immune_human_2x` | 2 | 17,277 | 17.3 minutes | 31.4 minutes |
 | `PBMC_human_6x` | 6 | 51,291 | 23.8 minutes | 52.4 minutes |
@@ -876,7 +894,7 @@ targets::tar_manifest(callr_function = NULL)
 Manifest-time failures usually indicate one of these contracts:
 
 - an unknown, misspelled, wrongly typed, or required YAML parameter;
-- an aggregation referencing a reaction absent from `cfg_reactions.tsv`;
+- an aggregation referencing a GEM well absent from `cfg_GEM_wells.tsv`;
 - an unknown module or a missing module-config row;
 - a malformed `crew_controllers.R` return value; or
 - an R package or startup problem.
@@ -935,11 +953,11 @@ Code, configuration, input files, controller-independent global objects, or an u
 
 Check the contracts in [Configuration and inputs](main_inputs.qmd):
 
-- `reaction_cellranger_count_dir` contains the required `outs/` files;
+- `GEM_well_cellranger_arc_count_dir` contains the required `outs/` files;
 - VCF-backed demultiplexing also has `atac_possorted_bam.bam`;
-- donor and reaction metadata keys are present and unique;
+- donor and GEM well metadata keys are present and unique;
 - non-key metadata columns belong to only one metadata table; and
-- configured donor and reaction IDs match the metadata values exactly.
+- configured donor and GEM well IDs match the metadata values exactly.
 
 ## Controller and scheduler failures
 
@@ -993,7 +1011,7 @@ The [differential analyses](implementation_differential_analyses.qmd) and [genet
 | Change | Start with |
 |---|---|
 | Add or revise a YAML parameter | `cfg_pipeline_parameters.tsv`, then the owning config reader or target. |
-| Change reaction preprocessing | `_targets.R` mapping plus `extra_targets/per_reaction_targets.R`. |
+| Change GEM well preprocessing | `_targets.R` mapping plus `extra_targets/per_GEM_well_targets.R`. |
 | Change aggregation GEX, ATAC, or WNN processing | The corresponding graph section and `extra_targets/*_targets.R` file. |
 | Add a review boundary | Existing `[checkpoint:<name>]` description tags and the user-manual selector contract. |
 | Add a graph-visible target | Existing `[part_of_graph:<graph_id>]` tags and graph-pruning rules. |
@@ -1023,7 +1041,7 @@ The quickest way to understand the implementation is to follow one value across 
 
 1. `immune_human_2x` is a key in `cfg_aggregations.yaml`.
 2. `read_aggregation_config_tibble()` resolves manifest defaults and inheritance into one aggregation row.
-3. `build_aggregation_tibble()` filters active rows and adds symbols for reaction-, dataset-, and aggregation-level upstream targets.
+3. `build_aggregation_tibble()` filters active rows and adds symbols for GEM well-, dataset-, and aggregation-level upstream targets.
 4. The root `_targets.R` passes that row through `tar_map(names = aggregation, delimiter = ".")`.
 5. A base target such as `multimodal_Seurat_object` becomes `multimodal_Seurat_object.immune_human_2x`.
 6. Description tags make selected targets discoverable as checkpoints or graph nodes, while structured file helpers derive output paths from the active target name.
@@ -1053,7 +1071,7 @@ The curated graph views are orientation aids, not alternate target definitions. 
 
 # Implementation conventions
 
-The implementation book assumes a few repository conventions that are easy to miss when reading individual target files in isolation. These conventions are not separate framework features; they are the small contracts that make the `{targets}` graph configurable, inspectable, and readable across reaction-level preprocessing, aggregation-level analysis, and optional downstream modules.
+The implementation book assumes a few repository conventions that are easy to miss when reading individual target files in isolation. These conventions are not separate framework features; they are the small contracts that make the `{targets}` graph configurable, inspectable, and readable across GEM well-level preprocessing, aggregation-level analysis, and optional downstream modules.
 
 This chapter records the conventions that currently carry the most structural weight: target description tags, the parameter manifest, mapping tibbles, target-symbol columns, and the runtime bootstrap contract.
 
@@ -1119,14 +1137,14 @@ The resolution order is:
 
 ```yaml
 immune_human_2x:
-  aggregation_reaction_IDs: [healthy_PBMC_human, lymphoma_lymph_human]
+  aggregation_GEM_well_IDs: [healthy_PBMC_human, lymphoma_lymph_human]
   aggregation_GEX_marker_genes:
     B: [MS4A1, CD79A]
     T: [TRAC, CD3D]
 
 PBMC_human_6x:
   inherits: immune_human_2x
-  aggregation_reaction_IDs:
+  aggregation_GEM_well_IDs:
     - healthy_PBMC_human
     - pbmc_10k_chromium_controller
   modules: [genetic_enrichment]
@@ -1154,25 +1172,25 @@ The root `_targets.R` builds the target graph from mapping tibbles. Each mapping
 The core mapping flow is:
 
 1. `dataset_tibble_from_yaml` is read from `cfg_datasets.yaml`.
-2. `reaction_tibble` is read from `cfg_reactions.tsv` and joined to dataset-level config.
+2. `GEM_well_tibble` is read from `cfg_GEM_wells.tsv` and joined to dataset-level config.
 3. `aggregation_tibble_all_from_yaml` is read from `cfg_aggregations.yaml`.
 4. `aggregation_tibble` keeps active aggregations and adds upstream target-symbol columns.
-5. `dataset_tibble` collapses reaction rows back to one row per dataset.
-6. `_targets.R` expands reactions, datasets, and aggregations with `tar_map()`, then appends module target files.
+5. `dataset_tibble` collapses GEM well rows back to one row per dataset.
+6. `_targets.R` expands GEM wells, datasets, and aggregations with `tar_map()`, then appends module target files.
 
 ```r
 tarchetypes::tar_map(
-  values = reaction_tibble,
-  names = reaction_ID,
+  values = GEM_well_tibble,
+  names = GEM_well_ID,
   delimiter = ".",
-  source("extra_targets/per_reaction_targets.R")$value
+  source("extra_targets/per_GEM_well_targets.R")$value
 )
 ```
 
-With `reaction_ID = "healthy_PBMC_human"`, a target named `cellranger_summary_file` becomes `cellranger_summary_file.healthy_PBMC_human`. The same dot-delimited suffix convention is used for datasets, aggregations, module targets, and nested module maps.
+With `GEM_well_ID = "healthy_PBMC_human"`, a target named `cellranger_summary_file` becomes `cellranger_summary_file.healthy_PBMC_human`. The same dot-delimited suffix convention is used for datasets, aggregations, module targets, and nested module maps.
 
 ```text
-cfg_reactions.tsv row       -> reaction_tibble row    -> per-reaction targets
+cfg_GEM_wells.tsv row       -> GEM_well_tibble row    -> per GEM well targets
 cfg_datasets.yaml key       -> dataset_tibble row     -> per-dataset targets
 cfg_aggregations.yaml key   -> aggregation_tibble row -> per-aggregation targets
 ```
@@ -1182,14 +1200,14 @@ Aggregation rows may opt into optional modules through `modules`. `_targets.R` v
 The naming convention is therefore compositional:
 
 ```text
-<target>.<reaction_ID>
+<target>.<GEM_well_ID>
 <target>.<dataset_name>
 <target>.<aggregation_name>
 <module_target>.<module_name>.<aggregation_name>
 <nested_module_target>.<nested_suffix>.<module_name>.<aggregation_name>
 ```
 
-Because these suffixes become target names and cache identity, config keys should be stable, human-readable, and free of unnecessary punctuation. In particular, avoid dots in reaction, dataset, aggregation, and module IDs unless there is a compelling reason.
+Because these suffixes become target names and cache identity, config keys should be stable, human-readable, and free of unnecessary punctuation. In particular, avoid dots in GEM well, dataset, aggregation, and module IDs unless there is a compelling reason.
 
 ## Target-symbol columns
 
@@ -1201,11 +1219,11 @@ The compact constructor is `target_sym_col()`. It records a base target name, th
 aggregation_tibble |>
   add_target_sym_cols(
     aggregation_GEX_counts_BPCells_matrix_syms =
-      target_sym_col("GEX_counts_BPCells_matrix", "aggregation_reaction_IDs")
+      target_sym_col("GEX_counts_BPCells_matrix", "aggregation_GEM_well_IDs")
   )
 ```
 
-For an aggregation whose `aggregation_reaction_IDs` are `c("rx1", "rx2")`, this creates a row value equivalent to:
+For an aggregation whose `aggregation_GEM_well_IDs` are `c("rx1", "rx2")`, this creates a row value equivalent to:
 
 ```r
 rlang::syms(c(
@@ -1227,8 +1245,8 @@ Column names should describe the downstream scope, the upstream target, and the 
 
 The shared pattern appears at three boundaries:
 
-- `aggregation_*_syms` columns splice per-reaction targets into aggregation-level targets.
-- `dataset_*_syms` columns splice per-reaction targets into dataset-level targets.
+- `aggregation_*_syms` columns splice per GEM well targets into aggregation-level targets.
+- `dataset_*_syms` columns splice per GEM well targets into dataset-level targets.
 - `per_dataset_*_syms` columns splice per-dataset targets into aggregation-level summary targets.
 
 Module target files also need aggregation-specific references to main-pipeline targets. For this, `add_aggregation_target_syms()` creates one symbol per row, suffixed by the aggregation name. These columns are named like the target they replace rather than with `*_syms`, because each cell is a single symbol rather than a list.
@@ -1287,6 +1305,102 @@ These conventions are the connective tissue behind the graph chapters. The param
 When modifying the implementation, preserve these contracts unless the change is explicitly meant to replace one of them.
 
 
+<!-- source: website/implementation/algorithm_validation.qmd -->
+
+# Algorithmic implementations, deviations and validation
+
+multiomeR reimplements a small number of reference algorithms so they can operate on the workflow's native matrices and graph state. This page is the maintained record of what those implementations preserve, where they deliberately differ, and what the executable validation establishes.
+
+The evidence labels used below are intentionally narrow:
+
+- **Reference-parity tested** means the repository and named reference implementation run on the same deterministic fixture and their returned values are compared directly.
+- **Reference-similarity tested** means exact equality is not an appropriate contract, so predefined similarity thresholds are checked against the named reference implementation.
+- **Algorithmically derived** means the implementation is checked against an independent mathematical result, not against another software implementation.
+- **Internally checked** means a deterministic repository fixture exercises an internal contract without establishing reference parity.
+
+Passing these fixtures does not validate every dataset, parameter regime, approximate-neighbor realization, biological interpretation, or downstream target. The [CI workflow](https://github.com/koefoeden/multiomeR/blob/main/.github/workflows/algorithm-validation.yaml) reruns the checks when the validation scripts, relevant helpers, or Pixi environment change.
+
+| Implementation | Evidence status | Maintained reference | Current fixed-fixture result |
+|---|---|---|---|
+| BPCells-native UCell | Reference-parity tested | UCell 2.14.0 | Exact values, dimensions, and dimnames |
+| Native WNN | Reference-similarity tested | Seurat 5.5.0 | Production-like fixture: weight Spearman 0.925; mean neighbor overlap 0.952 |
+| Sparse SCAVENGE propagation | Algorithmically derived and reference-similarity tested | SCAVENGE 1.0.2 at `8ee8b173d965` | Closed-form delta 3.55e-13; score-rank Spearman 0.9966; significant-cell Jaccard 1.0 |
+
+## BPCells-native UCell scoring
+
+**Reference algorithm.** [`UCell::ScoreSignatures_UCell()`](https://bioconductor.org/packages/release/bioc/html/UCell.html) calculates per-cell signature scores from descending feature ranks, caps ranks at `maxRank`, combines positive and negative signatures, and clips negative combined scores to zero. The maintained comparison also covers `UCell::AddModuleScore_UCell()`.
+
+**Reason for reimplementation.** The workflow keeps gene-by-cell counts in BPCells-backed matrices. Materializing the complete matrix in memory or building a Seurat object solely for marker scoring would discard that storage contract, so multiomeR ranks bounded cell chunks and returns metadata-ready scores directly.
+
+**Behavior preserved.** The implementation preserves UCell signature syntax (`+` and `-` suffixes), descending per-cell ranks, configurable tie handling, `maxRank` capping, impute/skip behavior for missing genes, negative-signature weighting, lower-bound clipping, signature names, and cell order.
+
+**Deliberate deviations and consequences.** Matrix materialization is limited to one cell chunk at a time, and optional fork workers operate across chunks. This changes memory and execution behavior but not the tested score values. The helper returns a data frame instead of mutating a Seurat object. The target-level marker validator rejects configured genes missing from the Cell Ranger reference before normal pipeline scoring, whereas the lower-level helper still exposes UCell's impute/skip modes for explicit use.
+
+**Implementation and wiring.** The scorer is [`calculate_BPCells_UCell_scores_from_matrix()` in `R/processing_GEX_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_GEX_helpers.R). [`extra_targets/general_aggregation_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/general_aggregation_targets.R) validates `UCell_GEX_marker_genes_list`, and [`extra_targets/GEX_graph_and_cluster_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/GEX_graph_and_cluster_targets.R) computes cell-level scores before GEX cell-type assignment. ATAC and WNN cell-type targets reuse those metadata scores.
+
+**Validation.** [`scripts/validate_scoring_parity.R`](https://github.com/koefoeden/multiomeR/blob/main/scripts/validate_scoring_parity.R) creates a deterministic 500-gene by 37-cell matrix, writes the project input as BPCells, and compares signed signatures with imputed and skipped missing genes. It requires `identical()` values, dimensions, and dimnames against UCell 2.14.0. It also retains exact Seurat `AddModuleScore` and cell-cycle helper checks plus a metadata-join contract.
+
+The UCell 2.14.0 reference call with imputed missing genes can emit non-fatal R stack-imbalance warnings under the repository's R 4.5 environment. A narrow diagnostic reproduced them in the UCell reference call but not in the repository scorer. The validation therefore runs the reference call in a disposable `callr` process and compares its returned matrix in the clean parent session; this isolates the package warning without weakening the equality assertion or changing the runtime.
+
+**Status and rerun.** Reference-parity tested against UCell 2.14.0 with exact equality; passing in the current locked environment.
+
+```bash
+pixi run test-scoring-parity
+```
+
+## Native weighted nearest neighbors
+
+**Reference algorithm.** [`Seurat::FindMultiModalNeighbors()`](https://satijalab.org/seurat/reference/findmultimodalneighbors) constructs cell-specific modality weights from within- and cross-modality neighborhood prediction, collects candidate neighbors across modalities, and selects a weighted multimodal neighbor set.
+
+**Reason for reimplementation.** The pipeline already has aligned RNA PCA/Harmony and ATAC LSI/Harmony matrices and needs reusable neighbor indices, distances, and modality weights without creating a Seurat object. Native graph state also feeds UMAP, Leiden clustering, SCAVENGE, and the optional Seurat/Signac export.
+
+**Behavior preserved.** [`weighted_nearest_neighbors_BPCells()`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_multimodal_helpers.R) preserves row-wise L2 normalization, per-modality nearest neighbors, nearest-distance correction, within/cross prediction kernels, capped modality affinity ratios, normalized cell-specific modality weights, candidate-set union, weighted neighbor ranking, and Seurat's transformation from weighted affinity to neighbor distance.
+
+**Deliberate deviations and consequences.** BPCells HNSW replaces Seurat's Annoy search, so approximate candidate sets need not be identical. Adaptive bandwidth uses the corrected distance to the configured `k`th neighbor rather than Seurat 5.5.0's default SNN-derived far-neighbor bandwidth. The helper does not expose Seurat's optional smoothing or cross-constant list, and BPCells builds downstream SNN state rather than storing Seurat `Neighbor` and `Graph` objects. Its current `seed` argument is not consulted by the HNSW calls, so it must not be interpreted as controlling neighbor-search randomness. These choices can change weights, selected neighbors, SNN edges, clusters, and UMAP coordinates; correlation and overlap are therefore the validation contract, not exact equality.
+
+**Implementation and wiring.** The implementation and graph consumers are in [`R/processing_multimodal_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_multimodal_helpers.R). [`extra_targets/WNN_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/WNN_targets.R) aligns modality embeddings, creates `WNN_results_raw`, filters small clusters, optionally recomputes `WNN_results`, and wires that state into WNN UMAP, clustering, metadata, and cell-type targets.
+
+**Validation.** [`scripts/validate_algorithm_deviations.R`](https://github.com/koefoeden/multiomeR/blob/main/scripts/validate_algorithm_deviations.R) compares two deterministic RNA/ATAC fixtures with Seurat 5.5.0. The headline production-like fixture uses 400 cells, 12 dimensions, `k = 30`, and candidate range 200, matching the pipeline's configured neighbor count and native WNN candidate range. It requires Spearman correlation at least 0.90 for each modality weight, mean neighbor-set overlap at least 0.94, and first-quartile overlap at least 0.90; observed values are 0.925, 0.952, and 0.933. A smaller 160-cell stress fixture retains opposing per-cell noise gradients at `k = 15` and candidate range 50. Its deliberately looser thresholds are 0.80, 0.85, and 0.75; observed values are 0.851, 0.924, and 0.867. The current locked BPCells 0.3.1 build is pinned at `28759cdd5125`.
+
+**Status and rerun.** Reference-similarity tested against Seurat 5.5.0; passing. This does not assert parity of SNN weights, clustering, or UMAP.
+
+```bash
+pixi run Rscript scripts/validate_algorithm_deviations.R
+```
+
+## Sparse SCAVENGE propagation and significance
+
+**Reference algorithm.** [SCAVENGE 1.0.2 at commit `8ee8b173d965`](https://github.com/sankaranlab/SCAVENGE/tree/8ee8b173d965009a696b2a590d5b17b28b7cf851) selects high chromVAR Z-score seed cells, performs a column-normalized random walk with restart, caps and rescales the propagation score into a trait relevance score (TRS), and uses degree-matched seed permutations to identify significant cells.
+
+**Reason for reimplementation.** The reference package's last commit and dependency stack predate the pipeline's current R/Bioconductor environment. multiomeR needs sparse propagation over native RNA, ATAC, and WNN SNN matrices and must avoid materializing a cell-by-permutation score matrix for large cell sets.
+
+**Behavior preserved.** The implementation preserves the one-sided Z-score seed threshold and top-percent cap, column-normalized transition matrix, equal seed restart mass, iterative random walk, 0.95 propagation-score cap, min-max scaling, Z-score scale factor, degree-matched seed sampling, and per-cell comparison with permuted propagation scores.
+
+**Deliberate deviations and consequences.** The reference workflow normally uses a mutual-kNN graph; multiomeR propagates over BPCells-derived SNN graphs from RNA, ATAC, or WNN state. Seed and scale-factor helpers guarantee at least one selected cell for small inputs and break boundary ties deterministically. The random walk validates graph inputs and has a maximum-iteration guard. Permutations accumulate exceedance counts rather than retaining every score vector, and report add-one empirical p-values, `(exceedances + 1) / (permutations + 1)`, with `p < 0.05`; the reference thresholds raw exceedance counts. These graph, boundary, and p-value choices can alter TRS values and significant-cell calls, especially near thresholds.
+
+**Implementation and wiring.** Seed selection, sparse random walk, streaming degree-matched permutations, and TRS construction are in [`R/gchromvar_SCAVENGE_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/gchromvar_SCAVENGE_helpers.R). [`module_genetic_enrichment/SCAVENGE_graph_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/module_genetic_enrichment/SCAVENGE_graph_targets.R) constructs each graph and maps chromVAR Z-score records into `TRS_tibbles`; [`SCAVENGE_group_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/module_genetic_enrichment/SCAVENGE_group_targets.R) wires group summaries and plots.
+
+**Validation.** The deterministic 60-cell fixture contains three disconnected, regular graph blocks and three enriched seeds. First, the iterative sparse random walk is compared with the closed-form solution
+
+\[
+s = r\left(I - (1-r)P\right)^{-1}p_0,
+\]
+
+with a maximum absolute tolerance of 1e-10; the current delta is 3.55e-13. Second, compact local reference functions reproduce the relevant SCAVENGE 1.0.2 code at the pinned commit without installing its historical dependency stack. With 199 fixed-RNG permutations, the test requires TRS rank Spearman correlation at least 0.99 and significant-cell Jaccard overlap at least 0.80. Current values are 0.9966 and 1.0.
+
+**Status and rerun.** Random-walk propagation is algorithmically derived against the closed form, and score ranks/significant-cell calls are reference-similarity tested on one small deterministic fixture. This is not full reference-package parity and does not validate graph construction, chromVAR inputs, or genome-scale permutation stability.
+
+```bash
+pixi run Rscript scripts/validate_algorithm_deviations.R
+```
+
+Run the complete maintained set, including UCell, with:
+
+```bash
+pixi run test-algorithm-validation
+```
+
+
 ## Part: Background
 
 
@@ -1301,7 +1415,7 @@ When modifying the implementation, preserve these contracts unless the change is
 multiomeR challenges the commonly used single-cell & single-nucleus processing workflows, where most processing steps are run sequentially and are implemented in hard-to-customize packaged functions. Widely used examples include brilliant packages such as Seurat and Signac. However, while offering superb ease-of-use, this traditional workflow has two important downsides:
 
 1) The built-in processing steps (usually functions) are only customizable to levels chosen by the package developers, which often falls short in the face of the enormous variance and complexity of real-life single-cell and single-nucleus sequencing datasets
-2) The traditional workflows leave a lot of performance on the table, since they rarely take advantage of the inherent parallelism when processing these large sequencing datasets. This includes commonly found multiplicities of independent experimental samples (donors, reactions), data modalities, data representations, downstream analyses, etc.
+2) The traditional workflows leave a lot of performance on the table, since they rarely take advantage of the inherent parallelism when processing these large sequencing datasets. This includes commonly found multiplicities of independent experimental samples (donors, GEM wells), data modalities, data representations, downstream analyses, etc.
 
 Until recently, this simplified and easy-to-use workflow has been necessary to make the tools practically usable in a busy research environment. However, with the recent advent of powerful, AI coding agents, which can quickly ingest large complex codebases, this inherent tug-of-war between performance/customizability and ease-of-use/code interpretability has started to move the needle in favor of complex, performant, and customizable approaches. This is especially relevant because single-cell and single-nucleus datasets continue to grow faster than routine compute capacity. These observations, together with a lack of an established framework for the processing of Multiome data, constitute the main motivation for the development of this pipeline.
 
@@ -1330,11 +1444,11 @@ multiomeR achieves its high performance through two key design choices:
 
 
 
-The root `_targets.R` creates dataset, reaction, and aggregation mapping rows, then maps target fragments from `extra_targets/`. Use the diagrams to find the relevant stage, then inspect the corresponding source file for the complete command and resource declaration.
+The root `_targets.R` creates dataset, GEM well, and aggregation mapping rows, then maps target fragments from `extra_targets/`. Use the diagrams to find the relevant stage, then inspect the corresponding source file for the complete command and resource declaration.
 
 | Stage | Primary source |
 |---|---|
-| Reaction preprocessing | `extra_targets/per_reaction_targets.R` |
+| GEM well preprocessing | `extra_targets/per_GEM_well_targets.R` |
 | Dataset summaries | `extra_targets/per_dataset_targets.R` |
 | Aggregation setup and shared QC | `extra_targets/general_aggregation_targets.R` |
 | GEX | `extra_targets/GEX_merge_and_dim_reduc_targets.R`, `extra_targets/GEX_graph_and_cluster_targets.R` |
@@ -1345,7 +1459,7 @@ The root `_targets.R` creates dataset, reaction, and aggregation mapping rows, t
 
 ## Parallel pre-processing
 
-This view covers per-reaction processing and QC, including optional ambient RNA correction, donor demultiplexing, doublet detection, barcode filtering, and handoffs into aggregation-level GEX and ATAC objects.
+This view covers per GEM well processing and QC, including optional ambient RNA correction, donor demultiplexing, doublet detection, barcode filtering, and handoffs into aggregation-level GEX and ATAC objects.
 
 [Mermaid graph omitted; source: `website/figures/human_curated/parallel_v2.mmd`]
 
@@ -1364,6 +1478,8 @@ This view covers ATAC QC, peak calling, consensus peak construction, chromatin a
 ## WNN integration
 
 This view covers GEX and ATAC embedding handoffs, WNN integration, modality weights, cluster comparison, and integrated metadata outputs.
+
+The native implementation, its differences from Seurat, and the maintained similarity thresholds are recorded in [Algorithmic implementations, deviations and validation](algorithm_validation.qmd#native-weighted-nearest-neighbors).
 
 [Mermaid graph omitted; source: `website/figures/human_curated/WNN_v2.mmd`]
 
@@ -1410,6 +1526,8 @@ The main target fragments live in `setup_targets.R`, `gchromVAR_targets.R`, `SCA
 ## Single-nucleus and graph-based enrichment
 
 This view covers the configured GWAS inputs, single-nucleus enrichment state, graph propagation, and downstream trait summaries. Additional cell-type contribution and locus-attribution branches may be pruned from this compact orientation view; use the manifest for the complete graph.
+
+The sparse SCAVENGE reimplementation, deliberate graph and permutation differences, and validation evidence are recorded in [Algorithmic implementations, deviations and validation](algorithm_validation.qmd#sparse-scavenge-propagation-and-significance).
 
 [Mermaid graph omitted; source: `website/figures/human_curated/genetic_enrichment_single_nucleus_v2.mmd`]
 

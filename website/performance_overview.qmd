@@ -1,6 +1,6 @@
 # Performance and scaling
 
-multiomeR gains performance from two complementary mechanisms: `{targets}` exposes independent reactions, modalities, and analysis branches for concurrent execution, while BPCells keeps large matrices on disk and streams many operations instead of materializing dense objects.
+multiomeR gains performance from two complementary mechanisms: `{targets}` exposes independent GEM wells, modalities, and analysis branches for concurrent execution, while BPCells keeps large matrices on disk and streams many operations instead of materializing dense objects.
 
 Actual wall time depends on input nuclei, retained cells, peak counts, enabled plots and modules, hardware, scheduler latency, controller concurrency, and which targets are already up to date. Treat benchmark results as workload descriptions, not promises for another machine or configuration.
 
@@ -8,7 +8,7 @@ Actual wall time depends on input nuclei, retained cells, peak counts, enabled p
 
 The current stored benchmark contains two public aggregations and estimates the critical path to each final `multimodal_Seurat_object` from recorded `{targets}` runtime metadata.
 
-| Aggregation | Reactions | Cell Ranger input nuclei | Estimated critical path | Sum if ancestor targets ran serially |
+| Aggregation | GEM wells | Cell Ranger input nuclei | Estimated critical path | Sum if ancestor targets ran serially |
 |---|---:|---:|---:|---:|
 | `immune_human_2x` | 2 | 17,277 | 17.3 minutes | 31.4 minutes |
 | `PBMC_human_6x` | 6 | 51,291 | 23.8 minutes | 52.4 minutes |

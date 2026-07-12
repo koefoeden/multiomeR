@@ -5,11 +5,11 @@ pipeline_name <- "processing_and_aggregation"
 source("helpers/_setup.R")
 ```
 
-The root `_targets.R` creates dataset, reaction, and aggregation mapping rows, then maps target fragments from `extra_targets/`. Use the diagrams to find the relevant stage, then inspect the corresponding source file for the complete command and resource declaration.
+The root `_targets.R` creates dataset, GEM well, and aggregation mapping rows, then maps target fragments from `extra_targets/`. Use the diagrams to find the relevant stage, then inspect the corresponding source file for the complete command and resource declaration.
 
 | Stage | Primary source |
 |---|---|
-| Reaction preprocessing | `extra_targets/per_reaction_targets.R` |
+| GEM well preprocessing | `extra_targets/per_GEM_well_targets.R` |
 | Dataset summaries | `extra_targets/per_dataset_targets.R` |
 | Aggregation setup and shared QC | `extra_targets/general_aggregation_targets.R` |
 | GEX | `extra_targets/GEX_merge_and_dim_reduc_targets.R`, `extra_targets/GEX_graph_and_cluster_targets.R` |
@@ -20,7 +20,7 @@ The root `_targets.R` creates dataset, reaction, and aggregation mapping rows, t
 
 ## Parallel pre-processing
 
-This view covers per-reaction processing and QC, including optional ambient RNA correction, donor demultiplexing, doublet detection, barcode filtering, and handoffs into aggregation-level GEX and ATAC objects.
+This view covers per GEM well processing and QC, including optional ambient RNA correction, donor demultiplexing, doublet detection, barcode filtering, and handoffs into aggregation-level GEX and ATAC objects.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_mermaid("website/figures/human_curated/parallel_v2.mmd")
@@ -45,6 +45,8 @@ emit_mermaid("website/figures/human_curated/ATAC_v2.mmd")
 ## WNN integration
 
 This view covers GEX and ATAC embedding handoffs, WNN integration, modality weights, cluster comparison, and integrated metadata outputs.
+
+The native implementation, its differences from Seurat, and the maintained similarity thresholds are recorded in [Algorithmic implementations, deviations and validation](algorithm_validation.qmd#native-weighted-nearest-neighbors).
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_mermaid("website/figures/human_curated/WNN_v2.mmd")

@@ -171,30 +171,30 @@ build_signac_annotation_GRanges <- function(reference_Ensembl_annotations_GRange
 #' Build the legacy Seurat/Signac export object from BPCells-native matrices and metadata.
 #'
 #' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
-#' @param reaction_ID_vec Character vector of reaction IDs to include in the
+#' @param GEM_well_ID_vec Character vector of `GEM_well_ID` values to include in the
 #'   exported fragment records.
 #' @param cellranger_summary_files Character vector/list of Cell Ranger summary
-#'   file paths aligned to `reaction_ID_vec`.
+#'   file paths aligned to `GEM_well_ID_vec`.
 #' @return A single branch record, usually a list or one-row tibble, carrying all inputs needed by a dynamic target branch.
 #' @keywords internal
 
-make_signac_fragment_records <- function(metadata_tibble, reaction_ID_vec, cellranger_summary_files) {
+make_signac_fragment_records <- function(metadata_tibble, GEM_well_ID_vec, cellranger_summary_files) {
   cellranger_summary_files <- unlist(cellranger_summary_files, use.names = FALSE)
 
-  if (length(cellranger_summary_files) != length(reaction_ID_vec)) {
-    stop("cellranger_summary_files must have the same length as reaction_ID_vec.")
+  if (length(cellranger_summary_files) != length(GEM_well_ID_vec)) {
+    stop("cellranger_summary_files must have the same length as GEM_well_ID_vec.")
   }
 
   purrr::map2_dfr(
-    reaction_ID_vec,
-    seq_along(reaction_ID_vec),
-    \(reaction_ID, idx) {
+    GEM_well_ID_vec,
+    seq_along(GEM_well_ID_vec),
+    \(GEM_well_ID, idx) {
       fragment_file <- file.path(dirname(cellranger_summary_files[[idx]]), "atac_fragments.tsv.gz")
-      assay_cell_names <- metadata_tibble$barcode_w_prefix[metadata_tibble$TENX_reaction_ID == reaction_ID]
-      fragment_cell_names <- sub(paste0("^", reaction_ID, "_"), "", assay_cell_names)
+      assay_cell_names <- metadata_tibble$barcode_w_prefix[metadata_tibble$GEM_well_ID == GEM_well_ID]
+      fragment_cell_names <- sub(paste0("^", GEM_well_ID, "_"), "", assay_cell_names)
 
       tibble::tibble(
-        reaction_ID = reaction_ID,
+        GEM_well_ID = GEM_well_ID,
         fragment_file = fragment_file,
         fragment_index_file = paste0(fragment_file, ".tbi"),
         assay_cell_names = list(assay_cell_names),
@@ -211,7 +211,7 @@ create_signac_fragment_objects <- function(fragment_records_tibble) {
 
   purrr::pmap(
     fragment_records_tibble,
-    \(reaction_ID, fragment_file, fragment_index_file, assay_cell_names, fragment_cell_names) {
+    \(GEM_well_ID, fragment_file, fragment_index_file, assay_cell_names, fragment_cell_names) {
       cells <- fragment_cell_names
       names(cells) <- assay_cell_names
       Signac::CreateFragmentObject(

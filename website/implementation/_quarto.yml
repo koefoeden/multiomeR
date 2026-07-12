@@ -20,6 +20,8 @@ book:
           text: Reading the graph views
         - href: implementation_conventions.qmd
           text: Implementation conventions
+        - href: algorithm_validation.qmd
+          text: Algorithmic implementations, deviations and validation
     - part: "Background"
       chapters:
         - href: background_philosophy.qmd

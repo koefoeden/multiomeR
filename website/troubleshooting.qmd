@@ -14,7 +14,7 @@ targets::tar_manifest(callr_function = NULL)
 Manifest-time failures usually indicate one of these contracts:
 
 - an unknown, misspelled, wrongly typed, or required YAML parameter;
-- an aggregation referencing a reaction absent from `cfg_reactions.tsv`;
+- an aggregation referencing a GEM well absent from `cfg_GEM_wells.tsv`;
 - an unknown module or a missing module-config row;
 - a malformed `crew_controllers.R` return value; or
 - an R package or startup problem.
@@ -73,11 +73,11 @@ Code, configuration, input files, controller-independent global objects, or an u
 
 Check the contracts in [Configuration and inputs](main_inputs.qmd):
 
-- `reaction_cellranger_count_dir` contains the required `outs/` files;
+- `GEM_well_cellranger_arc_count_dir` contains the required `outs/` files;
 - VCF-backed demultiplexing also has `atac_possorted_bam.bam`;
-- donor and reaction metadata keys are present and unique;
+- donor and GEM well metadata keys are present and unique;
 - non-key metadata columns belong to only one metadata table; and
-- configured donor and reaction IDs match the metadata values exactly.
+- configured donor and GEM well IDs match the metadata values exactly.
 
 ## Controller and scheduler failures
 

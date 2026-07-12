@@ -31,7 +31,7 @@ targets::tar_make(
 
 Review before continuing:
 
-- reaction- and dataset-level barcode exclusion summaries for unexpected sample loss;
+- GEM well- and dataset-level barcode exclusion summaries for unexpected sample loss;
 - PCA, Harmony, UMAP, and metadata-association diagnostics for technical structure;
 - cluster markers and marker-module scores for coherent cell-type labels; and
 - `GEX_Seurat_object.your_aggregation` plus `metadata_w_cell_types_tibble.GEX.your_aggregation` for the cells entering ATAC processing.

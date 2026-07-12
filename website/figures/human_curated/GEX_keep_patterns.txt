@@ -5,7 +5,7 @@
 ^metadata_w_cell_types_tibble\.GEX\.
 ^PCA_BPCells\.GEX\.
 ^PCA_clusters\.GEX\.
-^reaction_ID_metadata_tibble\.
+^GEM_well_metadata_tibble\.
 ^scDblFinder_results_df\.GEX\.
 ^UCell_GEX_marker_genes_list\.
 ^UMAP_embeddings_tibble\.GEX\.

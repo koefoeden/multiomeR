@@ -5,15 +5,29 @@ pipeline_name <- "processing_and_aggregation"
 source("helpers/_setup.R")
 ```
 
-multiomeR uses three linked configuration layers. A **dataset** defines a shared reference and reaction-level QC policy, a **reaction** points to one `cellranger-arc count` output, and an **aggregation** selects reactions for joint GEX, ATAC, and WNN analysis.
+multiomeR uses three linked configuration layers. A **dataset** defines a shared reference and GEM well-level QC policy, a **GEM well** points to one `cellranger-arc count` output, and an **aggregation** selects GEM wells for joint GEX, ATAC, and WNN analysis.
 
 | Layer | Configuration | Key relationship |
 |---|---|---|
-| Dataset | `cfg_datasets.yaml` | Reactions refer to the dataset key. |
-| Reaction | `cfg_reactions.tsv` | Aggregations refer to one or more `reaction_ID` values. |
-| Aggregation | `cfg_aggregations.yaml` | Metadata tables must cover the configured donor and reaction IDs. |
+| Dataset | `cfg_datasets.yaml` | GEM wells refer to the dataset key. |
+| GEM well | `cfg_GEM_wells.tsv` | Aggregations refer to one or more `GEM_well_ID` values. |
+| Aggregation | `cfg_aggregations.yaml` | Metadata tables must cover the configured donor and GEM well IDs. |
 
-The committed `cfg_datasets.yaml`, `cfg_reactions.tsv`, and `cfg_aggregations.yaml` files are symlinks to public templates. Keep those templates as examples. For a real project, replace the symlinks with project-specific files or provide them from a downstream private repository.
+The committed `cfg_datasets.yaml`, `cfg_GEM_wells.tsv`, and `cfg_aggregations.yaml` files are symlinks to public templates. Keep those templates as examples. For a real project, replace the symlinks with project-specific files or provide them from a downstream private repository.
+
+## Migration to GEM well terminology
+
+This release makes a breaking terminology transition to the 10x Genomics term **GEM well**. There are no compatibility aliases: update configuration, metadata, and any code that calls the renamed helpers together. Existing identifier values do not need to change.
+
+| Previous name | Current name |
+|---|---|
+| `cfg_reactions.tsv` / `cfg_reactions_template.tsv` | `cfg_GEM_wells.tsv` / `cfg_GEM_wells_template.tsv` |
+| `reaction_ID` or `TENX_reaction_ID` | `GEM_well_ID` |
+| `aggregation_reaction_IDs` | `aggregation_GEM_well_IDs` |
+| `aggregation_reaction_ID_metadata_tsv` | `aggregation_GEM_well_metadata_tsv` |
+| `reaction_donor_id`, `reaction_n_donors`, `reaction_cellbender_h5_file`, `reaction_donors_VCF_file` | The corresponding `GEM_well_*` columns |
+| `reaction_cellranger_count_dir` | `GEM_well_cellranger_arc_count_dir` |
+| `per_reaction_targets.R` | `per_GEM_well_targets.R` |
 
 ## Start with one explicitly scoped analysis
 
@@ -26,7 +40,7 @@ The following minimum example shows the relationship between the three layers. R
 ```{.yaml filename="cfg_datasets.yaml"}
 your_dataset:
   dataset_cellranger_arc_refdata_dir: /path/to/refdata-cellranger-arc
-  dataset_QC_exclude_list_per_reaction:
+  dataset_QC_exclude_list_per_GEM_well:
     - TSS.enrichment < 4
     - nucleosome_signal > 4
     - nCount_RNA < 250
@@ -35,17 +49,17 @@ your_dataset:
 
 `dataset_cellranger_arc_refdata_dir` is required. The QC expressions are evaluated against per-barcode metadata. Starting with `dataset_run_amulet: false` avoids adding AMULET to the first data run; enable it deliberately after the basic input contract works.
 
-### 2. Define one reaction
+### 2. Define one GEM well
 
-```{.text filename="cfg_reactions.tsv"}
-reaction_ID	dataset	reaction_donor_id	reaction_n_donors	reaction_cellranger_count_dir	reaction_cellbender_h5_file	reaction_donors_VCF_file
-your_reaction	your_dataset	donor_1	1	/path/to/your_reaction	NA	NA
+```{.text filename="cfg_GEM_wells.tsv"}
+GEM_well_ID	dataset	GEM_well_donor_id	GEM_well_n_donors	GEM_well_cellranger_arc_count_dir	GEM_well_cellbender_h5_file	GEM_well_donors_VCF_file
+your_GEM_well	your_dataset	donor_1	1	/path/to/your_GEM_well	NA	NA
 ```
 
-`reaction_cellranger_count_dir` points to the directory containing `outs/`, not to `outs/` itself. The baseline pipeline requires:
+`GEM_well_cellranger_arc_count_dir` points to the directory containing `outs/`, not to `outs/` itself. The baseline pipeline requires:
 
 ```{.text filename="Text"}
-<reaction_cellranger_count_dir>/outs/
+<GEM_well_cellranger_arc_count_dir>/outs/
 |-- summary.csv
 |-- filtered_feature_bc_matrix.h5
 |-- atac_fragments.tsv.gz
@@ -53,7 +67,7 @@ your_reaction	your_dataset	donor_1	1	/path/to/your_reaction	NA	NA
 `-- per_barcode_metrics.csv
 ```
 
-If `reaction_donors_VCF_file` is configured, `atac_possorted_bam.bam` is also required for `cellsnp-lite`. Without a VCF, the pipeline skips genotype demultiplexing and assigns `reaction_donor_id` to every called nucleus. That donor ID must match the donor metadata table.
+If `GEM_well_donors_VCF_file` is configured, `atac_possorted_bam.bam` is also required for `cellsnp-lite`. Without a VCF, the pipeline skips genotype demultiplexing and assigns `GEM_well_donor_id` to every called nucleus. That donor ID must match the donor metadata table.
 
 ### 3. Create keyed metadata
 
@@ -64,22 +78,26 @@ donor_id	condition
 donor_1	control
 ```
 
-The reaction metadata table must contain one unique row per `TENX_reaction_ID`:
+The GEM well metadata table must contain one unique row per `GEM_well_ID`:
 
-```{.text filename="reaction_metadata.tsv"}
-TENX_reaction_ID	batch
-your_reaction	batch_1
+```{.text filename="GEM_well_metadata.tsv"}
+GEM_well_ID	batch
+your_GEM_well	batch_1
 ```
 
-Apart from their key columns, the donor and reaction tables must not reuse column names. Put donor-specific phenotypes and covariates in the donor table; put library-, run-, or batch-specific variables in the reaction table.
+Apart from their key columns, the donor and GEM well tables must not reuse column names. Put donor-specific phenotypes and covariates in the donor table; put library-, run-, or batch-specific variables in the GEM well table.
+
+The GEM well table may contain rows for multiple aggregations. Each aggregation
+subsets it to `aggregation_GEM_well_IDs` before expensive targets consume it,
+so metadata changes for unrelated GEM wells do not propagate downstream.
 
 ### 4. Define one aggregation
 
 ```{.yaml filename="cfg_aggregations.yaml"}
 your_aggregation:
-  aggregation_reaction_IDs: [your_reaction]
+  aggregation_GEM_well_IDs: [your_GEM_well]
   aggregation_donor_id_metadata_tsv: /path/to/donor_metadata.tsv
-  aggregation_reaction_ID_metadata_tsv: /path/to/reaction_metadata.tsv
+  aggregation_GEM_well_metadata_tsv: /path/to/GEM_well_metadata.tsv
   aggregation_GEX_marker_genes:
     Cell_type_A: [GENE1, GENE2]
     Cell_type_B: [GENE3, GENE4]
@@ -100,7 +118,7 @@ manifest |>
   dplyr::select(name, description)
 ```
 
-Manifest construction validates the YAML parameter schema, aggregation-to-reaction references, module names and rows, and controller setup. Metadata file contents are validated when their targets run. Fix manifest-time errors before calling `tar_make()`, then continue to [Running the workflow](main_running.qmd).
+Manifest construction validates the YAML parameter schema, aggregation references to GEM wells, module names and rows, and controller setup. Metadata file contents are validated when their targets run. Fix manifest-time errors before calling `tar_make()`, then continue to [Running the workflow](main_running.qmd).
 
 ## Configuration reference
 
@@ -123,27 +141,27 @@ emit_yaml_template_entry(datasets_config_file, "immune_human_dataset")
 
 </details>
 
-### Reaction columns
+### GEM well columns
 
-Reaction-level configuration lives in [`cfg_reactions.tsv`](`r reactions_github_file`).
+GEM well-level configuration lives in [`cfg_GEM_wells.tsv`](`r GEM_wells_github_file`).
 
 | Column | Meaning |
 |---|---|
-| `reaction_ID` | Stable reaction identifier used in target names and aggregation config. |
+| `GEM_well_ID` | Stable GEM well identifier used in target names and aggregation config. |
 | `dataset` | Dataset key from `cfg_datasets.yaml`. |
-| `reaction_donor_id` | Donor assigned to a non-multiplexed reaction; use `NA` when donor identities are resolved from a VCF. |
-| `reaction_n_donors` | Expected donor count. |
-| `reaction_cellranger_count_dir` | Path to the directory containing `outs/`. |
-| `reaction_cellbender_h5_file` | Optional CellBender-corrected GEX H5 file; otherwise `NA`. |
-| `reaction_donors_VCF_file` | Optional donor-genotype VCF for `cellsnp-lite` and `vireo`; otherwise `NA`. |
+| `GEM_well_donor_id` | Donor assigned to a non-multiplexed GEM well; use `NA` when donor identities are resolved from a VCF. |
+| `GEM_well_n_donors` | Expected donor count. |
+| `GEM_well_cellranger_arc_count_dir` | Path to the directory containing `outs/`. |
+| `GEM_well_cellbender_h5_file` | Optional CellBender-corrected GEX H5 file; otherwise `NA`. |
+| `GEM_well_donors_VCF_file` | Optional donor-genotype VCF for `cellsnp-lite` and `vireo`; otherwise `NA`. |
 
 <details>
-<summary>Show the public reaction table</summary>
+<summary>Show the public GEM well table</summary>
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
-reaction_template <- readr::read_tsv("cfg_reactions.tsv", show_col_types = FALSE)
+GEM_well_template <- readr::read_tsv("cfg_GEM_wells.tsv", show_col_types = FALSE)
 cat('<div class="scrollable-table">\n')
-cat(knitr::kable(reaction_template, format = "html"))
+cat(knitr::kable(GEM_well_template, format = "html"))
 cat("\n</div>\n")
 ```
 

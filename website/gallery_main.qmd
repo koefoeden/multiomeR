@@ -21,9 +21,9 @@ render_gallery_section(
   gallery_items,
   "Main pipeline",
   subsection_descriptions = c(
-    "Parallel reaction pre-processing" = paste(
-      "Dataset-level summaries compare reactions before aggregation and help",
-      "identify reaction-specific QC problems."
+    "Parallel GEM well pre-processing" = paste(
+      "Dataset-level summaries compare GEM wells before aggregation and help",
+      "identify GEM well-specific QC problems."
     ),
     "GEX" = "Aggregation-level RNA dimension-reduction and cell-type review outputs.",
     "ATAC" = "Aggregation-level chromatin-accessibility dimension-reduction outputs.",

@@ -41,9 +41,9 @@ rlang::list2(
     resources = get_tar_resources(cores_req = 6, RAM_GB_req = 8, RAM_GB_per_extra_core = 3)
   ),
   targets::tar_target(
-    name = scDblFinder_reaction_tibble.GEX,
-    description = "Prepare per-reaction GEX barcodes and cluster labels for scDblFinder",
-    command = prepare_scDblFinder_reaction_tibble(
+    name = scDblFinder_GEM_well_tibble.GEX,
+    description = "Prepare per GEM well GEX barcodes and cluster labels for scDblFinder",
+    command = prepare_scDblFinder_GEM_well_tibble(
       metadata_tibble = metadata_w_cell_types_unfiltered_tibble.GEX,
       cluster_collapse_list = aggregation_scDblFinder_GEX_cell_type_collapse_list,
       cluster_col = "PCA_harmony_SNN_cluster_cell_type"
@@ -51,23 +51,23 @@ rlang::list2(
     iteration = "vector"
   ),
   targets::tar_target(
-    name = scDblFinder_results_by_reaction_tibble.GEX,
-    description = "Run GEX scDblFinder independently per 10x reaction from BPCells count slices",
-    command = run_scDblFinder_BPCells_reaction(
+    name = scDblFinder_results_by_GEM_well_tibble.GEX,
+    description = "Run GEX scDblFinder independently for each 10x Genomics GEM well from BPCells count slices",
+    command = run_scDblFinder_BPCells_GEM_well(
       feature_matrix = aggregated_counts_BPCells_matrix.GEX,
-      scDblFinder_reaction_tibble = scDblFinder_reaction_tibble.GEX,
+      scDblFinder_GEM_well_tibble = scDblFinder_GEM_well_tibble.GEX,
       output_suffix = "GEX",
       dbr.sd = 1.0
     ),
-    pattern = map(scDblFinder_reaction_tibble.GEX),
+    pattern = map(scDblFinder_GEM_well_tibble.GEX),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = scDblFinder_results_df.GEX,
-    description = "Combine per-reaction GEX scDblFinder classifications [part_of_graph:GEX] [part_of_graph:seurat_export]",
-    command = scDblFinder_results_by_reaction_tibble.GEX |>
+    description = "Combine per GEM well GEX scDblFinder classifications [part_of_graph:GEX] [part_of_graph:seurat_export]",
+    command = scDblFinder_results_by_GEM_well_tibble.GEX |>
       dplyr::bind_rows() |>
-      dplyr::select(-dplyr::any_of("TENX_reaction_ID")) |>
+      dplyr::select(-dplyr::any_of("GEM_well_ID")) |>
       tibble::column_to_rownames("barcode_w_prefix"),
     resources = get_tar_resources(RAM_GB_req = 8)
   ),
@@ -78,19 +78,19 @@ rlang::list2(
       scDblFinder_metadata <- metadata_w_cell_types_unfiltered_tibble.GEX |>
         dplyr::left_join(scDblFinder_results_df.GEX |> tibble::rownames_to_column("barcode_w_prefix"), by = "barcode_w_prefix")
       plot <- scDblFinder_metadata |>
-        dplyr::select(PCA_harmony_SNN_cluster, PCA_harmony_SNN_cluster_cell_type, scDblFinder.score_GEX, scDblFinder.class_GEX, TENX_reaction_ID) |>
+        dplyr::select(PCA_harmony_SNN_cluster, PCA_harmony_SNN_cluster_cell_type, scDblFinder.score_GEX, scDblFinder.class_GEX, GEM_well_ID) |>
         tidyr::pivot_longer(cols = dplyr::all_of(c("PCA_harmony_SNN_cluster", "PCA_harmony_SNN_cluster_cell_type")), names_to = "cluster_type", values_to = "cluster_id") %>%
         ggplot2::ggplot(ggplot2::aes(x = cluster_id, y = scDblFinder.score_GEX)) +
         ggplot2::geom_violin(scale = "width") +
         ggplot2::geom_jitter(
           data = \(d) dplyr::filter(d, scDblFinder.class_GEX == "doublet"),
-          ggplot2::aes(color = TENX_reaction_ID),
+          ggplot2::aes(color = GEM_well_ID),
           size = 0.3,
           alpha = 0.5,
           width = 0.2
         ) +
         ggplot2::facet_wrap(~cluster_type, scales = "free_x") +
-        ggplot2::labs(subtitle = "Points are cells classified as doublet by scDblFinder, colored by reaction.") +
+        ggplot2::labs(subtitle = "Points are cells classified as doublet by scDblFinder, colored by GEM well.") +
         ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)) +
         ggplot2::theme(legend.position = "none")
 

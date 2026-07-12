@@ -29,7 +29,7 @@
 ^peak_TF_motif_matrix\.ATAC\.
 ^peaks_per_cluster_narrowPeaks\.peaks\.ATAC\.
 ^per_barcode_metrics_tibble\.
-^reaction_ID_metadata_tibble\.
+^GEM_well_metadata_tibble\.
 ^scDblFinder_results_df\.ATAC\.
 ^scDblFinder_results_df\.GEX\.
 ^TF_activity_BPCells_matrix_dir\.ATAC\.

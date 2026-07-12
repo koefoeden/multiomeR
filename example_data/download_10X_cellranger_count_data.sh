@@ -16,10 +16,10 @@ if [[ ! -f "${manifest}" ]]; then
   exit 1
 fi
 
-tail -n +2 "${manifest}" | while IFS=$'\t' read -r reaction_ID file_name url; do
-  [[ -z "${reaction_ID}" ]] && continue
+tail -n +2 "${manifest}" | while IFS=$'\t' read -r GEM_well_ID file_name url; do
+  [[ -z "${GEM_well_ID}" ]] && continue
 
-  output_dir="${dest_root}/${reaction_ID}/outs"
+  output_dir="${dest_root}/${GEM_well_ID}/outs"
   output_file="${output_dir}/${file_name}"
   mkdir -p "${output_dir}"
 

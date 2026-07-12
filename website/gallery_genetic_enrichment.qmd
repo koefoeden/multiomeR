@@ -12,7 +12,7 @@ gallery_items <- check_output_gallery_assets(
 )
 ```
 
-These curated outputs use the larger `PBMC_human_6x` aggregation, not the two-reaction quickstart, and show selected SCAVENGE/WNN results rather than every attribution output. See [Genetic enrichment](downstream_genetic_enrichment.qmd) for prerequisites, checkpoint targets, and interpretation guidance.
+These curated outputs use the larger `PBMC_human_6x` aggregation, not the quickstart with two GEM wells, and show selected SCAVENGE/WNN results rather than every attribution output. See [Genetic enrichment](downstream_genetic_enrichment.qmd) for prerequisites, checkpoint targets, and interpretation guidance.
 
 ```{r, echo = FALSE, results = "asis"}
 render_gallery_section(

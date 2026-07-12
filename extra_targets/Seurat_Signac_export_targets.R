@@ -10,7 +10,7 @@ rlang::list2(
     description = "Map prefixed pipeline barcodes to original CellRanger fragment files for Signac",
     command = make_signac_fragment_records(
       metadata_tibble = metadata_w_cell_types_tibble.WNN,
-      reaction_ID_vec = aggregation_reaction_IDs,
+      GEM_well_ID_vec = aggregation_GEM_well_IDs,
       cellranger_summary_files = aggregation_cellranger_summary_file_syms
     )
   ),

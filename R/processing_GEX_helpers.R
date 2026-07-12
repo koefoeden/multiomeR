@@ -505,11 +505,11 @@ get_SCT_variable_feature_variance <- function(SCT_out, pearson_residuals) {
 #' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
 #' @param barcode_vec Optional barcode subset; cells not present in the matrix are ignored, and an empty intersection is an error.
 #' @param donor_id_metadata_tibble Donor-level metadata tibble keyed by donor identifier.
-#' @param reaction_ID_metadata_tibble Reaction-level metadata tibble keyed by 10x reaction ID.
+#' @param GEM_well_metadata_tibble GEM well-level metadata tibble keyed by `GEM_well_ID`.
 #' @return A tibble with identifiers and derived columns consumed by downstream targets.
 #' @keywords internal
 
-prepare_GEX_metadata_tibble <- function(metadata_tibble, barcode_vec, donor_id_metadata_tibble = NULL, reaction_ID_metadata_tibble = NULL) {
+prepare_GEX_metadata_tibble <- function(metadata_tibble, barcode_vec, donor_id_metadata_tibble = NULL, GEM_well_metadata_tibble = NULL) {
   metadata_out <- metadata_tibble |>
     dplyr::distinct(barcode_w_prefix, .keep_all = TRUE) |>
     dplyr::filter(.data$barcode_w_prefix %in% barcode_vec) |>
@@ -518,31 +518,31 @@ prepare_GEX_metadata_tibble <- function(metadata_tibble, barcode_vec, donor_id_m
   if (!is.null(donor_id_metadata_tibble)) {
     metadata_out <- dplyr::left_join(metadata_out, donor_id_metadata_tibble, by = "donor_id")
   }
-  if (!is.null(reaction_ID_metadata_tibble)) {
-    metadata_out <- dplyr::left_join(metadata_out, reaction_ID_metadata_tibble, by = "TENX_reaction_ID")
+  if (!is.null(GEM_well_metadata_tibble)) {
+    metadata_out <- dplyr::left_join(metadata_out, GEM_well_metadata_tibble, by = "GEM_well_ID")
   }
 
   metadata_out
 }
 
-#' Prepare scDblFinder reaction tibble
+#' Prepare scDblFinder GEM well tibble
 #'
-#' Build one scDblFinder branch record per TENX reaction.
+#' Build one scDblFinder branch record per 10x Genomics GEM well.
 #'
 #' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
 #' @param cluster_collapse_list Optional named mapping used to collapse detailed
 #'   cluster labels before passing them to scDblFinder.
 #' @param cluster_col Single metadata column name used as the cluster/grouping variable.
-#' @param sample_col Metadata column identifying the reaction/sample used as the
+#' @param sample_col Metadata column identifying the GEM well/sample used as the
 #'   dynamic-branch key.
-#' @return A tibble with one row per reaction and list-columns for barcodes and
+#' @return A tibble with one row per GEM well and list-columns for barcodes and
 #'   named collapsed cluster labels.
 #' @keywords internal
 
-prepare_scDblFinder_reaction_tibble <- function(metadata_tibble,
+prepare_scDblFinder_GEM_well_tibble <- function(metadata_tibble,
                                                 cluster_collapse_list = NULL,
                                                 cluster_col,
-                                                sample_col = "TENX_reaction_ID") {
+                                                sample_col = "GEM_well_ID") {
   metadata <- metadata_tibble |>
     dplyr::select(dplyr::all_of(c("barcode_w_prefix", sample_col, cluster_col))) |>
     dplyr::distinct(barcode_w_prefix, .keep_all = TRUE) |>
@@ -564,41 +564,41 @@ prepare_scDblFinder_reaction_tibble <- function(metadata_tibble,
     dplyr::arrange(.data[[sample_col]])
 }
 
-#' Run scDblFinder BPCells reaction
+#' Run scDblFinder BPCells GEM well
 #'
-#' Run scDblFinder on one reaction-specific slice of a BPCells feature matrix.
+#' Run scDblFinder on one GEM well-specific slice of a BPCells feature matrix.
 #'
 #' @param feature_matrix Feature-by-cell matrix-like object with row names as feature IDs and column names as cell barcodes.
-#' @param scDblFinder_reaction_tibble One-row branch tibble with reaction ID,
+#' @param scDblFinder_GEM_well_tibble One-row branch tibble with GEM well ID,
 #'   barcode vector, and named cluster vector.
 #' @param output_suffix Suffix appended to `scDblFinder.class_` and
 #'   `scDblFinder.score_` output columns.
 #' @param dbr.sd Doublet-rate uncertainty passed to `scDblFinder::scDblFinder()`.
-#' @param sample_col Column containing the reaction/sample identifier in the
+#' @param sample_col Column containing the GEM well/sample identifier in the
 #'   branch tibble.
 #' @param ... Additional arguments passed to `scDblFinder::scDblFinder()`.
-#' @return A tibble keyed by `barcode_w_prefix` with reaction ID, doublet class,
+#' @return A tibble keyed by `barcode_w_prefix` with GEM well ID, doublet class,
 #'   and doublet score columns for the requested output suffix.
 #' @keywords internal
 
-run_scDblFinder_BPCells_reaction <- function(feature_matrix,
-                                             scDblFinder_reaction_tibble,
+run_scDblFinder_BPCells_GEM_well <- function(feature_matrix,
+                                             scDblFinder_GEM_well_tibble,
                                              output_suffix,
                                              dbr.sd = 1.0,
-                                             sample_col = "TENX_reaction_ID",
+                                             sample_col = "GEM_well_ID",
                                              ...) {
-  reaction_id <- scDblFinder_reaction_tibble[[sample_col]][[1]]
-  barcode_vec <- scDblFinder_reaction_tibble$barcode_vec[[1]]
-  clusters <- scDblFinder_reaction_tibble$cluster_vec[[1]]
+  GEM_well_ID <- scDblFinder_GEM_well_tibble[[sample_col]][[1]]
+  barcode_vec <- scDblFinder_GEM_well_tibble$barcode_vec[[1]]
+  clusters <- scDblFinder_GEM_well_tibble$cluster_vec[[1]]
   class_col <- paste0("scDblFinder.class_", output_suffix)
   score_col <- paste0("scDblFinder.score_", output_suffix)
 
   barcode_vec <- intersect(barcode_vec, colnames(feature_matrix))
   if (length(barcode_vec) == 0) {
-    stop("No barcodes found for scDblFinder reaction ", reaction_id)
+    stop("No barcodes found for scDblFinder GEM well ", GEM_well_ID)
   }
 
-  # Keep scDblFinder memory bounded by materializing only one reaction branch,
+  # Keep scDblFinder memory bounded by materializing only one GEM well branch,
   # and avoid MulticoreParam forked copies inside the branch.
   counts_matrix <- feature_matrix[, barcode_vec, drop = FALSE] |>
     methods::as("dgCMatrix")
@@ -618,7 +618,7 @@ run_scDblFinder_BPCells_reaction <- function(feature_matrix,
       barcode_w_prefix = .data$barcode_w_prefix,
       !!class_col := .data$class,
       !!score_col := .data$score,
-      TENX_reaction_ID = reaction_id
+      GEM_well_ID = GEM_well_ID
     )
 }
 

@@ -35,7 +35,7 @@ Status key:
 | B5 | accept | `website/intro_manual_usage.qmd` | Quickstart route links only to installation despite covering install, run, inspect. | Added the full three-step quickstart route. |
 | B6 | accept | `website/intro_manual_usage.qmd` | Own-data route links directly to inputs, bypassing overview/running pages. | Added overview, configuration, and checkpoint links. |
 | B7 | accept | `website/intro_manual_usage.qmd` | Manual routing page omits basic prerequisites. | Added a dedicated prerequisites section. |
-| B8 | accept | `website/intro_manual_usage.qmd` | Definition of "reaction" is too hardware-specific and may confuse sequencing lanes. | Replaced it with the configuration/output-directory definition. |
+| B8 | accept | `website/intro_manual_usage.qmd` | Definition of "GEM well" is too hardware-specific and may confuse sequencing lanes. | Replaced it with the configuration/output-directory definition. |
 | B9 | accept | `website/intro_manual_usage.qmd` | Manual map omits Performance and Output gallery sections. | Added output, operation, scaling, and troubleshooting routes. |
 | B10 | accept | `website/main_overview.qmd` | First own-data page lacks entry requirements and next action. | Added entry requirements and a recommended path. |
 | B11 | revise | `website/main_overview.qmd` | Role is ambiguous because intro page bypasses it. | Kept the page but made it a stable stage-based orientation page. |
@@ -82,7 +82,7 @@ Status key:
 | E5 | accept | `website/gallery_differential_analyses.qmd` | Gallery page shares title with module page. | Renamed all gallery pages unambiguously. |
 | E6 | accept | `website/output_gallery.yaml` or gallery renderer | Differential volcano cards expose dynamic branch hashes. | Replaced hashes with stable parent target names. |
 | E7 | accept | `website/gallery_differential_analyses.qmd` | Gallery under-represents module outputs promised elsewhere. | Explicitly labeled the gallery as a curated subset. |
-| E8 | accept | `website/gallery_genetic_enrichment.qmd` | Gallery silently switches from quickstart `immune_human_2x` to larger `PBMC_human_6x`. | Added an explicit six-reaction scope note. |
+| E8 | accept | `website/gallery_genetic_enrichment.qmd` | Gallery silently switches from quickstart `immune_human_2x` to larger `PBMC_human_6x`. | Added an explicit scope note for six GEM wells. |
 | E9 | accept | `website/gallery_genetic_enrichment.qmd` | Most rendered sections lack reader context. | Added page and subsection context and removed stale missing-asset cards. |
 | E10 | accept | `website/gallery_genetic_enrichment.qmd` | "Raw GWAS-specific trait relevance scores" is misleading for SCAVENGE UMAPs. | Reworded as per-cell graph-propagated scores. |
 

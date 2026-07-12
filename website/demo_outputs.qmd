@@ -38,7 +38,7 @@ For example, `aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x` is placed u
 outputs/files/immune_human_2x/GEX/
 ```
 
-Other files are grouped under `outputs/files/<scope>/`, where the scope is a reaction, dataset, or aggregation.
+Other files are grouped under `outputs/files/<scope>/`, where the scope is a GEM well, dataset, or aggregation.
 
 ## Plots
 

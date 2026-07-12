@@ -1,14 +1,14 @@
 # Mapping tibbles ---------------------------------------------------------------
 dataset_tibble_from_yaml <- read_dataset_config_tibble(config_file = "cfg_datasets.yaml")
-reaction_tibble <- build_reaction_tibble(dataset_tibble_from_yaml = dataset_tibble_from_yaml)
+GEM_well_tibble <- build_GEM_well_tibble(dataset_tibble_from_yaml = dataset_tibble_from_yaml)
 
 aggregation_tibble_all_from_yaml <- read_aggregation_config_tibble(config_file = "cfg_aggregations.yaml")
 aggregation_tibble <- build_aggregation_tibble(
   aggregation_tibble_all_from_yaml = aggregation_tibble_all_from_yaml,
-  reaction_tibble = reaction_tibble
+  GEM_well_tibble = GEM_well_tibble
 )
 dataset_tibble <- build_dataset_tibble(
-  reaction_tibble = reaction_tibble,
+  GEM_well_tibble = GEM_well_tibble,
   dataset_tibble_from_yaml = dataset_tibble_from_yaml
 )
 roadmap_EDACC_names <- get_roadmap_EDACC_names(aggregation_tibble = aggregation_tibble)
@@ -22,11 +22,11 @@ validate_aggregation_module_names(
 pipeline <- rlang::list2(
   source("extra_targets/setup_targets.R")$value,
   tarchetypes::tar_map(
-    values = reaction_tibble,
-    names = reaction_ID,
+    values = GEM_well_tibble,
+    names = GEM_well_ID,
     descriptions = NULL,
     delimiter = ".",
-    source("extra_targets/per_reaction_targets.R")$value
+    source("extra_targets/per_GEM_well_targets.R")$value
   ),
   tarchetypes::tar_map(
     values = dataset_tibble,

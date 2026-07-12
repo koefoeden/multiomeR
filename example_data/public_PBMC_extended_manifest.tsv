@@ -1,4 +1,4 @@
-reaction_ID	file_name	url
+GEM_well_ID	file_name	url
 pbmc_10k_chromium_controller	web_summary.html	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/10k_PBMC_Multiome_nextgem_Chromium_Controller/10k_PBMC_Multiome_nextgem_Chromium_Controller_web_summary.html
 pbmc_10k_chromium_controller	summary.csv	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/10k_PBMC_Multiome_nextgem_Chromium_Controller/10k_PBMC_Multiome_nextgem_Chromium_Controller_summary.csv
 pbmc_10k_chromium_controller	per_barcode_metrics.csv	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/10k_PBMC_Multiome_nextgem_Chromium_Controller/10k_PBMC_Multiome_nextgem_Chromium_Controller_per_barcode_metrics.csv

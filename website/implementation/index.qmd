@@ -20,7 +20,7 @@ The [differential analyses](implementation_differential_analyses.qmd) and [genet
 | Change | Start with |
 |---|---|
 | Add or revise a YAML parameter | `cfg_pipeline_parameters.tsv`, then the owning config reader or target. |
-| Change reaction preprocessing | `_targets.R` mapping plus `extra_targets/per_reaction_targets.R`. |
+| Change GEM well preprocessing | `_targets.R` mapping plus `extra_targets/per_GEM_well_targets.R`. |
 | Change aggregation GEX, ATAC, or WNN processing | The corresponding graph section and `extra_targets/*_targets.R` file. |
 | Add a review boundary | Existing `[checkpoint:<name>]` description tags and the user-manual selector contract. |
 | Add a graph-visible target | Existing `[part_of_graph:<graph_id>]` tags and graph-pruning rules. |

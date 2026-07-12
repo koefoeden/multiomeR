@@ -9,6 +9,15 @@ fail <- function(...) {
   stop(paste0(...), call. = FALSE)
 }
 
+ucell_reference_version <- as.character(utils::packageVersion("UCell"))
+if (!identical(ucell_reference_version, "2.14.0")) {
+  fail(
+    "UCell reference version changed from 2.14.0 to ",
+    ucell_reference_version,
+    "; review exact-parity expectations"
+  )
+}
+
 expect_identical_scores <- function(observed, expected, label) {
   observed <- as.matrix(observed)
   expected <- as.matrix(expected)
@@ -50,19 +59,65 @@ make_bpcells_matrix <- function(counts) {
   BPCells::open_matrix_dir(matrix_dir)
 }
 
+run_ucell_reference <- function(counts, marker_genes, method, missing_genes = "impute") {
+  # UCell 2.14.0 can emit non-fatal R stack-imbalance warnings for the
+  # missing-gene fixture under R 4.5. Run only the reference implementation in
+  # a disposable process so those package-level warnings cannot corrupt this
+  # validation session; callr still returns the exact matrix being compared.
+  callr::r(
+    function(counts, marker_genes, method, missing_genes) {
+      counts <- Matrix::Matrix(counts, sparse = TRUE)
+      if (identical(method, "score_signatures")) {
+        return(UCell::ScoreSignatures_UCell(
+          matrix = counts,
+          features = marker_genes,
+          maxRank = 80,
+          w_neg = 0.75,
+          name = "",
+          chunk.size = 7,
+          missing_genes = missing_genes,
+          BPPARAM = BiocParallel::SerialParam(),
+          ncores = 1,
+          ties.method = "average"
+        ))
+      }
+
+      seurat_obj <- SeuratObject::CreateSeuratObject(counts = counts)
+      seurat_obj <- UCell::AddModuleScore_UCell(
+        obj = seurat_obj,
+        features = marker_genes,
+        maxRank = 80,
+        chunk.size = 7,
+        BPPARAM = BiocParallel::SerialParam(),
+        ncores = 1,
+        storeRanks = FALSE,
+        w_neg = 0.75,
+        assay = "RNA",
+        slot = "counts",
+        ties.method = "average",
+        missing_genes = "impute",
+        force.gc = FALSE,
+        name = ""
+      )
+      seurat_obj@meta.data
+    },
+    args = list(
+      counts = counts,
+      marker_genes = marker_genes,
+      method = method,
+      missing_genes = missing_genes
+    ),
+    show = FALSE
+  )
+}
+
 compare_score_signatures_ucell <- function(counts, bpcells_counts, marker_genes, missing_genes) {
-  expected <- suppressWarnings(UCell::ScoreSignatures_UCell(
-    matrix = Matrix::Matrix(counts, sparse = TRUE),
-    features = marker_genes,
-    maxRank = 80,
-    w_neg = 0.75,
-    name = "",
-    chunk.size = 7,
-    missing_genes = missing_genes,
-    BPPARAM = BiocParallel::SerialParam(),
-    ncores = 1,
-    ties.method = "average"
-  ))
+  expected <- run_ucell_reference(
+    counts = counts,
+    marker_genes = marker_genes,
+    method = "score_signatures",
+    missing_genes = missing_genes
+  )
 
   observed <- calculate_BPCells_UCell_scores_from_matrix(
     counts_matrix = bpcells_counts,
@@ -82,23 +137,11 @@ compare_score_signatures_ucell <- function(counts, bpcells_counts, marker_genes,
 }
 
 compare_add_module_score_ucell <- function(counts, bpcells_counts, marker_genes) {
-  seurat_obj <- SeuratObject::CreateSeuratObject(counts = Matrix::Matrix(counts, sparse = TRUE))
-  seurat_obj <- suppressWarnings(UCell::AddModuleScore_UCell(
-    obj = seurat_obj,
-    features = marker_genes,
-    maxRank = 80,
-    chunk.size = 7,
-    BPPARAM = BiocParallel::SerialParam(),
-    ncores = 1,
-    storeRanks = FALSE,
-    w_neg = 0.75,
-    assay = "RNA",
-    slot = "counts",
-    ties.method = "average",
-    missing_genes = "impute",
-    force.gc = FALSE,
-    name = ""
-  ))
+  expected <- run_ucell_reference(
+    counts = counts,
+    marker_genes = marker_genes,
+    method = "add_module_score"
+  )
 
   observed <- calculate_BPCells_UCell_scores_from_matrix(
     counts_matrix = bpcells_counts,
@@ -109,7 +152,7 @@ compare_add_module_score_ucell <- function(counts, bpcells_counts, marker_genes)
     ties_method = "average",
     missing_genes = "impute"
   )
-  expected <- seurat_obj@meta.data[, colnames(observed), drop = FALSE]
+  expected <- expected[, colnames(observed), drop = FALSE]
 
   expect_identical_scores(
     observed = observed,
@@ -252,4 +295,4 @@ compare_seurat_module_scores(counts, bpcells_counts)
 compare_cell_cycle_scores(counts, bpcells_counts)
 compare_metadata_join(bpcells_counts, marker_genes)
 
-cat("scoring parity ok\n")
+cat("scoring parity ok: UCell ", ucell_reference_version, "\n", sep = "")

@@ -14,7 +14,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = combined_BPCells_fragment_obj.ATAC,
-      description = "Merge per-reaction BPCells fragment objects and filter to standard chromosomes [part_of_graph:ATAC] [part_of_graph:parallel] [part_of_graph:seurat_export]",
+      description = "Merge per GEM well BPCells fragment objects and filter to standard chromosomes [part_of_graph:ATAC] [part_of_graph:parallel] [part_of_graph:seurat_export]",
       command = {
         standard_chroms <- switch(
           organism_chr,
@@ -473,7 +473,7 @@ rlang::list2(
             "vireo_max_prob_singlet"
           ),
           categorical_technical_cols = c(
-            "TENX_reaction_ID",
+            "GEM_well_ID",
             "multiplex_batch",
             "multiplex_pool",
             "run_harmony",
@@ -496,9 +496,9 @@ rlang::list2(
 
   ATAC_graph_and_cluster_targets = rlang::list2(
     targets::tar_target(
-      name = scDblFinder_reaction_tibble.ATAC,
-      description = "Prepare per-reaction ATAC barcodes and cluster labels for scDblFinder",
-      command = prepare_scDblFinder_reaction_tibble(
+      name = scDblFinder_GEM_well_tibble.ATAC,
+      description = "Prepare per GEM well ATAC barcodes and cluster labels for scDblFinder",
+      command = prepare_scDblFinder_GEM_well_tibble(
         metadata_tibble = metadata_w_cell_types_unfiltered_tibble.ATAC |>
           dplyr::filter(.data$barcode_w_prefix %in% QC_filtered_BCs.ATAC),
         cluster_collapse_list = aggregation_scDblFinder_GEX_cell_type_collapse_list,
@@ -528,43 +528,43 @@ rlang::list2(
       resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
     ),
     targets::tar_target(
-      name = scDblFinder_results_by_reaction_tibble.ATAC,
-      description = "Run ATAC scDblFinder independently per 10x reaction from pre-aggregated peak-group counts",
-      command = run_scDblFinder_BPCells_reaction(
+      name = scDblFinder_results_by_GEM_well_tibble.ATAC,
+      description = "Run ATAC scDblFinder independently for each 10x Genomics GEM well from pre-aggregated peak-group counts",
+      command = run_scDblFinder_BPCells_GEM_well(
         feature_matrix = scDblFinder_feature_matrix.ATAC,
-        scDblFinder_reaction_tibble = scDblFinder_reaction_tibble.ATAC,
+        scDblFinder_GEM_well_tibble = scDblFinder_GEM_well_tibble.ATAC,
         output_suffix = "ATAC",
         dbr.sd = 1.0,
         aggregateFeatures = FALSE,
         nfeatures = 50,
         processing = "normFeatures"
       ),
-      pattern = map(scDblFinder_reaction_tibble.ATAC),
+      pattern = map(scDblFinder_GEM_well_tibble.ATAC),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     # Previous full-peak ATAC scDblFinder path. Kept as fallback, but disabled because
     # scDblFinder::aggregateFeatures() recomputes TF-IDF and can OOM before aggregation.
     # tar_target(
-    #   name = scDblFinder_results_by_reaction_tibble.ATAC,
-    #   description = "Run ATAC scDblFinder independently per 10x reaction from BPCells peak-count slices",
-    #   command = run_scDblFinder_BPCells_reaction(
+    #   name = scDblFinder_results_by_GEM_well_tibble.ATAC,
+    #   description = "Run ATAC scDblFinder independently for each 10x Genomics GEM well from BPCells peak-count slices",
+    #   command = run_scDblFinder_BPCells_GEM_well(
     #     feature_matrix = peak_QC_filtered_BPCells_matrix.ATAC,
-    #     scDblFinder_reaction_tibble = scDblFinder_reaction_tibble.ATAC,
+    #     scDblFinder_GEM_well_tibble = scDblFinder_GEM_well_tibble.ATAC,
     #     output_suffix = "ATAC",
     #     dbr.sd = 1.0,
     #     aggregateFeatures = TRUE,
     #     nfeatures = 50,
     #     processing = "normFeatures"
     #   ),
-    #   pattern = map(scDblFinder_reaction_tibble.ATAC),
+    #   pattern = map(scDblFinder_GEM_well_tibble.ATAC),
     #   resources = get_tar_resources(RAM_GB_req = 16)
     # ),
     targets::tar_target(
       name = scDblFinder_results_df.ATAC,
-      description = "Combine per-reaction ATAC scDblFinder classifications [part_of_graph:ATAC] [part_of_graph:seurat_export]",
-      command = scDblFinder_results_by_reaction_tibble.ATAC |>
+      description = "Combine per GEM well ATAC scDblFinder classifications [part_of_graph:ATAC] [part_of_graph:seurat_export]",
+      command = scDblFinder_results_by_GEM_well_tibble.ATAC |>
         dplyr::bind_rows() |>
-        dplyr::select(-dplyr::any_of("TENX_reaction_ID")),
+        dplyr::select(-dplyr::any_of("GEM_well_ID")),
       resources = get_tar_resources(RAM_GB_req = 8)
     ),
     tarchetypes::tar_file(
@@ -574,7 +574,7 @@ rlang::list2(
         scDblFinder_metadata <- metadata_w_cell_types_unfiltered_tibble.ATAC |>
           dplyr::left_join(scDblFinder_results_df.ATAC, by = "barcode_w_prefix")
         plot_data <- scDblFinder_metadata |>
-          dplyr::select(LSI_harmony_SNN_cluster, LSI_harmony_SNN_cluster_cell_type, scDblFinder.score_ATAC, scDblFinder.class_ATAC, TENX_reaction_ID) |>
+          dplyr::select(LSI_harmony_SNN_cluster, LSI_harmony_SNN_cluster_cell_type, scDblFinder.score_ATAC, scDblFinder.class_ATAC, GEM_well_ID) |>
           tidyr::pivot_longer(
             cols = dplyr::all_of(c("LSI_harmony_SNN_cluster", "LSI_harmony_SNN_cluster_cell_type")),
             names_to = "cluster_type",
@@ -586,13 +586,13 @@ rlang::list2(
           ggplot2::geom_violin(scale = "width") +
           ggplot2::geom_jitter(
             data = \(d) dplyr::filter(d, scDblFinder.class_ATAC == "doublet"),
-            ggplot2::aes(color = TENX_reaction_ID),
+            ggplot2::aes(color = GEM_well_ID),
             size = 0.3,
             alpha = 0.5,
             width = 0.2
           ) +
           ggplot2::facet_wrap(~cluster_type, scales = "free_x") +
-          ggplot2::labs(subtitle = "Points are cells classified as doublet by scDblFinder, colored by reaction.") +
+          ggplot2::labs(subtitle = "Points are cells classified as doublet by scDblFinder, colored by GEM well.") +
           ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)) +
           ggplot2::theme(legend.position = "none")
 
@@ -630,14 +630,14 @@ rlang::list2(
   ATAC_QC_plots_targets = rlang::list2(
     tarchetypes::tar_file(
       name = peaks_QC_violins_plot.ATAC,
-      description = "Violin plots of peak-based ATAC QC metrics per reaction. [checkpoint:ATAC]",
+      description = "Violin plots of peak-based ATAC QC metrics per GEM well. [checkpoint:ATAC]",
       command = {
         plot_data <- metadata_w_QC_tibble.ATAC |>
-          dplyr::select(TENX_reaction_ID, "dataset", dplyr::any_of(aggregation_peak_based_continuous_QC_vars)) |>
+          dplyr::select(GEM_well_ID, "dataset", dplyr::any_of(aggregation_peak_based_continuous_QC_vars)) |>
           tidyr::pivot_longer(cols = dplyr::any_of(aggregation_peak_based_continuous_QC_vars), names_to = "feature", values_to = "value")
 
         plot <- plot_data |>
-          ggplot2::ggplot(ggplot2::aes(x = TENX_reaction_ID, y = value, fill = dataset)) +
+          ggplot2::ggplot(ggplot2::aes(x = GEM_well_ID, y = value, fill = dataset)) +
           ggplot2::geom_violin(scale = "width") +
           ggplot2::facet_wrap(~feature, scales = "free", ncol = 1) +
           ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)) +

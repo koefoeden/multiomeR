@@ -62,7 +62,7 @@ The **main pipeline** processes each GEM well, aggregates selected GEM wells, an
 
 ## System requirements
 
-- Linux with `git`, `curl`, and `tar`, plus HTTPS access to GitHub, Pixi, and 10x Genomics downloads.
+- Linux or Apple Silicon macOS with `git`, `curl`, and `tar`, plus HTTPS access to GitHub, Pixi, and 10x Genomics downloads.
 - At least 60 GB of RAM. This is enough for one heavy target at a time; machines near the minimum should reduce concurrent workers in `crew_controllers.R`.
 - At least 60 GB of free disk space for the downloaded archives, extracted reference, pixi environment, and approximately 6 GB of demo outputs.
 - Multiple CPU cores are strongly recommended. The timing quoted in the next chapter was measured with 16 logical threads.
@@ -128,8 +128,8 @@ export PATH="$HOME/.pixi/bin:$PATH"
 Install the locked pixi environment from the repository root. The duration depends on the package cache, network connection, and the source builds in the following step.
 
 ```{.bash filename="Bash"}
-pixi install --locked --run-post-link-scripts
-pixi run install-r-github-packages
+R_PROFILE_USER=/dev/null pixi install --locked --run-post-link-scripts
+pixi run install-source-packages
 ```
 
 ```{.bash filename="Bash"}
@@ -157,7 +157,7 @@ The command should return one row named `multimodal_Seurat_object.immune_human_2
 ::: {.callout-note collapse="true"}
 ## Why are both installation commands needed?
 
-Pixi resolves R, Bioconductor, and command-line tools in one locked environment. `--run-post-link-scripts` materializes Bioconductor data packages such as BSgenome, while `pixi run install-r-github-packages` installs the pinned GitHub versions of BPCells, Signac, and betterChromVAR that are not supplied by the locked conda environment.
+Pixi resolves R, Bioconductor, and command-line tools in one locked environment. `R_PROFILE_USER=/dev/null` prevents the project startup profile from loading packages while the environment is still being created, and `--run-post-link-scripts` materializes Bioconductor data packages such as BSgenome. `pixi run install-source-packages` then installs pinned packages that are unavailable from the locked conda environment. On Apple Silicon, this includes a native build of cellsnp-lite and the small set of R packages missing from the `osx-arm64` channels.
 :::
 
 

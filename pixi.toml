@@ -5,21 +5,18 @@ dev = { features = ["dev"], solve-group = "default" }
 [workspace]
 name = "multiomeR"
 channels = ["conda-forge", "bioconda"]
-platforms = ["linux-64"]
+platforms = ["linux-64", "osx-arm64"]
 
 [tasks]
-install-r-github-packages = { cmd = "Rscript scripts/install_r_github_packages.R", description = "Install GitHub-only R packages into the pixi R library." }
+install-source-packages = { cmd = "Rscript --vanilla scripts/install_r_source_packages.R && bash scripts/install_cellsnp_lite.sh", description = "Install pinned packages that are unavailable from the locked conda environment." }
 test-scoring-parity = { cmd = "Rscript scripts/validate_scoring_parity.R", description = "Validate BPCells-native scoring helpers against reference implementations on synthetic data." }
 test-algorithm-validation = { cmd = "Rscript scripts/validate_scoring_parity.R && Rscript scripts/validate_algorithm_deviations.R", description = "Validate documented UCell, WNN, and SCAVENGE implementations on deterministic fixtures." }
 
 [dependencies]
 # we still need some more general cleanup before we do a final dependency hygiene check. Lots of prefix calls in functions/targets that are not used anymore.
 # system tools
-bcftools = "1.22.*"
 htslib = "1.23.*"
-bcftools-liftover-plugin = "1.22.*"
 macs3 = "3.0.*"
-cellsnp-lite = "1.2.*"
 vireosnp = "0.5.*"
 bedtools = "2.31.*"
 ucsc-bedtobigbed = ">=482,<483"
@@ -35,7 +32,6 @@ bioconductor-bsgenome = ">=1.78.0,<2"
 "bioconductor-bsgenome.hsapiens.ucsc.hg38" = ">=1.4.5,<2"
 "bioconductor-bsgenome.mmusculus.ucsc.mm10" = ">=1.4.3,<2"
 "bioconductor-bsgenome.mmusculus.ucsc.mm39" = ">=1.4.3,<2"
-bioconductor-cagefightr = ">=1.30.0,<2"
 bioconductor-chromvar = ">=1.32.0,<2" # used indirectly by betterChromVAR
 # bioconductor-complexheatmap = ">=2.26.1,<3" # no direct source use after replacing genetic enrichment heatmaps with ggplot
 # bioconductor-delayedarray = ">=0.36.0,<0.37" # no direct source use; SummarizedExperiment should pull it if needed
@@ -52,7 +48,6 @@ bioconductor-iranges = ">=2.44.0,<3"
 bioconductor-jaspar2024 = ">=0.99.7,<0.100"
 bioconductor-limma = ">=3.66.0,<4"
 bioconductor-matrixgenerics = ">=1.22.0,<2"
-bioconductor-milor = ">=2.6.0,<3"
 bioconductor-rsamtools = ">=2.26.0,<3"
 bioconductor-rtracklayer = ">=1.70.1,<2"
 # bioconductor-s4arrays = ">=1.10.1,<2" # no direct source use; SummarizedExperiment/DelayedArray should pull it if needed
@@ -100,8 +95,6 @@ r-ggrastr = ">=1.0.2,<2"
 r-ggrepel = ">=0.9.8,<0.10"
 r-ggtern = ">=4.0.0,<5"
 r-ggtext = ">=0.1.2,<0.2"
-r-ghql = ">=0.1.2,<0.2"
-r-gifski = ">=1.32.0_2,<2"
 r-glmmtmb = ">=1.1.14,<2"
 r-glue = ">=1.8.0,<2"
 r-googlesheets4 = ">=1.1.2,<2"
@@ -139,15 +132,13 @@ r-rprojroot = ">=2.1.1,<3"
 r-rsqlite = ">=2.4.6,<3"
 r-scales = ">=1.4.0,<2"
 r-scattermore = ">=1.2,<2" # used indirectly by BPCells for plotting
-r-seurat = ">=5.5.0,<6"
+r-seurat = "5.5.0.*"
 # Signac v2 is required for the Seurat/Signac convenience export target.
 # Do not enable bioconda r-signac here yet: bioconda currently provides Signac 1.17.x,
 # while the target needs the v2 branch for ChromatinAssay5 / GRangesAssay support.
 # Install through DESCRIPTION Remotes / remotes until Signac v2 is published on conda-forge or bioconda.
 # r-signac = ">=2.0.0,<3"
 r-stringr = ">=1.6.0,<2"
-r-tarchetypes = ">=0.14.1,<0.15"
-r-targets = ">=1.12.0,<2"
 r-tibble = ">=3.3.1,<4"
 r-tidyr = ">=1.3.2,<2"
 r-tidyselect = ">=1.2.1,<2"
@@ -159,7 +150,6 @@ r-xml = ">=3.99_0.22,<4"
 r-yaml = ">=2.3.12,<3"
 r-qs2 = ">=0.2.0,<0.3" # used indirectly by targets for saving/loading target objects
 bioconductor-motifmatchr = ">=1.32.0,<2"
-r-autometric = ">=0.1.2,<0.2" # used indirectly by targets
 libblas = { version = "*", build = "*openblas" }
 liblapack = { version = "*", build = "*openblas" }
 libcblas = { version = "*", build = "*openblas" }
@@ -170,6 +160,26 @@ r-remotes = ">=2.5.0,<3" # install helper for GitHub-only R dependencies such as
 r-fastmatch = ">=1.1_8,<2" # indirect dependency of Signac v2
 r-rcpproll = ">=0.3.2,<0.4" # indirect dependency of Signac v2
 bioconductor-sparsematrixstats = ">=1.22.0,<2" # indirect dependency of Signac v2
+
+[target.linux-64.dependencies]
+bcftools = "1.22.*"
+cellsnp-lite = "1.2.*"
+bioconductor-cagefightr = ">=1.30.0,<2"
+r-ghql = ">=0.1.2,<0.2"
+r-targets = ">=1.12.0,<2"
+r-tarchetypes = ">=0.14.1,<0.15"
+
+[target.osx-arm64.dependencies]
+autoconf = ">=2.72,<3"
+automake = ">=1.17,<2"
+bcftools = "1.23.*"
+liblzma-devel = ">=5.8.3,<6"
+make = ">=4.4,<5"
+pkg-config = ">=0.29.2,<0.30"
+bioconductor-genomicfiles = ">=1.46.0,<2"
+r-crul = ">=1.6.0,<2"
+r-gridextra = ">=2.3,<3"
+r-pryr = ">=0.1.6,<0.2"
 
 [feature.dev.dependencies]
 python = ">=3.12,<3.13"
@@ -182,6 +192,8 @@ r-assertthat = ">=0.2.1,<0.3"
 r-nanoparquet = ">=0.5.1,<0.6" # doesn't work?
 nodejs = ">=26.3.1,<26.4"
 imagemagick = ">=7.1.2_26,<8"
+
+[feature.dev.target.linux-64.dependencies]
 pngquant = ">=2.17.0,<3"
 
 [feature.dev.tasks]

@@ -39,8 +39,8 @@ jobs:
         with:
           cache: true
 
-      - name: Install pinned GitHub R packages
-        run: pixi run install-r-github-packages
+      - name: Install pinned source packages
+        run: pixi run install-source-packages
 
       - name: Validate algorithm implementations
         run: pixi run test-algorithm-validation

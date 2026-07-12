@@ -11,3 +11,22 @@ sidecars are unavailable.
 
 Generated outputs are written below `manuscript_figures/outputs/` and are not
 tracked.
+
+The benchmark renderer caches the portable wall-time result below the active
+targets store and writes its plot artifacts below `manuscript_figures/outputs/`:
+
+```bash
+pixi run Rscript manuscript_figures/render_benchmark_walltime_plot.R
+```
+
+Run that command first from the checkout that owns the targets store and its
+private configuration. A different checkout can then render the cached result
+by pointing at that store:
+
+```bash
+MULTIOMER_TARGETS_STORE=/path/to/targets/store \
+  pixi run Rscript manuscript_figures/render_benchmark_walltime_plot.R
+```
+
+The combined figure renderer reads the resulting local plot object from
+`manuscript_figures/outputs/benchmark/`.

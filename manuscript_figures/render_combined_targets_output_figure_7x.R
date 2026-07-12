@@ -233,6 +233,19 @@ figure_2_GWAS_heatmap_panel <- function(plot) {
 }
 
 output_dir <- "manuscript_figures/outputs/combined_targets_output_figures_7x"
+benchmark_plot_rds <- file.path(
+  "manuscript_figures",
+  "outputs",
+  "benchmark",
+  "multimodal_seurat_walltime_plot.rds"
+)
+if (!file.exists(benchmark_plot_rds)) {
+  stop(
+    "Missing benchmark plot object: ", benchmark_plot_rds, "\n",
+    "Run manuscript_figures/render_benchmark_walltime_plot.R first.",
+    call. = FALSE
+  )
+}
 
 panel_specs <- tibble::tribble(
   ~figure_number , ~tag , ~plot_call                                                                                                                                                                       , ~pick_regex                  , ~title        , ~caption , ~plot_modifier                                                   ,
@@ -244,7 +257,7 @@ panel_specs <- tibble::tribble(
   "2"            , "C"  , quote(targets::tar_read(peak_gene_correlation_top_link_ATAC_tracks_plots.peak_gene_correlation.WNN.mixed_human_7x))                                                              , "Brain_rank001_"             , NA_character_ , NA       , quote(figure_2_peak_gene_link_panel(plot, group = "Brain"))      ,
   "2"            , "D"  , quote(targets::tar_read(TRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.mixed_human_7x))                                                                    , "MonocyteCount_Vuckovic2020" , NA_character_ , NA       , quote(figure_2_single_cell_GWAS_panel(plot))                     ,
   "2"            , "E"  , quote(targets::tar_read(chromVAR_deviation_heatmap.cell_type_pseudobulk.genetic_enrichment.mixed_human_7x))                                                                      , NA_character_                , NA_character_ , NA       , quote(figure_2_GWAS_heatmap_panel(plot))                         ,
-  "3"            , "A"  , quote(readRDS("/maps/projects/cbmr_shared/people/tqb695/non-GDPR/multiome-pipeline/pipelines/processing_and_aggregation/outputs/benchmark/multimodal_seurat_walltime_plot.rds")) , NA_character_                , NA_character_ , NA       , NA                                                               ,
+  "3"            , "A"  , quote(readRDS(benchmark_plot_rds))                                                                                                                                             , NA_character_                , NA_character_ , NA       , NA                                                               ,
 )
 
 figure_specs <- tibble::tribble(

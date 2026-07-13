@@ -1,0 +1,61 @@
+{
+  "fasta_hash": "b6f131840f9f337e7b858c3d1e89d7ce0321b243",
+  "genomes": [
+    "GRCh38"
+  ],
+  "gtf_hash.gz": "095eda2804bbb2df4dfcbdda4447659687ec73a6",
+  "input_fasta_files": [
+    "Homo_sapiens.GRCh38.dna.primary_assembly.fa.modified"
+  ],
+  "input_gtf_files": [
+    "gencode.v44.primary_assembly.annotation.gtf.filtered"
+  ],
+  "mem_gb": 16,
+  "mkref_version": "cellranger-arc-2.0.2",
+  "non_nuclear_contigs": [
+    "chrM"
+  ],
+  "organism": "Homo_sapiens",
+  "primary_contigs": [
+    "chr1",
+    "chr10",
+    "chr11",
+    "chr12",
+    "chr13",
+    "chr14",
+    "chr15",
+    "chr16",
+    "chr17",
+    "chr18",
+    "chr19",
+    "chr2",
+    "chr20",
+    "chr21",
+    "chr22",
+    "chr3",
+    "chr4",
+    "chr5",
+    "chr6",
+    "chr7",
+    "chr8",
+    "chr9",
+    "chrX",
+    "chrY",
+    "KI270728.1",
+    "KI270727.1",
+    "GL000009.2",
+    "GL000194.1",
+    "GL000195.1",
+    "GL000219.1",
+    "KI270734.1",
+    "GL000213.1",
+    "GL000218.1",
+    "KI270731.1",
+    "KI270721.1",
+    "KI270726.1",
+    "KI270711.1",
+    "KI270713.1"
+  ],
+  "threads": 2,
+  "version": "2024-A"
+}

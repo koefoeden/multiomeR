@@ -10,9 +10,9 @@ knitr::opts_chunk$set(
 
 ## System requirements
 
-- Linux with `git`, `curl`, and `tar`, plus HTTPS access to GitHub, Pixi, and 10x Genomics downloads.
+- Linux with `git` and `curl`, plus HTTPS access to GitHub, Pixi, and 10x Genomics downloads.
 - At least 60 GB of RAM. This is enough for one heavy target at a time; machines near the minimum should reduce concurrent workers in `crew_controllers.R`.
-- At least 60 GB of free disk space for the downloaded archives, extracted reference, pixi environment, and approximately 6 GB of demo outputs.
+- At least 30 GB of free disk space for the public inputs, pixi environment, temporary files, and approximately 6 GB of demo outputs.
 - Multiple CPU cores are strongly recommended. The timing quoted in the next chapter was measured with 16 logical threads.
 
 The committed `crew_controllers.R` symlink points to the local controller template. That template assumes a 16-CPU, 256-GB workstation and can run several workers concurrently. Review [Distributed computing](performance_distributed_computing.qmd) before running on a smaller machine or a scheduler.
@@ -54,15 +54,10 @@ curl -fL -o "${lymphoma_dir}/atac_fragments.tsv.gz" "${lymphoma_prefix}_atac_fra
 curl -fL -o "${lymphoma_dir}/atac_fragments.tsv.gz.tbi" "${lymphoma_prefix}_atac_fragments.tsv.gz.tbi"
 ```
 
-Then download and unpack the matching human Cell Ranger ARC reference (14.9 GB). If you already have this reference, symlink it to `example_data/refdata-cellranger-arc-GRCh38-2024-A` instead.
-
-```{.bash filename="Bash"}
-refdata="refdata-cellranger-arc-GRCh38-2024-A"
-refdata_url="https://cf.10xgenomics.com/supp/cell-arc"
-
-curl -fL -o "example_data/${refdata}.tar.gz" "${refdata_url}/${refdata}.tar.gz"
-tar -xzf "example_data/${refdata}.tar.gz" -C example_data
-```
+The repository already includes the small `reference.json` from the exact
+`refdata-cellranger-arc-GRCh38-2020-A-2.0.0` reference used to create both
+public outputs. The demo configuration points to that file, so the full Cell
+Ranger ARC reference is not required.
 
 ## Create and launch the pixi environment
 

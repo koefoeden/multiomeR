@@ -29,6 +29,11 @@ This release makes a breaking terminology transition to the 10x Genomics term **
 | `reaction_cellranger_count_dir` | `GEM_well_cellranger_arc_count_dir` |
 | `per_reaction_targets.R` | `per_GEM_well_targets.R` |
 
+The reference input is also narrowed from a directory to the metadata file the
+pipeline actually reads. Replace `dataset_cellranger_arc_refdata_dir` with
+`dataset_cellranger_arc_reference_json` and append `/reference.json` to existing
+reference-directory values.
+
 ## Start with one explicitly scoped analysis
 
 `is_active` defaults to `true` for every aggregation. Before an unqualified `targets::tar_make()`, either remove unavailable template rows or add `is_active: false` to every aggregation you are not ready to run. During setup, always select one aggregation explicitly.
@@ -39,7 +44,7 @@ The following minimum example shows the relationship between the three layers. R
 
 ```{.yaml filename="cfg_datasets.yaml"}
 your_dataset:
-  dataset_cellranger_arc_refdata_dir: /path/to/refdata-cellranger-arc
+  dataset_cellranger_arc_reference_json: /path/to/reference.json
   dataset_QC_exclude_list_per_GEM_well:
     - TSS.enrichment < 4
     - nucleosome_signal > 4
@@ -47,7 +52,16 @@ your_dataset:
   dataset_run_amulet: false
 ```
 
-`dataset_cellranger_arc_refdata_dir` is required. The QC expressions are evaluated against per-barcode metadata. Starting with `dataset_run_amulet: false` avoids adding AMULET to the first data run; enable it deliberately after the basic input contract works.
+`dataset_cellranger_arc_reference_json` is required and must point to the
+`reference.json` from the exact Cell Ranger ARC reference used to create the
+dataset outputs. The repository includes metadata for the public human and
+mouse 2020-A references and the human 2024-A reference under
+`reference_metadata/`; custom references can supply their own JSON without
+retaining the full reference directory. multiomeR checks that the JSON genome
+matches the feature HDF5 and rejects aggregations whose GEM wells use different
+references.
+
+The QC expressions are evaluated against per-barcode metadata. Starting with `dataset_run_amulet: false` avoids adding AMULET to the first data run; enable it deliberately after the basic input contract works.
 
 ### 2. Define one GEM well
 

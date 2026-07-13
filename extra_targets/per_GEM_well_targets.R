@@ -60,26 +60,19 @@ rlang::list2(
       gene_features_df
     }
   ),
+  tarchetypes::tar_file(
+    name = cellranger_reference_json_file,
+    description = "Track the Cell Ranger reference metadata JSON assigned to this GEM well",
+    command = dataset_cellranger_arc_reference_json
+  ),
   targets::tar_target(
     name = cellranger_ref_list,
-    description = "Load CellRanger reference JSON and annotate with Gencode version and AnnotationHub code",
-    command = {
-      cellranger_ref_list <- jsonlite::read_json(fs::path(dataset_cellranger_arc_refdata_dir, "reference.json"))
-      cellranger_ref_list$gencode_version <- stringr::str_remove(
-        cellranger_ref_list[["input_gtf_files"]][[1]],
-        ".primary_assembly.*"
-      )
-      cellranger_ref_list$annot_hub_code <- c(
-        "gencode.v44" = "AH113665",
-        "gencode.vM33" = "AH113713",
-        "gencode.v32" = "AH75011",
-        "gencode.vM23" = "AH75036"
-      )[[cellranger_ref_list$gencode_version]]
-      if (is.null(cellranger_ref_list$annot_hub_code)) {
-        stop("Unsupported Gencode version: ", cellranger_ref_list$gencode_version)
-      }
-      cellranger_ref_list
-    },
+    description = "Load and validate the Cell Ranger reference metadata assigned to this GEM well",
+    command = read_cellranger_reference_json(cellranger_reference_json_file) |>
+      assert_cellranger_reference_matches_features(
+        feature_genomes = gene_features_df$genome,
+        GEM_well_ID = GEM_well_ID
+      ),
   ),
   tarchetypes::tar_file(
     name = cellbender_h5_file,

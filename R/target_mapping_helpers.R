@@ -164,7 +164,7 @@ build_aggregation_tibble <- function(
       aggregation_unfiltered_cells_n_vecs_syms = target_sym_col("unfiltered_cells_n_vecs", "aggregation_GEM_well_IDs"),
       aggregation_excluded_barcodes_by_type_list_syms = target_sym_col("excluded_barcodes_by_type_list", "aggregation_GEM_well_IDs"),
       aggregation_excluded_cellranger_only_barcodes_by_type_list_syms = target_sym_col("excluded_cellranger_only_barcodes_by_type_list", "aggregation_GEM_well_IDs"),
-      aggregation_cellranger_ref_list_syms = target_sym_col("cellranger_ref_list", "aggregation_GEM_well_IDs", transform = \(ids) utils::head(ids, 1)),
+      aggregation_cellranger_ref_list_syms = target_sym_col("cellranger_ref_list", "aggregation_GEM_well_IDs"),
       aggregation_gene_features_df_syms = target_sym_col("gene_features_df", "aggregation_GEM_well_IDs", transform = \(ids) utils::head(ids, 1))
     )
 

@@ -1,0 +1,63 @@
+{
+  "fasta_hash": "c9c31fef9ba3b93f99ad59d9345aeee0c9cb0640",
+  "genomes": [
+    "mm10"
+  ],
+  "gtf_hash.gz": "73e68486af93260a77bf2ebad4b5dd2532aaa016",
+  "input_fasta_files": [
+    "Mus_musculus.GRCm38.dna.primary_assembly.fa.modified"
+  ],
+  "input_gtf_files": [
+    "gencode.vM23.primary_assembly.annotation.gtf.filtered"
+  ],
+  "mem_gb": 16,
+  "mkref_version": "cellranger-arc-2.0.0",
+  "non_nuclear_contigs": [
+    "chrM"
+  ],
+  "organism": "Mus_musculus",
+  "primary_contigs": [
+    "chr1",
+    "chr10",
+    "chr11",
+    "chr12",
+    "chr13",
+    "chr14",
+    "chr15",
+    "chr16",
+    "chr17",
+    "chr18",
+    "chr19",
+    "chr2",
+    "chr3",
+    "chr4",
+    "chr5",
+    "chr6",
+    "chr7",
+    "chr8",
+    "chr9",
+    "chrX",
+    "chrY",
+    "JH584299.1",
+    "GL456233.1",
+    "GL456211.1",
+    "GL456350.1",
+    "JH584293.1",
+    "GL456221.1",
+    "JH584297.1",
+    "JH584296.1",
+    "GL456354.1",
+    "JH584294.1",
+    "JH584298.1",
+    "GL456219.1",
+    "GL456210.1",
+    "JH584303.1",
+    "GL456212.1",
+    "JH584304.1",
+    "GL456216.1",
+    "JH584292.1",
+    "JH584295.1"
+  ],
+  "threads": 2,
+  "version": "2020-A"
+}

@@ -40,7 +40,7 @@ multiomeR is currently in beta. Expect breaking changes as the workflow is matur
 | Add a downstream analysis | Check the prerequisites for [differential analyses](downstream_differential_analyses.qmd) or [genetic enrichment](downstream_genetic_enrichment.qmd). |
 | Understand or modify the internals | Use the separate [implementation book](implementation/). |
 
-Before starting, you need Linux and basic familiarity with R, tabular metadata, and `targets`. The demo supplies a working configuration; your own analysis also needs complete `cellranger-arc count` outputs, a matching reference, and keyed GEM well and donor metadata. Tutorial pages provide a safe route through the workflow; searchable parameter tables and the implementation book are references to consult as needed.
+Before starting, you need Linux and basic familiarity with R, tabular metadata, and `targets`. The demo supplies a working configuration; your own analysis also needs complete `cellranger-arc count` outputs, the matching reference metadata JSON, and keyed GEM well and donor metadata. Tutorial pages provide a safe route through the workflow; searchable parameter tables and the implementation book are references to consult as needed.
 
 In this manual, a **GEM well** is one configured 10x library and output directory, a **dataset** groups GEM wells that share reference and QC settings, and an **aggregation** is a joint analysis of one or more GEM wells. A **donor** is the individual identified by `donor_id`; one GEM well may contain multiple donors.
 
@@ -62,9 +62,9 @@ The **main pipeline** processes each GEM well, aggregates selected GEM wells, an
 
 ## System requirements
 
-- Linux with `git`, `curl`, and `tar`, plus HTTPS access to GitHub, Pixi, and 10x Genomics downloads.
+- Linux with `git` and `curl`, plus HTTPS access to GitHub, Pixi, and 10x Genomics downloads.
 - At least 60 GB of RAM. This is enough for one heavy target at a time; machines near the minimum should reduce concurrent workers in `crew_controllers.R`.
-- At least 60 GB of free disk space for the downloaded archives, extracted reference, pixi environment, and approximately 6 GB of demo outputs.
+- At least 30 GB of free disk space for the public inputs, pixi environment, temporary files, and approximately 6 GB of demo outputs.
 - Multiple CPU cores are strongly recommended. The timing quoted in the next chapter was measured with 16 logical threads.
 
 The committed `crew_controllers.R` symlink points to the local controller template. That template assumes a 16-CPU, 256-GB workstation and can run several workers concurrently. Review [Distributed computing](performance_distributed_computing.qmd) before running on a smaller machine or a scheduler.
@@ -106,15 +106,10 @@ curl -fL -o "${lymphoma_dir}/atac_fragments.tsv.gz" "${lymphoma_prefix}_atac_fra
 curl -fL -o "${lymphoma_dir}/atac_fragments.tsv.gz.tbi" "${lymphoma_prefix}_atac_fragments.tsv.gz.tbi"
 ```
 
-Then download and unpack the matching human Cell Ranger ARC reference (14.9 GB). If you already have this reference, symlink it to `example_data/refdata-cellranger-arc-GRCh38-2024-A` instead.
-
-```{.bash filename="Bash"}
-refdata="refdata-cellranger-arc-GRCh38-2024-A"
-refdata_url="https://cf.10xgenomics.com/supp/cell-arc"
-
-curl -fL -o "example_data/${refdata}.tar.gz" "${refdata_url}/${refdata}.tar.gz"
-tar -xzf "example_data/${refdata}.tar.gz" -C example_data
-```
+The repository already includes the small `reference.json` from the exact
+`refdata-cellranger-arc-GRCh38-2020-A-2.0.0` reference used to create both
+public outputs. The demo configuration points to that file, so the full Cell
+Ranger ARC reference is not required.
 
 ## Create and launch the pixi environment
 
@@ -311,6 +306,11 @@ This release makes a breaking terminology transition to the 10x Genomics term **
 | `reaction_cellranger_count_dir` | `GEM_well_cellranger_arc_count_dir` |
 | `per_reaction_targets.R` | `per_GEM_well_targets.R` |
 
+The reference input is also narrowed from a directory to the metadata file the
+pipeline actually reads. Replace `dataset_cellranger_arc_refdata_dir` with
+`dataset_cellranger_arc_reference_json` and append `/reference.json` to existing
+reference-directory values.
+
 ## Start with one explicitly scoped analysis
 
 `is_active` defaults to `true` for every aggregation. Before an unqualified `targets::tar_make()`, either remove unavailable template rows or add `is_active: false` to every aggregation you are not ready to run. During setup, always select one aggregation explicitly.
@@ -321,7 +321,7 @@ The following minimum example shows the relationship between the three layers. R
 
 ```{.yaml filename="cfg_datasets.yaml"}
 your_dataset:
-  dataset_cellranger_arc_refdata_dir: /path/to/refdata-cellranger-arc
+  dataset_cellranger_arc_reference_json: /path/to/reference.json
   dataset_QC_exclude_list_per_GEM_well:
     - TSS.enrichment < 4
     - nucleosome_signal > 4
@@ -329,7 +329,16 @@ your_dataset:
   dataset_run_amulet: false
 ```
 
-`dataset_cellranger_arc_refdata_dir` is required. The QC expressions are evaluated against per-barcode metadata. Starting with `dataset_run_amulet: false` avoids adding AMULET to the first data run; enable it deliberately after the basic input contract works.
+`dataset_cellranger_arc_reference_json` is required and must point to the
+`reference.json` from the exact Cell Ranger ARC reference used to create the
+dataset outputs. The repository includes metadata for the public human and
+mouse 2020-A references and the human 2024-A reference under
+`reference_metadata/`; custom references can supply their own JSON without
+retaining the full reference directory. multiomeR checks that the JSON genome
+matches the feature HDF5 and rejects aggregations whose GEM wells use different
+references.
+
+The QC expressions are evaluated against per-barcode metadata. Starting with `dataset_run_amulet: false` avoids adding AMULET to the first data run; enable it deliberately after the basic input contract works.
 
 ### 2. Define one GEM well
 

@@ -1,8 +1,12 @@
 rlang::list2(
   targets::tar_target(
     name = aggregated_cellranger_ref_list,
-    description = "Use the validated CellRanger reference metadata shared by this aggregation",
-    command = aggregation_cellranger_ref_list_syms[[1]]
+    description = "Validate and use the Cell Ranger reference metadata shared by this aggregation",
+    command = resolve_aggregation_cellranger_reference(
+      cellranger_references = aggregation_cellranger_ref_list_syms,
+      GEM_well_IDs = aggregation_GEM_well_IDs,
+      aggregation = aggregation
+    )
   ),
   targets::tar_target(
     name = gene_features_df,

@@ -557,7 +557,19 @@ collapse_GWAS_locus_contribution_for_plot <- function(locus_contribution_tibble,
         .data$locus_label,
         stringr::str_c(.data$locus_label, .data$top_L2G_gene, sep = "\n")
       )
-    )
+    ) |>
+    dplyr::group_by(.data$plot_locus) |>
+    dplyr::mutate(
+      credible_set_index = dplyr::row_number(),
+      credible_set_count = dplyr::n(),
+      plot_locus = dplyr::if_else(
+        .data$credible_set_count > 1L,
+        stringr::str_c(.data$plot_locus, "\ncredible set ", .data$credible_set_index),
+        .data$plot_locus
+      )
+    ) |>
+    dplyr::ungroup() |>
+    dplyr::select(-credible_set_index, -credible_set_count)
 
   top_tibble <- locus_contribution_tibble |>
     dplyr::semi_join(top_locus_ids, by = "studyLocusId") |>

@@ -7,7 +7,10 @@ on:
       - pixi.lock
       - scripts/install_r_github_packages.R
       - scripts/validate_algorithm_deviations.R
+      - scripts/validate_amulet_bpcells_parity.R
       - scripts/validate_scoring_parity.R
+      - src/amulet_bpcells.cpp
+      - R/amulet_BPCells_helpers.R
       - R/processing_GEX_helpers.R
       - R/processing_multimodal_helpers.R
       - R/gchromvar_SCAVENGE_helpers.R
@@ -18,7 +21,10 @@ on:
       - pixi.lock
       - scripts/install_r_github_packages.R
       - scripts/validate_algorithm_deviations.R
+      - scripts/validate_amulet_bpcells_parity.R
       - scripts/validate_scoring_parity.R
+      - src/amulet_bpcells.cpp
+      - R/amulet_BPCells_helpers.R
       - R/processing_GEX_helpers.R
       - R/processing_multimodal_helpers.R
       - R/gchromvar_SCAVENGE_helpers.R

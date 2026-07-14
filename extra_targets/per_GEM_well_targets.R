@@ -224,21 +224,30 @@ rlang::list2(
   ),
   targets::tar_target(
     name = amulet_metrics_tibble,
-    description = "Run AMULET doublet detection on ATAC fragments and return per-barcode metrics [part_of_graph:parallel] [part_of_graph:seurat_export]",
+    description = "Run BPCells-native AMULET doublet detection on ATAC fragments and return per-barcode metrics [part_of_graph:parallel] [part_of_graph:seurat_export] [resource_observation: peak_RSS_GB=0.64; walltime_s=15.4; dataset=healthy_PBMC_human; selected_cells=2711; method=/usr/bin/time -v native-only; date=2026-07-12]",
     command = {
       if (isTRUE(dataset_run_amulet)) {
-        fragment_file <- file.path(dirname(cellranger_summary_file), "atac_fragments.tsv.gz")
-        fragment_file |>
-          scDblFinder::amulet(
-            barcodes = cellranger_barcodes_tsv,
-            minFrags = 1000,
-            BPPARAM = BiocParallel::MulticoreParam(workers = 6)
+        barcode_prefix <- base::paste0(GEM_well_ID, "_")
+        prefixed_barcodes <- base::paste0(barcode_prefix, base::readLines(cellranger_barcodes_tsv))
+
+        calculate_amulet_metrics_BPCells(
+          fragments = fragments_w_prefix_bpcells,
+          barcodes = prefixed_barcodes,
+          min_fragments = 1000L,
+          cellranger_end_inclusive = TRUE,
+          native_source_file = amulet_BPCells_native_source_file
+        ) |>
+          dplyr::rename_with(
+            ~ base::paste0("amulet_", .x),
+            .cols = 2:dplyr::last_col()
           ) |>
-          dplyr::rename_with(~ paste0("amulet_", .x), .cols = 2:dplyr::last_col()) |>
-          tibble::rownames_to_column("barcode")
+          tibble::rownames_to_column("barcode") |>
+          dplyr::mutate(
+            barcode = base::substring(.data$barcode, base::nchar(barcode_prefix) + 1L)
+          )
       } else {
         tibble::tibble(
-          barcode = readLines(cellranger_barcodes_tsv),
+          barcode = base::readLines(cellranger_barcodes_tsv),
           amulet_nFrags = NA_integer_,
           amulet_uniqFrags = NA_integer_,
           amulet_nAbove2 = NA_integer_,
@@ -248,7 +257,7 @@ rlang::list2(
         )
       }
     },
-    resources = get_tar_resources(RAM_GB_req = 60, cores_req = 6) # needs quite a lot of memory - consider decreasing workers if this is a problem.
+    resources = get_tar_resources(RAM_GB_req = 16, cores_req = 1)
   ),
   tarchetypes::tar_file(
     name = cellsnp_dir,

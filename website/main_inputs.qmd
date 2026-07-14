@@ -61,7 +61,7 @@ retaining the full reference directory. multiomeR checks that the JSON genome
 matches the feature HDF5 and rejects aggregations whose GEM wells use different
 references.
 
-The QC expressions are evaluated against per-barcode metadata. Starting with `dataset_run_amulet: false` avoids adding AMULET to the first data run; enable it deliberately after the basic input contract works.
+The QC expressions are evaluated against per-barcode metadata. Starting with `dataset_run_amulet: false` avoids adding AMULET to the first data run; enable it deliberately after the basic input contract works. When enabled, multiomeR runs its [validated BPCells-native AMULET implementation](implementation/algorithm_validation.html#bpcells-native-amulet) on the existing per-GEM-well fragment directory. The implementation preserves scDblFinder's tested unique-fragment metrics while avoiding full fragment materialization; PCR-duplicate expansion (`uniqueFrags = FALSE`) is not supported.
 
 ### 2. Define one GEM well
 

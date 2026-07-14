@@ -1,5 +1,10 @@
 rlang::list2(
   tarchetypes::tar_file(
+    name = amulet_BPCells_native_source_file,
+    description = "Track the native BPCells fragment iterator used by AMULET",
+    command = "src/amulet_bpcells.cpp"
+  ),
+  tarchetypes::tar_file(
     name = open_targets_credible_set_dataset_path,
     description = "Download the Open Targets 26.03 credible_set Parquet dataset for shared GWAS consumers [part_of_graph:genetic_enrichment_single_nucleus]",
     command = download_open_targets_dataset("https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.03/output/credible_set/")

@@ -344,6 +344,23 @@ scale_GWAS_heatmap_scores <- function(heatmap_data, group_cols = character(), sc
     dplyr::ungroup()
 }
 
+#' Build a sparse SCAVENGE transition matrix
+#'
+#' Column-normalize a sparse nearest-neighbor graph for random walk with restart.
+#'
+#' @param NN_graph Sparse cell-by-cell adjacency matrix with identical row and
+#'   column names and no degree-zero cells.
+#' @return Column-normalized sparse transition matrix.
+#' @keywords internal
+
+get_SCAVENGE_transition_matrix <- function(NN_graph) {
+  col_sums <- Matrix::colSums(NN_graph)
+  if (any(col_sums == 0)) {
+    stop("NN_graph contains degree-zero cells.")
+  }
+  NN_graph %*% Matrix::Diagonal(x = 1 / col_sums)
+}
+
 #' Run sparse random walk with restart
 #'
 #' Propagate seed-cell signal over a sparse nearest-neighbor graph.
@@ -357,10 +374,18 @@ scale_GWAS_heatmap_scores <- function(heatmap_data, group_cols = character(), sc
 #' @param stationary_cutoff L1-change threshold used to stop iterations once the
 #'   score vector is stationary.
 #' @param max_iter Maximum random-walk iterations before returning the latest score.
+#' @param transition_matrix Precomputed column-normalized transition matrix.
 #' @return Named numeric propagation score vector aligned to `NN_graph` row names.
 #' @keywords internal
 
-run_sparse_random_walk_with_restart <- function(NN_graph, seed_cells, restart_prob = 0.05, stationary_cutoff = 1e-5, max_iter = 10000) {
+run_sparse_random_walk_with_restart <- function(
+  NN_graph,
+  seed_cells,
+  restart_prob = 0.05,
+  stationary_cutoff = 1e-5,
+  max_iter = 10000,
+  transition_matrix = get_SCAVENGE_transition_matrix(NN_graph)
+) {
   if (restart_prob <= 0 || restart_prob >= 1) {
     stop("restart_prob must be between 0 and 1.")
   }
@@ -368,12 +393,6 @@ run_sparse_random_walk_with_restart <- function(NN_graph, seed_cells, restart_pr
     stop("seed_cells contains cells not found in NN_graph.")
   }
 
-  col_sums <- Matrix::colSums(NN_graph)
-  if (any(col_sums == 0)) {
-    stop("NN_graph contains degree-zero cells.")
-  }
-
-  transition_matrix <- NN_graph %*% Matrix::Diagonal(x = 1 / col_sums)
   restart_vec <- numeric(nrow(NN_graph))
   names(restart_vec) <- rownames(NN_graph)
   restart_vec[seed_cells] <- 1 / length(seed_cells)
@@ -426,6 +445,7 @@ get_degree_matched_permutation_p_values <- function(NN_graph, seed_idx, observed
   degree_vec <- Matrix::colSums(NN_graph)
   cells_by_degree <- split(seq_along(degree_vec), degree_vec)
   seed_counts_by_degree <- table(degree_vec[seed_idx])
+  transition_matrix <- get_SCAVENGE_transition_matrix(NN_graph)
 
   run_permutations <- function(n_permutations) {
     exceedance_counts <- integer(length(observed_score_vec))
@@ -441,7 +461,8 @@ get_degree_matched_permutation_p_values <- function(NN_graph, seed_idx, observed
       permutation_score_vec <- run_sparse_random_walk_with_restart(
         NN_graph = NN_graph,
         seed_cells = rownames(NN_graph)[sampled_cell_idx],
-        restart_prob = restart_prob
+        restart_prob = restart_prob,
+        transition_matrix = transition_matrix
       )
 
       exceedance_counts <- exceedance_counts + as.integer(permutation_score_vec > observed_score_vec)

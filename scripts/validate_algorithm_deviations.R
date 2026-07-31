@@ -304,7 +304,17 @@ validate_SCAVENGE <- function() {
     restart_prob = restart_prob,
     stationary_cutoff = 1e-12
   )
-  transition <- graph %*% Matrix::Diagonal(x = 1 / Matrix::colSums(graph))
+  transition <- get_SCAVENGE_transition_matrix(graph)
+  observed_precomputed <- run_sparse_random_walk_with_restart(
+    NN_graph = graph,
+    seed_cells = seed_cells,
+    restart_prob = restart_prob,
+    stationary_cutoff = 1e-12,
+    transition_matrix = transition
+  )
+  transition_reuse_delta <- max(abs(observed_precise - observed_precomputed))
+  expect_at_most(transition_reuse_delta, 0, "SCAVENGE precomputed-transition delta")
+
   restart <- setNames(numeric(nrow(graph)), rownames(graph))
   restart[seed_cells] <- 1 / length(seed_cells)
   closed_form <- solve(
@@ -366,6 +376,7 @@ validate_SCAVENGE <- function() {
   cat(
     "SCAVENGE validation ok: reference 1.0.2@8ee8b173d965",
     "; closed-form max delta=", format(closed_form_delta, scientific = TRUE, digits = 3),
+    "; precomputed-transition max delta=", format(transition_reuse_delta, scientific = TRUE, digits = 3),
     "; score-rank Spearman=", format(score_rank_correlation, digits = 4),
     "; significant-cell Jaccard=", format(significant_jaccard, digits = 4),
     "\n",

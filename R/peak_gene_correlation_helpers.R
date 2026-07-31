@@ -461,6 +461,92 @@ normalize_peak_gene_correlation_aggregate_matrices <- function(
   )
 }
 
+#' Extract top-link aggregate values from one normalized branch
+#'
+#' Extract only the normalized GEX and ATAC rows needed for top-link scatter
+#' plots from one cell-group/chromosome branch.
+#'
+#' @param normalized_aggregate_matrices List returned by
+#'   `normalize_peak_gene_correlation_aggregate_matrices()`.
+#' @param top_links_tibble Top peak-gene links, including scatter-plot names and
+#'   matrix feature identifiers.
+#' @return A compact tibble of aggregate-level values for links available in
+#'   this branch.
+#' @keywords internal
+
+extract_peak_gene_correlation_top_link_aggregate_values <- function(
+  normalized_aggregate_matrices,
+  top_links_tibble
+) {
+  cell_group <- normalized_aggregate_matrices$cell_group
+  chr <- normalized_aggregate_matrices$chr
+  GEX_norm <- normalized_aggregate_matrices$GEX_norm
+  ATAC_norm <- normalized_aggregate_matrices$ATAC_norm
+
+  branch_links <- top_links_tibble |>
+    dplyr::filter(
+      .data$chr == !!chr,
+      .data$gene_matrix_feature %in% rownames(GEX_norm),
+      .data$peak %in% rownames(ATAC_norm)
+    )
+
+  if (nrow(branch_links) == 0L) {
+    return(tibble::tibble(
+      scatter_plot_name = character(),
+      primary_cell_group = character(),
+      cell_group = character(),
+      chr = character(),
+      peak = character(),
+      TargetGeneID = character(),
+      TargetGene = character(),
+      correlation = numeric(),
+      FDR = numeric(),
+      rank_in_cell_group = integer(),
+      rank_for_gene = integer(),
+      aggregate_id = character(),
+      n_cells = numeric(),
+      GEX_depth = numeric(),
+      ATAC_depth = numeric(),
+      gene_expression_logCPM = numeric(),
+      peak_accessibility_logCPM = numeric()
+    ))
+  }
+
+  aggregate_depth_tibble <- normalized_aggregate_matrices$aggregate_depth_tibble |>
+    dplyr::select("aggregate_id", "n_cells", "GEX_depth", "ATAC_depth")
+  n_aggregates <- nrow(aggregate_depth_tibble)
+
+  purrr::map_dfr(seq_len(nrow(branch_links)), \(index) {
+    link_row <- branch_links[index, , drop = FALSE]
+
+    dplyr::bind_cols(
+      link_row[rep(1L, n_aggregates), , drop = FALSE] |>
+        dplyr::transmute(
+          scatter_plot_name = .data$scatter_plot_name,
+          primary_cell_group = .data$cell_group,
+          cell_group = !!cell_group,
+          chr = .data$chr,
+          peak = .data$peak,
+          TargetGeneID = .data$TargetGeneID,
+          TargetGene = .data$TargetGene,
+          correlation = .data$correlation,
+          FDR = .data$FDR,
+          rank_in_cell_group = .data$rank_in_cell_group,
+          rank_for_gene = .data$rank_for_gene
+        ),
+      aggregate_depth_tibble,
+      tibble::tibble(
+        gene_expression_logCPM = as.numeric(
+          GEX_norm[link_row$gene_matrix_feature[[1]], ]
+        ),
+        peak_accessibility_logCPM = as.numeric(
+          ATAC_norm[link_row$peak[[1]], ]
+        )
+      )
+    )
+  })
+}
+
 #' Empty peak gene correlation results tibble
 #'
 #' Return a correctly typed empty peak-gene correlation result table.
@@ -766,4 +852,172 @@ make_peak_gene_correlation_links <- function(results_tibble) {
       !.data$isSelfPromoter
     ) |>
     dplyr::arrange(.data$cell_group, .data$rank_in_cell_group)
+}
+
+#' Summarize peak-gene correlations for a histogram
+#'
+#' @param results_tibble Peak-gene correlation results.
+#' @param bin_width Correlation-bin width.
+#' @return A compact tibble of pair counts by cell group and correlation bin.
+#' @keywords internal
+
+summarize_peak_gene_correlation_histogram <- function(
+  results_tibble,
+  bin_width = 0.025
+) {
+  results_tibble |>
+    dplyr::select("cell_group", "correlation") |>
+    dplyr::filter(!is.na(.data$correlation)) |>
+    dplyr::mutate(
+      correlation_bin = pmin(
+        1 - bin_width,
+        pmax(
+          -1,
+          floor((.data$correlation + 1) / bin_width) * bin_width - 1
+        )
+      ),
+      correlation_mid = .data$correlation_bin + bin_width / 2
+    ) |>
+    dplyr::count(.data$cell_group, .data$correlation_mid, name = "n_pairs")
+}
+
+#' Plot a peak-gene correlation histogram
+#'
+#' @param plot_tibble Compact output from
+#'   `summarize_peak_gene_correlation_histogram()`.
+#' @param bin_width Correlation-bin width.
+#' @return A ggplot ready for saving.
+#' @keywords internal
+
+plot_peak_gene_correlation_histogram <- function(
+  plot_tibble,
+  bin_width = 0.025
+) {
+  ggplot2::ggplot(
+    plot_tibble,
+    ggplot2::aes(x = .data$correlation_mid, y = .data$n_pairs)
+  ) +
+    ggplot2::geom_col(width = bin_width) +
+    ggplot2::facet_wrap(~cell_group, scales = "free_y") +
+    ggplot2::labs(
+      x = "Pearson correlation",
+      y = "Peak-gene pairs"
+    )
+}
+
+#' Summarize peak-gene correlation support counts
+#'
+#' @param results_tibble Peak-gene correlation results.
+#' @return A compact long-form tibble of support counts by cell group.
+#' @keywords internal
+
+summarize_peak_gene_correlation_support_counts <- function(results_tibble) {
+  results_tibble |>
+    dplyr::select(
+      "cell_group",
+      "FDR",
+      "correlation",
+      "isSelfPromoter"
+    ) |>
+    dplyr::summarise(
+      tested_pairs = dplyr::n(),
+      FDR_significant_pairs = sum(.data$FDR < 0.05, na.rm = TRUE),
+      positive_non_promoter_links = sum(
+        .data$correlation > 0 &
+          .data$FDR < 0.05 &
+          !.data$isSelfPromoter,
+        na.rm = TRUE
+      ),
+      .by = "cell_group"
+    ) |>
+    tidyr::pivot_longer(
+      cols = -"cell_group",
+      names_to = "metric",
+      values_to = "n"
+    ) |>
+    dplyr::mutate(n_for_plot = pmax(.data$n, 1))
+}
+
+#' Plot peak-gene correlation support counts
+#'
+#' @param plot_tibble Compact output from
+#'   `summarize_peak_gene_correlation_support_counts()`.
+#' @return A ggplot ready for saving.
+#' @keywords internal
+
+plot_peak_gene_correlation_support_counts <- function(plot_tibble) {
+  ggplot2::ggplot(
+    plot_tibble,
+    ggplot2::aes(
+      x = .data$n_for_plot,
+      y = stats::reorder(.data$cell_group, .data$n_for_plot),
+      fill = .data$metric
+    )
+  ) +
+    ggplot2::geom_col(position = "dodge") +
+    ggplot2::scale_x_log10() +
+    ggplot2::labs(
+      x = "Count, log10 scale",
+      y = "Cell group",
+      fill = NULL
+    )
+}
+
+#' Summarize peak-gene correlations by TSS distance
+#'
+#' @param results_tibble Peak-gene correlation results.
+#' @return A compact tibble of correlation summaries by cell group and distance
+#'   bin.
+#' @keywords internal
+
+summarize_peak_gene_correlation_by_distance <- function(results_tibble) {
+  results_tibble |>
+    dplyr::select(
+      "cell_group",
+      "correlation",
+      "isSelfPromoter",
+      "distance",
+      "FDR"
+    ) |>
+    dplyr::filter(!is.na(.data$correlation), !.data$isSelfPromoter) |>
+    dplyr::mutate(
+      abs_distance_bin = pmin(
+        250000,
+        floor(abs(.data$distance) / 5000) * 5000
+      )
+    ) |>
+    dplyr::summarise(
+      n_pairs = dplyr::n(),
+      median_correlation = stats::median(.data$correlation, na.rm = TRUE),
+      significant_fraction = mean(.data$FDR < 0.05, na.rm = TRUE),
+      .by = c("cell_group", "abs_distance_bin")
+    )
+}
+
+#' Plot peak-gene correlations by TSS distance
+#'
+#' @param plot_tibble Compact output from
+#'   `summarize_peak_gene_correlation_by_distance()`.
+#' @return A ggplot ready for saving.
+#' @keywords internal
+
+plot_peak_gene_correlation_by_distance <- function(plot_tibble) {
+  ggplot2::ggplot(
+    plot_tibble,
+    ggplot2::aes(
+      x = .data$abs_distance_bin / 1000,
+      y = .data$median_correlation
+    )
+  ) +
+    ggplot2::geom_hline(
+      yintercept = 0,
+      linetype = 2,
+      color = "grey70"
+    ) +
+    ggplot2::geom_line() +
+    ggplot2::facet_wrap(~cell_group) +
+    ggplot2::labs(
+      x = "Absolute TSS distance, kb",
+      y = "Median correlation"
+    )
 }

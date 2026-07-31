@@ -146,29 +146,15 @@ rlang::list2(
     description = "Save a facetted histogram of peak-gene correlations by cell group",
     command = {
       correlation_bin_width <- 0.025
-      correlation_plot_tibble <- peak_gene_correlation_results_tibble.peak_gene_correlation.WNN |>
-        dplyr::filter(!is.na(.data$correlation)) |>
-        dplyr::mutate(
-          correlation_bin = pmin(
-            1 - correlation_bin_width,
-            pmax(-1, floor((.data$correlation + 1) / correlation_bin_width) * correlation_bin_width - 1)
-          ),
-          correlation_mid = .data$correlation_bin + correlation_bin_width / 2
-        ) |>
-        dplyr::count(.data$cell_group, .data$correlation_mid, name = "n_pairs")
-
-      correlation_histogram_plot <- ggplot2::ggplot(
-        correlation_plot_tibble,
-        ggplot2::aes(x = .data$correlation_mid, y = .data$n_pairs)
-      ) +
-        ggplot2::geom_col(width = correlation_bin_width) +
-        ggplot2::facet_wrap(~cell_group, scales = "free_y") +
-        ggplot2::labs(
-          x = "Pearson correlation",
-          y = "Peak-gene pairs"
-        )
-
-      save_plots_structured(correlation_histogram_plot)
+      correlation_plot_tibble <- summarize_peak_gene_correlation_histogram(
+        results_tibble = peak_gene_correlation_results_tibble.peak_gene_correlation.WNN,
+        bin_width = correlation_bin_width
+      )
+      plot_peak_gene_correlation_histogram(
+        plot_tibble = correlation_plot_tibble,
+        bin_width = correlation_bin_width
+      ) |>
+        save_plots_structured()
     },
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
@@ -176,36 +162,11 @@ rlang::list2(
     name = peak_gene_correlation_support_counts_plot.peak_gene_correlation.WNN,
     description = "Save peak-gene correlation tested, significant, and linked pair counts by cell group",
     command = {
-      support_plot_tibble <- peak_gene_correlation_results_tibble.peak_gene_correlation.WNN |>
-        dplyr::summarise(
-          tested_pairs = dplyr::n(),
-          FDR_significant_pairs = sum(.data$FDR < 0.05, na.rm = TRUE),
-          positive_non_promoter_links = sum(
-            .data$correlation > 0 & .data$FDR < 0.05 & !.data$isSelfPromoter,
-            na.rm = TRUE
-          ),
-          .by = "cell_group"
-        ) |>
-        tidyr::pivot_longer(
-          cols = -"cell_group",
-          names_to = "metric",
-          values_to = "n"
-        ) |>
-        dplyr::mutate(n_for_plot = pmax(.data$n, 1))
-
-      support_count_plot <- ggplot2::ggplot(
-        support_plot_tibble,
-        ggplot2::aes(x = .data$n_for_plot, y = stats::reorder(.data$cell_group, .data$n_for_plot), fill = .data$metric)
-      ) +
-        ggplot2::geom_col(position = "dodge") +
-        ggplot2::scale_x_log10() +
-        ggplot2::labs(
-          x = "Count, log10 scale",
-          y = "Cell group",
-          fill = NULL
-        )
-
-      save_plots_structured(support_count_plot)
+      support_plot_tibble <- summarize_peak_gene_correlation_support_counts(
+        peak_gene_correlation_results_tibble.peak_gene_correlation.WNN
+      )
+      plot_peak_gene_correlation_support_counts(support_plot_tibble) |>
+        save_plots_structured()
     },
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
@@ -213,31 +174,11 @@ rlang::list2(
     name = peak_gene_correlation_distance_correlation_plot.peak_gene_correlation.WNN,
     description = "Save median peak-gene correlation by absolute TSS distance and cell group",
     command = {
-      distance_plot_tibble <- peak_gene_correlation_results_tibble.peak_gene_correlation.WNN |>
-        dplyr::filter(!is.na(.data$correlation), !.data$isSelfPromoter) |>
-        dplyr::mutate(
-          abs_distance_bin = pmin(250000, floor(abs(.data$distance) / 5000) * 5000)
-        ) |>
-        dplyr::summarise(
-          n_pairs = dplyr::n(),
-          median_correlation = stats::median(.data$correlation, na.rm = TRUE),
-          significant_fraction = mean(.data$FDR < 0.05, na.rm = TRUE),
-          .by = c("cell_group", "abs_distance_bin")
-        )
-
-      distance_correlation_plot <- ggplot2::ggplot(
-        distance_plot_tibble,
-        ggplot2::aes(x = .data$abs_distance_bin / 1000, y = .data$median_correlation)
-      ) +
-        ggplot2::geom_hline(yintercept = 0, linetype = 2, color = "grey70") +
-        ggplot2::geom_line() +
-        ggplot2::facet_wrap(~cell_group) +
-        ggplot2::labs(
-          x = "Absolute TSS distance, kb",
-          y = "Median correlation"
-        )
-
-      save_plots_structured(distance_correlation_plot)
+      distance_plot_tibble <- summarize_peak_gene_correlation_by_distance(
+        peak_gene_correlation_results_tibble.peak_gene_correlation.WNN
+      )
+      plot_peak_gene_correlation_by_distance(distance_plot_tibble) |>
+        save_plots_structured()
     },
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
@@ -291,53 +232,37 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
+    name = peak_gene_correlation_top_link_aggregate_values_tibbles.peak_gene_correlation.WNN,
+    description = "Extract top-link aggregate values from one normalized cell-group/chromosome branch",
+    command = extract_peak_gene_correlation_top_link_aggregate_values(
+      normalized_aggregate_matrices =
+        peak_gene_correlation_normalized_aggregate_matrices.peak_gene_correlation.WNN,
+      top_links_tibble =
+        peak_gene_correlation_top_links_tibble.peak_gene_correlation.WNN
+    ),
+    pattern = map(
+      peak_gene_correlation_normalized_aggregate_matrices.peak_gene_correlation.WNN
+    ),
+    iteration = "vector",
+    resources = get_tar_resources(RAM_GB_req = 16)
+  ),
+  targets::tar_target(
+    name = peak_gene_correlation_top_link_aggregate_values_tibble.peak_gene_correlation.WNN,
+    description = "Combine compact top-link aggregate values across cell groups and chromosomes",
+    command = dplyr::bind_rows(
+      peak_gene_correlation_top_link_aggregate_values_tibbles.peak_gene_correlation.WNN
+    ),
+    resources = get_tar_resources(RAM_GB_req = 16)
+  ),
+  targets::tar_target(
     name = peak_gene_correlation_top_link_aggregate_scatter_tibble.peak_gene_correlation.WNN,
     description = "Build aggregate-level GEX and ATAC values for one top peak-gene link",
     command = {
-      normalized_branches <- as.list(peak_gene_correlation_normalized_aggregate_matrices.peak_gene_correlation.WNN)
-      normalized_branches_by_key <- normalized_branches |>
-        purrr::set_names(
-          purrr::map_chr(
-            normalized_branches,
-            \(branch) paste(branch$cell_group, branch$chr, sep = "__")
-          )
-        )
-
       link_row <- peak_gene_correlation_top_links_tibble.peak_gene_correlation.WNN
-      matching_branches <- purrr::keep(
-        normalized_branches_by_key,
-        \(branch) {
-          identical(branch$chr, link_row$chr[[1]]) &&
-            link_row$gene_matrix_feature[[1]] %in% rownames(branch$GEX_norm) &&
-            link_row$peak[[1]] %in% rownames(branch$ATAC_norm)
-        }
-      )
-
-      purrr::map_dfr(matching_branches, \(branch) {
-        n_aggregates <- nrow(branch$aggregate_depth_tibble)
-
-        dplyr::bind_cols(
-          tibble::tibble(
-            scatter_plot_name = link_row$scatter_plot_name[[1]],
-            primary_cell_group = link_row$cell_group[[1]],
-            cell_group = branch$cell_group,
-            chr = link_row$chr[[1]],
-            peak = link_row$peak[[1]],
-            TargetGeneID = link_row$TargetGeneID[[1]],
-            TargetGene = link_row$TargetGene[[1]],
-            correlation = link_row$correlation[[1]],
-            FDR = link_row$FDR[[1]],
-            rank_in_cell_group = link_row$rank_in_cell_group[[1]],
-            rank_for_gene = link_row$rank_for_gene[[1]]
-          )[rep(1L, n_aggregates), , drop = FALSE],
-          branch$aggregate_depth_tibble |>
-            dplyr::select("aggregate_id", "n_cells", "GEX_depth", "ATAC_depth"),
-          tibble::tibble(
-            gene_expression_logCPM = as.numeric(branch$GEX_norm[link_row$gene_matrix_feature[[1]], ]),
-            peak_accessibility_logCPM = as.numeric(branch$ATAC_norm[link_row$peak[[1]], ])
-          )
+      peak_gene_correlation_top_link_aggregate_values_tibble.peak_gene_correlation.WNN |>
+        dplyr::filter(
+          .data$scatter_plot_name == link_row$scatter_plot_name[[1]]
         )
-      })
     },
     pattern = map(peak_gene_correlation_top_links_tibble.peak_gene_correlation.WNN),
     iteration = "vector",

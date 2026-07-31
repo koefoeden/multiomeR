@@ -1146,6 +1146,53 @@ get_embedding_metadata_association_tibble <- function(embedding_matrix, metadata
   })
 }
 
+#' Plot an embedding metadata-association tibble
+#'
+#' Construct an association barplot from already summarized plotting data.
+#'
+#' @param plot_tibble Tibble with `variable`, `dim`, `metric`, and
+#'   `embedding_type` columns.
+#' @param dims Numeric dimension indices used for x-axis breaks.
+#' @param title Plot title used for the assembled association panel.
+#' @return A ggplot ready for saving or composition.
+#' @keywords internal
+
+plot_embedding_metadata_association_tibble <- function(plot_tibble, dims, title) {
+  if (nrow(plot_tibble) == 0 || all(is.na(plot_tibble$metric))) {
+    return(empty_embedding_metadata_association_plot(title, "No usable metadata variables"))
+  }
+
+  plot_tibble <- plot_tibble |>
+    dplyr::mutate(
+      variable = factor(.data$variable, levels = unique(.data$variable)),
+      embedding_type = factor(.data$embedding_type, levels = c("Non-Harmony", "Harmony"))
+    )
+  y_max <- max(plot_tibble$metric, na.rm = TRUE)
+  y_upper <- if (is.finite(y_max) && y_max > 0) {
+    min(1, max(pretty(c(0, y_max), n = 4)))
+  } else {
+    0.01
+  }
+
+  plot_tibble |>
+    ggplot2::ggplot(ggplot2::aes(x = .data$dim, y = .data$metric, fill = .data$embedding_type)) +
+    ggplot2::geom_hline(yintercept = 0, linewidth = 0.2, color = "grey60") +
+    ggplot2::geom_col(position = ggplot2::position_dodge(width = 0.75), width = 0.7, na.rm = TRUE) +
+    ggplot2::facet_wrap(~variable, ncol = 1, strip.position = "right") +
+    ggplot2::scale_x_continuous(breaks = dims) +
+    ggplot2::scale_y_continuous(
+      labels = scales::label_percent(accuracy = 1),
+      limits = c(0, y_upper),
+      expand = ggplot2::expansion(mult = c(0, 0.05))
+    ) +
+    ggplot2::scale_fill_manual(values = c("Non-Harmony" = "#999999", "Harmony" = "#2166AC")) +
+    ggplot2::labs(title = title, x = "Dimension", y = "Variance explained", fill = NULL) +
+    ggplot2::theme(
+      legend.position = "top",
+      strip.text.y.right = ggplot2::element_text(angle = 0, hjust = 0)
+    )
+}
+
 #' Plot embedding metadata association barplot
 #'
 #' Plot association strength between one embedding matrix and metadata variables.
@@ -1208,39 +1255,11 @@ plot_embedding_metadata_association_barplot <- function(
     plot_tibble <- dplyr::bind_rows(plot_tibble, harmony_plot_tibble)
   }
 
-  if (nrow(plot_tibble) == 0 || all(is.na(plot_tibble$metric))) {
-    return(empty_embedding_metadata_association_plot(title, "No usable metadata variables"))
-  }
-
-  plot_tibble <- plot_tibble |>
-    dplyr::mutate(
-      variable = factor(.data$variable, levels = unique(.data$variable)),
-      embedding_type = factor(.data$embedding_type, levels = c("Non-Harmony", "Harmony"))
-    )
-  y_max <- max(plot_tibble$metric, na.rm = TRUE)
-  y_upper <- if (is.finite(y_max) && y_max > 0) {
-    min(1, max(pretty(c(0, y_max), n = 4)))
-  } else {
-    0.01
-  }
-
-  plot <- plot_tibble |>
-    ggplot2::ggplot(ggplot2::aes(x = .data$dim, y = .data$metric, fill = .data$embedding_type)) +
-    ggplot2::geom_hline(yintercept = 0, linewidth = 0.2, color = "grey60") +
-    ggplot2::geom_col(position = ggplot2::position_dodge(width = 0.75), width = 0.7, na.rm = TRUE) +
-    ggplot2::facet_wrap(~variable, ncol = 1, strip.position = "right") +
-    ggplot2::scale_x_continuous(breaks = inputs$dims) +
-    ggplot2::scale_y_continuous(
-      labels = scales::label_percent(accuracy = 1),
-      limits = c(0, y_upper),
-      expand = ggplot2::expansion(mult = c(0, 0.05))
-    ) +
-    ggplot2::scale_fill_manual(values = c("Non-Harmony" = "#999999", "Harmony" = "#2166AC")) +
-    ggplot2::labs(title = title, x = "Dimension", y = "Variance explained", fill = NULL) +
-    ggplot2::theme(
-      legend.position = "top",
-      strip.text.y.right = ggplot2::element_text(angle = 0, hjust = 0)
-    )
+  plot_embedding_metadata_association_tibble(
+    plot_tibble = plot_tibble,
+    dims = inputs$dims,
+    title = title
+  )
 }
 
 #' Plot embedding metadata association barplots

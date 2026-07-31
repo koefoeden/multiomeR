@@ -183,35 +183,12 @@ rlang::list2(
     tarchetypes::tar_file(
       name = markers_violin_plot.WNN,
       description = "Violin plots of marker gene expression per WNN cell type. [checkpoint:multimodal]",
-      command = {
-        marker_expression_tibble <- metadata_w_cell_types_tibble.WNN |>
-          add_feature_matrix_to_metadata(
-            feature_matrix = aggregated_counts_BPCells_matrix.GEX,
-            features = GEX_marker_genes_vec
-          )
-
-        plots <- GEX_marker_genes_vec |>
-          purrr::set_names() |>
-          purrr::map(\(marker_gene) {
-            tibble::tibble(
-              WNN_harmony_SNN_cluster_cell_type = marker_expression_tibble$WNN_harmony_SNN_cluster_cell_type,
-              value = marker_expression_tibble[[marker_gene]]
-            ) |>
-              ggplot2::ggplot(ggplot2::aes(
-                x = WNN_harmony_SNN_cluster_cell_type,
-                y = value,
-                fill = WNN_harmony_SNN_cluster_cell_type
-              )) +
-              ggplot2::geom_violin(scale = "width") +
-              ggplot2::labs(title = marker_gene) +
-              ggplot2::theme(
-                axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
-                axis.title.x = ggplot2::element_blank(),
-                legend.position = "none"
-              )
-          })
-        save_plots_structured(plots)
-      },
+      command = plot_WNN_marker_expression_violins(
+        metadata_tibble = metadata_w_cell_types_tibble.WNN,
+        feature_matrix = aggregated_counts_BPCells_matrix.GEX,
+        marker_genes = GEX_marker_genes_vec
+      ) |>
+        save_plots_structured(),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(

@@ -99,7 +99,9 @@ get_region_GRanges_for_BPCells_track <- function(region_id, gene_GRanges = NULL,
 #' @param gene_GRanges Gene annotation GRanges with gene-name metadata used to resolve gene-centered regions.
 #' @param group_cells_by_col Metadata column used to split cells into separate
 #'   coverage tracks.
-#' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
+#' @return A combined BPCells trackplot whose reachable data are limited to
+#'   summarized coverage bins and peaks overlapping the displayed region. The
+#'   plot must not retain the fragment object or full peak table.
 #' @keywords internal
 
 plot_coverage_at_region_BPCells <- function(
@@ -133,14 +135,25 @@ plot_coverage_at_region_BPCells <- function(
   }
 
   region <- get_region_GRanges_for_BPCells_track(region_id, gene_GRanges = gene_GRanges)
-  coverage_track <- BPCells::trackplot_coverage(
+  coverage_tibble <- BPCells::trackplot_coverage(
     fragments = fragments,
     region = region,
     groups = groups,
     cell_read_counts = cell_read_counts,
     group_order = gtools::mixedsort(unique(as.character(groups))),
-    bins = 500
+    bins = 500,
+    return_data = TRUE
   )
+  coverage_track <- make_BPCells_ATAC_coverage_track_from_tibble(
+    coverage_tibble = coverage_tibble,
+    region = region
+  )
+  collapsed_peaks <- collapsed_peaks |>
+    dplyr::filter(
+      .data$chr == as.character(GenomeInfoDb::seqnames(region)),
+      .data$end > GenomicRanges::start(region),
+      .data$start < GenomicRanges::end(region)
+    )
   peak_track <- BPCells::trackplot_genome_annotation(
     loci = collapsed_peaks,
     region = region,

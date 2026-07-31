@@ -107,6 +107,70 @@ add_feature_matrix_to_metadata <- function(metadata_tibble, feature_matrix, feat
     dplyr::left_join(feature_tibble, by = barcode_col)
 }
 
+#' Plot one WNN marker-expression violin
+#'
+#' @param plot_tibble Two-column tibble containing
+#'   `WNN_harmony_SNN_cluster_cell_type` and `value`.
+#' @param marker_gene Marker gene used as the plot title.
+#' @return A ggplot ready for saving or composition.
+#' @keywords internal
+
+plot_WNN_marker_expression_violin <- function(plot_tibble, marker_gene) {
+  plot_tibble |>
+    ggplot2::ggplot(ggplot2::aes(
+      x = .data$WNN_harmony_SNN_cluster_cell_type,
+      y = .data$value,
+      fill = .data$WNN_harmony_SNN_cluster_cell_type
+    )) +
+    ggplot2::geom_violin(scale = "width") +
+    ggplot2::labs(title = marker_gene) +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
+      axis.title.x = ggplot2::element_blank(),
+      legend.position = "none"
+    )
+}
+
+#' Plot WNN marker-expression violins
+#'
+#' @param metadata_tibble Tibble with one row per cell and barcode and WNN
+#'   cell-type columns.
+#' @param feature_matrix Feature-by-cell matrix-like object with marker genes in
+#'   rows and cell barcodes in columns.
+#' @param marker_genes Character vector of marker genes to plot.
+#' @param barcode_col Metadata barcode column matching `feature_matrix` columns.
+#' @return Named list with one violin plot per marker gene.
+#' @keywords internal
+
+plot_WNN_marker_expression_violins <- function(
+  metadata_tibble,
+  feature_matrix,
+  marker_genes,
+  barcode_col = "barcode_w_prefix"
+) {
+  marker_expression_tibble <- metadata_tibble |>
+    dplyr::select(dplyr::all_of(c(
+      barcode_col,
+      "WNN_harmony_SNN_cluster_cell_type"
+    ))) |>
+    add_feature_matrix_to_metadata(
+      feature_matrix = feature_matrix,
+      features = marker_genes,
+      barcode_col = barcode_col
+    )
+
+  marker_genes |>
+    purrr::set_names() |>
+    purrr::map(\(marker_gene) {
+      marker_expression_tibble |>
+        dplyr::select(
+          WNN_harmony_SNN_cluster_cell_type,
+          value = dplyr::all_of(marker_gene)
+        ) |>
+        plot_WNN_marker_expression_violin(marker_gene = marker_gene)
+    })
+}
+
 #' Get WNN embedding matrices
 #'
 #' Align and subset RNA and ATAC embeddings for weighted-nearest-neighbor analysis.

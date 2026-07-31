@@ -713,6 +713,76 @@ prepare_GWAS_locus_contribution_waterfall_tibble <- function(locus_tibble, n_top
   )
 }
 
+#' Plot one locus-contribution waterfall
+#'
+#' @param waterfall_tibble Minimal plotting data returned by
+#'   `prepare_GWAS_locus_contribution_waterfall_tibble()`.
+#' @param title Plot title identifying the GWAS and cell type.
+#' @return A ggplot ready for saving or composition.
+#' @keywords internal
+
+plot_GWAS_locus_contribution_waterfall <- function(waterfall_tibble, title) {
+  connector_tibble <- waterfall_tibble |>
+    dplyr::filter(.data$locus_label != "Total")
+  connector_tibble <- connector_tibble |>
+    dplyr::slice_head(n = max(0L, nrow(connector_tibble) - 1L))
+
+  ggplot2::ggplot(waterfall_tibble) +
+    ggplot2::geom_rect(
+      ggplot2::aes(
+        xmin = .data$plot_index - 0.42,
+        xmax = .data$plot_index + 0.42,
+        ymin = pmin(.data$start, .data$end),
+        ymax = pmax(.data$start, .data$end),
+        fill = .data$direction
+      )
+    ) +
+    ggplot2::geom_segment(
+      data = connector_tibble,
+      ggplot2::aes(
+        x = .data$plot_index + 0.42,
+        xend = .data$plot_index + 1 - 0.42,
+        y = .data$end,
+        yend = .data$end
+      ),
+      color = "grey55",
+      linewidth = 0.3
+    ) +
+    ggplot2::geom_hline(yintercept = 0, color = "grey35", linewidth = 0.3) +
+    ggrepel::geom_label_repel(
+      data = dplyr::filter(waterfall_tibble, .data$gene_label != ""),
+      ggplot2::aes(x = .data$plot_index, y = .data$end, label = .data$gene_label),
+      direction = "y",
+      seed = 1,
+      size = 2.2,
+      min.segment.length = 0,
+      box.padding = 0.2,
+      point.padding = 0.1,
+      max.overlaps = Inf,
+      fill = scales::alpha("white", 0.9),
+      color = "grey15",
+      linewidth = 0.15
+    ) +
+    ggplot2::scale_x_continuous(
+      breaks = waterfall_tibble$plot_index,
+      labels = waterfall_tibble$locus_label,
+      expand = ggplot2::expansion(add = 0.6)
+    ) +
+    ggplot2::scale_fill_manual(values = c(Positive = "#B40426", Negative = "#3B4CC0", Total = "grey25"), name = NULL) +
+    ggplot2::labs(
+      x = "Credible-set locus (lead variant)",
+      y = "Cumulative relative deviation",
+      title = title,
+      caption = "Labels show the top Open Targets L2G gene and score for each locus."
+    ) +
+    ggplot2::theme_minimal(base_size = 9) +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
+      panel.grid.major.x = ggplot2::element_blank(),
+      legend.position = "bottom"
+    )
+}
+
 #' Plot locus-contribution waterfalls
 #'
 #' @param locus_contribution_tibble Exact locus-level contribution.
@@ -726,67 +796,14 @@ plot_GWAS_locus_contribution_waterfalls <- function(locus_contribution_tibble, n
     interaction(locus_contribution_tibble$GWAS_ID, locus_contribution_tibble$cluster, drop = TRUE, lex.order = TRUE)
   )
 
-  purrr::imap(split_tibbles, \(locus_tibble, plot_name) {
-    waterfall_tibble <- prepare_GWAS_locus_contribution_waterfall_tibble(locus_tibble, n_top_loci = n_top_loci)
-    connector_tibble <- waterfall_tibble |>
-      dplyr::filter(.data$locus_label != "Total")
-    connector_tibble <- connector_tibble |>
-      dplyr::slice_head(n = max(0L, nrow(connector_tibble) - 1L))
-
-    ggplot2::ggplot(waterfall_tibble) +
-      ggplot2::geom_rect(
-        ggplot2::aes(
-          xmin = .data$plot_index - 0.42,
-          xmax = .data$plot_index + 0.42,
-          ymin = pmin(.data$start, .data$end),
-          ymax = pmax(.data$start, .data$end),
-          fill = .data$direction
-        )
-      ) +
-      ggplot2::geom_segment(
-        data = connector_tibble,
-        ggplot2::aes(
-          x = .data$plot_index + 0.42,
-          xend = .data$plot_index + 1 - 0.42,
-          y = .data$end,
-          yend = .data$end
-        ),
-        color = "grey55",
-        linewidth = 0.3
-      ) +
-      ggplot2::geom_hline(yintercept = 0, color = "grey35", linewidth = 0.3) +
-      ggrepel::geom_label_repel(
-        data = dplyr::filter(waterfall_tibble, .data$gene_label != ""),
-        ggplot2::aes(x = .data$plot_index, y = .data$end, label = .data$gene_label),
-        direction = "y",
-        seed = 1,
-        size = 2.2,
-        min.segment.length = 0,
-        box.padding = 0.2,
-        point.padding = 0.1,
-        max.overlaps = Inf,
-        fill = scales::alpha("white", 0.9),
-        color = "grey15",
-        linewidth = 0.15
-      ) +
-      ggplot2::scale_x_continuous(
-        breaks = waterfall_tibble$plot_index,
-        labels = waterfall_tibble$locus_label,
-        expand = ggplot2::expansion(add = 0.6)
-      ) +
-      ggplot2::scale_fill_manual(values = c(Positive = "#B40426", Negative = "#3B4CC0", Total = "grey25"), name = NULL) +
-      ggplot2::labs(
-        x = "Credible-set locus (lead variant)",
-        y = "Cumulative relative deviation",
-        title = stringr::str_glue("{locus_tibble$GWAS_ID[[1]]} - {locus_tibble$cluster[[1]]}"),
-        caption = "Labels show the top Open Targets L2G gene and score for each locus."
-      ) +
-      ggplot2::theme_minimal(base_size = 9) +
-      ggplot2::theme(
-        axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
-        panel.grid.major.x = ggplot2::element_blank(),
-        legend.position = "bottom"
-      )
+  purrr::map(split_tibbles, \(locus_tibble) {
+    plot_GWAS_locus_contribution_waterfall(
+      waterfall_tibble = prepare_GWAS_locus_contribution_waterfall_tibble(
+        locus_tibble,
+        n_top_loci = n_top_loci
+      ),
+      title = stringr::str_glue("{locus_tibble$GWAS_ID[[1]]} - {locus_tibble$cluster[[1]]}")
+    )
   }) |>
     rlang::set_names(stringr::str_replace_all(names(split_tibbles), "[^A-Za-z0-9_.-]+", "_"))
 }

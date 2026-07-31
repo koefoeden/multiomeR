@@ -1245,12 +1245,15 @@ plot_GWAS_feature_support_tracks <- function(feature_metadata, feature_col = "cl
 
 plot_GWAS_metadata_tracks <- function(ordered_metadata) {
   method_colors <- c("SuSie" = "#238B45", "SuSiE-inf" = "#41B6C4", "PICS" = "#F16913")
-  endpoint_breaks <- function(limits) {
-    limits <- limits[is.finite(limits)]
-    if (length(limits) == 0) {
-      return(numeric())
-    }
-    unique(range(limits))
+  format_short_number <- function(values) {
+    vapply(values, \(value) {
+      if (!is.finite(value)) {
+        return(NA_character_)
+      }
+      divisor <- if (value >= 1e6) 1e6 else if (value >= 1e3) 1e3 else 1
+      suffix <- if (divisor == 1e6) "M" else if (divisor == 1e3) "K" else ""
+      paste0(format(signif(value / divisor, 3), trim = TRUE, scientific = FALSE), suffix)
+    }, character(1))
   }
   row_levels <- if (is.factor(ordered_metadata$GWAS_ID)) levels(ordered_metadata$GWAS_ID) else unique(as.character(ordered_metadata$GWAS_ID))
   row_categories <- ordered_metadata |>
@@ -1259,7 +1262,16 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
   row_breaks <- get_plot_group_breaks(row_categories$Category[match(row_levels, row_categories$GWAS_ID)])
   bar_plot_data <- ordered_metadata |>
     dplyr::transmute(GWAS_ID, Loci = n_credible_set_loci, Samples = sample_size) |>
-    tidyr::pivot_longer(-GWAS_ID, names_to = "track", values_to = "value")
+    tidyr::pivot_longer(-GWAS_ID, names_to = "track", values_to = "value") |>
+    dplyr::mutate(
+      panel_max = max(value, na.rm = TRUE),
+      label = format_short_number(value),
+      label_inside = value / panel_max >= 0.28,
+      label_x = dplyr::if_else(label_inside, value - 0.025 * panel_max, value + 0.025 * panel_max),
+      label_hjust = dplyr::if_else(label_inside, 1, 0),
+      label_color = dplyr::if_else(label_inside, "white", "grey20"),
+      .by = track
+    )
   ancestry_plot_data <- ordered_metadata |>
     dplyr::select(GWAS_ID, dplyr::matches("^ancestry_(EUR|EAS|AFR|AMR|SAS|OTH)$")) |>
     tidyr::pivot_longer(-GWAS_ID, names_to = "ancestry_group", values_to = "fraction") |>
@@ -1301,12 +1313,18 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
   bar_plot <- bar_plot_data |>
     ggplot2::ggplot(ggplot2::aes(x = value, y = GWAS_ID)) +
     ggplot2::geom_col(fill = "grey45", width = 0.8, na.rm = TRUE) +
+    ggplot2::geom_text(
+      ggplot2::aes(x = label_x, label = label, hjust = label_hjust, color = label_color),
+      size = 3,
+      na.rm = TRUE
+    ) +
     ggplot2::geom_hline(yintercept = row_breaks, color = "grey25", linewidth = 0.35) +
     ggplot2::facet_grid(. ~ track, scales = "free_x", switch = "x") +
-    ggplot2::scale_x_continuous(breaks = endpoint_breaks, labels = scales::label_number(scale_cut = scales::cut_short_scale()), expand = c(0, 0)) +
+    ggplot2::scale_color_identity() +
+    ggplot2::scale_x_continuous(expand = c(0, 0)) +
     ggplot2::scale_y_discrete(drop = FALSE, expand = c(0, 0)) +
     ggplot2::labs(x = NULL, y = NULL) +
-    gwas_heatmap_metadata_theme(show_x = TRUE)
+    gwas_heatmap_metadata_theme()
 
   ancestry_plot <- ancestry_plot_data |>
     ggplot2::ggplot(ggplot2::aes(x = fraction, y = GWAS_ID, fill = ancestry_group)) +

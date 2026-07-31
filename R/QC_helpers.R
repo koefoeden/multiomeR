@@ -8,6 +8,93 @@ plot_nuclei_per_donor_id <- function(
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 60, vjust = 1, hjust = 1))
 }
 
+#' Plot one per-dataset QC violin
+#'
+#' @param plot_tibble Per-feature plotting data with `GEM_well_ID`, `dataset`,
+#'   `feature`, and `value` columns.
+#' @param feature_thresholds Threshold intervals for the plotted feature.
+#' @return A ggplot ready for saving or composition.
+#' @keywords internal
+
+plot_per_dataset_QC_violin <- function(plot_tibble, feature_thresholds) {
+  plot <- plot_tibble |>
+    ggplot2::ggplot(ggplot2::aes(x = GEM_well_ID, y = value, fill = dataset))
+
+  if (nrow(feature_thresholds) > 0) {
+    plot <- plot +
+      ggplot2::geom_rect(
+        data = feature_thresholds,
+        ggplot2::aes(ymin = ymin, ymax = ymax),
+        xmin = -Inf,
+        xmax = Inf,
+        fill = "grey60",
+        alpha = 0.25,
+        inherit.aes = FALSE
+      ) +
+      ggplot2::geom_hline(
+        data = feature_thresholds,
+        ggplot2::aes(yintercept = threshold),
+        color = "grey35",
+        linetype = "dashed",
+        inherit.aes = FALSE
+      )
+  }
+
+  plot +
+    ggplot2::geom_violin(scale = "width") +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
+      axis.title.x = ggplot2::element_blank(),
+      legend.position = "none"
+    )
+}
+
+#' Plot per-dataset QC violins
+#'
+#' @param metadata_tibble Per-cell metadata containing `GEM_well_ID`,
+#'   `dataset`, and requested QC feature columns.
+#' @param QC_exclude_vector Character vector of QC exclusion expressions.
+#' @param feature_names Character vector of QC features to plot.
+#' @return Named list with one violin plot per available QC feature.
+#' @keywords internal
+
+plot_per_dataset_QC_violins <- function(
+  metadata_tibble,
+  QC_exclude_vector,
+  feature_names
+) {
+  threshold_tibble <- get_QC_exclude_threshold_tibble(
+    QC_exclude_vector = QC_exclude_vector,
+    feature_names = feature_names
+  )
+  features <- intersect(feature_names, colnames(metadata_tibble))
+
+  features |>
+    purrr::set_names() |>
+    purrr::map(\(feature) {
+      plot_tibble <- metadata_tibble |>
+        dplyr::transmute(
+          GEM_well_ID,
+          dataset,
+          feature = .env$feature,
+          value = unname(.data[[feature]])
+        ) |>
+        dplyr::filter(
+          .by = GEM_well_ID,
+          value >= stats::quantile(value, probs = 0.02, na.rm = TRUE),
+          value <= stats::quantile(value, probs = 0.98, na.rm = TRUE)
+        )
+
+      plot_per_dataset_QC_violin(
+        plot_tibble = plot_tibble,
+        feature_thresholds = dplyr::filter(
+          threshold_tibble,
+          .data$feature == .env$feature
+        )
+      )
+    })
+}
+
 #' Plot markers volcano simple
 #'
 #' Draw faceted marker volcano plots with top up/down genes labelled per cluster.

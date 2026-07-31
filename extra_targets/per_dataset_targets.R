@@ -47,65 +47,11 @@ rlang::list2(
   tarchetypes::tar_file(
     name = per_dataset_QC_violins,
     description = "Plot violin plots of QC metrics per GEM well for this dataset and save to file",
-    command = {
-      threshold_tibble <- get_QC_exclude_threshold_tibble(
-        QC_exclude_vector = dataset_QC_exclude_list_per_GEM_well,
-        feature_names = PROCESSING_PER_GEM_well_QC_VARS
-      )
-
-      plot_data <- per_dataset_cellranger_kept_metadata_tibble |>
-        tidyr::pivot_longer(
-          cols = dplyr::any_of(PROCESSING_PER_GEM_well_QC_VARS),
-          names_to = "feature",
-          values_to = "value"
-        ) |>
-        dplyr::filter(
-          .by = c(GEM_well_ID, feature),
-          value >= stats::quantile(value, probs = 0.02, na.rm = TRUE),
-          value <= stats::quantile(value, probs = 0.98, na.rm = TRUE)
-        )
-
-      plots <- plot_data$feature |>
-        unique() |>
-        purrr::set_names() |>
-        purrr::map(\(feature) {
-          feature_thresholds <- threshold_tibble |>
-            dplyr::filter(.data$feature == .env$feature)
-
-          plot <- plot_data |>
-            dplyr::filter(.data$feature == .env$feature) |>
-            ggplot2::ggplot(ggplot2::aes(x = GEM_well_ID, y = value, fill = dataset))
-
-          if (nrow(feature_thresholds) > 0) {
-            plot <- plot +
-              ggplot2::geom_rect(
-                data = feature_thresholds,
-                ggplot2::aes(ymin = ymin, ymax = ymax),
-                xmin = -Inf,
-                xmax = Inf,
-                fill = "grey60",
-                alpha = 0.25,
-                inherit.aes = FALSE
-              ) +
-              ggplot2::geom_hline(
-                data = feature_thresholds,
-                ggplot2::aes(yintercept = threshold),
-                color = "grey35",
-                linetype = "dashed",
-                inherit.aes = FALSE
-              )
-          }
-
-          plot +
-            ggplot2::geom_violin(scale = "width") +
-            ggplot2::theme(
-              axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
-              axis.title.x = ggplot2::element_blank(),
-              legend.position = "none"
-            )
-        })
-
-      save_plots_structured(plots)
-    }
+    command = plot_per_dataset_QC_violins(
+      metadata_tibble = per_dataset_cellranger_kept_metadata_tibble,
+      QC_exclude_vector = dataset_QC_exclude_list_per_GEM_well,
+      feature_names = PROCESSING_PER_GEM_well_QC_VARS
+    ) |>
+      save_plots_structured()
   )
 )

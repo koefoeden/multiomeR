@@ -1476,6 +1476,45 @@ plot_psbulk_DGE_volcanoes <- function(
     )
 }
 
+#' Plot a formatted psbulk DCA volcano
+#'
+#' Construct a DCA volcano from minimal point and label tibbles.
+#'
+#' @param plot_tibble Point data containing `logFC`, the requested y-value
+#'   column, `type`, and `sig`.
+#' @param label_tibble Thirty-row label data containing `logFC`, the requested
+#'   y-value column, `type`, and `geneName`.
+#' @param y_val Column name mapped to the volcano plot y-axis, usually a P-value/FDR-derived statistic.
+#' @param title Plot title combining model and contrast.
+#' @return A ggplot ready for saving or composition.
+#' @keywords internal
+
+plot_psbulk_DCA_volcano_tibble <- function(
+  plot_tibble,
+  label_tibble,
+  y_val,
+  title
+) {
+  ggplot2::ggplot(
+    plot_tibble,
+    ggplot2::aes(x = logFC, y = .data[[y_val]], color = type)
+  ) +
+    ggplot2::geom_point(ggplot2::aes(alpha = sig), size = 0.5) +
+    ggplot2::labs(title = title) +
+    ggplot2::geom_hline(yintercept = -log10(0.05), lty = 2) +
+    ggrepel::geom_text_repel(
+      data = label_tibble,
+      ggplot2::aes(label = geneName),
+      size = 3,
+      min.segment.length = 0,
+      max.overlaps = 50
+    ) +
+    ggplot2::scale_x_continuous(limits = symmetric_limits) +
+    ggplot2::scale_alpha_manual(values = c("Sig" = 1, "NS" = 0.1)) +
+    ggplot2::theme(legend.position = "top") +
+    ignore_aes_in_color_legend()
+}
+
 #' Plot psbulk DCA volcano
 #'
 #' Plot differential chromatin-accessibility peaks as genomic volcano panels.
@@ -1492,11 +1531,17 @@ plot_psbulk_DCA_volcano <- function(
   ATAC_consensus_peak_GRanges,
   y_val = c("log10pvalue", "log10FDR")
 ) {
+  y_val <- y_val[[1]]
   annot_tibble <- ATAC_consensus_peak_GRanges |>
     tibble::as_tibble() |>
-    dplyr::mutate(geneName = dplyr::case_when(is.na(geneName) ~ region_vec, .default = geneName))
+    dplyr::transmute(
+      region_vec,
+      txType,
+      geneName = dplyr::case_when(is.na(geneName) ~ region_vec, .default = geneName)
+    )
 
   combined_coef_test_results_formatted <- psbulk_DX_results_tibble_per_contrast |>
+    dplyr::select(feature_id, logFC, PValue, contrast, model) |>
     dplyr::left_join(annot_tibble, by = c("feature_id" = "region_vec")) |>
     dplyr::mutate(
       FDR = stats::p.adjust(PValue, method = "BH"),
@@ -1519,22 +1564,17 @@ plot_psbulk_DCA_volcano <- function(
     dplyr::arrange(dplyr::desc(importance)) |>
     dplyr::slice_head(n = 30)
 
-  volcano_plot <- ggplot2::ggplot(combined_coef_test_results_formatted, ggplot2::aes(x = logFC, y = .data[[y_val[1]]], color = type)) + #txType)) +
-    ggplot2::geom_point(ggplot2::aes(alpha = sig), size = 0.5) +
-    ggplot2::labs(title = stringr::str_c(unique(combined_coef_test_results_formatted$model), ": ", unique(combined_coef_test_results_formatted$contrast))) +
-    ggplot2::geom_hline(yintercept = -log10(0.05), lty = 2) +
-    ggrepel::geom_text_repel(data = top_peaks_tibble, ggplot2::aes(label = geneName), size = 3, min.segment.length = 0, max.overlaps = 50) +
-    ggplot2::scale_x_continuous(limits = symmetric_limits) +
-    ggplot2::scale_alpha_manual(values = c("Sig" = 1, "NS" = 0.1)) +
-    ggplot2::theme(legend.position = "top") +
-    ignore_aes_in_color_legend()
-
-  suppress_warnings_matching(
-    expr = {
-      print(volcano_plot)
-      volcano_plot
-    },
-    pattern = "too many overlaps"
+  plot_psbulk_DCA_volcano_tibble(
+    plot_tibble = combined_coef_test_results_formatted |>
+      dplyr::select(logFC, dplyr::all_of(y_val), type, sig),
+    label_tibble = top_peaks_tibble |>
+      dplyr::select(logFC, dplyr::all_of(y_val), type, geneName),
+    y_val = y_val,
+    title = stringr::str_c(
+      unique(combined_coef_test_results_formatted$model),
+      ": ",
+      unique(combined_coef_test_results_formatted$contrast)
+    )
   )
 }
 

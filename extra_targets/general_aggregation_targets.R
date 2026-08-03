@@ -75,6 +75,20 @@ rlang::list2(
     }
   ),
   targets::tar_target(
+    name = ATAC_coverage_marker_genes,
+    description = "Select the first positive GEX marker per cell type for representative ATAC coverage loci [part_of_graph:ATAC]",
+    command = UCell_GEX_marker_genes_list |>
+      purrr::imap_chr(\(marker_genes, cell_type) {
+        positive_marker_genes <- marker_genes[!stringr::str_ends(marker_genes, "-")]
+        if (length(positive_marker_genes) == 0) {
+          stop("No positive GEX marker was configured for cell type: ", cell_type, call. = FALSE)
+        }
+        stringr::str_remove(positive_marker_genes[[1]], "[+]$")
+      }) |>
+      unname() |>
+      unique()
+  ),
+  targets::tar_target(
     name = GEX_marker_genes_vec,
     description = "Flatten validated GEX marker genes to plain feature names",
     command = {

@@ -405,6 +405,286 @@ get_pseudobulk_activity_matrix.TFA <- function(
   )
 }
 
+get_psbulk_cell_type_design <- function(sample_tibble, formula_chr) {
+  design_matrix <- stats::model.matrix(stats::as.formula(formula_chr), data = sample_tibble)
+  colnames(design_matrix) <- colnames(design_matrix) |>
+    stringr::str_replace_all(":", ".") |>
+    stringr::str_replace_all("-", "_")
+  rownames(design_matrix) <- sample_tibble$ID
+  design_matrix
+}
+
+fit_psbulk_cell_type_matrix <- function(
+  psbulk_feature_matrix,
+  sample_tibble,
+  formula_chr,
+  correlation_block = NULL
+) {
+  design_matrix <- get_psbulk_cell_type_design(sample_tibble, formula_chr)
+  is_count_data <- is_count_matrix(psbulk_feature_matrix)
+
+  has_correlation_block <- !is.null(correlation_block) && nzchar(correlation_block)
+  if (has_correlation_block) {
+    assert_with_info(
+      correlation_block %in% names(sample_tibble) && !anyNA(sample_tibble[[correlation_block]]),
+      glue_info = "Configured cell-type correlation block is missing or incomplete: {correlation_block}."
+    )
+  }
+
+  if (is_count_data) {
+    DGE_list <- edgeR::DGEList(
+      counts = psbulk_feature_matrix,
+      samples = tibble::column_to_rownames(sample_tibble, var = "ID")
+    )
+    sample_cols_expressed <- psbulk_colSums(DGE_list$counts) > 0
+    DGE_list <- DGE_list[, sample_cols_expressed, keep.lib.sizes = FALSE]
+    design_matrix <- design_matrix[sample_cols_expressed, , drop = FALSE]
+    feature_rows_expressed <- edgeR::filterByExpr(DGE_list, design = design_matrix)
+    DGE_list <- edgeR::normLibSizes(DGE_list[feature_rows_expressed, , keep.lib.sizes = FALSE])
+
+    assert_with_info(
+      nrow(DGE_list) > 0 && nrow(design_matrix) > ncol(design_matrix),
+      glue_info = "No valid cell-type-specific count model remains after filtering."
+    )
+
+    fit <- edgeR::voomLmFit(
+      DGE_list,
+      design = design_matrix,
+      block = if (has_correlation_block) factor(DGE_list$samples[[correlation_block]]) else NULL,
+      normalize.method = "none",
+      keep.EList = TRUE
+    )
+    retained_samples <- DGE_list$samples
+  } else {
+    retained_samples <- tibble::column_to_rownames(sample_tibble, var = "ID")
+    expression_object <- structure(
+      list(E = psbulk_feature_matrix, samples = retained_samples),
+      class = "EList"
+    )
+    if (has_correlation_block) {
+      block <- factor(retained_samples[[correlation_block]])
+      correlation_fit <- limma::duplicateCorrelation(
+        expression_object,
+        design = design_matrix,
+        block = block
+      )
+      fit <- limma::lmFit(
+        expression_object,
+        design = design_matrix,
+        block = block,
+        correlation = correlation_fit$consensus.correlation
+      )
+    } else {
+      fit <- limma::lmFit(expression_object, design = design_matrix)
+    }
+    fit$EList <- expression_object
+  }
+
+  fit$samples <- retained_samples
+  list(
+    fit = fit,
+    design = design_matrix,
+    samples = retained_samples,
+    correlation_block = correlation_block,
+    block_correlation = fit$correlation %||% NA_real_
+  )
+}
+
+get_psbulk_standardized_residuals <- function(cell_type_record, feature_ids, donor_ids, random_effect) {
+  sample_idx <- match(donor_ids, cell_type_record$samples[[random_effect]])
+  feature_idx <- match(feature_ids, rownames(cell_type_record$fit$coefficients))
+  expression_matrix <- cell_type_record$fit$EList$E[feature_idx, sample_idx, drop = FALSE]
+  fitted_matrix <- cell_type_record$fit$coefficients[feature_idx, , drop = FALSE] %*%
+    t(cell_type_record$design[sample_idx, , drop = FALSE])
+  residual_matrix <- expression_matrix - fitted_matrix
+  weights_matrix <- cell_type_record$fit$EList$weights
+  if (!is.null(weights_matrix)) {
+    residual_matrix <- residual_matrix * sqrt(weights_matrix[feature_idx, sample_idx, drop = FALSE])
+  }
+  residual_matrix - rowMeans(residual_matrix)
+}
+
+estimate_psbulk_cell_type_residual_correlations <- function(cell_type_records, random_effect, max_features = 2000L) {
+  cell_types <- names(cell_type_records)
+  correlation_matrix <- diag(length(cell_types))
+  dimnames(correlation_matrix) <- list(cell_types, cell_types)
+  common_feature_ids <- Reduce(
+    intersect,
+    purrr::map(cell_type_records, ~ rownames(.x$fit$coefficients))
+  ) |>
+    sort()
+
+  assert_with_info(
+    length(common_feature_ids) > 0,
+    glue_info = "Cell-type-specific fits do not share any testable features."
+  )
+
+  if (length(common_feature_ids) > max_features) {
+    common_feature_ids <- common_feature_ids[
+      unique(round(seq(1, length(common_feature_ids), length.out = max_features)))
+    ]
+  }
+
+  for (i in seq_len(length(cell_types) - 1L)) {
+    for (j in seq.int(i + 1L, length(cell_types))) {
+      cell_type_i <- cell_types[[i]]
+      cell_type_j <- cell_types[[j]]
+      common_donor_ids <- intersect(
+        cell_type_records[[cell_type_i]]$samples[[random_effect]],
+        cell_type_records[[cell_type_j]]$samples[[random_effect]]
+      )
+      assert_with_info(
+        length(common_donor_ids) > ncol(cell_type_records[[cell_type_i]]$design) + 2L,
+        glue_info = "Too few paired donors remain to estimate cross-cell-type residual correlation."
+      )
+
+      residuals_i <- get_psbulk_standardized_residuals(
+        cell_type_records[[cell_type_i]], common_feature_ids, common_donor_ids, random_effect
+      )
+      residuals_j <- get_psbulk_standardized_residuals(
+        cell_type_records[[cell_type_j]], common_feature_ids, common_donor_ids, random_effect
+      )
+      denominator <- sqrt(rowSums(residuals_i^2) * rowSums(residuals_j^2))
+      feature_correlations <- rowSums(residuals_i * residuals_j) / denominator
+      feature_correlations <- feature_correlations[is.finite(feature_correlations)]
+      fisher_correlations <- atanh(pmax(-0.999999, pmin(0.999999, feature_correlations)))
+      consensus_correlation <- tanh(mean(fisher_correlations, trim = 0.15))
+      correlation_matrix[i, j] <- consensus_correlation
+      correlation_matrix[j, i] <- consensus_correlation
+    }
+  }
+
+  correlation_matrix
+}
+
+get_psbulk_stacked_cell_type_design <- function(cell_type_records, joint_design_matrix) {
+  retained_sample_ids <- purrr::map(cell_type_records, ~ rownames(.x$design)) |>
+    unlist(use.names = FALSE)
+  separate_coefficient_names <- purrr::imap(
+    cell_type_records,
+    ~ paste(.y, colnames(.x$design), sep = "::")
+  ) |>
+    unlist(use.names = FALSE)
+  stacked_design_matrix <- matrix(
+    0,
+    nrow = length(retained_sample_ids),
+    ncol = length(separate_coefficient_names),
+    dimnames = list(retained_sample_ids, separate_coefficient_names)
+  )
+
+  column_offset <- 0L
+  for (cell_type in names(cell_type_records)) {
+    cell_type_design <- cell_type_records[[cell_type]]$design
+    column_idx <- seq.int(column_offset + 1L, column_offset + ncol(cell_type_design))
+    stacked_design_matrix[rownames(cell_type_design), column_idx] <- cell_type_design
+    column_offset <- max(column_idx)
+  }
+
+  retained_joint_design <- joint_design_matrix[retained_sample_ids, , drop = FALSE]
+  joint_from_separate_matrix <- qr.solve(retained_joint_design, stacked_design_matrix)
+  rownames(joint_from_separate_matrix) <- colnames(retained_joint_design)
+  colnames(joint_from_separate_matrix) <- colnames(stacked_design_matrix)
+
+  assert_with_info(
+    max(abs(retained_joint_design %*% joint_from_separate_matrix - stacked_design_matrix)) < 1e-8,
+    glue_info = "The joint and cell-type-specific pseudobulk formulas do not span the same model."
+  )
+
+  list(
+    joint_design = retained_joint_design,
+    stacked_design = stacked_design_matrix,
+    joint_from_separate = joint_from_separate_matrix
+  )
+}
+
+fit_psbulk_feature_matrix_by_cell_type <- function(
+  psbulk_feature_matrix,
+  final_sample_tibble,
+  model_list,
+  design_matrix,
+  basis_matrix
+) {
+  pairing_variable <- model_list$pairing_variable %||% model_list$random_effect
+  correlation_block <- model_list$correlation_block %||% NULL
+  assert_with_info(
+    !is.null(pairing_variable) && pairing_variable != "",
+    glue_info = "cell_type_formula requires a configured donor/sample pairing_variable."
+  )
+
+  cell_types <- sort(unique(final_sample_tibble$cluster))
+  assert_with_info(
+    length(cell_types) > 1L,
+    glue_info = "cell_type_formula requires at least two retained cell types."
+  )
+
+  fit_cell_type <- function(cell_type) {
+    sample_idx <- which(final_sample_tibble$cluster == cell_type)
+    cell_type_samples <- final_sample_tibble[sample_idx, , drop = FALSE]
+    assert_with_info(
+      !anyDuplicated(cell_type_samples[[pairing_variable]]),
+      glue_info = "Cell-type-specific pseudobulk fits require at most one sample per pairing unit and cell type."
+    )
+    fit_psbulk_cell_type_matrix(
+      psbulk_feature_matrix = psbulk_feature_matrix[, sample_idx, drop = FALSE],
+      sample_tibble = cell_type_samples,
+      formula_chr = model_list$cell_type_formula,
+      correlation_block = correlation_block
+    )
+  }
+  n_parallel_cell_type_fits <- min(6L, length(cell_types))
+
+  cell_type_records <- if (n_parallel_cell_type_fits == 1L) {
+    purrr::map(cell_types, fit_cell_type)
+  } else {
+    parallel::mclapply(
+      cell_types,
+      fit_cell_type,
+      mc.cores = n_parallel_cell_type_fits,
+      mc.preschedule = TRUE
+    )
+  }
+  child_errors <- purrr::keep(cell_type_records, ~ inherits(.x, "try-error"))
+  assert_with_info(
+    length(child_errors) == 0L,
+    glue_info = "One or more parallel cell-type fits failed: {paste(child_errors, collapse = '; ')}"
+  )
+  cell_type_records <- cell_type_records |>
+    purrr::set_names(cell_types)
+
+  residual_correlations <- estimate_psbulk_cell_type_residual_correlations(
+    cell_type_records = cell_type_records,
+    random_effect = pairing_variable
+  )
+  stacked_design <- get_psbulk_stacked_cell_type_design(cell_type_records, design_matrix)
+  cell_type_fits <- purrr::map(cell_type_records, function(record) {
+    record$fit$EList <- NULL
+    record$fit
+  })
+  retained_sample_ids <- rownames(stacked_design$joint_design)
+  samples <- final_sample_tibble[match(retained_sample_ids, final_sample_tibble$ID), , drop = FALSE] |>
+    tibble::column_to_rownames(var = "ID")
+
+  structure(
+    list(
+      cell_type_fits = cell_type_fits,
+      residual_correlations = residual_correlations,
+      correlation_block = correlation_block,
+      block_correlations = purrr::map_dbl(cell_type_records, "block_correlation"),
+      n_parallel_cell_type_fits = n_parallel_cell_type_fits,
+      joint_from_separate = stacked_design$joint_from_separate,
+      design = stacked_design$joint_design,
+      basis_matrix = basis_matrix,
+      samples = samples,
+      analysis_type = if (is.null(correlation_block) || !nzchar(correlation_block)) {
+        "limma_cell_type_paired"
+      } else {
+        "limma_cell_type_paired_blocked"
+      }
+    ),
+    class = c("psbulk_cell_type_fit", "list")
+  )
+}
+
 #' Fit psbulk feature matrix model
 #'
 #' Fit the configured pseudobulk model for one feature matrix branch.
@@ -695,6 +975,187 @@ get_psbulk_feature_model_contrast_support <- function(psbulk_feature_matrix_fit,
   )
 }
 
+get_psbulk_cell_type_contrasts <- function(psbulk_feature_matrix_fit, joint_contrast_vec) {
+  separate_contrast_vec <- drop(t(psbulk_feature_matrix_fit$joint_from_separate) %*% joint_contrast_vec)
+  names(separate_contrast_vec) <- colnames(psbulk_feature_matrix_fit$joint_from_separate)
+
+  purrr::map(names(psbulk_feature_matrix_fit$cell_type_fits), function(cell_type) {
+    coefficient_prefix <- paste0(cell_type, "::")
+    coefficient_idx <- startsWith(names(separate_contrast_vec), coefficient_prefix)
+    cell_type_contrast <- separate_contrast_vec[coefficient_idx]
+    names(cell_type_contrast) <- substring(names(cell_type_contrast), nchar(coefficient_prefix) + 1L)
+    cell_type_contrast
+  }) |>
+    purrr::set_names(names(psbulk_feature_matrix_fit$cell_type_fits)) |>
+    purrr::keep(~ any(abs(.x) > sqrt(.Machine$double.eps)))
+}
+
+get_psbulk_cell_type_contrast_statistics <- function(cell_type_fit, contrast_vec) {
+  contrast_fit <- cell_type_fit |>
+    limma::contrasts.fit(contrast = contrast_vec) |>
+    limma::eBayes()
+  standard_error <- drop(contrast_fit$stdev.unscaled) * sqrt(contrast_fit$s2.post)
+
+  tibble::tibble(
+    feature_id = rownames(contrast_fit$coefficients),
+    logFC = drop(contrast_fit$coefficients),
+    AveExpr = rep_len(contrast_fit$Amean %||% NA_real_, nrow(contrast_fit)),
+    standard_error = standard_error,
+    df_total = rep_len(contrast_fit$df.total, nrow(contrast_fit)),
+    t = drop(contrast_fit$t),
+    PValue = drop(contrast_fit$p.value),
+    B = drop(contrast_fit$lods)
+  )
+}
+
+get_psbulk_paired_cell_type_contrast_statistics <- function(psbulk_feature_matrix_fit, cell_type_contrasts) {
+  active_cell_types <- names(cell_type_contrasts)
+  reference_contrast <- cell_type_contrasts[[1]]
+  reference_unit <- reference_contrast / sqrt(sum(reference_contrast^2))
+  contrast_scales <- purrr::map_dbl(cell_type_contrasts, ~ sum(.x * reference_unit))
+  proportional_residuals <- purrr::map2_dbl(
+    cell_type_contrasts,
+    contrast_scales,
+    ~ max(abs(.x - .y * reference_unit))
+  )
+  assert_with_info(
+    max(proportional_residuals) < 1e-8,
+    glue_info = "Cross-cell-type contrasts must compare the same within-cell-type coefficient combination."
+  )
+
+  cell_type_statistics <- purrr::map2(
+    psbulk_feature_matrix_fit$cell_type_fits[active_cell_types],
+    cell_type_contrasts,
+    get_psbulk_cell_type_contrast_statistics
+  )
+  common_feature_ids <- Reduce(intersect, purrr::map(cell_type_statistics, ~ .x$feature_id))
+  assert_with_info(
+    length(common_feature_ids) > 0,
+    glue_info = "No features are independently testable in every cell type required by the contrast."
+  )
+  cell_type_statistics <- purrr::map(
+    cell_type_statistics,
+    ~ .x[match(common_feature_ids, .x$feature_id), , drop = FALSE]
+  )
+
+  logFC <- Reduce(`+`, purrr::map(cell_type_statistics, ~ .x$logFC))
+  variance <- Reduce(`+`, purrr::map(cell_type_statistics, ~ .x$standard_error^2))
+  for (i in seq_len(length(active_cell_types) - 1L)) {
+    for (j in seq.int(i + 1L, length(active_cell_types))) {
+      correlation <- psbulk_feature_matrix_fit$residual_correlations[
+        active_cell_types[[i]], active_cell_types[[j]]
+      ]
+      covariance_sign <- sign(contrast_scales[[i]] * contrast_scales[[j]])
+      variance <- variance +
+        2 * correlation * covariance_sign *
+          cell_type_statistics[[i]]$standard_error * cell_type_statistics[[j]]$standard_error
+    }
+  }
+  assert_with_info(
+    all(is.finite(variance) & variance > 0),
+    glue_info = "Paired cell-type contrast produced non-positive or non-finite variance."
+  )
+
+  standard_error <- sqrt(variance)
+  t_statistic <- logFC / standard_error
+  df_total <- Reduce(pmin, purrr::map(cell_type_statistics, ~ .x$df_total))
+  PValue <- 2 * stats::pt(-abs(t_statistic), df = df_total)
+  AveExpr <- Reduce(`+`, purrr::map(cell_type_statistics, ~ .x$AveExpr)) / length(cell_type_statistics)
+
+  tibble::tibble(
+    feature_id = common_feature_ids,
+    logFC = logFC,
+    AveExpr = AveExpr,
+    standard_error = standard_error,
+    df_total = df_total,
+    t = t_statistic,
+    PValue = PValue,
+    B = NA_real_
+  )
+}
+
+get_psbulk_cell_type_contrast_support <- function(
+  psbulk_feature_matrix_fit,
+  cell_type_contrasts,
+  pairing_variable
+) {
+  active_cell_types <- names(cell_type_contrasts)
+  sample_tibbles <- purrr::map(
+    psbulk_feature_matrix_fit$cell_type_fits[active_cell_types],
+    "samples"
+  )
+  assert_with_info(
+    all(purrr::map_lgl(sample_tibbles, ~ pairing_variable %in% names(.x))),
+    glue_info = "Pairing variable is missing from one or more cell-type fits: {pairing_variable}."
+  )
+
+  reference_contrast <- cell_type_contrasts[[1]]
+  reference_unit <- reference_contrast / sqrt(sum(reference_contrast^2))
+  contrast_scales <- purrr::map_dbl(
+    cell_type_contrasts,
+    ~ sum(.x * reference_unit)
+  )
+  sample_counts <- purrr::map_int(sample_tibbles, nrow)
+  donor_ids <- purrr::map(sample_tibbles, ~ as.character(.x[[pairing_variable]]))
+
+  tibble::tibble(
+    n_samples = sum(sample_counts),
+    n_donors = dplyr::n_distinct(unlist(donor_ids, use.names = FALSE)),
+    n_positive_samples = sum(sample_counts[contrast_scales > 0]),
+    n_negative_samples = sum(sample_counts[contrast_scales < 0]),
+    min_group_n_samples = min(
+      sum(sample_counts[contrast_scales > 0]),
+      sum(sample_counts[contrast_scales < 0])
+    ),
+    n_paired_donors = if (length(donor_ids) > 1L) {
+      length(Reduce(intersect, donor_ids))
+    } else {
+      0L
+    },
+    analysis_type = psbulk_feature_matrix_fit$analysis_type %||% NA_character_
+  )
+}
+
+get_psbulk_cell_type_model_results <- function(
+  psbulk_feature_matrix_fit,
+  contrast_vec_list,
+  pairing_variable = "donor_id"
+) {
+  purrr::imap(
+    contrast_vec_list,
+    function(contrast_vec, contrast_name) {
+      cell_type_contrasts <- get_psbulk_cell_type_contrasts(psbulk_feature_matrix_fit, contrast_vec)
+      statistics <- if (length(cell_type_contrasts) == 1L) {
+        cell_type <- names(cell_type_contrasts)[[1]]
+        get_psbulk_cell_type_contrast_statistics(
+          psbulk_feature_matrix_fit$cell_type_fits[[cell_type]],
+          cell_type_contrasts[[cell_type]]
+        )
+      } else {
+        get_psbulk_paired_cell_type_contrast_statistics(
+          psbulk_feature_matrix_fit,
+          cell_type_contrasts
+        )
+      }
+
+      statistics |>
+        dplyr::mutate(
+          FDR = stats::p.adjust(PValue, method = "BH"),
+          contrast = contrast_name,
+          n_tested_features = dplyr::n()
+        ) |>
+        dplyr::arrange(PValue) |>
+        dplyr::bind_cols(
+          get_psbulk_cell_type_contrast_support(
+            psbulk_feature_matrix_fit = psbulk_feature_matrix_fit,
+            cell_type_contrasts = cell_type_contrasts,
+            pairing_variable = pairing_variable
+          )
+        )
+    }
+  )
+}
+
 #' Get psbulk feature model results
 #'
 #' Run configured contrasts and collect pseudobulk model test results.
@@ -710,7 +1171,13 @@ get_psbulk_feature_model_results <- function(psbulk_feature_matrix_fit, psbulk_f
   model_list <- psbulk_feature_dynamic_tibble$model[[1]]
   contrast_vec_list <- get_contrast_vec_list(psbulk_feature_matrix_fit, model_list)
 
-  test_table_list <- if (class(psbulk_feature_matrix_fit) == "DGEGLM") {
+  test_table_list <- if (inherits(psbulk_feature_matrix_fit, "psbulk_cell_type_fit")) {
+    get_psbulk_cell_type_model_results(
+      psbulk_feature_matrix_fit,
+      contrast_vec_list,
+      pairing_variable = model_list$pairing_variable %||% model_list$random_effect %||% "donor_id"
+    )
+  } else if (class(psbulk_feature_matrix_fit) == "DGEGLM") {
     purrr::imap(
       contrast_vec_list,
       ~ edgeR::glmQLFTest(psbulk_feature_matrix_fit, contrast = .x)$table |>
@@ -849,141 +1316,114 @@ plot_psbulk_DX_significant_elements_modality_distribution <- function(significan
 }
 
 
-#' Get gene idxs and annot per gene list
+#' Retain detected genes per gene set
 #'
-#' Convert gene sets into model-row index lists for limma camera.
+#' Intersect configured gene sets with the feature universe of a pseudobulk fit.
 #'
-#' @param DGE_list edgeR-style DGE/model list with counts or log-expression, sample metadata, and fitted model components.
+#' @param psbulk_feature_matrix_fit Fitted pseudobulk model object.
 #' @param gene_set_subcollection Named gene-set collection or subcollection used for GSEA.
 #' @param min_genes_per_set Minimum number of genes from a gene set that must be present in the model feature universe.
-#' @return Named list of integer row indices for gene sets meeting
-#'   `min_genes_per_set`.
+#' @return Named list of detected gene identifiers for retained gene sets.
 #' @keywords internal
 
-get_gene_idxs_and_annot_per_gene_list <- function(DGE_list, gene_set_subcollection, min_genes_per_set = 5) {
-  # convert to indices in relation to DGE_list
-  gene_idx_in_DGE_list <- limma::ids2indices(gene.sets = gene_set_subcollection, identifiers = rownames(DGE_list), remove.empty = FALSE)
-
-  set_names_w_fewer_than_n_genes <- gene_idx_in_DGE_list |>
-    purrr::map_vec(length) |>
-    magrittr::is_less_than(min_genes_per_set) |>
-    which() |>
-    names()
-  if (length(set_names_w_fewer_than_n_genes) > 0) {
-    warning(stringr::str_glue(
-      "Removed the following sets because they had fewer than {min_genes_per_set} genes: {str_c(set_names_w_fewer_than_n_genes, collapse = ', ')}"
+get_detected_gene_sets <- function(
+  psbulk_feature_matrix_fit,
+  gene_set_subcollection,
+  min_genes_per_set = 5L
+) {
+  feature_ids <- if (inherits(psbulk_feature_matrix_fit, "psbulk_cell_type_fit")) {
+    unique(unlist(
+      purrr::map(psbulk_feature_matrix_fit$cell_type_fits, rownames),
+      use.names = FALSE
     ))
+  } else {
+    rownames(psbulk_feature_matrix_fit)
   }
 
-  # assert_that()
-  out_gene_idx_in_DGE_list <- gene_idx_in_DGE_list[names(gene_idx_in_DGE_list) %!in% set_names_w_fewer_than_n_genes]
+  gene_sets <- purrr::map(
+    gene_set_subcollection,
+    ~ intersect(as.character(.x), feature_ids)
+  )
+  gene_sets <- gene_sets[lengths(gene_sets) >= min_genes_per_set]
 
   assert_with_info(
-    length(out_gene_idx_in_DGE_list) > 0,
-    glue_info = "No genesets were left after removing those with fewer than {min_genes_per_set} detected genes in the DGE list (after expression filtering).\nConsider other gene sets or lowering the min_genes_per_set in get_gene_idxs_and_annot_per_gene_list()."
+    length(gene_sets) > 0L,
+    glue_info = "No gene sets retained at least {min_genes_per_set} detected genes."
   )
-  return(out_gene_idx_in_DGE_list)
+  gene_sets
+}
+
+get_cameraPR_statistic <- function(contrast_statistics) {
+  signed_normal_score <- sign(contrast_statistics$logFC) * stats::qnorm(
+    pmax(pmin(contrast_statistics$PValue, 1), .Machine$double.xmin) / 2,
+    lower.tail = FALSE
+  )
+  if ("t" %in% names(contrast_statistics)) {
+    dplyr::if_else(is.finite(contrast_statistics$t), contrast_statistics$t, signed_normal_score)
+  } else {
+    signed_normal_score
+  }
 }
 
 #' Get GSEA results
 #'
-#' Run limma camera gene-set tests for configured pseudobulk contrasts.
+#' Run competitive limma cameraPR gene-set tests for pseudobulk contrasts.
 #'
-#' @param psbulk_feature_matrix_fit Fitted pseudobulk model object used as input
-#'   to limma camera.
-#' @param gene_indices_per_gene_list Named list of integer feature indices for gene sets present in the fitted model matrix.
+#' @param psbulk_feature_matrix_fit Fitted pseudobulk model object.
+#' @param gene_sets Named list of detected gene identifiers per gene set.
 #' @param psbulk_feature_dynamic_tibble Dynamic-branch metadata row describing the model, contrast, and feature matrix being processed.
-#' @return Camera/GSEA result tibble for each contrast and gene set; random-effect
-#'   models currently return an empty tibble with a warning.
+#' @param min_genes_per_set Minimum number of contrast-tested genes required per gene set.
+#' @return Competitive cameraPR result tibble for each contrast and gene set.
 #' @keywords internal
 
-get_GSEA_results <- function(psbulk_feature_matrix_fit, gene_indices_per_gene_list, psbulk_feature_dynamic_tibble) {
-  model_list <- psbulk_feature_dynamic_tibble$model[[1]]
+get_GSEA_results <- function(
+  psbulk_feature_matrix_fit,
+  gene_sets,
+  psbulk_feature_dynamic_tibble,
+  min_genes_per_set = 5L
+) {
+  contrast_statistics <- get_psbulk_feature_model_results(
+    psbulk_feature_matrix_fit = psbulk_feature_matrix_fit,
+    psbulk_feature_dynamic_tibble = psbulk_feature_dynamic_tibble
+  ) |>
+    dplyr::mutate(cameraPR_statistic = get_cameraPR_statistic(dplyr::pick(dplyr::everything()))) |>
+    dplyr::filter(is.finite(cameraPR_statistic))
 
-  if (!(is.null(model_list$random_effect) || model_list$random_effect == "")) {
-    warning("Camera results not implemented for random effect, returning empty tibble")
-    return(tibble::tibble())
-  }
-
-  non_empty_set_IDs <- gene_indices_per_gene_list |>
-    purrr::discard(~ length(.x) == 0) |>
-    names()
-  empty_custom_set_IDs <- gene_indices_per_gene_list |>
-    purrr::keep(~ length(.x) == 0) |>
-    names() |>
-    stringr::str_subset("CUSTOM:")
-  if (length(empty_custom_set_IDs) > 0) {
-    warning(stringr::str_glue("Empty custom sets: {str_c(empty_custom_set_IDs, collapse = ', ')}"))
-  }
-
-  assert_with_info(
-    ncol(psbulk_feature_matrix_fit$design) > 1,
-    glue_info = "GSEA only supported for models with more than one parameter."
-  )
-  contrast_vec_list <- get_contrast_vec_list(psbulk_feature_matrix_fit, model_list)
-
-  # Note: Random effect errors out here
-  # but this works for limma object on TF activity??
-  # we manually add FDR since it is missing in the case of single-gene sets.
-  fry_results <- contrast_vec_list |>
-    purrr::imap(
-      \(contrast_vec, contrast_name) {
-        edgeR::fry.DGEGLM(
-          psbulk_feature_matrix_fit,
-          index = gene_indices_per_gene_list[non_empty_set_IDs],
-          design = psbulk_feature_matrix_fit$design,
-          contrast = contrast_vec
-        ) |>
-          dplyr::mutate(PValue = PValue.Mixed, FDR = stats::p.adjust(PValue, "BH"), contrast = contrast_name) |>
-          tibble::rownames_to_column(var = "ID")
-      }
-    ) |>
-    dplyr::bind_rows()
-
-  camera_results <- contrast_vec_list |>
-    purrr::imap(
-      \(contrast_vec, contrast_name) {
-        edgeR::camera.DGEGLM(
-          psbulk_feature_matrix_fit,
-          index = gene_indices_per_gene_list[non_empty_set_IDs],
-          design = psbulk_feature_matrix_fit$design,
-          contrast = contrast_vec
-        ) |>
-          dplyr::mutate(FDR = stats::p.adjust(PValue, "BH"), contrast = contrast_name) |>
-          tibble::rownames_to_column(var = "ID")
-      }
-    ) |>
-    dplyr::bind_rows()
-
-  excluded_by_camera <- non_empty_set_IDs[non_empty_set_IDs %!in% camera_results$ID]
-  excluded_by_fry <- non_empty_set_IDs[non_empty_set_IDs %!in% fry_results$ID]
-
-  if (length(excluded_by_camera) > 0 || length(excluded_by_fry) > 0) {
-    camera_custom_gene_sets <- stringr::str_subset(excluded_by_camera, "CUSTOM:")
-    fry_custom_gene_sets <- stringr::str_subset(excluded_by_fry, "CUSTOM:")
-    stop(stringr::str_glue(
-      "CAMERA excluded {length(excluded_by_camera)} gene sets, including the custom sets: {str_c(camera_custom_gene_sets, collapse = ', ')}",
-      "FRY excluded {length(excluded_by_fry)} gene sets, including the custom sets: {str_c(fry_custom_gene_sets, collapse = ', ')}",
-      .sep = "\n"
-    ))
-  }
-
-  combined_results <-
-    list(fry = fry_results, camera = camera_results) |>
-    dplyr::bind_rows(.id = "method") |>
-    dplyr::mutate(
-      `-log10(PValue)` = -log10(PValue),
-      `-log10(FDR)` = -log10(FDR),
-      cell_type_subset = psbulk_feature_dynamic_tibble$cell_type_subset,
-      model = psbulk_feature_dynamic_tibble$model_name,
-      color_category = dplyr::case_when(
-        FDR < 0.05 & Direction == "Up" ~ "SigUP",
-        FDR < 0.05 & Direction == "Down" ~ "SigDown",
-        TRUE ~ "NS"
+  contrast_statistics |>
+    dplyr::group_split(contrast) |>
+    purrr::map_dfr(function(statistics) {
+      gene_indices <- limma::ids2indices(
+        gene.sets = gene_sets,
+        identifiers = statistics$feature_id,
+        remove.empty = FALSE
       )
-    )
+      gene_indices <- gene_indices[lengths(gene_indices) >= min_genes_per_set]
+      if (!length(gene_indices)) {
+        return(tibble::tibble())
+      }
 
-  return(combined_results)
+      limma::cameraPR(
+        statistic = statistics$cameraPR_statistic,
+        index = gene_indices,
+        inter.gene.cor = 0.01,
+        sort = FALSE
+      ) |>
+        tibble::as_tibble(rownames = "ID") |>
+        dplyr::mutate(
+          FDR = stats::p.adjust(PValue, method = "BH"),
+          contrast = statistics$contrast[[1]],
+          method = "cameraPR",
+          `-log10(PValue)` = -log10(PValue),
+          `-log10(FDR)` = -log10(FDR),
+          cell_type_subset = psbulk_feature_dynamic_tibble$cell_type_subset,
+          model = psbulk_feature_dynamic_tibble$model_name,
+          color_category = dplyr::case_when(
+            FDR < 0.05 & Direction == "Up" ~ "SigUP",
+            FDR < 0.05 & Direction == "Down" ~ "SigDown",
+            TRUE ~ "NS"
+          )
+        )
+    })
 }
 
 #' Plot psbulk DGE volcano
@@ -1161,55 +1601,47 @@ plot_GSEA_results <- function(GSEA_results_tibble) {
 
 #' Plot GSEA contrast results
 #'
-#' Plot top camera/GSEA terms for one pseudobulk contrast.
+#' Plot top competitive cameraPR terms for one pseudobulk contrast.
 #'
 #' @param GSEA_results_tibble GSEA result tibble with contrast, pathway, enrichment score, and adjusted P-value columns.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for `save_plots_structured()` or composition.
 #' @keywords internal
 
 plot_GSEA_contrast_results <- function(GSEA_results_tibble) {
-  # not used in interactive mode
-
-  sanitized_ID_GSEA_results_tibble <- GSEA_results_tibble |>
+  plotting_tibble <- GSEA_results_tibble |>
     dplyr::mutate(
-      ID = stringr::str_remove(ID, "_TARGET_GENES$|^HALLMARK_|^KEGG_MEDICUS_(REFERENCE_)?|^WP_|^GOBP_|^GOCC_|^GOMF_|^HP_|^REACTOME_|^PID_|^MODULE_|^GAVISH_3CA_|^KEGG_")
-    )
-
-  top_ID_tibble <- sanitized_ID_GSEA_results_tibble |>
-    dplyr::slice_min(order_by = PValue, n = 25, by = c(model, method, contrast)) |>
-    dplyr::distinct(ID, model, contrast)
-
-  plotting_tibble <- sanitized_ID_GSEA_results_tibble |>
-    tidyr::pivot_wider(names_from = method, values_from = c(`-log10(FDR)`, Direction), id_cols = c(ID, model, contrast)) |>
-    dplyr::mutate(
-      `-log10(FDR)_camera` = dplyr::case_when(
-        Direction_camera == "Up" ~ `-log10(FDR)_camera`,
-        Direction_camera == "Down" ~ -`-log10(FDR)_camera`,
-        .default = 0
-      ),
-      color_cat = dplyr::case_when(
-        `-log10(FDR)_camera` > -log10(0.05) ~ "CameraSigUp",
-        `-log10(FDR)_camera` < log10(0.05) ~ "CameraSigDown",
-        `-log10(FDR)_fry` > -log10(0.05) ~ "SigMixed",
-        .default = "NS"
+      ID = stringr::str_remove(ID, "_TARGET_GENES$|^HALLMARK_|^KEGG_MEDICUS_(REFERENCE_)?|^WP_|^GOBP_|^GOCC_|^GOMF_|^HP_|^REACTOME_|^PID_|^MODULE_|^GAVISH_3CA_|^KEGG_"),
+      signed_log10_FDR = dplyr::if_else(
+        Direction == "Up",
+        -log10(pmax(FDR, .Machine$double.xmin)),
+        log10(pmax(FDR, .Machine$double.xmin))
       )
-    )
+    ) |>
+    dplyr::slice_min(PValue, n = 25, with_ties = FALSE) |>
+    dplyr::mutate(ID = stats::reorder(ID, signed_log10_FDR))
 
-  label_tibble <- plotting_tibble |>
-    dplyr::inner_join(top_ID_tibble)
-
-  plot <- ggplot2::ggplot(plotting_tibble, ggplot2::aes(x = `-log10(FDR)_camera`, y = `-log10(FDR)_fry`, label = ID, text = ID, color = color_cat)) +
-    ggplot2::geom_point() +
-    ggplot2::labs(title = stringr::str_c(unique(plotting_tibble$model), ": ", unique(plotting_tibble$contrast))) +
-    ggplot2::geom_vline(xintercept = -log10(0.05), lty = 2, color = "red") +
-    ggplot2::geom_vline(xintercept = log10(0.05), lty = 2, color = "blue") +
-    ggplot2::geom_hline(yintercept = -log10(0.05), lty = 2) +
-    ggplot2::theme(legend.position = "top") +
-    ggplot2::scale_color_manual(values = c("CameraSigUp" = "red", "CameraSigDown" = "blue", "SigMixed" = "black", "NS" = "grey")) +
-    ggrepel::geom_text_repel(data = label_tibble, ggplot2::aes(label = ID), size = 2, min.segment.length = 0, max.overlaps = 20) +
-    ggplot2::scale_x_continuous(limits = symmetric_limits)
-
-  return(plot)
+  ggplot2::ggplot(
+    plotting_tibble,
+    ggplot2::aes(x = signed_log10_FDR, y = ID, color = FDR < 0.05)
+  ) +
+    ggplot2::geom_vline(
+      xintercept = c(log10(0.05), -log10(0.05)),
+      linetype = "dashed",
+      color = "grey55"
+    ) +
+    ggplot2::geom_point(size = 2) +
+    ggplot2::scale_color_manual(values = c(`TRUE` = "#D55E00", `FALSE` = "grey55")) +
+    ggplot2::labs(
+      title = stringr::str_c(
+        unique(plotting_tibble$model),
+        ": ",
+        unique(plotting_tibble$contrast)
+      ),
+      x = "Signed -log10(FDR); positive indicates enrichment among positive statistics",
+      y = NULL,
+      color = "FDR < 0.05"
+    ) +
+    ggplot2::theme(legend.position = "bottom")
 }
 
 plot_psbulk_DX_PValue_density <- function(combined_psbulk_DX_results_tibble) {

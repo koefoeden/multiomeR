@@ -28,7 +28,11 @@ rlang::list2(
       extended_donor_id_metadata_tibble = donor_id_metadata_tibble.extended,
       psbulk_feature_dynamic_tibble = dynamic_tibble
     ),
-    pattern = map(filtered_mat_per_model, dynamic_tibble)
+    pattern = map(filtered_mat_per_model, dynamic_tibble),
+    resources = get_tar_resources(
+      cores_req = 6,
+      RAM_GB_req = 60
+    )
   ),
   targets::tar_target(
     name = results_tibble,

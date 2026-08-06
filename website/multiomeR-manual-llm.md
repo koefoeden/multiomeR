@@ -593,7 +593,7 @@ Use `differential_analyses_extended_donor_id_metadata_tsv` when the modelling ta
 
 ## Outputs
 
-It produces cell-type-composition models; pseudobulk differential gene expression, accessibility, and TF activity; diagnostics and cross-modality summaries; and GSEA with selected MSigDB or custom gene sets. Open Targets evidence annotation is optional.
+It produces cell-type-composition models; pseudobulk differential gene expression, accessibility, and TF activity; diagnostics and cross-modality summaries; and GSEA with selected MSigDB or custom gene sets. GSEA uses `cameraPR` with `inter.gene.cor = 0.01` for every supported pseudobulk fit. This is exclusively a competitive test: a significant set is more strongly associated with the contrast than the remaining tested genes, rather than merely showing any collective change. Open Targets evidence annotation is optional.
 
 ## Configure the module
 

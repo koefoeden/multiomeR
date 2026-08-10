@@ -101,7 +101,7 @@ force_recreate_graph <- identical(
 
 pipeline_github_file <- file.path(github_repo, "_targets.R")
 datasets_config_file <- "cfg_datasets.yaml"
-aggregations_config_file <- "cfg_aggregations.yaml"
+aggregations_config_file <- "cfg_aggregations_template.yaml"
 pipeline_parameters_file <- "cfg_pipeline_parameters.tsv"
 datasets_github_file <- file.path(github_repo, "cfg_datasets.yaml")
 GEM_wells_github_file <- file.path(github_repo, "cfg_GEM_wells.tsv")

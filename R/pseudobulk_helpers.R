@@ -1316,43 +1316,6 @@ plot_psbulk_DX_significant_elements_modality_distribution <- function(significan
 }
 
 
-#' Retain detected genes per gene set
-#'
-#' Intersect configured gene sets with the feature universe of a pseudobulk fit.
-#'
-#' @param psbulk_feature_matrix_fit Fitted pseudobulk model object.
-#' @param gene_set_subcollection Named gene-set collection or subcollection used for GSEA.
-#' @param min_genes_per_set Minimum number of genes from a gene set that must be present in the model feature universe.
-#' @return Named list of detected gene identifiers for retained gene sets.
-#' @keywords internal
-
-get_detected_gene_sets <- function(
-  psbulk_feature_matrix_fit,
-  gene_set_subcollection,
-  min_genes_per_set = 5L
-) {
-  feature_ids <- if (inherits(psbulk_feature_matrix_fit, "psbulk_cell_type_fit")) {
-    unique(unlist(
-      purrr::map(psbulk_feature_matrix_fit$cell_type_fits, rownames),
-      use.names = FALSE
-    ))
-  } else {
-    rownames(psbulk_feature_matrix_fit)
-  }
-
-  gene_sets <- purrr::map(
-    gene_set_subcollection,
-    ~ intersect(as.character(.x), feature_ids)
-  )
-  gene_sets <- gene_sets[lengths(gene_sets) >= min_genes_per_set]
-
-  assert_with_info(
-    length(gene_sets) > 0L,
-    glue_info = "No gene sets retained at least {min_genes_per_set} detected genes."
-  )
-  gene_sets
-}
-
 get_cameraPR_statistic <- function(contrast_statistics) {
   signed_normal_score <- sign(contrast_statistics$logFC) * stats::qnorm(
     pmax(pmin(contrast_statistics$PValue, 1), .Machine$double.xmin) / 2,
@@ -1380,7 +1343,7 @@ get_GSEA_results <- function(
   psbulk_feature_matrix_fit,
   gene_sets,
   psbulk_feature_dynamic_tibble,
-  min_genes_per_set = 5L
+  min_genes_per_set = 10L
 ) {
   contrast_statistics <- get_psbulk_feature_model_results(
     psbulk_feature_matrix_fit = psbulk_feature_matrix_fit,
@@ -1610,7 +1573,9 @@ plot_GSEA_results <- function(GSEA_results_tibble) {
 plot_GSEA_contrast_results <- function(GSEA_results_tibble) {
   plotting_tibble <- GSEA_results_tibble |>
     dplyr::mutate(
-      ID = stringr::str_remove(ID, "_TARGET_GENES$|^HALLMARK_|^KEGG_MEDICUS_(REFERENCE_)?|^WP_|^GOBP_|^GOCC_|^GOMF_|^HP_|^REACTOME_|^PID_|^MODULE_|^GAVISH_3CA_|^KEGG_"),
+      ID = stringr::str_remove(ID, "^HALLMARK_|^WP_|^GOBP_|^GOCC_|^GOMF_|^HP_|^REACTOME_|^PID_|^MODULE_|^GAVISH_3CA_|^KEGG_"),
+      ID = stringr::str_replace_all(ID, "_", " "),
+      ID = stringr::str_wrap(ID, width = 48),
       signed_log10_FDR = dplyr::if_else(
         Direction == "Up",
         -log10(pmax(FDR, .Machine$double.xmin)),
@@ -1636,12 +1601,21 @@ plot_GSEA_contrast_results <- function(GSEA_results_tibble) {
         unique(plotting_tibble$model),
         ": ",
         unique(plotting_tibble$contrast)
+      ) |>
+        stringr::str_replace_all("_", " ") |>
+        stringr::str_wrap(width = 70),
+      x = paste(
+        "Signed -log10(FDR)",
+        "Positive values indicate enrichment among positive statistics",
+        sep = "\n"
       ),
-      x = "Signed -log10(FDR); positive indicates enrichment among positive statistics",
       y = NULL,
       color = "FDR < 0.05"
     ) +
-    ggplot2::theme(legend.position = "bottom")
+    ggplot2::theme(
+      axis.text.y = ggplot2::element_text(size = 8),
+      legend.position = "bottom"
+    )
 }
 
 plot_psbulk_DX_PValue_density <- function(combined_psbulk_DX_results_tibble) {
@@ -1714,48 +1688,40 @@ plot_DCTC_by_phenotype_per_cluster <- function(
     ggplot2::labs(x = stringr::str_glue("Phenotype class ({DCTC_plot_phenotype_vars})"), y = "Proportion of nuclei per cluster", title = stringr::str_glue("{DCTC_plot_phenotype_vars}"))
 }
 
-#' Get MSigDB genesets split by subcollection list list
+#' Get one MSigDB gene-set collection
 #'
-#' Fetch MSigDB gene sets and split them by subcollection for GSEA targets.
+#' Fetch one selected MSigDB collection or subcollection for competitive tests.
+#' Pathway size is filtered later against each contrast's tested-gene universe.
 #'
-#' @param species_chr Species label passed to MSigDB/msigdbr gene-set lookup.
-#' @param use_id_chr Gene identifier type requested from MSigDB, such as symbols or Ensembl IDs.
-#' @param min_size_num Minimum gene-set size retained before downstream enrichment testing.
-#' @param max_size_num Maximum gene-set size retained before downstream enrichment testing.
-#' @return Named list of subcollections; each subcollection is a named list of
-#'   gene vectors after size filtering.
+#' @param organism_chr Pipeline organism identifier.
+#' @param collection_chr MSigDB collection identifier.
+#' @param subcollection_chr Optional MSigDB subcollection identifier.
+#' @return Named list of gene-symbol vectors, one per gene set.
 #' @keywords internal
 
-get_MSigDB_genesets_split_by_subcollection_list_list <- function(
-  species_chr,
-  use_id_chr = c("gene_symbol", "db_gene_symbol", "ensembl_gene", "source_gene")[1],
-  min_size_num = 15,
-  max_size_num = 500
+get_msigdb_gene_sets <- function(
+  organism_chr,
+  collection_chr,
+  subcollection_chr = NA_character_
 ) {
-  msig_tibble <- msigdbr::msigdbr(species = species_chr)
+  species_chr <- switch(
+    organism_chr,
+    Homo_sapiens = "human",
+    Mus_musculus = "mouse",
+    stop("Unsupported organism for MSigDB gene sets: ", organism_chr)
+  )
+  msigdbr_args <- list(species = species_chr, collection = collection_chr)
+  if (!is.na(subcollection_chr)) {
+    msigdbr_args$subcollection <- subcollection_chr
+  }
 
-  filtered_msig_tibble <- msig_tibble |>
-    dplyr::mutate(gs_subcollection = stringr::str_replace_all(dplyr::case_when(gs_subcollection == "" ~ gs_collection, .default = gs_subcollection), ":", "_")) |>
-    dplyr::transmute(gs_name, gene_id = .data[[use_id_chr]], gs_subcollection) |>
+  gene_sets_tibble <- rlang::exec(msigdbr::msigdbr, !!!msigdbr_args) |>
+    dplyr::transmute(gs_name, gene_id = gene_symbol) |>
     dplyr::filter(!is.na(gene_id)) |>
     dplyr::distinct() |>
-    dplyr::add_count(gs_name, name = "n_genes") |>
-    dplyr::filter(n_genes >= min_size_num, n_genes <= max_size_num)
+    dplyr::summarise(genes = list(gene_id), .by = gs_name)
 
-  # list of character vectors per set, then to index list over y_DGEList rows
-  MSigDB_genesets_split_by_subcollection_list_list <- filtered_msig_tibble |>
-    group_split_by("gs_subcollection") |>
-    purrr::map(
-      \(gene_set_tibble) {
-        summarised_tibble <- gene_set_tibble |>
-          dplyr::group_by(gs_name) |>
-          dplyr::summarise(genes = list(gene_id), .groups = "drop")
-
-        rlang::set_names(summarised_tibble$genes, summarised_tibble$gs_name)
-      }
-    )
-
-  MSigDB_genesets_split_by_subcollection_list_list
+  rlang::set_names(gene_sets_tibble$genes, gene_sets_tibble$gs_name)
 }
 
 

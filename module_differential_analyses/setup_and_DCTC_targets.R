@@ -16,26 +16,6 @@ rlang::list2(
     description = "Build named list of configured pseudobulk DX model specifications [part_of_graph:differential_analyses]",
     command = normalize_psbulk_feature_models(differential_analyses_psbulk_DX_models)
   ),
-  targets::tar_target(
-    name = combined_gene_sets,
-    description = "Load MSigDB gene sets for the study organism, optionally prepending custom gene sets",
-    command = {
-      species_chr <- switch(
-        organism_chr,
-        Homo_sapiens = "human",
-        Mus_musculus = "mouse",
-        "Unknown species"
-      )
-
-      standard_gene_sets <- get_MSigDB_genesets_split_by_subcollection_list_list(species_chr = species_chr)
-
-      if (!is.null(differential_analyses_psbulk_DX_GSEA_custom_lists)) {
-        c("CUSTOM" = list(differential_analyses_psbulk_DX_GSEA_custom_lists), standard_gene_sets)
-      } else {
-        standard_gene_sets
-      }
-    }
-  ),
   tarchetypes::tar_file(
     name = pseudobulk_depth_distribution_plot,
     description = "Plot pseudobulk count depths and detected features per cluster-donor sample. [checkpoint:differential_analyses]",

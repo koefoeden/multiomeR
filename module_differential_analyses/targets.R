@@ -45,11 +45,9 @@ rlang::list2(
     ),
     tarchetypes::tar_map(
       values = tibble::tribble(
-        ~map_psbulk_DX_GSEA_tar_suffix , ~map_psbulk_DX_GSEA_subcollection ,
-        "H.GSEA.DGE"                   , "H"                               ,
-        "CP_KEGG_MEDICUS.GSEA.DGE"     , "CP_KEGG_MEDICUS"                 ,
-        "TFT_GTRD.GSEA.DGE"            , "TFT_GTRD"                        ,
-        "CUSTOM.GSEA.DGE"              , "CUSTOM"
+        ~map_psbulk_DX_GSEA_tar_suffix, ~map_MSigDB_collection, ~map_MSigDB_subcollection,
+        "H.GSEA.DGE",                   "H",                   NA_character_,
+        "CP_REACTOME.GSEA.DGE",         "C2",                  "CP:REACTOME"
       ),
       names = map_psbulk_DX_GSEA_tar_suffix,
       descriptions = NULL,

@@ -1,22 +1,23 @@
 rlang::list2(
   targets::tar_target(
-    name = detected_gene_sets,
-    description = "Retain detected genes for each configured gene set",
-    command = get_detected_gene_sets(
-      psbulk_feature_matrix_fit = feature_matrix_fit.DGE,
-      gene_set_subcollection = combined_gene_sets[[map_psbulk_DX_GSEA_subcollection]]
+    name = gene_sets,
+    description = "Load one selected MSigDB gene-set collection for competitive testing",
+    command = get_msigdb_gene_sets(
+      organism_chr = organism_chr,
+      collection_chr = map_MSigDB_collection,
+      subcollection_chr = map_MSigDB_subcollection
     ),
-    pattern = map(feature_matrix_fit.DGE)
+    deployment = "main"
   ),
   targets::tar_target(
     name = results,
     description = "Run competitive cameraPR enrichment on pseudobulk contrasts for each gene-set subcollection [part_of_graph:differential_analyses]",
     command = get_GSEA_results(
       psbulk_feature_matrix_fit = feature_matrix_fit.DGE,
-      gene_sets = detected_gene_sets,
+      gene_sets = gene_sets,
       psbulk_feature_dynamic_tibble = dynamic_tibble.DGE
     ),
-    pattern = map(detected_gene_sets, dynamic_tibble.DGE, feature_matrix_fit.DGE)
+    pattern = map(dynamic_tibble.DGE, feature_matrix_fit.DGE)
   ),
   targets::tar_target(
     name = plots,

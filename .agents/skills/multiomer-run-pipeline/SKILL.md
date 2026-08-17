@@ -5,9 +5,9 @@ description: Inspect or run the active multiomeR root targets workflow through P
 
 # multiomeR Run Pipeline
 
-The active project is `_targets.R`; `_targets.yaml` currently resolves the store
-to `outputs`. Differential analyses and genetic enrichment are aggregation-level
-modules in this same graph. Run R through Pixi; see `multiomer-run-r-code`.
+The active project is `_targets.R`; use the store resolved by `_targets.yaml`.
+Differential analyses and genetic enrichment are aggregation-level modules in
+this same graph. Run R through Pixi; see `multiomer-run-r-code`.
 
 ## Read-only inspection
 
@@ -16,9 +16,16 @@ the PID of a completed run, so verify it with `ps` before reporting that a run i
 active.
 
 ```bash
-pixi run Rscript - <<'EOF'
+pixi run --use-environment-activation-cache Rscript - <<'EOF'
 cat("store:", targets::tar_config_get("store"), "\n")
-cat("recorded pid:", targets::tar_pid(), "\n")
+pid <- targets::tar_pid()
+cat("recorded pid:", pid, "\n")
+process <- if (length(pid) == 1L && !is.na(pid)) {
+  system2("ps", c("-p", pid, "-o", "pid=,stat=,cmd="), stdout = TRUE, stderr = TRUE)
+} else {
+  character()
+}
+cat("live process:", if (length(process)) process else "<none>", "\n")
 print(targets::tar_progress_summary())
 EOF
 ```
@@ -26,7 +33,7 @@ EOF
 For a target family, keep outdatedness checks narrow:
 
 ```bash
-pixi run Rscript - <<'EOF'
+pixi run --use-environment-activation-cache Rscript - <<'EOF'
 targets::tar_outdated(
   names = tidyselect::matches("<target-or-dataset-pattern>"),
   callr_function = NULL
@@ -36,11 +43,16 @@ EOF
 
 ## Run patterns
 
+Immediately before `tar_make()`, confirm that no live driver already owns the
+configured store. Do not infer ownership from a recorded PID without the process
+check above.
+
 Preview a new or regex-based selection before running it. Fail if it matches no
-defined targets.
+defined targets. Run a known exact target directly instead of constructing the
+graph once for preview and again for execution.
 
 ```bash
-pixi run Rscript - <<'EOF'
+pixi run --use-environment-activation-cache Rscript - <<'EOF'
 selection <- targets::tar_manifest(
   names = tidyselect::matches("<target-or-dataset-pattern>"),
   fields = c(name, description),
@@ -55,10 +67,14 @@ targets::tar_make(
 EOF
 ```
 
+After `tar_make()` returns, inspect the selected endpoints. Report completion
+only when each endpoint has data, no error, and terminal progress; partial
+progress or a returned driver is not success.
+
 Run all targets only when explicitly requested:
 
 ```bash
-pixi run Rscript - <<'EOF'
+pixi run --use-environment-activation-cache Rscript - <<'EOF'
 targets::tar_make()
 EOF
 ```
@@ -66,6 +82,14 @@ EOF
 For mapped targets, select the defined target stem and configured suffix rather
 than a dynamic branch hash. Use names from `tar_manifest()` or `tar_meta()` and
 prefer checkpoint description tags when they express the requested endpoint.
+
+For a narrow selection whose upstream targets are known to be current, consider
+`shortcut = TRUE` in `tar_outdated()` or `tar_make()`. This can avoid expensive
+upstream file-metadata checks, especially on network filesystems, by trusting
+stored upstream metadata. Do not use it when upstream code, configuration, data,
+or file freshness may have changed: the shortcut can incorrectly skip work
+because it assumes those dependencies are already up to date. Keep the default
+`shortcut = FALSE` for production validation and whenever freshness is uncertain.
 
 ## Practical Notes
 

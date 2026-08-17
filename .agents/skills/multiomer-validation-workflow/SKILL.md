@@ -10,22 +10,16 @@ execution only when static graph construction cannot prove the behavior.
 
 ## Fast Default
 
-Parse every edited R file in one R session:
-
-```bash
-pixi run Rscript - <<'EOF'
-files <- c(
-  "path/to/edited_file.R"
-)
-invisible(lapply(files, parse))
-cat("parse ok\n")
-EOF
-```
+Validate each edited file once through the strongest applicable check. Focused
+source or behavior checks already parse helpers and scripts; manifest
+construction parses and sources target graph files. Use standalone `parse()`
+only when an edited file is not otherwise loaded or when isolating a syntax
+failure.
 
 For target changes, build the manifest without callr. This catches missing helpers, bad target commands, malformed `tar_map()` values, and most graph-construction failures without running targets:
 
 ```bash
-pixi run Rscript - <<'EOF'
+pixi run --use-environment-activation-cache Rscript - <<'EOF'
 targets::tar_manifest(callr_function = NULL)
 cat("manifest ok\n")
 EOF
@@ -39,11 +33,12 @@ git diff --check
 
 ## Target Execution
 
-Run targets only when the changed behavior needs runtime proof. Preview the
-selection and fail on an empty match:
+Run targets only when the changed behavior needs runtime proof. For a known
+exact target, run it directly. Preview new or regex-based selections and fail on
+an empty match:
 
 ```bash
-pixi run Rscript - <<'EOF'
+pixi run --use-environment-activation-cache Rscript - <<'EOF'
 selection <- targets::tar_manifest(
   names = tidyselect::matches("<target-and-scope-pattern>"),
   fields = c(name, description),

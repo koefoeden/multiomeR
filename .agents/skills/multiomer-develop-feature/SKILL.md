@@ -23,6 +23,10 @@ Use this when adding or changing targets, helpers, or analysis steps.
 - Prefer BPCells, matrices, `GRanges`, tibbles, and `SummarizedExperiment` over Seurat/Signac objects for new ATAC/GEX processing.
 - Keep Seurat compatibility only at explicit legacy boundaries. Do not create intermediate Seurat objects just to pass data between targets.
 - Use direct package APIs rather than compatibility wrappers when practical.
+- Prefer direct target commands and existing machinery. Add helpers only for
+  reused or otherwise unreadable logic, and targets only for meaningful
+  computation, output, or cache/invalidation boundaries—not to rename, forward,
+  or organize other targets.
 - Defer expensive compatibility artifacts until their consumer needs them.
 - Keep target names specific and modality-suffixed where relevant, e.g.
   `consensus_peak_BPCells_matrix.ATAC` and
@@ -41,6 +45,8 @@ tar_target(
 
 - Use `tarchetypes::tar_file()` for paths written to disk.
 - Use `tarchetypes::tar_map()` for per-dataset or per-parameter expansion.
+- Always set `deployment = "main"` on `tarchetypes::tar_files()` so file
+  discovery stays in the pipeline driver environment rather than a Crew worker.
 - Use `packages = w_def("PackageName")` only when a target needs to extend the default package set.
 - Add `get_tar_resources()` from measured needs or the closest comparable
   target; do not copy a large CPU/RAM request as a generic default.

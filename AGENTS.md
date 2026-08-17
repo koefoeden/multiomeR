@@ -19,9 +19,9 @@ After changing either documentation book, render both books and refresh the
 LLM-oriented export:
 
 ```bash
-pixi run quarto render website
-pixi run quarto render website/implementation
-pixi run -e dev export-website-llm-markdown
+pixi run --use-environment-activation-cache quarto render website
+pixi run --use-environment-activation-cache quarto render website/implementation
+pixi run --use-environment-activation-cache -e dev export-website-llm-markdown
 ```
 
 ## Repository-specific agent workflows
@@ -33,3 +33,10 @@ repository skills should use the matching `SKILL.md`, especially for:
 - debugging failed targets;
 - validating R helper or target-graph changes;
 - creating commits, pull requests, releases, or pipeline diagrams.
+
+Always pass `--use-environment-activation-cache` when invoking `pixi run`.
+
+Treat repository-local skills as living workflow documentation. Unless a task
+is explicitly read-only, revise the relevant skill when its use reveals
+materially stale, ambiguous, or missing guidance. Keep revisions succinct and
+high-level; omit details reliably implied by the code or existing instructions.

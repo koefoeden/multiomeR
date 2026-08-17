@@ -22,14 +22,14 @@ rg -n "part_of_graph:" _targets.R extra_targets module_*
 3. Regenerate every tagged view through the live manifest:
 
 ```bash
-pixi run Rscript website/figures/human_curated/graphs_v2.R
+pixi run --use-environment-activation-cache Rscript website/figures/human_curated/graphs_v2.R
 ```
 
 4. Review the changed `website/figures/human_curated/<graph_id>_v2.mmd` files
    and render the implementation book:
 
 ```bash
-pixi run quarto render website/implementation
+pixi run --use-environment-activation-cache quarto render website/implementation
 ```
 
 Do not depend on `website/cache/targets_graphs`; that cache is optional and is

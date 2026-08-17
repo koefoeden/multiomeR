@@ -1,13 +1,13 @@
 ---
 name: multiomer-fix-errors
-description: Inspect errors and interactively debug R targets workflows in multiomeR using list_distinct_errored_targets(), inspect_target_workspace(), and targeted tar_read_raw() probes. Use when a multiomeR run reports errored targets, when investigating a failing target, or when the user asks to debug multiomeR.
+description: Inspect errors and interactively debug R targets workflows in multiomeR using stored errors, saved workspaces, and targeted dependency probes. Use when a multiomeR run reports errored targets, when investigating a failing target, or when the user asks to debug multiomeR.
 ---
 
 # multiomeR Fix Errors
 
 Determine the failing target and configured scope first. The project uses the
-root `_targets.R` graph and the configured `outputs` store. Run R through Pixi;
-see `multiomer-run-r-code`.
+root `_targets.R` graph and configured store. Run R through Pixi; see
+`multiomer-run-r-code`.
 
 ## Triage
 
@@ -23,8 +23,8 @@ Use the distinct summary only when several targets repeat the same failure:
 list_distinct_errored_targets()
 ```
 
-Add commands and tracebacks when the root cause is not obvious. This helper, not
-`list_distinct_errored_targets()`, accepts `target_name_pattern`:
+Use the traceback summary only when several failures need batch comparison. It
+builds the full manifest to attach commands, so do not use it as the default:
 
 ```r
 list_distinct_errored_targets_w_tracebacks(target_name_pattern = "<target_or_dataset>")
@@ -65,23 +65,7 @@ its non-standard evaluation looks for a target literally called `name`.
 
 ## Verify
 
-Re-run as narrowly as possible:
-
-```bash
-pixi run Rscript - <<'EOF'
-selection <- targets::tar_manifest(
-  names = tidyselect::matches("<target-and-scope-pattern>"),
-  fields = c(name, description),
-  callr_function = NULL
-)
-stopifnot(nrow(selection) > 0L)
-print(selection)
-targets::tar_make(
-  names = tidyselect::matches("<target-and-scope-pattern>")
-)
-EOF
-```
-
-Use `multiomer-validation-workflow` for parse and graph checks. Exercise a second
-configured scope only when the changed contract crosses species, modalities, or
-configuration shapes and the first run cannot establish that behavior.
+Use `multiomer-validation-workflow`, then re-run the narrowest failing target
+through `multiomer-run-pipeline`. Exercise a second configured scope only when
+the changed contract crosses species, modalities, or configuration shapes and
+the first run cannot establish that behavior.

@@ -14,7 +14,7 @@ store under `pipelines/`.
 ### 1. Resolve the store and PID
 
 ```bash
-pixi run Rscript - <<'EOF'
+pixi run --use-environment-activation-cache Rscript - <<'EOF'
 store <- targets::tar_config_get("store")
 cat("store:", store, "\n")
 cat("recorded pid:", targets::tar_pid(store = store), "\n")

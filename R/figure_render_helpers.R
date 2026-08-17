@@ -152,6 +152,76 @@ prepare_plot_panels <- function(
   list(plots = panel_plots, caption = fig_caption)
 }
 
+#' Compose a manuscript figure
+#'
+#' Prepare explicitly supplied plot inputs and arrange them as a patchwork
+#' figure without writing files.
+#'
+#' @param panel_specs Panel specification tibble accepted by
+#'   `prepare_plot_panels()`.
+#' @param layout Quoted patchwork layout expression referring to panels by tag.
+#' @param figure_caption Optional figure-level caption text.
+#' @param figure_theme Theme added to every panel. By default, plot subtitles
+#'   and plot captions are omitted because explanatory detail belongs in the
+#'   assembled figure caption.
+#' @param show_tags Logical; if `TRUE`, add panel tags and tagged panel captions.
+#' @param caption_label Optional caption prefix, such as `"Figure 2"`.
+#' @param envir Parent environment used to evaluate the patchwork layout.
+#' @return A composed plot or patchwork figure.
+#' @keywords internal
+compose_manuscript_figure <- function(
+  panel_specs,
+  layout,
+  figure_caption = NULL,
+  figure_theme = ggplot2::theme(
+    plot.subtitle = ggplot2::element_blank(),
+    plot.caption = ggplot2::element_blank()
+  ),
+  show_tags = nrow(panel_specs) > 1L,
+  caption_label = NULL,
+  envir = parent.frame()
+) {
+  loadNamespace("patchwork")
+  prepared_panels <- prepare_plot_panels(
+    panel_specs,
+    figure_theme = figure_theme,
+    show_tags = show_tags,
+    envir = envir
+  )
+
+  layout_env <- list2env(as.list(prepared_panels$plots), parent = envir)
+  caption_text <- c(figure_caption, prepared_panels$caption)
+  caption_text <- caption_text[!is.na(caption_text) & nzchar(caption_text)]
+  figure_caption <- if (length(caption_text)) {
+    paste(caption_text, collapse = " ")
+  } else {
+    NULL
+  }
+  if (!is.null(figure_caption) && !is.null(caption_label) && nzchar(caption_label)) {
+    figure_caption <- paste0("<b>", caption_label, ":</b> ", figure_caption)
+  }
+
+  combined_plot <- eval(layout, envir = layout_env)
+  if (is.null(figure_caption)) {
+    return(combined_plot)
+  }
+
+  combined_plot +
+    patchwork::plot_annotation(
+      caption = figure_caption,
+      theme = ggplot2::theme(
+        plot.caption = ggtext::element_textbox_simple(
+          hjust = 0,
+          halign = 0,
+          lineheight = 1.05,
+          margin = ggplot2::margin(t = 6),
+          width = grid::unit(1, "npc")
+        ),
+        plot.caption.position = "plot"
+      )
+    )
+}
+
 #' Render manuscript figures
 #'
 #' Render one or more patchwork figures from panel and figure specification
@@ -161,7 +231,9 @@ prepare_plot_panels <- function(
 #' @param figure_specs Figure specification tibble with `figure_number`,
 #'   `height`, `layout`, and `caption`.
 #' @param output_dir Output directory for PNG files.
-#' @param figure_theme Theme added to each panel.
+#' @param figure_theme Theme added to each panel. By default, plot subtitles and
+#'   plot captions are omitted because explanatory detail belongs in the
+#'   assembled figure caption.
 #' @param figure_label Figure caption label.
 #' @param width Output figure width in inches.
 #' @param dpi Output PNG resolution.
@@ -172,7 +244,10 @@ render_figures <- function(
   panel_specs,
   figure_specs,
   output_dir,
-  figure_theme = ggplot2::theme(),
+  figure_theme = ggplot2::theme(
+    plot.subtitle = ggplot2::element_blank(),
+    plot.caption = ggplot2::element_blank()
+  ),
   figure_label = "Figure",
   width = 7,
   dpi = 300,

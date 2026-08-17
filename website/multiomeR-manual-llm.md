@@ -593,9 +593,11 @@ Use `differential_analyses_extended_donor_id_metadata_tsv` when the modelling ta
 
 ## Outputs
 
-It produces cell-type-composition models; pseudobulk differential gene expression, peak accessibility, and JASPAR motif-family accessibility; diagnostics and cross-modality summaries; and competitive gene-set tests against the MSigDB Hallmark and Reactome collections.
+It produces cell-type-composition models; pseudobulk differential gene expression, peak accessibility, JASPAR motif-family accessibility, and expression-derived CollecTRI TF activity; diagnostics and cross-modality summaries; and competitive gene-set tests against the MSigDB Hallmark and Reactome collections.
 
-DTFA tests the 233 sequence-similarity families in the official JASPAR2026 CORE vertebrate clustering rather than individual TF motifs. Each family is represented by its published root motif, which is scanned directly against the consensus peaks; individual member motifs are used only as family metadata. The same family-level accessibility matrix supports marker plots and the Seurat compatibility export.
+The DCTA branch infers signed TF or TF-complex activity from normalized GEX pseudobulks with CollecTRI regulons and the `decoupleR` univariate linear model (ULM). Genes are filtered for expression across cell-type pseudobulks, and each retained regulator must have at least five measured targets. Its inferred activities then use the same configured donor-level models and contrasts as DGE, DCA, and DTFA. The published human CollecTRI network is downloaded from the OmniPath rescue archive and accepted only when it matches the pipeline's pinned SHA-256 checksum.
+
+DTFA tests the 233 sequence-similarity families in the official JASPAR2026 CORE vertebrate clustering rather than individual TF motifs. Each family is represented by its published root motif, which is scanned directly against the consensus peaks; individual member motifs are used only as family metadata. The same family-level accessibility matrix supports marker plots and the Seurat compatibility export. The CollecTRI-DTFA comparison maps individual CollecTRI regulators to these JASPAR families and compares model t-statistics, not raw activity scales. AP1 and NFKB remain intact as complex regulons during activity inference; their canonical members are used only to associate the complexes with motif families for comparison. Detailed source-level results retain TF expression as a third reference, while family-level summaries use the median CollecTRI regulator t-statistic and report whether any mapped source is FDR-significant.
 
 Each gene-set collection is tested independently with `cameraPR`, `inter.gene.cor = 0.01`, and a minimum of 10 genes represented in the contrast-specific universe. A significant set is more strongly associated with the contrast than the remaining tested genes, rather than merely showing any collective change. Open Targets evidence annotation is optional.
 
@@ -663,7 +665,7 @@ targets::tar_make(
 )
 ```
 
-Review pseudobulk depths and retained donor counts before interpreting coefficients. Check model-matrix terms, P-value distributions, effect directions, and agreement or disagreement across DGE, DCA, and DTFA. These are complementary regulatory readouts: agreement strengthens a shared interpretation, while disagreement can reflect post-transcriptional regulation, motif-family ambiguity, or different evidence carried by expression and accessibility. Treat the [gallery](gallery_differential_analyses.qmd) as a visual reference, not as a statistical acceptance threshold.
+Review pseudobulk depths and retained donor counts before interpreting coefficients. Check model-matrix terms, P-value distributions, effect directions, and agreement or disagreement across DGE, DCA, DTFA, and DCTA. The CollecTRI-DTFA concordance target summarizes family coverage, rank correlation, directional agreement, and joint FDR support for every configured contrast. These are complementary regulatory readouts: agreement strengthens a shared interpretation, while disagreement can reflect post-transcriptional regulation, motif-family ambiguity, or different evidence carried by expression and accessibility. Treat the [gallery](gallery_differential_analyses.qmd) as a visual reference, not as a statistical acceptance threshold.
 
 Runtime depends on donors, cell types, models, contrasts, and GSEA branches. Use [Troubleshooting](troubleshooting.qmd) if a formula, contrast, or metadata join fails.
 
@@ -780,6 +782,8 @@ To reproduce these plot families, [install](demo_installation.qmd) and [run](dem
 
 
 These cards are a curated subset from the public `immune_human_2x` configuration. They illustrate diagnostics, not acceptable effect sizes or significance patterns for another study. See [Differential analyses](downstream_differential_analyses.qmd) for prerequisites, models, and the checkpoint command.
+
+The full module additionally produces expression-derived CollecTRI activity results and a CollecTRI-DTFA concordance plot. They are not shown below until stable public example assets are available.
 
 [Generated Quarto chunk omitted: `render_gallery_section( gallery_items, "Differential analyses module", subsection_descriptions = c( "Gene expression"...`]
 
@@ -1536,9 +1540,11 @@ Subgroup reprocessing is configuration-dependent and should not be treated as pa
 
 
 
-`module_differential_analyses/targets.R` filters aggregations that enabled the module, joins their module config, attaches symbols for accepted WNN metadata and pseudobulk inputs, and maps the composition, pseudobulk, GSEA, and cross-modality target fragments. The generic pseudobulk model family is instantiated for DGE, DCA, and DTFA.
+`module_differential_analyses/targets.R` filters aggregations that enabled the module, joins their module config, attaches symbols for accepted WNN metadata and pseudobulk inputs, and maps the composition, pseudobulk, GSEA, and cross-modality target fragments. The generic pseudobulk model family is instantiated for DGE, DCA, DTFA, and expression-derived CollecTRI activity (DCTA). DCTA first converts filtered, normalized GEX pseudobulks to signed ULM scores and then reuses the same model and contrast machinery.
 
 DTFA uses the 233 official JASPAR2026 CORE vertebrate familial root motifs as its complete feature universe. The pipeline scans those family-level profiles directly, rather than scanning individual motifs and taking the union of their peak matches.
+
+The cross-modality fragment creates a CollecTRI-to-JASPAR family crosswalk, a detailed regulator-level table containing DCTA, DTFA, and TF-expression results, a family-level comparison table, a contrast-level concordance summary, and its plot. CollecTRI complexes remain intact in DCTA; complex-member mappings are introduced only by the comparison crosswalk.
 
 The graph below is an orientation view. Inspect `setup_and_DCTC_targets.R`, `psbulk_DX_targets.R`, `GSEA_targets.R`, and `cross_modality_targets.R` for the complete model and plotting commands. The user-facing prerequisites and checkpoint selector are documented in [Differential analyses](../downstream_differential_analyses.html).
 

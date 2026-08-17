@@ -74,7 +74,7 @@ rlang::list2(
         dplyr::pull(feature_id) |>
         unique()
 
-      if (stringr::str_detect(map_psbulk_DX_tar_suffix, "DCA")) {
+      if (!identical(map_psbulk_DX_tar_suffix, "DGE")) {
         return(tibble::tibble(feature_id = top_features_vec, ensembl_id = NA_character_, OT_GWAS_evidence = NA))
       }
 

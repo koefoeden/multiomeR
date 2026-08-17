@@ -20,6 +20,14 @@ rlang::list2(
     command = "resources/JASPAR2026_vertebrate_motif_families.tsv"
   ),
   tarchetypes::tar_file(
+    name = CollecTRI_human_network_csv,
+    description = "Download and checksum the published human CollecTRI signed TF-target network [part_of_graph:differential_analyses]",
+    command = download_CollecTRI_human_network(
+      network_url = "https://rescued.omnipathdb.org/CollecTRI.csv",
+      expected_sha256 = "86c90b30f2cc75c189da1f0a8c353d1547287cd656a9fac1c678634285bcb4e0"
+    )
+  ),
+  tarchetypes::tar_file(
     name = open_targets_credible_set_dataset_path,
     description = "Download the Open Targets 26.03 credible_set Parquet dataset for shared GWAS consumers [part_of_graph:genetic_enrichment_single_nucleus]",
     command = download_open_targets_dataset("https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.03/output/credible_set/")
@@ -101,6 +109,11 @@ rlang::list2(
 
       family_members
     }
+  ),
+  targets::tar_target(
+    name = CollecTRI_human_network_tibble,
+    description = "Validate and reformat the checksum-pinned human CollecTRI signed TF-target network [part_of_graph:differential_analyses]",
+    command = read_CollecTRI_human_network(CollecTRI_human_network_csv)
   ),
   targets::tar_target(
     name = chromHMMs_list_general,

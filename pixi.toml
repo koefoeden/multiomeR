@@ -169,6 +169,7 @@ r-remotes = ">=2.5.0,<3" # install helper for GitHub-only R dependencies such as
 r-fastmatch = ">=1.1_8,<2" # indirect dependency of Signac v2
 r-rcpproll = ">=0.3.2,<0.4" # indirect dependency of Signac v2
 bioconductor-sparsematrixstats = ">=1.22.0,<2" # indirect dependency of Signac v2
+bioconductor-decoupler = ">=2.16.0,<3"
 
 [feature.dev.dependencies]
 python = ">=3.12,<3.13"

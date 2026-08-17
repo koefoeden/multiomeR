@@ -30,19 +30,30 @@ rlang::list2(
     descriptions = NULL,
     delimiter = ".",
     source("module_differential_analyses/setup_and_DCTC_targets.R")$value,
-    source("module_differential_analyses/cross_modality_targets.R")$value,
+    targets::tar_target(
+      name = pseudobulk_CollecTRI_TF_activity_matrix.GEX,
+      description = "Infer signed CollecTRI ULM TF activities from GEX pseudobulks [part_of_graph:differential_analyses]",
+      command = get_pseudobulk_CollecTRI_TF_activity_matrix(
+        psbulk_GEX_counts_matrix = pseudobulk_counts_matrix.GEX,
+        CollecTRI_network_tibble = CollecTRI_human_network_tibble
+      ),
+      packages = w_def("decoupleR"),
+      resources = get_tar_resources(RAM_GB_req = 32)
+    ),
     tarchetypes::tar_map(
       values = tibble::tribble(
         ~map_psbulk_DX_tar_suffix , ~map_psbulk_data_matrix                      ,
         "DGE"                     , rlang::sym("pseudobulk_counts_matrix.GEX")   ,
         "DCA"                     , rlang::sym("pseudobulk_counts_matrix.ATAC")  ,
-        "DTFA"                    , rlang::sym("pseudobulk_motif_family_accessibility_matrix.ATAC")
+        "DTFA"                    , rlang::sym("pseudobulk_motif_family_accessibility_matrix.ATAC"),
+        "DCTA"                    , rlang::sym("pseudobulk_CollecTRI_TF_activity_matrix.GEX")
       ),
       names = map_psbulk_DX_tar_suffix,
       descriptions = NULL,
       delimiter = ".",
       source("module_differential_analyses/psbulk_DX_targets.R")$value
     ),
+    source("module_differential_analyses/cross_modality_targets.R")$value,
     tarchetypes::tar_map(
       values = tibble::tribble(
         ~map_psbulk_DX_GSEA_tar_suffix, ~map_MSigDB_collection, ~map_MSigDB_subcollection,

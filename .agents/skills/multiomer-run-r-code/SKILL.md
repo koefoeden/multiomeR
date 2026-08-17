@@ -102,3 +102,6 @@ The repository is one root `targets` project. Do not set `TAR_PROJECT` or call
 legacy `activate_*()` helpers. Call `load_CFG("<dataset>")` only when an
 interactive probe needs resolved dataset-level configuration. Use
 `multiomer-run-pipeline` for target execution.
+
+Do not use `targets::tar_config_set()` to redirect a scratch probe: it rewrites
+`_targets.yaml`. Create a disposable scratch project instead.

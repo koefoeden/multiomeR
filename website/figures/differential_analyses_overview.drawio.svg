@@ -23,7 +23,7 @@
   <rect x="250" y="60" width="220" height="130" class="group"/>
   <text x="360" y="98" text-anchor="middle" class="label">differential_analyses</text>
   <text x="360" y="124" text-anchor="middle" class="body">Pseudobulk model fitting</text>
-  <text x="360" y="144" text-anchor="middle" class="body">DGE, DCA, DTFA, and DCTC</text>
+  <text x="360" y="144" text-anchor="middle" class="body">DGE, DCA, DTFA, DCTA, and DCTC</text>
   <text x="360" y="164" text-anchor="middle" class="body">cluster- and dataset-level summaries</text>
 
   <rect x="510" y="80" width="180" height="90" class="box"/>

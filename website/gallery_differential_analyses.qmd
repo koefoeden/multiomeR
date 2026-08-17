@@ -14,6 +14,8 @@ gallery_items <- check_output_gallery_assets(
 
 These cards are a curated subset from the public `immune_human_2x` configuration. They illustrate diagnostics, not acceptable effect sizes or significance patterns for another study. See [Differential analyses](downstream_differential_analyses.qmd) for prerequisites, models, and the checkpoint command.
 
+The full module additionally produces expression-derived CollecTRI activity results and a CollecTRI-DTFA concordance plot. They are not shown below until stable public example assets are available.
+
 ```{r, echo = FALSE, results = "asis"}
 render_gallery_section(
   gallery_items,

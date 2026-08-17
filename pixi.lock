@@ -59,6 +59,7 @@ environments:
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-chromvar-1.32.0-r45ha27e39d_0.conda
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-cigarillo-1.0.0-r45h01b2380_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-data-packages-20260207-hdfd78af_0.conda
+      - conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-decoupler-2.16.0-r45hdfd78af_0.conda
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-delayedarray-0.36.0-r45h01b2380_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-delayedmatrixstats-1.32.0-r45hdfd78af_0.conda
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-dirichletmultinomial-1.52.0-r45h57f0213_0.conda
@@ -736,6 +737,7 @@ environments:
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-chromvar-1.32.0-r45ha27e39d_0.conda
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-cigarillo-1.0.0-r45h01b2380_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-data-packages-20260207-hdfd78af_0.conda
+      - conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-decoupler-2.16.0-r45hdfd78af_0.conda
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-delayedarray-0.36.0-r45h01b2380_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-delayedmatrixstats-1.32.0-r45hdfd78af_0.conda
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-dirichletmultinomial-1.52.0-r45h57f0213_0.conda
@@ -2292,6 +2294,27 @@ packages:
   license: MIT
   size: 274646
   timestamp: 1770502117512
+- conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-decoupler-2.16.0-r45hdfd78af_0.conda
+  sha256: eb6377558f290ce411be3e5bddae462b16a29db47edb1b6cbe3b83020425fbec
+  md5: e6d4d8c523792278b91e2df77a4329b3
+  depends:
+  - bioconductor-biocparallel >=1.44.0,<1.45.0
+  - r-base >=4.5,<4.6.0a0
+  - r-broom
+  - r-dplyr
+  - r-magrittr
+  - r-matrix
+  - r-parallelly
+  - r-purrr
+  - r-rlang
+  - r-stringr
+  - r-tibble
+  - r-tidyr
+  - r-tidyselect
+  - r-withr
+  license: GPL-3 + file LICENSE
+  size: 3550259
+  timestamp: 1770587644278
 - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-delayedarray-0.36.0-r45h01b2380_0.conda
   sha256: 1f1fd7027ffffebeaca5c416f05d91bcd3a05cf1d043ee347fffbcdde6978c01
   md5: 8a5b2ea0550afcb925ff5f267ff741ea

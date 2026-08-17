@@ -11,8 +11,7 @@
 ^peak_TF_motif_matrix\.ATAC\.
 ^peaks_per_cluster_narrowPeaks\.peaks\.ATAC\.
 ^scDblFinder_results_df\.ATAC\.
-^TF_activity_BPCells_matrix_dir\.ATAC\.
+^motif_family_accessibility_BPCells_matrix_dir\.ATAC\.
 ^UCell_GEX_marker_genes_list\.
 ^UMAP_embeddings_tibble\.ATAC\.
 ^within_clusters_collapsed_peaks_per_cluster_GRanges\.ATAC\.
-

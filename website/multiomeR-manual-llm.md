@@ -521,10 +521,10 @@ Review before continuing:
 
 - peak-based QC exclusions and retained cell counts;
 - LSI dimensions, metadata associations, UMAPs, and cluster stability;
-- consensus peaks, motif matches, TF activity, and marker-gene activity; and
+- consensus peaks, JASPAR motif-family accessibility, and marker-gene activity; and
 - coverage tracks and differential-accessibility summaries where configured.
 
-Key objects include `consensus_peak_tibble.ATAC.your_aggregation`, `metadata_w_cell_types_tibble.ATAC.your_aggregation`, and the BPCells peak and TF-activity matrices. Revisit the peak-calling, ATAC dimensions, QC, or marker-TF settings if the review fails.
+Key objects include `consensus_peak_tibble.ATAC.your_aggregation`, `metadata_w_cell_types_tibble.ATAC.your_aggregation`, and the BPCells peak and motif-family-accessibility matrices. Revisit the peak-calling, ATAC dimensions, QC, or marker-TF settings if the review fails.
 
 ## Multimodal checkpoint
 
@@ -584,7 +584,7 @@ See the [output gallery](gallery_differential_analyses.qmd) for representative d
 Before enabling the module, confirm that:
 
 - the aggregation has passed the GEX, ATAC, and multimodal checkpoints;
-- WNN cell-type metadata and GEX, ATAC, and TF-activity pseudobulk matrices are available;
+- WNN cell-type metadata and GEX and ATAC pseudobulk matrices are available;
 - the donor metadata contains one unique row per `donor_id` and every variable used in a model;
 - model variables are donor- or pseudobulk-sample-level variables, not duplicated cell-level measurements; and
 - the number and distribution of donors support the specified design and contrasts.
@@ -593,7 +593,7 @@ Use `differential_analyses_extended_donor_id_metadata_tsv` when the modelling ta
 
 ## Outputs
 
-It produces cell-type-composition models; pseudobulk differential gene expression, accessibility, and TF activity; diagnostics and cross-modality summaries; and competitive gene-set tests against the MSigDB Hallmark and Reactome collections. Each collection is tested independently with `cameraPR`, `inter.gene.cor = 0.01`, and a minimum of 10 genes represented in the contrast-specific universe. A significant set is more strongly associated with the contrast than the remaining tested genes, rather than merely showing any collective change. Open Targets evidence annotation is optional.
+It produces cell-type-composition models; pseudobulk differential gene expression, peak accessibility, and JASPAR motif-family accessibility; diagnostics and cross-modality summaries; and competitive gene-set tests against the MSigDB Hallmark and Reactome collections. DTFA tests 155 sequence-similarity families constructed from the official JASPAR2024 vertebrate motif clustering rather than individual TF motifs. A peak is annotated to a family when any constituent motif matches it. The same family-level accessibility matrix supports marker plots and the Seurat compatibility export. Each gene-set collection is tested independently with `cameraPR`, `inter.gene.cor = 0.01`, and a minimum of 10 genes represented in the contrast-specific universe. A significant set is more strongly associated with the contrast than the remaining tested genes, rather than merely showing any collective change. Open Targets evidence annotation is optional.
 
 ## Configure the module
 

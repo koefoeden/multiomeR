@@ -87,17 +87,17 @@
   status: available
 
 - section: Differential analyses module
-  subsection: Transcription-factor activity
+  subsection: Motif-family accessibility
   title: Volcano plot
-  description: Highlights transcription factors with the strongest activity differences for one comparison.
+  description: Highlights JASPAR motif families with the strongest accessibility differences for one comparison.
   target: volcano_plots_files.DTFA.differential_analyses.immune_human_2x
   asset: gallery_assets/differential_analyses/transcription_factor_activity/volcano_plot.png
   status: available
 
 - section: Differential analyses module
-  subsection: Transcription-factor activity
+  subsection: Motif-family accessibility
   title: Significant-elements summary
-  description: Summarizes the number and direction of significant transcription-factor activity changes across comparisons.
+  description: Summarizes the number and direction of significant motif-family accessibility changes across comparisons.
   target: significant_elements_plot.DTFA.differential_analyses.immune_human_2x
   asset: gallery_assets/differential_analyses/transcription_factor_activity/significant_elements.png
   status: available

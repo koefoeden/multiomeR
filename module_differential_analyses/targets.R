@@ -17,7 +17,7 @@ differential_analyses_tibble <- differential_analyses_aggregation_tibble |>
     "pseudobulk_counts_matrix.ATAC",
     "pseudobulk_depth_tibble.GEX",
     "pseudobulk_depth_tibble.ATAC",
-    "pseudobulk_activity_matrix.TFA",
+    "pseudobulk_motif_family_accessibility_matrix.ATAC",
     "consensus_peak_annotated_GRanges.ATAC",
     "gene_features_df",
     "organism_chr"
@@ -36,7 +36,7 @@ rlang::list2(
         ~map_psbulk_DX_tar_suffix , ~map_psbulk_data_matrix                      ,
         "DGE"                     , rlang::sym("pseudobulk_counts_matrix.GEX")   ,
         "DCA"                     , rlang::sym("pseudobulk_counts_matrix.ATAC")  ,
-        "DTFA"                    , rlang::sym("pseudobulk_activity_matrix.TFA")
+        "DTFA"                    , rlang::sym("pseudobulk_motif_family_accessibility_matrix.ATAC")
       ),
       names = map_psbulk_DX_tar_suffix,
       descriptions = NULL,

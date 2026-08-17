@@ -76,7 +76,6 @@ environments:
       - conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-hdf5array-1.38.0-r45hdfd78af_0.conda
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-interactionset-1.38.0-r45ha27e39d_0.conda
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-iranges-2.44.0-r45h01b2380_1.conda
-      - conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-jaspar2024-0.99.7-r45hdfd78af_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-keggrest-1.50.0-r45hdfd78af_0.conda
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-limma-3.66.0-r45h01b2380_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-matrixgenerics-1.22.0-r45hdfd78af_1.conda
@@ -754,7 +753,6 @@ environments:
       - conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-hdf5array-1.38.0-r45hdfd78af_0.conda
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-interactionset-1.38.0-r45ha27e39d_0.conda
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-iranges-2.44.0-r45h01b2380_1.conda
-      - conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-jaspar2024-0.99.7-r45hdfd78af_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-keggrest-1.50.0-r45hdfd78af_0.conda
       - conda: https://conda.anaconda.org/bioconda/linux-64/bioconductor-limma-3.66.0-r45h01b2380_0.conda
       - conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-matrixgenerics-1.22.0-r45hdfd78af_1.conda
@@ -2691,17 +2689,6 @@ packages:
   license: Artistic-2.0
   size: 2344215
   timestamp: 1770546527540
-- conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-jaspar2024-0.99.7-r45hdfd78af_0.conda
-  sha256: 3507691cf7f8d4715b504e197873c379a699dddac1adb9aa937d3679c9d4a6b4
-  md5: b920c7d6986c751f6d54abab387b0fcd
-  depends:
-  - bioconductor-biocfilecache >=3.0.0,<3.1.0
-  - bioconductor-data-packages >=20260207
-  - curl
-  - r-base >=4.5,<4.6.0a0
-  license: GPL-2
-  size: 18254
-  timestamp: 1772013629129
 - conda: https://conda.anaconda.org/bioconda/noarch/bioconductor-keggrest-1.50.0-r45hdfd78af_0.conda
   sha256: 7f7aba428c1f3c8fcf0e3eb038ee3aba35f8a028e2819f30b009a1306afff886
   md5: c96e2ad4f63389243760a93d1cc5ea8a

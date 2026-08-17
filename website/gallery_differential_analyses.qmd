@@ -21,7 +21,7 @@ render_gallery_section(
   subsection_descriptions = c(
     "Gene expression" = "Pseudobulk differential gene-expression results across configured models and contrasts.",
     "Chromatin accessibility" = "Pseudobulk differential accessibility of consensus-peak features.",
-    "Transcription-factor activity" = "Pseudobulk differential TF-activity results derived from ATAC data.",
+    "Motif-family accessibility" = "Pseudobulk differential accessibility results for JASPAR motif families derived from ATAC data.",
     "Cell-type composition" = "Donor-level composition models with effect and uncertainty summaries."
   )
 )

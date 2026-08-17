@@ -54,10 +54,10 @@ Review before continuing:
 
 - peak-based QC exclusions and retained cell counts;
 - LSI dimensions, metadata associations, UMAPs, and cluster stability;
-- consensus peaks, motif matches, TF activity, and marker-gene activity; and
+- consensus peaks, JASPAR motif-family accessibility, and marker-gene activity; and
 - coverage tracks and differential-accessibility summaries where configured.
 
-Key objects include `consensus_peak_tibble.ATAC.your_aggregation`, `metadata_w_cell_types_tibble.ATAC.your_aggregation`, and the BPCells peak and TF-activity matrices. Revisit the peak-calling, ATAC dimensions, QC, or marker-TF settings if the review fails.
+Key objects include `consensus_peak_tibble.ATAC.your_aggregation`, `metadata_w_cell_types_tibble.ATAC.your_aggregation`, and the BPCells peak and motif-family-accessibility matrices. Revisit the peak-calling, ATAC dimensions, QC, or marker-TF settings if the review fails.
 
 ## Multimodal checkpoint
 

@@ -32,7 +32,7 @@ rlang::list2(
       GEX_non_harmony_UMAP_embeddings_tibble = UMAP_embeddings_tibble.GEX_non_harmony,
       ATAC_UMAP_embeddings_tibble = UMAP_embeddings_tibble.ATAC,
       WNN_UMAP_embeddings_tibble = UMAP_embeddings_tibble.WNN,
-      TF_activity_matrix = TF_activity_BPCells_matrix.ATAC,
+      motif_family_accessibility_matrix = motif_family_accessibility_BPCells_matrix.ATAC,
       gene_features_df = gene_features_df,
       signac_annotation_GRanges = signac_annotation_GRanges,
       fragment_records_tibble = signac_fragment_records_tibble,

@@ -5,6 +5,21 @@ rlang::list2(
     command = "src/amulet_bpcells.cpp"
   ),
   tarchetypes::tar_file(
+    name = SCAVENGE_native_source_file,
+    description = "Track the shared-memory SCAVENGE permutation random-walk kernel",
+    command = "src/scavenge_random_walk.cpp"
+  ),
+  tarchetypes::tar_file(
+    name = JASPAR2026_vertebrate_familial_root_motifs_tf,
+    description = "Track the 233 official JASPAR2026 CORE vertebrate familial root motifs [part_of_graph:ATAC] [part_of_graph:seurat_export] [part_of_graph:differential_analyses]",
+    command = "resources/JASPAR2026_vertebrate_familial_root_motifs.tf"
+  ),
+  tarchetypes::tar_file(
+    name = JASPAR2026_vertebrate_motif_families_tsv,
+    description = "Track the official JASPAR2026 CORE vertebrate familial motif membership map [part_of_graph:ATAC] [part_of_graph:seurat_export] [part_of_graph:differential_analyses]",
+    command = "resources/JASPAR2026_vertebrate_motif_families.tsv"
+  ),
+  tarchetypes::tar_file(
     name = open_targets_credible_set_dataset_path,
     description = "Download the Open Targets 26.03 credible_set Parquet dataset for shared GWAS consumers [part_of_graph:genetic_enrichment_single_nucleus]",
     command = download_open_targets_dataset("https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.03/output/credible_set/")
@@ -40,22 +55,51 @@ rlang::list2(
     resources = get_tar_resources(cores_req = 1, RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = TF_motif_matrix_list,
-    description = "Load vertebrate TF motif matrices",
+    name = JASPAR_familial_root_motif_matrix_list,
+    description = "Load the 233 JASPAR2026 CORE vertebrate familial root motifs as sequence-scanning inputs [part_of_graph:ATAC] [part_of_graph:seurat_export] [part_of_graph:differential_analyses]",
     command = {
-      JASPAR2024_db <- RSQLite::dbConnect(
-        RSQLite::SQLite(),
-        JASPAR2024::db(JASPAR2024::JASPAR2024())
+      root_motifs <- read_JASPAR_familial_root_PFMatrixList(
+        JASPAR2026_vertebrate_familial_root_motifs_tf
       )
-      on.exit(RSQLite::dbDisconnect(JASPAR2024_db))
+      if (!identical(names(root_motifs), sprintf("cluster_%03d", seq_len(233L)))) {
+        stop("The vendored JASPAR2026 root-motif file must contain cluster_001 through cluster_233 in order.")
+      }
+      root_motifs
+    }
+  ),
+  targets::tar_target(
+    name = JASPAR_motif_family_members_tibble,
+    description = "Map individual JASPAR2026 CORE vertebrate motifs to 233 sequence-similarity families [part_of_graph:ATAC] [part_of_graph:seurat_export] [part_of_graph:differential_analyses]",
+    command = {
+      family_members <- readr::read_tsv(
+        JASPAR2026_vertebrate_motif_families_tsv,
+        show_col_types = FALSE
+      ) |>
+        dplyr::mutate(motif_feature = paste0(stringr::str_to_upper(TF_name), "__", motif_id))
+      root_motif_ids <- vapply(
+        seq_along(JASPAR_familial_root_motif_matrix_list),
+        function(index) TFBSTools::ID(JASPAR_familial_root_motif_matrix_list[[index]]),
+        character(1)
+      )
 
-      TF_motif_matrix_list <- TFBSTools::getMatrixSet(
-        x = JASPAR2024_db,
-        list(tax_group = "vertebrates", collection = "CORE", all_versions = FALSE)
+      validation <- c(
+        member_rows = nrow(family_members) == 1019L,
+        motif_families = dplyr::n_distinct(family_members$motif_family) == 233L,
+        unique_motif_features = !anyDuplicated(family_members$motif_feature),
+        root_motif_names = setequal(
+          family_members$motif_family,
+          root_motif_ids
+        )
       )
-      motif_names <- vapply(seq_along(TF_motif_matrix_list), \(idx) TFBSTools::name(TF_motif_matrix_list[[idx]]), character(1))
-      names(TF_motif_matrix_list) <- paste0(stringr::str_to_upper(motif_names), "__", names(TF_motif_matrix_list))
-      TF_motif_matrix_list
+      if (!all(validation)) {
+        stop(
+          "The vendored JASPAR2026 motif-family map failed: ",
+          paste(names(validation)[!validation], collapse = ", "),
+          "."
+        )
+      }
+
+      family_members
     }
   ),
   targets::tar_target(

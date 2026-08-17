@@ -1,0 +1,1020 @@
+motif_family	motif_id	TF_name	TF_class
+cluster_001	MA0655.1	JDP2	Basic leucine zipper factors (bZIP)
+cluster_001	MA0774.1	MEIS2	Homeo domain factors
+cluster_001	MA1633.2	BACH1	Basic leucine zipper factors (bZIP)
+cluster_001	MA1988.2	Atf3	Basic leucine zipper factors (bZIP)
+cluster_001	MA0591.2	Bach1::Mafk	Basic leucine zipper factors (bZIP)
+cluster_001	MA0496.4	MAFK	Basic leucine zipper factors (bZIP)
+cluster_001	MA1101.3	BACH2	Basic leucine zipper factors (bZIP)
+cluster_001	MA1634.2	BATF	Basic leucine zipper factors (bZIP)
+cluster_001	MA0462.3	BATF::JUN	Basic leucine zipper factors (bZIP)
+cluster_001	MA0489.3	Jun	Basic leucine zipper factors (bZIP)
+cluster_001	MA0835.3	BATF3	Basic leucine zipper factors (bZIP)
+cluster_001	MA1928.2	BNC2	C2H2 zinc finger factors
+cluster_001	MA0476.2	FOS	Basic leucine zipper factors (bZIP)
+cluster_001	MA0099.4	FOS::JUN	Basic leucine zipper factors (bZIP)
+cluster_001	MA1134.2	FOS::JUNB	Basic leucine zipper factors (bZIP)
+cluster_001	MA0490.3	JUNB	Basic leucine zipper factors (bZIP)
+cluster_001	MA1141.2	FOS::JUND	Basic leucine zipper factors (bZIP)
+cluster_001	MA0491.3	JUND	Basic leucine zipper factors (bZIP)
+cluster_001	MA1135.2	FOSB::JUNB	Basic leucine zipper factors (bZIP)
+cluster_001	MA0477.3	FOSL1	Basic leucine zipper factors (bZIP)
+cluster_001	MA1128.2	FOSL1::JUN	Basic leucine zipper factors (bZIP)
+cluster_001	MA1137.2	FOSL1::JUNB	Basic leucine zipper factors (bZIP)
+cluster_001	MA1142.2	FOSL1::JUND	Basic leucine zipper factors (bZIP)
+cluster_001	MA0478.2	FOSL2	Basic leucine zipper factors (bZIP)
+cluster_001	MA1130.2	FOSL2::JUN	Basic leucine zipper factors (bZIP)
+cluster_001	MA1138.2	FOSL2::JUNB	Basic leucine zipper factors (bZIP)
+cluster_001	MA1144.2	FOSL2::JUND	Basic leucine zipper factors (bZIP)
+cluster_001	MA0739.2	Hic1	C2H2 zinc finger factors
+cluster_001	MA0738.2	HIC2	C2H2 zinc finger factors
+cluster_001	MA1132.2	JUN::JUNB	Basic leucine zipper factors (bZIP)
+cluster_001	MA1520.2	MAF	Basic leucine zipper factors (bZIP)
+cluster_001	MA0501.2	MAF::NFE2	Basic leucine zipper factors (bZIP)
+cluster_001	MA0841.2	NFE2	Basic leucine zipper factors (bZIP)
+cluster_001	MA1521.2	MAFA	Basic leucine zipper factors (bZIP)
+cluster_001	MA0659.4	Mafg	Basic leucine zipper factors (bZIP)
+cluster_001	MA0498.3	MEIS1	Homeo domain factors
+cluster_001	MA0775.2	MEIS3	Homeo domain factors
+cluster_001	MA0150.3	Nfe2l2	Basic leucine zipper factors (bZIP)
+cluster_001	MA0670.2	NFIA	SMAD/NF-1 DNA-binding domain factors
+cluster_001	MA0161.3	NFIC	SMAD/NF-1 DNA-binding domain factors
+cluster_001	MA0671.2	NFIX	SMAD/NF-1 DNA-binding domain factors
+cluster_001	MA1114.2	PBX3	Homeo domain factors
+cluster_001	MA0782.3	PKNOX1	Homeo domain factors
+cluster_001	MA1592.2	ZNF274	C2H2 zinc finger factors
+cluster_001	MA0089.3	MAFG::NRF1	Basic leucine zipper factors (bZIP)::Uncharacterized
+cluster_001	MA2486.1	Fosb	Basic leucine zipper factors (bZIP)
+cluster_002	MA0145.2	Tfcp2l1	Grainyhead domain factors
+cluster_002	MA0641.1	ELF4	Tryptophan cluster factors
+cluster_002	MA1931.1	ELK1::HOXA1	Tryptophan cluster factors::Homeo domain factors
+cluster_002	MA1957.1	HOXB2::ELK1	Homeo domain factors::Tryptophan cluster factors
+cluster_002	MA2329.1	ZBTB11	C2H2 zinc finger factors
+cluster_002	MA2332.1	ZNF175	C2H2 zinc finger factors
+cluster_002	MA2340.1	Zbtb2	C2H2 zinc finger factors
+cluster_002	MA0598.4	EHF	Tryptophan cluster factors
+cluster_002	MA0473.4	ELF1	Tryptophan cluster factors
+cluster_002	MA1483.3	ELF2	Tryptophan cluster factors
+cluster_002	MA0640.3	ELF3	Tryptophan cluster factors
+cluster_002	MA0136.4	Elf5	Tryptophan cluster factors
+cluster_002	MA0028.3	ELK1	Tryptophan cluster factors
+cluster_002	MA1708.2	ETV7	Tryptophan cluster factors
+cluster_002	MA1932.2	ELK1::HOXB13	Tryptophan cluster factors::Homeo domain factors
+cluster_002	MA0686.2	SPDEF	Tryptophan cluster factors
+cluster_002	MA0759.3	ELK3	Tryptophan cluster factors
+cluster_002	MA0076.3	ELK4	Tryptophan cluster factors
+cluster_002	MA0760.2	ERF	Tryptophan cluster factors
+cluster_002	MA1934.2	ERF::FIGLA	Tryptophan cluster factors::Basic helix-loop-helix factors (bHLH)
+cluster_002	MA1935.2	ERF::FOXI1	Tryptophan cluster factors::Fork head/winged helix factors
+cluster_002	MA1936.2	ERF::FOXO1	Tryptophan cluster factors::Fork head/winged helix factors
+cluster_002	MA1937.2	ERF::HOXB13	Tryptophan cluster factors::Homeo domain factors
+cluster_002	MA0474.4	Erg	Tryptophan cluster factors
+cluster_002	MA0098.4	ETS1	Tryptophan cluster factors
+cluster_002	MA1484.2	ETS2	Tryptophan cluster factors
+cluster_002	MA0761.3	ETV1	Tryptophan cluster factors
+cluster_002	MA0762.2	ETV2	Tryptophan cluster factors
+cluster_002	MA1940.2	ETV2::DRGX	Tryptophan cluster factors::Homeo domain factors
+cluster_002	MA1941.2	ETV2::FIGLA	Tryptophan cluster factors::Basic helix-loop-helix factors (bHLH)
+cluster_002	MA1942.2	ETV2::FOXI1	Tryptophan cluster factors::Fork head/winged helix factors
+cluster_002	MA1943.2	ETV2::HOXB13	Tryptophan cluster factors::Homeo domain factors
+cluster_002	MA0763.2	ETV3	Tryptophan cluster factors
+cluster_002	MA0764.4	ETV4	Tryptophan cluster factors
+cluster_002	MA0765.4	ETV5	Tryptophan cluster factors
+cluster_002	MA1944.2	ETV5::DRGX	Tryptophan cluster factors::Homeo domain factors
+cluster_002	MA1945.2	ETV5::FIGLA	Tryptophan cluster factors::Basic helix-loop-helix factors (bHLH)
+cluster_002	MA1946.2	ETV5::FOXI1	Tryptophan cluster factors::Fork head/winged helix factors
+cluster_002	MA1947.2	ETV5::FOXO1	Tryptophan cluster factors::Fork head/winged helix factors
+cluster_002	MA1948.2	ETV5::HOXA2	Tryptophan cluster factors::Homeo domain factors
+cluster_002	MA0645.2	ETV6	Tryptophan cluster factors
+cluster_002	MA0156.4	FEV	Tryptophan cluster factors
+cluster_002	MA0475.3	FLI1	Tryptophan cluster factors
+cluster_002	MA1949.2	FLI1::DRGX	Homeo domain factors::Tryptophan cluster factors
+cluster_002	MA1950.2	FLI1::FOXI1	Tryptophan cluster factors::Fork head/winged helix factors
+cluster_002	MA1952.2	FOXJ2::ELF1	Fork head/winged helix factors::Tryptophan cluster factors
+cluster_002	MA1953.2	FOXO1::ELF1	Fork head/winged helix factors::Tryptophan cluster factors
+cluster_002	MA1954.2	FOXO1::ELK1	Fork head/winged helix factors::Tryptophan cluster factors
+cluster_002	MA1955.2	FOXO1::ELK3	Fork head/winged helix factors::Tryptophan cluster factors
+cluster_002	MA1956.2	FOXO1::FLI1	Fork head/winged helix factors::Tryptophan cluster factors
+cluster_002	MA0062.4	GABPA	Tryptophan cluster factors
+cluster_002	MA1958.2	HOXD12::ELK1	Homeo domain factors::Tryptophan cluster factors
+cluster_002	MA1508.2	IKZF1	C2H2 zinc finger factors
+cluster_002	MA1992.2	Ikzf3	C2H2 zinc finger factors
+cluster_002	MA0080.7	Spi1	Tryptophan cluster factors
+cluster_002	MA0081.3	SPIB	Tryptophan cluster factors
+cluster_002	MA0687.2	SPIC	Tryptophan cluster factors
+cluster_002	MA1966.2	TFAP4::ETV1	Basic helix-loop-helix factors (bHLH)::Tryptophan cluster factors
+cluster_002	MA1967.2	TFAP4::FLI1	Basic helix-loop-helix factors (bHLH)::Tryptophan cluster factors
+cluster_002	MA1709.2	ZIM3	C2H2 zinc finger factors
+cluster_002	MA2589.1	ZNF728	C2H2 zinc finger factors
+cluster_002	MA2594.1	DMTF1	Tryptophan cluster factors
+cluster_002	MA1589.3	ZNF140	C2H2 zinc finger factors
+cluster_003	MA0035.5	GATA1	Other C4 zinc finger-type factors
+cluster_003	MA0036.4	GATA2	Other C4 zinc finger-type factors
+cluster_003	MA0037.5	Gata3	Other C4 zinc finger-type factors
+cluster_003	MA0482.3	GATA4	Other C4 zinc finger-type factors
+cluster_003	MA0766.3	GATA5	Other C4 zinc finger-type factors
+cluster_003	MA1104.3	GATA6	Other C4 zinc finger-type factors
+cluster_003	MA0029.2	Mecom	C2H2 zinc finger factors
+cluster_003	MA1970.2	TRPS1	Other C4 zinc finger-type factors
+cluster_003	MA2557.1	ZGLP1	Other C4 zinc finger-type factors
+cluster_004	MA0119.1	NFIC::TLX1	SMAD/NF-1 DNA-binding domain factors::Homeo domain factors
+cluster_004	MA1643.2	NFIB	SMAD/NF-1 DNA-binding domain factors
+cluster_004	MA1527.2	NFIC	SMAD/NF-1 DNA-binding domain factors
+cluster_004	MA1528.2	NFIX	SMAD/NF-1 DNA-binding domain factors
+cluster_004	MA1712.2	ZNF454	C2H2 zinc finger factors
+cluster_005	MA0509.3	RFX1	Fork head/winged helix factors
+cluster_005	MA0798.3	RFX3	Fork head/winged helix factors
+cluster_005	MA2334.1	ZNF547	C2H2 zinc finger factors
+cluster_005	MA0600.3	RFX2	Fork head/winged helix factors
+cluster_005	MA0799.3	RFX4	Fork head/winged helix factors
+cluster_005	MA0510.3	RFX5	Fork head/winged helix factors
+cluster_005	MA1724.2	Rfx6	Fork head/winged helix factors
+cluster_005	MA1554.2	RFX7	Fork head/winged helix factors
+cluster_006	MA0486.2	HSF1	Heat shock factors
+cluster_006	MA0731.1	BCL6B	C2H2 zinc finger factors
+cluster_006	MA0770.1	HSF2	Heat shock factors
+cluster_006	MA0771.1	HSF4	Heat shock factors
+cluster_006	MA0463.3	BCL6	C2H2 zinc finger factors
+cluster_006	MA0137.4	STAT1	STAT domain factors
+cluster_006	MA0144.3	STAT3	STAT domain factors
+cluster_006	MA0518.2	Stat4	STAT domain factors
+cluster_006	MA1624.2	Stat5a	STAT domain factors
+cluster_006	MA0519.2	Stat5a::Stat5b	STAT domain factors
+cluster_006	MA1625.2	Stat5b	STAT domain factors
+cluster_006	MA0520.2	Stat6	STAT domain factors
+cluster_007	MA0613.1	FOXG1	Fork head/winged helix factors
+cluster_007	MA0614.1	Foxj2	Fork head/winged helix factors
+cluster_007	MA0042.2	FOXI1	Fork head/winged helix factors
+cluster_007	MA0033.2	FOXL1	Fork head/winged helix factors
+cluster_007	MA0660.1	MEF2B	MADS box factors
+cluster_007	MA0773.1	MEF2D	MADS box factors
+cluster_007	MA0845.1	FOXB1	Fork head/winged helix factors
+cluster_007	MA0032.2	FOXC1	Fork head/winged helix factors
+cluster_007	MA0848.1	FOXO4	Fork head/winged helix factors
+cluster_007	MA0849.1	FOXO6	Fork head/winged helix factors
+cluster_007	MA0850.1	FOXP3	Fork head/winged helix factors
+cluster_007	MA1489.1	FOXN3	Fork head/winged helix factors
+cluster_007	MA2117.1	FOXP4	Fork head/winged helix factors
+cluster_007	MA2118.1	FOXS1	Fork head/winged helix factors
+cluster_007	MA2124.1	Hmga1	TATA-binding proteins
+cluster_007	MA0877.4	BARHL1	Homeo domain factors
+cluster_007	MA0635.2	BARHL2	Homeo domain factors
+cluster_007	MA0480.3	Foxo1	Fork head/winged helix factors
+cluster_007	MA0148.5	FOXA1	Fork head/winged helix factors
+cluster_007	MA0047.4	FOXA2	Fork head/winged helix factors
+cluster_007	MA1683.2	FOXA3	Fork head/winged helix factors
+cluster_007	MA0846.2	FOXC2	Fork head/winged helix factors
+cluster_007	MA0031.2	FOXD1	Fork head/winged helix factors
+cluster_007	MA0847.4	FOXD2	Fork head/winged helix factors
+cluster_007	MA0041.3	FOXD3	Fork head/winged helix factors
+cluster_007	MA1487.3	FOXE1	Fork head/winged helix factors
+cluster_007	MA1606.2	Foxf1	Fork head/winged helix factors
+cluster_007	MA0030.2	FOXF2	Fork head/winged helix factors
+cluster_007	MA0851.2	Foxj3	Fork head/winged helix factors
+cluster_007	MA0852.3	FOXK1	Fork head/winged helix factors
+cluster_007	MA1103.3	FOXK2	Fork head/winged helix factors
+cluster_007	MA1607.2	Foxl2	Fork head/winged helix factors
+cluster_007	MA0157.4	Foxo3	Fork head/winged helix factors
+cluster_007	MA0481.4	FOXP1	Fork head/winged helix factors
+cluster_007	MA0593.2	FOXP2	Fork head/winged helix factors
+cluster_007	MA0040.2	Foxq1	Fork head/winged helix factors
+cluster_007	MA0052.5	MEF2A	MADS box factors
+cluster_007	MA0497.2	MEF2C	MADS box factors
+cluster_007	MA1125.2	ZNF384	C2H2 zinc finger factors
+cluster_007	MA2469.1	FOXM1	Fork head/winged helix factors
+cluster_007	MA2593.1	ZNF362	C2H2 zinc finger factors
+cluster_008	MA0068.2	PAX4	Paired box factors
+cluster_008	MA0724.1	VENTX	Homeo domain factors
+cluster_008	MA0158.2	HOXA5	Homeo domain factors
+cluster_008	MA0912.2	HOXD3	Homeo domain factors
+cluster_008	MA2093.1	HOXB1	Homeo domain factors
+cluster_008	MA2119.1	HOXA3	Homeo domain factors
+cluster_008	MA1547.2	PITX2	Homeo domain factors
+cluster_008	MA2333.1	ZNF35	C2H2 zinc finger factors
+cluster_008	MA2339.1	Nanog	Homeo domain factors
+cluster_008	MA0854.2	Alx1	Homeo domain factors
+cluster_008	MA0634.2	ALX3	Homeo domain factors
+cluster_008	MA1463.2	ARGFX	Homeo domain factors
+cluster_008	MA0875.2	BARX1	Homeo domain factors
+cluster_008	MA0876.2	BSX	Homeo domain factors
+cluster_008	MA0467.3	Crx	Homeo domain factors
+cluster_008	MA0879.3	DLX1	Homeo domain factors
+cluster_008	MA0885.3	Dlx2	Homeo domain factors
+cluster_008	MA0880.2	Dlx3	Homeo domain factors
+cluster_008	MA0881.2	Dlx4	Homeo domain factors
+cluster_008	MA1476.3	Dlx5	Homeo domain factors
+cluster_008	MA0882.2	DLX6	Homeo domain factors
+cluster_008	MA0883.2	Dmbx1	Homeo domain factors
+cluster_008	MA1480.2	DPRX	Homeo domain factors
+cluster_008	MA1481.2	DRGX	Homeo domain factors
+cluster_008	MA1495.2	HOXA1	Homeo domain factors
+cluster_008	MA0612.3	EMX1	Homeo domain factors
+cluster_008	MA0886.2	EMX2	Homeo domain factors
+cluster_008	MA0027.3	EN1	Homeo domain factors
+cluster_008	MA0642.3	EN2	Homeo domain factors
+cluster_008	MA0644.3	ESX1	Homeo domain factors
+cluster_008	MA0900.3	HOXA2	Homeo domain factors
+cluster_008	MA0887.2	EVX1	Homeo domain factors
+cluster_008	MA0888.2	EVX2	Homeo domain factors
+cluster_008	MA0682.3	PITX1	Homeo domain factors
+cluster_008	MA0889.2	GBX1	Homeo domain factors
+cluster_008	MA0890.2	GBX2	Homeo domain factors
+cluster_008	MA0648.2	GSC	Homeo domain factors
+cluster_008	MA0891.2	GSC2	Homeo domain factors
+cluster_008	MA0892.2	GSX1	Homeo domain factors
+cluster_008	MA0893.3	GSX2	Homeo domain factors
+cluster_008	MA0894.2	HESX1	Homeo domain factors
+cluster_008	MA0895.2	HMBOX1	Homeo domain factors
+cluster_008	MA0896.2	Hmx1	Homeo domain factors
+cluster_008	MA0898.2	Hmx3	Homeo domain factors
+cluster_008	MA1496.2	HOXA4	Homeo domain factors
+cluster_008	MA1497.2	HOXA6	Homeo domain factors
+cluster_008	MA1498.3	HOXA7	Homeo domain factors
+cluster_008	MA0902.3	HOXB2	Homeo domain factors
+cluster_008	MA0903.2	HOXB3	Homeo domain factors
+cluster_008	MA1499.2	HOXB4	Homeo domain factors
+cluster_008	MA0904.3	HOXB5	Homeo domain factors
+cluster_008	MA1500.2	HOXB6	Homeo domain factors
+cluster_008	MA1501.2	HOXB7	Homeo domain factors
+cluster_008	MA1502.2	HOXB8	Homeo domain factors
+cluster_008	MA1504.2	HOXC4	Homeo domain factors
+cluster_008	MA1505.2	HOXC8	Homeo domain factors
+cluster_008	MA1507.2	HOXD4	Homeo domain factors
+cluster_008	MA0910.3	HOXD8	Homeo domain factors
+cluster_008	MA1608.2	Isl1	Homeo domain factors
+cluster_008	MA0654.2	ISX	Homeo domain factors
+cluster_008	MA0618.2	LBX1	Homeo domain factors
+cluster_008	MA0699.2	LBX2	Homeo domain factors
+cluster_008	MA1518.3	Lhx1	Homeo domain factors
+cluster_008	MA0700.3	LHX2	Homeo domain factors
+cluster_008	MA0704.2	Lhx4	Homeo domain factors
+cluster_008	MA1519.2	LHX5	Homeo domain factors
+cluster_008	MA0658.2	LHX6	Homeo domain factors
+cluster_008	MA0705.2	Lhx8	Homeo domain factors
+cluster_008	MA0701.3	LHX9	Homeo domain factors
+cluster_008	MA0702.3	LMX1A	Homeo domain factors
+cluster_008	MA0703.3	LMX1B	Homeo domain factors
+cluster_008	MA0661.2	MEOX1	Homeo domain factors
+cluster_008	MA0706.2	MEOX2	Homeo domain factors
+cluster_008	MA0621.2	mix-a	Homeo domain factors
+cluster_008	MA0662.2	MIXL1	Homeo domain factors
+cluster_008	MA0707.3	MNX1	Homeo domain factors
+cluster_008	MA0666.3	MSX1	Homeo domain factors
+cluster_008	MA0708.3	MSX2	Homeo domain factors
+cluster_008	MA0709.2	Msx3	Homeo domain factors
+cluster_008	MA0060.4	NFYA	Heteromeric CCAAT-binding factors
+cluster_008	MA0502.3	NFYB	Heteromeric CCAAT-binding factors
+cluster_008	MA1644.2	NFYC	Heteromeric CCAAT-binding factors
+cluster_008	MA0674.2	NKX6-1	Homeo domain factors
+cluster_008	MA0675.2	NKX6-2	Homeo domain factors
+cluster_008	MA1530.2	NKX6-3	Homeo domain factors
+cluster_008	MA0125.2	Nobox	Homeo domain factors
+cluster_008	MA0710.2	NOTO	Homeo domain factors
+cluster_008	MA0711.2	OTX1	Homeo domain factors
+cluster_008	MA0712.3	OTX2	Homeo domain factors
+cluster_008	MA0132.3	PDX1	Homeo domain factors
+cluster_008	MA0714.2	PITX3	Homeo domain factors
+cluster_008	MA0628.2	POU6F1	Homeo domain factors
+cluster_008	MA1549.2	POU6F1	Homeo domain factors
+cluster_008	MA0793.2	POU6F2	Homeo domain factors
+cluster_008	MA0716.2	PRRX1	Homeo domain factors
+cluster_008	MA0075.4	PRRX2	Homeo domain factors
+cluster_008	MA0718.2	RAX	Homeo domain factors
+cluster_008	MA0717.2	RAX2	Homeo domain factors
+cluster_008	MA0719.2	RHOXF1	Homeo domain factors
+cluster_008	MA1963.2	SATB1	Homeo domain factors
+cluster_008	MA0630.2	SHOX	Homeo domain factors
+cluster_008	MA0720.2	Shox2	Homeo domain factors
+cluster_008	MA1577.2	TLX2	Homeo domain factors
+cluster_008	MA0721.2	UNCX	Homeo domain factors
+cluster_008	MA0722.2	VAX1	Homeo domain factors
+cluster_008	MA0723.3	VAX2	Homeo domain factors
+cluster_008	MA0725.2	VSX1	Homeo domain factors
+cluster_008	MA0726.2	VSX2	Homeo domain factors
+cluster_008	MA2597.1	LEUTX	Homeo domain factors
+cluster_008	MA2600.1	TPRX1	Homeo domain factors
+cluster_008	MA2677.1	HOXD1	Homeo domain factors
+cluster_009	MA0009.2	TBXT	T-Box factors
+cluster_009	MA0689.1	TBX20	T-Box factors
+cluster_009	MA0801.1	MGA	T-Box factors
+cluster_009	MA0803.1	TBX15	T-Box factors
+cluster_009	MA0805.1	TBX1	T-Box factors
+cluster_009	MA0806.1	TBX4	T-Box factors
+cluster_009	MA0807.1	TBX5	T-Box factors
+cluster_009	MA0690.3	TBX21	T-Box factors
+cluster_009	MA0800.2	EOMES	T-Box factors
+cluster_009	MA1566.3	TBX3	T-Box factors
+cluster_009	MA1960.2	MGA::EVX1	T-Box factors::Homeo domain factors
+cluster_009	MA0802.2	TBR1	T-Box factors
+cluster_009	MA1565.2	TBX18	T-Box factors
+cluster_009	MA0804.2	TBX19	T-Box factors
+cluster_009	MA0688.2	TBX2	T-Box factors
+cluster_009	MA1567.3	Tbx6	T-Box factors
+cluster_009	MA1657.2	ZNF652	C2H2 zinc finger factors
+cluster_009	MA2492.1	ZNF18	C2H2 zinc finger factors
+cluster_009	MA2543.1	ZBTB47	C2H2 zinc finger factors
+cluster_009	MA2629.1	GSC::TBX21	Homeo domain factors::T-Box factors
+cluster_010	MA0515.1	Sox6	High-mobility group (HMG) domain factors
+cluster_010	MA1421.1	TCF7L1	High-mobility group (HMG) domain factors
+cluster_010	MA2095.1	Sox7	High-mobility group (HMG) domain factors
+cluster_010	MA1563.2	SOX18	High-mobility group (HMG) domain factors
+cluster_010	MA0143.5	SOX2	High-mobility group (HMG) domain factors
+cluster_010	MA1991.2	Hnf1A	Homeo domain factors
+cluster_010	MA0768.3	Lef1	High-mobility group (HMG) domain factors
+cluster_010	MA0442.3	SOX10	High-mobility group (HMG) domain factors
+cluster_010	MA0869.3	Sox11	High-mobility group (HMG) domain factors
+cluster_010	MA1561.2	SOX12	High-mobility group (HMG) domain factors
+cluster_010	MA1120.2	SOX13	High-mobility group (HMG) domain factors
+cluster_010	MA1562.2	SOX14	High-mobility group (HMG) domain factors
+cluster_010	MA1152.2	SOX15	High-mobility group (HMG) domain factors
+cluster_010	MA0078.3	Sox17	High-mobility group (HMG) domain factors
+cluster_010	MA0514.3	Sox3	High-mobility group (HMG) domain factors
+cluster_010	MA0867.3	SOX4	High-mobility group (HMG) domain factors
+cluster_010	MA0087.3	Sox5	High-mobility group (HMG) domain factors
+cluster_010	MA0868.3	SOX8	High-mobility group (HMG) domain factors
+cluster_010	MA0077.2	SOX9	High-mobility group (HMG) domain factors
+cluster_010	MA0084.2	SRY	High-mobility group (HMG) domain factors
+cluster_010	MA0769.3	TCF7	High-mobility group (HMG) domain factors
+cluster_010	MA0523.2	TCF7L2	High-mobility group (HMG) domain factors
+cluster_010	MA2684.1	SOX30	High-mobility group (HMG) domain factors
+cluster_011	MA0696.1	ZIC1	C2H2 zinc finger factors
+cluster_011	MA0736.1	GLIS2	C2H2 zinc finger factors
+cluster_011	MA0737.1	GLIS3	C2H2 zinc finger factors
+cluster_011	MA1990.2	Gli1	C2H2 zinc finger factors
+cluster_011	MA0734.4	Gli2	C2H2 zinc finger factors
+cluster_011	MA1491.3	GLI3	C2H2 zinc finger factors
+cluster_011	MA0735.2	GLIS1	C2H2 zinc finger factors
+cluster_011	MA0694.2	ZBTB7B	C2H2 zinc finger factors
+cluster_011	MA0751.2	ZIC4	C2H2 zinc finger factors
+cluster_011	MA1584.2	ZIC5	C2H2 zinc finger factors
+cluster_011	MA0695.3	ZBTB7C	C2H2 zinc finger factors
+cluster_012	MA0653.1	IRF9	Tryptophan cluster factors
+cluster_012	MA1420.1	IRF5	Tryptophan cluster factors
+cluster_012	MA1509.1	IRF6	Tryptophan cluster factors
+cluster_012	MA0050.4	Irf1	Tryptophan cluster factors
+cluster_012	MA0051.2	IRF2	Tryptophan cluster factors
+cluster_012	MA1418.2	IRF3	Tryptophan cluster factors
+cluster_012	MA1419.2	IRF4	Tryptophan cluster factors
+cluster_012	MA0772.2	IRF7	Tryptophan cluster factors
+cluster_012	MA0652.2	IRF8	Tryptophan cluster factors
+cluster_012	MA1647.3	Prdm4	C2H2 zinc finger factors
+cluster_012	MA0517.2	STAT1::STAT2	STAT domain factors
+cluster_012	MA1623.2	Stat2	STAT domain factors
+cluster_012	MA1971.2	ZBED2	C2H2 zinc finger factors
+cluster_013	MA0071.1	RORA	Nuclear receptors with C4 zinc fingers
+cluster_013	MA2324.1	BCL11A	C2H2 zinc finger factors
+cluster_013	MA2337.1	Nr1h3	Nuclear receptors with C4 zinc fingers
+cluster_013	MA2338.1	Ppara	Nuclear receptors with C4 zinc fingers
+cluster_013	MA0592.4	ESRRA	Nuclear receptors with C4 zinc fingers
+cluster_013	MA0141.4	ESRRB	Nuclear receptors with C4 zinc fingers
+cluster_013	MA0643.2	Esrrg	Nuclear receptors with C4 zinc fingers
+cluster_013	MA1996.2	Nr1H2	Nuclear receptors with C4 zinc fingers
+cluster_013	MA1110.3	Nr1H4	Nuclear receptors with C4 zinc fingers
+cluster_013	MA1535.2	NR2C1	Nuclear receptors with C4 zinc fingers
+cluster_013	MA1536.2	NR2C2	Nuclear receptors with C4 zinc fingers
+cluster_013	MA1111.2	NR2F2	Nuclear receptors with C4 zinc fingers
+cluster_013	MA1112.3	NR4A1	Nuclear receptors with C4 zinc fingers
+cluster_013	MA0160.3	NR4A2	Nuclear receptors with C4 zinc fingers
+cluster_013	MA1541.2	NR6A1	Nuclear receptors with C4 zinc fingers
+cluster_013	MA0072.2	RORA	Nuclear receptors with C4 zinc fingers
+cluster_013	MA1150.2	RORB	Nuclear receptors with C4 zinc fingers
+cluster_013	MA1151.2	RORC	Nuclear receptors with C4 zinc fingers
+cluster_013	MA0597.3	THAP1	C2CH THAP-type zinc finger factors
+cluster_013	MA2504.1	BCL11A	C2H2 zinc finger factors
+cluster_013	MA2542.1	SCAND3	C2H2 zinc finger factors
+cluster_013	MA1540.3	Nr5a1	Nuclear receptors with C4 zinc fingers
+cluster_013	MA0505.3	Nr5a2	Nuclear receptors with C4 zinc fingers
+cluster_014	MA0117.3	Mafb	Basic leucine zipper factors (bZIP)
+cluster_014	MA0495.4	MAFF	Basic leucine zipper factors (bZIP)
+cluster_014	MA0842.3	NRL	Basic leucine zipper factors (bZIP)
+cluster_014	MA2495.1	ZNF490	C2H2 zinc finger factors
+cluster_014	MA2532.1	ZNF780B	C2H2 zinc finger factors
+cluster_015	MA0599.1	KLF5	C2H2 zinc finger factors
+cluster_015	MA0741.1	KLF16	C2H2 zinc finger factors
+cluster_015	MA0079.5	SP1	C2H2 zinc finger factors
+cluster_015	MA0516.3	SP2	C2H2 zinc finger factors
+cluster_015	MA0685.2	SP4	C2H2 zinc finger factors
+cluster_015	MA0740.2	KLF14	C2H2 zinc finger factors
+cluster_015	MA0742.2	KLF12	C2H2 zinc finger factors
+cluster_015	MA1511.2	KLF10	C2H2 zinc finger factors
+cluster_015	MA0493.3	KLF1	C2H2 zinc finger factors
+cluster_015	MA1512.2	KLF11	C2H2 zinc finger factors
+cluster_015	MA1513.2	KLF15	C2H2 zinc finger factors
+cluster_015	MA1515.2	KLF2	C2H2 zinc finger factors
+cluster_015	MA1516.2	KLF3	C2H2 zinc finger factors
+cluster_015	MA0039.5	KLF4	C2H2 zinc finger factors
+cluster_015	MA1517.2	KLF6	C2H2 zinc finger factors
+cluster_015	MA1959.2	KLF7	C2H2 zinc finger factors
+cluster_015	MA1107.3	KLF9	C2H2 zinc finger factors
+cluster_015	MA1522.2	MAZ	C2H2 zinc finger factors
+cluster_015	MA1961.2	PATZ1	C2H2 zinc finger factors
+cluster_015	MA0746.3	SP3	C2H2 zinc finger factors
+cluster_015	MA1965.2	SP5	C2H2 zinc finger factors
+cluster_015	MA0747.2	SP8	C2H2 zinc finger factors
+cluster_015	MA1564.2	SP9	C2H2 zinc finger factors
+cluster_015	MA1578.2	VEZF1	C2H2 zinc finger factors
+cluster_015	MA1627.2	Wt1	C2H2 zinc finger factors
+cluster_015	MA1653.2	ZNF148	C2H2 zinc finger factors
+cluster_015	MA0528.3	ZNF263	C2H2 zinc finger factors
+cluster_015	MA1630.3	ZNF281	C2H2 zinc finger factors
+cluster_015	MA1599.2	ZNF682	C2H2 zinc finger factors
+cluster_015	MA0753.3	ZNF740	C2H2 zinc finger factors
+cluster_015	MA2512.1	ZNF648	C2H2 zinc finger factors
+cluster_015	MA2565.1	ZNF70	C2H2 zinc finger factors
+cluster_015	MA2570.1	ZNF746	C2H2 zinc finger factors
+cluster_015	MA2578.1	ZBTB8A	C2H2 zinc finger factors
+cluster_015	MA2681.1	KLF8	C2H2 zinc finger factors
+cluster_016	MA0665.1	MSC	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA0667.1	MYF6	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA0691.1	TFAP4	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA0783.1	PKNOX2	Homeo domain factors
+cluster_016	MA0796.1	TGIF1	Homeo domain factors
+cluster_016	MA0797.1	TGIF2	Homeo domain factors
+cluster_016	MA0816.1	Ascl2	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA1485.1	FERD3L	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA1571.1	TGIF2LX	Homeo domain factors
+cluster_016	MA1572.1	TGIF2LY	Homeo domain factors
+cluster_016	MA1100.3	ASCL1	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA1631.2	ASCL1	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA1467.3	Atoh1	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA1472.3	Bhlha15	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA1635.2	BHLHE22	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA0820.2	FIGLA	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA0048.3	NHLH1	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA0522.4	TCF3	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA1638.2	HAND2	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA0100.4	MYB	Tryptophan cluster factors
+cluster_016	MA1641.2	MYF5	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA0499.3	MYOD1	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA0500.3	MYOG	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA1109.2	NEUROD1	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA1993.2	Neurod2	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA0668.3	Neurod2	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA1642.2	NEUROG2	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA1997.2	Olig2	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA1542.2	OSR1	C2H2 zinc finger factors
+cluster_016	MA1646.2	OSR2	C2H2 zinc finger factors
+cluster_016	MA1619.2	Ptf1A	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA1620.2	Ptf1A	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA1558.2	SNAI1	C2H2 zinc finger factors
+cluster_016	MA0745.3	SNAI2	C2H2 zinc finger factors
+cluster_016	MA1559.2	SNAI3	C2H2 zinc finger factors
+cluster_016	MA0521.3	Tcf12	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA1648.2	TCF12	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA0832.2	Tcf21	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA0830.3	TCF4	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA1123.3	TWIST1	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA0633.3	Twist2	Basic helix-loop-helix factors (bHLH)
+cluster_016	MA0103.4	ZEB1	Homeo domain factors
+cluster_016	MA1628.2	Zic1::Zic2	C2H2 zinc finger factors
+cluster_016	MA1629.2	Zic2	C2H2 zinc finger factors
+cluster_016	MA0697.3	Zic3	C2H2 zinc finger factors
+cluster_016	MA1593.2	ZNF317	C2H2 zinc finger factors
+cluster_016	MA2536.1	PRDM13	C2H2 zinc finger factors
+cluster_016	MA2686.1	ZEB2	Homeo domain factors
+cluster_016	MA1618.2	Ptf1A	Basic helix-loop-helix factors (bHLH)
+cluster_017	MA0069.1	PAX6	Paired box factors
+cluster_017	MA0779.2	PAX1	Paired box factors
+cluster_017	MA0781.2	PAX9	Paired box factors
+cluster_017	MA0067.3	PAX2	Paired box factors
+cluster_017	MA1546.2	PAX3	Paired box factors
+cluster_017	MA2094.1	PAX8	Paired box factors
+cluster_017	MA2525.1	ZNF699	C2H2 zinc finger factors
+cluster_018	MA0808.1	TEAD3	TEA domain factors
+cluster_018	MA0606.3	Nfat5	Rel homology region (RHR) factors
+cluster_018	MA0624.3	Nfatc1	Rel homology region (RHR) factors
+cluster_018	MA0152.3	Nfatc2	Rel homology region (RHR) factors
+cluster_018	MA0625.3	NFATC3	Rel homology region (RHR) factors
+cluster_018	MA1525.3	NFATC4	Rel homology region (RHR) factors
+cluster_018	MA1116.2	RBPJ	Rel homology region (RHR) factors
+cluster_018	MA0090.4	TEAD1	TEA domain factors
+cluster_018	MA1121.2	TEAD2	TEA domain factors
+cluster_018	MA0809.3	TEAD4	TEA domain factors
+cluster_018	MA2676.1	HSF5	Heat shock factors
+cluster_019	MA0471.3	E2F6	Fork head/winged helix factors
+cluster_019	MA0865.3	E2F8	Fork head/winged helix factors
+cluster_019	MA1122.2	TFDP1	Fork head/winged helix factors
+cluster_019	MA0748.3	YY2	C2H2 zinc finger factors
+cluster_019	MA1583.2	ZFP57	C2H2 zinc finger factors
+cluster_020	MA1654.2	ZNF16	C2H2 zinc finger factors
+cluster_020	MA1977.2	ZNF324	C2H2 zinc finger factors
+cluster_021	MA1616.2	Prdm15	C2H2 zinc finger factors
+cluster_021	MA1118.2	SIX1	Homeo domain factors
+cluster_021	MA1119.2	SIX2	Homeo domain factors
+cluster_021	MA2001.2	Six4	Homeo domain factors
+cluster_022	MA2336.1	ZSCAN21	C2H2 zinc finger factors
+cluster_022	MA2514.1	ZNF853	C2H2 zinc finger factors
+cluster_023	MA0155.1	INSM1	C2H2 zinc finger factors
+cluster_023	MA1102.3	CTCFL	C2H2 zinc finger factors
+cluster_023	MA2517.1	ZSCAN25	C2H2 zinc finger factors
+cluster_023	MA2576.1	ZXDB	C2H2 zinc finger factors
+cluster_023	MA2577.1	ZXDC	C2H2 zinc finger factors
+cluster_023	MA2596.1	ZXDA	C2H2 zinc finger factors
+cluster_024	MA0914.2	ISL2	Homeo domain factors
+cluster_024	MA1523.2	MSANTD3	Tryptophan cluster factors
+cluster_024	MA1994.2	Nkx2-1	Homeo domain factors
+cluster_024	MA1645.2	NKX2-2	Homeo domain factors
+cluster_024	MA0672.2	NKX2-3	Homeo domain factors
+cluster_024	MA2003.2	NKX2-4	Homeo domain factors
+cluster_024	MA0063.3	NKX2-5	Homeo domain factors
+cluster_024	MA0673.2	NKX2-8	Homeo domain factors
+cluster_024	MA0124.3	Nkx3-1	Homeo domain factors
+cluster_024	MA0122.4	Nkx3-2	Homeo domain factors
+cluster_024	MA2598.1	MSANTD1	Tryptophan cluster factors
+cluster_025	MA2102.1	ZBTB17	C2H2 zinc finger factors
+cluster_025	MA0754.3	CUX1	Homeo domain factors
+cluster_025	MA0755.2	CUX2	Homeo domain factors
+cluster_025	MA0756.3	ONECUT2	Homeo domain factors
+cluster_025	MA1639.2	MEIS1	Homeo domain factors
+cluster_025	MA1640.2	MEIS2	Homeo domain factors
+cluster_025	MA0679.3	ONECUT1	Homeo domain factors
+cluster_025	MA0757.2	ONECUT3	Homeo domain factors
+cluster_025	MA0070.2	PBX1	Homeo domain factors
+cluster_025	MA1113.3	PBX2	Homeo domain factors
+cluster_026	MA0115.1	NR1H2::RXRA	Nuclear receptors with C4 zinc fingers
+cluster_026	MA0512.2	Rxra	Nuclear receptors with C4 zinc fingers
+cluster_026	MA0728.1	Nr2F6	Nuclear receptors with C4 zinc fingers
+cluster_026	MA0729.1	RARA	Nuclear receptors with C4 zinc fingers
+cluster_026	MA0855.1	RXRB	Nuclear receptors with C4 zinc fingers
+cluster_026	MA0856.1	RXRG	Nuclear receptors with C4 zinc fingers
+cluster_026	MA0857.1	Rarb	Nuclear receptors with C4 zinc fingers
+cluster_026	MA1532.2	NR1D2	Nuclear receptors with C4 zinc fingers
+cluster_026	MA1494.2	HNF4A	Nuclear receptors with C4 zinc fingers
+cluster_026	MA1531.2	NR1D1	Nuclear receptors with C4 zinc fingers
+cluster_026	MA0504.2	NR2C2	Nuclear receptors with C4 zinc fingers
+cluster_026	MA0017.3	NR2F1	Nuclear receptors with C4 zinc fingers
+cluster_026	MA1537.2	NR2F1	Nuclear receptors with C4 zinc fingers
+cluster_026	MA0677.2	Nr2f6	Nuclear receptors with C4 zinc fingers
+cluster_026	MA1148.2	PPARA::RXRA	Nuclear receptors with C4 zinc fingers
+cluster_026	MA1550.2	PPARD	Nuclear receptors with C4 zinc fingers
+cluster_026	MA0065.3	Pparg::Rxra	Nuclear receptors with C4 zinc fingers
+cluster_026	MA0859.2	Rarg	Nuclear receptors with C4 zinc fingers
+cluster_026	MA1574.2	THRB	Nuclear receptors with C4 zinc fingers
+cluster_027	MA2101.1	ZNF677	C2H2 zinc finger factors
+cluster_027	MA0629.2	Rhox11	Homeo domain factors
+cluster_027	MA1725.2	ZNF189	C2H2 zinc finger factors
+cluster_027	MA1655.2	ZNF341	C2H2 zinc finger factors
+cluster_027	MA1730.2	ZNF708	C2H2 zinc finger factors
+cluster_027	MA2568.1	ZNF568	C2H2 zinc finger factors
+cluster_028	MA0003.5	TFAP2A	Basic helix-span-helix factors (bHSH)
+cluster_028	MA0812.2	TFAP2B	Basic helix-span-helix factors (bHSH)
+cluster_028	MA0814.3	TFAP2C	Basic helix-span-helix factors (bHSH)
+cluster_028	MA1569.2	TFAP2E	Basic helix-span-helix factors (bHSH)
+cluster_028	MA1581.2	ZBTB6	C2H2 zinc finger factors
+cluster_029	MA0153.2	HNF1B	Homeo domain factors
+cluster_029	MA0780.1	PAX3	Paired box factors
+cluster_029	MA0853.2	Alx4	Homeo domain factors
+cluster_029	MA0874.2	Arx	Homeo domain factors
+cluster_029	MA0046.3	HNF1A	Homeo domain factors
+cluster_029	MA0135.2	Lhx3	Homeo domain factors
+cluster_029	MA0680.3	Pax7	Paired box factors
+cluster_029	MA0790.2	POU4F1	Homeo domain factors
+cluster_029	MA0683.2	POU4F2	Homeo domain factors
+cluster_029	MA0791.2	POU4F3	Homeo domain factors
+cluster_030	MA0142.1	Pou5f1::Sox2	Homeo domain factors::High-mobility group (HMG) domain factors
+cluster_030	MA0787.1	POU3F2	Homeo domain factors
+cluster_030	MA0788.1	POU3F3	Homeo domain factors
+cluster_030	MA0789.1	POU3F4	Homeo domain factors
+cluster_030	MA0792.1	POU5F1B	Homeo domain factors
+cluster_030	MA1962.1	POU2F1::SOX2	Homeo domain factors::High-mobility group (HMG) domain factors
+cluster_030	MA0784.3	POU1F1	Homeo domain factors
+cluster_030	MA0785.2	POU2F1	Homeo domain factors
+cluster_030	MA0507.3	POU2F2	Homeo domain factors
+cluster_030	MA0627.3	POU2F3	Homeo domain factors
+cluster_030	MA0786.2	POU3F1	Homeo domain factors
+cluster_030	MA1115.2	POU5F1	Homeo domain factors
+cluster_031	MA1650.2	ZBTB14	C2H2 zinc finger factors
+cluster_031	MA2515.1	ZNF865	C2H2 zinc finger factors
+cluster_032	MA2323.1	Pgr	Nuclear receptors with C4 zinc fingers
+cluster_032	MA2327.1	PGR	Nuclear receptors with C4 zinc fingers
+cluster_032	MA0007.4	Ar	Nuclear receptors with C4 zinc fingers
+cluster_032	MA0113.4	NR3C1	Nuclear receptors with C4 zinc fingers
+cluster_032	MA0727.2	NR3C2	Nuclear receptors with C4 zinc fingers
+cluster_033	MA0676.1	Nr2e1	Nuclear receptors with C4 zinc fingers
+cluster_033	MA0114.5	HNF4A	Nuclear receptors with C4 zinc fingers
+cluster_033	MA0484.3	HNF4G	Nuclear receptors with C4 zinc fingers
+cluster_033	MA1534.2	NR1I3	Nuclear receptors with C4 zinc fingers
+cluster_033	MA0693.4	Vdr	Nuclear receptors with C4 zinc fingers
+cluster_033	MA2506.1	MYT1	C2HC
+cluster_033	MA2682.1	MYT1L	C2HC
+cluster_034	MA2550.1	ZNF275	C2H2 zinc finger factors
+cluster_034	MA2569.1	ZNF676	C2H2 zinc finger factors
+cluster_035	MA1555.1	RXRB	Nuclear receptors with C4 zinc fingers
+cluster_035	MA1556.1	RXRG	Nuclear receptors with C4 zinc fingers
+cluster_035	MA1985.1	ZNF669	C2H2 zinc finger factors
+cluster_035	MA1552.2	RARB	Nuclear receptors with C4 zinc fingers
+cluster_035	MA1553.2	RARG	Nuclear receptors with C4 zinc fingers
+cluster_036	MA1731.2	ZNF768	C2H2 zinc finger factors
+cluster_036	MA2591.1	ZNF850	C2H2 zinc finger factors
+cluster_037	MA2125.1	Zfp809	C2H2 zinc finger factors
+cluster_037	MA2341.1	FEZF2	C2H2 zinc finger factors
+cluster_037	MA1979.2	ZNF416	C2H2 zinc finger factors
+cluster_038	MA0472.2	EGR2	C2H2 zinc finger factors
+cluster_038	MA0162.5	EGR1	C2H2 zinc finger factors
+cluster_038	MA0732.2	EGR3	C2H2 zinc finger factors
+cluster_038	MA0733.2	EGR4	C2H2 zinc finger factors
+cluster_038	MA2546.1	ZNF131	C2H2 zinc finger factors
+cluster_038	MA2583.1	ZNF142	C2H2 zinc finger factors
+cluster_038	MA0506.3	Nrf1	Uncharacterized
+cluster_039	MA0646.2	GCM1	GCM domain factors
+cluster_039	MA0767.2	GCM2	GCM domain factors
+cluster_039	MA2579.1	ZBTB8B	C2H2 zinc finger factors
+cluster_040	MA0878.3	CDX1	Homeo domain factors
+cluster_040	MA0465.3	CDX2	Homeo domain factors
+cluster_040	MA1473.2	CDX4	Homeo domain factors
+cluster_040	MA0650.4	Hoxa13	Homeo domain factors
+cluster_040	MA0901.3	HOXB13	Homeo domain factors
+cluster_040	MA0899.2	HOXA10	Homeo domain factors
+cluster_040	MA0911.2	Hoxa11	Homeo domain factors
+cluster_040	MA1503.2	HOXB9	Homeo domain factors
+cluster_040	MA0905.2	HOXC10	Homeo domain factors
+cluster_040	MA0651.3	HOXC11	Homeo domain factors
+cluster_040	MA0906.2	HOXC12	Homeo domain factors
+cluster_040	MA0907.2	HOXC13	Homeo domain factors
+cluster_040	MA0485.3	HOXC9	Homeo domain factors
+cluster_040	MA1506.2	HOXD10	Homeo domain factors
+cluster_040	MA0908.2	HOXD11	Homeo domain factors
+cluster_040	MA0873.2	HOXD12	Homeo domain factors
+cluster_040	MA0909.4	Hoxd13	Homeo domain factors
+cluster_040	MA0913.3	HOXD9	Homeo domain factors
+cluster_041	MA2123.1	Hand1	Basic helix-loop-helix factors (bHLH)
+cluster_041	MA0092.2	Hand1::Tcf3	Basic helix-loop-helix factors (bHLH)
+cluster_041	MA1964.2	SMAD2	SMAD/NF-1 DNA-binding domain factors
+cluster_041	MA1153.2	Smad4	SMAD/NF-1 DNA-binding domain factors
+cluster_041	MA1579.2	ZBTB26	C2H2 zinc finger factors
+cluster_042	MA0151.1	Arid3a	ARID
+cluster_042	MA0601.2	Arid3b	ARID
+cluster_042	MA2552.1	ZNF367	C2H2 zinc finger factors
+cluster_042	MA2575.1	ZNF536	C2H2 zinc finger factors
+cluster_042	MA2685.1	TLX3	Homeo domain factors
+cluster_043	MA0813.1	TFAP2B	Basic helix-span-helix factors (bHSH)
+cluster_043	MA0815.1	TFAP2C	Basic helix-span-helix factors (bHSH)
+cluster_043	MA0872.1	TFAP2A	Basic helix-span-helix factors (bHSH)
+cluster_043	MA2122.1	Ebf4	Rel homology region (RHR) factors
+cluster_043	MA0154.5	EBF1	Rel homology region (RHR) factors
+cluster_043	MA1604.2	Ebf2	Rel homology region (RHR) factors
+cluster_043	MA1637.2	EBF3	Rel homology region (RHR) factors
+cluster_043	MA0810.2	TFAP2A	Basic helix-span-helix factors (bHSH)
+cluster_043	MA0811.2	TFAP2B	Basic helix-span-helix factors (bHSH)
+cluster_043	MA0524.3	TFAP2C	Basic helix-span-helix factors (bHSH)
+cluster_043	MA0116.2	ZNF423	C2H2 zinc finger factors
+cluster_044	MA2002.2	Zfp335	C2H2 zinc finger factors
+cluster_044	MA2470.1	ZBTB48	C2H2 zinc finger factors
+cluster_044	MA2572.1	ZNF827	C2H2 zinc finger factors
+cluster_045	MA0004.1	Arnt	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0608.1	Creb3l2	Basic leucine zipper factors (bZIP)
+cluster_045	MA0636.1	BHLHE41	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0663.1	MLX	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0823.1	HEY1	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA1493.1	HES6	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0821.2	HES5	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0831.3	TFE3	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA2325.1	EPAS1	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0006.2	Ahr::Arnt	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0259.2	ARNT::HIF1A	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA1464.2	ARNT2	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0603.2	Arntl	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0464.3	BHLHE40	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0819.3	CLOCK	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0828.3	SREBF2	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0058.4	MAX	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA1099.3	HES1	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0616.3	HES2	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0649.2	HEY2	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA1106.2	HIF1A	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0059.2	MAX::MYC	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0147.4	MYC	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0620.4	MITF	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0622.2	Mlxip	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0664.2	MLXIPL	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0825.2	MNT	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0104.5	MYCN	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0626.2	Npas2	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA1560.2	SOHLH2	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0829.3	SREBF1	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0632.3	TCFL5	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0692.2	TFEB	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0871.3	TFEC	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0093.4	USF1	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA0526.5	USF2	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA2601.1	USF3	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA2628.1	HELT	Basic helix-loop-helix factors (bHLH)
+cluster_045	MA2674.1	HIF3A	Homeo domain factors
+cluster_045	MA2683.1	NPAS3	Basic helix-loop-helix factors (bHLH)
+cluster_046	MA0163.1	PLAG1	C2H2 zinc finger factors
+cluster_046	MA2510.1	ZBTB41	C2H2 zinc finger factors
+cluster_047	MA1684.1	Foxn1	Fork head/winged helix factors
+cluster_047	MA0131.3	HINFP	C2H2 zinc finger factors
+cluster_048	MA0595.1	SREBF1	Basic helix-loop-helix factors (bHLH)
+cluster_048	MA0596.1	SREBF2	Basic helix-loop-helix factors (bHLH)
+cluster_048	MA0604.1	Atf1	Basic leucine zipper factors (bZIP)
+cluster_048	MA1127.1	FOSB::JUN	Basic leucine zipper factors (bZIP)
+cluster_048	MA1129.1	FOSL1::JUN	Basic leucine zipper factors (bZIP)
+cluster_048	MA1136.1	FOSB::JUNB	Basic leucine zipper factors (bZIP)
+cluster_048	MA1632.2	ATF2	Basic leucine zipper factors (bZIP)
+cluster_048	MA0605.3	ATF3	Basic leucine zipper factors (bZIP)
+cluster_048	MA0834.2	ATF7	Basic leucine zipper factors (bZIP)
+cluster_048	MA0488.2	JUN	Basic leucine zipper factors (bZIP)
+cluster_048	MA0018.5	CREB1	Basic leucine zipper factors (bZIP)
+cluster_048	MA1475.2	CREB3L4	Basic leucine zipper factors (bZIP)
+cluster_048	MA0840.2	Creb5	Basic leucine zipper factors (bZIP)
+cluster_048	MA0609.3	CREM	Basic leucine zipper factors (bZIP)
+cluster_048	MA1951.2	FOS	Basic leucine zipper factors (bZIP)
+cluster_048	MA1126.2	FOS::JUN	Basic leucine zipper factors (bZIP)
+cluster_048	MA1140.3	JUNB	Basic leucine zipper factors (bZIP)
+cluster_048	MA0492.2	JUND	Basic leucine zipper factors (bZIP)
+cluster_048	MA1143.2	FOSL1::JUND	Basic leucine zipper factors (bZIP)
+cluster_048	MA1131.2	FOSL2::JUN	Basic leucine zipper factors (bZIP)
+cluster_048	MA1139.2	FOSL2::JUNB	Basic leucine zipper factors (bZIP)
+cluster_048	MA1145.2	FOSL2::JUND	Basic leucine zipper factors (bZIP)
+cluster_048	MA0656.2	JDP2	Basic leucine zipper factors (bZIP)
+cluster_048	MA1133.2	JUN::JUNB	Basic leucine zipper factors (bZIP)
+cluster_049	MA0647.2	GRHL1	Grainyhead domain factors
+cluster_049	MA1105.3	GRHL2	Grainyhead domain factors
+cluster_049	MA0743.3	SCRT1	C2H2 zinc finger factors
+cluster_049	MA0744.3	SCRT2	C2H2 zinc finger factors
+cluster_049	MA1968.2	TFCP2	Grainyhead domain factors
+cluster_050	MA0111.1	Spz1	Basic helix-loop-helix factors (bHLH)
+cluster_050	MA0631.2	Six3	Homeo domain factors
+cluster_051	MA2096.1	ZNF524	C2H2 zinc finger factors
+cluster_051	MA1649.2	ZBTB12	C2H2 zinc finger factors
+cluster_052	MA1573.2	Thap11	C2CH THAP-type zinc finger factors
+cluster_052	MA0088.3	ZNF143	C2H2 zinc finger factors
+cluster_053	MA0095.4	Yy1	C2H2 zinc finger factors
+cluster_053	MA1651.2	ZFP42	C2H2 zinc finger factors
+cluster_054	MA0610.2	DMRT3	DM-type intertwined zinc finger factors
+cluster_054	MA1707.2	DMRTA1	DM-type intertwined zinc finger factors
+cluster_054	MA1478.2	DMRTA2	DM-type intertwined zinc finger factors
+cluster_054	MA1479.2	DMRTC2	DM-type intertwined zinc finger factors
+cluster_055	MA0862.1	GMEB2	SAND domain factors
+cluster_055	MA0615.2	Gmeb1	SAND domain factors
+cluster_055	MA2571.1	ZNF800	C2H2 zinc finger factors
+cluster_056	MA2491.1	ZNF134	C2H2 zinc finger factors
+cluster_056	MA2529.1	ZNF772	C2H2 zinc finger factors
+cluster_057	MA0669.1	NEUROG2	Basic helix-loop-helix factors (bHLH)
+cluster_057	MA0678.1	OLIG2	Basic helix-loop-helix factors (bHLH)
+cluster_057	MA0826.1	OLIG1	Basic helix-loop-helix factors (bHLH)
+cluster_057	MA0827.1	OLIG3	Basic helix-loop-helix factors (bHLH)
+cluster_057	MA1468.1	ATOH7	Basic helix-loop-helix factors (bHLH)
+cluster_057	MA1570.1	TFAP4	Basic helix-loop-helix factors (bHLH)
+cluster_057	MA0623.2	NEUROG1	Basic helix-loop-helix factors (bHLH)
+cluster_057	MA0607.2	BHLHA15	Basic helix-loop-helix factors (bHLH)
+cluster_057	MA0818.2	BHLHE22	Basic helix-loop-helix factors (bHLH)
+cluster_057	MA0461.3	Atoh1	Basic helix-loop-helix factors (bHLH)
+cluster_057	MA0817.2	BHLHE23	Basic helix-loop-helix factors (bHLH)
+cluster_057	MA1524.3	Msgn1	Basic helix-loop-helix factors (bHLH)
+cluster_057	MA0091.2	TAL1::TCF3	Basic helix-loop-helix factors (bHLH)
+cluster_057	MA1568.2	TCF21	Basic helix-loop-helix factors (bHLH)
+cluster_057	MA0698.2	ZBTB18	C2H2 zinc finger factors
+cluster_058	MA2511.1	ZNF335	C2H2 zinc finger factors
+cluster_058	MA2588.1	FAM200B	C2H2 zinc finger factors
+cluster_058	MA0750.4	ZBTB7A	C2H2 zinc finger factors
+cluster_059	MA0024.3	E2F1	Fork head/winged helix factors
+cluster_059	MA0864.3	E2F2	Fork head/winged helix factors
+cluster_059	MA0469.4	E2F3	Fork head/winged helix factors
+cluster_059	MA0470.3	E2F4	Fork head/winged helix factors
+cluster_059	MA2535.1	MYPOP	Tryptophan cluster factors
+cluster_060	MA1728.2	ZNF549	C2H2 zinc finger factors
+cluster_060	MA2582.1	ZNF121	C2H2 zinc finger factors
+cluster_061	MA0749.2	ZBED1	C2H2 zinc finger factors
+cluster_061	MA0527.2	ZBTB33	C2H2 zinc finger factors
+cluster_061	MA2503.1	Banp	ARID
+cluster_062	MA2326.1	IKZF2	C2H2 zinc finger factors
+cluster_062	MA0508.4	PRDM1	C2H2 zinc finger factors
+cluster_063	MA2457.1	ZNF260	C2H2 zinc finger factors
+cluster_063	MA2458.1	ZNF146	C2H2 zinc finger factors
+cluster_064	MA1713.2	ZNF610	C2H2 zinc finger factors
+cluster_064	MA2581.1	ZNF66	C2H2 zinc finger factors
+cluster_065	MA0838.1	CEBPG	Basic leucine zipper factors (bZIP)
+cluster_065	MA0833.3	ATF4	Basic leucine zipper factors (bZIP)
+cluster_065	MA0102.5	CEBPA	Basic leucine zipper factors (bZIP)
+cluster_065	MA0466.4	CEBPB	Basic leucine zipper factors (bZIP)
+cluster_065	MA0836.3	CEBPD	Basic leucine zipper factors (bZIP)
+cluster_065	MA0837.3	CEBPE	Basic leucine zipper factors (bZIP)
+cluster_065	MA1636.2	CEBPG	Basic leucine zipper factors (bZIP)
+cluster_065	MA0639.2	DBP	Basic leucine zipper factors (bZIP)
+cluster_065	MA0843.2	TEF	Basic leucine zipper factors (bZIP)
+cluster_065	MA0043.4	HLF	Basic leucine zipper factors (bZIP)
+cluster_065	MA0025.3	NFIL3	Basic leucine zipper factors (bZIP)
+cluster_066	MA0101.1	REL	Rel homology region (RHR) factors
+cluster_066	MA0107.1	RELA	Rel homology region (RHR) factors
+cluster_066	MA0105.4	NFKB1	Rel homology region (RHR) factors
+cluster_066	MA0778.2	NFKB2	Rel homology region (RHR) factors
+cluster_066	MA2534.1	ZNF831	C2H2 zinc finger factors
+cluster_067	MA2603.1	ZFTA	C2H2 zinc finger factors
+cluster_067	MA1976.3	ZNF320	C2H2 zinc finger factors
+cluster_068	MA1587.1	ZNF135	C2H2 zinc finger factors
+cluster_068	MA1596.1	ZNF460	C2H2 zinc finger factors
+cluster_069	MA1603.2	Dmrt1	DM-type intertwined zinc finger factors
+cluster_069	MA2484.1	Dmrtb1	DM-type intertwined zinc finger factors
+cluster_070	MA0468.1	DUX4	Homeo domain factors
+cluster_070	MA0713.1	PHOX2A	Homeo domain factors
+cluster_070	MA0715.1	PROP1	Homeo domain factors
+cluster_070	MA0884.2	DUXA	Homeo domain factors
+cluster_070	MA0611.3	Dux	Homeo domain factors
+cluster_070	MA0681.3	PHOX2B	Homeo domain factors
+cluster_070	MA2485.1	Duxbl1	Helix-Turn-Helix
+cluster_071	MA2126.1	Zfp961	C2H2 zinc finger factors
+cluster_071	MA1727.2	ZNF417	C2H2 zinc finger factors
+cluster_071	MA2602.1	ZBED5	C2H2 zinc finger factors
+cluster_072	MA1721.2	ZNF93	C2H2 zinc finger factors
+cluster_072	MA2538.1	CGGBP1	C2H2 zinc finger factors
+cluster_073	MA0014.4	PAX5	Paired box factors
+cluster_073	MA1995.2	Npas4	Basic helix-loop-helix factors (bHLH)
+cluster_074	MA2097.1	ZNF75A	C2H2 zinc finger factors
+cluster_074	MA1601.2	ZNF75D	C2H2 zinc finger factors
+cluster_075	MA0795.1	SMAD3	SMAD/NF-1 DNA-binding domain factors
+cluster_075	MA1557.1	SMAD5	SMAD/NF-1 DNA-binding domain factors
+cluster_075	MA1602.2	ZSCAN29	C2H2 zinc finger factors
+cluster_075	MA2585.1	ZNF500	C2H2 zinc finger factors
+cluster_076	MA0258.2	ESR2	Nuclear receptors with C4 zinc fingers
+cluster_076	MA0112.4	ESR1	Nuclear receptors with C4 zinc fingers
+cluster_076	MA0066.2	PPARG	Nuclear receptors with C4 zinc fingers
+cluster_077	MA0860.1	Rarg	Nuclear receptors with C4 zinc fingers
+cluster_077	MA0494.2	Nr1h3::Rxra	Nuclear receptors with C4 zinc fingers
+cluster_077	MA1969.2	THRA	Nuclear receptors with C4 zinc fingers
+cluster_077	MA1576.2	THRB	Nuclear receptors with C4 zinc fingers
+cluster_078	MA0479.2	FOXH1	Fork head/winged helix factors
+cluster_078	MA0056.3	MZF1	C2H2 zinc finger factors
+cluster_079	MA2523.1	ZNF689	C2H2 zinc finger factors
+cluster_079	MA2595.1	ZNF700	C2H2 zinc finger factors
+cluster_080	MA1615.2	Plagl1	C2H2 zinc finger factors
+cluster_080	MA1548.2	PLAGL2	C2H2 zinc finger factors
+cluster_081	MA0511.2	RUNX2	Runt domain factors
+cluster_081	MA1989.2	Bcl11B	C2H2 zinc finger factors
+cluster_081	MA0684.3	RUNX3	Runt domain factors
+cluster_081	MA0002.3	Runx1	Runt domain factors
+cluster_082	MA1466.2	ATF6	Basic leucine zipper factors (bZIP)
+cluster_082	MA0638.2	CREB3	Basic leucine zipper factors (bZIP)
+cluster_082	MA0839.2	CREB3L1	Basic leucine zipper factors (bZIP)
+cluster_082	MA1474.2	CREB3L4	Basic leucine zipper factors (bZIP)
+cluster_082	MA0844.2	XBP1	Basic leucine zipper factors (bZIP)
+cluster_083	MA0525.2	TP63	p53 domain factors
+cluster_083	MA0106.3	TP53	p53 domain factors
+cluster_083	MA0861.2	TP73	p53 domain factors
+cluster_084	MA1108.3	MXI1	Basic helix-loop-helix factors (bHLH)
+cluster_084	MA2559.1	NACC2	C2H2 zinc finger factors
+cluster_084	MA2592.1	MKX	Homeo domain factors
+cluster_084	MA2678.1	IRX1	Homeo domain factors
+cluster_084	MA2679.1	IRX2	Homeo domain factors
+cluster_084	MA2680.1	IRX5	Homeo domain factors
+cluster_085	MA1538.1	NR2F1	Nuclear receptors with C4 zinc fingers
+cluster_085	MA1539.1	NR2F6	Nuclear receptors with C4 zinc fingers
+cluster_085	MA1146.2	NR1H4::RXRA	Nuclear receptors with C4 zinc fingers
+cluster_085	MA1147.2	NR4A2::RXRA	Nuclear receptors with C4 zinc fingers
+cluster_086	MA1933.2	ELK1::SREBF2	Tryptophan cluster factors::Basic helix-loop-helix factors (bHLH)
+cluster_086	MA1939.2	ERF::SREBF2	Tryptophan cluster factors::Basic helix-loop-helix factors (bHLH)
+cluster_087	MA0038.3	GFI1	C2H2 zinc finger factors
+cluster_087	MA0483.2	Gfi1B	C2H2 zinc finger factors
+cluster_088	MA0074.1	RXRA::VDR	Nuclear receptors with C4 zinc fingers
+cluster_088	MA1533.2	NR1I2	Nuclear receptors with C4 zinc fingers
+cluster_089	MA2548.1	ZNF226	C2H2 zinc finger factors
+cluster_089	MA2549.1	ZNF234	C2H2 zinc finger factors
+cluster_090	MA0866.1	SOX21	High-mobility group (HMG) domain factors
+cluster_090	MA0870.1	Sox1	High-mobility group (HMG) domain factors
+cluster_091	MA0159.1	RARA::RXRA	Nuclear receptors with C4 zinc fingers
+cluster_091	MA0730.1	RARA	Nuclear receptors with C4 zinc fingers
+cluster_091	MA0858.1	Rarb	Nuclear receptors with C4 zinc fingers
+cluster_091	MA1149.2	RARA::RXRG	Nuclear receptors with C4 zinc fingers
+cluster_092	MA0019.2	Ddit3::Cebpa	Basic leucine zipper factors (bZIP)
+cluster_093	MA0073.2	RREB1	C2H2 zinc finger factors
+cluster_094	MA0083.3	SRF	MADS box factors
+cluster_095	MA0108.3	TBP	TATA-binding proteins
+cluster_096	MA0130.1	ZNF354C	C2H2 zinc finger factors
+cluster_097	MA0138.3	REST	C2H2 zinc finger factors
+cluster_098	MA0139.2	CTCF	C2H2 zinc finger factors
+cluster_099	MA0140.3	GATA1::TAL1	Other C4 zinc finger-type factors::Basic helix-loop-helix factors (bHLH)
+cluster_100	MA0146.3	Zfx	C2H2 zinc finger factors
+cluster_101	MA0149.1	EWSR1-FLI1	Tryptophan cluster factors
+cluster_102	MA0164.2	Nr2e3	Nuclear receptors with C4 zinc fingers
+cluster_103	MA0594.3	HOXA9	Homeo domain factors
+cluster_104	MA0602.2	Arid5a	ARID
+cluster_105	MA0619.2	LIN54	CRC domain
+cluster_106	MA0657.2	KLF13	C2H2 zinc finger factors
+cluster_107	MA0752.2	ZNF410	C2H2 zinc finger factors
+cluster_108	MA0758.1	E2F7	Fork head/winged helix factors
+cluster_109	MA0776.1	MYBL1	Tryptophan cluster factors
+cluster_110	MA0777.1	MYBL2	Tryptophan cluster factors
+cluster_111	MA0794.1	PROX1	Homeo domain factors
+cluster_112	MA0822.1	HES7	Basic helix-loop-helix factors (bHLH)
+cluster_113	MA0863.1	MTF1	C2H2 zinc finger factors
+cluster_114	MA0897.2	Hmx2	Homeo domain factors
+cluster_115	MA1117.2	RELB	Rel homology region (RHR) factors
+cluster_116	MA1124.1	ZNF24	C2H2 zinc finger factors
+cluster_117	MA1154.2	ZNF282	C2H2 zinc finger factors
+cluster_118	MA1155.1	ZSCAN4	C2H2 zinc finger factors
+cluster_119	MA1470.2	BACH2	Basic leucine zipper factors (bZIP)
+cluster_120	MA1471.2	BARX2	Homeo domain factors
+cluster_121	MA1514.2	KLF17	C2H2 zinc finger factors
+cluster_122	MA1529.2	NHLH2	Basic helix-loop-helix factors (bHLH)
+cluster_123	MA1544.2	OVOL1	C2H2 zinc finger factors
+cluster_124	MA1545.2	OVOL2	C2H2 zinc finger factors
+cluster_125	MA1575.2	THRB	Nuclear receptors with C4 zinc fingers
+cluster_126	MA1580.1	ZBTB32	C2H2 zinc finger factors
+cluster_127	MA1585.2	ZKSCAN1	C2H2 zinc finger factors
+cluster_128	MA1588.1	ZNF136	C2H2 zinc finger factors
+cluster_129	MA1594.1	ZNF382	C2H2 zinc finger factors
+cluster_130	MA1597.1	ZNF528	C2H2 zinc finger factors
+cluster_131	MA1600.2	ZNF684	C2H2 zinc finger factors
+cluster_132	MA1652.2	ZKSCAN5	C2H2 zinc finger factors
+cluster_133	MA1656.2	ZNF449	C2H2 zinc finger factors
+cluster_134	MA1710.2	ZNF257	C2H2 zinc finger factors
+cluster_135	MA1711.2	ZNF343	C2H2 zinc finger factors
+cluster_136	MA1714.2	ZNF675	C2H2 zinc finger factors
+cluster_137	MA1715.1	ZNF707	C2H2 zinc finger factors
+cluster_138	MA1716.2	ZNF76	C2H2 zinc finger factors
+cluster_139	MA1717.2	ZNF784	C2H2 zinc finger factors
+cluster_140	MA1718.1	ZNF8	C2H2 zinc finger factors
+cluster_141	MA1719.2	ZNF816	C2H2 zinc finger factors
+cluster_142	MA1720.2	ZNF85	C2H2 zinc finger factors
+cluster_143	MA1722.2	ZSCAN31	C2H2 zinc finger factors
+cluster_144	MA1723.2	PRDM9	C2H2 zinc finger factors
+cluster_145	MA1726.2	ZNF331	C2H2 zinc finger factors
+cluster_146	MA1729.2	ZNF680	C2H2 zinc finger factors
+cluster_147	MA1929.2	CTCF	C2H2 zinc finger factors
+cluster_148	MA1930.2	CTCF	C2H2 zinc finger factors
+cluster_149	MA1938.2	ERF::NHLH1	Tryptophan cluster factors::Basic helix-loop-helix factors (bHLH)
+cluster_150	MA1972.1	ZFP14	C2H2 zinc finger factors
+cluster_151	MA1973.2	ZKSCAN3	C2H2 zinc finger factors
+cluster_152	MA1974.2	ZNF211	C2H2 zinc finger factors
+cluster_153	MA1975.2	ZNF214	C2H2 zinc finger factors
+cluster_154	MA1978.2	ZNF354A	C2H2 zinc finger factors
+cluster_155	MA1980.1	ZNF418	C2H2 zinc finger factors
+cluster_156	MA1981.2	ZNF530	C2H2 zinc finger factors
+cluster_157	MA1982.2	ZNF574	C2H2 zinc finger factors
+cluster_158	MA1983.2	ZNF582	C2H2 zinc finger factors
+cluster_159	MA1984.2	ZNF667	C2H2 zinc finger factors
+cluster_160	MA1986.2	ZNF692	C2H2 zinc finger factors
+cluster_161	MA1987.2	ZNF701	C2H2 zinc finger factors
+cluster_162	MA1998.2	Prdm14	C2H2 zinc finger factors
+cluster_163	MA1999.2	Prdm5	C2H2 zinc finger factors
+cluster_164	MA2098.1	ZNF766	C2H2 zinc finger factors
+cluster_165	MA2099.1	ZNF770	C2H2 zinc finger factors
+cluster_166	MA2100.1	ZSCAN16	C2H2 zinc finger factors
+cluster_167	MA2120.1	ZNF184	C2H2 zinc finger factors
+cluster_168	MA2121.1	ZNF213	C2H2 zinc finger factors
+cluster_169	MA2328.1	ZBED4	C2H2 zinc finger factors
+cluster_170	MA2330.2	ZBTB24	C2H2 zinc finger factors
+cluster_171	MA2331.1	ZNF157	C2H2 zinc finger factors
+cluster_172	MA2335.1	ZNF558	C2H2 zinc finger factors
+cluster_173	MA2462.1	ZNF250	C2H2 zinc finger factors
+cluster_174	MA2487.1	ZBTB21	C2H2 zinc finger factors
+cluster_175	MA2488.1	ZBTB40	C2H2 zinc finger factors
+cluster_176	MA2489.1	ZFP28	C2H2 zinc finger factors
+cluster_177	MA2490.1	ZFP3	C2H2 zinc finger factors
+cluster_178	MA2493.1	ZNF322	C2H2 zinc finger factors
+cluster_179	MA2494.1	ZNF436	C2H2 zinc finger factors
+cluster_180	MA2496.1	ZNF596	C2H2 zinc finger factors
+cluster_181	MA2497.1	ZNF623	C2H2 zinc finger factors
+cluster_182	MA2507.1	NACC2	C2H2 zinc finger factors
+cluster_183	MA2508.1	CASZ1	C2H2 zinc finger factors
+cluster_184	MA2509.1	ZBTB5	C2H2 zinc finger factors
+cluster_185	MA2513.1	FLYWCH1	No class information
+cluster_186	MA2516.1	ZSCAN2	C2H2 zinc finger factors
+cluster_187	MA2518.1	ZNF551	C2H2 zinc finger factors
+cluster_188	MA2519.1	ZNF606	C2H2 zinc finger factors
+cluster_189	MA2520.1	ZNF678	C2H2 zinc finger factors
+cluster_190	MA2521.1	FIZ1	C2H2 zinc finger factors
+cluster_191	MA2522.1	ZNF683	C2H2 zinc finger factors
+cluster_192	MA2524.1	ZNF696	C2H2 zinc finger factors
+cluster_193	MA2526.1	ZNF721	C2H2 zinc finger factors
+cluster_194	MA2527.1	ZNF726	C2H2 zinc finger factors
+cluster_195	MA2528.1	ZNF732	C2H2 zinc finger factors
+cluster_196	MA2530.1	ZNF773	C2H2 zinc finger factors
+cluster_197	MA2531.1	ZNF775	C2H2 zinc finger factors
+cluster_198	MA2533.1	ZNF814	C2H2 zinc finger factors
+cluster_199	MA2537.1	SALL3	C2H2 zinc finger factors
+cluster_200	MA2539.1	SLC2A4RG	C2H2 zinc finger factors
+cluster_201	MA2540.1	SP140L	SAND domain factors
+cluster_202	MA2541.1	CREB3L3	Basic leucine zipper factors (bZIP)
+cluster_203	MA2544.1	ZKSCAN4	C2H2 zinc finger factors
+cluster_204	MA2545.1	ZNF57	C2H2 zinc finger factors
+cluster_205	MA2547.1	ZNF215	C2H2 zinc finger factors
+cluster_206	MA2551.1	ZNF286B	C2H2 zinc finger factors
+cluster_207	MA2553.1	ZNF407	C2H2 zinc finger factors
+cluster_208	MA2554.1	ZNF471	C2H2 zinc finger factors
+cluster_209	MA2555.1	ZNF493	C2H2 zinc finger factors
+cluster_210	MA2556.1	ZNF510	C2H2 zinc finger factors
+cluster_211	MA2558.1	MSANTD4	Tryptophan cluster factors
+cluster_212	MA2560.1	POGK	C2H2 zinc finger factors
+cluster_213	MA2561.1	TIGD4	C2H2 zinc finger factors
+cluster_214	MA2562.1	TIGD5	C2H2 zinc finger factors
+cluster_215	MA2563.1	TIGD7	C2H2 zinc finger factors
+cluster_216	MA2564.1	ZNF43	C2H2 zinc finger factors
+cluster_217	MA2566.1	ZNF395	C2H2 zinc finger factors
+cluster_218	MA2567.1	ZNF497	C2H2 zinc finger factors
+cluster_219	MA2573.1	ZNF836	C2H2 zinc finger factors
+cluster_220	MA2574.1	ZNF878	C2H2 zinc finger factors
+cluster_221	MA2580.1	ZNF20	C2H2 zinc finger factors
+cluster_222	MA2584.1	DNTTIP1	Rel homology region (RHR) factors
+cluster_223	MA2586.1	ZNF518B	C2H2 zinc finger factors
+cluster_224	MA2587.1	ZNF672	C2H2 zinc finger factors
+cluster_225	MA2590.1	ZNF841	C2H2 zinc finger factors
+cluster_226	MA2599.1	TIGD3	No class information
+cluster_227	MA2675.1	HOMEZ	Homeo domain factors
+cluster_228	MA2687.1	ZNF251	C2H2 zinc finger factors
+cluster_229	MA2688.1	ZNF347	C2H2 zinc finger factors
+cluster_230	MA2689.1	ZNF470	C2H2 zinc finger factors
+cluster_231	MA2690.1	ZNF724	C2H2 zinc finger factors
+cluster_232	MA2691.1	ZNF841	C2H2 zinc finger factors
+cluster_233	MA2692.1	ZNF43	C2H2 zinc finger factors

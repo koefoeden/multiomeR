@@ -365,7 +365,7 @@ compute_pseudobulk_chromVAR_deviation_SE <- function(
   )
 }
 
-get_pseudobulk_chromVAR_activity_matrix <- function(
+get_pseudobulk_chromVAR_accessibility_matrix <- function(
   psbulk_ATAC_data_matrix,
   chromVAR_obj,
   annotation_matrix,
@@ -392,15 +392,15 @@ get_pseudobulk_chromVAR_activity_matrix <- function(
     limma::normalizeBetweenArrays(method = "quantile")
 }
 
-get_pseudobulk_activity_matrix.TFA <- function(
+get_pseudobulk_motif_family_accessibility_matrix <- function(
   psbulk_ATAC_data_matrix,
   chromVAR_obj,
-  chromVAR_motif_matrix
+  chromVAR_motif_family_matrix
 ) {
-  get_pseudobulk_chromVAR_activity_matrix(
+  get_pseudobulk_chromVAR_accessibility_matrix(
     psbulk_ATAC_data_matrix = psbulk_ATAC_data_matrix,
     chromVAR_obj = chromVAR_obj,
-    annotation_matrix = chromVAR_motif_matrix,
+    annotation_matrix = chromVAR_motif_family_matrix,
     normalize = TRUE
   )
 }

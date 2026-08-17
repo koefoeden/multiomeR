@@ -29,15 +29,84 @@ row_sums_for_peak_count_matrix <- function(counts_matrix) {
   }
 }
 
-get_motif_matrix_from_peak_ranges <- function(peak_ranges, TF_motif_matrix_list, genome_obj) {
+read_JASPAR_familial_root_PFMatrixList <- function(path) {
+  lines <- readLines(path, warn = FALSE)
+  motif_ends <- which(trimws(lines) == "//")
+  motif_starts <- c(1L, utils::head(motif_ends, -1L) + 1L)
+
+  root_motifs <- Map(function(motif_start, motif_end) {
+    block <- lines[motif_start:motif_end]
+    motif_id <- sub("^ID[[:space:]]+", "", block[grepl("^ID[[:space:]]", block)])
+    matrix_header <- which(grepl("^P0[[:space:]]", block))
+    if (length(motif_id) != 1L || length(matrix_header) != 1L) {
+      stop("Malformed JASPAR familial root motif in ", path, ".")
+    }
+
+    matrix_rows <- block[seq.int(matrix_header + 1L, length(block))]
+    matrix_rows <- matrix_rows[grepl("^[[:space:]]*[0-9]+[[:space:]]", matrix_rows)]
+    matrix_values <- do.call(rbind, strsplit(trimws(matrix_rows), "[[:space:]]+"))
+    profile_matrix <- t(apply(matrix_values[, 2:5, drop = FALSE], 2, as.numeric))
+    rownames(profile_matrix) <- c("A", "C", "G", "T")
+    colnames(profile_matrix) <- seq_len(ncol(profile_matrix))
+    profile_matrix <- profile_matrix[, colSums(profile_matrix) > 0, drop = FALSE]
+
+    TFBSTools::PFMatrix(
+      ID = motif_id,
+      name = motif_id,
+      matrixClass = "PFM",
+      strand = "+",
+      bg = stats::setNames(rep(0.25, 4L), c("A", "C", "G", "T")),
+      profileMatrix = profile_matrix
+    )
+  }, motif_starts, motif_ends)
+
+  names(root_motifs) <- vapply(root_motifs, TFBSTools::ID, character(1))
+  do.call(TFBSTools::PFMatrixList, root_motifs)
+}
+
+get_motif_matrix_from_peak_ranges <- function(peak_ranges, motif_matrix_list, genome_obj) {
   motif_matches <- motifmatchr::matchMotifs(
-    pwms = TF_motif_matrix_list,
+    pwms = motif_matrix_list,
     subject = peak_ranges,
     genome = genome_obj
   )
   motif_matrix <- SummarizedExperiment::assay(motif_matches, "motifMatches")
   rownames(motif_matrix) <- get_peak_names_from_GRanges(peak_ranges)
+  colnames(motif_matrix) <- names(motif_matrix_list)
   motif_matrix
+}
+
+resolve_marker_motif_families <- function(marker_TFs_list, motif_family_members_tibble) {
+  resolve_marker <- function(marker_TF) {
+    marker_suffix <- stringr::str_extract(marker_TF, "[+-]$")
+    marker_name <- stringr::str_remove(marker_TF, "[+-]$")
+    marker_name_upper <- stringr::str_to_upper(marker_name)
+
+    matching_rows <- motif_family_members_tibble |>
+      dplyr::filter(
+        stringr::str_to_upper(motif_feature) == marker_name_upper |
+          stringr::str_to_upper(TF_name) == marker_name_upper
+      )
+
+    if (nrow(matching_rows) == 0L) {
+      stop("Configured ATAC marker TF is missing from the JASPAR2026 vertebrate motif families: ", marker_name, ".")
+    }
+
+    matching_families <- unique(matching_rows$motif_family)
+    if (length(matching_families) > 1L) {
+      stop(
+        "Configured ATAC marker TF resolves to multiple JASPAR2026 motif families: ",
+        marker_name,
+        ". Use one of these ID-qualified motifs: ",
+        paste(matching_rows$motif_feature, collapse = ", "),
+        "."
+      )
+    }
+
+    paste0(matching_families, dplyr::coalesce(marker_suffix, ""))
+  }
+
+  purrr::map(marker_TFs_list, \(marker_TFs) unique(purrr::map_chr(marker_TFs, resolve_marker)))
 }
 
 get_peak_ranges_for_peak_names <- function(peak_names, ATAC_peak_GRanges, genome_obj) {
@@ -60,7 +129,7 @@ get_peak_ranges_for_peak_names <- function(peak_names, ATAC_peak_GRanges, genome
 #' @param ATAC_peak_names Character vector of peak names to extract from
 #'   `ATAC_peak_GRanges`.
 #' @param ATAC_peak_GRanges GRanges for ATAC peaks, aligned by peak name to the corresponding ATAC matrix rows.
-#' @param TF_motif_matrix_list Motif annotation resources used by
+#' @param motif_matrix_list Motif annotation resources used by
 #'   `get_motif_matrix_from_peak_ranges()`.
 #' @param genome Genome build key used to choose chromosome sizes, blacklist resources, and external-tool parameters.
 #' @return Peak-by-motif matrix for the requested peak names.
@@ -68,7 +137,7 @@ get_peak_ranges_for_peak_names <- function(peak_names, ATAC_peak_GRanges, genome
 
 get_motif_matrix_from_ATAC_peak_names <- function(ATAC_peak_names,
                                                   ATAC_peak_GRanges,
-                                                  TF_motif_matrix_list,
+                                                  motif_matrix_list,
                                                   genome = "GRCh38") {
   genome_obj <- get_chromVAR_genome_obj(genome)
   peak_ranges <- get_peak_ranges_for_peak_names(
@@ -77,7 +146,7 @@ get_motif_matrix_from_ATAC_peak_names <- function(ATAC_peak_names,
     genome_obj = genome_obj
   )
 
-  motif_matrix <- get_motif_matrix_from_peak_ranges(peak_ranges, TF_motif_matrix_list, genome_obj)
+  motif_matrix <- get_motif_matrix_from_peak_ranges(peak_ranges, motif_matrix_list, genome_obj)
   motif_matrix[ATAC_peak_names, , drop = FALSE]
 }
 
@@ -337,7 +406,7 @@ combine_chromVAR_chunk_results <- function(chunk_results, chromVAR_obj, annotati
 }
 
 #' Run betterChromVAR from peak inputs
-get_marker_TF_activities_from_chromVAR_BPCells_z_scores <- function(chromVAR_z_scores_BPCells_matrix, metadata_tibble, group_col) {
+get_marker_motif_family_accessibility_from_chromVAR_BPCells_z_scores <- function(chromVAR_z_scores_BPCells_matrix, metadata_tibble, group_col) {
   if (!inherits(chromVAR_z_scores_BPCells_matrix, "IterableMatrix")) {
     stop("chromVAR_z_scores_BPCells_matrix must be a BPCells IterableMatrix.")
   }

@@ -437,7 +437,7 @@ align_WNN_knn_to_cells <- function(WNN_results, cells) {
 #' @param WNN_results Optional list returned by WNN helpers, including KNN/SNN structures and modality weights aligned by barcode.
 #' @param ATAC_UMAP_embeddings_tibble Optional tibble of ATAC UMAP coordinates keyed by `barcode_w_prefix`.
 #' @param WNN_UMAP_embeddings_tibble Optional tibble of WNN UMAP coordinates keyed by `barcode_w_prefix`.
-#' @param TF_activity_matrix Optional TF-by-cell activity matrix, usually chromVAR deviation scores or a derived activity assay.
+#' @param motif_family_accessibility_matrix Optional motif-family-by-cell chromVAR accessibility score matrix.
 #' @param signac_annotation_GRanges Optional GRanges object containing signac annotation GRanges coordinates and metadata.
 #' @param fragment_records_tibble Optional tibble describing fragment files and cell sets used to create Signac Fragment objects.
 #' @param ATAC_dims Optional ATAC dimensions used when reconstructing reductions and neighbors in the export object.
@@ -463,7 +463,7 @@ build_seurat_signac_convenience_object <- function(
   WNN_results = NULL,
   ATAC_UMAP_embeddings_tibble = NULL,
   WNN_UMAP_embeddings_tibble = NULL,
-  TF_activity_matrix = NULL,
+  motif_family_accessibility_matrix = NULL,
   signac_annotation_GRanges = NULL,
   fragment_records_tibble = NULL,
   ATAC_dims = NULL,
@@ -480,7 +480,7 @@ build_seurat_signac_convenience_object <- function(
       ATAC_LSI_results = rownames(ATAC_LSI_results$cell_embeddings),
       ATAC_harmony_embeddings = rownames(ATAC_harmony_embeddings),
       WNN_results = rownames(WNN_results$nn_idx),
-      TF_activity_matrix = colnames(TF_activity_matrix)
+      motif_family_accessibility_matrix = colnames(motif_family_accessibility_matrix)
     ))
   )
 
@@ -519,9 +519,13 @@ build_seurat_signac_convenience_object <- function(
   object[["SCTregr"]] <- SeuratObject::CreateAssay5Object(counts = SCTregr_counts)
   SeuratObject::VariableFeatures(object[["SCTregr"]]) <- base::intersect(PCA_results$variable_features, rownames(object[["SCTregr"]]))
 
-  if (!is.null(TF_activity_matrix)) {
-    TF_activity_data <- align_matrix_columns(TF_activity_matrix, cells, "TF_activity_matrix")
-    object[["TF_activity"]] <- SeuratObject::CreateAssay5Object(data = TF_activity_data)
+  if (!is.null(motif_family_accessibility_matrix)) {
+    motif_family_accessibility_data <- align_matrix_columns(
+      motif_family_accessibility_matrix,
+      cells,
+      "motif_family_accessibility_matrix"
+    )
+    object[["motif_family_accessibility"]] <- SeuratObject::CreateAssay5Object(data = motif_family_accessibility_data)
   }
 
   object <- add_dimreduc_from_matrix(

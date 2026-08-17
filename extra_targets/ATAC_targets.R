@@ -712,85 +712,39 @@ rlang::list2(
     )
   ),
 
-  ATAC_w_TF_activity_targets = rlang::list2(
+  ATAC_w_motif_family_accessibility_targets = rlang::list2(
     targets::tar_target(
-      name = ATAC_marker_TFs_list,
-      description = "Validate configured ATAC marker TFs against organism motif names [part_of_graph:ATAC] [part_of_graph:seurat_export]",
-      command = {
-        motif_list <- TF_motif_matrix_list
-        motif_names <- paste0(
-          stringr::str_to_upper(vapply(seq_along(motif_list), \(idx) TFBSTools::name(motif_list[[idx]]), character(1))),
-          "__",
-          vapply(seq_along(motif_list), \(idx) TFBSTools::ID(motif_list[[idx]]), character(1))
-        )
-        motif_symbols <- stringr::str_split_i(motif_names, "__", 1)
-        resolve_marker_TFs <- function(marker_TFs) {
-          purrr::map_chr(
-            marker_TFs,
-            \(marker_TF) {
-              marker_TF_suffix <- stringr::str_extract(marker_TF, "[+-]$")
-              marker_TF_name <- stringr::str_remove_all(marker_TF, "[+-]$")
-              full_match <- motif_names[stringr::str_to_upper(motif_names) == stringr::str_to_upper(marker_TF_name)]
-              if (length(full_match) == 1) {
-                return(paste0(full_match, dplyr::coalesce(marker_TF_suffix, "")))
-              }
-
-              symbol_matches <- motif_names[stringr::str_to_upper(motif_symbols) == stringr::str_to_upper(marker_TF_name)]
-              if (length(symbol_matches) == 0) {
-                stop(
-                  "Configured ATAC marker TF is missing from vertebrate motif names in ",
-                  targets::tar_name(),
-                  ": ",
-                  marker_TF_name,
-                  ". Use a motif symbol or ID-qualified motif feature from TF_motif_matrix_list.",
-                  call. = FALSE
-                )
-              }
-              if (length(symbol_matches) > 1) {
-                stop(
-                  "Configured ATAC marker TF is ambiguous in ",
-                  targets::tar_name(),
-                  ": ",
-                  marker_TF_name,
-                  ". Available ID-qualified motif features: ",
-                  paste(symbol_matches, collapse = ", "),
-                  ". Update aggregation_ATAC_marker_TFs in cfg_aggregations.yaml to one of these exact feature names.",
-                  call. = FALSE
-                )
-              }
-              paste0(symbol_matches, dplyr::coalesce(marker_TF_suffix, ""))
-            }
-          )
-        }
-        purrr::map(aggregation_ATAC_marker_TFs, resolve_marker_TFs)
-      }
+      name = ATAC_marker_motif_families_list,
+      description = "Resolve configured ATAC marker TFs to JASPAR2026 motif-similarity families [part_of_graph:ATAC] [part_of_graph:seurat_export]",
+      command = resolve_marker_motif_families(
+        marker_TFs_list = aggregation_ATAC_marker_TFs,
+        motif_family_members_tibble = JASPAR_motif_family_members_tibble
+      )
     ),
     targets::tar_target(
-      name = ATAC_marker_TFs_vec,
-      description = "Flatten validated ATAC marker TFs to plain feature names",
+      name = ATAC_marker_motif_families_vec,
+      description = "Flatten configured ATAC marker motif families to plain feature names",
       command = {
-        ATAC_marker_TFs_list |>
+        ATAC_marker_motif_families_list |>
           unlist(use.names = FALSE) |>
           stringr::str_remove_all("[+-]$") |>
           unique()
       }
     ),
     targets::tar_target(
-      name = peak_TF_motif_matrix.ATAC, # TODO: this runs quite slowly for large peak sets - consider looking into faster alternatives.
-      description = "Match TF motifs to ATAC peaks for reuse by betterChromVAR [part_of_graph:ATAC] [part_of_graph:seurat_export]",
-      command = {
-        get_motif_matrix_from_ATAC_peak_names(
-          ATAC_peak_names = rownames(consensus_peak_BPCells_matrix.ATAC),
-          ATAC_peak_GRanges = consensus_peak_GRanges.ATAC,
-          TF_motif_matrix_list = TF_motif_matrix_list,
-          genome = aggregated_cellranger_ref_list$genomes[[1]]
-        )
-      },
+      name = peak_TF_motif_family_matrix.ATAC,
+      description = "Match JASPAR2026 familial root motifs directly to ATAC peaks [part_of_graph:ATAC] [part_of_graph:seurat_export] [part_of_graph:differential_analyses]",
+      command = get_motif_matrix_from_ATAC_peak_names(
+        ATAC_peak_names = rownames(consensus_peak_BPCells_matrix.ATAC),
+        ATAC_peak_GRanges = consensus_peak_GRanges.ATAC,
+        motif_matrix_list = JASPAR_familial_root_motif_matrix_list,
+        genome = aggregated_cellranger_ref_list$genomes[[1]]
+      ),
       resources = get_tar_resources(RAM_GB_req = 60)
     ),
     targets::tar_target(
       name = chromVAR_obj.ATAC,
-      description = "Build the lightweight BPCells-backed chromVAR RSE for TF activity and genetic enrichment [part_of_graph:ATAC] [part_of_graph:seurat_export] [part_of_graph:genetic_enrichment_single_nucleus]",
+      description = "Build the lightweight BPCells-backed chromVAR RSE for motif-family accessibility and genetic enrichment [part_of_graph:ATAC] [part_of_graph:seurat_export] [part_of_graph:genetic_enrichment_single_nucleus]",
       command = get_chromVAR_obj_from_peak_matrix(
         ATAC_peak_matrix = consensus_peak_BPCells_matrix.ATAC[, metadata_w_cell_types_tibble.ATAC$barcode_w_prefix],
         ATAC_peak_GRanges = consensus_peak_GRanges.ATAC,
@@ -838,20 +792,20 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 60)
     ),
     targets::tar_target(
-      name = chromVAR_TF_motif_matrix.ATAC,
-      description = "Align the TF motif annotation matrix to the filtered chromVAR peak order",
+      name = chromVAR_TF_motif_family_matrix.ATAC,
+      description = "Align JASPAR2026 familial root-motif annotations to the filtered chromVAR peak order [part_of_graph:ATAC] [part_of_graph:seurat_export] [part_of_graph:differential_analyses]",
       command = align_chromVAR_annotations_to_obj(
-        annotations = peak_TF_motif_matrix.ATAC,
+        annotations = peak_TF_motif_family_matrix.ATAC,
         chromVAR_obj = chromVAR_obj.ATAC
       ),
       resources = get_tar_resources(RAM_GB_req = 32)
     ),
     targets::tar_target(
-      name = motif_chromVAR_chunk_results.ATAC,
-      description = "Compute per-cell TF motif accessibility scores for one reusable ATAC chunk",
+      name = motif_family_chromVAR_chunk_results.ATAC,
+      description = "Compute per-cell motif-family accessibility scores for one reusable ATAC chunk",
       command = {
         compute_chromVAR_annotation_chunk_result(
-          annotations = chromVAR_TF_motif_matrix.ATAC,
+          annotations = chromVAR_TF_motif_family_matrix.ATAC,
           chromVAR_obj = chromVAR_obj.ATAC,
           chunk_context_record = chromVAR_chunk_context_records.ATAC,
           compute = c("deviations", "z")
@@ -861,27 +815,27 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 60)
     ),
     targets::tar_target(
-      name = motif_chromVAR_results.ATAC,
-      description = "Combine chunk-level TF motif accessibility scores into the standard chromVAR result object",
+      name = motif_family_chromVAR_results.ATAC,
+      description = "Combine chunk-level motif-family accessibility scores into the standard chromVAR result object",
       command = combine_chromVAR_chunk_results(
-        chunk_results = motif_chromVAR_chunk_results.ATAC,
+        chunk_results = motif_family_chromVAR_chunk_results.ATAC,
         chromVAR_obj = chromVAR_obj.ATAC,
-        annotations = chromVAR_TF_motif_matrix.ATAC
+        annotations = chromVAR_TF_motif_family_matrix.ATAC
       ),
       resources = get_tar_resources(RAM_GB_req = 60)
     ),
     tarchetypes::tar_file(
-      name = TF_activity_BPCells_matrix_dir.ATAC,
-      description = "Write betterChromVAR TF activity Z-scores to a BPCells matrix directory [part_of_graph:ATAC] [part_of_graph:seurat_export]",
+      name = motif_family_accessibility_BPCells_matrix_dir.ATAC,
+      description = "Write betterChromVAR motif-family accessibility Z-scores to a BPCells matrix directory [part_of_graph:ATAC] [part_of_graph:seurat_export]",
       command = {
         out_dir <- get_structured_file_path()
-        column_major_dir <- tempfile(pattern = "TF_activity_column_major_", tmpdir = dirname(out_dir))
+        column_major_dir <- tempfile(pattern = "motif_family_accessibility_column_major_", tmpdir = dirname(out_dir))
         on.exit(if (fs::dir_exists(column_major_dir)) fs::dir_delete(column_major_dir), add = TRUE)
         if (fs::dir_exists(out_dir)) {
           fs::dir_delete(out_dir)
         }
 
-        motif_chromVAR_results.ATAC$chromVAR_z_scores |>
+        motif_family_chromVAR_results.ATAC$chromVAR_z_scores |>
           Matrix::Matrix(sparse = TRUE) |>
           methods::as("dgCMatrix") |>
           BPCells::write_matrix_dir(column_major_dir, compress = FALSE, overwrite = TRUE)
@@ -891,40 +845,40 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 60)
     ),
     targets::tar_target(
-      name = TF_activity_BPCells_matrix.ATAC,
-      description = "Open the disk-backed betterChromVAR TF activity Z-score matrix",
-      command = BPCells::open_matrix_dir(TF_activity_BPCells_matrix_dir.ATAC),
+      name = motif_family_accessibility_BPCells_matrix.ATAC,
+      description = "Open the disk-backed betterChromVAR motif-family accessibility Z-score matrix",
+      command = BPCells::open_matrix_dir(motif_family_accessibility_BPCells_matrix_dir.ATAC),
       resources = get_tar_resources(RAM_GB_req = 8)
     ),
     targets::tar_target(
-      name = TF_activity_markers.ATAC,
-      description = "Find marker TF activities per ATAC cell type from betterChromVAR Z-scores",
-      command = get_marker_TF_activities_from_chromVAR_BPCells_z_scores(
-        chromVAR_z_scores_BPCells_matrix = TF_activity_BPCells_matrix.ATAC,
+      name = motif_family_accessibility_markers.ATAC,
+      description = "Find marker motif-family accessibility scores per ATAC cell type",
+      command = get_marker_motif_family_accessibility_from_chromVAR_BPCells_z_scores(
+        chromVAR_z_scores_BPCells_matrix = motif_family_accessibility_BPCells_matrix.ATAC,
         metadata_tibble = metadata_w_cell_types_tibble.ATAC,
         group_col = "LSI_harmony_SNN_cluster_cell_type"
       ),
       resources = get_tar_resources(RAM_GB_req = 60)
     ),
     tarchetypes::tar_file(
-      name = TF_activity_marker_volcano_plots.ATAC,
-      description = "Facetted volcano plot of marker TF activity scores per ATAC cell type. [checkpoint:ATAC]",
+      name = motif_family_accessibility_marker_volcano_plots.ATAC,
+      description = "Facetted volcano plot of marker motif-family accessibility per ATAC cell type. [checkpoint:ATAC]",
       command = {
-        plot <- TF_activity_markers.ATAC |>
+        plot <- motif_family_accessibility_markers.ATAC |>
           dplyr::mutate(avg_log2FC = .data$avg_diff) |>
           plot_markers_volcano_simple() +
-          ggplot2::labs(x = "Mean TF activity difference")
+          ggplot2::labs(x = "Mean motif-family accessibility difference")
         save_plots_structured(plot)
       },
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
-      name = TF_activity_heatmap.ATAC,
-      description = "Heatmap of configured marker TF activity scores per ATAC cell type. [checkpoint:ATAC]",
+      name = motif_family_accessibility_heatmap.ATAC,
+      description = "Heatmap of configured marker motif-family accessibility per ATAC cell type. [checkpoint:ATAC]",
       command = plot_feature_scores_heatmap_from_matrix(
-        feature_matrix = TF_activity_BPCells_matrix.ATAC,
+        feature_matrix = motif_family_accessibility_BPCells_matrix.ATAC,
         metadata_tibble = metadata_w_cell_types_tibble.ATAC,
-        features = ATAC_marker_TFs_vec,
+        features = ATAC_marker_motif_families_vec,
         group_col = "LSI_harmony_SNN_cluster_cell_type"
       ) |>
         save_plots_structured(),
@@ -934,7 +888,7 @@ rlang::list2(
       name = continuous_UMAP_spec.ATAC,
       description = "Continuous ATAC UMAP variables to plot one at a time",
       command = {
-        feature_vars <- intersect(ATAC_marker_TFs_vec, rownames(TF_activity_BPCells_matrix.ATAC))
+        feature_vars <- intersect(ATAC_marker_motif_families_vec, rownames(motif_family_accessibility_BPCells_matrix.ATAC))
         tibble::tibble(
           variable = c(aggregation_w_peaks_continuous_vars, feature_vars),
           value_source = c(
@@ -947,12 +901,12 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = continuous.UMAPs.ATAC,
-      description = "UMAPs colored by continuous TF activity and peak accessibility metrics. [checkpoint:ATAC]",
+      description = "UMAPs colored by continuous motif-family accessibility and peak accessibility metrics. [checkpoint:ATAC]",
       command = plot_UMAP_from_metadata(
         metadata_tibble = metadata_w_cell_types_tibble.ATAC,
         variable = continuous_UMAP_spec.ATAC$variable,
         value_source = continuous_UMAP_spec.ATAC$value_source,
-        feature_matrix = TF_activity_BPCells_matrix.ATAC
+        feature_matrix = motif_family_accessibility_BPCells_matrix.ATAC
       ) |>
         save_plots_structured(
           dyn_suffix_in_subdir = TRUE,

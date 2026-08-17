@@ -297,12 +297,12 @@ rlang::list2(
       dplyr::mutate(modality = "ATAC")
   ),
   targets::tar_target(
-    name = pseudobulk_activity_matrix.TFA,
-    description = "Compute pseudobulk TF activity scores from BPCells-backed pseudobulk ATAC counts [part_of_graph:differential_analyses]",
-    command = get_pseudobulk_activity_matrix.TFA(
+    name = pseudobulk_motif_family_accessibility_matrix.ATAC,
+    description = "Compute pseudobulk JASPAR motif-family accessibility scores from ATAC counts [part_of_graph:differential_analyses]",
+    command = get_pseudobulk_motif_family_accessibility_matrix(
       psbulk_ATAC_data_matrix = pseudobulk_counts_matrix.ATAC,
       chromVAR_obj = chromVAR_obj.ATAC,
-      chromVAR_motif_matrix = chromVAR_TF_motif_matrix.ATAC
+      chromVAR_motif_family_matrix = chromVAR_TF_motif_family_matrix.ATAC
     ),
     resources = get_tar_resources(RAM_GB_req = 60)
   )

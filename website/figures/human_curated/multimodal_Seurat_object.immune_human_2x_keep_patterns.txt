@@ -32,7 +32,7 @@
 ^GEM_well_metadata_tibble\.
 ^scDblFinder_results_df\.ATAC\.
 ^scDblFinder_results_df\.GEX\.
-^TF_activity_BPCells_matrix_dir\.ATAC\.
+^motif_family_accessibility_BPCells_matrix_dir\.ATAC\.
 ^UCell_GEX_marker_genes_list\.
 ^UMAP_embeddings_tibble\.ATAC\.
 ^UMAP_embeddings_tibble\.GEX\.
@@ -41,5 +41,4 @@
 ^vireo_donor_ids_tibble\.
 ^within_clusters_collapsed_peaks_per_cluster_GRanges\.ATAC\.
 ^WNN_results\.
-
 

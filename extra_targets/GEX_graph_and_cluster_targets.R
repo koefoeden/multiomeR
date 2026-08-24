@@ -100,29 +100,15 @@ rlang::list2(
   ),
   targets::tar_target(
     name = metadata_w_cell_types_tibble.GEX,
-    description = "Remove GEX doublets and high-doublet clusters, then annotate remaining cells with scDblFinder scores [part_of_graph:ATAC] [part_of_graph:GEX] [part_of_graph:seurat_export]",
-    command = {
-      scDblFinder_tibble <- scDblFinder_results_df.GEX |>
-        tibble::rownames_to_column("barcode_w_prefix")
-      excluded_doublets_barcodes <- scDblFinder_tibble |>
-        dplyr::filter(.data$scDblFinder.class_GEX == "doublet") |>
-        dplyr::pull(.data$barcode_w_prefix)
-
-      high_doublet_clusters_vec <- metadata_w_cell_types_unfiltered_tibble.GEX |>
-        dplyr::mutate(is_excluded = .data$barcode_w_prefix %in% excluded_doublets_barcodes) |>
-        dplyr::group_by(.data$PCA_harmony_SNN_cluster) |>
-        dplyr::summarise(frac_excluded = mean(is_excluded), .groups = "drop") |>
-        dplyr::filter(frac_excluded > 0.5) |>
-        dplyr::pull(.data$PCA_harmony_SNN_cluster)
-
-      excluded_high_doublet_cluster_barcodes_vec <- metadata_w_cell_types_unfiltered_tibble.GEX |>
-        dplyr::filter(.data$PCA_harmony_SNN_cluster %in% high_doublet_clusters_vec) |>
-        dplyr::pull(.data$barcode_w_prefix)
-
-      metadata_w_cell_types_unfiltered_tibble.GEX |>
-        dplyr::filter(!.data$barcode_w_prefix %in% base::union(excluded_doublets_barcodes, excluded_high_doublet_cluster_barcodes_vec)) |>
-        dplyr::left_join(scDblFinder_tibble, by = "barcode_w_prefix")
-    },
+    description = "Annotate GEX metadata with scDblFinder QC and apply configured cell- and cluster-level doublet filters [part_of_graph:ATAC] [part_of_graph:GEX] [part_of_graph:seurat_export]",
+    command = filter_metadata_by_scDblFinder(
+      metadata_tibble = metadata_w_cell_types_unfiltered_tibble.GEX,
+      scDblFinder_results_df = scDblFinder_results_df.GEX,
+      class_col = "scDblFinder.class_GEX",
+      cluster_col = "PCA_harmony_SNN_cluster",
+      remove_called_doublets = aggregation_scDblFinder_GEX_remove_called_doublets,
+      max_doublet_fraction_per_cluster = aggregation_scDblFinder_GEX_max_doublet_fraction_per_cluster
+    ),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(

@@ -622,6 +622,84 @@ run_scDblFinder_BPCells_GEM_well <- function(feature_matrix,
     )
 }
 
+#' Apply scDblFinder cell- and cluster-level filters
+#'
+#' Add scDblFinder annotations to cell metadata and optionally remove cells
+#' called as doublets or all cells in clusters whose called-doublet fraction
+#' exceeds a configured threshold. Cluster fractions are always calculated
+#' from the original scDblFinder calls, independently of cell-level removal.
+#'
+#' @param metadata_tibble Cell metadata containing `barcode_w_prefix` and the
+#'   configured cluster column.
+#' @param scDblFinder_results_df scDblFinder results containing
+#'   `barcode_w_prefix`, or row names that contain the prefixed barcodes.
+#' @param class_col Name of the scDblFinder class column.
+#' @param cluster_col Name of the cluster column in `metadata_tibble`.
+#' @param remove_called_doublets Whether to remove individual cells called as
+#'   doublets.
+#' @param max_doublet_fraction_per_cluster Maximum allowed fraction of called
+#'   doublets in a cluster. `NULL` disables whole-cluster removal.
+#' @return Filtered cell metadata with scDblFinder columns joined by barcode.
+#' @keywords internal
+
+filter_metadata_by_scDblFinder <- function(
+  metadata_tibble,
+  scDblFinder_results_df,
+  class_col,
+  cluster_col,
+  remove_called_doublets = TRUE,
+  max_doublet_fraction_per_cluster = 0.5
+) {
+  if (!"barcode_w_prefix" %in% names(scDblFinder_results_df)) {
+    scDblFinder_results_df <- scDblFinder_results_df |>
+      tibble::rownames_to_column("barcode_w_prefix")
+  }
+
+  called_doublet_barcodes <- scDblFinder_results_df |>
+    dplyr::filter(.data[[class_col]] == "doublet") |>
+    dplyr::pull("barcode_w_prefix")
+
+  excluded_called_doublet_barcodes <- if (remove_called_doublets) {
+    called_doublet_barcodes
+  } else {
+    character()
+  }
+
+  excluded_high_doublet_cluster_barcodes <- if (
+    is.null(max_doublet_fraction_per_cluster)
+  ) {
+    character()
+  } else {
+    high_doublet_clusters <- metadata_tibble |>
+      dplyr::mutate(
+        is_called_doublet = .data$barcode_w_prefix %in%
+          called_doublet_barcodes
+      ) |>
+      dplyr::group_by(.data[[cluster_col]]) |>
+      dplyr::summarise(
+        doublet_fraction = mean(.data$is_called_doublet),
+        .groups = "drop"
+      ) |>
+      dplyr::filter(
+        .data$doublet_fraction > max_doublet_fraction_per_cluster
+      )
+    high_doublet_clusters <- high_doublet_clusters[[cluster_col]]
+
+    metadata_tibble |>
+      dplyr::filter(.data[[cluster_col]] %in% high_doublet_clusters) |>
+      dplyr::pull("barcode_w_prefix")
+  }
+
+  excluded_barcodes <- base::union(
+    excluded_called_doublet_barcodes,
+    excluded_high_doublet_cluster_barcodes
+  )
+
+  metadata_tibble |>
+    dplyr::filter(!.data$barcode_w_prefix %in% excluded_barcodes) |>
+    dplyr::left_join(scDblFinder_results_df, by = "barcode_w_prefix")
+}
+
 #' Get feature groups from LSI loadings
 #'
 #' Cluster LSI loading profiles into feature groups for scDblFinder aggregation.

@@ -123,14 +123,17 @@ figure_2_TF_activity_panel <- function(plot) {
 figure_2_peak_gene_link_panel <- function(plot, group = "B") {
   plot$data <- plot$data[plot$data$group == group, , drop = FALSE]
   plot$data$group <- droplevels(plot$data$group)
+  plot$facet$params$labeller <- ggplot2::as_labeller(
+    stats::setNames("Insertions", group)
+  )
   plot$patches$layout$heights <- grid::unit(c(1, 1, 1), "null")
   plot$patches$plots[[1]]$layers[[2]]$aes_params$size <- 1.6
   plot <- set_text_layer_family(plot)
 
   plot +
-    ggplot2::labs(x = NULL, y = "Insertions") +
+    ggplot2::labs(x = NULL, y = NULL) +
     patchwork::plot_annotation(
-      title = "Peak-gene links",
+      title = paste0("Peak-gene links (", group, ")"),
       theme = panel_title_theme
     ) &
     ggplot2::guides(colour = "none") &

@@ -5,7 +5,8 @@
 }
 
 load_CFG <- function(name) {
-  read_dataset_config_tibble(verbose = FALSE) |>
+  build_GEM_well_tibble() |>
+    build_dataset_config_tibble() |>
     dplyr::filter(.data$dataset == .env$name) |>
     as.list() |>
     purrr::flatten() |>

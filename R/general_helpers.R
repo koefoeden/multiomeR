@@ -94,20 +94,6 @@ manifest_defaults <- function(manifest_tibble) {
   defaults
 }
 
-read_dataset_config_tibble <- function(
-  config_file = "cfg_datasets.yaml",
-  manifest_file = "cfg_pipeline_parameters.tsv",
-  verbose = FALSE
-) {
-  read_manifest_config_tibble(
-    config_file = config_file,
-    manifest_file = manifest_file,
-    scope = "dataset",
-    key_col = "dataset",
-    verbose = verbose
-  )
-}
-
 read_aggregation_config_tibble <- function(
   config_file = "cfg_aggregations.yaml",
   manifest_file = "cfg_pipeline_parameters.tsv",

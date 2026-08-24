@@ -1,16 +1,13 @@
 # Mapping tibbles ---------------------------------------------------------------
-dataset_tibble_from_yaml <- read_dataset_config_tibble(config_file = "cfg_datasets.yaml")
-GEM_well_tibble <- build_GEM_well_tibble(dataset_tibble_from_yaml = dataset_tibble_from_yaml)
+GEM_well_tibble_all <- build_GEM_well_tibble()
 
 aggregation_tibble_all_from_yaml <- read_aggregation_config_tibble(config_file = "cfg_aggregations.yaml")
 aggregation_tibble <- build_aggregation_tibble(
   aggregation_tibble_all_from_yaml = aggregation_tibble_all_from_yaml,
-  GEM_well_tibble = GEM_well_tibble
+  GEM_well_tibble = GEM_well_tibble_all
 )
-dataset_tibble <- build_dataset_tibble(
-  GEM_well_tibble = GEM_well_tibble,
-  dataset_tibble_from_yaml = dataset_tibble_from_yaml
-)
+GEM_well_tibble <- build_active_GEM_well_tibble(GEM_well_tibble_all)
+dataset_tibble <- build_dataset_tibble(GEM_well_tibble = GEM_well_tibble)
 roadmap_EDACC_names <- get_roadmap_EDACC_names(aggregation_tibble = aggregation_tibble)
 
 known_aggregation_modules <- c("differential_analyses", "genetic_enrichment")

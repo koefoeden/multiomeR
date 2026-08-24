@@ -100,12 +100,12 @@ The root `_targets.R` builds the target graph from mapping tibbles. Each mapping
 
 The core mapping flow is:
 
-1. `dataset_tibble_from_yaml` is read from `cfg_datasets.yaml`.
-2. `GEM_well_tibble` is read from `cfg_GEM_wells.tsv` and joined to dataset-level config.
-3. `aggregation_tibble_all_from_yaml` is read from `cfg_aggregations.yaml`.
-4. `aggregation_tibble` keeps active aggregations and adds upstream target-symbol columns.
-5. `dataset_tibble` collapses GEM well rows back to one row per dataset.
-6. `_targets.R` expands GEM wells, datasets, and aggregations with `tar_map()`, then appends module target files.
+1. `GEM_well_tibble_all` reads every row and its pre-aggregation processing settings from `cfg_GEM_wells.tsv`.
+2. `aggregation_tibble_all_from_yaml` is read from `cfg_aggregations.yaml`.
+3. `aggregation_tibble` keeps active aggregations, validates their GEM well references against the complete view, and adds upstream target-symbol columns.
+4. `GEM_well_tibble` keeps GEM wells whose `GEM_well_is_active` value is true.
+5. `dataset_tibble` groups those active GEM well rows by the `dataset` label for QC summaries.
+6. `_targets.R` expands active GEM wells, derived dataset summaries, and aggregations with `tar_map()`, then appends module target files.
 
 ```r
 tarchetypes::tar_map(
@@ -119,8 +119,8 @@ tarchetypes::tar_map(
 With `GEM_well_ID = "healthy_PBMC_human"`, a target named `cellranger_summary_file` becomes `cellranger_summary_file.healthy_PBMC_human`. The same dot-delimited suffix convention is used for datasets, aggregations, module targets, and nested module maps.
 
 ```text
-cfg_GEM_wells.tsv row       -> GEM_well_tibble row    -> per GEM well targets
-cfg_datasets.yaml key       -> dataset_tibble row     -> per-dataset targets
+active cfg_GEM_wells.tsv row -> GEM_well_tibble row    -> per GEM well targets
+derived dataset group       -> dataset_tibble row     -> per-dataset targets
 cfg_aggregations.yaml key   -> aggregation_tibble row -> per-aggregation targets
 ```
 

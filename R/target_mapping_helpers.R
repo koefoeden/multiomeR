@@ -48,6 +48,35 @@ validate_processing_and_aggregation_config <- function(
     )
   }
 
+  inactive_GEM_well_tibble <- GEM_well_tibble |>
+    dplyr::filter(!purrr::map_lgl(is_active, isTRUE)) |>
+    dplyr::select(GEM_well_ID, dataset)
+  inactive_reference_details <- aggregation_tibble_from_yaml |>
+    dplyr::select(aggregation, aggregation_GEM_well_IDs) |>
+    tidyr::unnest_longer(aggregation_GEM_well_IDs, values_to = "GEM_well_ID") |>
+    dplyr::inner_join(inactive_GEM_well_tibble, by = "GEM_well_ID") |>
+    dplyr::summarise(
+      GEM_well_IDs = paste(GEM_well_ID, collapse = ", "),
+      .by = c(aggregation, dataset)
+    ) |>
+    dplyr::transmute(
+      details = paste0(
+        "aggregation '", aggregation,
+        "' -> inactive GEM well(s) in dataset '", dataset,
+        "' (GEM_well_ID value(s): ", GEM_well_IDs, ")"
+      )
+    ) |>
+    dplyr::pull(details)
+  if (length(inactive_reference_details) > 0) {
+    stop(
+      aggregation_config_file,
+      " contains active aggregation references to inactive GEM wells: ",
+      paste(inactive_reference_details, collapse = "; "),
+      ". Activate each GEM well in cfg_GEM_wells.tsv or remove it from the active aggregation.",
+      call. = FALSE
+    )
+  }
+
   invisible(TRUE)
 }
 
@@ -97,38 +126,128 @@ assert_donor_GEM_well_metadata_column_ownership <- function(donor_id_metadata_ti
 
 #' Build GEM well mapping tibble
 #'
-#' Read GEM well-level config and attach dataset-level YAML config values for
-#' use by the GEM well `tar_map()`.
+#' Read GEM well-level processing configuration for the GEM well `tar_map()`.
 #'
-#' @param dataset_tibble_from_yaml Dataset config tibble created from
-#'   `cfg_datasets.yaml`.
+#' The ` ;; ` separator preserves multiple QC expressions inside the tabular
+#' configuration file. User-facing GEM well column names are normalized to the
+#' existing internal target-command symbols so the configuration migration does
+#' not invalidate cached processing targets.
+#'
 #' @param GEM_well_config_file Path to the GEM well TSV config.
-#' @param dataset_config_file Path to the dataset YAML config.
-#' @return A tibble with one row per GEM well and joined dataset config columns.
+#' @return A tibble with one row per GEM well and normalized config columns.
 #' @keywords internal
 
-build_GEM_well_tibble <- function(
-  dataset_tibble_from_yaml,
-  GEM_well_config_file = "cfg_GEM_wells.tsv",
-  dataset_config_file = "cfg_datasets.yaml"
-) {
+parse_GEM_well_QC_exclude_list <- function(value, GEM_well_ID) {
+  if (length(value) != 1L || is.na(value) || !nzchar(value)) {
+    return(NULL)
+  }
+
+  parsed <- strsplit(value, ";;", fixed = TRUE)[[1]] |>
+    trimws() |>
+    purrr::discard(\(item) !nzchar(item))
+  purrr::walk(parsed, \(expression) {
+    tryCatch(
+      rlang::parse_expr(expression),
+      error = function(error) {
+        stop(
+          "Invalid filter expression for GEM well '", GEM_well_ID, "': ",
+          expression, " (", conditionMessage(error), ")",
+          call. = FALSE
+        )
+      }
+    )
+  })
+  parsed
+}
+
+build_GEM_well_tibble <- function(GEM_well_config_file = "cfg_GEM_wells.tsv") {
+  required_columns <- c(
+    "GEM_well_ID",
+    "dataset",
+    "GEM_well_donor_id",
+    "GEM_well_n_donors",
+    "GEM_well_cellranger_arc_count_dir",
+    "GEM_well_cellbender_h5_file",
+    "GEM_well_donors_VCF_file",
+    "GEM_well_cellranger_arc_reference_json",
+    "GEM_well_QC_exclude_list",
+    "GEM_well_run_amulet",
+    "GEM_well_is_active"
+  )
   GEM_well_tibble <- readr::read_tsv(GEM_well_config_file, show_col_types = FALSE) |>
     dplyr::mutate(dplyr::across(c(GEM_well_ID, GEM_well_donor_id), as.character))
 
-  unknown_datasets <- setdiff(GEM_well_tibble$dataset, dataset_tibble_from_yaml$dataset)
-  if (length(unknown_datasets) > 0) {
+  missing_columns <- setdiff(required_columns, colnames(GEM_well_tibble))
+  if (length(missing_columns) > 0L) {
     stop(
-      GEM_well_config_file,
-      " references dataset(s) not defined in ",
-      dataset_config_file,
-      ": ",
-      paste(unknown_datasets, collapse = ", "),
+      GEM_well_config_file, " is missing required column(s): ",
+      paste(missing_columns, collapse = ", "),
       call. = FALSE
     )
   }
+  duplicated_GEM_well_IDs <- GEM_well_tibble |>
+    dplyr::count(.data$GEM_well_ID) |>
+    dplyr::filter(.data$n > 1L) |>
+    dplyr::pull(.data$GEM_well_ID)
+  if (length(duplicated_GEM_well_IDs) > 0L) {
+    stop(
+      GEM_well_config_file, " contains duplicated GEM_well_ID value(s): ",
+      paste(duplicated_GEM_well_IDs, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  if (anyNA(GEM_well_tibble$GEM_well_cellranger_arc_reference_json) ||
+      any(!nzchar(GEM_well_tibble$GEM_well_cellranger_arc_reference_json))) {
+    stop("Every GEM well must define GEM_well_cellranger_arc_reference_json.", call. = FALSE)
+  }
+  if (anyNA(GEM_well_tibble$GEM_well_run_amulet) ||
+      anyNA(GEM_well_tibble$GEM_well_is_active)) {
+    stop("Every GEM well must define GEM_well_run_amulet and GEM_well_is_active.", call. = FALSE)
+  }
 
   GEM_well_tibble |>
-    dplyr::left_join(dataset_tibble_from_yaml, by = "dataset")
+    dplyr::mutate(
+      dataset_cellranger_arc_reference_json = purrr::map(
+        .data$GEM_well_cellranger_arc_reference_json,
+        identity
+      ),
+      dataset_QC_exclude_list_per_GEM_well = purrr::map2(
+        .data$GEM_well_QC_exclude_list,
+        .data$GEM_well_ID,
+        parse_GEM_well_QC_exclude_list
+      ),
+      dataset_run_amulet = purrr::map(.data$GEM_well_run_amulet, identity),
+      is_active = purrr::map(.data$GEM_well_is_active, identity)
+    ) |>
+    dplyr::select(
+      dplyr::all_of(c(
+        "GEM_well_ID",
+        "dataset",
+        "GEM_well_donor_id",
+        "GEM_well_n_donors",
+        "GEM_well_cellranger_arc_count_dir",
+        "GEM_well_cellbender_h5_file",
+        "GEM_well_donors_VCF_file",
+        "dataset_cellranger_arc_reference_json",
+        "dataset_QC_exclude_list_per_GEM_well",
+        "dataset_run_amulet",
+        "is_active"
+      ))
+    )
+}
+
+#' Build the active GEM well mapping tibble
+#'
+#' Keep only GEM wells whose GEM well-level config enables graph construction.
+#'
+#' @param GEM_well_tibble Complete GEM well mapping tibble created by
+#'   `build_GEM_well_tibble()`.
+#' @return The active GEM well rows, with columns unchanged.
+#' @keywords internal
+
+build_active_GEM_well_tibble <- function(GEM_well_tibble) {
+  GEM_well_tibble |>
+    dplyr::filter(purrr::map_lgl(is_active, isTRUE))
 }
 
 #' Build aggregation mapping tibble
@@ -248,20 +367,44 @@ build_aggregation_tibble <- function(
     )
 }
 
-#' Build dataset mapping tibble
+#' Build dataset config tibble
 #'
-#' Collapse GEM well rows by dataset and attach dataset-level YAML config values
-#' for use by the dataset `tar_map()`.
+#' Collapse GEM well-level settings by dataset for interactive configuration
+#' loading and dataset-level QC summaries.
 #'
 #' @param GEM_well_tibble GEM well mapping tibble created by
 #'   `build_GEM_well_tibble()`.
-#' @param dataset_tibble_from_yaml Dataset config tibble created from
-#'   `cfg_datasets.yaml`.
+#' @return A tibble with one row per dataset and collapsed GEM well settings.
+#' @keywords internal
+
+build_dataset_config_tibble <- function(GEM_well_tibble) {
+  GEM_well_tibble |>
+    dplyr::summarise(
+      dataset_cellranger_arc_reference_json = list(
+        .data$dataset_cellranger_arc_reference_json[[1]]
+      ),
+      dataset_QC_exclude_list_per_GEM_well = list(unique(unlist(
+        .data$dataset_QC_exclude_list_per_GEM_well,
+        use.names = FALSE
+      ))),
+      dataset_run_amulet = list(any(unlist(.data$dataset_run_amulet))),
+      is_active = list(any(unlist(.data$is_active))),
+      .by = dataset
+    )
+}
+
+#' Build dataset mapping tibble
+#'
+#' Collapse GEM well rows by dataset for the dataset QC-summary `tar_map()`.
+#'
+#' @inheritParams build_dataset_config_tibble
 #' @return A tibble with one row per dataset and GEM well target symbol
 #'   list-columns.
 #' @keywords internal
 
-build_dataset_tibble <- function(GEM_well_tibble, dataset_tibble_from_yaml) {
+build_dataset_tibble <- function(GEM_well_tibble) {
+  dataset_config_tibble <- build_dataset_config_tibble(GEM_well_tibble)
+
   GEM_well_tibble |>
     dplyr::summarise(
       dataset_GEM_well_IDs = list(GEM_well_ID),
@@ -273,7 +416,7 @@ build_dataset_tibble <- function(GEM_well_tibble, dataset_tibble_from_yaml) {
       dataset_excluded_cellranger_only_barcodes_by_type_list_syms = target_sym_col("excluded_cellranger_only_barcodes_by_type_list", "dataset_GEM_well_IDs"),
       dataset_excluded_barcodes_by_type_list_syms = target_sym_col("excluded_barcodes_by_type_list", "dataset_GEM_well_IDs")
     ) |>
-    dplyr::left_join(dataset_tibble_from_yaml, by = "dataset")
+    dplyr::left_join(dataset_config_tibble, by = "dataset")
 }
 
 #' Get Roadmap EDACC names

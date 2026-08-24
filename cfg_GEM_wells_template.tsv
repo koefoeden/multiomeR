@@ -1,10 +1,10 @@
-GEM_well_ID	dataset	GEM_well_donor_id	GEM_well_n_donors	GEM_well_cellranger_arc_count_dir	GEM_well_cellbender_h5_file	GEM_well_donors_VCF_file
-embryonic_brain_mouse	brain_mouse_dataset	mouse_1	1	example_data/embryonic_brain_mouse	NA	NA
-healthy_PBMC_human	immune_human_dataset	pbmc1	1	example_data/healthy_PBMC_human	NA	NA
-pbmc_10k_chromium_controller	immune_human_dataset	pbmc2	1	example_data/pbmc_10k_chromium_controller	NA	NA
-pbmc_10k_chromium_x	immune_human_dataset	pbmc3	1	example_data/pbmc_10k_chromium_x	NA	NA
-pbmc_granulocyte_sorted_10k	immune_human_dataset	pbmc4	1	example_data/pbmc_granulocyte_sorted_10k	NA	NA
-pbmc_unsorted_10k	immune_human_dataset	pbmc5	1	example_data/pbmc_unsorted_10k	NA	NA
-pbmc_unsorted_3k	immune_human_dataset	pbmc6	1	example_data/pbmc_unsorted_3k	NA	NA
-healthy_brain_human	brain_human_dataset	brain1	1	example_data/healthy_brain_human	NA	NA
-lymphoma_lymph_human	immune_human_dataset	lymph1	1	example_data/lymphoma_lymph_human	NA	NA
+GEM_well_ID	dataset	GEM_well_donor_id	GEM_well_n_donors	GEM_well_cellranger_arc_count_dir	GEM_well_cellbender_h5_file	GEM_well_donors_VCF_file	GEM_well_cellranger_arc_reference_json	GEM_well_QC_exclude_list	GEM_well_run_amulet	GEM_well_is_active
+embryonic_brain_mouse	brain_mouse_dataset	mouse_1	1	example_data/embryonic_brain_mouse	NA	NA	reference_metadata/refdata-cellranger-arc-mm10-2020-A-2.0.0/reference.json	TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250 ;; RNA_mito_percent > 10	FALSE	TRUE
+healthy_PBMC_human	immune_human_dataset	pbmc1	1	example_data/healthy_PBMC_human	NA	NA	reference_metadata/refdata-cellranger-arc-GRCh38-2020-A-2.0.0/reference.json	TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250 ;; RNA_mito_percent > 10	FALSE	TRUE
+pbmc_10k_chromium_controller	immune_human_dataset	pbmc2	1	example_data/pbmc_10k_chromium_controller	NA	NA	reference_metadata/refdata-cellranger-arc-GRCh38-2020-A-2.0.0/reference.json	TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250 ;; RNA_mito_percent > 10	FALSE	TRUE
+pbmc_10k_chromium_x	immune_human_dataset	pbmc3	1	example_data/pbmc_10k_chromium_x	NA	NA	reference_metadata/refdata-cellranger-arc-GRCh38-2020-A-2.0.0/reference.json	TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250 ;; RNA_mito_percent > 10	FALSE	TRUE
+pbmc_granulocyte_sorted_10k	immune_human_dataset	pbmc4	1	example_data/pbmc_granulocyte_sorted_10k	NA	NA	reference_metadata/refdata-cellranger-arc-GRCh38-2020-A-2.0.0/reference.json	TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250 ;; RNA_mito_percent > 10	FALSE	TRUE
+pbmc_unsorted_10k	immune_human_dataset	pbmc5	1	example_data/pbmc_unsorted_10k	NA	NA	reference_metadata/refdata-cellranger-arc-GRCh38-2020-A-2.0.0/reference.json	TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250 ;; RNA_mito_percent > 10	FALSE	TRUE
+pbmc_unsorted_3k	immune_human_dataset	pbmc6	1	example_data/pbmc_unsorted_3k	NA	NA	reference_metadata/refdata-cellranger-arc-GRCh38-2020-A-2.0.0/reference.json	TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250 ;; RNA_mito_percent > 10	FALSE	TRUE
+healthy_brain_human	brain_human_dataset	brain1	1	example_data/healthy_brain_human	NA	NA	reference_metadata/refdata-cellranger-arc-GRCh38-2020-A-2.0.0/reference.json	TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250 ;; RNA_mito_percent > 10	FALSE	TRUE
+lymphoma_lymph_human	immune_human_dataset	lymph1	1	example_data/lymphoma_lymph_human	NA	NA	reference_metadata/refdata-cellranger-arc-GRCh38-2020-A-2.0.0/reference.json	TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250 ;; RNA_mito_percent > 10	FALSE	TRUE

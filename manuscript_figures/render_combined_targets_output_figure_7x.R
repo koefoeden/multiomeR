@@ -247,17 +247,33 @@ if (!file.exists(benchmark_plot_rds)) {
   )
 }
 
-panel_specs <- tibble::tribble(
-  ~figure_number , ~tag , ~plot_call                                                                                                                                                                       , ~pick_regex                  , ~title        , ~caption , ~plot_modifier                                                   ,
-  # "S1"           , "A"  , quote(targets::tar_read(categorical.UMAPs.WNN.mixed_human_7x))                                                      , "WNN_harmony_SNN_cluster_cell_type" , NA_character_ , "UMAP embedding derived from native RNA+ATAC weighted-nearest-neighbor graph. Nuclei are colored by cluster-level cell type labels." , NA                                          ,
-  # "S1"           , "B"  , quote(targets::tar_read(markers_dot_plot.GEX.mixed_human_7x))                                                       , NA_character_                       , NA_character_ , "Expression of canonical marker genes across cell types."                                                                            , quote(plot + ggplot2::labs(y = "celltype")) ,
-  # "S1"           , "C"  , quote(targets::tar_read(coverage_tracks_plots.ATAC.mixed_human_7x))                                                 , "MS4A1"                             , NA_character_ , "Chromatin accessibility track at the MS4A1 locus."                                                                                  , NA                                          ,
-  "2"            , "A"  , quote(figure_2_UMAP_panel())                                                                                                                                                     , NA_character_                , NA_character_ , NA       , NA                                                               ,
-  "2"            , "B"  , quote(targets::tar_read(motif_family_accessibility_heatmap.ATAC.mixed_human_7x))                                                                                                , NA_character_                , NA_character_ , NA       , quote(figure_2_TF_activity_panel(plot))                          ,
-  "2"            , "C"  , quote(targets::tar_read(peak_gene_correlation_top_link_ATAC_tracks_plots.peak_gene_correlation.WNN.mixed_human_7x))                                                              , "Brain_rank001_"             , NA_character_ , NA       , quote(figure_2_peak_gene_link_panel(plot, group = "Brain"))      ,
-  "2"            , "D"  , quote(targets::tar_read(TRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.mixed_human_7x))                                                                    , "MonocyteCount_Vuckovic2020" , NA_character_ , NA       , quote(figure_2_single_cell_GWAS_panel(plot))                     ,
-  "2"            , "E"  , quote(targets::tar_read(chromVAR_deviation_heatmap.cell_type_pseudobulk.genetic_enrichment.mixed_human_7x))                                                                      , NA_character_                , NA_character_ , NA       , quote(figure_2_GWAS_heatmap_panel(plot))                         ,
-  "3"            , "A"  , quote(readRDS(benchmark_plot_rds))                                                                                                                                             , NA_character_                , NA_character_ , NA       , NA                                                               ,
+panel_specs <- tibble::tibble(
+  figure_number = c("2", "2", "2", "2", "2", "3"),
+  tag = c("A", "B", "C", "D", "E", "A"),
+  plot_input = list(
+    figure_2_UMAP_panel(),
+    targets::tar_read(motif_family_accessibility_heatmap.ATAC.mixed_human_7x),
+    targets::tar_read(peak_gene_correlation_top_link_ATAC_tracks_plots.peak_gene_correlation.WNN.mixed_human_7x),
+    targets::tar_read(TRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.mixed_human_7x),
+    targets::tar_read(chromVAR_deviation_heatmap.cell_type_pseudobulk.genetic_enrichment.mixed_human_7x),
+    readRDS(benchmark_plot_rds)
+  ),
+  pick_regex = c(
+    NA_character_,
+    NA_character_,
+    "Brain_rank001_",
+    "MonocyteCount_Vuckovic2020",
+    NA_character_,
+    NA_character_
+  ),
+  plot_modifier = list(
+    NULL,
+    figure_2_TF_activity_panel,
+    \(plot) figure_2_peak_gene_link_panel(plot, group = "Brain"),
+    figure_2_single_cell_GWAS_panel,
+    figure_2_GWAS_heatmap_panel,
+    NULL
+  )
 )
 
 figure_specs <- tibble::tribble(

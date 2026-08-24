@@ -24,7 +24,13 @@ plot_object_path <- function(image_path) {
 #' @return A ggplot object with the requested panel tag.
 #' @keywords internal
 tag_panel <- function(plot, tag) {
-  ggplotify::as.ggplot(plot) +
+  tagged_plot <- if (inherits(plot, "patchwork") || !inherits(plot, "ggplot")) {
+    ggplotify::as.ggplot(plot)
+  } else {
+    plot
+  }
+
+  tagged_plot +
     ggplot2::labs(tag = tag) +
     ggplot2::theme(
       plot.tag = ggplot2::element_text(face = "bold", size = 16),
@@ -63,20 +69,53 @@ pick_plot_path <- function(image_paths, pick_regex = NULL, exclude_regex = NULL)
 #' Build tagged figure panels and captions from a compact panel specification
 #' table.
 #'
-#' @param panel_specs Tibble with `plot_call`, `pick_regex`, `title`, `tag`,
-#'   `caption`, and optionally `plot_modifier`.
-#' @param figure_theme Theme added to each panel.
+#' @param panel_specs Tibble with `tag` and a `plot_input` list-column containing
+#'   plot objects or target-tracked image paths. Optional columns are
+#'   `pick_regex`, `title`, `caption`, and `plot_modifier`; modifiers must be
+#'   functions accepting and returning one plot.
+#' @param figure_theme Theme added to each panel. By default, plot subtitles and
+#'   plot captions are omitted because explanatory detail belongs in the
+#'   assembled figure caption.
 #' @param show_tags Logical; if `TRUE`, add panel tags and combine panel
 #'   captions.
-#' @param envir Evaluation environment for plot calls and modifiers.
 #' @return List with `plots` and `caption`.
 #' @keywords internal
 prepare_plot_panels <- function(
   panel_specs,
-  figure_theme = ggplot2::theme(),
-  show_tags = TRUE,
-  envir = parent.frame()
+  figure_theme = ggplot2::theme(
+    plot.subtitle = ggplot2::element_blank(),
+    plot.caption = ggplot2::element_blank()
+  ),
+  show_tags = TRUE
 ) {
+  required_columns <- c("tag", "plot_input")
+  missing_columns <- setdiff(required_columns, colnames(panel_specs))
+  if (length(missing_columns)) {
+    stop(
+      "Missing required panel specification columns: ",
+      paste(missing_columns, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  if (!nrow(panel_specs)) {
+    stop("`panel_specs` must contain at least one panel.", call. = FALSE)
+  }
+  if (anyNA(panel_specs$tag) || any(!nzchar(panel_specs$tag))) {
+    stop("Panel tags must be non-empty strings.", call. = FALSE)
+  }
+  if (anyDuplicated(panel_specs$tag)) {
+    stop("Panel tags must be unique.", call. = FALSE)
+  }
+
+  for (column_name in c("pick_regex", "title", "caption")) {
+    if (!column_name %in% colnames(panel_specs)) {
+      panel_specs[[column_name]] <- rep(NA_character_, nrow(panel_specs))
+    }
+  }
+  if (!"plot_modifier" %in% colnames(panel_specs)) {
+    panel_specs$plot_modifier <- rep(list(NULL), nrow(panel_specs))
+  }
+
   caption_is_present <- !is.na(panel_specs$caption) & nzchar(panel_specs$caption)
   fig_caption <- if (!any(caption_is_present)) {
     NULL
@@ -93,20 +132,15 @@ prepare_plot_panels <- function(
   } else {
     panel_specs$caption[[which(caption_is_present)[[1]]]]
   }
-  if (!"plot_modifier" %in% names(panel_specs)) {
-    panel_specs$plot_modifier <- rep(list(NA), nrow(panel_specs))
-  }
-
-  read_panel_plot <- function(plot_call, pick_regex, title, tag, plot_modifier) {
+  read_panel_plot <- function(plot_input, pick_regex, title, tag, plot_modifier) {
     pick_regex <- if (is.na(pick_regex)) NULL else pick_regex
     title <- if (is.na(title)) NULL else title
-    plot_or_paths <- eval(plot_call, envir = envir)
 
-    if (inherits(plot_or_paths, "ggplot")) {
-      plot <- plot_or_paths
+    if (inherits(plot_input, c("ggplot", "grob", "gTree", "gtable", "recordedplot"))) {
+      plot <- plot_input
     } else {
       image_path <- pick_plot_path(
-        plot_or_paths,
+        plot_input,
         pick_regex = pick_regex
       )
       object_path <- plot_object_path(image_path)
@@ -130,10 +164,11 @@ prepare_plot_panels <- function(
       }
     }
 
-    missing_modifier <- is.null(plot_modifier) ||
-      (length(plot_modifier) == 1L && is.atomic(plot_modifier) && is.na(plot_modifier))
-    if (!missing_modifier) {
-      plot <- eval(plot_modifier, envir = list2env(list(plot = plot), parent = envir))
+    if (!is.null(plot_modifier)) {
+      if (!is.function(plot_modifier)) {
+        stop("Panel plot modifiers must be functions or NULL.", call. = FALSE)
+      }
+      plot <- plot_modifier(plot)
     }
 
     if (show_tags) {
@@ -144,7 +179,7 @@ prepare_plot_panels <- function(
   }
 
   panel_plots <- purrr::pmap(
-    panel_specs[c("plot_call", "pick_regex", "title", "tag", "plot_modifier")],
+    panel_specs[c("plot_input", "pick_regex", "title", "tag", "plot_modifier")],
     read_panel_plot
   ) |>
     purrr::set_names(panel_specs$tag)
@@ -185,8 +220,7 @@ compose_manuscript_figure <- function(
   prepared_panels <- prepare_plot_panels(
     panel_specs,
     figure_theme = figure_theme,
-    show_tags = show_tags,
-    envir = envir
+    show_tags = show_tags
   )
 
   layout_env <- list2env(as.list(prepared_panels$plots), parent = envir)
@@ -237,7 +271,7 @@ compose_manuscript_figure <- function(
 #' @param figure_label Figure caption label.
 #' @param width Output figure width in inches.
 #' @param dpi Output PNG resolution.
-#' @param envir Evaluation environment for layouts and panel calls.
+#' @param envir Evaluation environment for patchwork layouts.
 #' @return Character vector of written PNG paths.
 #' @keywords internal
 render_figures <- function(
@@ -274,44 +308,15 @@ render_figures <- function(
     ]
     figure_panel_specs$figure_number <- NULL
 
-    prepared_panels <- prepare_plot_panels(
+    combined_plot <- compose_manuscript_figure(
       figure_panel_specs,
+      layout = figure_spec$layout[[1]],
+      figure_caption = figure_spec$caption[[1]],
       figure_theme = figure_theme,
       show_tags = nrow(figure_panel_specs) > 1L,
+      caption_label = paste(figure_label, figure_number),
       envir = envir
     )
-
-    layout_env <- list2env(as.list(prepared_panels$plots), parent = envir)
-    figure_caption <- figure_spec$caption[[1]]
-    caption_text <- c(figure_caption, prepared_panels$caption)
-    caption_text <- caption_text[!is.na(caption_text) & nzchar(caption_text)]
-    fig_caption <- if (length(caption_text)) {
-      paste0(
-        "<b>",
-        figure_label,
-        " ",
-        figure_number,
-        ":</b> ",
-        paste(caption_text, collapse = " ")
-      )
-    } else {
-      NULL
-    }
-
-    combined_plot <- eval(figure_spec$layout[[1]], envir = layout_env) +
-      patchwork::plot_annotation(
-        caption = fig_caption,
-        theme = ggplot2::theme(
-          plot.caption = ggtext::element_textbox_simple(
-            hjust = 0,
-            halign = 0,
-            lineheight = 1.05,
-            margin = ggplot2::margin(t = 6),
-            width = grid::unit(1, "npc")
-          ),
-          plot.caption.position = "plot"
-        )
-      )
 
     output_png <- file.path(output_dir, paste0(figure_number, ".png"))
     ggplot2::ggsave(

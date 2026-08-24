@@ -7,4 +7,6 @@ normal pipeline source code.
 
 Related standalone pipelines can instead install this subdirectory from an
 immutable multiomeR Git commit. This provides versioned reuse without a second
-copy of the helper implementations.
+copy of the helper implementations. Until the multiomeR repository is
+published, installation from GitHub requires repository access and an
+authenticated token.

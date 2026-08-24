@@ -10,7 +10,9 @@ Use this when adding or changing targets, helpers, or analysis steps.
 ## Core Workflow
 
 1. Inspect the owning target fragment, helper, and configuration contract.
-2. Put reusable or otherwise unreadable target logic in `R/<domain>_helpers.R`.
+2. Put pipeline-specific or otherwise unreadable target logic in
+   `R/<domain>_helpers.R`. Put generally reusable cross-repository helpers in
+   `packages/multiomeRCore/R` instead.
 3. Add targets to the nearest `extra_targets/*.R` or `module_*/*.R` fragment;
    reserve `_targets.R` for graph composition and mapping.
 4. Add or revise YAML parameters in `cfg_pipeline_parameters.tsv` before using

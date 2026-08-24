@@ -28,10 +28,11 @@ independent R processes from one verified Pixi shell. Track each PID and exit
 status, separate their output, and avoid concurrent writes to the same files or
 targets store.
 
-Use normal startup when `.Rprofile` or project bootstrap is required. Use
-`--vanilla` for standalone structural checks and explicitly source their
-dependencies. Never use bare `R` or `Rscript` outside a verified Pixi shell.
-Confirm important REPL-derived conclusions in a fresh `Rscript` process.
+Use ordinary `Rscript` startup so the repository's `.Rprofile` initializes the
+project runtime. Do not suppress repository startup: target and helper checks
+may depend on that bootstrap even when they look structural. Never use bare `R`
+or `Rscript` outside a verified Pixi shell. Confirm important REPL-derived
+conclusions in a fresh `Rscript` process.
 
 ## One-Off Check
 
@@ -41,10 +42,10 @@ pixi run --use-environment-activation-cache Rscript - <<'EOF'
 EOF
 ```
 
-For a standalone parse check:
+For a parse check:
 
 ```bash
-pixi run --use-environment-activation-cache Rscript --vanilla -e 'invisible(parse(file = "path/to/file.R"))'
+pixi run --use-environment-activation-cache Rscript -e 'invisible(parse(file = "path/to/file.R"))'
 ```
 
 ## Retain Pixi Activation

@@ -41,7 +41,8 @@ Pull requests are welcome, but leanness is a high priority. Prefer a small, dire
 For code changes:
 
 - keep target graph changes explicit and easy to inspect
-- add reusable helper code under `R/` only when target code would otherwise become hard to read or duplicated
+- add pipeline-specific helper code under `R/` when target code would otherwise become hard to read or duplicated
+- add generally reusable cross-repository helpers under `packages/multiomeRCore/R`; multiomeR sources this code directly, while standalone pipelines can install the nested package from a pinned commit
 - add core target fragments under `extra_targets/`
 - add optional downstream analyses under a `module_*` directory
 - avoid compatibility layers for retired workflow shapes unless there is a clear public need

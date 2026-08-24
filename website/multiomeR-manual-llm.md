@@ -1032,7 +1032,7 @@ The [differential analyses](implementation_differential_analyses.qmd) and [genet
 | Change aggregation GEX, ATAC, or WNN processing | The corresponding graph section and `extra_targets/*_targets.R` file. |
 | Add a review boundary | Existing `[checkpoint:<name>]` description tags and the user-manual selector contract. |
 | Add a graph-visible target | Existing `[part_of_graph:<graph_id>]` tags and graph-pruning rules. |
-| Change resource routing | `crew_controllers.R`, `R/resource_helpers.R`, and the runtime bootstrap convention. |
+| Change resource routing | `crew_controllers.R`, `packages/multiomeRCore/R/resource_helpers.R`, and the runtime bootstrap convention. |
 
 If you are trying to run multiomeR rather than modify it, start with the [main manual](../).
 
@@ -1286,10 +1286,16 @@ multiomeR assumes that the repository runtime is bootstrapped before the target 
 `load_project_runtime()` is the single entry point for:
 
 1. loading core workflow packages and conflict preferences,
-2. sourcing project helpers with `targets::tar_source("R")`,
-3. applying global plotting and `{targets}` options,
-4. installing the current `{targets}` patches,
+2. sourcing generally reusable helpers from `packages/multiomeRCore/R`,
+3. sourcing pipeline-specific helpers from the root `R/` directory,
+4. applying global plotting and `{targets}` options,
 5. sourcing `crew_controllers.R` and installing controller resources.
+
+The nested `multiomeRCore` directory is both ordinary editable pipeline source
+and an installable package boundary for standalone repositories. multiomeR does
+not install or attach that package itself: `targets::tar_source()` loads the
+same implementation files before the root helpers. Keep domain-specific code
+under `R/`, but do not duplicate the generally reusable implementations there.
 
 For commands that intentionally bypass startup side effects, source the bootstrap helper directly and then load the runtime:
 

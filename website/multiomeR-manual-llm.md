@@ -650,7 +650,7 @@ Runtime depends on donors, cell types, models, contrasts, and GSEA branches. Use
 
 ## When to use this module
 
-Use this optional module for a completed human aggregation when fine-mapped GWAS evidence should be integrated with chromatin accessibility. It maps Open Targets credible-set variants to consensus peaks, calculates GWAS chromVAR-style deviations with the pipeline's chromVAR/betterChromVAR machinery, propagates trait relevance with [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE), and attributes cell-type deviations back to loci and variants.
+Use this optional module for a completed human aggregation when fine-mapped GWAS evidence should be integrated with chromatin accessibility. It maps published credible-set variants to consensus peaks, calculates GWAS chromVAR-style deviations with the pipeline's chromVAR/betterChromVAR machinery, propagates trait relevance with [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE), and attributes cell-type deviations back to loci and variants.
 
 See the [output gallery](gallery_genetic_enrichment.qmd) for representative results and the [implementation graph](implementation/implementation_genetic_enrichment.html) for upstream ATAC and WNN dependencies.
 
@@ -660,13 +660,13 @@ Before enabling the module, confirm that:
 
 - the aggregation is human and has passed the GEX, ATAC, and multimodal checkpoints;
 - WNN metadata and graph results, consensus peaks, ATAC counts, chromVAR objects, and GEX/ATAC embeddings are available;
-- each configured Open Targets `studyId` represents the intended trait and population;
+- each configured `sourceId` represents the intended trait and population;
 - the machine can download and retain the Open Targets study and credible-set Parquet datasets; and
 - the biological question justifies cell-level, graph-propagated, or cell-type-pseudobulk enrichment rather than treating those summaries as interchangeable.
 
 ## Outputs
 
-It produces Open Targets and fine-mapping metadata, posterior-weighted variant-to-peak mappings, single-nucleus GWAS deviations, SCAVENGE trait-relevance summaries, cell-type heatmaps, and peak-, locus-, and variant-level attribution outputs.
+It produces source and fine-mapping metadata, posterior-weighted variant-to-peak mappings, single-nucleus GWAS deviations, SCAVENGE trait-relevance summaries, cell-type heatmaps, and peak-, locus-, and variant-level attribution outputs.
 
 ## Configure the module
 
@@ -681,12 +681,22 @@ Then create a matching row in `module_genetic_enrichment/cfg.yaml`. The committe
 
 ```{.yaml filename="module_genetic_enrichment/cfg.yaml"}
 your_aggregation:
-  genetic_enrichment_open_targets_studies:
+  genetic_enrichment_GWAS_studies:
     lymphocyte_count:
       Category: positive_control
-      studyId: GCST90002388
+      sourceId: GCST90002388
       finemappingMethod: auto
+    published_local_study:
+      Category: trait_of_interest
+      sourceId: data/published_study.GRCh38.parquet
 ```
+
+`sourceId` values beginning with `GCST` use the pinned Open Targets datasets.
+Every other value is a local Parquet filename, resolved from the project root
+and tracked as a file target. Local files must satisfy the schema enforced by
+`validate_local_finemapped_GWAS_tibble()`; their study ID, fine-mapping method,
+build, credible-set probability, and provenance are read from the file rather
+than repeated in YAML.
 
 The root workflow currently pins Open Targets release `26.03`. That release identifier is recorded in downstream metadata and determines the available studies, credible sets, and fine-mapping methods.
 
@@ -726,7 +736,7 @@ targets::tar_make(
 )
 ```
 
-Before interpreting trait scores, verify the resolved Open Targets release and fine-mapping method, the number of credible-set loci and variants retained, and the overlap with consensus peaks. Then compare direct deviation summaries with SCAVENGE-propagated scores and inspect whether apparent cell-type enrichment is supported by enough nuclei and loci.
+Before interpreting trait scores, verify the resolved source release and fine-mapping method, the number of credible-set loci and variants retained, and the overlap with consensus peaks. Then compare direct deviation summaries with SCAVENGE-propagated scores and use the heatmap glyphs to identify cluster-median enrichment supported by within-grouping BH-adjusted degree-matched permutation P-values.
 
 Runtime and disk use grow with studies, cells, graph representations, permutations, and attributed loci. The [gallery](gallery_genetic_enrichment.qmd) uses a larger aggregation with six GEM wells and is not produced by the minimal quickstart.
 

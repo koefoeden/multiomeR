@@ -7,7 +7,7 @@ This page maps the stable stages of the main processing branch after `cellranger
 ## Processing stages
 
 1. **GEM well preprocessing** reads Cell Ranger matrices and fragments, calculates RNA and ATAC QC, and assigns stable GEM well-prefixed barcodes.
-2. **Dataset-level review** compares GEM wells that share a reference genome and QC policy before they enter an aggregation.
+2. **Pre-aggregation QC review** compares related GEM wells before they enter an aggregation.
 3. **GEX processing** merges selected GEM wells into BPCells-backed matrices, performs dimension reduction and clustering, assigns cell-type labels, and creates the first review checkpoint.
 4. **ATAC processing** merges fragments, calls or tiles peaks, creates the consensus peak matrix, performs LSI and clustering, and summarizes motif and regulatory activity.
 5. **Multimodal integration** combines aligned GEX and ATAC embeddings with WNN, produces integrated metadata and review plots, and optionally exports a [`Seurat`](https://satijalab.org/seurat/)/[`Signac`](https://stuartlab.org/signac/) compatibility object.

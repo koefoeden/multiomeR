@@ -17,7 +17,7 @@ The quickest way to understand the implementation is to follow one value across 
 
 1. `immune_human_2x` is a key in `cfg_aggregations.yaml`.
 2. `read_aggregation_config_tibble()` resolves manifest defaults and inheritance into one aggregation row.
-3. `build_aggregation_tibble()` filters active rows and adds symbols for GEM well-, dataset-, and aggregation-level upstream targets.
+3. `build_aggregation_tibble()` filters active rows and adds symbols for GEM-well, derived QC-group, and aggregation-level upstream targets.
 4. The root `_targets.R` passes that row through `tar_map(names = aggregation, delimiter = ".")`.
 5. A base target such as `multimodal_Seurat_object` becomes `multimodal_Seurat_object.immune_human_2x`.
 6. Description tags make selected targets discoverable as checkpoints or graph nodes, while structured file helpers derive output paths from the active target name.

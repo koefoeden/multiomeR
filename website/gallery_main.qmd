@@ -12,7 +12,9 @@ gallery_items <- check_output_gallery_assets(
 )
 ```
 
-These documentation snapshots show representative outputs from the public `immune_human_2x` configuration. The first cards summarize its shared dataset; GEX, ATAC, and WNN cards are aggregation-level. Each card names its target.
+These documentation snapshots show representative outputs from the public
+`immune_human_2x` configuration. The first cards summarize pre-aggregation QC;
+GEX, ATAC, and WNN cards are aggregation-level. Each card names its target.
 
 To reproduce these plot families, [install](demo_installation.qmd) and [run](demo_running.qmd) the demo, then request the broader [review checkpoints](main_running.qmd). The endpoint-only quickstart does not build every gallery plot; [inspect its local outputs](demo_outputs.qmd) to see the distinction.
 
@@ -22,7 +24,7 @@ render_gallery_section(
   "Main pipeline",
   subsection_descriptions = c(
     "Parallel GEM well pre-processing" = paste(
-      "Dataset-level summaries compare GEM wells before aggregation and help",
+      "Cross-GEM-well summaries compare inputs before aggregation and help",
       "identify GEM well-specific QC problems."
     ),
     "GEX" = "Aggregation-level RNA dimension-reduction and cell-type review outputs.",

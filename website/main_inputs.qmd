@@ -7,37 +7,16 @@ source("helpers/_setup.R")
 
 multiomeR uses two linked configuration layers. A **GEM well** points to one
 `cellranger-arc count` output and defines its pre-aggregation processing and QC.
-An **aggregation** selects GEM wells for joint GEX, ATAC, and WNN analysis. The
-`dataset` column remains a grouping label for QC summaries and metadata; it is
-not a separate configuration layer.
+An **aggregation** selects GEM wells for joint GEX, ATAC, and WNN analysis.
 
 | Layer | Configuration | Key relationship |
 |---|---|---|
 | GEM well | `cfg_GEM_wells.tsv` | Aggregations refer to one or more `GEM_well_ID` values. |
-| Aggregation | `cfg_aggregations.yaml` | Metadata tables must cover the configured donor and GEM well IDs. |
+| Aggregation | `cfg_aggregations.yaml` | Selects GEM wells and points to donor-level metadata. |
 
-The committed `cfg_GEM_wells.tsv` and `cfg_aggregations.yaml` files are symlinks
-to public templates. Keep those templates as examples. For a real project,
-replace the symlinks with project-specific files or provide them from a
-downstream private repository.
-
-## Migration to GEM well terminology
-
-This release makes a breaking terminology transition to the 10x Genomics term **GEM well**. There are no compatibility aliases: update configuration, metadata, and any code that calls the renamed helpers together. Existing identifier values do not need to change.
-
-| Previous name | Current name |
-|---|---|
-| `cfg_reactions.tsv` / `cfg_reactions_template.tsv` | `cfg_GEM_wells.tsv` / `cfg_GEM_wells_template.tsv` |
-| `reaction_ID` or `TENX_reaction_ID` | `GEM_well_ID` |
-| `aggregation_reaction_IDs` | `aggregation_GEM_well_IDs` |
-| `aggregation_reaction_ID_metadata_tsv` | `aggregation_GEM_well_metadata_tsv` |
-| `reaction_donor_id`, `reaction_n_donors`, `reaction_cellbender_h5_file`, `reaction_donors_VCF_file` | The corresponding `GEM_well_*` columns |
-| `reaction_cellranger_count_dir` | `GEM_well_cellranger_arc_count_dir` |
-| `per_reaction_targets.R` | `per_GEM_well_targets.R` |
-
-The reference input is also narrowed from a directory to the metadata file the
-pipeline actually reads. `GEM_well_cellranger_arc_reference_json` points to the
-`reference.json` file from the exact reference used for that GEM well.
+The committed `cfg_GEM_wells.tsv` and `cfg_aggregations.yaml` files may be
+symlinks to repository-specific configuration. For a new project, start from
+the corresponding templates and point the symlinks to reviewed project files.
 
 ## Start with one explicitly scoped analysis
 
@@ -54,8 +33,8 @@ your study.
 ### 1. Define one GEM well
 
 ```{.text filename="cfg_GEM_wells.tsv"}
-GEM_well_ID	dataset	GEM_well_donor_id	GEM_well_n_donors	GEM_well_cellranger_arc_count_dir	GEM_well_cellbender_h5_file	GEM_well_donors_VCF_file	GEM_well_cellranger_arc_reference_json	GEM_well_QC_exclude_list	GEM_well_run_amulet	GEM_well_is_active
-your_GEM_well	your_dataset	donor_1	1	/path/to/your_GEM_well	NA	NA	/path/to/reference.json	TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250	FALSE	TRUE
+GEM_well_ID	GEM_well_dataset	GEM_well_donor_id	GEM_well_n_donors	GEM_well_cellranger_arc_count_dir	GEM_well_add_cellbender	GEM_well_cellbender_h5_file	GEM_well_donors_VCF_file	GEM_well_cellranger_arc_reference_json	GEM_well_QC_exclude_list	GEM_well_is_active	GEM_well_multiplex_batch
+your_GEM_well	your_dataset	donor_1	1	/path/to/your_GEM_well	FALSE	NA	NA	/path/to/reference.json	TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250	TRUE	batch_1
 ```
 
 `GEM_well_cellranger_arc_reference_json` must point to the `reference.json`
@@ -68,10 +47,10 @@ separated by ` ;; `. Expressions are evaluated individually against per-barcode
 metadata, preserving their order and their separate exclusion reasons. An empty
 field applies no pre-aggregation QC filters.
 
-Starting with `GEM_well_run_amulet` set to `FALSE` avoids adding AMULET to the
-first data run; enable it deliberately after the basic input contract works.
-When enabled, multiomeR runs its [validated BPCells-native AMULET implementation](implementation/algorithm_validation.html#bpcells-native-amulet)
-on the existing fragment directory.
+multiomeR always runs its
+[validated BPCells-native AMULET implementation](implementation/algorithm_validation.html#bpcells-native-amulet)
+on the existing fragment directory. There is no per-GEM-well switch because
+the implementation is fast enough to be part of the standard QC path.
 
 `GEM_well_cellranger_arc_count_dir` points to the directory containing `outs/`, not to `outs/` itself. The baseline pipeline requires:
 
@@ -86,7 +65,7 @@ on the existing fragment directory.
 
 If `GEM_well_donors_VCF_file` is configured, `atac_possorted_bam.bam` is also required for `cellsnp-lite`. Without a VCF, the pipeline skips genotype demultiplexing and assigns `GEM_well_donor_id` to every called nucleus. That donor ID must match the donor metadata table.
 
-### 2. Create keyed metadata
+### 2. Create keyed donor metadata
 
 The donor metadata table must contain one unique row per `donor_id`:
 
@@ -95,18 +74,17 @@ donor_id	condition
 donor_1	control
 ```
 
-The GEM well metadata table must contain one unique row per `GEM_well_ID`:
+Put donor-specific phenotypes and covariates in the donor table. Put library-,
+run-, or batch-specific variables directly in `cfg_GEM_wells.tsv`, using a
+`GEM_well_` prefix. Apart from their key columns, donor and GEM-well metadata
+must not reuse column names.
 
-```{.text filename="GEM_well_metadata.tsv"}
-GEM_well_ID	batch
-your_GEM_well	batch_1
-```
-
-Apart from their key columns, the donor and GEM well tables must not reuse column names. Put donor-specific phenotypes and covariates in the donor table; put library-, run-, or batch-specific variables in the GEM well table.
-
-The GEM well table may contain rows for multiple aggregations. Each aggregation
-subsets it to `aggregation_GEM_well_IDs` before expensive targets consume it,
-so metadata changes for unrelated GEM wells do not propagate downstream.
+The canonical GEM-well table may contain rows for multiple aggregations. Each
+aggregation first subsets and orders it by `aggregation_GEM_well_IDs`, then
+projects only the columns requested for SCT, Harmony, subgroup modelling, or
+configured analyses. Consequently, changing an unused annotation or a GEM well
+outside the aggregation does not invalidate expensive processing targets. The
+complete annotation view is attached only to explicit export targets.
 
 ### 3. Define one aggregation
 
@@ -114,7 +92,6 @@ so metadata changes for unrelated GEM wells do not propagate downstream.
 your_aggregation:
   aggregation_GEM_well_IDs: [your_GEM_well]
   aggregation_donor_id_metadata_tsv: /path/to/donor_metadata.tsv
-  aggregation_GEM_well_metadata_tsv: /path/to/GEM_well_metadata.tsv
   aggregation_GEX_marker_genes:
     Cell_type_A: [GENE1, GENE2]
     Cell_type_B: [GENE3, GENE4]
@@ -123,7 +100,7 @@ your_aggregation:
 
 Omit `modules` for the first main-pipeline run. Add optional module names and matching module-config rows only after the main aggregation has passed its review checkpoints.
 
-### 5. Validate before running
+### 4. Validate before running
 
 From the repository-root R session, construct the graph and inspect the targets created for the aggregation:
 
@@ -148,28 +125,17 @@ GEM well-level configuration lives in [`cfg_GEM_wells.tsv`](`r GEM_wells_github_
 | Column | Meaning |
 |---|---|
 | `GEM_well_ID` | Stable GEM well identifier used in target names and aggregation config. |
-| `dataset` | Grouping label used for dataset-level QC summaries and metadata. |
+| `GEM_well_dataset` | Internal grouping key for pre-aggregation QC summaries. |
 | `GEM_well_donor_id` | Donor assigned to a non-multiplexed GEM well; use `NA` when donor identities are resolved from a VCF. |
 | `GEM_well_n_donors` | Expected donor count. |
 | `GEM_well_cellranger_arc_count_dir` | Path to the directory containing `outs/`. |
-| `GEM_well_cellbender_h5_file` | Optional CellBender-corrected GEX H5 file; otherwise `NA`. |
+| `GEM_well_add_cellbender` | Whether the standard-layout CellBender output should be used. |
+| `GEM_well_cellbender_h5_file` | CellBender-corrected GEX H5 path when enabled; otherwise `NA`. |
 | `GEM_well_donors_VCF_file` | Optional donor-genotype VCF for `cellsnp-lite` and `vireo`; otherwise `NA`. |
 | `GEM_well_cellranger_arc_reference_json` | `reference.json` from the Cell Ranger ARC reference used for this GEM well. |
 | `GEM_well_QC_exclude_list` | Complete per-barcode exclusion expressions separated by ` ;; `; empty applies none. |
-| `GEM_well_run_amulet` | Whether to calculate AMULET metrics for this GEM well. |
 | `GEM_well_is_active` | Whether to construct this GEM well's processing targets. |
-
-<details>
-<summary>Show the public GEM well table</summary>
-
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-GEM_well_template <- readr::read_tsv("cfg_GEM_wells.tsv", show_col_types = FALSE)
-cat('<div class="scrollable-table">\n')
-cat(knitr::kable(GEM_well_template, format = "html"))
-cat("\n</div>\n")
-```
-
-</details>
+| Other `GEM_well_*` columns | Optional annotations consumed only when requested by a downstream metadata view or export. |
 
 ### Aggregation parameters
 

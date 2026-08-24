@@ -31,12 +31,12 @@ targets::tar_make(
 
 Review before continuing:
 
-- GEM well- and dataset-level barcode exclusion summaries for unexpected sample loss;
+- per-GEM-well and cross-GEM-well barcode exclusion summaries for unexpected sample loss;
 - PCA, Harmony, UMAP, and metadata-association diagnostics for technical structure;
 - cluster markers and marker-module scores for coherent cell-type labels; and
 - `GEX_Seurat_object.your_aggregation` plus `metadata_w_cell_types_tibble.GEX.your_aggregation` for the cells entering ATAC processing.
 
-The [main gallery](gallery_main.qmd) shows representative GEX review plots. Change the dataset QC, aggregation dimensions, clustering, or marker configuration and rerun this checkpoint if the result is not biologically and technically credible.
+The [main gallery](gallery_main.qmd) shows representative GEX review plots. Change the GEM-well QC, aggregation dimensions, clustering, or marker configuration and rerun this checkpoint if the result is not biologically and technically credible.
 
 ## ATAC checkpoint
 
@@ -90,6 +90,9 @@ targets::tar_make(
 )
 ```
 
-An unqualified `targets::tar_make()` runs every active aggregation and every enabled optional module in the root workflow. Use it only when that is the intended scope. Because `is_active` defaults to `true`, disable unavailable template aggregations before broad execution.
+An unqualified `targets::tar_make()` constructs every active GEM well, derived
+QC summary, active aggregation, and enabled optional module in the root
+workflow. Use it only when that is the intended scope. Disable unavailable
+template GEM wells and aggregations before broad execution.
 
 Continue to the [differential analyses](downstream_differential_analyses.qmd) or [genetic enrichment](downstream_genetic_enrichment.qmd) module only after the main aggregation is accepted. If a target fails, follow [Troubleshooting](troubleshooting.qmd) and rerun the narrowest affected selection.

@@ -5,12 +5,15 @@ pipeline_name <- "processing_and_aggregation"
 source("helpers/_setup.R")
 ```
 
-The root `_targets.R` creates dataset, GEM well, and aggregation mapping rows, then maps target fragments from `extra_targets/`. Use the diagrams to find the relevant stage, then inspect the corresponding source file for the complete command and resource declaration.
+The root `_targets.R` creates GEM-well, derived QC-group, and aggregation
+mapping rows, then maps target fragments from `extra_targets/`. Use the diagrams
+to find the relevant stage, then inspect the corresponding source file for the
+complete command and resource declaration.
 
 | Stage | Primary source |
 |---|---|
 | GEM well preprocessing | `extra_targets/per_GEM_well_targets.R` |
-| Dataset summaries | `extra_targets/per_dataset_targets.R` |
+| Cross-GEM-well QC summaries | `extra_targets/per_dataset_targets.R` |
 | Aggregation setup and shared QC | `extra_targets/general_aggregation_targets.R` |
 | GEX | `extra_targets/GEX_merge_and_dim_reduc_targets.R`, `extra_targets/GEX_graph_and_cluster_targets.R` |
 | ATAC | `extra_targets/ATAC_targets.R` |

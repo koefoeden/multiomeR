@@ -100,12 +100,21 @@ The root `_targets.R` builds the target graph from mapping tibbles. Each mapping
 
 The core mapping flow is:
 
-1. `GEM_well_tibble_all` reads every row and its pre-aggregation processing settings from `cfg_GEM_wells.tsv`.
+1. `GEM_well_tibble_all` reads only the pre-aggregation processing columns from every row in the canonical `cfg_GEM_wells.tsv`.
 2. `aggregation_tibble_all_from_yaml` is read from `cfg_aggregations.yaml`.
 3. `aggregation_tibble` keeps active aggregations, validates their GEM well references against the complete view, and adds upstream target-symbol columns.
 4. `GEM_well_tibble` keeps GEM wells whose `GEM_well_is_active` value is true.
-5. `dataset_tibble` groups those active GEM well rows by the `dataset` label for QC summaries.
-6. `_targets.R` expands active GEM wells, derived dataset summaries, and aggregations with `tar_map()`, then appends module target files.
+5. `dataset_tibble` derives internal cross-GEM-well QC groups from those active rows.
+6. `_targets.R` expands active GEM wells, derived QC summaries, and aggregations with `tar_map()`, then appends module target files.
+
+Within each aggregation, `GEM_well_metadata_tibble` reads the same canonical
+file, subsets it to `aggregation_GEM_well_IDs`, and preserves that order. Cheap
+keyed projection targets then expose only the columns requested for SCT,
+Harmony, subgroup modelling, or configured analyses. Complete non-processing
+annotations are joined only for explicit export objects. These projection
+targets are cache boundaries: a newly added or edited online column can update
+the canonical table without changing expensive consumers whose selected view
+is identical.
 
 ```r
 tarchetypes::tar_map(

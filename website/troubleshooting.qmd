@@ -75,7 +75,7 @@ Check the contracts in [Configuration and inputs](main_inputs.qmd):
 
 - `GEM_well_cellranger_arc_count_dir` contains the required `outs/` files;
 - VCF-backed demultiplexing also has `atac_possorted_bam.bam`;
-- donor and GEM well metadata keys are present and unique;
+- donor metadata keys and canonical `cfg_GEM_wells.tsv` keys are present and unique;
 - non-key metadata columns belong to only one metadata table; and
 - configured donor and GEM well IDs match the metadata values exactly.
 

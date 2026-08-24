@@ -64,5 +64,7 @@ tar_target(
 - Add GitHub-only R packages to `scripts/install_r_github_packages.R` with a
   pinned commit and add any required system or indirect dependencies to
   `pixi.toml`.
-- Do not recreate `DESCRIPTION`; this repository is not currently maintained as
-  an R package.
+- Do not create a root `DESCRIPTION`; the workflow itself is not maintained as
+  an R package. Generally reusable helpers belong in the existing nested
+  `packages/multiomeRCore` package, whose `R/` files the workflow sources
+  directly.

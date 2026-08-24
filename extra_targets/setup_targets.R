@@ -1,5 +1,11 @@
 rlang::list2(
   tarchetypes::tar_file(
+    name = GEM_well_config_tsv,
+    description = "Track the canonical GEM well processing and metadata TSV",
+    command = "cfg_GEM_wells.tsv",
+    deployment = "main"
+  ),
+  tarchetypes::tar_file(
     name = amulet_BPCells_native_source_file,
     description = "Track the native BPCells fragment iterator used by AMULET",
     command = "src/amulet_bpcells.cpp"

@@ -9,7 +9,7 @@ rlang::list2(
     name = signac_fragment_records_tibble,
     description = "Map prefixed pipeline barcodes to original CellRanger fragment files for Signac",
     command = make_signac_fragment_records(
-      metadata_tibble = metadata_w_cell_types_tibble.WNN,
+      metadata_tibble = metadata_w_cell_types_annotation_tibble.WNN,
       GEM_well_ID_vec = aggregation_GEM_well_IDs,
       cellranger_summary_files = aggregation_cellranger_summary_file_syms
     )
@@ -20,7 +20,7 @@ rlang::list2(
     command = build_seurat_signac_convenience_object(
       GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX,
       ATAC_peak_matrix = peak_QC_filtered_BPCells_matrix.ATAC,
-      metadata_tibble = metadata_w_cell_types_tibble.WNN,
+      metadata_tibble = metadata_w_cell_types_annotation_tibble.WNN,
       ATAC_peak_GRanges = consensus_peak_GRanges.ATAC,
       ATAC_annotated_peak_GRanges = consensus_peak_annotated_GRanges.ATAC,
       PCA_results = PCA_BPCells.GEX,

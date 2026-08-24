@@ -113,6 +113,39 @@ rlang::list2(
         cluster_column = "WNN_harmony_SNN_cluster" 
       ),
       resources = get_tar_resources(RAM_GB_req = 16)
+    ),
+    targets::tar_target(
+      name = metadata_w_cell_types_analysis_tibble.WNN,
+      description = "Join configured analysis variables onto processed WNN metadata",
+      command = prepare_GEX_metadata_tibble(
+        metadata_tibble = metadata_w_cell_types_tibble.WNN,
+        barcode_vec = metadata_w_cell_types_tibble.WNN$barcode_w_prefix,
+        donor_id_metadata_tibble = donor_id_analysis_metadata_tibble,
+        GEM_well_metadata_tibble = GEM_well_analysis_metadata_tibble
+      ),
+      resources = get_tar_resources(RAM_GB_req = 16)
+    ),
+    targets::tar_target(
+      name = metadata_w_cell_types_subgroup_tibble.WNN,
+      description = "Join only configured subgroup model variables onto processed WNN metadata",
+      command = prepare_GEX_metadata_tibble(
+        metadata_tibble = metadata_w_cell_types_tibble.WNN,
+        barcode_vec = metadata_w_cell_types_tibble.WNN$barcode_w_prefix,
+        donor_id_metadata_tibble = donor_id_subgroup_metadata_tibble,
+        GEM_well_metadata_tibble = GEM_well_subgroup_metadata_tibble
+      ),
+      resources = get_tar_resources(RAM_GB_req = 16)
+    ),
+    targets::tar_target(
+      name = metadata_w_cell_types_annotation_tibble.WNN,
+      description = "Join complete donor and GEM well annotations onto processed WNN metadata",
+      command = prepare_GEX_metadata_tibble(
+        metadata_tibble = metadata_w_cell_types_tibble.WNN,
+        barcode_vec = metadata_w_cell_types_tibble.WNN$barcode_w_prefix,
+        donor_id_metadata_tibble = donor_id_metadata_tibble,
+        GEM_well_metadata_tibble = GEM_well_annotation_metadata_tibble
+      ),
+      resources = get_tar_resources(RAM_GB_req = 16)
     )
   ),
   WNN_plot_targets = rlang::list2(
@@ -140,7 +173,7 @@ rlang::list2(
     tarchetypes::tar_file(
       name = categorical.UMAPs.WNN,
       description = "UMAPs colored by categorical metadata variables on the WNN embedding. [checkpoint:multimodal]",
-      command = metadata_w_cell_types_tibble.WNN |>
+      command = metadata_w_cell_types_analysis_tibble.WNN |>
         plot_UMAP_from_metadata(
           variable = categorical_UMAP_var.WNN,
           umap_cols = c("WNN_UMAP_1", "WNN_UMAP_2")
@@ -156,7 +189,7 @@ rlang::list2(
       name = continuous.UMAPs.WNN,
       description = "UMAPs colored by continuous QC and gene expression features on the WNN embedding. [checkpoint:multimodal]",
       command = plot_UMAP_from_metadata(
-        metadata_tibble = metadata_w_cell_types_tibble.WNN,
+        metadata_tibble = metadata_w_cell_types_analysis_tibble.WNN,
         variable = continuous_UMAP_spec.WNN$variable,
         value_source = continuous_UMAP_spec.WNN$value_source,
         feature_matrix = aggregated_counts_BPCells_matrix.GEX,
@@ -173,7 +206,7 @@ rlang::list2(
       name = categorical_bars_plots.WNN,
       description = "Bar plots of categorical metadata composition per WNN cell type. [checkpoint:multimodal]",
       command = plot_categorical_bars_plot(
-        metadata_tibble = metadata_w_cell_types_tibble.WNN,
+        metadata_tibble = metadata_w_cell_types_analysis_tibble.WNN,
         metadata_cols = aggregation_WNN_categorical_vars,
         cluster_col = "WNN_harmony_SNN_cluster_cell_type"
       ) |>

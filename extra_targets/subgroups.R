@@ -5,7 +5,7 @@ rlang::list2(
     # TODO: Generalize this to work with any cluster column - however, seems to be slightly problematic with target-errors regarding unknown object.
     # Probably some tricky interaction with NSE.
     command = {
-      filtered_nuclei_tibble <- metadata_w_cell_types_tibble.WNN %>%
+      filtered_nuclei_tibble <- metadata_w_cell_types_subgroup_tibble.WNN %>%
         dplyr::group_by(.data[["PCA_harmony_SNN_cluster_cell_type"]]) %>%
         # group_by({{ aggregation_subgroups_col }}) %>%
         dplyr::summarise(n_nuclei = dplyr::n()) %>%
@@ -23,7 +23,7 @@ rlang::list2(
   targets::tar_target(
     name = metadata_tibble.subgroups,
     description = "Subset WNN metadata to cells matching each subgroup cluster value [part_of_graph:full_subgroups]",
-    command = metadata_w_cell_types_tibble.WNN |>
+    command = metadata_w_cell_types_subgroup_tibble.WNN |>
       filter_metadata_tibble_by_col_match(
         column_name = aggregation_subgroups_col,
         column_values_pattern = subgroups_to_process_vec

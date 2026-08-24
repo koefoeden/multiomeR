@@ -106,6 +106,67 @@ read_keyed_metadata_tibble <- function(metadata_tsv, key_col) {
     dplyr::mutate(dplyr::across(dplyr::all_of(key_col), as.character))
 }
 
+subset_keyed_metadata_tibble <- function(metadata_tibble, key_col, keys, source_label) {
+  keys <- as.character(keys)
+  missing_keys <- setdiff(keys, metadata_tibble[[key_col]])
+  if (length(missing_keys) > 0L) {
+    stop(
+      source_label,
+      " is missing configured ",
+      key_col,
+      " value(s): ",
+      paste(missing_keys, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  metadata_tibble[
+    match(keys, metadata_tibble[[key_col]]),
+    ,
+    drop = FALSE
+  ]
+}
+
+project_keyed_metadata_tibble <- function(metadata_tibble, key_col, requested_columns = NULL) {
+  requested_columns <- requested_columns %||% character()
+  requested_columns <- unique(as.character(unlist(requested_columns, use.names = FALSE)))
+  requested_columns <- requested_columns[
+    !is.na(requested_columns) & nzchar(requested_columns) & requested_columns != "NULL"
+  ]
+
+  metadata_tibble |>
+    dplyr::select(
+      dplyr::all_of(key_col),
+      dplyr::any_of(requested_columns)
+    )
+}
+
+metadata_columns_in_filter_expressions <- function(filter_expressions) {
+  filter_expressions <- filter_expressions %||% character()
+  filter_expressions |>
+    purrr::map(rlang::parse_expr) |>
+    purrr::map(base::all.vars) |>
+    unlist(use.names = FALSE) |>
+    unique()
+}
+
+get_GEM_well_annotation_metadata_tibble <- function(GEM_well_metadata_tibble) {
+  processing_columns <- c(
+    "GEM_well_donor_id",
+    "GEM_well_n_donors",
+    "GEM_well_cellranger_arc_count_dir",
+    "GEM_well_add_cellbender",
+    "GEM_well_cellbender_h5_file",
+    "GEM_well_donors_VCF_file",
+    "GEM_well_cellranger_arc_reference_json",
+    "GEM_well_QC_exclude_list",
+    "GEM_well_is_active"
+  )
+
+  GEM_well_metadata_tibble |>
+    dplyr::select(-dplyr::any_of(processing_columns))
+}
+
 assert_donor_GEM_well_metadata_column_ownership <- function(donor_id_metadata_tibble, GEM_well_metadata_tibble) {
   overlapping_cols <- intersect(
     setdiff(colnames(donor_id_metadata_tibble), "donor_id"),
@@ -163,15 +224,15 @@ parse_GEM_well_QC_exclude_list <- function(value, GEM_well_ID) {
 build_GEM_well_tibble <- function(GEM_well_config_file = "cfg_GEM_wells.tsv") {
   required_columns <- c(
     "GEM_well_ID",
-    "dataset",
+    "GEM_well_dataset",
     "GEM_well_donor_id",
     "GEM_well_n_donors",
     "GEM_well_cellranger_arc_count_dir",
+    "GEM_well_add_cellbender",
     "GEM_well_cellbender_h5_file",
     "GEM_well_donors_VCF_file",
     "GEM_well_cellranger_arc_reference_json",
     "GEM_well_QC_exclude_list",
-    "GEM_well_run_amulet",
     "GEM_well_is_active"
   )
   GEM_well_tibble <- readr::read_tsv(GEM_well_config_file, show_col_types = FALSE) |>
@@ -200,23 +261,34 @@ build_GEM_well_tibble <- function(GEM_well_config_file = "cfg_GEM_wells.tsv") {
       any(!nzchar(GEM_well_tibble$GEM_well_cellranger_arc_reference_json))) {
     stop("Every GEM well must define GEM_well_cellranger_arc_reference_json.", call. = FALSE)
   }
-  if (anyNA(GEM_well_tibble$GEM_well_run_amulet) ||
+  if (anyNA(GEM_well_tibble$GEM_well_add_cellbender) ||
       anyNA(GEM_well_tibble$GEM_well_is_active)) {
-    stop("Every GEM well must define GEM_well_run_amulet and GEM_well_is_active.", call. = FALSE)
+    stop("Every GEM well must define GEM_well_add_cellbender and GEM_well_is_active.", call. = FALSE)
+  }
+  inconsistent_cellbender <- xor(
+    GEM_well_tibble$GEM_well_add_cellbender,
+    !is.na(GEM_well_tibble$GEM_well_cellbender_h5_file)
+  )
+  if (any(inconsistent_cellbender)) {
+    stop(
+      "GEM_well_add_cellbender and GEM_well_cellbender_h5_file disagree for GEM well(s): ",
+      paste(GEM_well_tibble$GEM_well_ID[inconsistent_cellbender], collapse = ", "),
+      call. = FALSE
+    )
   }
 
   GEM_well_tibble |>
     dplyr::mutate(
-      dataset_cellranger_arc_reference_json = purrr::map(
+      dataset = .data$GEM_well_dataset,
+      GEM_well_cellranger_arc_reference_json = purrr::map(
         .data$GEM_well_cellranger_arc_reference_json,
         identity
       ),
-      dataset_QC_exclude_list_per_GEM_well = purrr::map2(
+      GEM_well_QC_exclude_list = purrr::map2(
         .data$GEM_well_QC_exclude_list,
         .data$GEM_well_ID,
         parse_GEM_well_QC_exclude_list
       ),
-      dataset_run_amulet = purrr::map(.data$GEM_well_run_amulet, identity),
       is_active = purrr::map(.data$GEM_well_is_active, identity)
     ) |>
     dplyr::select(
@@ -228,9 +300,8 @@ build_GEM_well_tibble <- function(GEM_well_config_file = "cfg_GEM_wells.tsv") {
         "GEM_well_cellranger_arc_count_dir",
         "GEM_well_cellbender_h5_file",
         "GEM_well_donors_VCF_file",
-        "dataset_cellranger_arc_reference_json",
-        "dataset_QC_exclude_list_per_GEM_well",
-        "dataset_run_amulet",
+        "GEM_well_cellranger_arc_reference_json",
+        "GEM_well_QC_exclude_list",
         "is_active"
       ))
     )
@@ -380,14 +451,10 @@ build_aggregation_tibble <- function(
 build_dataset_config_tibble <- function(GEM_well_tibble) {
   GEM_well_tibble |>
     dplyr::summarise(
-      dataset_cellranger_arc_reference_json = list(
-        .data$dataset_cellranger_arc_reference_json[[1]]
-      ),
-      dataset_QC_exclude_list_per_GEM_well = list(unique(unlist(
-        .data$dataset_QC_exclude_list_per_GEM_well,
+      dataset_QC_exclude_list = list(unique(unlist(
+        .data$GEM_well_QC_exclude_list,
         use.names = FALSE
       ))),
-      dataset_run_amulet = list(any(unlist(.data$dataset_run_amulet))),
       is_active = list(any(unlist(.data$is_active))),
       .by = dataset
     )

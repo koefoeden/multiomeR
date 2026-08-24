@@ -205,12 +205,6 @@ rlang::list2(
     command = aggregation_donor_id_metadata_tsv,
     deployment = "main"
   ),
-  tarchetypes::tar_file(
-    name = GEM_well_metadata_tsv,
-    description = "Track the GEM well metadata TSV file for change detection",
-    command = aggregation_GEM_well_metadata_tsv,
-    deployment = "main"
-  ),
   targets::tar_target(
     name = donor_id_metadata_tibble,
     description = "Read the donor ID metadata TSV into a tibble with donor_id coerced to character [part_of_graph:GEX] [part_of_graph:parallel] [part_of_graph:seurat_export]",
@@ -218,26 +212,142 @@ rlang::list2(
   ),
   targets::tar_target(
     name = GEM_well_metadata_tibble,
-    description = "Read and subset GEM well metadata to the configured aggregation IDs [part_of_graph:GEX] [part_of_graph:parallel] [part_of_graph:seurat_export]",
+    description = "Read and subset the canonical GEM well table to the configured aggregation IDs",
     command = {
-      GEM_well_metadata <- read_keyed_metadata_tibble(GEM_well_metadata_tsv, "GEM_well_ID")
-      missing_GEM_well_IDs <- setdiff(aggregation_GEM_well_IDs, GEM_well_metadata$GEM_well_ID)
-      if (length(missing_GEM_well_IDs) > 0) {
-        stop(
-          GEM_well_metadata_tsv,
-          " is missing configured GEM_well_ID value(s): ",
-          paste(missing_GEM_well_IDs, collapse = ", "),
-          call. = FALSE
-        )
-      }
-      GEM_well_metadata <- GEM_well_metadata[
-        match(aggregation_GEM_well_IDs, GEM_well_metadata$GEM_well_ID),
-        ,
-        drop = FALSE
-      ]
+      GEM_well_metadata <- read_keyed_metadata_tibble(GEM_well_config_tsv, "GEM_well_ID")
+      GEM_well_metadata <- subset_keyed_metadata_tibble(
+        GEM_well_metadata,
+        "GEM_well_ID",
+        aggregation_GEM_well_IDs,
+        GEM_well_config_tsv
+      )
       assert_donor_GEM_well_metadata_column_ownership(donor_id_metadata_tibble, GEM_well_metadata)
       GEM_well_metadata
     }
+  ),
+  targets::tar_target(
+    name = donor_id_SCT_metadata_tibble,
+    description = "Project donor metadata to SCT regression variables",
+    command = project_keyed_metadata_tibble(
+      donor_id_metadata_tibble,
+      "donor_id",
+      aggregation_SCT_regress_vars
+    )
+  ),
+  targets::tar_target(
+    name = GEM_well_SCT_metadata_tibble,
+    description = "Project GEM well metadata to SCT regression variables",
+    command = project_keyed_metadata_tibble(
+      GEM_well_metadata_tibble,
+      "GEM_well_ID",
+      aggregation_SCT_regress_vars
+    )
+  ),
+  targets::tar_target(
+    name = donor_id_harmony_metadata_tibble,
+    description = "Project donor metadata to GEX and ATAC Harmony variables",
+    command = project_keyed_metadata_tibble(
+      donor_id_metadata_tibble,
+      "donor_id",
+      c(
+        aggregation_harmony_correction_metadata_col_names,
+        aggregation_extra_harmony_covars_ATAC
+      )
+    )
+  ),
+  targets::tar_target(
+    name = GEM_well_harmony_metadata_tibble,
+    description = "Project GEM well metadata to GEX and ATAC Harmony variables",
+    command = project_keyed_metadata_tibble(
+      GEM_well_metadata_tibble,
+      "GEM_well_ID",
+      c(
+        aggregation_harmony_correction_metadata_col_names,
+        aggregation_extra_harmony_covars_ATAC
+      )
+    )
+  ),
+  targets::tar_target(
+    name = donor_id_subgroup_metadata_tibble,
+    description = "Project donor metadata to subgroup model variables",
+    command = project_keyed_metadata_tibble(
+      donor_id_metadata_tibble,
+      "donor_id",
+      c(
+        aggregation_subgroups_col,
+        aggregation_subgroups_SCT_regress_vars,
+        aggregation_subgroups_extra_harmony_covars
+      )
+    )
+  ),
+  targets::tar_target(
+    name = GEM_well_subgroup_metadata_tibble,
+    description = "Project GEM well metadata to subgroup model variables",
+    command = project_keyed_metadata_tibble(
+      GEM_well_metadata_tibble,
+      "GEM_well_ID",
+      c(
+        aggregation_subgroups_col,
+        aggregation_subgroups_SCT_regress_vars,
+        aggregation_subgroups_extra_harmony_covars
+      )
+    )
+  ),
+  targets::tar_target(
+    name = donor_id_analysis_metadata_tibble,
+    description = "Project donor metadata to configured analysis variables",
+    command = project_keyed_metadata_tibble(
+      donor_id_metadata_tibble,
+      "donor_id",
+      c(
+        aggregation_categorical_vars,
+        aggregation_continuous_vars
+      )
+    )
+  ),
+  targets::tar_target(
+    name = GEM_well_analysis_metadata_tibble,
+    description = "Project GEM well metadata to configured analysis and diagnostic variables",
+    command = project_keyed_metadata_tibble(
+      GEM_well_metadata_tibble,
+      "GEM_well_ID",
+      c(
+        aggregation_categorical_vars,
+        aggregation_continuous_vars,
+        "GEM_well_pre_amp_cycles",
+        "GEM_well_multiplex_batch",
+        "GEM_well_multiplex_pool",
+        "GEM_well_run_harmony",
+        "GEM_well_run_harmony_batched"
+      )
+    )
+  ),
+  targets::tar_target(
+    name = donor_id_QC_metadata_tibble,
+    description = "Project donor metadata to columns referenced by aggregation QC expressions",
+    command = project_keyed_metadata_tibble(
+      donor_id_metadata_tibble,
+      "donor_id",
+      metadata_columns_in_filter_expressions(
+        aggregation_QC_exclude_list_combined_object
+      )
+    )
+  ),
+  targets::tar_target(
+    name = GEM_well_QC_metadata_tibble,
+    description = "Project GEM well metadata to columns referenced by aggregation QC expressions",
+    command = project_keyed_metadata_tibble(
+      GEM_well_metadata_tibble,
+      "GEM_well_ID",
+      metadata_columns_in_filter_expressions(
+        aggregation_QC_exclude_list_combined_object
+      )
+    )
+  ),
+  targets::tar_target(
+    name = GEM_well_annotation_metadata_tibble,
+    description = "Exclude processing configuration from complete GEM well annotations",
+    command = get_GEM_well_annotation_metadata_tibble(GEM_well_metadata_tibble)
   ),
   targets::tar_target(
     name = interesting_genes,

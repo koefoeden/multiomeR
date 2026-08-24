@@ -49,7 +49,7 @@ rlang::list2(
     description = "Plot violin plots of QC metrics per GEM well for this dataset and save to file",
     command = plot_per_dataset_QC_violins(
       metadata_tibble = per_dataset_cellranger_kept_metadata_tibble,
-      QC_exclude_vector = dataset_QC_exclude_list_per_GEM_well,
+      QC_exclude_vector = dataset_QC_exclude_list,
       feature_names = PROCESSING_PER_GEM_well_QC_VARS
     ) |>
       save_plots_structured()

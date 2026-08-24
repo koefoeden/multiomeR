@@ -23,8 +23,8 @@ rlang::list2(
     command = run_GEX_PCA_BPCells(
       GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX,
       metadata_tibble = GEX_cellranger_kept_metadata_tibble |>
-        dplyr::left_join(donor_id_metadata_tibble, by = "donor_id") |>
-        dplyr::left_join(GEM_well_metadata_tibble, by = "GEM_well_ID"),
+        dplyr::left_join(donor_id_SCT_metadata_tibble, by = "donor_id") |>
+        dplyr::left_join(GEM_well_SCT_metadata_tibble, by = "GEM_well_ID"),
       organism_chr = organism_chr,
       GEX_PCA_backend = aggregation_GEX_PCA_backend,
       SCT_regress_vars = aggregation_SCT_regress_vars,
@@ -38,9 +38,27 @@ rlang::list2(
     description = "Prepare CellRanger-kept GEX metadata aligned to the native PCA cells [part_of_graph:GEX] [part_of_graph:seurat_export]",
     command = prepare_GEX_metadata_tibble(
       metadata_tibble = GEX_cellranger_kept_metadata_tibble,
-      barcode_vec = rownames(PCA_BPCells.GEX$cell_embeddings),
-      donor_id_metadata_tibble = donor_id_metadata_tibble,
-      GEM_well_metadata_tibble = GEM_well_metadata_tibble
+      barcode_vec = rownames(PCA_BPCells.GEX$cell_embeddings)
+    )
+  ),
+  targets::tar_target(
+    name = metadata_harmony_tibble.GEX,
+    description = "Join only configured Harmony covariates onto aligned GEX metadata",
+    command = prepare_GEX_metadata_tibble(
+      metadata_tibble = metadata_tibble.GEX,
+      barcode_vec = metadata_tibble.GEX$barcode_w_prefix,
+      donor_id_metadata_tibble = donor_id_harmony_metadata_tibble,
+      GEM_well_metadata_tibble = GEM_well_harmony_metadata_tibble
+    )
+  ),
+  targets::tar_target(
+    name = metadata_analysis_tibble.GEX,
+    description = "Join configured analysis variables onto aligned GEX metadata",
+    command = prepare_GEX_metadata_tibble(
+      metadata_tibble = metadata_tibble.GEX,
+      barcode_vec = metadata_tibble.GEX$barcode_w_prefix,
+      donor_id_metadata_tibble = donor_id_analysis_metadata_tibble,
+      GEM_well_metadata_tibble = GEM_well_analysis_metadata_tibble
     )
   ),
   targets::tar_target(
@@ -65,7 +83,7 @@ rlang::list2(
     description = "Harmony-corrected SCTransform GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:WNN] [part_of_graph:seurat_export]",
     command = run_harmony_on_embedding_matrix(
       embedding_matrix = PCA_BPCells.GEX$cell_embeddings,
-      metadata_tibble = metadata_tibble.GEX,
+      metadata_tibble = metadata_harmony_tibble.GEX,
       harmony_correction_metadata_col_names = aggregation_harmony_correction_metadata_col_names,
       dims = aggregation_GEX_data_PCs,
       cores = 6,
@@ -165,7 +183,7 @@ rlang::list2(
       plots <- plot_embedding_metadata_association_barplots(
         embedding_matrix = PCA_BPCells.GEX$cell_embeddings,
         harmony_embedding_matrix = if (length(aggregation_harmony_correction_metadata_col_names %||% character()) > 0) harmony_embeddings_matrix.GEX else NULL,
-        metadata_tibble = metadata_tibble.GEX,
+        metadata_tibble = metadata_analysis_tibble.GEX,
         dims = aggregation_GEX_data_PCs,
         dim_prefix = "PCA_",
         continuous_technical_cols = c(
@@ -177,14 +195,14 @@ rlang::list2(
           "nucleosome_signal",
           "ATAC_peak_region_frac",
           "vireo_max_prob_singlet",
-          "pre_amp_cycles"
+          "GEM_well_pre_amp_cycles"
         ),
         categorical_technical_cols = c(
           "GEM_well_ID",
-          "multiplex_batch",
-          "multiplex_pool",
-          "run_harmony",
-          "run_harmony_batched",
+          "GEM_well_multiplex_batch",
+          "GEM_well_multiplex_pool",
+          "GEM_well_run_harmony",
+          "GEM_well_run_harmony_batched",
           "vireo_type",
           "discarded_by_cellranger",
           "discarded_by_amulet"

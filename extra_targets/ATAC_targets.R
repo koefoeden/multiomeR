@@ -308,9 +308,19 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 60)
     ),
     targets::tar_target(
+      name = metadata_w_QC_analysis_tibble.ATAC,
+      description = "Join only configured QC-expression metadata onto ATAC QC metrics",
+      command = prepare_GEX_metadata_tibble(
+        metadata_tibble = metadata_w_QC_tibble.ATAC,
+        barcode_vec = metadata_w_QC_tibble.ATAC$barcode_w_prefix,
+        donor_id_metadata_tibble = donor_id_QC_metadata_tibble,
+        GEM_well_metadata_tibble = GEM_well_QC_metadata_tibble
+      )
+    ),
+    targets::tar_target(
       name = QC_excluded_BCs_list.ATAC,
       description = "Identify barcodes failing ATAC QC thresholds",
-      command = get_excluded_BCs(metadata_w_QC_tibble.ATAC, QC_exclude_vector = aggregation_QC_exclude_list_combined_object)
+      command = get_excluded_BCs(metadata_w_QC_analysis_tibble.ATAC, QC_exclude_vector = aggregation_QC_exclude_list_combined_object)
     ),
     targets::tar_target(
       name = QC_filtered_BCs.ATAC,
@@ -321,6 +331,26 @@ rlang::list2(
       name = metadata_filtered_tibble.ATAC,
       description = "BPCells-native ATAC metadata after QC filtering",
       command = dplyr::filter(metadata_w_QC_tibble.ATAC, .data$barcode_w_prefix %in% QC_filtered_BCs.ATAC)
+    ),
+    targets::tar_target(
+      name = metadata_harmony_tibble.ATAC,
+      description = "Join only configured Harmony covariates onto filtered ATAC metadata",
+      command = prepare_GEX_metadata_tibble(
+        metadata_tibble = metadata_filtered_tibble.ATAC,
+        barcode_vec = metadata_filtered_tibble.ATAC$barcode_w_prefix,
+        donor_id_metadata_tibble = donor_id_harmony_metadata_tibble,
+        GEM_well_metadata_tibble = GEM_well_harmony_metadata_tibble
+      )
+    ),
+    targets::tar_target(
+      name = metadata_analysis_tibble.ATAC,
+      description = "Join configured analysis variables onto filtered ATAC metadata",
+      command = prepare_GEX_metadata_tibble(
+        metadata_tibble = metadata_filtered_tibble.ATAC,
+        barcode_vec = metadata_filtered_tibble.ATAC$barcode_w_prefix,
+        donor_id_metadata_tibble = donor_id_analysis_metadata_tibble,
+        GEM_well_metadata_tibble = GEM_well_analysis_metadata_tibble
+      )
     ),
     targets::tar_target(
       name = peak_QC_filtered_BPCells_matrix.ATAC,
@@ -355,7 +385,7 @@ rlang::list2(
       description = "Harmony-corrected BPCells-native ATAC LSI embeddings [part_of_graph:ATAC] [part_of_graph:WNN] [part_of_graph:seurat_export]",
       command = run_harmony_on_embedding_matrix(
         embedding_matrix = LSI_BPCells.ATAC$cell_embeddings,
-        metadata_tibble = metadata_filtered_tibble.ATAC,
+        metadata_tibble = metadata_harmony_tibble.ATAC,
         harmony_correction_metadata_col_names = c(aggregation_harmony_correction_metadata_col_names, aggregation_extra_harmony_covars_ATAC),
         dims = aggregation_ATAC_data_PCs,
         cores = 6
@@ -458,7 +488,7 @@ rlang::list2(
           } else {
             NULL
           },
-          metadata_tibble = metadata_filtered_tibble.ATAC,
+          metadata_tibble = metadata_analysis_tibble.ATAC,
           dims = aggregation_ATAC_data_PCs,
           dim_prefix = "LSI_",
           continuous_technical_cols = c(
@@ -474,10 +504,10 @@ rlang::list2(
           ),
           categorical_technical_cols = c(
             "GEM_well_ID",
-            "multiplex_batch",
-            "multiplex_pool",
-            "run_harmony",
-            "run_harmony_batched",
+            "GEM_well_multiplex_batch",
+            "GEM_well_multiplex_pool",
+            "GEM_well_run_harmony",
+            "GEM_well_run_harmony_batched",
             "vireo_type",
             "discarded_by_cellranger",
             "discarded_by_amulet"
@@ -610,6 +640,26 @@ rlang::list2(
         remove_called_doublets = aggregation_scDblFinder_ATAC_remove_called_doublets,
         max_doublet_fraction_per_cluster = aggregation_scDblFinder_ATAC_max_doublet_fraction_per_cluster
       )
+    ),
+    targets::tar_target(
+      name = metadata_w_cell_types_analysis_tibble.ATAC,
+      description = "Join configured analysis variables onto processed ATAC metadata",
+      command = prepare_GEX_metadata_tibble(
+        metadata_tibble = metadata_w_cell_types_tibble.ATAC,
+        barcode_vec = metadata_w_cell_types_tibble.ATAC$barcode_w_prefix,
+        donor_id_metadata_tibble = donor_id_analysis_metadata_tibble,
+        GEM_well_metadata_tibble = GEM_well_analysis_metadata_tibble
+      )
+    ),
+    targets::tar_target(
+      name = metadata_w_cell_types_annotation_tibble.ATAC,
+      description = "Join complete donor and GEM well annotations onto processed ATAC metadata",
+      command = prepare_GEX_metadata_tibble(
+        metadata_tibble = metadata_w_cell_types_tibble.ATAC,
+        barcode_vec = metadata_w_cell_types_tibble.ATAC$barcode_w_prefix,
+        donor_id_metadata_tibble = donor_id_metadata_tibble,
+        GEM_well_metadata_tibble = GEM_well_annotation_metadata_tibble
+      )
     )
   ),
 
@@ -637,7 +687,7 @@ rlang::list2(
       description = "Bar plots of categorical metadata proportions by cell-type cluster. [checkpoint:ATAC]",
       command = {
         plot <- plot_categorical_bars_plot(
-          metadata_w_cell_types_tibble.ATAC,
+          metadata_w_cell_types_analysis_tibble.ATAC,
           metadata_cols = aggregation_ATAC_categorical_vars,
           cluster_col = "LSI_harmony_SNN_cluster_cell_type"
         )
@@ -661,7 +711,7 @@ rlang::list2(
     tarchetypes::tar_file(
       name = categorical.UMAPs.ATAC,
       description = "UMAPs colored by categorical metadata variables. [checkpoint:ATAC]",
-      command = metadata_w_cell_types_tibble.ATAC |>
+      command = metadata_w_cell_types_analysis_tibble.ATAC |>
         plot_UMAP_from_metadata(variable = categorical_UMAP_var.ATAC) |>
         save_plots_structured(
           dyn_suffix_in_subdir = TRUE,
@@ -841,7 +891,7 @@ rlang::list2(
       description = "Find marker motif-family accessibility scores per ATAC cell type",
       command = get_marker_motif_family_accessibility_from_chromVAR_BPCells_z_scores(
         chromVAR_z_scores_BPCells_matrix = motif_family_accessibility_BPCells_matrix.ATAC,
-        metadata_tibble = metadata_w_cell_types_tibble.ATAC,
+        metadata_tibble = metadata_w_cell_types_analysis_tibble.ATAC,
         group_col = "LSI_harmony_SNN_cluster_cell_type"
       ),
       resources = get_tar_resources(RAM_GB_req = 60)

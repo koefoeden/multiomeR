@@ -63,7 +63,7 @@ rlang::list2(
   tarchetypes::tar_file(
     name = cellranger_reference_json_file,
     description = "Track the Cell Ranger reference metadata JSON assigned to this GEM well",
-    command = dataset_cellranger_arc_reference_json
+    command = GEM_well_cellranger_arc_reference_json
   ),
   targets::tar_target(
     name = cellranger_ref_list,
@@ -97,7 +97,7 @@ rlang::list2(
           BPCells::open_matrix_10x_hdf5(cellranger_h5_file, feature_type = "Gene Expression")
         }
 
-      source_label <- if (length(cellbender_h5_file) > 0L) "CellBender GEX matrix" else "CellRanger GEX matrix"
+      source_label <- if (cellbender_h5_file != "NULL.txt") "CellBender GEX matrix" else "CellRanger GEX matrix"
       if (nrow(gene_expression_matrix) != nrow(gene_features_df)) {
         stop(
           source_label,
@@ -226,36 +226,24 @@ rlang::list2(
     name = amulet_metrics_tibble,
     description = "Run BPCells-native AMULET doublet detection on ATAC fragments and return per-barcode metrics [part_of_graph:parallel] [part_of_graph:seurat_export] [resource_observation: peak_RSS_GB=0.64; walltime_s=15.4; dataset=healthy_PBMC_human; selected_cells=2711; method=/usr/bin/time -v native-only; date=2026-07-12]",
     command = {
-      if (isTRUE(dataset_run_amulet)) {
-        barcode_prefix <- base::paste0(GEM_well_ID, "_")
-        prefixed_barcodes <- base::paste0(barcode_prefix, base::readLines(cellranger_barcodes_tsv))
+      barcode_prefix <- base::paste0(GEM_well_ID, "_")
+      prefixed_barcodes <- base::paste0(barcode_prefix, base::readLines(cellranger_barcodes_tsv))
 
-        calculate_amulet_metrics_BPCells(
-          fragments = fragments_w_prefix_bpcells,
-          barcodes = prefixed_barcodes,
-          min_fragments = 1000L,
-          cellranger_end_inclusive = TRUE,
-          native_source_file = amulet_BPCells_native_source_file
+      calculate_amulet_metrics_BPCells(
+        fragments = fragments_w_prefix_bpcells,
+        barcodes = prefixed_barcodes,
+        min_fragments = 1000L,
+        cellranger_end_inclusive = TRUE,
+        native_source_file = amulet_BPCells_native_source_file
+      ) |>
+        dplyr::rename_with(
+          ~ base::paste0("amulet_", .x),
+          .cols = 2:dplyr::last_col()
         ) |>
-          dplyr::rename_with(
-            ~ base::paste0("amulet_", .x),
-            .cols = 2:dplyr::last_col()
-          ) |>
-          tibble::rownames_to_column("barcode") |>
-          dplyr::mutate(
-            barcode = base::substring(.data$barcode, base::nchar(barcode_prefix) + 1L)
-          )
-      } else {
-        tibble::tibble(
-          barcode = base::readLines(cellranger_barcodes_tsv),
-          amulet_nFrags = NA_integer_,
-          amulet_uniqFrags = NA_integer_,
-          amulet_nAbove2 = NA_integer_,
-          amulet_total.nAbove2 = NA_integer_,
-          amulet_p.value = NA_real_,
-          amulet_q.value = NA_real_
+        tibble::rownames_to_column("barcode") |>
+        dplyr::mutate(
+          barcode = base::substring(.data$barcode, base::nchar(barcode_prefix) + 1L)
         )
-      }
     },
     resources = get_tar_resources(RAM_GB_req = 16, cores_req = 1)
   ),
@@ -303,7 +291,7 @@ rlang::list2(
       dplyr::full_join(amulet_metrics_tibble, by = "barcode") |>
       dplyr::mutate(
         discarded_by_cellranger = is.na(is_cell),
-        discarded_by_amulet = if (isTRUE(dataset_run_amulet)) is.na(amulet_uniqFrags) else FALSE,
+        discarded_by_amulet = is.na(amulet_uniqFrags),
         not_found_in_GEX_matrix = is.na(orig.ident),
         GEM_well_ID = GEM_well_ID,
         dataset = dataset,
@@ -319,7 +307,7 @@ rlang::list2(
   targets::tar_target(
     name = excluded_barcodes_by_type_list,
     description = "Identify barcodes failing per GEM well QC thresholds and group them by exclusion reason",
-    command = get_excluded_BCs(full_metadata_tibble, QC_exclude_vector = dataset_QC_exclude_list_per_GEM_well)
+    command = get_excluded_BCs(full_metadata_tibble, QC_exclude_vector = GEM_well_QC_exclude_list)
   ),
   tarchetypes::tar_file(
     name = excluded_barcodes_by_type_upset,
@@ -335,7 +323,7 @@ rlang::list2(
     description = "Identify CellRanger-only barcodes failing per GEM well QC and group by exclusion reason [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = full_metadata_tibble |>
       dplyr::filter(!discarded_by_cellranger) |>
-      get_excluded_BCs(QC_exclude_vector = dataset_QC_exclude_list_per_GEM_well)
+      get_excluded_BCs(QC_exclude_vector = GEM_well_QC_exclude_list)
   ),
   tarchetypes::tar_file(
     name = excluded_cellranger_only_barcodes_by_type_upset,

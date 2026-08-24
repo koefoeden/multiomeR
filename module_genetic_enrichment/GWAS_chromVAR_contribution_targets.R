@@ -22,7 +22,13 @@ rlang::list2(
     description = "Rank Open Targets L2G gene predictions for all enabled GWAS credible-set loci",
     command = get_open_targets_GWAS_locus_to_gene_tibble(
       GWAS_locus_tibble = GWAS_peak_variant_weight_tibble |>
-        dplyr::distinct(GWAS_ID, studyId, studyLocusId, open_targets_release),
+        dplyr::filter(sourceType == "open_targets") |>
+        dplyr::distinct(
+          GWAS_ID,
+          studyId,
+          studyLocusId,
+          open_targets_release = sourceRelease
+        ),
       open_targets_gwas_credible_sets_evidence_dataset_path = open_targets_gwas_credible_sets_evidence_dataset_path,
       open_targets_target_dataset_path = open_targets_target_dataset_path
     ),

@@ -17,45 +17,66 @@ genetic_enrichment_GWAS_config_tibble <- if (nrow(genetic_enrichment_tibble) == 
 } else {
   GWAS_config_tibble <- purrr::map_dfr(seq_len(nrow(genetic_enrichment_tibble)), \(i) {
     row <- genetic_enrichment_tibble[i, , drop = FALSE]
-    open_targets_studies <- row$genetic_enrichment_open_targets_studies[[1]]
-    if (is.null(open_targets_studies)) {
-      stop("genetic_enrichment_open_targets_studies must be configured for aggregation: ", row$aggregation)
+    GWAS_studies <- row$genetic_enrichment_GWAS_studies[[1]]
+    if (is.null(GWAS_studies)) {
+      stop("genetic_enrichment_GWAS_studies must be configured for aggregation: ", row$aggregation)
     }
 
-    tibble::enframe(open_targets_studies, name = "GWAS_ID", value = "open_targets_config") |>
+    tibble::enframe(GWAS_studies, name = "GWAS_ID", value = "GWAS_config") |>
       dplyr::mutate(
         aggregation = row$aggregation,
-        Category = purrr::map2_chr(open_targets_config, GWAS_ID, \(config, GWAS_ID) {
+        config_order = dplyr::row_number(),
+        Category = purrr::map2_chr(GWAS_config, GWAS_ID, \(config, GWAS_ID) {
           if (is.null(config$Category)) {
-            stop("Missing Open Targets Category for GWAS_ID: ", GWAS_ID)
+            stop("Missing Category for GWAS_ID: ", GWAS_ID)
           }
           as.character(config$Category)
         }),
-        studyId = purrr::map2_chr(open_targets_config, GWAS_ID, \(config, GWAS_ID) {
-          if (is.null(config$studyId)) {
-            stop("Missing Open Targets studyId for GWAS_ID: ", GWAS_ID)
+        sourceId = purrr::map2_chr(GWAS_config, GWAS_ID, \(config, GWAS_ID) {
+          if (is.null(config$sourceId)) {
+            stop("Missing sourceId for GWAS_ID: ", GWAS_ID)
           }
-          as.character(config$studyId)
+          as.character(config$sourceId)
         }),
-        requested_finemappingMethod = purrr::map_chr(open_targets_config, \(config) {
-          finemappingMethod <- config$finemappingMethod
-          if (is.null(finemappingMethod) || is.na(finemappingMethod) || identical(finemappingMethod, "")) {
-            return("auto")
+        sourceType = purrr::map_chr(sourceId, classify_GWAS_source),
+        requested_finemappingMethod = purrr::pmap_chr(
+          dplyr::pick(GWAS_config, sourceType, GWAS_ID),
+          \(GWAS_config, sourceType, GWAS_ID) {
+            config <- GWAS_config
+            finemappingMethod <- config$finemappingMethod
+            if (identical(sourceType, "local_file")) {
+              if (!is.null(finemappingMethod)) {
+                stop("finemappingMethod must come from the local file for GWAS_ID: ", GWAS_ID)
+              }
+              return(NA_character_)
+            }
+            if (is.null(finemappingMethod) || is.na(finemappingMethod) || identical(finemappingMethod, "")) {
+              return("auto")
+            }
+            method_lower <- stringr::str_to_lower(finemappingMethod)
+            dplyr::case_when(
+              method_lower == "auto" ~ "auto",
+              method_lower == "susie" ~ "SuSie",
+              method_lower == "susie-inf" ~ "SuSiE-inf",
+              method_lower == "pics" ~ "PICS",
+              TRUE ~ as.character(finemappingMethod)
+            )
           }
-          method_lower <- stringr::str_to_lower(finemappingMethod)
-          dplyr::case_when(
-            method_lower == "auto" ~ "auto",
-            method_lower == "susie" ~ "SuSie",
-            method_lower == "susie-inf" ~ "SuSiE-inf",
-            method_lower == "pics" ~ "PICS",
-            TRUE ~ as.character(finemappingMethod)
-          )
-        }),
-        variant_weighting_mode = purrr::map2_chr(open_targets_config, GWAS_ID, \(config, GWAS_ID) {
-          normalize_open_targets_variant_weighting_mode(config$variant_weighting_mode, GWAS_ID = GWAS_ID)
+        ),
+        variant_weighting_mode = purrr::map2_chr(GWAS_config, GWAS_ID, \(config, GWAS_ID) {
+          normalize_GWAS_variant_weighting_mode(config$variant_weighting_mode, GWAS_ID = GWAS_ID)
         })
       ) |>
-      dplyr::select(aggregation, Category, GWAS_ID, studyId, requested_finemappingMethod, variant_weighting_mode)
+      dplyr::select(
+        aggregation,
+        config_order,
+        Category,
+        GWAS_ID,
+        sourceId,
+        sourceType,
+        requested_finemappingMethod,
+        variant_weighting_mode
+      )
   })
 
   duplicated_GWAS <- GWAS_config_tibble |>
@@ -67,7 +88,17 @@ genetic_enrichment_GWAS_config_tibble <- if (nrow(genetic_enrichment_tibble) == 
 
   GWAS_config_tibble |>
     dplyr::group_by(aggregation) |>
-    tidyr::nest(GWAS_inputs_config_tibble = c(Category, GWAS_ID, studyId, requested_finemappingMethod, variant_weighting_mode)) |>
+    tidyr::nest(
+      GWAS_inputs_config_tibble = c(
+        config_order,
+        Category,
+        GWAS_ID,
+        sourceId,
+        sourceType,
+        requested_finemappingMethod,
+        variant_weighting_mode
+      )
+    ) |>
     dplyr::ungroup()
 }
 

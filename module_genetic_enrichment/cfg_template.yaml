@@ -1,24 +1,24 @@
 immune_human_2x:
-  genetic_enrichment_open_targets_studies:
+  genetic_enrichment_GWAS_studies:
     LymphocyteCount_Vuckovic2020:
       Category: positive_control
-      studyId: GCST90002388
+      sourceId: GCST90002388
       finemappingMethod: auto
     MonocyteCount_Vuckovic2020:
       Category: positive_control
-      studyId: GCST90002393
+      sourceId: GCST90002393
       finemappingMethod: auto
     BCellNeoplasm_Guler2025:
       Category: B_cell_neoplasm
-      studyId: GCST90624736
+      sourceId: GCST90624736
       finemappingMethod: auto
     BMI_Verma2024:
       Category: negative_control
-      studyId: GCST90475159
+      sourceId: GCST90475159
       finemappingMethod: auto
     EducationalAttainment_Okbay2022:
       Category: brain_cognition
-      studyId: GCST90105038
+      sourceId: GCST90105038
       finemappingMethod: auto
 PBMC_human_6x:
   inherits: immune_human_2x

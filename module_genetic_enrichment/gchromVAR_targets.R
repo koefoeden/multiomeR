@@ -16,17 +16,6 @@ rlang::list2(
     command = SummarizedExperiment::rowRanges(chromVAR_obj.ATAC)
   ),
   targets::tar_target(
-    name = GWAS_input_records,
-    description = "Convert one configured GWAS input to one record for dynamic trait-level chromVAR branching",
-    command = get_GWAS_chromVAR_input_record(
-      GWAS_input_tibble = GWAS_analysis_inputs_tibble,
-      open_targets_credible_set_dataset_path = open_targets_credible_set_dataset_path
-    ),
-    pattern = map(GWAS_analysis_inputs_tibble),
-    iteration = "list",
-    resources = get_tar_resources(RAM_GB_req = 40)
-  ),
-  targets::tar_target(
     name = GWAS_peak_weight_records,
     description = "Build capped peak posterior-probability weights for one GWAS [part_of_graph:genetic_enrichment_single_nucleus]",
     command = get_GWAS_chromVAR_peak_weight_record(

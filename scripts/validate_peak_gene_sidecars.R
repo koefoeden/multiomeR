@@ -30,6 +30,8 @@ normalized_branch <- list(
   ),
   aggregate_depth_tibble = tibble::tibble(
     aggregate_id = c("agg1", "agg2", "agg3"),
+    donor_id = c("donor1", "donor2", "donor3"),
+    state_bin = c("state1", "state1", "state2"),
     n_cells = c(10, 11, 12),
     GEX_depth = c(1000, 1100, 1200),
     ATAC_depth = c(2000, 2100, 2200)
@@ -91,6 +93,7 @@ results <- tibble::tibble(
   correlation = c(-0.2, 0.12, NA, 0.33, 0.34, -0.1),
   FDR = c(0.2, 0.01, 0.03, 0.04, 0.06, 0.01),
   isSelfPromoter = c(FALSE, FALSE, TRUE, FALSE, FALSE, TRUE),
+  isTargetGeneBody = c(FALSE, FALSE, TRUE, FALSE, FALSE, TRUE),
   distance = c(-5100, 12000, 100, 6000, 9000, -100)
 )
 
@@ -112,8 +115,11 @@ legacy_support <- results |>
   dplyr::summarise(
     tested_pairs = dplyr::n(),
     FDR_significant_pairs = sum(.data$FDR < 0.05, na.rm = TRUE),
-    positive_non_promoter_links = sum(
-      .data$correlation > 0 & .data$FDR < 0.05 & !.data$isSelfPromoter,
+    candidate_enhancer_links = sum(
+      .data$correlation >= 0.15 &
+        .data$FDR < 0.05 &
+        !.data$isSelfPromoter &
+        !.data$isTargetGeneBody,
       na.rm = TRUE
     ),
     .by = "cell_group"

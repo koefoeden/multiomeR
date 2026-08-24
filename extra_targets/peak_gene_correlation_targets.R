@@ -27,23 +27,23 @@ rlang::list2(
   ),
   targets::tar_target(
     name = peak_gene_correlation_cell_group_diagnostics_tibble.peak_gene_correlation.WNN,
-    description = "Record broad cell groups dropped before KNN aggregation",
+    description = "Record broad cell groups dropped before donor-state pseudobulking",
     command = make_peak_gene_correlation_cell_group_diagnostics(
       metadata_tibble = metadata_w_cell_types_tibble.WNN,
       GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX,
       ATAC_counts_matrix = consensus_peak_BPCells_matrix.ATAC,
-      embedding_matrix = harmony_embeddings_matrix.GEX
+      embedding_matrix = harmony_embeddings_matrix.ATAC
     ),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = peak_gene_correlation_cell_groups_tibble.peak_gene_correlation.WNN,
-    description = "Split eligible broad WNN cell-type groups for KNN aggregate construction",
+    description = "Split eligible broad WNN cell-type groups for donor-state pseudobulking",
     command = make_peak_gene_correlation_cell_groups(
       metadata_tibble = metadata_w_cell_types_tibble.WNN,
       GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX,
       ATAC_counts_matrix = consensus_peak_BPCells_matrix.ATAC,
-      embedding_matrix = harmony_embeddings_matrix.GEX
+      embedding_matrix = harmony_embeddings_matrix.ATAC
     ) |>
       dplyr::group_by(cell_group) |>
       targets::tar_group(),
@@ -51,22 +51,40 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_knn_aggregates_tibbles.peak_gene_correlation.WNN,
-    description = "Build non-overlapping ArchR-style KNN aggregates within one broad cell type",
-    command = make_peak_gene_correlation_knn_aggregates(
+    name = peak_gene_correlation_donor_state_records.peak_gene_correlation.WNN,
+    description = "Build mutually exclusive donor by ATAC-state pseudobulks within one broad cell type",
+    command = make_peak_gene_correlation_donor_state_record(
       cell_group_tibble = peak_gene_correlation_cell_groups_tibble.peak_gene_correlation.WNN,
-      embedding_matrix = harmony_embeddings_matrix.GEX
+      metadata_tibble = metadata_w_cell_types_tibble.WNN,
+      ATAC_embedding_matrix = harmony_embeddings_matrix.ATAC
     ),
     pattern = map(peak_gene_correlation_cell_groups_tibble.peak_gene_correlation.WNN),
-    iteration = "vector",
-    packages = w_def("FNN"),
+    iteration = "list",
     resources = get_tar_resources(RAM_GB_req = 32)
+  ),
+  targets::tar_target(
+    name = peak_gene_correlation_donor_state_aggregates_tibble.peak_gene_correlation.WNN,
+    description = "Combine retained donor by ATAC-state pseudobulk memberships",
+    command = combine_peak_gene_correlation_donor_state_records(
+      records = peak_gene_correlation_donor_state_records.peak_gene_correlation.WNN,
+      component = "aggregates"
+    ),
+    resources = get_tar_resources(RAM_GB_req = 16)
+  ),
+  targets::tar_target(
+    name = peak_gene_correlation_donor_state_diagnostics_tibble.peak_gene_correlation.WNN,
+    description = "Combine donor-state pseudobulk eligibility diagnostics",
+    command = combine_peak_gene_correlation_donor_state_records(
+      records = peak_gene_correlation_donor_state_records.peak_gene_correlation.WNN,
+      component = "diagnostics"
+    ),
+    resources = get_tar_resources(RAM_GB_req = 8)
   ),
   targets::tar_target(
     name = peak_gene_correlation_group_chromosome_tibble.peak_gene_correlation.WNN,
     description = "Split peak-gene correlation work by broad cell type and chromosome",
     command = make_peak_gene_correlation_group_chromosome_tibble(
-      knn_aggregates_tibble = peak_gene_correlation_knn_aggregates_tibbles.peak_gene_correlation.WNN,
+      donor_state_aggregates_tibble = peak_gene_correlation_donor_state_aggregates_tibble.peak_gene_correlation.WNN,
       chromosome_tibble = peak_gene_correlation_chromosome_tibble.peak_gene_correlation.WNN,
       candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.peak_gene_correlation.WNN
     ),
@@ -75,10 +93,10 @@ rlang::list2(
   ),
   targets::tar_target(
     name = peak_gene_correlation_aggregate_matrices.peak_gene_correlation.WNN,
-    description = "Aggregate chromosome-specific GEX and ATAC counts over KNN aggregates",
+    description = "Aggregate chromosome-specific GEX and ATAC counts over donor-state pseudobulks",
     command = make_peak_gene_correlation_aggregate_matrices(
       group_chromosome_tibble = peak_gene_correlation_group_chromosome_tibble.peak_gene_correlation.WNN,
-      knn_aggregates_tibble = peak_gene_correlation_knn_aggregates_tibbles.peak_gene_correlation.WNN,
+      donor_state_aggregates_tibble = peak_gene_correlation_donor_state_aggregates_tibble.peak_gene_correlation.WNN,
       candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.peak_gene_correlation.WNN,
       GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX,
       ATAC_counts_matrix = consensus_peak_BPCells_matrix.ATAC
@@ -88,7 +106,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = peak_gene_correlation_normalized_aggregate_matrices.peak_gene_correlation.WNN,
-    description = "Normalize KNN aggregate GEX and ATAC matrices as log1p CPM",
+    description = "Normalize donor-state pseudobulk GEX and ATAC matrices as log1p CPM",
     command = normalize_peak_gene_correlation_aggregate_matrices(
       peak_gene_correlation_aggregate_matrices.peak_gene_correlation.WNN
     ),
@@ -97,7 +115,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = peak_gene_correlation_results_tibbles.peak_gene_correlation.WNN,
-    description = "Score Pearson peak-gene correlations for one broad cell type and chromosome",
+    description = "Score donor-adjusted peak-gene associations for one broad cell type and chromosome",
     command = score_peak_gene_correlations_for_cell_group(
       normalized_aggregate_matrices = peak_gene_correlation_normalized_aggregate_matrices.peak_gene_correlation.WNN,
       candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.peak_gene_correlation.WNN
@@ -128,7 +146,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = peak_gene_correlation_links_tibble.peak_gene_correlation.WNN,
-    description = "Filter positive non-promoter peak-gene links at FDR < 0.05",
+    description = "Filter positive candidate enhancer-gene links at FDR < 0.05",
     command = make_peak_gene_correlation_links(peak_gene_correlation_results_tibble.peak_gene_correlation.WNN),
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
@@ -137,6 +155,7 @@ rlang::list2(
     description = "Combine peak-gene correlation cell-group and branch diagnostics",
     command = dplyr::bind_rows(
       peak_gene_correlation_cell_group_diagnostics_tibble.peak_gene_correlation.WNN,
+      peak_gene_correlation_donor_state_diagnostics_tibble.peak_gene_correlation.WNN,
       peak_gene_correlation_branch_diagnostics_tibbles.peak_gene_correlation.WNN
     ),
     resources = get_tar_resources(RAM_GB_req = 16)

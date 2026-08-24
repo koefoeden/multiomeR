@@ -28,6 +28,8 @@ make_peak_gene_correlation_gene_TSS_tibble <- function(
         TRUE ~ NA_character_
       ),
       chr = as.character(.data$seqnames),
+      gene_start = as.integer(.data$start),
+      gene_end = as.integer(.data$end),
       TSS = dplyr::if_else(as.character(.data$strand) == "-", .data$end, .data$start),
       strand = as.character(.data$strand),
       gene_biotype = as.character(.data$gene_biotype)
@@ -39,6 +41,8 @@ make_peak_gene_correlation_gene_TSS_tibble <- function(
       "gene_name",
       "gene_matrix_feature",
       "chr",
+      "gene_start",
+      "gene_end",
       "TSS",
       "strand",
       "gene_biotype"
@@ -98,8 +102,12 @@ make_peak_gene_correlation_candidate_pairs <- function(
       TargetGene = character(),
       gene_matrix_feature = character(),
       TargetGeneTSS = integer(),
+      TargetGeneStart = integer(),
+      TargetGeneEnd = integer(),
       distance = integer(),
-      isSelfPromoter = logical()
+      isSelfPromoter = logical(),
+      isTargetGeneBody = logical(),
+      link_class = character()
     ))
   }
 
@@ -114,6 +122,8 @@ make_peak_gene_correlation_candidate_pairs <- function(
         TargetGene = .data$gene_name,
         gene_matrix_feature = .data$gene_matrix_feature,
         TargetGeneTSS = .data$TSS,
+        TargetGeneStart = .data$gene_start,
+        TargetGeneEnd = .data$gene_end,
         target_gene_strand = .data$strand
       )
   ) |>
@@ -129,7 +139,14 @@ make_peak_gene_correlation_candidate_pairs <- function(
         .data$TargetGeneTSS + 1500L,
         .data$TargetGeneTSS + 500L
       ),
-      isSelfPromoter = .data$end >= .data$promoter_start & .data$start <= .data$promoter_end
+      isSelfPromoter = .data$end >= .data$promoter_start & .data$start <= .data$promoter_end,
+      isTargetGeneBody = .data$end >= .data$TargetGeneStart & .data$start <= .data$TargetGeneEnd,
+      link_class = dplyr::case_when(
+        .data$isSelfPromoter ~ "self_promoter",
+        .data$isTargetGeneBody ~ "target_gene_body",
+        abs(.data$distance) <= 10000L ~ "proximal_nonpromoter",
+        TRUE ~ "distal"
+      )
     ) |>
     dplyr::select(
       "peak",
@@ -141,8 +158,12 @@ make_peak_gene_correlation_candidate_pairs <- function(
       "TargetGene",
       "gene_matrix_feature",
       "TargetGeneTSS",
+      "TargetGeneStart",
+      "TargetGeneEnd",
       "distance",
-      "isSelfPromoter"
+      "isSelfPromoter",
+      "isTargetGeneBody",
+      "link_class"
     ) |>
     dplyr::distinct(.data$peak, .data$TargetGeneID, .keep_all = TRUE)
 
@@ -242,6 +263,8 @@ make_peak_gene_correlation_cell_group_diagnostics <- function(
       cell_group = .data$cell_group,
       chr = NA_character_,
       n_cells = .data$n_cells,
+      n_donors = NA_integer_,
+      n_state_bins = NA_integer_,
       n_aggregates = NA_integer_,
       n_candidate_pairs = NA_integer_,
       n_detected_genes = NA_integer_,
@@ -250,91 +273,290 @@ make_peak_gene_correlation_cell_group_diagnostics <- function(
     )
 }
 
-#' Make peak gene correlation KNN aggregates
+#' Build the donor-aware peak gene correlation nuisance design
 #'
-#' Build overlapping KNN pseudobulk aggregates for one cell group.
-#'
-#' @param cell_group_tibble One-row tibble from `make_peak_gene_correlation_cell_groups()`
-#'   containing `cell_group` and list-column `barcodes`.
-#' @param embedding_matrix Numeric matrix with cells/barcodes in rows and embedding dimensions in columns; row names are carried into downstream coordinates.
-#' @param dims Integer dimension indices to use; combined with `dim_prefix` to select columns such as `PCA_1` or `LSI_2`.
-#' @param k Number of nearest neighbors to use for KNN/SNN construction.
-#' @param seed_attempts Maximum number of candidate seed cells to sample for KNN
-#'   aggregate construction.
-#' @param overlap_cutoff Maximum allowed overlap fraction with already accepted
-#'   aggregates; higher values retain more redundant aggregates.
-#' @param seed Random seed passed to stochastic clustering, sampling, or embedding code for reproducibility.
-#' @return A tibble with one accepted aggregate per row, including `cell_group`,
-#'   `aggregate_id`, list-column `barcodes`, and `n_cells`.
+#' @param aggregate_depth_tibble Donor-state aggregate metadata.
+#' @return A full-rank numeric design matrix containing donor, ATAC state, and
+#'   library-depth terms.
 #' @keywords internal
 
-make_peak_gene_correlation_knn_aggregates <- function(
+make_peak_gene_correlation_design_matrix <- function(aggregate_depth_tibble) {
+  design_data <- aggregate_depth_tibble |>
+    dplyr::transmute(
+      donor_id = factor(.data$donor_id),
+      state_bin = factor(.data$state_bin),
+      log_GEX_depth = log1p(.data$GEX_depth),
+      log_ATAC_depth = log1p(.data$ATAC_depth)
+    )
+
+  design <- stats::model.matrix(
+    ~ donor_id + state_bin + scale(log_GEX_depth) + scale(log_ATAC_depth),
+    data = design_data
+  )
+  finite_cols <- apply(design, 2, \(x) all(is.finite(x)))
+  design <- design[, finite_cols, drop = FALSE]
+  design_qr <- qr(design)
+  design[, design_qr$pivot[seq_len(design_qr$rank)], drop = FALSE]
+}
+
+residualize_peak_gene_correlation_matrix <- function(feature_matrix, design) {
+  feature_matrix <- as.matrix(feature_matrix)
+  t(qr.resid(qr(design), t(feature_matrix)))
+}
+
+#' Make donor by ATAC state pseudobulks for peak gene correlation
+#'
+#' Partition one broad cell group into mutually exclusive ATAC-defined states,
+#' then pseudobulk cells within donor and state. The retained table requires
+#' repeated state observations within donor and broad state support across
+#' donors, so donor fixed effects can be used in the association model.
+#'
+#' @param cell_group_tibble One-row tibble from
+#'   `make_peak_gene_correlation_cell_groups()`.
+#' @param metadata_tibble Cell metadata containing barcode, donor, and depth
+#'   columns.
+#' @param ATAC_embedding_matrix ATAC Harmony/LSI embedding with cells in rows.
+#' @param donor_col Metadata column containing biological donor identifiers.
+#' @param dims Embedding dimensions to use. Named `LSI_*` columns are preferred.
+#' @param min_cells_per_donor_state Minimum cells in a retained donor-state
+#'   pseudobulk.
+#' @param min_donors Minimum retained donors required for the cell group.
+#' @param min_donors_per_state Minimum donors supporting each retained state.
+#' @param min_states_per_donor Minimum retained states required per donor.
+#' @param max_state_bins Maximum number of ATAC state bins.
+#' @param seed Random seed used for deterministic k-means initialization.
+#' @return A list with `aggregates` and a one-row `diagnostics` tibble.
+#' @keywords internal
+
+make_peak_gene_correlation_donor_state_record <- function(
   cell_group_tibble,
-  embedding_matrix,
-  dims = 1:30,
-  k = 100L,
-  seed_attempts = 500L,
-  overlap_cutoff = 0.8,
+  metadata_tibble,
+  ATAC_embedding_matrix,
+  donor_col = "donor_id",
+  dims = 2:20,
+  min_cells_per_donor_state = 20L,
+  min_donors = 30L,
+  min_donors_per_state = 20L,
+  min_states_per_donor = 2L,
+  max_state_bins = 20L,
   seed = 1L
 ) {
   cell_group <- cell_group_tibble$cell_group[[1]]
-  barcodes <- cell_group_tibble$barcodes[[1]]
-  barcodes <- intersect(barcodes, rownames(embedding_matrix))
-
-  dim_cols <- paste0("PCA_", dims)
-  if (all(dim_cols %in% colnames(embedding_matrix))) {
-    available_dims <- dim_cols
-  } else {
-    available_dims <- seq_len(min(max(dims), ncol(embedding_matrix)))
-  }
-
-  group_embedding <- embedding_matrix[barcodes, available_dims, drop = FALSE]
-  aggregate_size <- min(as.integer(k), nrow(group_embedding))
-  set.seed(seed)
-  seed_indices <- sample(seq_len(nrow(group_embedding)), min(seed_attempts, nrow(group_embedding)))
-  knn <- FNN::get.knnx(
-    data = group_embedding,
-    query = group_embedding[seed_indices, , drop = FALSE],
-    k = aggregate_size,
-    algorithm = "kd_tree"
+  empty_aggregates <- tibble::tibble(
+    cell_group = character(),
+    aggregate_id = character(),
+    donor_id = character(),
+    state_bin = character(),
+    barcodes = list(),
+    n_cells = integer(),
+    GEX_depth = numeric(),
+    ATAC_depth = numeric()
   )
-  accepted_barcodes <- list()
 
-  for (seed_position in seq_along(seed_indices)) {
-    seed_idx <- seed_indices[[seed_position]]
-    neighbor_indices <- unique(c(seed_idx, knn$nn.index[seed_position, ]))
-    neighbor_indices <- neighbor_indices[neighbor_indices >= 1L & neighbor_indices <= nrow(group_embedding)]
-    candidate_barcodes <- rownames(group_embedding)[utils::head(neighbor_indices, aggregate_size)]
+  make_diagnostic <- function(
+    skipped_reason = NA_character_,
+    n_cells = 0L,
+    n_donors = 0L,
+    n_state_bins = 0L,
+    n_aggregates = 0L
+  ) {
+    tibble::tibble(
+      cell_group = cell_group,
+      chr = NA_character_,
+      n_cells = as.integer(n_cells),
+      n_donors = as.integer(n_donors),
+      n_state_bins = as.integer(n_state_bins),
+      n_aggregates = as.integer(n_aggregates),
+      n_candidate_pairs = NA_integer_,
+      n_detected_genes = NA_integer_,
+      n_accessible_peaks = NA_integer_,
+      skipped_reason = skipped_reason
+    )
+  }
 
-    overlaps <- if (length(accepted_barcodes) == 0L) {
-      numeric()
-    } else {
-      vapply(
-        accepted_barcodes,
-        \(accepted) length(intersect(candidate_barcodes, accepted)) / aggregate_size,
-        numeric(1)
+  if (!donor_col %in% colnames(metadata_tibble)) {
+    return(list(
+      aggregates = empty_aggregates,
+      diagnostics = make_diagnostic("missing_donor_metadata")
+    ))
+  }
+
+  requested_barcodes <- intersect(
+    cell_group_tibble$barcodes[[1]],
+    rownames(ATAC_embedding_matrix)
+  )
+  GEX_depth_cols <- intersect(c("nCount_RNA", "gex_umis_count"), colnames(metadata_tibble))
+  ATAC_depth_cols <- intersect(c("nCount_ATAC", "atac_fragments"), colnames(metadata_tibble))
+  if (length(GEX_depth_cols) == 0L || length(ATAC_depth_cols) == 0L) {
+    return(list(
+      aggregates = empty_aggregates,
+      diagnostics = make_diagnostic("missing_library_depth_metadata")
+    ))
+  }
+  GEX_depth_col <- GEX_depth_cols[[1]]
+  ATAC_depth_col <- ATAC_depth_cols[[1]]
+  group_metadata <- metadata_tibble |>
+    dplyr::distinct(.data$barcode_w_prefix, .keep_all = TRUE) |>
+    dplyr::filter(.data$barcode_w_prefix %in% requested_barcodes) |>
+    dplyr::transmute(
+      barcode_w_prefix = .data$barcode_w_prefix,
+      donor_id = as.character(.data[[donor_col]]),
+      GEX_cell_depth = dplyr::coalesce(as.numeric(.data[[GEX_depth_col]]), 0),
+      ATAC_cell_depth = dplyr::coalesce(as.numeric(.data[[ATAC_depth_col]]), 0)
+    ) |>
+    dplyr::filter(!is.na(.data$donor_id), .data$donor_id != "")
+
+  donor_counts <- group_metadata |>
+    dplyr::count(.data$donor_id, name = "n_cells")
+  eligible_donors <- donor_counts |>
+    dplyr::filter(.data$n_cells >= min_cells_per_donor_state * min_states_per_donor) |>
+    dplyr::pull(.data$donor_id)
+  group_metadata <- group_metadata |>
+    dplyr::filter(.data$donor_id %in% eligible_donors)
+
+  if (length(eligible_donors) < min_donors) {
+    return(list(
+      aggregates = empty_aggregates,
+      diagnostics = make_diagnostic(
+        "too_few_donors_with_sufficient_cells",
+        n_cells = nrow(group_metadata),
+        n_donors = length(eligible_donors)
       )
-    }
+    ))
+  }
 
-    if (length(overlaps) == 0L || max(overlaps) <= overlap_cutoff) {
-      accepted_barcodes[[length(accepted_barcodes) + 1L]] <- candidate_barcodes
+  median_cells_per_donor <- stats::median(
+    donor_counts$n_cells[donor_counts$donor_id %in% eligible_donors]
+  )
+  n_state_bins <- min(
+    as.integer(max_state_bins),
+    as.integer(floor(median_cells_per_donor / min_cells_per_donor_state))
+  )
+  if (n_state_bins < min_states_per_donor) {
+    return(list(
+      aggregates = empty_aggregates,
+      diagnostics = make_diagnostic(
+        "too_few_adaptive_state_bins",
+        n_cells = nrow(group_metadata),
+        n_donors = length(eligible_donors),
+        n_state_bins = n_state_bins
+      )
+    ))
+  }
+
+  available_dims <- intersect(paste0("LSI_", dims), colnames(ATAC_embedding_matrix))
+  if (length(available_dims) == 0L) {
+    available_dims <- seq_len(min(length(dims), ncol(ATAC_embedding_matrix)))
+  }
+  group_metadata <- group_metadata |>
+    dplyr::arrange(match(.data$barcode_w_prefix, rownames(ATAC_embedding_matrix)))
+  group_embedding <- ATAC_embedding_matrix[
+    group_metadata$barcode_w_prefix,
+    available_dims,
+    drop = FALSE
+  ]
+  variable_dims <- apply(group_embedding, 2, stats::sd, na.rm = TRUE) > 0
+  group_embedding <- scale(group_embedding[, variable_dims, drop = FALSE])
+  if (ncol(group_embedding) == 0L || anyNA(group_embedding)) {
+    return(list(
+      aggregates = empty_aggregates,
+      diagnostics = make_diagnostic(
+        "invalid_ATAC_embedding",
+        n_cells = nrow(group_metadata),
+        n_donors = length(eligible_donors),
+        n_state_bins = n_state_bins
+      )
+    ))
+  }
+
+  set.seed(seed)
+  state_fit <- stats::kmeans(
+    x = group_embedding,
+    centers = n_state_bins,
+    iter.max = 50L,
+    nstart = 1L,
+    algorithm = "Lloyd"
+  )
+  state_width <- nchar(as.character(n_state_bins))
+  group_metadata$state_bin <- sprintf(
+    paste0("ATAC_state_%0", state_width, "d"),
+    state_fit$cluster
+  )
+
+  donor_state_cells <- group_metadata |>
+    dplyr::summarise(
+      barcodes = list(.data$barcode_w_prefix),
+      n_cells = dplyr::n(),
+      GEX_depth = sum(.data$GEX_cell_depth),
+      ATAC_depth = sum(.data$ATAC_cell_depth),
+      .by = c("donor_id", "state_bin")
+    ) |>
+    dplyr::filter(.data$n_cells >= min_cells_per_donor_state)
+
+  repeat {
+    previous_n <- nrow(donor_state_cells)
+    retained_states <- donor_state_cells |>
+      dplyr::summarise(n_donors = dplyr::n_distinct(.data$donor_id), .by = "state_bin") |>
+      dplyr::filter(.data$n_donors >= min_donors_per_state) |>
+      dplyr::pull(.data$state_bin)
+    donor_state_cells <- donor_state_cells |>
+      dplyr::filter(.data$state_bin %in% retained_states)
+    retained_donors <- donor_state_cells |>
+      dplyr::summarise(n_states = dplyr::n_distinct(.data$state_bin), .by = "donor_id") |>
+      dplyr::filter(.data$n_states >= min_states_per_donor) |>
+      dplyr::pull(.data$donor_id)
+    donor_state_cells <- donor_state_cells |>
+      dplyr::filter(.data$donor_id %in% retained_donors)
+    if (nrow(donor_state_cells) == previous_n) {
+      break
     }
   }
 
-  tibble::tibble(
-    cell_group = cell_group,
-    aggregate_id = paste0(make.names(cell_group), "_knn_", seq_along(accepted_barcodes)),
-    barcodes = accepted_barcodes,
-    n_cells = lengths(accepted_barcodes)
+  retained_n_donors <- dplyr::n_distinct(donor_state_cells$donor_id)
+  retained_n_states <- dplyr::n_distinct(donor_state_cells$state_bin)
+  if (retained_n_donors < min_donors || retained_n_states < min_states_per_donor) {
+    return(list(
+      aggregates = empty_aggregates,
+      diagnostics = make_diagnostic(
+        "insufficient_repeated_donor_state_support",
+        n_cells = sum(donor_state_cells$n_cells),
+        n_donors = retained_n_donors,
+        n_state_bins = retained_n_states,
+        n_aggregates = nrow(donor_state_cells)
+      )
+    ))
+  }
+
+  aggregates <- donor_state_cells |>
+    dplyr::arrange(.data$donor_id, .data$state_bin) |>
+    dplyr::mutate(
+      cell_group = cell_group,
+      aggregate_id = paste(make.names(cell_group), make.names(.data$donor_id), .data$state_bin, sep = "__"),
+      .before = 1
+    )
+
+  list(
+    aggregates = aggregates,
+    diagnostics = make_diagnostic(
+      n_cells = sum(aggregates$n_cells),
+      n_donors = retained_n_donors,
+      n_state_bins = retained_n_states,
+      n_aggregates = nrow(aggregates)
+    )
   )
 }
 
+combine_peak_gene_correlation_donor_state_records <- function(records, component) {
+  stopifnot(component %in% c("aggregates", "diagnostics"))
+  purrr::map_dfr(records, component)
+}
+
 make_peak_gene_correlation_group_chromosome_tibble <- function(
-  knn_aggregates_tibble,
+  donor_state_aggregates_tibble,
   chromosome_tibble,
   candidate_pairs_tibble
 ) {
-  cell_groups <- knn_aggregates_tibble |>
+  cell_groups <- donor_state_aggregates_tibble |>
     dplyr::distinct(.data$cell_group)
 
   tidyr::crossing(cell_groups, chromosome_tibble) |>
@@ -347,9 +569,9 @@ make_peak_gene_correlation_group_chromosome_tibble <- function(
     targets::tar_group()
 }
 
-make_aggregate_membership_matrix <- function(knn_aggregates_tibble) {
-  aggregate_ids <- knn_aggregates_tibble$aggregate_id
-  aggregate_barcodes <- knn_aggregates_tibble$barcodes
+make_aggregate_membership_matrix <- function(aggregates_tibble) {
+  aggregate_ids <- aggregates_tibble$aggregate_id
+  aggregate_barcodes <- aggregates_tibble$barcodes
   cell_barcodes <- unique(unlist(aggregate_barcodes, use.names = FALSE))
 
   Matrix::sparseMatrix(
@@ -372,12 +594,12 @@ aggregate_BPCells_matrix_by_membership <- function(feature_matrix, features, mem
 
 #' Make peak gene correlation aggregate matrices
 #'
-#' Aggregate GEX and ATAC count matrices over accepted KNN pseudobulk groups.
+#' Aggregate GEX and ATAC count matrices over donor-state pseudobulk groups.
 #'
 #' @param group_chromosome_tibble One-row branch tibble with `cell_group` and
 #'   `chr` selecting the correlation branch.
-#' @param knn_aggregates_tibble Aggregate membership tibble from
-#'   `make_peak_gene_correlation_knn_aggregates()`.
+#' @param donor_state_aggregates_tibble Aggregate membership tibble from
+#'   `make_peak_gene_correlation_donor_state_record()`.
 #' @param candidate_pairs_tibble Candidate peak-gene pairs; only pairs on the
 #'   branch chromosome are used to select features.
 #' @param GEX_counts_matrix Gene-by-cell count matrix; row names are gene IDs/names and column names are cell barcodes.
@@ -388,7 +610,7 @@ aggregate_BPCells_matrix_by_membership <- function(feature_matrix, features, mem
 
 make_peak_gene_correlation_aggregate_matrices <- function(
   group_chromosome_tibble,
-  knn_aggregates_tibble,
+  donor_state_aggregates_tibble,
   candidate_pairs_tibble,
   GEX_counts_matrix,
   ATAC_counts_matrix
@@ -398,7 +620,7 @@ make_peak_gene_correlation_aggregate_matrices <- function(
   branch_pairs <- candidate_pairs_tibble |>
     dplyr::filter(.data$chr == !!chr)
 
-  branch_aggregates <- knn_aggregates_tibble |>
+  branch_aggregates <- donor_state_aggregates_tibble |>
     dplyr::filter(.data$cell_group == !!cell_group)
   membership_matrix <- make_aggregate_membership_matrix(branch_aggregates)
 
@@ -413,14 +635,18 @@ make_peak_gene_correlation_aggregate_matrices <- function(
     membership_matrix = membership_matrix
   )
 
-  aggregate_depth_tibble <- tibble::tibble(
-    cell_group = cell_group,
-    chr = chr,
-    aggregate_id = colnames(membership_matrix),
-    n_cells = Matrix::colSums(membership_matrix),
-    GEX_depth = Matrix::colSums(GEX_counts),
-    ATAC_depth = Matrix::colSums(ATAC_counts)
-  )
+  aggregate_depth_tibble <- branch_aggregates |>
+    dplyr::arrange(match(.data$aggregate_id, colnames(membership_matrix))) |>
+    dplyr::select(
+      "cell_group",
+      "aggregate_id",
+      "donor_id",
+      "state_bin",
+      "n_cells",
+      "GEX_depth",
+      "ATAC_depth"
+    ) |>
+    dplyr::mutate(chr = chr, .after = "cell_group")
 
   list(
     cell_group = cell_group,
@@ -431,9 +657,13 @@ make_peak_gene_correlation_aggregate_matrices <- function(
   )
 }
 
-normalize_peak_gene_correlation_counts <- function(counts_matrix, scale_factor = 1e6) {
+normalize_peak_gene_correlation_counts <- function(
+  counts_matrix,
+  depth = Matrix::colSums(counts_matrix),
+  scale_factor = 1e6
+) {
   counts_matrix <- methods::as(counts_matrix, "dgCMatrix")
-  depth <- Matrix::colSums(counts_matrix)
+  stopifnot(length(depth) == ncol(counts_matrix))
   scale <- rep(0, length(depth))
   scale[depth > 0] <- scale_factor / depth[depth > 0]
   normalized <- counts_matrix %*% Matrix::Diagonal(x = scale)
@@ -445,8 +675,16 @@ normalize_peak_gene_correlation_aggregate_matrices <- function(
   aggregate_matrices,
   scale_factor = 1e6
 ) {
-  GEX_norm <- normalize_peak_gene_correlation_counts(aggregate_matrices$GEX_counts, scale_factor)
-  ATAC_norm <- normalize_peak_gene_correlation_counts(aggregate_matrices$ATAC_counts, scale_factor)
+  GEX_norm <- normalize_peak_gene_correlation_counts(
+    aggregate_matrices$GEX_counts,
+    depth = aggregate_matrices$aggregate_depth_tibble$GEX_depth,
+    scale_factor = scale_factor
+  )
+  ATAC_norm <- normalize_peak_gene_correlation_counts(
+    aggregate_matrices$ATAC_counts,
+    depth = aggregate_matrices$aggregate_depth_tibble$ATAC_depth,
+    scale_factor = scale_factor
+  )
 
   list(
     cell_group = aggregate_matrices$cell_group,
@@ -504,6 +742,8 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
       rank_in_cell_group = integer(),
       rank_for_gene = integer(),
       aggregate_id = character(),
+      donor_id = character(),
+      state_bin = character(),
       n_cells = numeric(),
       GEX_depth = numeric(),
       ATAC_depth = numeric(),
@@ -513,7 +753,14 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
   }
 
   aggregate_depth_tibble <- normalized_aggregate_matrices$aggregate_depth_tibble |>
-    dplyr::select("aggregate_id", "n_cells", "GEX_depth", "ATAC_depth")
+    dplyr::select(
+      "aggregate_id",
+      "donor_id",
+      "state_bin",
+      "n_cells",
+      "GEX_depth",
+      "ATAC_depth"
+    )
   n_aggregates <- nrow(aggregate_depth_tibble)
 
   purrr::map_dfr(seq_len(nrow(branch_links)), \(index) {
@@ -565,14 +812,24 @@ empty_peak_gene_correlation_results_tibble <- function() {
     TargetGeneID = character(),
     TargetGene = character(),
     TargetGeneTSS = integer(),
+    TargetGeneStart = integer(),
+    TargetGeneEnd = integer(),
     distance = integer(),
     isSelfPromoter = logical(),
+    isTargetGeneBody = logical(),
+    link_class = character(),
     n_aggregates = integer(),
+    n_donors = integer(),
+    design_rank = integer(),
+    residual_df = integer(),
     mean_gene_expression = numeric(),
     gene_detected_frac = numeric(),
     mean_peak_accessibility = numeric(),
     peak_accessible_frac = numeric(),
+    raw_correlation = numeric(),
     correlation = numeric(),
+    coefficient = numeric(),
+    cluster_robust_SE = numeric(),
     nominal_pvalue = numeric()
   )
 }
@@ -605,6 +862,11 @@ prepare_peak_gene_correlation_branch <- function(
   cell_group <- normalized_aggregate_matrices$cell_group
   chr <- normalized_aggregate_matrices$chr
   n_aggregates <- ncol(normalized_aggregate_matrices$GEX_norm)
+  aggregate_depth_tibble <- normalized_aggregate_matrices$aggregate_depth_tibble
+  n_donors <- dplyr::n_distinct(aggregate_depth_tibble$donor_id)
+  design <- make_peak_gene_correlation_design_matrix(aggregate_depth_tibble)
+  design_rank <- qr(design)$rank
+  residual_df <- n_aggregates - design_rank - 1L
 
   branch_pairs <- candidate_pairs_tibble |>
     dplyr::filter(.data$chr == !!chr)
@@ -623,7 +885,9 @@ prepare_peak_gene_correlation_branch <- function(
     )
 
   skipped_reason <- dplyr::case_when(
-    n_aggregates < min_aggregates ~ "too_few_accepted_knn_aggregates",
+    n_aggregates < min_aggregates ~ "too_few_donor_state_aggregates",
+    n_donors < 3L ~ "too_few_donors",
+    residual_df < 5L ~ "insufficient_residual_degrees_of_freedom",
     nrow(branch_pairs) == 0L ~ "no_candidate_pairs",
     length(detected_genes) == 0L ~ "no_detected_genes",
     length(accessible_peaks) == 0L ~ "no_accessible_peaks",
@@ -635,6 +899,10 @@ prepare_peak_gene_correlation_branch <- function(
     cell_group = cell_group,
     chr = chr,
     n_aggregates = n_aggregates,
+    n_donors = n_donors,
+    design = design,
+    design_rank = design_rank,
+    residual_df = residual_df,
     candidate_pairs = filtered_pairs,
     detected_genes = detected_genes,
     accessible_peaks = accessible_peaks,
@@ -679,6 +947,10 @@ diagnose_peak_gene_correlation_branch <- function(
     cell_group = branch$cell_group,
     chr = branch$chr,
     n_cells = NA_integer_,
+    n_donors = branch$n_donors,
+    n_state_bins = dplyr::n_distinct(
+      normalized_aggregate_matrices$aggregate_depth_tibble$state_bin
+    ),
     n_aggregates = branch$n_aggregates,
     n_candidate_pairs = nrow(branch$candidate_pairs),
     n_detected_genes = length(branch$detected_genes),
@@ -689,7 +961,7 @@ diagnose_peak_gene_correlation_branch <- function(
 
 #' Score peak gene correlations for cell group
 #'
-#' Compute aggregate-level Pearson correlations for candidate peak-gene pairs.
+#' Compute donor-adjusted aggregate-level associations for candidate pairs.
 #'
 #' @param normalized_aggregate_matrices List returned by
 #'   `normalize_peak_gene_correlation_aggregate_matrices()`, including normalized
@@ -702,7 +974,8 @@ diagnose_peak_gene_correlation_branch <- function(
 #' @param min_aggregates Minimum number of accepted aggregates required before
 #'   correlations are computed.
 #' @return A result tibble with branch identifiers, feature means/detection
-#'   fractions, Pearson correlation, and nominal p value for each retained pair.
+#'   fractions, adjusted correlation, coefficient, cluster-robust standard
+#'   error, and nominal p value for each retained pair.
 #' @keywords internal
 
 score_peak_gene_correlations_for_cell_group <- function(
@@ -727,7 +1000,11 @@ score_peak_gene_correlations_for_cell_group <- function(
   GEX_norm <- normalized_aggregate_matrices$GEX_norm
   ATAC_norm <- normalized_aggregate_matrices$ATAC_norm
   n_aggregates <- branch$n_aggregates
-  df <- n_aggregates - 2L
+  donor_id <- normalized_aggregate_matrices$aggregate_depth_tibble$donor_id
+  n_donors <- branch$n_donors
+  design <- branch$design
+  design_qr <- qr(design)
+  residual_df <- branch$residual_df
 
   scored_pairs <- branch$candidate_pairs |>
     dplyr::group_by(gene_matrix_feature) |>
@@ -738,29 +1015,72 @@ score_peak_gene_correlations_for_cell_group <- function(
 
       gene_vec <- as.numeric(GEX_norm[gene_feature, ])
       gene_centered <- gene_vec - mean(gene_vec)
-      gene_ss <- sum(gene_centered^2)
+      raw_gene_ss <- sum(gene_centered^2)
+      gene_residual <- as.numeric(qr.resid(design_qr, gene_vec))
+      residual_gene_ss <- sum(gene_residual^2)
 
       peak_matrix <- as.matrix(ATAC_norm[peak_features, , drop = FALSE])
       peak_centered <- sweep(peak_matrix, 1, rowMeans(peak_matrix), "-")
-      peak_ss <- rowSums(peak_centered^2)
+      raw_peak_ss <- rowSums(peak_centered^2)
+      peak_residual <- residualize_peak_gene_correlation_matrix(peak_matrix, design)
+      residual_peak_ss <- rowSums(peak_residual^2)
 
-      denominator <- sqrt(peak_ss * gene_ss)
-      correlation <- as.numeric((peak_centered %*% gene_centered) / denominator)
+      raw_denominator <- sqrt(raw_peak_ss * raw_gene_ss)
+      raw_correlation <- as.numeric((peak_centered %*% gene_centered) / raw_denominator)
+      raw_correlation[raw_denominator == 0 | !is.finite(raw_correlation)] <- NA_real_
+      raw_correlation <- pmax(pmin(raw_correlation, 1), -1)
+
+      cross_product <- as.numeric(peak_residual %*% gene_residual)
+      denominator <- sqrt(residual_peak_ss * residual_gene_ss)
+      correlation <- cross_product / denominator
       correlation[denominator == 0 | !is.finite(correlation)] <- NA_real_
       correlation <- pmax(pmin(correlation, 1), -1)
 
-      t_statistic <- correlation * sqrt(df / pmax(1 - correlation^2, .Machine$double.eps))
-      nominal_pvalue <- 2 * stats::pt(abs(t_statistic), df = df, lower.tail = FALSE)
-      nominal_pvalue[is.na(correlation)] <- NA_real_
+      coefficient <- cross_product / residual_peak_ss
+      coefficient[residual_peak_ss == 0 | !is.finite(coefficient)] <- NA_real_
+      association_residual <-
+        matrix(
+          gene_residual,
+          nrow = nrow(peak_residual),
+          ncol = ncol(peak_residual),
+          byrow = TRUE
+        ) -
+        sweep(peak_residual, 1, coefficient, "*")
+      cluster_scores <- rowsum(
+        t(peak_residual * association_residual),
+        group = donor_id,
+        reorder = FALSE
+      )
+      cluster_meat <- colSums(cluster_scores^2)
+      small_sample_correction <-
+        n_donors / (n_donors - 1) *
+        (n_aggregates - 1) / residual_df
+      coefficient_variance <-
+        small_sample_correction * cluster_meat / residual_peak_ss^2
+      cluster_robust_SE <- sqrt(coefficient_variance)
+      cluster_robust_SE[!is.finite(cluster_robust_SE)] <- NA_real_
+      t_statistic <- coefficient / cluster_robust_SE
+      nominal_pvalue <- 2 * stats::pt(
+        abs(t_statistic),
+        df = n_donors - 1L,
+        lower.tail = FALSE
+      )
+      nominal_pvalue[is.na(coefficient) | is.na(cluster_robust_SE)] <- NA_real_
 
       gene_pairs |>
         dplyr::mutate(
           n_aggregates = n_aggregates,
+          n_donors = n_donors,
+          design_rank = branch$design_rank,
+          residual_df = residual_df,
           mean_gene_expression = normalized_aggregate_matrices$mean_gene_expression[.data$gene_matrix_feature],
           gene_detected_frac = normalized_aggregate_matrices$gene_detected_frac[.data$gene_matrix_feature],
           mean_peak_accessibility = normalized_aggregate_matrices$mean_peak_accessibility[.data$peak],
           peak_accessible_frac = normalized_aggregate_matrices$peak_accessible_frac[.data$peak],
+          raw_correlation = raw_correlation,
           correlation = correlation,
+          coefficient = coefficient,
+          cluster_robust_SE = cluster_robust_SE,
           nominal_pvalue = nominal_pvalue
         )
     }) |>
@@ -805,14 +1125,24 @@ finalize_peak_gene_correlation_results <- function(results_tibble, aggregation) 
     "TargetGeneID",
     "TargetGene",
     "TargetGeneTSS",
+    "TargetGeneStart",
+    "TargetGeneEnd",
     "distance",
     "isSelfPromoter",
+    "isTargetGeneBody",
+    "link_class",
     "n_aggregates",
+    "n_donors",
+    "design_rank",
+    "residual_df",
     "mean_gene_expression",
     "gene_detected_frac",
     "mean_peak_accessibility",
     "peak_accessible_frac",
+    "raw_correlation",
     "correlation",
+    "coefficient",
+    "cluster_robust_SE",
     "nominal_pvalue",
     "FDR",
     "rank_in_cell_group",
@@ -847,11 +1177,18 @@ finalize_peak_gene_correlation_results <- function(results_tibble, aggregation) 
 make_peak_gene_correlation_links <- function(results_tibble) {
   results_tibble |>
     dplyr::filter(
-      .data$correlation > 0,
+      .data$correlation >= 0.15,
       .data$FDR < 0.05,
-      !.data$isSelfPromoter
+      !.data$isSelfPromoter,
+      !.data$isTargetGeneBody
     ) |>
     dplyr::arrange(.data$cell_group, .data$rank_in_cell_group)
+}
+
+make_empty_peak_gene_correlation_plot <- function(message = "No analyzable peak-gene associations") {
+  ggplot2::ggplot() +
+    ggplot2::annotate("text", x = 0, y = 0, label = message) +
+    ggplot2::theme_void()
 }
 
 #' Summarize peak-gene correlations for a histogram
@@ -893,6 +1230,9 @@ plot_peak_gene_correlation_histogram <- function(
   plot_tibble,
   bin_width = 0.025
 ) {
+  if (nrow(plot_tibble) == 0L) {
+    return(make_empty_peak_gene_correlation_plot())
+  }
   ggplot2::ggplot(
     plot_tibble,
     ggplot2::aes(x = .data$correlation_mid, y = .data$n_pairs)
@@ -900,7 +1240,7 @@ plot_peak_gene_correlation_histogram <- function(
     ggplot2::geom_col(width = bin_width) +
     ggplot2::facet_wrap(~cell_group, scales = "free_y") +
     ggplot2::labs(
-      x = "Pearson correlation",
+      x = "Donor/state/depth-adjusted correlation",
       y = "Peak-gene pairs"
     )
 }
@@ -917,15 +1257,17 @@ summarize_peak_gene_correlation_support_counts <- function(results_tibble) {
       "cell_group",
       "FDR",
       "correlation",
-      "isSelfPromoter"
+      "isSelfPromoter",
+      "isTargetGeneBody"
     ) |>
     dplyr::summarise(
       tested_pairs = dplyr::n(),
       FDR_significant_pairs = sum(.data$FDR < 0.05, na.rm = TRUE),
-      positive_non_promoter_links = sum(
-        .data$correlation > 0 &
+      candidate_enhancer_links = sum(
+        .data$correlation >= 0.15 &
           .data$FDR < 0.05 &
-          !.data$isSelfPromoter,
+          !.data$isSelfPromoter &
+          !.data$isTargetGeneBody,
         na.rm = TRUE
       ),
       .by = "cell_group"
@@ -946,6 +1288,9 @@ summarize_peak_gene_correlation_support_counts <- function(results_tibble) {
 #' @keywords internal
 
 plot_peak_gene_correlation_support_counts <- function(plot_tibble) {
+  if (nrow(plot_tibble) == 0L) {
+    return(make_empty_peak_gene_correlation_plot())
+  }
   ggplot2::ggplot(
     plot_tibble,
     ggplot2::aes(
@@ -1002,6 +1347,9 @@ summarize_peak_gene_correlation_by_distance <- function(results_tibble) {
 #' @keywords internal
 
 plot_peak_gene_correlation_by_distance <- function(plot_tibble) {
+  if (nrow(plot_tibble) == 0L) {
+    return(make_empty_peak_gene_correlation_plot())
+  }
   ggplot2::ggplot(
     plot_tibble,
     ggplot2::aes(

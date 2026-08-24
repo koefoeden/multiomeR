@@ -1,0 +1,28 @@
+Package: multiomeRCore
+Type: Package
+Title: Reusable Runtime Helpers for multiomeR Pipelines
+Version: 0.1.0
+Authors@R: person("Thomas", "Gade Koefoed", role = c("aut", "cre"), email = "thomas.gade.koefoed@sund.ku.dk")
+Description: A small collection of general process, resource, and structured
+    output helpers used by multiomeR and related targets pipelines. The
+    multiomeR pipeline sources the package R files directly so its users can
+    edit them as ordinary workflow code, while external workflows can install
+    the same files as a versioned package.
+License: MIT + file LICENSE
+Encoding: UTF-8
+RoxygenNote: 7.3.3
+Depends:
+    R (>= 4.1.0)
+Imports:
+    dplyr,
+    fs,
+    magrittr,
+    processx,
+    purrr,
+    stringr,
+    targets
+Suggests:
+    crew,
+    ggplot2,
+    ragg,
+    svglite

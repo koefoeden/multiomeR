@@ -40,3 +40,13 @@ Treat repository-local skills as living workflow documentation. Unless a task
 is explicitly read-only, revise the relevant skill when its use reveals
 materially stale, ambiguous, or missing guidance. Keep revisions succinct and
 high-level; omit details reliably implied by the code or existing instructions.
+
+## Reusable helper source
+
+The generally reusable process, resource, and structured-output helpers live
+under `packages/multiomeRCore/R`. The multiomeR pipeline sources those files
+directly, so ordinary users can edit them as pipeline code without installing
+the nested package. Standalone repositories may install the same directory as
+the `multiomeRCore` package from a pinned multiomeR Git commit. Do not duplicate
+these implementations under the root `R/` directory or in downstream runtime
+packages.

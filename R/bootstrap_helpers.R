@@ -96,6 +96,7 @@ source_shared_helpers <- function(force = FALSE) {
   }
 
   load_project_packages()
+  targets::tar_source("packages/multiomeRCore/R")
   targets::tar_source("R")
   bootstrap_state_env$shared_helpers_loaded <- TRUE
   invisible(TRUE)

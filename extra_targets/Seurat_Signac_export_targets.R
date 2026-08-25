@@ -12,7 +12,17 @@ rlang::list2(
       metadata_tibble = metadata_w_cell_types_annotation_tibble.WNN,
       GEM_well_ID_vec = aggregation_GEM_well_IDs,
       cellranger_summary_files = aggregation_cellranger_summary_file_syms
-    )
+    ),
+    iteration = "vector"
+  ),
+  targets::tar_target(
+    name = signac_fragment_object,
+    description = "Create and cache one Signac Fragment object per GEM well",
+    command = create_signac_fragment_object(signac_fragment_records_tibble),
+    pattern = map(signac_fragment_records_tibble),
+    iteration = "list",
+    resources = get_tar_resources(RAM_GB_req = 8),
+    packages = w_def("Signac")
   ),
   targets::tar_target(
     name = multimodal_Seurat_object,
@@ -35,13 +45,13 @@ rlang::list2(
       motif_family_accessibility_matrix = motif_family_accessibility_BPCells_matrix.ATAC,
       gene_features_df = gene_features_df,
       signac_annotation_GRanges = signac_annotation_GRanges,
-      fragment_records_tibble = signac_fragment_records_tibble,
+      fragment_objects = signac_fragment_object,
       GEX_dims = aggregation_GEX_data_PCs,
       ATAC_dims = aggregation_ATAC_data_PCs,
       data_nNNs = aggregation_data_nNNs,
-      graph_threads = 15
+      graph_threads = 6
     ),
-    resources = get_tar_resources(RAM_GB_req = 60),
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60),
     packages = w_def(c("Seurat", "SeuratObject", "Signac", "BPCells"))
   )
 )

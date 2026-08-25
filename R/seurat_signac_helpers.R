@@ -204,23 +204,29 @@ make_signac_fragment_records <- function(metadata_tibble, GEM_well_ID_vec, cellr
   )
 }
 
+create_signac_fragment_object <- function(fragment_record) {
+  if (is.null(fragment_record) || nrow(fragment_record) != 1L) {
+    stop("fragment_record must contain exactly one row.")
+  }
+
+  cells <- fragment_record$fragment_cell_names[[1]]
+  names(cells) <- fragment_record$assay_cell_names[[1]]
+  Signac::CreateFragmentObject(
+    path = fragment_record$fragment_file[[1]],
+    index = fragment_record$fragment_index_file[[1]],
+    cells = cells,
+    validate.fragments = FALSE
+  )
+}
+
 create_signac_fragment_objects <- function(fragment_records_tibble) {
   if (is.null(fragment_records_tibble) || nrow(fragment_records_tibble) == 0) {
     return(list())
   }
 
-  purrr::pmap(
-    fragment_records_tibble,
-    \(GEM_well_ID, fragment_file, fragment_index_file, assay_cell_names, fragment_cell_names) {
-      cells <- fragment_cell_names
-      names(cells) <- assay_cell_names
-      Signac::CreateFragmentObject(
-        path = fragment_file,
-        index = fragment_index_file,
-        cells = cells,
-        validate.fragments = FALSE
-      )
-    }
+  purrr::map(
+    seq_len(nrow(fragment_records_tibble)),
+    \(record_index) create_signac_fragment_object(fragment_records_tibble[record_index, , drop = FALSE])
   )
 }
 
@@ -440,6 +446,7 @@ align_WNN_knn_to_cells <- function(WNN_results, cells) {
 #' @param motif_family_accessibility_matrix Optional motif-family-by-cell chromVAR accessibility score matrix.
 #' @param signac_annotation_GRanges Optional GRanges object containing signac annotation GRanges coordinates and metadata.
 #' @param fragment_records_tibble Optional tibble describing fragment files and cell sets used to create Signac Fragment objects.
+#' @param fragment_objects Optional prebuilt list of Signac Fragment objects.
 #' @param ATAC_dims Optional ATAC dimensions used when reconstructing reductions and neighbors in the export object.
 #' @param graph_threads Thread count used for KNN graph reconstruction during export.
 #' @return A Seurat/Signac object or component with metadata, assays, reductions, and graphs aligned by cell barcode.
@@ -466,6 +473,7 @@ build_seurat_signac_convenience_object <- function(
   motif_family_accessibility_matrix = NULL,
   signac_annotation_GRanges = NULL,
   fragment_records_tibble = NULL,
+  fragment_objects = NULL,
   ATAC_dims = NULL,
   graph_threads = 1
 ) {
@@ -503,7 +511,7 @@ build_seurat_signac_convenience_object <- function(
     peak_ranges <- align_peak_GRanges_to_matrix(ATAC_peak_GRanges, rownames(peak_counts))
     object[["ATAC"]] <- Signac::CreateGRangesAssay(counts = peak_counts, ranges = peak_ranges)
     Signac::Annotation(object[["ATAC"]]) <- ensure_signac_annotation_GRanges(signac_annotation_GRanges)
-    Signac::Fragments(object[["ATAC"]]) <- create_signac_fragment_objects(fragment_records_tibble)
+    Signac::Fragments(object[["ATAC"]]) <- fragment_objects %||% create_signac_fragment_objects(fragment_records_tibble)
     SeuratObject::VariableFeatures(object[["ATAC"]]) <- rownames(object[["ATAC"]])
     object[["ATAC"]] <- add_feature_metadata(
       assay = object[["ATAC"]],

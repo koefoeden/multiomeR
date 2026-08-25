@@ -198,7 +198,7 @@ rlang::list2(
 
         consensus_mat <- BPCells::peak_matrix(frags, peaks_df, mode = aggregation_ATAC_peak_matrix_mode)
         rownames(consensus_mat) <- names(consensus_peak_GRanges.ATAC)
-        BPCells::write_matrix_dir(consensus_mat, out_dir, overwrite = TRUE)
+        BPCells::write_matrix_dir(consensus_mat, out_dir, buffer_size = 65536L, overwrite = TRUE)
         out_dir
       },
       resources = get_tar_resources(RAM_GB_req = 60)

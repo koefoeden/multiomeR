@@ -202,19 +202,23 @@ validate_wnn <- function() {
 # makes CI deterministic without installing SCAVENGE's historical dependency
 # stack or fetching network resources.
 reference_SCAVENGE_random_walk <- function(graph, seed_cells, restart_prob = 0.05, stationary_cutoff = 1e-5) {
+  graph <- methods::as(graph != 0, "dMatrix")
   graph <- t(t(graph) / Matrix::colSums(graph))
   restart <- setNames(numeric(nrow(graph)), rownames(graph))
   restart[seed_cells] <- 1
   restart <- restart / sum(restart)
-  transition <- t(graph)
-  score <- t(restart)
+  # randomWalk_sparse() transposes before calling its iterator, which
+  # transposes once more. Preserve both operations in this compact reference.
+  transition <- Matrix::t(Matrix::t(graph))
+  score <- restart
   delta <- 1
   while (delta > stationary_cutoff) {
-    next_score <- t(((1 - restart_prob) * transition) %*% t(score)) + restart_prob * restart
+    next_score <- as.numeric(
+      ((1 - restart_prob) * transition) %*% score
+    ) + restart_prob * restart
     delta <- sum(abs(next_score - score))
     score <- next_score
   }
-  score <- drop(score)
   names(score) <- rownames(graph)
   score
 }
@@ -237,12 +241,10 @@ reference_SCAVENGE_scores <- function(propagation_score, z_score, scale_percent 
   scaled * mean(z_score[scale_idx])
 }
 
-reference_SCAVENGE_significant_cells <- function(
+reference_SCAVENGE_sample_seed_indices <- function(
   graph,
   seed_idx,
-  observed_score,
-  permutation_times,
-  restart_prob = 0.05
+  permutation_times
 ) {
   cell_table <- data.frame(cell = seq_len(nrow(graph)), degree = Matrix::colSums(graph))
   seed_table <- data.frame(
@@ -253,47 +255,56 @@ reference_SCAVENGE_significant_cells <- function(
   cells_by_degree <- tapply(cell_table$cell, cell_table$degree, list)
   cells_by_degree <- cells_by_degree[names(cells_by_degree) %in% seed_table$degree]
 
-  permutation_scores <- lapply(seq_len(permutation_times), function(i) {
-    sampled_cells <- cells_by_degree |>
+  lapply(seq_len(permutation_times), function(permutation) {
+    cells_by_degree |>
       mapply(FUN = sample, seed_table$Freq) |>
       unlist(use.names = FALSE) |>
       sort()
-    reference_SCAVENGE_random_walk(
-      graph = graph,
-      seed_cells = rownames(graph)[as.numeric(sampled_cells)],
-      restart_prob = restart_prob
-    )
   })
-  exceedances <- rowSums(vapply(
-    permutation_scores,
-    function(score) score > observed_score,
-    logical(length(observed_score))
-  ))
-  setNames(exceedances <= 0.05 * permutation_times, rownames(graph))
 }
 
 make_SCAVENGE_fixture <- function() {
   n_cells <- 60L
   cells <- sprintf("cell%02d", seq_len(n_cells))
   adjacency <- matrix(0, n_cells, n_cells, dimnames = list(cells, cells))
-  for (block_start in c(1L, 21L, 41L)) {
-    block <- block_start + 0:19
-    for (offset in c(1L, 2L)) {
-      for (cell_idx in seq_along(block)) {
-        neighbor_idx <- ((cell_idx - 1L + offset) %% length(block)) + 1L
-        adjacency[block[[cell_idx]], block[[neighbor_idx]]] <- 1
-        adjacency[block[[neighbor_idx]], block[[cell_idx]]] <- 1
-      }
+  template_edges <- rbind(
+    c(1L, 2L), c(1L, 3L), c(1L, 4L), c(2L, 3L),
+    c(3L, 4L), c(4L, 5L), c(5L, 6L), c(5L, 7L),
+    c(6L, 7L), c(7L, 8L), c(8L, 9L), c(8L, 10L),
+    c(9L, 10L)
+  )
+  edge_index <- 0L
+  add_edge <- function(from, to) {
+    edge_index <<- edge_index + 1L
+    weight <- c(0.25, 0.5, 1)[[(edge_index - 1L) %% 3L + 1L]]
+    adjacency[from, to] <<- weight
+    adjacency[to, from] <<- weight
+  }
+  for (block in 0:5) {
+    block_start <- block * 10L
+    for (edge in seq_len(nrow(template_edges))) {
+      add_edge(
+        block_start + template_edges[edge, 1],
+        block_start + template_edges[edge, 2]
+      )
     }
+  }
+  for (block in 0:5) {
+    add_edge(block * 10L + 10L, ((block + 1L) %% 6L) * 10L + 10L)
   }
   z_score <- setNames(seq(0, 0.01, length.out = n_cells), cells)
   z_score[cells[1:3]] <- c(5, 4.5, 4)
-  list(graph = Matrix::Matrix(adjacency, sparse = TRUE), z_score = z_score)
+  list(
+    graph = Matrix::Matrix(adjacency, sparse = TRUE),
+    z_score = z_score,
+    block = rep(sprintf("block_%d", 1:6), each = 10L)
+  )
 }
 
 validate_SCAVENGE <- function() {
   fixture <- make_SCAVENGE_fixture()
-  graph <- fixture$graph
+  weighted_graph <- fixture$graph
+  graph <- get_SCAVENGE_adjacency_matrix(weighted_graph)
   z_score <- fixture$z_score
   seed_cells <- names(z_score)[seq_len(3L)]
   restart_prob <- 0.05
@@ -324,11 +335,33 @@ validate_SCAVENGE <- function() {
   closed_form_delta <- max(abs(observed_precise - closed_form))
   expect_at_most(closed_form_delta, 1e-10, "SCAVENGE random-walk closed-form delta")
 
+  reference_precise <- reference_SCAVENGE_random_walk(
+    weighted_graph,
+    seed_cells,
+    restart_prob,
+    stationary_cutoff = 1e-12
+  )
+  reference_propagation_delta <- max(abs(observed_precise - reference_precise))
+  expect_at_most(
+    reference_propagation_delta,
+    1e-12,
+    "SCAVENGE pinned-reference propagation delta"
+  )
+  observed_score <- run_sparse_random_walk_with_restart(
+    graph,
+    seed_cells,
+    restart_prob
+  )
+  reference_propagation <- reference_SCAVENGE_random_walk(
+    weighted_graph,
+    seed_cells,
+    restart_prob
+  )
+
   seed_idx <- reference_SCAVENGE_seed_index(z_score, seed_percent = 0.05)
   if (!identical(seed_idx, get_SCAVENGE_seed_index(z_score, seed_percent = 0.05))) {
     fail("SCAVENGE seed selection differs from the reference fixture")
   }
-  reference_propagation <- reference_SCAVENGE_random_walk(graph, names(z_score)[seed_idx], restart_prob)
   reference_cells <- names(reference_propagation)[reference_propagation != 0]
   reference_scores <- reference_SCAVENGE_scores(
     propagation_score = reference_propagation[reference_cells],
@@ -338,31 +371,131 @@ validate_SCAVENGE <- function() {
 
   permutation_times <- 199L
   set.seed(431)
-  observed <- get_SCAVENGE_TRS_from_chromVAR_z_score_record(
+  reference_samples <- reference_SCAVENGE_sample_seed_indices(
+    graph,
+    seed_idx,
+    permutation_times
+  )
+  set.seed(431)
+  native_samples <- sample_SCAVENGE_degree_matched_seed_indices(
+    graph,
+    seed_idx,
+    permutation_times
+  )
+  if (!identical(reference_samples, native_samples)) {
+    fail("SCAVENGE degree-matched seed samples differ from the pinned reference")
+  }
+  singleton_graph <- Matrix::Matrix(
+    matrix(
+      c(0, 1, 0, 1, 0, 1, 0, 1, 0),
+      nrow = 3,
+      dimnames = list(paste0("singleton", 1:3), paste0("singleton", 1:3))
+    ),
+    sparse = TRUE
+  )
+  singleton_samples <- sample_SCAVENGE_degree_matched_seed_indices(
+    singleton_graph,
+    setNames(c(FALSE, TRUE, FALSE), rownames(singleton_graph)),
+    permutation_times = 10L
+  )
+  if (!all(vapply(singleton_samples, identical, logical(1), 2L))) {
+    fail("SCAVENGE singleton degree strata do not retain their only candidate")
+  }
+
+  metadata_tibble <- tibble::tibble(
+    barcode_w_prefix = rownames(graph),
+    PCA_harmony_SNN_cluster_named = fixture$block,
+    PCA_harmony_SNN_cluster_cell_type = fixture$block
+  )
+  cluster_index_record <- get_SCAVENGE_cluster_index_record(
+    metadata_tibble,
+    rownames(graph),
+    "PCA_harmony_SNN"
+  )
+  native_statistics_1_core <- run_SCAVENGE_permutation_statistics(
+    transition,
+    native_samples,
+    observed_score,
+    cluster_index_record,
+    cores = 1L,
+    restart_prob = restart_prob,
+    native_source_file = "src/scavenge_random_walk.cpp"
+  )
+  native_statistics_2_cores <- run_SCAVENGE_permutation_statistics(
+    transition,
+    native_samples,
+    observed_score,
+    cluster_index_record,
+    cores = 2L,
+    restart_prob = restart_prob,
+    native_source_file = "src/scavenge_random_walk.cpp"
+  )
+  if (!identical(native_statistics_1_core, native_statistics_2_cores)) {
+    fail("SCAVENGE permutation statistics differ across core counts")
+  }
+
+  reference_permutation_scores <- vapply(
+    reference_samples,
+    function(sampled_indices) {
+      reference_SCAVENGE_random_walk(
+        graph,
+        rownames(graph)[sampled_indices],
+        restart_prob
+      )
+    },
+    numeric(nrow(graph))
+  )
+  reference_exceedance_counts <- rowSums(
+    reference_permutation_scores > observed_score
+  )
+  if (!all(
+    native_statistics_1_core$cell_exceedance_counts ==
+      reference_exceedance_counts
+  )) {
+    fail("SCAVENGE streaming exceedance counts differ from the pinned reference")
+  }
+
+  set.seed(431)
+  observed_result <- get_SCAVENGE_result_from_chromVAR_z_score_record(
     chromVAR_z_score_record = list(GWAS_ID = "fixture", z_score_vec = z_score),
-    NN_graph = graph,
-    cores = 1,
+    NN_graph = weighted_graph,
+    metadata_tibble = metadata_tibble,
+    graph_name = "PCA_harmony_SNN",
+    cores = 2,
     permutation_times = permutation_times,
     restart_prob = restart_prob,
     seed_percent = 0.05,
     scale_percent = 0.1
   )
-  set.seed(431)
-  reference_significant <- reference_SCAVENGE_significant_cells(
-    graph = graph[reference_cells, reference_cells, drop = FALSE],
-    seed_idx = seed_idx[reference_cells],
-    observed_score = reference_propagation[reference_cells],
-    permutation_times = permutation_times,
-    restart_prob = restart_prob
+  observed <- observed_result$TRS_tibble
+  cluster_summary <- observed_result$TRS_summary_tibble
+  if (
+    nrow(cluster_summary) != 12L ||
+      any(cluster_summary$permutation_times != permutation_times) ||
+      any(cluster_summary$permutation_p_value < 1 / (permutation_times + 1)) ||
+      any(cluster_summary$permutation_p_value > 1)
+  ) {
+    fail("SCAVENGE cluster-permutation summary is malformed")
+  }
+  score_delta <- max(abs(
+    observed$score - reference_scores[observed$barcode_w_prefix]
+  ))
+  expect_at_most(
+    score_delta,
+    1e-12,
+    "SCAVENGE trait-relevance-score delta"
   )
+  observed_exceedance_counts <- round(
+    observed$p_val * (permutation_times + 1L) - 1L
+  )
+  if (!all(observed_exceedance_counts == reference_exceedance_counts)) {
+    fail("SCAVENGE integrated add-one P-values do not preserve exceedance counts")
+  }
 
-  score_rank_correlation <- stats::cor(
-    observed$score,
-    reference_scores[observed$barcode_w_prefix],
-    method = "spearman"
-  )
+  reference_significant <- reference_exceedance_counts <=
+    0.05 * permutation_times
   observed_significant <- observed$barcode_w_prefix[observed$score_is_sig]
-  reference_significant <- names(reference_significant)[reference_significant]
+  reference_significant <- rownames(graph)[reference_significant]
   significant_union <- union(observed_significant, reference_significant)
   significant_jaccard <- if (length(significant_union) == 0L) {
     1
@@ -370,14 +503,15 @@ validate_SCAVENGE <- function() {
     length(intersect(observed_significant, reference_significant)) / length(significant_union)
   }
 
-  expect_at_least(score_rank_correlation, 0.99, "SCAVENGE score-rank Spearman correlation")
-  expect_at_least(significant_jaccard, 0.80, "SCAVENGE significant-cell Jaccard overlap")
+  expect_at_least(significant_jaccard, 0.95, "SCAVENGE significant-cell Jaccard overlap")
 
   cat(
     "SCAVENGE validation ok: reference 1.0.2@8ee8b173d965",
     "; closed-form max delta=", format(closed_form_delta, scientific = TRUE, digits = 3),
     "; precomputed-transition max delta=", format(transition_reuse_delta, scientific = TRUE, digits = 3),
-    "; score-rank Spearman=", format(score_rank_correlation, digits = 4),
+    "; pinned-reference max delta=", format(reference_propagation_delta, scientific = TRUE, digits = 3),
+    "; score max delta=", format(score_delta, scientific = TRUE, digits = 3),
+    "; exact streamed exceedance counts",
     "; significant-cell Jaccard=", format(significant_jaccard, digits = 4),
     "\n",
     sep = ""

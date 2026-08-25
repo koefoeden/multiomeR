@@ -307,7 +307,7 @@ get_SCAVENGE_seed_index <- function(z_score_vec, seed_percent = 0.05, p_value_cu
   seed_idx <- stats::pnorm(z_score_vec, lower.tail = FALSE) <= p_value_cutoff
   max_seed_count <- max(1L, floor(seed_percent * length(z_score_vec)))
   if (sum(seed_idx) > max_seed_count) {
-    seed_idx <- rank(-z_score_vec, ties.method = "first") <= max_seed_count
+    seed_idx <- rank(-z_score_vec) <= max_seed_count
   }
   seed_idx
 }
@@ -344,6 +344,107 @@ scale_GWAS_heatmap_scores <- function(heatmap_data, group_cols = character(), sc
     dplyr::ungroup()
 }
 
+#' Add cluster-level permutation significance to SCAVENGE dotplot data
+#'
+#' Classify visible point sizes from within-grouping BH-adjusted empirical
+#' P-values for the cluster median TRS statistic.
+#'
+#' @param dotplot_data SCAVENGE group-summary data containing
+#'   `permutation_p_adj_BH`.
+#' @return `dotplot_data` with a `significance` factor. Values above 0.05 are
+#'   `NA` and therefore omitted from the dotplot.
+#' @keywords internal
+
+add_SCAVENGE_dotplot_significance <- function(dotplot_data) {
+  dotplot_data |>
+    dplyr::mutate(
+      significance = factor(
+        dplyr::case_when(
+          permutation_p_adj_BH < 0.01 ~ "P < 0.01",
+          permutation_p_adj_BH <= 0.05 ~ "P <= 0.05"
+        ),
+        levels = c("P <= 0.05", "P < 0.01")
+      )
+    )
+}
+
+if (!exists("SCAVENGE_native_state_env", inherits = FALSE)) {
+  SCAVENGE_native_state_env <- new.env(parent = emptyenv())
+  SCAVENGE_native_state_env$dll_name <- NULL
+}
+
+load_SCAVENGE_native_library <- function(native_source_file) {
+  if (!is.null(SCAVENGE_native_state_env$dll_name)) {
+    return(SCAVENGE_native_state_env$dll_name)
+  }
+
+  build_dir <- tempfile("multiomeR_scavenge_")
+  dir.create(build_dir)
+  build_source_file <- file.path(build_dir, basename(native_source_file))
+  if (!file.copy(native_source_file, build_source_file)) {
+    stop(
+      "Could not copy the SCAVENGE native source into its temporary build directory.",
+      call. = FALSE
+    )
+  }
+  shared_library_file <- file.path(
+    build_dir,
+    paste0("multiomeR_scavenge", .Platform$dynlib.ext)
+  )
+  compile_library <- function(env = character()) {
+    system2(
+      command = file.path(R.home("bin"), "R"),
+      args = c("CMD", "SHLIB", "-o", shared_library_file, build_source_file),
+      stdout = TRUE,
+      stderr = TRUE,
+      env = env
+    )
+  }
+  build_output <- compile_library(
+    c("PKG_CXXFLAGS=-fopenmp", "PKG_LIBS=-fopenmp")
+  )
+  build_status <- attr(build_output, "status")
+  if (!is.null(build_status) && build_status != 0L) {
+    openmp_output <- build_output
+    unlink(c(
+      shared_library_file,
+      sub("[.]cpp$", ".o", build_source_file)
+    ))
+    build_output <- compile_library()
+    build_status <- attr(build_output, "status")
+    if (!is.null(build_status) && build_status != 0L) {
+      stop(
+        "Could not compile the SCAVENGE native random-walk helper with ",
+        "OpenMP or its serial fallback:\n",
+        paste(c(openmp_output, build_output), collapse = "\n"),
+        call. = FALSE
+      )
+    }
+  }
+
+  loaded_library <- dyn.load(shared_library_file)
+  SCAVENGE_native_state_env$dll_name <- loaded_library[["name"]]
+  SCAVENGE_native_state_env$dll_name
+}
+
+#' Prepare a SCAVENGE adjacency matrix
+#'
+#' Convert a sparse weighted neighbor graph to the binary adjacency matrix
+#' expected by the reference SCAVENGE implementation.
+#'
+#' @param NN_graph Sparse cell-by-cell neighbor graph.
+#' @return Sparse binary adjacency matrix with the input dimnames.
+#' @keywords internal
+
+get_SCAVENGE_adjacency_matrix <- function(NN_graph) {
+  adjacency_matrix <- Matrix::drop0(methods::as(
+    methods::as(NN_graph, "dMatrix"),
+    "generalMatrix"
+  ))
+  adjacency_matrix@x[] <- 1
+  adjacency_matrix
+}
+
 #' Build a sparse SCAVENGE transition matrix
 #'
 #' Column-normalize a sparse nearest-neighbor graph for random walk with restart.
@@ -358,7 +459,14 @@ get_SCAVENGE_transition_matrix <- function(NN_graph) {
   if (any(col_sums == 0)) {
     stop("NN_graph contains degree-zero cells.")
   }
-  NN_graph %*% Matrix::Diagonal(x = 1 / col_sums)
+  transition_matrix <- methods::as(
+    methods::as(NN_graph, "dMatrix"),
+    "generalMatrix"
+  )
+  transition_matrix@x <- transition_matrix@x *
+    rep.int(1 / col_sums, diff(transition_matrix@p))
+  colnames(transition_matrix) <- NULL
+  transition_matrix
 }
 
 #' Run sparse random walk with restart
@@ -421,72 +529,200 @@ drop_SCAVENGE_degree_zero_cells <- function(NN_graph) {
   }
 }
 
-#' Get degree matched permutation p values
+#' Sample SCAVENGE seeds within exact degree strata
 #'
-#' Estimate empirical SCAVENGE p values from degree-matched seed permutations.
+#' Reproduce the reference implementation's sequential base-R sampling while
+#' storing only the sampled seed indices needed by the streamed native walks.
 #'
-#' @param NN_graph Sparse cell adjacency matrix used for random-walk propagation.
-#' @param seed_idx Logical vector, named by cell, identifying observed seed cells.
-#' @param observed_score_vec Named observed propagation scores to compare against
-#'   permutations.
-#' @param permutation_times Number of degree-matched random seed sets to sample.
-#' @param cores Number of CPU cores requested for external tools or parallel work.
-#' @param restart_prob Restart probability passed to the random-walk helper.
-#' @return Tibble with one row per cell and empirical permutation p value.
+#' @param NN_graph Binary sparse adjacency matrix without degree-zero cells.
+#' @param seed_idx Named logical vector identifying observed seed cells.
+#' @param permutation_times Number of degree-matched seed samples.
+#' @return List of sorted one-based integer cell indices, one per permutation.
 #' @keywords internal
 
-get_degree_matched_permutation_p_values <- function(NN_graph, seed_idx, observed_score_vec, permutation_times = 1000, cores = 1, restart_prob = 0.05) {
-  if (permutation_times < 1) {
-    stop("permutation_times must be at least 1.")
-  }
-
-  observed_score_vec <- observed_score_vec[rownames(NN_graph)]
+sample_SCAVENGE_degree_matched_seed_indices <- function(
+  NN_graph,
+  seed_idx,
+  permutation_times
+) {
   seed_idx <- seed_idx[rownames(NN_graph)]
   degree_vec <- Matrix::colSums(NN_graph)
-  cells_by_degree <- split(seq_along(degree_vec), degree_vec)
   seed_counts_by_degree <- table(degree_vec[seed_idx])
-  transition_matrix <- get_SCAVENGE_transition_matrix(NN_graph)
-
-  run_permutations <- function(n_permutations) {
-    exceedance_counts <- integer(length(observed_score_vec))
-    for (i in seq_len(n_permutations)) {
-      sampled_cell_idx <- names(seed_counts_by_degree) |>
-        purrr::map(\(degree) {
-          degree_cell_idx <- cells_by_degree[[degree]]
-          degree_cell_idx[sample.int(length(degree_cell_idx), seed_counts_by_degree[[degree]])]
-        }) |>
-        unlist(use.names = FALSE) |>
-        sort()
-
-      permutation_score_vec <- run_sparse_random_walk_with_restart(
-        NN_graph = NN_graph,
-        seed_cells = rownames(NN_graph)[sampled_cell_idx],
-        restart_prob = restart_prob,
-        transition_matrix = transition_matrix
-      )
-
-      exceedance_counts <- exceedance_counts + as.integer(permutation_score_vec > observed_score_vec)
-    }
-    exceedance_counts
+  cells_by_degree <- split(
+    seq_along(degree_vec),
+    degree_vec
+  )[names(seed_counts_by_degree)]
+  if (any(lengths(cells_by_degree) == 0L)) {
+    stop("Could not resolve every SCAVENGE seed-degree group.")
   }
+  sample_sizes <- as.integer(seed_counts_by_degree)
+  lapply(seq_len(permutation_times), function(permutation) {
+    sampled_indices <- Map(
+      function(cell_indices, sample_size) {
+        if (length(cell_indices) == 1L) {
+          cell_indices
+        } else {
+          sample(cell_indices, sample_size)
+        }
+      },
+      cells_by_degree,
+      sample_sizes
+    )
+    sort(as.integer(unlist(sampled_indices, use.names = FALSE)))
+  })
+}
 
-  core_count <- min(cores, permutation_times)
-  chunk_sizes <- rep(permutation_times %/% core_count, core_count)
-  chunk_sizes[seq_len(permutation_times %% core_count)] <- chunk_sizes[seq_len(permutation_times %% core_count)] + 1L
-  chunk_sizes <- chunk_sizes[chunk_sizes > 0]
-
-  chunk_results <- if (core_count > 1) {
-    parallel::mclapply(chunk_sizes, run_permutations, mc.cores = core_count)
-  } else {
-    lapply(chunk_sizes, run_permutations)
-  }
-
-  p_val <- (Reduce(`+`, chunk_results) + 1) / (permutation_times + 1)
-  tibble::tibble(
-    rowname = names(observed_score_vec),
-    seed_idx = unname(seed_idx),
-    p_val = p_val
+get_SCAVENGE_cluster_index_record <- function(
+  metadata_tibble,
+  cell_names,
+  graph_name
+) {
+  grouping_cols <- paste0(
+    graph_name,
+    c("_cluster_named", "_cluster_cell_type")
   )
+  aligned_metadata <- metadata_tibble |>
+    dplyr::distinct(barcode_w_prefix, .keep_all = TRUE)
+  aligned_metadata <- aligned_metadata[
+    match(cell_names, aligned_metadata$barcode_w_prefix),
+    grouping_cols,
+    drop = FALSE
+  ]
+  membership_tibble <- aligned_metadata |>
+    dplyr::mutate(cell_index = seq_along(cell_names) - 1L) |>
+    tidyr::pivot_longer(
+      cols = dplyr::all_of(grouping_cols),
+      names_to = "grouping_col",
+      values_to = "cluster"
+    ) |>
+    dplyr::mutate(cluster = as.character(cluster)) |>
+    dplyr::filter(!is.na(cluster), cluster != "")
+  groups <- membership_tibble |>
+    dplyr::distinct(grouping_col, cluster) |>
+    dplyr::arrange(grouping_col, cluster) |>
+    dplyr::mutate(group_id = dplyr::row_number())
+  indexed_membership <- membership_tibble |>
+    dplyr::inner_join(groups, by = c("grouping_col", "cluster")) |>
+    dplyr::arrange(group_id, cell_index)
+  cluster_cells <- split(
+    indexed_membership$cell_index,
+    factor(indexed_membership$group_id, levels = groups$group_id)
+  )
+
+  groups$n_cells <- lengths(cluster_cells)
+  list(
+    groups = groups,
+    cluster_offsets = as.integer(c(0L, cumsum(lengths(cluster_cells)))),
+    cluster_cell_indices = as.integer(unlist(cluster_cells, use.names = FALSE))
+  )
+}
+
+run_SCAVENGE_permutation_statistics <- function(
+  transition_matrix,
+  sampled_cell_idx_list,
+  observed_score_vec,
+  cluster_index_record,
+  cores,
+  restart_prob,
+  native_source_file
+) {
+  permutation_times <- length(sampled_cell_idx_list)
+  core_count <- min(cores, permutation_times)
+  chunk_count <- min(permutation_times, 4L * core_count)
+  chunk_sizes <- rep(permutation_times %/% chunk_count, chunk_count)
+  chunk_sizes[seq_len(permutation_times %% chunk_count)] <-
+    chunk_sizes[seq_len(permutation_times %% chunk_count)] + 1L
+  dll_name <- load_SCAVENGE_native_library(native_source_file)
+
+  statistics <- .Call(
+    "multiomeR_scavenge_permutation_statistics",
+    transition_matrix@p,
+    transition_matrix@i,
+    transition_matrix@x,
+    as.integer(c(0L, cumsum(lengths(sampled_cell_idx_list)))),
+    as.integer(unlist(sampled_cell_idx_list, use.names = FALSE) - 1L),
+    as.integer(c(0L, cumsum(chunk_sizes))),
+    unname(observed_score_vec),
+    cluster_index_record$cluster_offsets,
+    cluster_index_record$cluster_cell_indices,
+    as.double(restart_prob),
+    as.double(1e-5),
+    as.integer(10000L),
+    as.integer(core_count),
+    PACKAGE = dll_name
+  )
+  statistics$cell_exceedance_counts <-
+    rowSums(statistics$cell_exceedance_counts)
+  statistics
+}
+
+summarize_SCAVENGE_cluster_permutations <- function(
+  observed_score_vec,
+  cluster_index_record,
+  cluster_statistics,
+  permutation_times,
+  GWAS_ID,
+  graph_name
+) {
+  cluster_indices <- purrr::map(
+    seq_len(nrow(cluster_index_record$groups)),
+    \(i) seq.int(
+      cluster_index_record$cluster_offsets[[i]] + 1L,
+      cluster_index_record$cluster_offsets[[i + 1L]]
+    )
+  )
+  cell_indices <- purrr::map(
+    cluster_indices,
+    \(idx) cluster_index_record$cluster_cell_indices[idx] + 1L
+  )
+  observed_median_raw_score <- purrr::map_dbl(
+    cell_indices,
+    \(idx) stats::median(observed_score_vec[idx])
+  )
+
+  cluster_index_record$groups |>
+    dplyr::mutate(
+      GWAS_ID = GWAS_ID,
+      graph = graph_name,
+      observed_median_raw_score = observed_median_raw_score,
+      null_median_raw_score = apply(
+        cluster_statistics,
+        1,
+        stats::median
+      ),
+      null_q95_raw_score = apply(
+        cluster_statistics,
+        1,
+        stats::quantile,
+        probs = 0.95,
+        names = FALSE
+      ),
+      exceedance_count = rowSums(
+        cluster_statistics >= observed_median_raw_score
+      ),
+      permutation_times = permutation_times,
+      permutation_p_value = (exceedance_count + 1) / (permutation_times + 1)
+    ) |>
+    dplyr::mutate(
+      permutation_p_adj_BH = stats::p.adjust(
+        permutation_p_value,
+        method = "BH"
+      ),
+      .by = grouping_col
+    ) |>
+    dplyr::select(
+      GWAS_ID,
+      graph,
+      grouping_col,
+      cluster,
+      observed_median_raw_score,
+      null_median_raw_score,
+      null_q95_raw_score,
+      exceedance_count,
+      permutation_times,
+      permutation_p_value,
+      permutation_p_adj_BH
+    )
 }
 
 get_empty_TRS_tibble <- function() {
@@ -501,42 +737,66 @@ get_empty_TRS_tibble <- function() {
   )
 }
 
-#' Get SCAVENGE TRS from a chromVAR z-score record
+#' Get SCAVENGE results from a chromVAR z-score record
 #'
-#' Convert one GWAS chromVAR z-score record into SCAVENGE TRS scores.
+#' Compute cell-level SCAVENGE TRS and empirical cluster-level significance from
+#' the same degree-matched permutation random walks.
 #'
 #' @param chromVAR_z_score_record List containing `GWAS_ID` and named cell-level
 #'   `z_score_vec`.
 #' @param NN_graph Sparse cell-by-cell neighbor graph; cells are intersected with
 #'   the z-score vector before scoring.
+#' @param metadata_tibble Cell metadata containing the graph-specific named and
+#'   cell-type cluster columns.
+#' @param graph_name Graph-name prefix used to resolve cluster columns.
 #' @param cores Number of CPU cores requested for external tools or parallel work.
 #' @param max_z_score Upper z-score cap for finite-cell filtering before seed selection.
-#' @param permutation_times Number of degree-matched permutations used for cell
-#'   p values.
+#' @param permutation_times Number of degree-matched permutations used for cell-
+#'   and cluster-level empirical P-values.
 #' @param restart_prob Restart probability for random-walk propagation.
 #' @param seed_percent Fraction of highest z-score cells used as seed cells.
 #' @param scale_percent Upper quantile used to derive the TRS scale factor from
 #'   filtered z scores.
-#' @return Tibble with cell barcode, TRS score, GWAS ID, seed flag, permutation
-#'   p value, `-log10(p)`, and significance flag.
+#' @param native_source_file Tracked C++ source for the shared-memory random-walk
+#'   kernel.
+#' @return List containing a cell-level `TRS_tibble` and a group-level
+#'   `TRS_summary_tibble` with empirical cluster P-values.
 #' @keywords internal
 
-get_SCAVENGE_TRS_from_chromVAR_z_score_record <- function(
+get_SCAVENGE_result_from_chromVAR_z_score_record <- function(
   chromVAR_z_score_record,
   NN_graph,
+  metadata_tibble,
+  graph_name,
   cores,
   max_z_score = 1000,
   permutation_times = 1000,
   restart_prob = 0.05,
   seed_percent = 0.05,
-  scale_percent = 0.01
+  scale_percent = 0.01,
+  native_source_file = file.path(
+    get_project_root(),
+    "src",
+    "scavenge_random_walk.cpp"
+  )
 ) {
   z_score_vec <- chromVAR_z_score_record$z_score_vec
   GWAS_ID <- chromVAR_z_score_record$GWAS_ID
+  empty_result <- function() {
+    list(
+      TRS_tibble = get_empty_TRS_tibble(),
+      TRS_summary_tibble = get_empty_TRS_summary_tibble()
+    )
+  }
+  if (permutation_times < 1) {
+    stop("permutation_times must be at least 1.")
+  }
 
   shared_cells <- intersect(names(z_score_vec), rownames(NN_graph))
   z_score_vec <- z_score_vec[shared_cells]
-  NN_graph <- NN_graph[shared_cells, shared_cells]
+  NN_graph <- get_SCAVENGE_adjacency_matrix(
+    NN_graph[shared_cells, shared_cells]
+  )
 
   finite_z_score_cell_idx <- which(is.finite(z_score_vec) & z_score_vec <= max_z_score)
   z_score_vec_filtered <- z_score_vec[finite_z_score_cell_idx]
@@ -545,12 +805,12 @@ get_SCAVENGE_TRS_from_chromVAR_z_score_record <- function(
   deg0_filtered_graph <- drop_SCAVENGE_degree_zero_cells(z_score_filtered_graph)
   deg0_z_score_vec_filtered <- z_score_vec_filtered[rownames(deg0_filtered_graph)]
   if (length(deg0_z_score_vec_filtered) == 0) {
-    return(get_empty_TRS_tibble())
+    return(empty_result())
   }
 
   is_seed_bool_vec <- get_SCAVENGE_seed_index(deg0_z_score_vec_filtered, seed_percent = seed_percent)
   if (!any(is_seed_bool_vec)) {
-    return(tibble::tibble(
+    TRS_tibble <- tibble::tibble(
       barcode_w_prefix = names(deg0_z_score_vec_filtered),
       score = 0,
       GWAS_ID = GWAS_ID,
@@ -558,6 +818,26 @@ get_SCAVENGE_TRS_from_chromVAR_z_score_record <- function(
       p_val = 1,
       log10_p_val = 0,
       score_is_sig = FALSE
+    )
+    TRS_summary_tibble <- summarize_SCAVENGE_TRS_by_groups(
+      TRS_tibble = TRS_tibble,
+      metadata_tibble = metadata_tibble,
+      graph_name = graph_name
+    ) |>
+      dplyr::mutate(
+        graph = graph_name,
+        observed_median_raw_score = 0,
+        null_median_raw_score = NA_real_,
+        null_q95_raw_score = NA_real_,
+        exceedance_count = NA_integer_,
+        permutation_times = 0L,
+        permutation_p_value = 1,
+        permutation_p_adj_BH = 1,
+        .after = GWAS_ID
+      )
+    return(list(
+      TRS_tibble = TRS_tibble,
+      TRS_summary_tibble = TRS_summary_tibble
     ))
   }
 
@@ -571,14 +851,14 @@ get_SCAVENGE_TRS_from_chromVAR_z_score_record <- function(
   net_prop_score_named_vec_filtered <- net_prop_score_named_vec[!zero_net_prop_score]
   kept_cells <- names(net_prop_score_named_vec_filtered)
   if (length(kept_cells) == 0) {
-    return(get_empty_TRS_tibble())
+    return(empty_result())
   }
 
   triple_filtered_graph <- drop_SCAVENGE_degree_zero_cells(deg0_filtered_graph[kept_cells, kept_cells, drop = FALSE])
   kept_cells <- rownames(triple_filtered_graph)
   net_prop_score_named_vec_filtered <- net_prop_score_named_vec_filtered[kept_cells]
   if (length(kept_cells) == 0) {
-    return(get_empty_TRS_tibble())
+    return(empty_result())
   }
 
   # Cap, scale, and multiply by scale factor
@@ -589,27 +869,59 @@ get_SCAVENGE_TRS_from_chromVAR_z_score_record <- function(
     min_max_scale_vec() %>%
     magrittr::multiply_by(scale_factor)
 
-  # Permutation test
-  perm_test_mod <- get_degree_matched_permutation_p_values(
-    seed_idx = is_seed_bool_vec[kept_cells],
+  seed_idx <- is_seed_bool_vec[kept_cells]
+  cluster_index_record <- get_SCAVENGE_cluster_index_record(
+    metadata_tibble = metadata_tibble,
+    cell_names = kept_cells,
+    graph_name = graph_name
+  )
+  sampled_cell_idx_list <- sample_SCAVENGE_degree_matched_seed_indices(
     NN_graph = triple_filtered_graph,
+    seed_idx = seed_idx,
+    permutation_times = permutation_times
+  )
+  permutation_statistics <- run_SCAVENGE_permutation_statistics(
+    transition_matrix = get_SCAVENGE_transition_matrix(triple_filtered_graph),
+    sampled_cell_idx_list = sampled_cell_idx_list,
     observed_score_vec = net_prop_score_named_vec_filtered,
-    permutation_times = permutation_times,
+    cluster_index_record = cluster_index_record,
     cores = cores,
-    restart_prob = restart_prob
+    restart_prob = restart_prob,
+    native_source_file = native_source_file
   )
 
-  out_tibble <- cell_named_TRS_vec %>%
-    tibble::enframe(name = "rowname", value = "score") %>%
-    dplyr::mutate(GWAS_ID = GWAS_ID) %>%
-    dplyr::left_join(perm_test_mod, by = "rowname") %>%
+  TRS_tibble <- cell_named_TRS_vec |>
+    tibble::enframe(name = "barcode_w_prefix", value = "score") |>
     dplyr::mutate(
+      GWAS_ID = GWAS_ID,
+      seed_idx = unname(seed_idx),
+      p_val = (permutation_statistics$cell_exceedance_counts + 1) /
+        (permutation_times + 1),
       log10_p_val = -log10(p_val),
-      score_is_sig = p_val < 0.05
-    ) %>%
-    dplyr::rename(barcode_w_prefix = rowname)
+      score_is_sig = p_val <= 0.05
+    )
+  cluster_permutation_tibble <- summarize_SCAVENGE_cluster_permutations(
+    observed_score_vec = net_prop_score_named_vec_filtered,
+    cluster_index_record = cluster_index_record,
+    cluster_statistics = permutation_statistics$cluster_statistics,
+    permutation_times = permutation_times,
+    GWAS_ID = GWAS_ID,
+    graph_name = graph_name
+  )
+  TRS_summary_tibble <- summarize_SCAVENGE_TRS_by_groups(
+    TRS_tibble = TRS_tibble,
+    metadata_tibble = metadata_tibble,
+    graph_name = graph_name
+  ) |>
+    dplyr::left_join(
+      cluster_permutation_tibble,
+      by = c("GWAS_ID", "grouping_col", "cluster")
+    )
 
-  return(out_tibble)
+  list(
+    TRS_tibble = TRS_tibble,
+    TRS_summary_tibble = TRS_summary_tibble
+  )
 }
 
 get_empty_TRS_summary_tibble <- function() {
@@ -1084,22 +1396,25 @@ get_plot_group_breaks <- function(ordered_values) {
   cumsum(group_lengths)[seq_len(length(group_lengths) - 1)] + 0.5
 }
 
-#' Plot GWAS feature heatmap
+#' Plot a GWAS feature matrix
 #'
-#' Draw a GWAS-by-feature heatmap with score mapped directly to cell fill.
+#' Draw a GWAS-by-feature heatmap or significance-filtered dotplot.
 #'
 #' @param score_plot_data Ordered score tibble containing GWAS IDs, feature IDs,
 #'   and fill values.
 #' @param feature_metadata Metadata for plotted features, including compartment
 #'   ordering used for vertical separators.
 #' @param feature_col Feature/cluster column plotted on the x axis.
-#' @param fill_col Numeric column mapped to tile fill.
-#' @param fill_label Legend label for the fill scale.
+#' @param fill_col Numeric column mapped to tile fill or point color.
+#' @param fill_label Legend label for the score color scale.
 #' @param fill_midpoint Midpoint for the diverging fill scale.
 #' @param fill_scale Color-scale type. Use `sequential` for nonnegative scores
 #'   and `diverging` for signed deviations.
 #' @param fill_limits Optional numeric fill-scale limits.
 #' @param title Optional plot title.
+#' @param support_label_col Optional text column drawn on top of heatmap tiles.
+#' @param point_size_col Optional factor column mapped to point size. When set,
+#'   draw a red sequential dotplot instead of heatmap tiles.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
@@ -1113,7 +1428,8 @@ plot_GWAS_feature_heatmap <- function(
   fill_scale = c("diverging", "sequential"),
   fill_limits = NULL,
   title = NULL,
-  support_label_col = NULL
+  support_label_col = NULL,
+  point_size_col = NULL
 ) {
   fill_scale <- match.arg(fill_scale)
   row_categories <- score_plot_data |>
@@ -1125,54 +1441,96 @@ plot_GWAS_feature_heatmap <- function(
     dplyr::pull(compartment) |>
     get_plot_group_breaks()
 
-  heatmap <- score_plot_data |>
-    ggplot2::ggplot(ggplot2::aes(x = .data[[feature_col]], y = GWAS_ID, fill = .data[[fill_col]])) +
-    ggplot2::geom_tile(color = "white", linewidth = 0.3) +
-    ggplot2::geom_hline(yintercept = row_breaks, color = "grey30", linewidth = 0.35) +
-    ggplot2::geom_vline(xintercept = feature_breaks, color = "grey30", linewidth = 0.35) +
+  feature_plot <- score_plot_data |>
+    ggplot2::ggplot(ggplot2::aes(x = .data[[feature_col]], y = GWAS_ID)) +
     ggplot2::scale_x_discrete(drop = FALSE, expand = c(0, 0)) +
     ggplot2::scale_y_discrete(drop = FALSE, expand = c(0, 0))
 
-  if (!is.null(support_label_col) && support_label_col %in% colnames(score_plot_data)) {
-    heatmap <- heatmap +
+  if (is.null(point_size_col)) {
+    feature_plot <- feature_plot +
+      ggplot2::geom_tile(
+        ggplot2::aes(fill = .data[[fill_col]]),
+        color = "white",
+        linewidth = 0.3
+      )
+  } else {
+    feature_plot <- feature_plot +
+      ggplot2::geom_point(
+        data = score_plot_data |> dplyr::filter(!is.na(.data[[point_size_col]])),
+        ggplot2::aes(color = .data[[fill_col]], size = .data[[point_size_col]]),
+        alpha = 0.95,
+        na.rm = TRUE
+      ) +
+      ggplot2::scale_size_manual(
+        values = c("P <= 0.05" = 2.4, "P < 0.01" = 4.8),
+        drop = FALSE,
+        name = "BH-adjusted P-value",
+        guide = ggplot2::guide_legend(title.position = "top")
+      )
+  }
+
+  feature_plot <- feature_plot +
+    ggplot2::geom_hline(yintercept = row_breaks, color = "grey30", linewidth = 0.35) +
+    ggplot2::geom_vline(xintercept = feature_breaks, color = "grey30", linewidth = 0.35)
+
+  if (is.null(point_size_col) && !is.null(support_label_col) && support_label_col %in% colnames(score_plot_data)) {
+    feature_plot <- feature_plot +
+      ggplot2::geom_text(
+        ggplot2::aes(label = .data[[support_label_col]]),
+        size = 3.4,
+        color = "white",
+        fontface = "bold",
+        na.rm = TRUE
+      ) +
       ggplot2::geom_text(
         ggplot2::aes(label = .data[[support_label_col]]),
         size = 2.8,
         color = "grey10",
+        fontface = "bold",
         na.rm = TRUE
       )
   }
 
-  fill_guide <- ggplot2::guide_colorbar(
+  score_guide <- ggplot2::guide_colorbar(
     title.position = "top",
     barwidth = grid::unit(32, "mm"),
     barheight = grid::unit(3, "mm")
   )
-  if (fill_scale == "sequential") {
-    heatmap <- heatmap +
+  if (!is.null(point_size_col)) {
+    feature_plot <- feature_plot +
+      ggplot2::scale_color_gradient(
+        low = "#FEE5D9",
+        high = "#A50F15",
+        limits = fill_limits,
+        name = fill_label,
+        guide = score_guide
+      )
+  } else if (fill_scale == "sequential") {
+    feature_plot <- feature_plot +
       ggplot2::scale_fill_gradient(
         low = "#F7FBFF",
         high = "#08519C",
         limits = fill_limits,
         name = fill_label,
-        guide = fill_guide
+        guide = score_guide
       )
   } else {
-    heatmap <- heatmap +
+    feature_plot <- feature_plot +
       ggplot2::scale_fill_gradient2(
-      low = "#3B4CC0",
-      mid = "white",
-      high = "#B40426",
-      midpoint = fill_midpoint,
-      limits = fill_limits,
-      name = fill_label,
-      guide = fill_guide
-    )
+        low = "#3B4CC0",
+        mid = "white",
+        high = "#B40426",
+        midpoint = fill_midpoint,
+        limits = fill_limits,
+        name = fill_label,
+        guide = score_guide
+      )
   }
 
   compact_x_axis <- dplyr::n_distinct(score_plot_data[[feature_col]]) <= 8
-  heatmap +
+  feature_plot +
     ggplot2::labs(x = NULL, y = NULL, title = title) +
+    ggplot2::coord_cartesian(clip = "off") +
     ggplot2::theme_minimal(base_size = 9) +
     ggplot2::theme(
       axis.text.x = ggplot2::element_text(
@@ -1194,30 +1552,49 @@ plot_GWAS_feature_heatmap <- function(
     )
 }
 
+format_GWAS_bar_number <- function(values) {
+  vapply(values, \(value) {
+    if (!is.finite(value)) {
+      return(NA_character_)
+    }
+    divisor <- if (value >= 1e6) 1e6 else if (value >= 1e3) 1e3 else 1
+    suffix <- if (divisor == 1e6) "M" else if (divisor == 1e3) "K" else ""
+    paste0(format(signif(value / divisor, 3), trim = TRUE, scientific = FALSE), suffix)
+  }, character(1))
+}
+
 plot_GWAS_feature_support_tracks <- function(feature_metadata, feature_col = "cluster") {
   if (!"n_cells" %in% colnames(feature_metadata) || all(is.na(feature_metadata$n_cells))) {
     return(patchwork::plot_spacer())
   }
 
-  feature_metadata |>
+  support_plot_data <- feature_metadata |>
     dplyr::arrange(.data[[feature_col]]) |>
+    dplyr::mutate(
+      panel_max = max(n_cells, na.rm = TRUE),
+      label = format_GWAS_bar_number(n_cells),
+      label_inside = n_cells / panel_max >= 0.28,
+      label_y = dplyr::if_else(label_inside, n_cells - 0.025 * panel_max, n_cells + 0.025 * panel_max),
+      label_hjust = dplyr::if_else(label_inside, 1, 0),
+      label_color = dplyr::if_else(label_inside, "white", "grey20")
+    )
+
+  support_plot_data |>
     ggplot2::ggplot(ggplot2::aes(x = .data[[feature_col]], y = n_cells)) +
     ggplot2::geom_col(fill = "#6B7280", color = "white", linewidth = 0.3, width = 1, na.rm = TRUE) +
+    ggplot2::geom_text(
+      ggplot2::aes(y = label_y, label = label, hjust = label_hjust, color = label_color),
+      angle = 90,
+      size = 2.8,
+      na.rm = TRUE
+    ) +
     ggplot2::scale_x_discrete(drop = FALSE, expand = c(0, 0)) +
-    ggplot2::scale_y_log10(
+    ggplot2::scale_y_continuous(
       position = "right",
-      breaks = scales::breaks_log(n = 3),
       labels = scales::label_number(scale_cut = scales::cut_short_scale()),
-      expand = ggplot2::expansion(mult = c(0, 0.08))
+      expand = ggplot2::expansion(mult = c(0, 0.12))
     ) +
-    ggplot2::annotation_logticks(
-      sides = "r",
-      short = grid::unit(0.5, "mm"),
-      mid = grid::unit(1, "mm"),
-      long = grid::unit(1.5, "mm"),
-      color = "grey45",
-      linewidth = 0.2
-    ) +
+    ggplot2::scale_color_identity() +
     ggplot2::coord_cartesian(clip = "off") +
     ggplot2::labs(x = NULL, y = "Nuclei") +
     ggplot2::theme_minimal(base_size = 8) +
@@ -1245,16 +1622,14 @@ plot_GWAS_feature_support_tracks <- function(feature_metadata, feature_col = "cl
 
 plot_GWAS_metadata_tracks <- function(ordered_metadata) {
   method_colors <- c("SuSie" = "#238B45", "SuSiE-inf" = "#41B6C4", "PICS" = "#F16913")
-  format_short_number <- function(values) {
-    vapply(values, \(value) {
-      if (!is.finite(value)) {
-        return(NA_character_)
-      }
-      divisor <- if (value >= 1e6) 1e6 else if (value >= 1e3) 1e3 else 1
-      suffix <- if (divisor == 1e6) "M" else if (divisor == 1e3) "K" else ""
-      paste0(format(signif(value / divisor, 3), trim = TRUE, scientific = FALSE), suffix)
-    }, character(1))
-  }
+  unknown_methods <- setdiff(
+    sort(unique(stats::na.omit(ordered_metadata$finemappingMethod))),
+    names(method_colors)
+  )
+  method_colors <- c(
+    method_colors,
+    make_named_heatmap_palette(unknown_methods, palette = "Dark2")
+  )
   row_levels <- if (is.factor(ordered_metadata$GWAS_ID)) levels(ordered_metadata$GWAS_ID) else unique(as.character(ordered_metadata$GWAS_ID))
   row_categories <- ordered_metadata |>
     dplyr::distinct(GWAS_ID, Category) |>
@@ -1265,17 +1640,35 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
     tidyr::pivot_longer(-GWAS_ID, names_to = "track", values_to = "value") |>
     dplyr::mutate(
       panel_max = max(value, na.rm = TRUE),
-      label = format_short_number(value),
+      label = format_GWAS_bar_number(value),
       label_inside = value / panel_max >= 0.28,
       label_x = dplyr::if_else(label_inside, value - 0.025 * panel_max, value + 0.025 * panel_max),
       label_hjust = dplyr::if_else(label_inside, 1, 0),
       label_color = dplyr::if_else(label_inside, "white", "grey20"),
       .by = track
     )
-  ancestry_plot_data <- ordered_metadata |>
-    dplyr::select(GWAS_ID, dplyr::matches("^ancestry_(EUR|EAS|AFR|AMR|SAS|OTH)$")) |>
+  ancestry_columns <- grep(
+    "^ancestry_(EUR|EAS|AFR|AMR|SAS|OTH)$",
+    colnames(ordered_metadata),
+    value = TRUE
+  )
+  ancestry_reported <- if (length(ancestry_columns) == 0L) {
+    rep(FALSE, nrow(ordered_metadata))
+  } else {
+    rowSums(!is.na(ordered_metadata[ancestry_columns])) > 0
+  }
+  ancestry_plot_data <- ordered_metadata[ancestry_reported, , drop = FALSE] |>
+    dplyr::select(GWAS_ID, dplyr::all_of(ancestry_columns)) |>
     tidyr::pivot_longer(-GWAS_ID, names_to = "ancestry_group", values_to = "fraction") |>
-    dplyr::mutate(ancestry_group = stringr::str_remove(ancestry_group, "^ancestry_"))
+    dplyr::filter(!is.na(fraction)) |>
+    dplyr::mutate(ancestry_group = stringr::str_remove(ancestry_group, "^ancestry_")) |>
+    dplyr::bind_rows(
+      tibble::tibble(
+        GWAS_ID = ordered_metadata$GWAS_ID[!ancestry_reported],
+        ancestry_group = "Unreported",
+        fraction = 1
+      )
+    )
 
   category_plot <- ordered_metadata |>
     ggplot2::ggplot(ggplot2::aes(x = 1, y = GWAS_ID, fill = Category)) +
@@ -1333,7 +1726,15 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
     ggplot2::scale_x_continuous(breaks = c(0, 1), labels = scales::percent_format(accuracy = 1), limits = c(0, 1), expand = c(0, 0)) +
     ggplot2::scale_y_discrete(drop = FALSE, expand = c(0, 0)) +
     ggplot2::scale_fill_manual(
-      values = c("EUR" = "#4DAF4A", "EAS" = "#377EB8", "AFR" = "#984EA3", "AMR" = "#FF7F00", "SAS" = "#E41A1C", "OTH" = "#999999"),
+      values = c(
+        "EUR" = "#4DAF4A",
+        "EAS" = "#377EB8",
+        "AFR" = "#984EA3",
+        "AMR" = "#FF7F00",
+        "SAS" = "#E41A1C",
+        "OTH" = "#999999",
+        "Unreported" = "#D9D9D9"
+      ),
       name = "Ancestry",
       guide = ggplot2::guide_legend(ncol = min(2L, get_heatmap_legend_ncol(ancestry_plot_data$ancestry_group, max_row_chars = 35)), byrow = TRUE, title.position = "top")
     ) +
@@ -1344,9 +1745,9 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
     ggplot2::theme(legend.justification = "left", legend.box.just = "left")
 }
 
-#' Plot GWAS by cluster heatmap
+#' Plot GWAS scores by cluster
 #'
-#' Combine GWAS metadata tracks with the ordered cluster score heatmap.
+#' Combine GWAS metadata tracks with an ordered cluster heatmap or dotplot.
 #'
 #' @param data_per_GWAS_and_cluster_df Score summary tibble with one row per
 #'   GWAS/cluster combination.
@@ -1361,6 +1762,7 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
 #' @param fill_scale Color-scale type passed to `plot_GWAS_feature_heatmap()`.
 #' @param fill_limits Optional numeric fill-scale limits.
 #' @param support_label_col Optional text column drawn on top of heatmap tiles.
+#' @param point_size_col Optional factor column mapped to dot size.
 #' @param show_feature_support Logical; when `TRUE`, draw a nuclei-count support
 #'   annotation if `n_cells` is available.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
@@ -1376,6 +1778,7 @@ plot_GWAS_by_cluster_heatmap <- function(
   fill_scale = c("diverging", "sequential"),
   fill_limits = NULL,
   support_label_col = NULL,
+  point_size_col = NULL,
   show_feature_support = TRUE
 ) {
   if (nrow(data_per_GWAS_and_cluster_df) == 0) {
@@ -1389,7 +1792,7 @@ plot_GWAS_by_cluster_heatmap <- function(
     score_col = fill_col
   )
 
-  heatmap <- plot_GWAS_feature_heatmap(
+  score_plot <- plot_GWAS_feature_heatmap(
     score_plot_data = ordered_data$scores,
     feature_metadata = ordered_data$clusters,
     feature_col = "cluster",
@@ -1398,21 +1801,23 @@ plot_GWAS_by_cluster_heatmap <- function(
     fill_midpoint = if (scaled) 0.5 else 0,
     fill_scale = fill_scale,
     fill_limits = fill_limits,
-    support_label_col = support_label_col
+    support_label_col = support_label_col,
+    point_size_col = point_size_col
   )
 
   if (isTRUE(show_feature_support) && "n_cells" %in% colnames(ordered_data$clusters) && any(!is.na(ordered_data$clusters$n_cells))) {
     left_panel <- patchwork::plot_spacer() / GWAS_metadata_tracks_plot + patchwork::plot_layout(heights = c(0.14, 1))
-    right_panel <- plot_GWAS_feature_support_tracks(ordered_data$clusters) / heatmap + patchwork::plot_layout(heights = c(0.14, 1))
+    right_panel <- plot_GWAS_feature_support_tracks(ordered_data$clusters) / score_plot + patchwork::plot_layout(heights = c(0.14, 1))
     return(patchwork::wrap_plots(left_panel, right_panel, nrow = 1, widths = c(4.8, 9)))
   }
 
-  patchwork::wrap_plots(GWAS_metadata_tracks_plot, heatmap, nrow = 1, widths = c(4.8, 9))
+  patchwork::wrap_plots(GWAS_metadata_tracks_plot, score_plot, nrow = 1, widths = c(4.8, 9))
 }
 
-#' Plot grouped GWAS by cluster heatmaps
+#' Plot grouped GWAS scores by cluster
 #'
-#' Split GWAS cluster heatmaps by a grouping column and return a named plot list.
+#' Split GWAS cluster heatmaps or dotplots by a grouping column and return a
+#' named plot list.
 #'
 #' @param data_per_GWAS_and_cluster_df Score summary tibble containing `split_col`
 #'   in addition to GWAS and cluster score fields.
@@ -1427,6 +1832,9 @@ plot_GWAS_by_cluster_heatmap <- function(
 #' @param fill_label Legend label for the heatmap fill.
 #' @param fill_scale Color-scale type passed to `plot_GWAS_by_cluster_heatmap()`.
 #' @param fill_limits Optional numeric fill-scale limits.
+#' @param support_label_col Optional text column drawn on top of heatmap tiles.
+#' @param point_size_col Optional factor column mapped to dot size.
+#' @param caption Optional caption added below each grouped heatmap.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
@@ -1439,31 +1847,40 @@ plot_grouped_GWAS_by_cluster_heatmaps <- function(
   scaled = FALSE,
   fill_label = "Score",
   fill_scale = c("diverging", "sequential"),
-  fill_limits = NULL
+  fill_limits = NULL,
+  support_label_col = NULL,
+  point_size_col = NULL,
+  caption = NULL
 ) {
   if (nrow(data_per_GWAS_and_cluster_df) == 0) {
     return(structure(list(), class = c("empty_plot_list", "list")))
   }
   fill_scale <- match.arg(fill_scale)
 
-  grouped_heatmap_data <- dplyr::group_by(data_per_GWAS_and_cluster_df, .data[[split_col]])
-  plot_names <- dplyr::group_keys(grouped_heatmap_data)[[split_col]]
+  grouped_plot_data <- dplyr::group_by(data_per_GWAS_and_cluster_df, .data[[split_col]])
+  plot_names <- dplyr::group_keys(grouped_plot_data)[[split_col]]
   if (!is.null(name_suffix)) {
     plot_names <- stringr::str_c(plot_names, "_", name_suffix)
   }
 
-  grouped_heatmap_data |>
+  grouped_plot_data |>
     dplyr::group_split() |>
     purrr::set_names(plot_names) |>
     purrr::map(\(group_data) {
-      plot_GWAS_by_cluster_heatmap(
+      plot <- plot_GWAS_by_cluster_heatmap(
         group_data |> dplyr::select(-dplyr::all_of(split_col)),
         GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
         compartments_patterns = compartments_patterns,
         scaled = scaled,
         fill_label = fill_label,
         fill_scale = fill_scale,
-        fill_limits = fill_limits
+        fill_limits = fill_limits,
+        support_label_col = support_label_col,
+        point_size_col = point_size_col
       )
+      if (!is.null(caption)) {
+        plot <- plot + patchwork::plot_annotation(caption = caption)
+      }
+      plot
     })
 }

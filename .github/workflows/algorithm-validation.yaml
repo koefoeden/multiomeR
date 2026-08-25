@@ -10,6 +10,7 @@ on:
       - scripts/validate_amulet_bpcells_parity.R
       - scripts/validate_scoring_parity.R
       - src/amulet_bpcells.cpp
+      - src/scavenge_random_walk.cpp
       - R/amulet_BPCells_helpers.R
       - R/processing_GEX_helpers.R
       - R/processing_multimodal_helpers.R
@@ -24,6 +25,7 @@ on:
       - scripts/validate_amulet_bpcells_parity.R
       - scripts/validate_scoring_parity.R
       - src/amulet_bpcells.cpp
+      - src/scavenge_random_walk.cpp
       - R/amulet_BPCells_helpers.R
       - R/processing_GEX_helpers.R
       - R/processing_multimodal_helpers.R

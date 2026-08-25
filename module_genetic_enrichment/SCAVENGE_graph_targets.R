@@ -18,29 +18,33 @@ rlang::list2(
     resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
   ),
   targets::tar_target(
-    name = TRS_tibbles,
-    description = "Propagate single-nucleus chromVAR Z-scores through the NN graph to compute SCAVENGE TRS for each GWAS [part_of_graph:genetic_enrichment_single_nucleus]",
-    command = get_SCAVENGE_TRS_from_chromVAR_z_score_record(
+    name = SCAVENGE_result_records,
+    description = "Compute cell-level SCAVENGE TRS and cluster-level permutation significance for one GWAS [part_of_graph:genetic_enrichment_single_nucleus]",
+    command = get_SCAVENGE_result_from_chromVAR_z_score_record(
       chromVAR_z_score_record = chromVAR_z_score_records.single_nucleus,
       NN_graph = graph_matrix,
+      metadata_tibble = metadata_w_cell_types_tibble.WNN,
+      graph_name = map_SCAVENGE_graph_name,
       cores = 6,
       permutation_times = genetic_enrichment_SCAVENGE_permutation_times,
       restart_prob = genetic_enrichment_SCAVENGE_restart_prob,
-      seed_percent = genetic_enrichment_SCAVENGE_seed_percent
+      seed_percent = genetic_enrichment_SCAVENGE_seed_percent,
+      native_source_file = SCAVENGE_native_source_file
     ),
     pattern = map(chromVAR_z_score_records.single_nucleus),
     resources = get_tar_resources(RAM_GB_req = 60, cores_req = 6)
   ),
   targets::tar_target(
+    name = TRS_tibbles,
+    description = "Extract one cell-level SCAVENGE TRS tibble",
+    command = purrr::pluck(SCAVENGE_result_records, "TRS_tibble"),
+    pattern = map(SCAVENGE_result_records)
+  ),
+  targets::tar_target(
     name = TRS_summary_tibbles,
-    description = "Summarize one GWAS SCAVENGE TRS branch across named and cell-type graph clusters",
-    command = summarize_SCAVENGE_TRS_by_groups(
-      TRS_tibble = TRS_tibbles,
-      metadata_tibble = metadata_w_cell_types_tibble.WNN,
-      graph_name = map_SCAVENGE_graph_name
-    ),
-    pattern = map(TRS_tibbles),
-    resources = get_tar_resources(RAM_GB_req = 32)
+    description = "Extract one cluster-level SCAVENGE summary with empirical permutation P-values",
+    command = purrr::pluck(SCAVENGE_result_records, "TRS_summary_tibble"),
+    pattern = map(SCAVENGE_result_records)
   ),
   targets::tar_target(
     name = TRS_tibble,

@@ -11,6 +11,11 @@ rlang::list2(
     command = "src/amulet_bpcells.cpp"
   ),
   tarchetypes::tar_file(
+    name = SCAVENGE_native_source_file,
+    description = "Track the shared-memory SCAVENGE permutation random-walk kernel",
+    command = "src/scavenge_random_walk.cpp"
+  ),
+  tarchetypes::tar_file(
     name = JASPAR2026_vertebrate_familial_root_motifs_tf,
     description = "Track the 233 official JASPAR2026 CORE vertebrate familial root motifs [part_of_graph:ATAC] [part_of_graph:seurat_export] [part_of_graph:differential_analyses]",
     command = "resources/JASPAR2026_vertebrate_familial_root_motifs.tf"

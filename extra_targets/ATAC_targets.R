@@ -399,7 +399,8 @@ rlang::list2(
         embedding_matrix = harmony_embeddings_matrix.ATAC,
         dims = aggregation_UMAP_ATAC_PCs,
         n_neighbors = aggregation_UMAP_nNNs,
-        min_dist = aggregation_UMAP_min_dist
+        min_dist = aggregation_UMAP_min_dist,
+        threads = 6
       ) |>
         tibble::as_tibble(rownames = "barcode_w_prefix"),
       resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
@@ -732,7 +733,8 @@ rlang::list2(
           embedding_matrix = harmony_embeddings_matrix.ATAC[metadata_w_cell_types_tibble.ATAC$barcode_w_prefix, , drop = FALSE],
           dims = 1:UMAP_n_dims_seq.ATAC,
           n_neighbors = UMAP_neighbors_seq,
-          min_dist = aggregation_UMAP_min_dist
+          min_dist = aggregation_UMAP_min_dist,
+          threads = 6
         ) |>
           tibble::as_tibble(rownames = "barcode_w_prefix")
 

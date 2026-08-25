@@ -491,11 +491,12 @@ weighted_nearest_neighbors_BPCells <- function(
 #' @param seed Random seed passed to stochastic clustering, sampling, or embedding code for reproducibility.
 #' @param col_prefix Prefix assigned to generated coordinate columns, for example `LSI_UMAP` gives `LSI_UMAP_1` and `LSI_UMAP_2`.
 #' @param n_components Number of UMAP output dimensions to compute.
+#' @param threads Number of threads used for nearest-neighbor processing.
 #' @return A tibble with `barcode_w_prefix` and generated UMAP coordinate
 #'   columns named from `col_prefix`.
 #' @keywords internal
 
-run_WNN_UMAP <- function(WNN_results, n_neighbors, min_dist, seed = 1, col_prefix = "WNN_UMAP", n_components = 2) {
+run_WNN_UMAP <- function(WNN_results, n_neighbors, min_dist, seed = 1, col_prefix = "WNN_UMAP", n_components = 2, threads = 1) {
   n_neighbors <- min(as.integer(n_neighbors), ncol(WNN_results$nn_idx))
   set.seed(seed)
   umap <- uwot::umap(
@@ -507,6 +508,8 @@ run_WNN_UMAP <- function(WNN_results, n_neighbors, min_dist, seed = 1, col_prefi
     n_neighbors = n_neighbors,
     min_dist = min_dist,
     n_components = n_components,
+    n_threads = threads,
+    n_sgd_threads = 0,
     verbose = TRUE
   )
 

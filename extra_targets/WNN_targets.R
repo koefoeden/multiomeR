@@ -89,7 +89,8 @@ rlang::list2(
       command = run_WNN_UMAP(
         WNN_results = WNN_results,
         n_neighbors = aggregation_UMAP_nNNs,
-        min_dist = aggregation_UMAP_min_dist
+        min_dist = aggregation_UMAP_min_dist,
+        threads = 6
       ),
       resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
     ),
@@ -317,7 +318,8 @@ rlang::list2(
         sweep_umap_tibble <- run_WNN_UMAP(
           WNN_results = WNN_results,
           n_neighbors = UMAP_neighbors_seq,
-          min_dist = aggregation_UMAP_min_dist
+          min_dist = aggregation_UMAP_min_dist,
+          threads = 6
         )
 
         metadata_w_cell_types_tibble.WNN |>

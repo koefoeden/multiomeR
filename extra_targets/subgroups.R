@@ -97,7 +97,8 @@ rlang::list2(
       n_neighbors = aggregation_UMAP_nNNs,
       min_dist = aggregation_UMAP_min_dist,
       dim_prefix = "PCA_",
-      col_prefix = "GEX_sub_UMAP"
+      col_prefix = "GEX_sub_UMAP",
+      threads = 6
     ) |>
       tibble::as_tibble(rownames = "barcode_w_prefix"),
     pattern = map(harmony_embeddings_matrix.GEX.subgroups),
@@ -127,7 +128,8 @@ rlang::list2(
       n_neighbors = aggregation_UMAP_nNNs,
       min_dist = aggregation_UMAP_min_dist,
       dim_prefix = "LSI_",
-      col_prefix = "ATAC_sub_UMAP"
+      col_prefix = "ATAC_sub_UMAP",
+      threads = 6
     ) |>
       tibble::as_tibble(rownames = "barcode_w_prefix"),
     pattern = map(harmony_embeddings_matrix.ATAC.subgroups),
@@ -183,7 +185,8 @@ rlang::list2(
       WNN_results = WNN_results.subgroups,
       n_neighbors = aggregation_UMAP_nNNs,
       min_dist = aggregation_UMAP_min_dist,
-      col_prefix = "WNN_sub_UMAP"
+      col_prefix = "WNN_sub_UMAP",
+      threads = 6
     ),
     pattern = map(WNN_results.subgroups),
     resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)

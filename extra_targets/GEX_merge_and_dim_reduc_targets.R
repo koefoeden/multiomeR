@@ -100,7 +100,8 @@ rlang::list2(
       n_neighbors = aggregation_UMAP_nNNs,
       min_dist = aggregation_UMAP_min_dist,
       dim_prefix = "PCA_",
-      col_prefix = "GEX_UMAP"
+      col_prefix = "GEX_UMAP",
+      threads = 6
     ) |>
       tibble::as_tibble(rownames = "barcode_w_prefix"),
     resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
@@ -114,7 +115,8 @@ rlang::list2(
       n_neighbors = aggregation_UMAP_nNNs,
       min_dist = aggregation_UMAP_min_dist,
       dim_prefix = "PCA_",
-      col_prefix = "GEX_non_harmony_UMAP"
+      col_prefix = "GEX_non_harmony_UMAP",
+      threads = 6
     ) |>
       tibble::as_tibble(rownames = "barcode_w_prefix"),
     resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)

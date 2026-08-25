@@ -214,7 +214,8 @@ rlang::list2(
         n_neighbors = UMAP_neighbors_seq,
         min_dist = aggregation_UMAP_min_dist,
         dim_prefix = "PCA_",
-        col_prefix = "GEX_UMAP"
+        col_prefix = "GEX_UMAP",
+        threads = 6
       ) |>
         tibble::as_tibble(rownames = "barcode_w_prefix")
 

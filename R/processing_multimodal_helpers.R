@@ -216,6 +216,92 @@ get_WNN_embedding_matrices <- function(
   )
 }
 
+if (!exists("WNN_native_state_env", inherits = FALSE)) {
+  WNN_native_state_env <- new.env(parent = emptyenv())
+  WNN_native_state_env$dll_name <- NULL
+}
+
+load_WNN_native_library <- function(native_source_file) {
+  if (!is.null(WNN_native_state_env$dll_name)) {
+    return(WNN_native_state_env$dll_name)
+  }
+
+  build_dir <- tempfile("multiomeR_wnn_")
+  dir.create(build_dir)
+  build_source_file <- file.path(build_dir, basename(native_source_file))
+  if (!file.copy(native_source_file, build_source_file)) {
+    stop(
+      "Could not copy the WNN native source into its temporary build directory.",
+      call. = FALSE
+    )
+  }
+
+  shared_library_file <- file.path(
+    build_dir,
+    paste0("multiomeR_wnn", .Platform$dynlib.ext)
+  )
+  build_result <- processx::run(
+    command = file.path(R.home("bin"), "R"),
+    args = c("CMD", "SHLIB", "-o", shared_library_file, build_source_file),
+    wd = build_dir,
+    echo = FALSE,
+    error_on_status = FALSE
+  )
+  if (build_result$status != 0L) {
+    stop(
+      "Could not compile the WNN native bandwidth helper:\n",
+      paste(c(build_result$stdout, build_result$stderr), collapse = "\n"),
+      call. = FALSE
+    )
+  }
+
+  loaded_library <- dyn.load(shared_library_file)
+  WNN_native_state_env$dll_name <- loaded_library[["name"]]
+  WNN_native_state_env$dll_name
+}
+
+#' Calculate a small-SNN WNN kernel bandwidth
+#'
+#' Estimate each cell's kernel width from the farthest of its `k` lowest
+#' nonzero shared-nearest-neighbour similarities, following Seurat's WNN
+#' bandwidth strategy.
+#'
+#' @param embedding_matrix L2-normalized cell-by-dimension embedding matrix.
+#' @param knn_idx Cell-by-neighbour matrix of one-based cell indices, including
+#'   each query cell in its first column.
+#' @param k Number of nearest neighbours used to construct the SNN and select
+#'   low-similarity cells.
+#' @param nearest_dist Distance to each cell's nearest non-self neighbour.
+#' @param native_source_file Path to the tracked native C++ implementation.
+#' @return Numeric bandwidth vector with one value per cell.
+#' @keywords internal
+
+calculate_small_SNN_bandwidth <- function(
+  embedding_matrix,
+  knn_idx,
+  k,
+  nearest_dist,
+  native_source_file = file.path(
+    get_project_root(),
+    "src",
+    "wnn_snn_bandwidth.cpp"
+  )
+) {
+  embedding_matrix <- as.matrix(embedding_matrix)
+  storage.mode(embedding_matrix) <- "double"
+  knn_idx <- as.matrix(knn_idx)
+  storage.mode(knn_idx) <- "integer"
+
+  .Call(
+    "multiomeR_wnn_small_snn_bandwidth",
+    embedding_matrix,
+    knn_idx,
+    as.integer(k),
+    as.numeric(nearest_dist),
+    PACKAGE = load_WNN_native_library(native_source_file)
+  )
+}
+
 #' Weighted nearest neighbors BPCells
 #'
 #' Compute Seurat-style weighted nearest neighbors from aligned modality embeddings.
@@ -234,6 +320,8 @@ get_WNN_embedding_matrices <- function(
 #' @param threads Number of threads passed to BPCells, HNSW, or matrix-stat routines.
 #' @param ef HNSW search breadth parameter; larger values improve recall at higher runtime/memory cost.
 #' @param seed Random seed passed to stochastic clustering, sampling, or embedding code for reproducibility.
+#' @param native_source_file Path to the tracked C++ implementation of the
+#'   small-SNN kernel bandwidth.
 #' @return A list containing modality weights per barcode, weighted neighbor
 #'   index/distance matrices, per-modality KNN results, nearest distances, and
 #'   adaptive bandwidths.
@@ -249,7 +337,12 @@ weighted_nearest_neighbors_BPCells <- function(
   kernel_power = 1,
   threads = 1,
   ef = 500,
-  seed = 1
+  seed = 1,
+  native_source_file = file.path(
+    get_project_root(),
+    "src",
+    "wnn_snn_bandwidth.cpp"
+  )
 ) {
   if (length(embeddings_list) < 2) {
     stop("weighted_nearest_neighbors_BPCells() requires at least two embedding matrices.")
@@ -269,8 +362,7 @@ weighted_nearest_neighbors_BPCells <- function(
   n_cells <- length(cell_names)
   k <- min(as.integer(k), n_cells - 1L)
   candidate_k <- min(max(as.integer(candidate_k), k), n_cells - 1L)
-  sigma_idx <- k + 1L
-  knn_k <- min(max(k + 1L, candidate_k + 1L, sigma_idx), n_cells)
+  knn_k <- min(max(k + 1L, candidate_k + 1L), n_cells)
 
   embeddings_norm <- if (isTRUE(l2_norm)) {
     purrr::map(embeddings_list, normalize_embedding_rows)
@@ -291,9 +383,18 @@ weighted_nearest_neighbors_BPCells <- function(
 
   nearest_dist <- purrr::map(modality_knn, \(nn) nn$dist[, 2])
   sigma_list <- purrr::map2(
+    embeddings_norm,
     modality_knn,
-    nearest_dist,
-    \(nn, nearest) pmax((nn$dist[, sigma_idx] - nearest) * sd_scale, .Machine$double.eps)
+    \(embedding, nn) {
+      bandwidth <- calculate_small_SNN_bandwidth(
+        embedding_matrix = embedding,
+        knn_idx = nn$idx,
+        k = k,
+        nearest_dist = nn$dist[, 2],
+        native_source_file = native_source_file
+      )
+      pmax(bandwidth * sd_scale, .Machine$double.eps)
+    }
   )
 
   modality_scores <- purrr::map(names(embeddings_norm), \(modality) {

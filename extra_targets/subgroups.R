@@ -170,7 +170,8 @@ rlang::list2(
       embeddings_list = embedding_matrices.subgroups,
       k = aggregation_data_nNNs,
       candidate_k = 200,
-      threads = 6
+      threads = 6,
+      native_source_file = WNN_native_source_file
     ),
     pattern = map(embedding_matrices.subgroups),
     resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)

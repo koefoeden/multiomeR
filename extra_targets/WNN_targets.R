@@ -21,7 +21,8 @@ rlang::list2(
         embeddings_list = embedding_matrices.WNN,
         k = aggregation_data_nNNs,
         candidate_k = 200,
-        threads = 6
+        threads = 6,
+        native_source_file = WNN_native_source_file
       ),
       resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
     ),
@@ -75,7 +76,8 @@ rlang::list2(
             embeddings_list = retained_embeddings,
             k = aggregation_data_nNNs,
             candidate_k = 200,
-            threads = 6
+            threads = 6,
+            native_source_file = WNN_native_source_file
           )
         }
       },

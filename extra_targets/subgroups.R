@@ -281,11 +281,27 @@ rlang::list2(
           )
         ))
 
+        plot_metadata_tibble <- metadata_w_clusters_tibble_filtered.subgroups
+        missing_categorical_vars <- setdiff(categorical_vars, names(plot_metadata_tibble))
+        annotation_vars <- intersect(
+          missing_categorical_vars,
+          names(metadata_w_cell_types_annotation_tibble.WNN)
+        )
+        if (length(annotation_vars) > 0L) {
+          plot_metadata_tibble <- plot_metadata_tibble |>
+            dplyr::left_join(
+              metadata_w_cell_types_annotation_tibble.WNN |>
+                dplyr::select(barcode_w_prefix, dplyr::all_of(annotation_vars)),
+              by = "barcode_w_prefix",
+              relationship = "many-to-one"
+            )
+        }
+
         plots <- categorical_vars |>
           purrr::set_names() |>
           purrr::map(\(variable) {
             plot_UMAP_from_metadata(
-              metadata_tibble = metadata_w_clusters_tibble_filtered.subgroups,
+              metadata_tibble = plot_metadata_tibble,
               variable = variable,
               umap_cols = UMAP_cols
             )

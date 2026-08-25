@@ -97,7 +97,7 @@ rlang::list2(
           BPCells::open_matrix_10x_hdf5(cellranger_h5_file, feature_type = "Gene Expression")
         }
 
-      source_label <- if (cellbender_h5_file != "NULL.txt") "CellBender GEX matrix" else "CellRanger GEX matrix"
+      source_label <- if (length(cellbender_h5_file) > 0L) "CellBender GEX matrix" else "CellRanger GEX matrix"
       if (nrow(gene_expression_matrix) != nrow(gene_features_df)) {
         stop(
           source_label,

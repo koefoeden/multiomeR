@@ -556,6 +556,11 @@ collapse_GWAS_locus_contribution_for_plot <- function(locus_contribution_tibble,
         is.na(.data$top_L2G_gene),
         .data$locus_label,
         stringr::str_c(.data$locus_label, .data$top_L2G_gene, sep = "\n")
+      ),
+      plot_locus = dplyr::if_else(
+        duplicated(.data$plot_locus) | duplicated(.data$plot_locus, fromLast = TRUE),
+        stringr::str_c(.data$plot_locus, .data$studyLocusId, sep = "\n"),
+        .data$plot_locus
       )
     )
 

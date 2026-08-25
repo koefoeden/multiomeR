@@ -284,12 +284,18 @@ get_CollecTRI_DTFA_comparison_tibble <- function(
       FDR_DTFA = FDR
     )
   DGE_results <- DGE_results_tibble |>
-    dplyr::bind_rows() |>
+    dplyr::bind_rows()
+  DGE_t_statistic <- if ("t" %in% names(DGE_results)) {
+    DGE_results$t
+  } else {
+    rep(NA_real_, nrow(DGE_results))
+  }
+  DGE_results <- DGE_results |>
     dplyr::transmute(
       dplyr::across(dplyr::all_of(join_keys)),
       source = stringr::str_to_upper(feature_id),
       logFC_TF_expression = logFC,
-      t_TF_expression = t,
+      t_TF_expression = DGE_t_statistic,
       FDR_TF_expression = FDR
     )
 

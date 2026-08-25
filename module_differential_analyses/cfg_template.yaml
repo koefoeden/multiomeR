@@ -16,7 +16,7 @@
 immune_human_2x:
   differential_analyses_DCTC_plot_phenotype_vars: condition
   differential_analyses_DCTC_formula_chr: cbind(n_nuclei, n_other_nuclei) ~ 0 + condition
-  differential_analyses_DCTC_color_by_categorical_metadata_column: tissue
+  differential_analyses_DCTC_color_by_categorical_metadata_column: NULL
   differential_analyses_psbulk_DX_models:
     condition_demo:
       cell_type_subset: NULL

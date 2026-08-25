@@ -486,24 +486,17 @@ validate_SCAVENGE <- function() {
     "SCAVENGE trait-relevance-score delta"
   )
   observed_exceedance_counts <- round(
-    observed$p_val * (permutation_times + 1L) - 1L
+    observed$p_val * permutation_times
   )
   if (!all(observed_exceedance_counts == reference_exceedance_counts)) {
-    fail("SCAVENGE integrated add-one P-values do not preserve exceedance counts")
+    fail("SCAVENGE integrated empirical P-values do not preserve exceedance counts")
   }
 
   reference_significant <- reference_exceedance_counts <=
     0.05 * permutation_times
-  observed_significant <- observed$barcode_w_prefix[observed$score_is_sig]
-  reference_significant <- rownames(graph)[reference_significant]
-  significant_union <- union(observed_significant, reference_significant)
-  significant_jaccard <- if (length(significant_union) == 0L) {
-    1
-  } else {
-    length(intersect(observed_significant, reference_significant)) / length(significant_union)
+  if (!identical(unname(observed$score_is_sig), unname(reference_significant))) {
+    fail("SCAVENGE significant-cell calls differ from the pinned reference")
   }
-
-  expect_at_least(significant_jaccard, 0.95, "SCAVENGE significant-cell Jaccard overlap")
 
   cat(
     "SCAVENGE validation ok: reference 1.0.2@8ee8b173d965",
@@ -512,7 +505,7 @@ validate_SCAVENGE <- function() {
     "; pinned-reference max delta=", format(reference_propagation_delta, scientific = TRUE, digits = 3),
     "; score max delta=", format(score_delta, scientific = TRUE, digits = 3),
     "; exact streamed exceedance counts",
-    "; significant-cell Jaccard=", format(significant_jaccard, digits = 4),
+    "; exact significant-cell calls",
     "\n",
     sep = ""
   )

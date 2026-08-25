@@ -895,8 +895,8 @@ get_SCAVENGE_result_from_chromVAR_z_score_record <- function(
     dplyr::mutate(
       GWAS_ID = GWAS_ID,
       seed_idx = unname(seed_idx),
-      p_val = (permutation_statistics$cell_exceedance_counts + 1) /
-        (permutation_times + 1),
+      p_val = permutation_statistics$cell_exceedance_counts /
+        permutation_times,
       log10_p_val = -log10(p_val),
       score_is_sig = p_val <= 0.05
     )

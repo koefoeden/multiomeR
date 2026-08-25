@@ -5,7 +5,46 @@ aggregation_tibble_all_from_yaml <- read_aggregation_config_tibble(config_file =
 aggregation_tibble <- build_aggregation_tibble(
   aggregation_tibble_all_from_yaml = aggregation_tibble_all_from_yaml,
   GEM_well_tibble = GEM_well_tibble_all
-)
+) |>
+  dplyr::mutate(
+    aggregation_ATAC_peak_calling_input_sym = purrr::map2(
+      aggregation,
+      aggregation_ATAC_peak_calling_method,
+      \(aggregation_name, peak_calling_method) {
+        input_target <- if (identical(peak_calling_method, "macs3")) {
+          "fragments_per_peak_calling_cluster_discovery.fragments.ATAC"
+        } else {
+          "peak_calling_cluster_discovery_tibble.ATAC"
+        }
+        rlang::sym(stringr::str_c(input_target, aggregation_name, sep = "."))
+      }
+    ),
+    aggregation_ATAC_peak_calling_pattern = purrr::pmap(
+      list(
+        aggregation,
+        aggregation_ATAC_peak_calling_method,
+        aggregation_ATAC_peak_calling_input_sym
+      ),
+      \(aggregation_name, peak_calling_method, peak_calling_input_sym) {
+        discovery_tibble_sym <- rlang::sym(stringr::str_c(
+          "peak_calling_cluster_discovery_tibble.ATAC",
+          aggregation_name,
+          sep = "."
+        ))
+        if (identical(peak_calling_method, "macs3")) {
+          rlang::call2("map", peak_calling_input_sym, discovery_tibble_sym)
+        } else {
+          rlang::call2("map", discovery_tibble_sym)
+        }
+      }
+    )
+  )
+aggregation_MACS3_tibble <- aggregation_tibble |>
+  dplyr::filter(aggregation_ATAC_peak_calling_method == "macs3") |>
+  add_aggregation_target_syms(c(
+    "combined_BPCells_fragment_obj.ATAC",
+    "peak_calling_cluster_discovery_tibble.ATAC"
+  ))
 GEM_well_tibble <- build_active_GEM_well_tibble(GEM_well_tibble_all)
 dataset_tibble <- build_dataset_tibble(GEM_well_tibble = GEM_well_tibble)
 roadmap_EDACC_names <- get_roadmap_EDACC_names(aggregation_tibble = aggregation_tibble)
@@ -67,6 +106,13 @@ pipeline <- rlang::list2(
     descriptions = NULL,
     delimiter = ".",
     source("extra_targets/peak_gene_correlation_targets.R")$value
+  ),
+  tarchetypes::tar_map(
+    values = aggregation_MACS3_tibble,
+    names = aggregation,
+    descriptions = NULL,
+    delimiter = ".",
+    source("extra_targets/ATAC_MACS3_targets.R")$value
   ),
   source("module_differential_analyses/targets.R")$value,
   source("module_genetic_enrichment/targets.R")$value

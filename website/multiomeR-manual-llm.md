@@ -76,90 +76,36 @@ The committed `crew_controllers.R` provides a local setup for a 16-CPU,
 on a smaller machine or a scheduler.
 
 
-## Clone and enter the repository
+## Set up the demo
+
+Run this block from the directory where you want to clone multiomeR. The single
+`pixi run` setup command installs the locked environment before its
+`setup-demo` task downloads the two configured public inputs and installs the
+pinned GitHub-only R packages.
 
 ```{.bash filename="Bash"}
+# Clone the repository and enter its root directory.
 git clone https://github.com/koefoeden/multiomeR.git
 cd multiomeR
-```
 
-## Download public inputs
-
-Download the subset of two public human `cellranger-arc count` outputs required by the `immune_human_2x` example aggregation from the repository root (3.9 GB). For your own data, retain the complete `outs/` directories.
-
-```{.bash filename="Bash"}
-pbmc_dir="example_data/healthy_PBMC_human/outs"
-lymphoma_dir="example_data/lymphoma_lymph_human/outs"
-
-mkdir -p $pbmc_dir $lymphoma_dir
-
-pbmc_prefix="https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_granulocyte_sorted_3k/pbmc_granulocyte_sorted_3k"
-curl -fL -o "${pbmc_dir}/web_summary.html" "${pbmc_prefix}_web_summary.html"
-curl -fL -o "${pbmc_dir}/summary.csv" "${pbmc_prefix}_summary.csv"
-curl -fL -o "${pbmc_dir}/per_barcode_metrics.csv" "${pbmc_prefix}_per_barcode_metrics.csv"
-curl -fL -o "${pbmc_dir}/filtered_feature_bc_matrix.h5" "${pbmc_prefix}_filtered_feature_bc_matrix.h5"
-curl -fL -o "${pbmc_dir}/raw_feature_bc_matrix.h5" "${pbmc_prefix}_raw_feature_bc_matrix.h5"
-curl -fL -o "${pbmc_dir}/atac_fragments.tsv.gz" "${pbmc_prefix}_atac_fragments.tsv.gz"
-curl -fL -o "${pbmc_dir}/atac_fragments.tsv.gz.tbi" "${pbmc_prefix}_atac_fragments.tsv.gz.tbi"
-
-lymphoma_prefix="https://cf.10xgenomics.com/samples/cell-arc/2.0.0/lymph_node_lymphoma_14k/lymph_node_lymphoma_14k"
-curl -fL -o "${lymphoma_dir}/web_summary.html" "${lymphoma_prefix}_web_summary.html"
-curl -fL -o "${lymphoma_dir}/summary.csv" "${lymphoma_prefix}_summary.csv"
-curl -fL -o "${lymphoma_dir}/per_barcode_metrics.csv" "${lymphoma_prefix}_per_barcode_metrics.csv"
-curl -fL -o "${lymphoma_dir}/filtered_feature_bc_matrix.h5" "${lymphoma_prefix}_filtered_feature_bc_matrix.h5"
-curl -fL -o "${lymphoma_dir}/raw_feature_bc_matrix.h5" "${lymphoma_prefix}_raw_feature_bc_matrix.h5"
-curl -fL -o "${lymphoma_dir}/atac_fragments.tsv.gz" "${lymphoma_prefix}_atac_fragments.tsv.gz"
-curl -fL -o "${lymphoma_dir}/atac_fragments.tsv.gz.tbi" "${lymphoma_prefix}_atac_fragments.tsv.gz.tbi"
-```
-
-The repository already includes the small `reference.json` from the exact
-`refdata-cellranger-arc-GRCh38-2020-A-2.0.0` reference used to create both
-public outputs. The demo configuration points to that file, so the full Cell
-Ranger ARC reference is not required.
-
-## Create and launch the pixi environment
-
-If `pixi` is not installed yet, install it first:
-
-```{.bash filename="Bash"}
+# Skip these two lines when pixi is already available on PATH.
 curl -fsSL https://pixi.sh/install.sh | sh
 export PATH="$HOME/.pixi/bin:$PATH"
+
+# Install the locked environment, download 3.9 GB of demo inputs, and install
+# the pinned GitHub versions of BPCells, Signac, and betterChromVAR.
+pixi run --use-environment-activation-cache --locked --run-post-link-scripts setup-demo
+
+# Start R in the configured environment for the commands in the next chapter.
+pixi run --use-environment-activation-cache --locked R
 ```
 
-Install the locked pixi environment from the repository root. The duration depends on the package cache, network connection, and the source builds in the following step.
+The download task is restart-safe: non-empty files already present under
+`example_data` are skipped. The repository includes the small `reference.json`
+from the exact `refdata-cellranger-arc-GRCh38-2020-A-2.0.0` reference used for
+both public outputs, so the full Cell Ranger ARC reference is not required.
 
-```{.bash filename="Bash"}
-pixi install --locked --run-post-link-scripts
-pixi run install-r-github-packages
-```
-
-```{.bash filename="Bash"}
-pixi shell
-R
-```
-
-Use this repository-root R session as the evaluation environment for subsequent R commands in this manual.
-
-## Validate the setup
-
-Before starting a compute-intensive run, build the target manifest for the exact demo endpoint:
-
-```{.r filename="R"}
-targets::tar_manifest(
-  names = tidyselect::matches(
-    "^multimodal_Seurat_object[.]immune_human_2x$"
-  ),
-  callr_function = NULL
-)[, c("name", "description")]
-```
-
-The command should return one row named `multimodal_Seurat_object.immune_human_2x`. Constructing the manifest also evaluates the configuration and target graph, so configuration, controller, or startup errors appear before the data run begins. Continue to [Run the demo](demo_running.qmd) when this check succeeds.
-
-::: {.callout-note collapse="true"}
-## Why are both installation commands needed?
-
-Pixi resolves R, Bioconductor, and command-line tools in one locked environment. `--run-post-link-scripts` materializes Bioconductor data packages such as BSgenome, while `pixi run install-r-github-packages` installs the pinned GitHub versions of BPCells, Signac, and betterChromVAR that are not supplied by the locked conda environment.
-:::
+Continue to [Run the demo](demo_running.qmd) from the R prompt.
 
 
 <!-- source: website/demo_running.qmd -->

@@ -9,6 +9,8 @@ platforms = ["linux-64"]
 
 [tasks]
 install-r-github-packages = { cmd = "Rscript scripts/install_r_github_packages.R", description = "Install GitHub-only R packages into the pixi R library." }
+download-demo-data = { cmd = "bash example_data/download_10X_cellranger_count_data.sh example_data/public_immune_human_2x_manifest.tsv", description = "Download the required subsets of two public Cell Ranger ARC outputs." }
+setup-demo = { depends-on = ["download-demo-data", "install-r-github-packages"], description = "Prepare the environment and inputs for the public quickstart." }
 test-scoring-parity = { cmd = "Rscript scripts/validate_scoring_parity.R", description = "Validate BPCells-native scoring helpers against reference implementations on synthetic data." }
 test-amulet-parity = { cmd = "Rscript scripts/validate_amulet_bpcells_parity.R", description = "Validate BPCells-native AMULET metrics and loci against scDblFinder." }
 test-algorithm-validation = { cmd = "Rscript scripts/validate_scoring_parity.R && Rscript scripts/validate_algorithm_deviations.R && Rscript scripts/validate_amulet_bpcells_parity.R", description = "Validate documented UCell, WNN, SCAVENGE, and AMULET implementations on deterministic fixtures." }

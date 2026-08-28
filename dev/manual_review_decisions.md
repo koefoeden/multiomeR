@@ -47,8 +47,8 @@ Status key:
 
 | ID | Status | Page | Issue | Suggested direction |
 |---|---|---|---|---|
-| C1 | accept | `website/demo_installation.qmd` | "Download the two outputs" overstates what is downloaded; commands fetch a subset. | Clarified subset versus complete user outputs. |
-| C2 | reject | `website/demo_installation.qmd` | Parallel data-download scripts/manifests may be stale relative to docs and config. | No parallel download script or manifest exists in the current checkout; the quickstart commands remain the single documented path. |
+| C1 | accept | `website/demo_installation.qmd` | "Download the two outputs" overstates what is downloaded. | The Pixi task now says it downloads the required subsets of the two public outputs. |
+| C2 | accept | `website/demo_installation.qmd` | Inline download commands can drift from the repository manifests. | Replaced them with the manifest-backed `download-demo-data` Pixi task. |
 | C3 | accept | `website/demo_installation.qmd` | System requirements understate disk and command prerequisites. | Added commands, network, disk, RAM, and CPU guidance. |
 | C4 | accept | `website/demo_installation.qmd` | Install timing claim is too crisp because GitHub R packages build from source. | Removed the fixed install-time promise. |
 | C5 | accept | `website/main_inputs.qmd` | Metadata requirements omit unique keys and non-overlapping non-key columns. | Added keyed examples and column-ownership rules. |

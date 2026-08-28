@@ -1,0 +1,15 @@
+GEM_well_ID	file_name	url
+healthy_PBMC_human	web_summary.html	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_granulocyte_sorted_3k/pbmc_granulocyte_sorted_3k_web_summary.html
+healthy_PBMC_human	summary.csv	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_granulocyte_sorted_3k/pbmc_granulocyte_sorted_3k_summary.csv
+healthy_PBMC_human	per_barcode_metrics.csv	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_granulocyte_sorted_3k/pbmc_granulocyte_sorted_3k_per_barcode_metrics.csv
+healthy_PBMC_human	filtered_feature_bc_matrix.h5	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_granulocyte_sorted_3k/pbmc_granulocyte_sorted_3k_filtered_feature_bc_matrix.h5
+healthy_PBMC_human	raw_feature_bc_matrix.h5	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_granulocyte_sorted_3k/pbmc_granulocyte_sorted_3k_raw_feature_bc_matrix.h5
+healthy_PBMC_human	atac_fragments.tsv.gz	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_granulocyte_sorted_3k/pbmc_granulocyte_sorted_3k_atac_fragments.tsv.gz
+healthy_PBMC_human	atac_fragments.tsv.gz.tbi	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_granulocyte_sorted_3k/pbmc_granulocyte_sorted_3k_atac_fragments.tsv.gz.tbi
+lymphoma_lymph_human	web_summary.html	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/lymph_node_lymphoma_14k/lymph_node_lymphoma_14k_web_summary.html
+lymphoma_lymph_human	summary.csv	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/lymph_node_lymphoma_14k/lymph_node_lymphoma_14k_summary.csv
+lymphoma_lymph_human	per_barcode_metrics.csv	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/lymph_node_lymphoma_14k/lymph_node_lymphoma_14k_per_barcode_metrics.csv
+lymphoma_lymph_human	filtered_feature_bc_matrix.h5	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/lymph_node_lymphoma_14k/lymph_node_lymphoma_14k_filtered_feature_bc_matrix.h5
+lymphoma_lymph_human	raw_feature_bc_matrix.h5	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/lymph_node_lymphoma_14k/lymph_node_lymphoma_14k_raw_feature_bc_matrix.h5
+lymphoma_lymph_human	atac_fragments.tsv.gz	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/lymph_node_lymphoma_14k/lymph_node_lymphoma_14k_atac_fragments.tsv.gz
+lymphoma_lymph_human	atac_fragments.tsv.gz.tbi	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/lymph_node_lymphoma_14k/lymph_node_lymphoma_14k_atac_fragments.tsv.gz.tbi

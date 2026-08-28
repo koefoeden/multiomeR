@@ -4,6 +4,10 @@
   configuration and local controller files are now regular files, and only the
   two `immune_human_2x` GEM wells and that aggregation are active by default.
 
+- Added a restart-safe `setup-demo` Pixi task that installs the environment,
+  downloads the two configured public inputs, and installs GitHub-only R
+  dependencies behind one quickstart command.
+
 - Replaced the public reaction-based API and configuration vocabulary with 10x
   Genomics GEM well terminology. Existing configurations must migrate to
   `cfg_GEM_wells.tsv`, `GEM_well_ID`, and the corresponding `GEM_well_*`

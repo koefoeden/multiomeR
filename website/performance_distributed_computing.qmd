@@ -31,15 +31,13 @@ The table describes controller capacity for routing. A local controller does not
 
 ## Local execution
 
-A fresh clone points `crew_controllers.R` to `crew_controllers_template.R`. The template is sized for a 16-CPU, 256-GB workstation, with four light workers and two heavy workers. A machine near the 60-GB minimum should reduce concurrency to one heavy worker and should not run several memory-intensive targets simultaneously.
-
-To create a machine-specific active file without editing the template in place:
-
-```{.bash filename="Bash"}
-cp --remove-destination crew_controllers_template.R crew_controllers.R
-```
-
-Then edit the worker counts and resource tiers in `crew_controllers.R`. Keep controller names identical between `controller_list` and `controller_resources_tibble`.
+A fresh clone includes a local `crew_controllers.R` sized for a 16-CPU,
+256-GB workstation, with four light workers and two heavy workers. A machine
+near the 60-GB minimum should reduce concurrency to one heavy worker and should
+not run several memory-intensive targets simultaneously. Edit the worker
+counts and resource tiers directly in `crew_controllers.R`, keeping controller
+names identical between `controller_list` and
+`controller_resources_tibble`.
 
 After changing the file, restart R or reload the project runtime explicitly:
 
@@ -51,7 +49,9 @@ Rebuild a narrow manifest selection before starting the data run to validate the
 
 ## Scheduler execution
 
-For SLURM, PBS, SGE, or LSF, replace the local controllers with the corresponding `crew.cluster` controllers. The commented SLURM section in `crew_controllers_template.R` shows the expected shape.
+For SLURM, PBS, SGE, or LSF, replace the local controllers with the corresponding
+`crew.cluster` controllers. The commented SLURM section in
+`crew_controllers.R` shows the expected shape.
 
 For every scheduler tier:
 

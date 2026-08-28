@@ -92,7 +92,7 @@ targets::tar_make(
 
 An unqualified `targets::tar_make()` constructs every active GEM well, derived
 QC summary, active aggregation, and enabled optional module in the root
-workflow. Use it only when that is the intended scope. Disable unavailable
-template GEM wells and aggregations before broad execution.
+workflow. Use it only when that is the intended scope. Keep unavailable GEM
+wells and aggregations inactive before broad execution.
 
 Continue to the [differential analyses](downstream_differential_analyses.qmd) or [genetic enrichment](downstream_genetic_enrichment.qmd) module only after the main aggregation is accepted. If a target fails, follow [Troubleshooting](troubleshooting.qmd) and rerun the narrowest affected selection.

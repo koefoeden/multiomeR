@@ -15,7 +15,10 @@ knitr::opts_chunk$set(
 - At least 30 GB of free disk space for the public inputs, pixi environment, temporary files, and approximately 6 GB of demo outputs.
 - Multiple CPU cores are strongly recommended. The timing quoted in the next chapter was measured with 16 logical threads.
 
-The committed `crew_controllers.R` symlink points to the local controller template. That template assumes a 16-CPU, 256-GB workstation and can run several workers concurrently. Review [Distributed computing](performance_distributed_computing.qmd) before running on a smaller machine or a scheduler.
+The committed `crew_controllers.R` provides a local setup for a 16-CPU,
+256-GB workstation and can run several workers concurrently. Review
+[Distributed computing](performance_distributed_computing.qmd) before running
+on a smaller machine or a scheduler.
 
 
 ## Clone and enter the repository

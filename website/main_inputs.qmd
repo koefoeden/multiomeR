@@ -14,17 +14,18 @@ An **aggregation** selects GEM wells for joint GEX, ATAC, and WNN analysis.
 | GEM well | `cfg_GEM_wells.tsv` | Aggregations refer to one or more `GEM_well_ID` values. |
 | Aggregation | `cfg_aggregations.yaml` | Selects GEM wells and points to donor-level metadata. |
 
-The committed `cfg_GEM_wells.tsv` and `cfg_aggregations.yaml` files may be
-symlinks to repository-specific configuration. For a new project, start from
-the corresponding templates and point the symlinks to reviewed project files.
+The committed `cfg_GEM_wells.tsv` and `cfg_aggregations.yaml` files are the
+active configuration files. They enable only the two GEM wells and the
+`immune_human_2x` aggregation used by the public quickstart. Edit these files
+directly when configuring another project.
 
 ## Start with one explicitly scoped analysis
 
 `GEM_well_is_active` controls per-GEM-well graph construction, while aggregation
 `is_active` controls aggregation graph construction. Every active aggregation
 must reference active GEM wells. Before an unqualified `targets::tar_make()`,
-deactivate every GEM well and aggregation you are not ready to run. During
-setup, always select one aggregation explicitly.
+deactivate every GEM well and aggregation you are not ready to run. The
+committed quickstart configuration already follows this rule.
 
 The following minimum example shows the relationship between the two layers.
 Replace the paths, identifiers, and marker genes with values appropriate for
@@ -149,7 +150,7 @@ emit_parameter_overview("aggregation")
 <summary>Show the public <code>immune_human_2x</code> example</summary>
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_yaml_template_entry(aggregations_config_file, "immune_human_2x")
+emit_yaml_entry(aggregations_config_file, "immune_human_2x")
 ```
 
 </details>

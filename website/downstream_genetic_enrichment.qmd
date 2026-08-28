@@ -34,7 +34,7 @@ your_aggregation:
   modules: [genetic_enrichment]
 ```
 
-Then create a matching row in `module_genetic_enrichment/cfg.yaml`. The committed file is a symlink to the public template; keep that template as a reference and use a project-specific file for real studies.
+Then create a matching row directly in `module_genetic_enrichment/cfg.yaml`.
 
 ```{.yaml filename="module_genetic_enrichment/cfg.yaml"}
 your_aggregation:
@@ -69,7 +69,7 @@ emit_parameter_overview("genetic_enrichment")
 <summary>Show the public <code>immune_human_2x</code> example</summary>
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_yaml_template_entry(module_cfg_template_file, "immune_human_2x")
+emit_yaml_entry(module_config_file, "immune_human_2x")
 ```
 
 </details>

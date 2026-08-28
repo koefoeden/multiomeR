@@ -44,7 +44,8 @@ your_aggregation:
   modules: [differential_analyses]
 ```
 
-Then create a matching row in `module_differential_analyses/cfg.yaml`. The committed file is a symlink to the public template; preserve the template as a reference and use a project-specific file for a real analysis.
+Then create a matching row directly in
+`module_differential_analyses/cfg.yaml`.
 
 ```{.yaml filename="module_differential_analyses/cfg.yaml"}
 your_aggregation:
@@ -75,7 +76,7 @@ emit_parameter_overview("differential_analyses")
 <summary>Show the public <code>immune_human_2x</code> example</summary>
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_yaml_template_entry(module_cfg_template_file, "immune_human_2x")
+emit_yaml_entry(module_config_file, "immune_human_2x")
 ```
 
 </details>

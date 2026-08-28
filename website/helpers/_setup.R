@@ -68,7 +68,7 @@ emit_mermaid <- function(path, theme_path = "website/figures/common_theme.mmd") 
   )
 }
 
-emit_yaml_template_entry <- function(path, key) {
+emit_yaml_entry <- function(path, key) {
   yaml_lines <- readLines(path, warn = FALSE)
   start_line <- which(startsWith(yaml_lines, paste0(key, ":")))
 
@@ -100,15 +100,15 @@ force_recreate_graph <- identical(
 )
 
 pipeline_github_file <- file.path(github_repo, "_targets.R")
-aggregations_config_file <- "cfg_aggregations_template.yaml"
+aggregations_config_file <- "cfg_aggregations.yaml"
 pipeline_parameters_file <- "cfg_pipeline_parameters.tsv"
 GEM_wells_github_file <- file.path(github_repo, "cfg_GEM_wells.tsv")
 aggregations_github_file <- file.path(github_repo, "cfg_aggregations.yaml")
 pipeline_parameters_github_file <- file.path(github_repo, "cfg_pipeline_parameters.tsv")
 
-module_cfg_template_file <- switch(
+module_config_file <- switch(
   pipeline_name,
-  "differential_analyses" = "module_differential_analyses/cfg_template.yaml",
-  "genetic_enrichment" = "module_genetic_enrichment/cfg_template.yaml",
+  "differential_analyses" = "module_differential_analyses/cfg.yaml",
+  "genetic_enrichment" = "module_genetic_enrichment/cfg.yaml",
   NULL
 )

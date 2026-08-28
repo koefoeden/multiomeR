@@ -70,7 +70,10 @@ The **main pipeline** processes each GEM well, aggregates selected GEM wells, an
 - At least 30 GB of free disk space for the public inputs, pixi environment, temporary files, and approximately 6 GB of demo outputs.
 - Multiple CPU cores are strongly recommended. The timing quoted in the next chapter was measured with 16 logical threads.
 
-The committed `crew_controllers.R` symlink points to the local controller template. That template assumes a 16-CPU, 256-GB workstation and can run several workers concurrently. Review [Distributed computing](performance_distributed_computing.qmd) before running on a smaller machine or a scheduler.
+The committed `crew_controllers.R` provides a local setup for a 16-CPU,
+256-GB workstation and can run several workers concurrently. Review
+[Distributed computing](performance_distributed_computing.qmd) before running
+on a smaller machine or a scheduler.
 
 
 ## Clone and enter the repository
@@ -295,17 +298,18 @@ An **aggregation** selects GEM wells for joint GEX, ATAC, and WNN analysis.
 | GEM well | `cfg_GEM_wells.tsv` | Aggregations refer to one or more `GEM_well_ID` values. |
 | Aggregation | `cfg_aggregations.yaml` | Selects GEM wells and points to donor-level metadata. |
 
-The committed `cfg_GEM_wells.tsv` and `cfg_aggregations.yaml` files may be
-symlinks to repository-specific configuration. For a new project, start from
-the corresponding templates and point the symlinks to reviewed project files.
+The committed `cfg_GEM_wells.tsv` and `cfg_aggregations.yaml` files are the
+active configuration files. They enable only the two GEM wells and the
+`immune_human_2x` aggregation used by the public quickstart. Edit these files
+directly when configuring another project.
 
 ## Start with one explicitly scoped analysis
 
 `GEM_well_is_active` controls per-GEM-well graph construction, while aggregation
 `is_active` controls aggregation graph construction. Every active aggregation
 must reference active GEM wells. Before an unqualified `targets::tar_make()`,
-deactivate every GEM well and aggregation you are not ready to run. During
-setup, always select one aggregation explicitly.
+deactivate every GEM well and aggregation you are not ready to run. The
+committed quickstart configuration already follows this rule.
 
 The following minimum example shows the relationship between the two layers.
 Replace the paths, identifiers, and marker genes with values appropriate for
@@ -427,7 +431,7 @@ Aggregation-level settings live in `cfg_aggregations.yaml`. Required parameters 
 <details>
 <summary>Show the public <code>immune_human_2x</code> example</summary>
 
-[Generated Quarto chunk omitted: `emit_yaml_template_entry(aggregations_config_file, "immune_human_2x")`]
+[Generated Quarto chunk omitted: `emit_yaml_entry(aggregations_config_file, "immune_human_2x")`]
 
 </details>
 
@@ -528,8 +532,8 @@ targets::tar_make(
 
 An unqualified `targets::tar_make()` constructs every active GEM well, derived
 QC summary, active aggregation, and enabled optional module in the root
-workflow. Use it only when that is the intended scope. Disable unavailable
-template GEM wells and aggregations before broad execution.
+workflow. Use it only when that is the intended scope. Keep unavailable GEM
+wells and aggregations inactive before broad execution.
 
 Continue to the [differential analyses](downstream_differential_analyses.qmd) or [genetic enrichment](downstream_genetic_enrichment.qmd) module only after the main aggregation is accepted. If a target fails, follow [Troubleshooting](troubleshooting.qmd) and rerun the narrowest affected selection.
 
@@ -582,7 +586,8 @@ your_aggregation:
   modules: [differential_analyses]
 ```
 
-Then create a matching row in `module_differential_analyses/cfg.yaml`. The committed file is a symlink to the public template; preserve the template as a reference and use a project-specific file for a real analysis.
+Then create a matching row directly in
+`module_differential_analyses/cfg.yaml`.
 
 ```{.yaml filename="module_differential_analyses/cfg.yaml"}
 your_aggregation:
@@ -610,7 +615,7 @@ The OLINK and bulk-RNA path fields are reserved optional integration inputs and 
 <details>
 <summary>Show the public <code>immune_human_2x</code> example</summary>
 
-[Generated Quarto chunk omitted: `emit_yaml_template_entry(module_cfg_template_file, "immune_human_2x")`]
+[Generated Quarto chunk omitted: `emit_yaml_entry(module_config_file, "immune_human_2x")`]
 
 </details>
 
@@ -677,7 +682,7 @@ your_aggregation:
   modules: [genetic_enrichment]
 ```
 
-Then create a matching row in `module_genetic_enrichment/cfg.yaml`. The committed file is a symlink to the public template; keep that template as a reference and use a project-specific file for real studies.
+Then create a matching row directly in `module_genetic_enrichment/cfg.yaml`.
 
 ```{.yaml filename="module_genetic_enrichment/cfg.yaml"}
 your_aggregation:
@@ -709,7 +714,7 @@ For `finemappingMethod: auto`, multiomeR selects the first available supported m
 <details>
 <summary>Show the public <code>immune_human_2x</code> example</summary>
 
-[Generated Quarto chunk omitted: `emit_yaml_template_entry(module_cfg_template_file, "immune_human_2x")`]
+[Generated Quarto chunk omitted: `emit_yaml_entry(module_config_file, "immune_human_2x")`]
 
 </details>
 
@@ -844,15 +849,13 @@ The table describes controller capacity for routing. A local controller does not
 
 ## Local execution
 
-A fresh clone points `crew_controllers.R` to `crew_controllers_template.R`. The template is sized for a 16-CPU, 256-GB workstation, with four light workers and two heavy workers. A machine near the 60-GB minimum should reduce concurrency to one heavy worker and should not run several memory-intensive targets simultaneously.
-
-To create a machine-specific active file without editing the template in place:
-
-```{.bash filename="Bash"}
-cp --remove-destination crew_controllers_template.R crew_controllers.R
-```
-
-Then edit the worker counts and resource tiers in `crew_controllers.R`. Keep controller names identical between `controller_list` and `controller_resources_tibble`.
+A fresh clone includes a local `crew_controllers.R` sized for a 16-CPU,
+256-GB workstation, with four light workers and two heavy workers. A machine
+near the 60-GB minimum should reduce concurrency to one heavy worker and should
+not run several memory-intensive targets simultaneously. Edit the worker
+counts and resource tiers directly in `crew_controllers.R`, keeping controller
+names identical between `controller_list` and
+`controller_resources_tibble`.
 
 After changing the file, restart R or reload the project runtime explicitly:
 
@@ -864,7 +867,9 @@ Rebuild a narrow manifest selection before starting the data run to validate the
 
 ## Scheduler execution
 
-For SLURM, PBS, SGE, or LSF, replace the local controllers with the corresponding `crew.cluster` controllers. The commented SLURM section in `crew_controllers_template.R` shows the expected shape.
+For SLURM, PBS, SGE, or LSF, replace the local controllers with the corresponding
+`crew.cluster` controllers. The commented SLURM section in
+`crew_controllers.R` shows the expected shape.
 
 For every scheduler tier:
 

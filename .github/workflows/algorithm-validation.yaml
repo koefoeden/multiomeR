@@ -40,6 +40,8 @@ jobs:
           cache: true
 
       - name: Install pinned GitHub R packages
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: pixi run --use-environment-activation-cache install-r-github-packages
 
       - name: Run test suite

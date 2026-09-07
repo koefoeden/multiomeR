@@ -10,6 +10,11 @@ knitr::opts_chunk$set(
 
 ## System requirements
 
+These instructions use the public repository and its demo configuration.
+An institutional checkout may supply different input paths, a different
+output folder, and cluster controllers. Use its local setup instructions
+before running the demo commands.
+
 - Linux with `git` and `curl`, plus HTTPS access to GitHub, Pixi, and 10x Genomics downloads.
 - At least 60 GB of RAM. This is enough for one heavy target at a time; machines near the minimum should reduce concurrent workers in `crew_controllers.R`.
 - At least 30 GB of free disk space for the public inputs, pixi environment, temporary files, and approximately 6 GB of demo outputs.

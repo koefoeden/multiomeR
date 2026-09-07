@@ -1,4 +1,4 @@
-# Distributed computing
+# Choose where the analysis runs
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -8,26 +8,15 @@ knitr::opts_chunk$set(
 )
 ```
 
-multiomeR runs `{targets}` through the [`crew` backend](https://books.ropensci.org/targets/crew.html). Check the active controller before the [first demo run](demo_running.qmd) and again before moving from a workstation to a scheduler.
+A **worker** is an R process that runs an analysis task. A **controller** starts
+and manages those workers, either on your machine or through a cluster
+scheduler. multiomeR uses `crew` for this. Choose the setup below before the
+[first demo run](demo_running.qmd).
 
-## Controller contract
-
-`crew_controllers.R` is sourced during `load_project_runtime()` and must return a named list containing these components:
-
-- `controller_list`: a non-empty list of `crew` controllers with unique controller names.
-- `controller_resources_tibble`: a data frame with exactly `controller_name`, `cores`, `RAM_GB`, and `gpus`, in that order.
-
-The resource columns must be numeric, non-missing, and contain one unique row per controller name represented in `controller_list`. The first resource-table row is the default controller. For explicit requests, `get_tar_resources()` selects the first compatible row after applying the requested CPU, RAM, and GPU constraints.
-
-```r
-controller_resources_tibble <- tibble::tribble(
-  ~controller_name, ~cores, ~RAM_GB, ~gpus,
-  "local-light",        1,      16,     0,
-  "local-heavy",        6,      60,     0
-)
-```
-
-The table describes controller capacity for routing. A local controller does not create physical memory: its `workers` value must be low enough that concurrent jobs cannot exhaust the machine.
+Use local workers on a suitable workstation. On a shared cluster, ask your
+support team which scheduler, account, and resource limits to use. The
+[targets distributed-computing guide](https://books.ropensci.org/targets/crew.html)
+explains the general setup; this page covers multiomeR's configuration file.
 
 ## Local execution
 
@@ -59,6 +48,25 @@ For every scheduler tier:
 2. Align scheduler CPU and memory requests with the capacity declared in the table.
 3. Set queue, account, wall-time, module, and worker-startup options required by the cluster.
 4. Keep GPU tiers separate; GPU controllers are considered only for targets requesting GPUs.
-5. Test one small checkpoint before increasing worker counts.
+5. Test a small target selection before increasing worker counts.
 
 Scheduler startup failures, resource-routing errors, and target failures are handled separately in [Troubleshooting](troubleshooting.qmd). Developer-facing details about runtime bootstrap and `get_tar_resources()` are in [Implementation conventions](implementation/implementation_conventions.html#runtime-bootstrap).
+
+## Controller contract
+
+`crew_controllers.R` is sourced during `load_project_runtime()` and must return a named list containing these components:
+
+- `controller_list`: a non-empty list of `crew` controllers with unique controller names.
+- `controller_resources_tibble`: a data frame with exactly `controller_name`, `cores`, `RAM_GB`, and `gpus`, in that order.
+
+The resource columns must be numeric, non-missing, and contain one unique row per controller name represented in `controller_list`. The first resource-table row is the default controller. For explicit requests, `get_tar_resources()` selects the first compatible row after applying the requested CPU, RAM, and GPU constraints.
+
+```r
+controller_resources_tibble <- tibble::tribble(
+  ~controller_name, ~cores, ~RAM_GB, ~gpus,
+  "local-light",        1,      16,     0,
+  "local-heavy",        6,      60,     0
+)
+```
+
+The table describes controller capacity for routing. A local controller does not create physical memory: its `workers` value must be low enough that concurrent jobs cannot exhaust the machine.

@@ -9,6 +9,10 @@ The active project is `_targets.R`; use the store resolved by `_targets.yaml`.
 Differential analyses and genetic enrichment are aggregation-level modules in
 this same graph. Run R through Pixi; see `multiomer-run-r-code`.
 
+With the default callr child process, keep `names` expressions self-contained:
+use literal names or patterns rather than a selection variable defined only in
+the calling R session.
+
 ## Read-only inspection
 
 Use the live configuration instead of a hardcoded store. `tar_pid()` can retain

@@ -1,92 +1,87 @@
-# Run and review the workflow
+# Run your analysis
 
-From the repository-root R session described in [Install and prepare the demo](demo_installation.qmd), run one aggregation in checkpoint-sized pieces. Replace `your_aggregation` with a configured aggregation name such as `immune_human_2x`.
+Start here after [configuring your inputs](main_inputs.qmd). Open R from the
+repository with `pixi shell` followed by `R`, as in the demo. Confirm that
+`crew_controllers.R` matches your machine or cluster before starting work.
 
-Before running, confirm that `crew_controllers.R` matches the machine or scheduler you intend to use. See [Distributed computing](performance_distributed_computing.qmd) for the controller contract.
+## Select one aggregation
 
-## Preview a checkpoint selection
-
-Use `tar_manifest()` with the same selector you plan to pass to `tar_make()`. This shows the requested checkpoint targets without executing them:
+Replace `your_aggregation` below with the exact name of your entry in
+`cfg_aggregations.yaml`. First check that the final result is defined:
 
 ```{.r filename="R"}
 targets::tar_manifest(
-  names = targets::tar_described_as(
-    tidyselect::contains("checkpoint:GEX")
-  ) & tidyselect::matches("your_aggregation"),
+  names = tidyselect::all_of("multimodal_Seurat_object.your_aggregation"),
   callr_function = NULL
 )[, c("name", "description")]
 ```
 
-If the result is empty, check the aggregation spelling. If manifest construction fails, resolve the configuration or controller error before starting compute work.
+`all_of()` selects an exact target name and reports an error if it is absent.
+`tar_manifest()` lists target definitions without running the analysis. This
+check should return one row. If it fails, check the name, `is_active`, and the
+configuration error before proceeding.
 
-## GEX checkpoint
+To build that result and its dependencies:
 
 ```{.r filename="R"}
 targets::tar_make(
-  names = targets::tar_described_as(
-    tidyselect::contains("checkpoint:GEX")
-  ) & tidyselect::matches("your_aggregation")
+  names = tidyselect::all_of("multimodal_Seurat_object.your_aggregation")
 )
 ```
 
-Review before continuing:
+This is the same final-object selection used in the demo. It runs the GEX,
+ATAC, and multimodal processing needed for the export; it does not build every
+review plot or optional analysis. Completion means the requested computation
+finished, not that its biological results have been reviewed.
 
-- per-GEM-well and cross-GEM-well barcode exclusion summaries for unexpected sample loss;
-- PCA, Harmony, UMAP, and metadata-association diagnostics for technical structure;
-- cluster markers and marker-module scores for coherent cell-type labels; and
-- `GEX_Seurat_object.your_aggregation` plus `metadata_w_cell_types_tibble.GEX.your_aggregation` for the cells entering ATAC processing.
+An unqualified `targets::tar_make()` requests all active GEM wells,
+aggregations, and enabled modules. Use an explicit selection while setting up
+one analysis.
 
-The [main gallery](gallery_main.qmd) shows representative GEX review plots. Change the GEM-well QC, aggregation dimensions, clustering, or marker configuration and rerun this checkpoint if the result is not biologically and technically credible.
+## Request an additional result
 
-## ATAC checkpoint
-
-Run this only after accepting the GEX checkpoint:
+Each card in the [main gallery](gallery_main.qmd) names the target that
+produced it. For example, this requests the WNN categorical UMAP plots:
 
 ```{.r filename="R"}
 targets::tar_make(
-  names = targets::tar_described_as(
-    tidyselect::contains("checkpoint:ATAC")
-  ) & tidyselect::matches("your_aggregation")
+  names = tidyselect::all_of("categorical.UMAPs.WNN.your_aggregation")
 )
 ```
 
-Review before continuing:
+Replace the aggregation suffix with your own name, or `immune_human_2x` for
+the public demo. Per-GEM-well and dataset QC targets use their respective
+GEM well or dataset identifiers instead. Use `tar_manifest()` with the same
+`names` argument to check a selection before running it.
 
-- peak-based QC exclusions and retained cell counts;
-- LSI dimensions, metadata associations, UMAPs, and cluster stability;
-- consensus peaks, JASPAR motif-family accessibility, and marker-gene activity; and
-- coverage tracks and differential-accessibility summaries where configured.
+Read tables and file paths as shown in [Inspect the demo results](demo_outputs.qmd).
+Requested figures are saved beneath the configured store's `plots/` folder.
 
-Key objects include `consensus_peak_tibble.ATAC.your_aggregation`, `metadata_w_cell_types_tibble.ATAC.your_aggregation`, and the BPCells peak and motif-family-accessibility matrices. Revisit the peak-calling, ATAC dimensions, QC, or marker-TF settings if the review fails.
+## QC checkpoints {#qc-checkpoints}
 
-## Multimodal checkpoint
+::: {.callout-note}
+## Under development
 
-```{.r filename="R"}
-targets::tar_make(
-  names = targets::tar_described_as(
-    tidyselect::contains("checkpoint:multimodal")
-  ) & tidyselect::matches("your_aggregation")
-)
-```
+The QC checkpoint sequence, plots to review at each stage, and guidance for
+choosing thresholds are being revised. This manual does not yet prescribe a
+checkpoint procedure. Existing `checkpoint:*` tags in the code are execution
+selections, not a finalized QC protocol.
+:::
 
-Review before continuing:
+The [gallery](gallery_main.qmd) provides examples of the available diagnostics.
+Use study-appropriate QC and review cell retention, sample representation,
+and cell annotations before interpreting downstream results. The demo's
+settings are examples, not universal thresholds.
 
-- WNN UMAPs and cluster identities against the accepted GEX and ATAC results;
-- RNA and ATAC modality weights for unexpected modality dominance;
-- cross-modality cluster comparisons and final integrated metadata; and
-- `multimodal_Seurat_object.your_aggregation` if a compatibility export is needed.
+## Rerun after a change
 
-Use [Verify and inspect the outputs](demo_outputs.qmd) for `tar_read()` and output-path examples.
-
-## Finish the intended scope
-
-To build the final main-pipeline endpoint for one aggregation after checkpoint review:
+After editing inputs or configuration, use the same selection to check what
+needs rebuilding:
 
 ```{.r filename="R"}
-targets::tar_make(
-  names = tidyselect::matches(
-    "^multimodal_Seurat_object[.]your_aggregation$"
-  )
+targets::tar_outdated(
+  names = tidyselect::all_of("multimodal_Seurat_object.your_aggregation"),
+  callr_function = NULL
 )
 ```
 
@@ -95,4 +90,7 @@ QC summary, active aggregation, and enabled optional module in the root
 workflow. Use it only when that is the intended scope. Keep unavailable GEM
 wells and aggregations inactive before broad execution.
 
-Continue to the [differential analyses](downstream_differential_analyses.qmd) or [genetic enrichment](downstream_genetic_enrichment.qmd) module only after the main aggregation is accepted. If a target fails, follow [Troubleshooting](troubleshooting.qmd) and rerun the narrowest affected selection.
+Once you have reviewed the main analysis, consider
+[differential analyses](downstream_differential_analyses.qmd) for comparisons
+across donors or [genetic enrichment](downstream_genetic_enrichment.qmd) for
+human GWAS integration.

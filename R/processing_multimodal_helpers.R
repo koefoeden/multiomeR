@@ -637,11 +637,6 @@ build_WNN_metadata_tibble <- function(metadata_tibble, WNN_results, UMAP_embeddi
   metadata_out
 }
 
-filter_metadata_tibble_by_col_match <- function(metadata_tibble, column_name, column_values_pattern) {
-  metadata_tibble |>
-    dplyr::filter(stringr::str_detect(as.character(.data[[column_name]]), column_values_pattern))
-}
-
 add_module_score_agreement_to_metadata <- function(metadata_tibble, marker_genes_list, parent_cluster_col = "PCA_harmony_SNN_cluster_cell_type") {
   score_cols <- intersect(names(marker_genes_list), colnames(metadata_tibble))
   if (length(score_cols) == 0) {

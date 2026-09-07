@@ -1,8 +1,7 @@
-`%||%` <- function(x, y) if (is.null(x)) y else x
-
 #' Collapse duplicate names
 #'
-#' Make duplicated list names unique by appending counters while preserving original ordering.
+#' Group equally named entries, concatenate their values one level, and
+#' recursively collapse nested named lists. Groups follow `split()` name order.
 #'
 #' @param input_list_object A list, possibly with duplicated names at one or more
 #'   nested levels. Non-list objects and unnamed lists are returned unchanged.

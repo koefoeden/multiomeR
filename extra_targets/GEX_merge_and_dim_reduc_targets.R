@@ -123,7 +123,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = VizDimLoadings_plots.GEX,
-    description = "Plot top gene loadings for each GEX PCA dimension. [checkpoint:GEX]",
+    description = "Plot top gene loadings for each GEX PCA dimension. [checkpoint:2_GEX-PCA-QC]",
     command = PCA_loadings_tibble.GEX |>
       plot_embedding_loadings_from_tibble(
         dims = aggregation_GEX_data_PCs,
@@ -131,12 +131,20 @@ rlang::list2(
         dim_prefix = "PCA_",
         nfeatures = 50
       ) |>
+      purrr::imap(\(plot, dimension) plot + ggplot2::labs(
+        title = paste("GEX gene loadings:", dimension),
+        subtitle = paste(
+          "Largest absolute loadings identify genes defining this PC; opposite signs mark opposing expression patterns.",
+          "Look for coherent markers or dominance by technical gene sets; the overall PC sign is arbitrary.",
+          sep = "\n"
+        )
+      )) |>
       save_plots_structured(),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
     name = variable_feature_plot.GEX,
-    description = "Plot residual variance of top variable genes selected from SCTransform residuals. [checkpoint:GEX]",
+    description = "Plot residual variance of top variable genes selected from SCTransform residuals. [checkpoint:2_GEX-PCA-QC]",
     command = {
       plot <- PCA_BPCells.GEX$variable_feature_stats |>
         utils::head(50) |>
@@ -147,18 +155,33 @@ rlang::list2(
           color = .data$PCA_weighted_loading_strength
         )) +
         ggplot2::geom_point(size = 2) +
-        ggplot2::labs(x = "SCT residual variance", y = NULL, color = "Weighted PCA loading strength")
+        ggplot2::labs(
+          title = "GEX variable genes after SCTransform",
+          subtitle = paste(
+            "50 selected variable genes, ordered by residual variance; colour shows weighted loading strength across computed PCs.",
+            "Check whether variable genes reflect cell biology or are dominated by mitochondrial, ribosomal or stress genes.",
+            sep = "\n"
+          ),
+          x = "SCT residual variance", y = NULL, color = "Weighted PCA loading strength"
+        )
       save_plots_structured(plot)
     },
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
     name = PCA_singular_values_elbow_plot.GEX,
-    description = "Elbow plot of native GEX PCA singular values. [checkpoint:GEX]",
+    description = "Elbow plot of native GEX PCA singular values. [checkpoint:2_GEX-PCA-QC]",
     command = {
       plot <- plot_embedding_singular_values(
         singular_values = PCA_BPCells.GEX$singular_values,
         dims = aggregation_GEX_data_PCs
+      ) + ggplot2::labs(
+        title = "GEX PCA singular-value elbow",
+        subtitle = paste(
+          "Larger singular values indicate stronger variation along a PC; a flattening curve suggests diminishing returns.",
+          "Use the elbow together with gene loadings and metadata associations to choose PCs; it is not a quality threshold.",
+          sep = "\n"
+        )
       )
       save_plots_structured(plot)
     },
@@ -166,13 +189,20 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = PCA_embedding_sdev_plot.GEX,
-    description = "Non-Harmony and Harmony GEX PCA embedding coordinate SD plot. [checkpoint:GEX]",
+    description = "Non-Harmony and Harmony GEX PCA embedding coordinate SD plot. [checkpoint:2_GEX-PCA-QC]",
     command = {
       plot <- plot_embedding_sdev(
         embedding_matrix = PCA_BPCells.GEX$cell_embeddings,
         dims = aggregation_GEX_data_PCs,
         harmony_embedding_matrix = if (length(aggregation_harmony_correction_metadata_col_names %||% character()) > 0) harmony_embeddings_matrix.GEX else NULL,
         dim_prefix = "PCA_"
+      ) + ggplot2::labs(
+        title = "GEX PCA coordinate spread",
+        subtitle = paste(
+          "Each point is the across-cell SD of one PC coordinate; Harmony coordinates are shown when correction is enabled.",
+          "Look for strongly altered or collapsed dimensions; this measures coordinate spread, not variance explained.",
+          sep = "\n"
+        )
       )
       save_plots_structured(plot)
     },
@@ -180,9 +210,9 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = PCA_metadata_association_barplots.GEX,
-    description = "Non-Harmony and Harmony GEX PCA metadata association bar plots. [checkpoint:GEX]",
+    description = "Non-Harmony and Harmony GEX PCA metadata association bar plots. [checkpoint:2_GEX-PCA-QC]",
     command = {
-      plots <- plot_embedding_metadata_association_barplots(
+      association_tibbles <- get_embedding_metadata_association_tibbles(
         embedding_matrix = PCA_BPCells.GEX$cell_embeddings,
         harmony_embedding_matrix = if (length(aggregation_harmony_correction_metadata_col_names %||% character()) > 0) harmony_embeddings_matrix.GEX else NULL,
         metadata_tibble = metadata_analysis_tibble.GEX,
@@ -212,9 +242,28 @@ rlang::list2(
         continuous_biological_cols = aggregation_continuous_vars %||% character(),
         categorical_biological_cols = aggregation_categorical_vars %||% character()
       )
+      plot_tibble <- association_tibbles |>
+        purrr::keep(\(data) nrow(data) > 0 && !all(is.na(data$metric))) |>
+        dplyr::bind_rows()
+      if (nrow(plot_tibble) > 0) {
+        plot_tibble <- dplyr::distinct(plot_tibble, variable, dim, embedding_type, .keep_all = TRUE)
+      }
+      plot <- plot_embedding_metadata_association_tibble(
+        plot_tibble = plot_tibble,
+        dims = aggregation_GEX_data_PCs,
+        title = "GEX PCA associations with metadata"
+      ) + ggplot2::labs(
+        subtitle = paste(
+          "Bars show squared Pearson correlation (continuous variables) or between-group variance fraction (categorical variables).",
+          "Each variable is assessed separately; associations omit direction and may reflect technical-biological confounding.",
+          sep = "\n"
+        ),
+        x = "PC",
+        y = "PC variance associated with metadata"
+      )
       save_plots_structured(
-        plots,
-        height = purrr::map_dbl(plots, \(plot) max(5, 0.75 * get_num_facet_rows(plot)))
+        plot,
+        height = max(5, 0.75 * get_num_facet_rows(plot))
       )
     },
     resources = get_tar_resources(RAM_GB_req = 16)

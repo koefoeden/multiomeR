@@ -13,39 +13,89 @@ plot_nuclei_per_donor_id <- function(
 #' @param plot_tibble Per-feature plotting data with `GEM_well_ID`, `dataset`,
 #'   `feature`, and `value` columns.
 #' @param feature_thresholds Threshold intervals for the plotted feature.
+#' @param show_dataset_legend Whether to show the legend for dataset fill colors.
 #' @return A ggplot ready for saving or composition.
 #' @keywords internal
 
-plot_per_dataset_QC_violin <- function(plot_tibble, feature_thresholds) {
+plot_per_dataset_QC_violin <- function(
+  plot_tibble,
+  feature_thresholds,
+  show_dataset_legend = FALSE
+) {
+  GEM_well_levels <- unique(as.character(plot_tibble$GEM_well_ID))
+  plot_tibble <- plot_tibble |>
+    dplyr::mutate(
+      GEM_well_ID = factor(.data$GEM_well_ID, levels = GEM_well_levels),
+      GEM_well_position = match(.data$GEM_well_ID, GEM_well_levels)
+    )
   plot <- plot_tibble |>
-    ggplot2::ggplot(ggplot2::aes(x = GEM_well_ID, y = value, fill = dataset))
+    ggplot2::ggplot(ggplot2::aes(
+      x = GEM_well_position,
+      y = value,
+      fill = dataset,
+      group = GEM_well_ID
+    ))
 
   if (nrow(feature_thresholds) > 0) {
-    plot <- plot +
-      ggplot2::geom_rect(
-        data = feature_thresholds,
-        ggplot2::aes(ymin = ymin, ymax = ymax),
-        xmin = -Inf,
-        xmax = Inf,
-        fill = "grey60",
-        alpha = 0.25,
-        inherit.aes = FALSE
-      ) +
-      ggplot2::geom_hline(
-        data = feature_thresholds,
-        ggplot2::aes(yintercept = threshold),
-        color = "grey35",
-        linetype = "dashed",
-        inherit.aes = FALSE
-      )
+    if ("GEM_well_ID" %in% colnames(feature_thresholds)) {
+      feature_thresholds <- feature_thresholds |>
+        dplyr::filter(.data$GEM_well_ID %in% GEM_well_levels) |>
+        dplyr::mutate(
+          GEM_well_position = match(.data$GEM_well_ID, GEM_well_levels),
+          xmin = .data$GEM_well_position - 0.45,
+          xmax = .data$GEM_well_position + 0.45
+        )
+      plot <- plot +
+        ggplot2::geom_rect(
+          data = feature_thresholds,
+          ggplot2::aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+          fill = "grey60",
+          alpha = 0.25,
+          inherit.aes = FALSE
+        ) +
+        ggplot2::geom_segment(
+          data = feature_thresholds,
+          ggplot2::aes(
+            x = xmin,
+            xend = xmax,
+            y = threshold,
+            yend = threshold
+          ),
+          color = "grey35",
+          linetype = "dashed",
+          inherit.aes = FALSE
+        )
+    } else {
+      plot <- plot +
+        ggplot2::geom_rect(
+          data = feature_thresholds,
+          ggplot2::aes(ymin = ymin, ymax = ymax),
+          xmin = -Inf,
+          xmax = Inf,
+          fill = "grey60",
+          alpha = 0.25,
+          inherit.aes = FALSE
+        ) +
+        ggplot2::geom_hline(
+          data = feature_thresholds,
+          ggplot2::aes(yintercept = threshold),
+          color = "grey35",
+          linetype = "dashed",
+          inherit.aes = FALSE
+        )
+    }
   }
 
   plot +
     ggplot2::geom_violin(scale = "width") +
+    ggplot2::scale_x_continuous(
+      breaks = seq_along(GEM_well_levels),
+      labels = GEM_well_levels
+    ) +
     ggplot2::theme(
       axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
       axis.title.x = ggplot2::element_blank(),
-      legend.position = "none"
+      legend.position = if (show_dataset_legend) "bottom" else "none"
     )
 }
 
@@ -55,18 +105,37 @@ plot_per_dataset_QC_violin <- function(plot_tibble, feature_thresholds) {
 #'   `dataset`, and requested QC feature columns.
 #' @param QC_exclude_vector Character vector of QC exclusion expressions.
 #' @param feature_names Character vector of QC features to plot.
+#' @param GEM_well_QC_exclude_list Optional named list of GEM-well-specific QC
+#'   exclusion expression vectors. Cannot be supplied together with
+#'   `QC_exclude_vector`.
+#' @param show_dataset_legend Whether to show the legend for dataset fill colors.
 #' @return Named list with one violin plot per available QC feature.
 #' @keywords internal
 
 plot_per_dataset_QC_violins <- function(
   metadata_tibble,
-  QC_exclude_vector,
-  feature_names
+  QC_exclude_vector = NULL,
+  feature_names,
+  GEM_well_QC_exclude_list = NULL,
+  show_dataset_legend = FALSE
 ) {
-  threshold_tibble <- get_QC_exclude_threshold_tibble(
-    QC_exclude_vector = QC_exclude_vector,
-    feature_names = feature_names
-  )
+  if (!is.null(QC_exclude_vector) && !is.null(GEM_well_QC_exclude_list)) {
+    stop(
+      "Supply either QC_exclude_vector or GEM_well_QC_exclude_list, not both.",
+      call. = FALSE
+    )
+  }
+  threshold_tibble <- if (is.null(GEM_well_QC_exclude_list)) {
+    get_QC_exclude_threshold_tibble(
+      QC_exclude_vector = QC_exclude_vector,
+      feature_names = feature_names
+    )
+  } else {
+    get_GEM_well_QC_exclude_threshold_tibble(
+      GEM_well_QC_exclude_list = GEM_well_QC_exclude_list,
+      feature_names = feature_names
+    )
+  }
   features <- intersect(feature_names, colnames(metadata_tibble))
 
   features |>
@@ -90,9 +159,154 @@ plot_per_dataset_QC_violins <- function(
         feature_thresholds = dplyr::filter(
           threshold_tibble,
           .data$feature == .env$feature
-        )
+        ),
+        show_dataset_legend = show_dataset_legend
       )
     })
+}
+
+#' Compare GEM-well QC distributions within an aggregation
+#'
+#' Plot one violin per GEM well for each available metric in the informational
+#' QC manifest. Configured exclusion regions are drawn separately for each GEM
+#' well so reaction-specific thresholds remain visually explicit.
+#'
+#' @param metadata_tibble Nucleus-level metadata containing `GEM_well_ID`,
+#'   `dataset`, and QC metric columns.
+#' @param QC_metric_manifest_tibble Informational QC metric manifest with metric
+#'   labels, stage availability, plotting quantiles, and global plotting status.
+#' @param QC_exclude_per_GEM_well_list Named list mapping GEM-well IDs to
+#'   character vectors of QC exclusion expressions.
+#' @return Named list containing one annotated ggplot per available GEM-well QC
+#'   metric.
+#' @keywords internal
+
+plot_GEM_well_QC_comparisons <- function(
+  metadata_tibble,
+  QC_metric_manifest_tibble,
+  QC_exclude_per_GEM_well_list
+) {
+  metric_manifest <- QC_metric_manifest_tibble |>
+    dplyr::filter(
+      .data$available_from_stage == "GEM_well",
+      .data$do_plot,
+      .data$metric_id %in% colnames(metadata_tibble)
+    ) |>
+    dplyr::filter(purrr::map_lgl(
+      .data$metric_id,
+      \(metric_id) {
+        values <- metadata_tibble[[metric_id]]
+        is.numeric(values) && any(is.finite(values))
+      }
+    ))
+  if (nrow(metric_manifest) == 0L) {
+    stop("No available GEM-well QC metrics were found in the metadata.", call. = FALSE)
+  }
+
+  threshold_tibble <- get_GEM_well_QC_exclude_threshold_tibble(
+    GEM_well_QC_exclude_list = QC_exclude_per_GEM_well_list,
+    feature_names = metric_manifest$metric_id
+  )
+  GEM_well_levels <- unique(as.character(metadata_tibble$GEM_well_ID))
+
+  metric_manifest |>
+    dplyr::select(
+      metric_id,
+      display_name,
+      description,
+      plot_min_q,
+      plot_max_q
+    ) |>
+    purrr::pmap(\(metric_id, display_name, description, plot_min_q, plot_max_q) {
+      plot_tibble <- metadata_tibble |>
+        dplyr::transmute(
+          GEM_well_ID = factor(.data$GEM_well_ID, levels = GEM_well_levels),
+          GEM_well_position = match(.data$GEM_well_ID, GEM_well_levels),
+          dataset,
+          value = unname(.data[[metric_id]])
+        ) |>
+        dplyr::filter(is.finite(.data$value)) |>
+        dplyr::mutate(
+          .by = GEM_well_ID,
+          plot_min = if (is.na(plot_min_q)) {
+            -Inf
+          } else {
+            stats::quantile(.data$value, probs = plot_min_q)
+          },
+          plot_max = if (is.na(plot_max_q)) {
+            Inf
+          } else {
+            stats::quantile(.data$value, probs = plot_max_q)
+          }
+        ) |>
+        dplyr::filter(
+          .data$value >= .data$plot_min,
+          .data$value <= .data$plot_max
+        ) |>
+        dplyr::select(-plot_min, -plot_max)
+      feature_thresholds <- threshold_tibble |>
+        dplyr::filter(
+          .data$feature == .env$metric_id,
+          .data$GEM_well_ID %in% GEM_well_levels
+        ) |>
+        dplyr::mutate(
+          GEM_well_position = match(.data$GEM_well_ID, GEM_well_levels),
+          xmin = .data$GEM_well_position - 0.45,
+          xmax = .data$GEM_well_position + 0.45
+        )
+
+      plot <- plot_tibble |>
+        ggplot2::ggplot(ggplot2::aes(
+          x = GEM_well_position,
+          y = value,
+          fill = dataset,
+          group = GEM_well_ID
+        ))
+      if (nrow(feature_thresholds) > 0L) {
+        plot <- plot +
+          ggplot2::geom_rect(
+            data = feature_thresholds,
+            ggplot2::aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+            fill = "grey60",
+            alpha = 0.25,
+            inherit.aes = FALSE
+          ) +
+          ggplot2::geom_segment(
+            data = feature_thresholds,
+            ggplot2::aes(
+              x = xmin,
+              xend = xmax,
+              y = threshold,
+              yend = threshold
+            ),
+            color = "grey35",
+            linetype = "dashed",
+            inherit.aes = FALSE
+          )
+      }
+
+      plot +
+        ggplot2::geom_violin(scale = "width") +
+        ggplot2::scale_x_continuous(
+          breaks = seq_along(GEM_well_levels),
+          labels = GEM_well_levels
+        ) +
+        ggplot2::labs(
+          title = display_name,
+          subtitle = stringr::str_wrap(
+            stringr::str_c(metric_id, ": ", description),
+            width = 120
+          ),
+          x = NULL,
+          y = display_name,
+          fill = "Dataset"
+        ) +
+        ggplot2::theme(
+          axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
+          legend.position = "bottom"
+        )
+    }) |>
+    stats::setNames(metric_manifest$metric_id)
 }
 
 #' Plot markers volcano simple

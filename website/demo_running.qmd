@@ -8,17 +8,24 @@ knitr::opts_chunk$set(
 )
 ```
 
-Run the command below to process the example `immune_human_2x` aggregation and produce its final multimodal Seurat/Signac compatibility object. The pipeline keeps BPCells-backed matrices as its primary state; the Seurat object is a convenience export and a clear end point for the quickstart.
+In the R session opened during installation, run the command below to process
+`immune_human_2x`. It combines the two demo GEM wells and produces a
+Seurat/Signac object containing the multimodal results.
 
-This selection builds the upstream objects and file targets needed by the final export. It does not request every sibling review plot in the GEX, ATAC, and WNN checkpoints. On one AMD EPYC 7543 system using 16 logical threads, a previous run of this example completed in under 25 minutes and wrote about 6 GB. Treat that as orientation, not a runtime guarantee.
+`names` selects the final result by its exact name using `all_of()`.
+`tar_make()` also builds the dependencies needed for that result, but does
+not build every plot in the gallery.
 
 ```{.r filename="R"}
 targets::tar_make(
-  names = tidyselect::matches(
-    "^multimodal_Seurat_object[.]immune_human_2x$"
-  )
+  names = tidyselect::all_of("multimodal_Seurat_object.immune_human_2x")
 )
 ```
+
+Keep the R session open until the command finishes. Progress messages report
+targets being dispatched, completed, or skipped because they are already
+up to date. A previous demo run on an AMD EPYC 7543 system with 16 logical
+threads took under 25 minutes and wrote about 6 GB; your runtime may differ.
 
 ## Confirm success
 
@@ -26,20 +33,14 @@ After the run, the following command should return `character(0)`, meaning the r
 
 ```{.r filename="R"}
 targets::tar_outdated(
-  names = tidyselect::matches(
-    "^multimodal_Seurat_object[.]immune_human_2x$"
-  ),
+  names = tidyselect::all_of("multimodal_Seurat_object.immune_human_2x"),
   callr_function = NULL
 )
 ```
 
-Confirm that the final object can be read:
+If names are returned, those results still need building. If the run failed,
+follow [Troubleshooting](troubleshooting.qmd), fix the reported cause, and run
+the same `tar_make()` command again. Completed results can be reused.
 
-```{.r filename="R"}
-demo_object <- targets::tar_read(
-  multimodal_Seurat_object.immune_human_2x
-)
-demo_object
-```
-
-Continue to [Verify and inspect the outputs](demo_outputs.qmd). If the run stops with an error, use [Troubleshooting](troubleshooting.qmd) before broadening the target selection.
+Continue to [Inspect the demo results](demo_outputs.qmd) to read the object
+and find the associated files.

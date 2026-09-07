@@ -94,11 +94,6 @@ emit_yaml_entry <- function(path, key) {
 }
 
 github_repo <- "https://github.com/koefoeden/multiomeR/tree/main"
-force_recreate_graph <- identical(
-  tolower(Sys.getenv("FORCE_RECREATE_GRAPH", "false")),
-  "true"
-)
-
 pipeline_github_file <- file.path(github_repo, "_targets.R")
 aggregations_config_file <- "cfg_aggregations.yaml"
 pipeline_parameters_file <- "cfg_pipeline_parameters.tsv"

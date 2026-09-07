@@ -2,32 +2,28 @@ rlang::list2(
   targets::tar_target(
     name = subgroups_to_process_vec,
     description = "Identify cell-type clusters with enough nuclei to process as subgroups [part_of_graph:full_subgroups]",
-    # TODO: Generalize this to work with any cluster column - however, seems to be slightly problematic with target-errors regarding unknown object.
-    # Probably some tricky interaction with NSE.
     command = {
       filtered_nuclei_tibble <- metadata_w_cell_types_subgroup_tibble.WNN %>%
-        dplyr::group_by(.data[["PCA_harmony_SNN_cluster_cell_type"]]) %>%
-        # group_by({{ aggregation_subgroups_col }}) %>%
+        dplyr::group_by(dplyr::across(dplyr::all_of(aggregation_subgroups_col))) %>%
         dplyr::summarise(n_nuclei = dplyr::n()) %>%
         dplyr::filter(n_nuclei >= aggregation_subgroups_min_nuclei_filter)
 
       assert_with_info(
         nrow(filtered_nuclei_tibble) > 0,
-        glue_info = "No clusters with at least {aggregation_subgroups_min_nuclei_filter} nuclei found. Consider increasing the aggregation_subgroups_min_nuclei_filter parameter."
+        glue_info = "No subgroups meet the minimum nucleus count. Consider lowering aggregation_subgroups_min_nuclei_filter."
       )
       filtered_nuclei_tibble %>%
-        dplyr::pull(dplyr::all_of("PCA_harmony_SNN_cluster_cell_type")) %>%
+        dplyr::pull(dplyr::all_of(aggregation_subgroups_col)) %>%
         as.character()
     }
   ),
   targets::tar_target(
     name = metadata_tibble.subgroups,
     description = "Subset WNN metadata to cells matching each subgroup cluster value [part_of_graph:full_subgroups]",
-    command = metadata_w_cell_types_subgroup_tibble.WNN |>
-      filter_metadata_tibble_by_col_match(
-        column_name = aggregation_subgroups_col,
-        column_values_pattern = subgroups_to_process_vec
-      ),
+    command = {
+      metadata <- metadata_w_cell_types_subgroup_tibble.WNN
+      metadata[metadata[[aggregation_subgroups_col]] %in% subgroups_to_process_vec, ]
+    },
     pattern = map(subgroups_to_process_vec),
     resources = get_tar_resources(RAM_GB_req = 8)
   ),
@@ -251,6 +247,37 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
+    name = metadata_w_clusters_tibble_plotting.subgroups,
+    description = "Join configured analysis variables onto filtered subgroup metadata for plotting",
+    command = {
+      donor_plot_metadata <- donor_id_analysis_metadata_tibble |>
+        dplyr::select(
+          .data$donor_id,
+          dplyr::any_of(setdiff(
+            colnames(donor_id_analysis_metadata_tibble),
+            colnames(metadata_w_clusters_tibble_filtered.subgroups)
+          ))
+        )
+      GEM_well_plot_metadata <- GEM_well_analysis_metadata_tibble |>
+        dplyr::select(
+          .data$GEM_well_ID,
+          dplyr::any_of(setdiff(
+            colnames(GEM_well_analysis_metadata_tibble),
+            colnames(metadata_w_clusters_tibble_filtered.subgroups)
+          ))
+        )
+
+      prepare_GEX_metadata_tibble(
+        metadata_tibble = metadata_w_clusters_tibble_filtered.subgroups,
+        barcode_vec = metadata_w_clusters_tibble_filtered.subgroups$barcode_w_prefix,
+        donor_id_metadata_tibble = donor_plot_metadata,
+        GEM_well_metadata_tibble = GEM_well_plot_metadata
+      )
+    },
+    pattern = map(metadata_w_clusters_tibble_filtered.subgroups),
+    resources = get_tar_resources(RAM_GB_req = 16)
+  ),
+  targets::tar_target(
     name = marker_tibbles.subgroups,
     description = "Find GEX marker genes for each subgroup GEX sub-cluster using BPCells [part_of_graph:full_subgroups]",
     command = get_BPCells_markers_from_matrix(
@@ -284,7 +311,7 @@ rlang::list2(
           )
         ))
 
-        plot_metadata_tibble <- metadata_w_clusters_tibble_filtered.subgroups
+        plot_metadata_tibble <- metadata_w_clusters_tibble_plotting.subgroups
         missing_categorical_vars <- setdiff(categorical_vars, names(plot_metadata_tibble))
         annotation_vars <- intersect(
           missing_categorical_vars,
@@ -314,7 +341,7 @@ rlang::list2(
         plots |>
           save_plots_structured(dyn_suffix_in_subdir = TRUE, override_suffix = subgroups_to_process_vec)
       },
-      pattern = map(metadata_w_clusters_tibble_filtered.subgroups, subgroups_to_process_vec),
+      pattern = map(metadata_w_clusters_tibble_plotting.subgroups, subgroups_to_process_vec),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
@@ -325,7 +352,7 @@ rlang::list2(
           purrr::set_names() |>
           purrr::map(\(variable) {
             plot_UMAP_from_metadata(
-              metadata_tibble = metadata_w_clusters_tibble_filtered.subgroups,
+              metadata_tibble = metadata_w_clusters_tibble_plotting.subgroups,
               variable = variable,
               umap_cols = UMAP_cols
             )
@@ -349,7 +376,11 @@ rlang::list2(
           dyn_suffix_in_subdir = TRUE,
           override_suffix = subgroups_to_process_vec
         ),
-      pattern = map(metadata_w_clusters_tibble_filtered.subgroups, subgroups_to_process_vec),
+      pattern = map(
+        metadata_w_clusters_tibble_plotting.subgroups,
+        metadata_w_clusters_tibble_filtered.subgroups,
+        subgroups_to_process_vec
+      ),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     skip_w_dummy_file_if(

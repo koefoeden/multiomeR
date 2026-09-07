@@ -8,14 +8,17 @@ channels = ["conda-forge", "bioconda"]
 platforms = ["linux-64"]
 
 [tasks]
+test = { cmd = "Rscript tests/testthat.R", description = "Run fast unit tests and slow algorithm parity tests." }
 install-r-github-packages = { cmd = "Rscript scripts/install_r_github_packages.R", description = "Install GitHub-only R packages into the pixi R library." }
 download-demo-data = { cmd = "bash example_data/download_10X_cellranger_count_data.sh example_data/public_immune_human_2x_manifest.tsv", description = "Download the required subsets of two public Cell Ranger ARC outputs." }
 setup-demo = { depends-on = ["download-demo-data", "install-r-github-packages"], description = "Prepare the environment and inputs for the public quickstart." }
-test-scoring-parity = { cmd = "Rscript scripts/validate_scoring_parity.R", description = "Validate BPCells-native scoring helpers against reference implementations on synthetic data." }
-test-amulet-parity = { cmd = "Rscript scripts/validate_amulet_bpcells_parity.R", description = "Validate BPCells-native AMULET metrics and loci against scDblFinder." }
-test-algorithm-validation = { cmd = "Rscript scripts/validate_scoring_parity.R && Rscript scripts/validate_algorithm_deviations.R && Rscript scripts/validate_amulet_bpcells_parity.R", description = "Validate documented UCell, WNN, SCAVENGE, and AMULET implementations on deterministic fixtures." }
+test-scoring-parity = { cmd = "Rscript -e 'testthat::test_file(\"tests/testthat/test-scoring-parity.R\", stop_on_failure = TRUE)'", description = "Run slow BPCells scoring integration tests against reference implementations." }
+test-amulet-parity = { cmd = "Rscript -e 'testthat::test_file(\"tests/testthat/test-amulet-parity.R\", stop_on_failure = TRUE)'", description = "Run slow BPCells-native AMULET integration tests against scDblFinder." }
+test-algorithm-validation = { cmd = "Rscript -e 'testthat::test_dir(\"tests/testthat\", filter = \"scoring-parity|wnn-parity|scavenge-parity|amulet-parity\")'", description = "Run slow UCell, WNN, SCAVENGE, and AMULET parity and acceptance tests." }
 
 [dependencies]
+r-testthat = ">=3.2.3,<4"
+r-tmb = "==1.9.19" # Match the glmmTMB binary ABI.
 # we still need some more general cleanup before we do a final dependency hygiene check. Lots of prefix calls in functions/targets that are not used anymore.
 # system tools
 bcftools = "1.22.*"

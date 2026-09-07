@@ -502,24 +502,29 @@ call_peaks_w_BPCells_tile <- function(
   out_file
 }
 
-#' Get peak GRanges w fixed width
+#' Read summit-centered, blacklist-filtered peaks
 #'
-#' Construct or transform genomic ranges with coordinates compatible with downstream ATAC helpers.
+#' Interpret narrowPeak starts as zero-based and return one-based closed ranges
+#' of width `2 * extend_summits`. Keep standard chromosomes in input order and
+#' remove every peak overlapping the blacklist.
 #'
-#' @param narrow_peak_path Path to a MACS3/BPCells narrowPeak file. Missing or
-#'   empty files return an empty GRanges object.
+#' @param narrow_peak_path Path to an existing MACS3/BPCells narrowPeak file.
+#'   Empty files return an empty GRanges object; missing files are errors.
 #' @param extend_summits Number of bases to extend on each side of the summit to
 #'   create fixed-width peak ranges.
-#' @param genome Genome build key used to choose chromosome sizes, blacklist resources, and external-tool parameters.
+#' @param genome Genome build used to select standard chromosome names.
 #' @param blacklist_GRanges GRanges object containing blacklist GRanges coordinates and metadata.
-#' @return A GRanges object with coordinates and metadata columns expected by downstream ATAC helpers.
+#' @return Filtered `GRanges` retaining the narrowPeak metadata columns.
 #' @keywords internal
 
 get_peak_GRanges_w_fixed_width <- function(narrow_peak_path, extend_summits = 250, genome = "GRCh38", blacklist_GRanges) {
   # Set genome-specific parameters
   valid_chroms <- get_standard_chroms(genome)
 
-  if (!fs::file_exists(narrow_peak_path) || fs::file_size(narrow_peak_path) == 0) {
+  if (!fs::file_exists(narrow_peak_path)) {
+    stop("Peak file does not exist: ", narrow_peak_path)
+  }
+  if (fs::file_size(narrow_peak_path) == 0) {
     return(empty_peak_GRanges())
   }
 
@@ -547,19 +552,22 @@ get_peak_GRanges_w_fixed_width <- function(narrow_peak_path, extend_summits = 25
 
   # Remove peaks overlapping with blacklisted regions
   blacklist_hits <- peak_GRanges %>% GenomicRanges::findOverlaps(blacklist_GRanges)
-  peak_GRanges_wo_blacklist_hits <- peak_GRanges[-S4Vectors::queryHits(blacklist_hits)]
+  peak_GRanges_wo_blacklist_hits <- peak_GRanges[setdiff(seq_along(peak_GRanges), S4Vectors::queryHits(blacklist_hits))]
 
   return(peak_GRanges_wo_blacklist_hits)
 }
 
-#' Combine collapse GRanges ArchR
+#' Combine and greedily collapse overlapping peak ranges
 #'
-#' Construct or transform genomic ranges with coordinates compatible with downstream ATAC helpers.
+#' Select the best-ranked peak in each connected overlap group, remove peaks
+#' overlapping those selections, and repeat on the remainder. Ignore strand
+#' during overlap comparisons.
 #'
-#' @param GRanges_list GRanges object containing GRanges list coordinates and metadata.
+#' @param GRanges_list List of peak `GRanges`; empty elements are discarded.
 #' @param by Metadata column used to prioritize overlapping GRanges while collapsing peaks.
 #' @param decreasing Logical; when TRUE, higher values of `by` are preferred during overlap collapse.
-#' @return A GRanges object with coordinates and metadata columns expected by downstream ATAC helpers.
+#' @return Selected nonoverlapping peaks sorted by sequence level and position,
+#'   or `empty_peak_GRanges()` when all inputs are empty.
 #' @keywords internal
 
 combine_collapse_GRanges_ArchR <- function(GRanges_list, by, decreasing = TRUE) {
@@ -601,11 +609,15 @@ combine_collapse_GRanges_ArchR <- function(GRanges_list, by, decreasing = TRUE) 
 
 #' Format peak GRanges
 #'
-#' Construct or transform genomic ranges with coordinates compatible with downstream ATAC helpers.
+#' Preserve coordinates and row order, add cluster and region identifiers, and
+#' name ranges as `seqnames-start-end`. Replace the narrowPeak `name` and
+#' `relative_summit_position` columns with `cluster` and `summit_position`.
 #'
 #' @param GRanges GRanges object containing GRanges coordinates and metadata.
-#' @param cluster_name Cluster label written into peak names and output filenames.
-#' @return A GRanges object with coordinates and metadata columns expected by downstream ATAC helpers.
+#' @param cluster_name Optional cluster label. Otherwise use existing `cluster`
+#'   metadata or extract the first substring enclosed by dots in `name`.
+#' @return Named `GRanges` with `cluster`, `summit_position`, and `region_vec`
+#'   metadata. `summit_position` is `start + relative_summit_position`.
 #' @keywords internal
 
 format_peak_GRanges <- function(GRanges, cluster_name = NULL) {
@@ -1197,95 +1209,67 @@ plot_embedding_metadata_association_tibble <- function(plot_tibble, dims, title)
     )
 }
 
-#' Plot embedding metadata association barplot
+#' Summarize embedding associations by metadata type and role
 #'
-#' Plot association strength between one embedding matrix and metadata variables.
-#'
-#' @param embedding_matrix Numeric matrix with cells/barcodes in rows and embedding dimensions in columns; row names are carried into downstream coordinates.
-#' @param harmony_embedding_matrix Optional Harmony-corrected embedding matrix with the same row names and dimension naming convention as `embedding_matrix`.
-#' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
-#' @param dims Integer dimension indices to use; combined with `dim_prefix` to select columns such as `PCA_1` or `LSI_2`.
-#' @param metadata_cols Character vector of metadata columns to test or plot.
-#' @param variable_type Metadata type to summarize; expected values are `continuous` or `categorical`.
-#' @param dim_prefix Prefix used to translate `dims` into embedding column names, for example `PCA_`, `LSI_`, or `WNN_`.
-#' @param title Plot title used for the assembled association panel.
-#' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
+#' Align cells and available dimensions once per embedding, then return four
+#' named tibbles: continuous/categorical technical and biological associations.
+#' Each has `variable`, `dim`, `metric`, and `embedding_type` columns when
+#' usable columns exist. Empty or nonnumeric continuous selections return no rows.
+#' @inheritParams plot_embedding_metadata_association_barplots
 #' @keywords internal
-
-plot_embedding_metadata_association_barplot <- function(
+get_embedding_metadata_association_tibbles <- function(
   embedding_matrix,
   harmony_embedding_matrix = NULL,
   metadata_tibble,
   dims,
-  metadata_cols,
-  variable_type = c("continuous", "categorical"),
-  dim_prefix = "LSI_",
-  title = NULL
+  dim_prefix,
+  continuous_technical_cols = character(),
+  categorical_technical_cols = character(),
+  continuous_biological_cols = character(),
+  categorical_biological_cols = character()
 ) {
-  variable_type <- match.arg(variable_type)
-  title <- title %||% variable_type
-  inputs <- prepare_embedding_metadata_association_inputs(
-    embedding_matrix = embedding_matrix,
-    metadata_tibble = metadata_tibble,
-    dims = dims,
-    dim_prefix = dim_prefix
-  )
-  plot_tibble <- get_embedding_metadata_association_tibble(
-    embedding_matrix = inputs$embedding_matrix,
-    metadata = inputs$metadata,
-    dim_cols = inputs$dim_cols,
-    dims = inputs$dims,
-    metadata_cols = metadata_cols,
-    variable_type = variable_type
-  ) |>
-    dplyr::mutate(embedding_type = "Non-Harmony")
-
+  embeddings <- list("Non-Harmony" = embedding_matrix)
   if (!is.null(harmony_embedding_matrix)) {
-    harmony_inputs <- prepare_embedding_metadata_association_inputs(
-      embedding_matrix = harmony_embedding_matrix,
-      metadata_tibble = metadata_tibble,
-      dims = dims,
-      dim_prefix = dim_prefix
-    )
-    harmony_plot_tibble <- get_embedding_metadata_association_tibble(
-      embedding_matrix = harmony_inputs$embedding_matrix,
-      metadata = harmony_inputs$metadata,
-      dim_cols = harmony_inputs$dim_cols,
-      dims = harmony_inputs$dims,
-      metadata_cols = metadata_cols,
-      variable_type = variable_type
-    ) |>
-      dplyr::mutate(embedding_type = "Harmony")
-    plot_tibble <- dplyr::bind_rows(plot_tibble, harmony_plot_tibble)
+    embeddings$Harmony <- harmony_embedding_matrix
   }
-
-  plot_embedding_metadata_association_tibble(
-    plot_tibble = plot_tibble,
-    dims = inputs$dims,
-    title = title
+  inputs <- purrr::map(embeddings, prepare_embedding_metadata_association_inputs,
+    metadata_tibble = metadata_tibble, dims = dims, dim_prefix = dim_prefix
   )
+  metadata_groups <- list(
+    continuous_technical = continuous_technical_cols,
+    categorical_technical = categorical_technical_cols,
+    continuous_biological = continuous_biological_cols,
+    categorical_biological = categorical_biological_cols
+  )
+  purrr::map2(metadata_groups, c("continuous", "categorical", "continuous", "categorical"), \(metadata_cols, variable_type) {
+    purrr::imap_dfr(inputs, \(input, embedding_type) {
+      get_embedding_metadata_association_tibble(
+        embedding_matrix = input$embedding_matrix,
+        metadata = input$metadata,
+        dim_cols = input$dim_cols,
+        dims = input$dims,
+        metadata_cols = metadata_cols,
+        variable_type = variable_type
+      ) |>
+        dplyr::mutate(embedding_type = embedding_type)
+    })
+  })
 }
 
 #' Plot embedding metadata association barplots
 #'
-#' Assemble technical and biological metadata-association barplots for embeddings.
-#'
-#' @param embedding_matrix Numeric matrix with cells/barcodes in rows and embedding dimensions in columns; row names are carried into downstream coordinates.
-#' @param harmony_embedding_matrix Optional Harmony-corrected embedding matrix with the same row names and dimension naming convention as `embedding_matrix`.
-#' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
-#' @param dims Integer dimension indices to use; combined with `dim_prefix` to select columns such as `PCA_1` or `LSI_2`.
-#' @param dim_prefix Prefix used to translate `dims` into embedding column names, for example `PCA_`, `LSI_`, or `WNN_`.
-#' @param continuous_technical_cols Numeric technical metadata columns to test
-#'   against embedding dimensions.
-#' @param categorical_technical_cols Categorical technical metadata columns to
-#'   test against embedding dimensions.
-#' @param continuous_biological_cols Numeric biological metadata columns to test
-#'   against embedding dimensions.
-#' @param categorical_biological_cols Categorical biological metadata columns to
-#'   test against embedding dimensions.
-#' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
+#' Assemble four panels from per-variable association summaries.
+#' @param embedding_matrix Numeric matrix with barcode row names and named dimensions.
+#' @param harmony_embedding_matrix Optional corrected embedding matrix.
+#' @param metadata_tibble Metadata containing `barcode_w_prefix` and requested variables.
+#' @param dims Integer dimension indices; unavailable dimensions are omitted.
+#' @param dim_prefix Embedding column prefix, such as `PCA_` or `LSI_`.
+#' @param continuous_technical_cols Numeric technical metadata column names.
+#' @param categorical_technical_cols Categorical technical metadata column names.
+#' @param continuous_biological_cols Numeric biological metadata column names.
+#' @param categorical_biological_cols Categorical biological metadata column names.
+#' @return Named list of four ggplots; unusable groups get an explanatory empty panel.
 #' @keywords internal
-
 plot_embedding_metadata_association_barplots <- function(
   embedding_matrix,
   harmony_embedding_matrix = NULL,
@@ -1297,39 +1281,24 @@ plot_embedding_metadata_association_barplots <- function(
   continuous_biological_cols = character(),
   categorical_biological_cols = character()
 ) {
-  plot_association_barplot <- function(metadata_cols, variable_type, title) {
-    plot_embedding_metadata_association_barplot(
-      embedding_matrix = embedding_matrix,
-      harmony_embedding_matrix = harmony_embedding_matrix,
-      metadata_tibble = metadata_tibble,
-      dims = dims,
-      metadata_cols = metadata_cols,
-      variable_type = variable_type,
-      dim_prefix = dim_prefix,
+  association_tibbles <- get_embedding_metadata_association_tibbles(
+    embedding_matrix = embedding_matrix,
+    harmony_embedding_matrix = harmony_embedding_matrix,
+    metadata_tibble = metadata_tibble,
+    dims = dims,
+    dim_prefix = dim_prefix,
+    continuous_technical_cols = continuous_technical_cols,
+    categorical_technical_cols = categorical_technical_cols,
+    continuous_biological_cols = continuous_biological_cols,
+    categorical_biological_cols = categorical_biological_cols
+  )
+  titles <- c("Continuous technical variables", "Categorical technical variables",
+    "Continuous biological variables", "Categorical biological variables")
+  purrr::map2(association_tibbles, titles, \(plot_tibble, title) {
+    plot_embedding_metadata_association_tibble(
+      plot_tibble = plot_tibble,
+      dims = dims[paste0(dim_prefix, dims) %in% colnames(embedding_matrix)],
       title = title
     )
-  }
-
-  list(
-    continuous_technical = plot_association_barplot(
-      metadata_cols = continuous_technical_cols,
-      variable_type = "continuous",
-      title = "Continuous technical variables"
-    ),
-    categorical_technical = plot_association_barplot(
-      metadata_cols = categorical_technical_cols,
-      variable_type = "categorical",
-      title = "Categorical technical variables"
-    ),
-    continuous_biological = plot_association_barplot(
-      metadata_cols = continuous_biological_cols,
-      variable_type = "continuous",
-      title = "Continuous biological variables"
-    ),
-    categorical_biological = plot_association_barplot(
-      metadata_cols = categorical_biological_cols,
-      variable_type = "categorical",
-      title = "Categorical biological variables"
-    )
-  )
+  })
 }

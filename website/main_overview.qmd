@@ -1,17 +1,39 @@
-# Main-pipeline overview
+# Plan your analysis
 
-## Purpose
+After trying the demo, choose one group of GEM wells to analyze together.
+This group is an **aggregation**. It should reflect the biological comparison
+you intend to make; donor identity, sample preparation, and batch information
+need to remain distinguishable within it.
 
-This page maps the stable stages of the main processing branch after `cellranger-arc count`. For required files and metadata, continue to [Configuration and inputs](main_inputs.qmd); for representative results, see the [main pipeline gallery](gallery_main.qmd).
+## What you need to prepare
 
-## Processing stages
+- Cell Ranger ARC outputs for each GEM well and the `reference.json` used to
+  produce them. All GEM wells in an aggregation must use the same reference.
+- A GEM-well table linking stable identifiers to input paths and library
+  annotations.
+- A donor table with one row per donor, including the phenotypes or covariates
+  you will use.
+- Marker genes appropriate for the expected cell types, plus initial processing
+  settings that you will review against your data.
 
-1. **GEM well preprocessing** reads Cell Ranger matrices and fragments, calculates RNA and ATAC QC, and assigns stable GEM well-prefixed barcodes.
-2. **Pre-aggregation QC review** compares related GEM wells before they enter an aggregation.
-3. **GEX processing** merges selected GEM wells into BPCells-backed matrices, performs dimension reduction and clustering, assigns cell-type labels, and creates the first review checkpoint.
-4. **ATAC processing** merges fragments, calls or tiles peaks, creates the consensus peak matrix, performs LSI and clustering, and summarizes motif and regulatory activity.
-5. **Multimodal integration** combines aligned GEX and ATAC embeddings with WNN, produces integrated metadata and review plots, and optionally exports a [`Seurat`](https://satijalab.org/seurat/)/[`Signac`](https://stuartlab.org/signac/) compatibility object.
+Start with the main processing workflow. Donor demultiplexing, CellBender,
+Harmony batch correction, and downstream modules require additional inputs
+or choices; enable them when your study needs them.
 
-Configuration can add genotype-aware donor assignment, CellBender inputs, Harmony correction, chromHMM annotation, peak-gene correlation, coverage tracks, and subgroup reprocessing.
+## How the data move through the workflow
 
-The [implementation graph](implementation/implementation_main.html) expands these stages to target level. After configuring the inputs, [run and review the GEX, ATAC, and multimodal checkpoints](main_running.qmd) in order.
+| Stage | What it does |
+|---|---|
+| GEM well processing | Reads Cell Ranger matrices and fragments, calculates QC metrics, and prefixes barcodes with the GEM well identifier. |
+| GEX (gene expression) | Combines selected GEM wells, reduces dimensions, clusters nuclei, and annotates cell types using marker genes. |
+| ATAC (chromatin accessibility) | Combines fragments, defines peaks, builds the peak-count matrix, and summarizes accessibility and motif signals. |
+| WNN (weighted nearest neighbors) | Combines RNA and ATAC representations to produce integrated clusters, metadata, and a Seurat/Signac export. |
+
+The pipeline also produces comparisons of related GEM wells before
+aggregation. The [main gallery](gallery_main.qmd) shows representative
+outputs; the [implementation graph](implementation/implementation_main.html)
+provides the detailed computational dependencies when you need them.
+
+Continue to [Configuration and inputs](main_inputs.qmd) to connect your
+files. The [QC checkpoint procedure](main_running.qmd#qc-checkpoints) remains
+under development.

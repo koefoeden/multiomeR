@@ -7,7 +7,7 @@ source("helpers/_setup.R")
 
 ## When to use this module
 
-Use this optional module when a completed aggregation contains replicated donor- or sample-level experimental, clinical, phenotypic, or technical variables that should be modelled across cell-type composition or pseudobulk molecular features.
+Use this module to ask how cell-type proportions, gene expression, or chromatin accessibility differ with a condition or donor phenotype. It requires biological replication across donors or samples. Molecular measurements are combined into **pseudobulks**: counts summarized for each cell type within a donor or sample.
 
 The module does not create biological replication. The donor structure, covariates, design formula, and contrasts must be defensible for the intended analysis before the workflow is run.
 
@@ -17,7 +17,7 @@ See the [output gallery](gallery_differential_analyses.qmd) for representative d
 
 Before enabling the module, confirm that:
 
-- the aggregation has passed the GEX, ATAC, and multimodal checkpoints;
+- you have reviewed the main aggregation and its cell-type annotations;
 - WNN cell-type metadata and GEX and ATAC pseudobulk matrices are available;
 - the donor metadata contains one unique row per `donor_id` and every variable used in a model;
 - model variables are donor- or pseudobulk-sample-level variables, not duplicated cell-level measurements; and
@@ -27,17 +27,27 @@ Use `differential_analyses_extended_donor_id_metadata_tsv` when the modelling ta
 
 ## Outputs
 
-It produces cell-type-composition models; pseudobulk differential gene expression, peak accessibility, JASPAR motif-family accessibility, and expression-derived CollecTRI TF activity; diagnostics and cross-modality summaries; and competitive gene-set tests against the MSigDB Hallmark and Reactome collections.
+Choose the output that matches your question:
 
-The DCTA branch infers signed TF or TF-complex activity from normalized GEX pseudobulks with CollecTRI regulons and the `decoupleR` univariate linear model (ULM). Genes are filtered for expression across cell-type pseudobulks, and each retained regulator must have at least five measured targets. Its inferred activities then use the same configured donor-level models and contrasts as DGE, DCA, and DTFA. The published human CollecTRI network is downloaded from the OmniPath rescue archive and accepted only when it matches the pipeline's pinned SHA-256 checksum.
+| Question | Output family |
+|---|---|
+| Do cell-type proportions differ? | Differential cell-type composition (DCTC) |
+| Which genes change expression? | Differential gene expression (DGE) |
+| Which peaks change accessibility? | Differential chromatin accessibility (DCA) |
+| Which motif families change accessibility? | ATAC-derived differential TF activity (DTFA) |
+| Which regulators show altered expression-based activity? | CollecTRI-derived differential TF activity (DCTA) |
 
-DTFA tests the 233 sequence-similarity families in the official JASPAR2026 CORE vertebrate clustering rather than individual TF motifs. Each family is represented by its published root motif, which is scanned directly against the consensus peaks; individual member motifs are used only as family metadata. The same family-level accessibility matrix supports marker plots and the Seurat compatibility export. The CollecTRI-DTFA comparison maps individual CollecTRI regulators to these JASPAR families and compares model t-statistics, not raw activity scales. AP1 and NFKB remain intact as complex regulons during activity inference; their canonical members are used only to associate the complexes with motif families for comparison. Detailed source-level results retain TF expression as a third reference, while family-level summaries use the median CollecTRI regulator t-statistic and report whether any mapped source is FDR-significant.
+The module also produces model diagnostics, comparisons across modalities,
+and gene-set tests for Hallmark and Reactome pathways. Activity scores are
+inferred from accessibility or expression; interpret them in the context of
+the measurement used.
 
-Each gene-set collection is tested independently with `cameraPR`, `inter.gene.cor = 0.01`, and a minimum of 10 genes represented in the contrast-specific universe. A significant set is more strongly associated with the contrast than the remaining tested genes, rather than merely showing any collective change. Open Targets evidence annotation is optional.
+See the [method details](implementation/implementation_differential_analyses.html#method-details)
+for activity inference, motif-family definitions, and gene-set testing.
 
 ## Configure the module
 
-First opt the aggregation into the module:
+Add `modules` to the existing aggregation entry, keeping its input and marker settings:
 
 ```{.yaml filename="cfg_aggregations.yaml"}
 your_aggregation:
@@ -62,11 +72,45 @@ your_aggregation:
         treated_vs_control: conditiontreated
 ```
 
-The full module checkpoint requests both composition and pseudobulk review outputs. Configure the DCTC phenotype/formula and at least one pseudobulk model before using that broad selector. Formula terms and contrast coefficients must match columns produced by the model matrix.
+The module selection below requests both composition and pseudobulk outputs. Configure the DCTC phenotype/formula and at least one pseudobulk model before using that broad selector. Formula terms and contrast coefficients must match columns produced by the model matrix.
 
-### Parameter reference
+The model example assumes `condition` distinguishes treated and control donors.
+Check which group is the reference and what each model coefficient represents
+before using `conditiontreated` as a contrast. Replace the example formula
+and contrast to match your study.
 
-The OLINK and bulk-RNA path fields are reserved optional integration inputs and are not consumed by the current public differential-analysis checkpoint. Leave them `NULL` unless the corresponding integration is implemented in your downstream workflow.
+## Run and review
+
+The existing `checkpoint:differential_analyses` tag selects module outputs.
+It does not perform QC approval; the [QC checkpoint procedure](main_running.qmd#qc-checkpoints)
+is under development. Preview the selected targets first:
+
+```{.r filename="R"}
+targets::tar_manifest(
+  names = targets::tar_described_as(
+    tidyselect::contains("checkpoint:differential_analyses")
+  ) & tidyselect::ends_with(".your_aggregation"),
+  callr_function = NULL
+)[, c("name", "description")]
+```
+
+Then run the same selection:
+
+```{.r filename="R"}
+targets::tar_make(
+  names = targets::tar_described_as(
+    tidyselect::contains("checkpoint:differential_analyses")
+  ) & tidyselect::ends_with(".your_aggregation")
+)
+```
+
+Review pseudobulk depths and retained donor counts before interpreting coefficients. Check model-matrix terms, P-value distributions, effect directions, and agreement or disagreement across DGE, DCA, DTFA, and DCTA. The CollecTRI-DTFA concordance target summarizes family coverage, rank correlation, directional agreement, and joint FDR support for every configured contrast. These are complementary regulatory readouts: agreement strengthens a shared interpretation, while disagreement can reflect post-transcriptional regulation, motif-family ambiguity, or different evidence carried by expression and accessibility. Treat the [gallery](gallery_differential_analyses.qmd) as a visual reference, not as a statistical acceptance threshold.
+
+Runtime depends on donors, cell types, models, contrasts, and gene-set analyses. Use [Troubleshooting](troubleshooting.qmd) if a formula, contrast, or metadata join fails.
+
+## Parameter reference
+
+The OLINK and bulk-RNA path fields are reserved optional integration inputs and are not consumed by the current public differential-analysis selection. Leave them `NULL` unless the corresponding integration is implemented in your downstream workflow.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_parameter_overview("differential_analyses")
@@ -80,30 +124,3 @@ emit_yaml_entry(module_config_file, "immune_human_2x")
 ```
 
 </details>
-
-## Run and review
-
-Preview the selected targets first:
-
-```{.r filename="R"}
-targets::tar_manifest(
-  names = targets::tar_described_as(
-    tidyselect::contains("checkpoint:differential_analyses")
-  ) & tidyselect::matches("your_aggregation"),
-  callr_function = NULL
-)[, c("name", "description")]
-```
-
-Then run the checkpoint:
-
-```{.r filename="R"}
-targets::tar_make(
-  names = targets::tar_described_as(
-    tidyselect::contains("checkpoint:differential_analyses")
-  ) & tidyselect::matches("your_aggregation")
-)
-```
-
-Review pseudobulk depths and retained donor counts before interpreting coefficients. Check model-matrix terms, P-value distributions, effect directions, and agreement or disagreement across DGE, DCA, DTFA, and DCTA. The CollecTRI-DTFA concordance target summarizes family coverage, rank correlation, directional agreement, and joint FDR support for every configured contrast. These are complementary regulatory readouts: agreement strengthens a shared interpretation, while disagreement can reflect post-transcriptional regulation, motif-family ambiguity, or different evidence carried by expression and accessibility. Treat the [gallery](gallery_differential_analyses.qmd) as a visual reference, not as a statistical acceptance threshold.
-
-Runtime depends on donors, cell types, models, contrasts, and GSEA branches. Use [Troubleshooting](troubleshooting.qmd) if a formula, contrast, or metadata join fails.

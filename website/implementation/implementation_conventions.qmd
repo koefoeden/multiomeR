@@ -1,8 +1,10 @@
 # Implementation conventions
 
-The implementation book assumes a few repository conventions that are easy to miss when reading individual target files in isolation. These conventions are not separate framework features; they are the small contracts that make the `{targets}` graph configurable, inspectable, and readable across GEM well-level preprocessing, aggregation-level analysis, and optional downstream modules.
-
-This chapter records the conventions that currently carry the most structural weight: target description tags, the parameter manifest, mapping tibbles, target-symbol columns, and the runtime bootstrap contract.
+This chapter explains how configuration becomes target definitions: the
+parameter manifest supplies defaults and validation rules, mapping tables
+define repeated analyses, and target symbols connect their dependencies.
+Description tags support result selection and graph views. The final section
+covers project startup and resource configuration.
 
 ## Target metadata tags
 
@@ -24,7 +26,12 @@ The currently meaningful tag families are:
 [resource_observation:<note>]   compact empirical resource note
 ```
 
-`[checkpoint:<name>]` marks targets that users can request as review boundaries with `targets::tar_described_as()`. These are practical handles for running or inspecting major checkpoints such as GEX, ATAC, multimodal, differential analyses, or genetic enrichment. They are not dependency groups and they are not parsed with a strict tag API; the user-facing commands currently match them by description substring.
+`[checkpoint:<name>]` marks targets selectable with `targets::tar_described_as()`.
+Existing tags include GEX, ATAC, multimodal, differential analyses, and genetic
+enrichment. Selection matches description substrings; dependencies still come
+from the target commands. These tags do not establish a QC acceptance
+procedure: the [user-facing checkpoints](../main_running.html#qc-checkpoints)
+are under development.
 
 `[part_of_graph:<graph_id>]` marks targets that should stay visible in a named implementation graph after graph-pruning helpers remove less informative intermediate nodes. This is the strictest tag family: `graph_id` must contain only letters, numbers, and underscores, and helper code parses these tags directly from target descriptions. A target may belong to several graph views.
 
@@ -46,7 +53,6 @@ Use tags only when they create a durable handle for readers, graph helpers, or c
 `cfg_pipeline_parameters.tsv` is the schema for YAML-backed pipeline configuration. Each row defines one parameter for one scope:
 
 ```text
-dataset
 aggregation
 differential_analyses
 genetic_enrichment

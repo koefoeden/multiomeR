@@ -68,6 +68,45 @@ get_QC_exclude_threshold_tibble <- function(QC_exclude_vector, feature_names) {
   })
 }
 
+#' Get GEM-well-specific QC exclude thresholds
+#'
+#' Preserve the association between each GEM well and its configured QC
+#' exclusion expressions when preparing threshold intervals for plotting.
+#'
+#' @param GEM_well_QC_exclude_list Named list of QC exclusion expression vectors,
+#'   one element per GEM well.
+#' @inheritParams get_QC_exclude_threshold_tibble
+#' @return A tibble as returned by `get_QC_exclude_threshold_tibble()`, with an
+#'   additional `GEM_well_ID` column.
+#' @keywords internal
+
+get_GEM_well_QC_exclude_threshold_tibble <- function(
+  GEM_well_QC_exclude_list,
+  feature_names
+) {
+  if (
+    !is.list(GEM_well_QC_exclude_list) ||
+      is.null(names(GEM_well_QC_exclude_list)) ||
+      any(!nzchar(names(GEM_well_QC_exclude_list)))
+  ) {
+    stop(
+      "GEM_well_QC_exclude_list must be a named list with one element per GEM well.",
+      call. = FALSE
+    )
+  }
+
+  purrr::imap_dfr(
+    GEM_well_QC_exclude_list,
+    \(QC_exclude_vector, GEM_well_ID) {
+      get_QC_exclude_threshold_tibble(
+        QC_exclude_vector = QC_exclude_vector,
+        feature_names = feature_names
+      ) |>
+        dplyr::mutate(GEM_well_ID = .env$GEM_well_ID, .before = 1)
+    }
+  )
+}
+
 #' Plot upset from excluded BCs list
 #'
 #' Plot overlaps among QC-excluded barcode sets as an UpSet-style chart.

@@ -1,4 +1,4 @@
-# Verify and inspect the outputs
+# Inspect the demo results
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -8,7 +8,9 @@ knitr::opts_chunk$set(
 )
 ```
 
-The public `immune_human_2x` demo writes its `targets` store to `outputs`, as configured in `_targets.yaml`. The quickstart selection creates the objects and file targets required by the final compatibility export. Plot targets are separate review outputs and are not all dependencies of that endpoint.
+The public demo uses `outputs/` as its results store. Other checkouts may
+use a different folder, recorded under `store` in `_targets.yaml`.
+The R commands below use that configuration automatically.
 
 The store contains serialized R objects in `objects/`, file artifacts in `files/`, and requested review figures in `plots/`.
 
@@ -17,10 +19,21 @@ The store contains serialized R objects in `objects/`, file artifacts in `files/
 Most intermediate and final result objects are saved automatically by `targets` under `outputs/objects` during a pipeline run. Read them with `targets::tar_read()` from a repository-root R session after the demo has completed.
 
 ```{.r filename="R"}
-targets::tar_read(UMAP_embeddings_tibble.WNN.immune_human_2x)
-targets::tar_read(metadata_w_cell_types_tibble.WNN.immune_human_2x)
-targets::tar_read(multimodal_Seurat_object.immune_human_2x)
+cell_metadata <- targets::tar_read(
+  metadata_w_cell_types_tibble.WNN.immune_human_2x
+)
+dim(cell_metadata)
+head(cell_metadata)
+
+demo_object <- targets::tar_read(multimodal_Seurat_object.immune_human_2x)
+demo_object
 ```
+
+The metadata table describes the retained nuclei and their annotations.
+WNN means *weighted nearest neighbors*: the integrated representation uses
+information from both RNA and ATAC. The Seurat/Signac object is a convenient
+export for further exploration; the pipeline also retains its matrices in
+BPCells format on disk.
 
 ## Files
 
@@ -43,14 +56,20 @@ GEM well, an internal pre-aggregation QC group, or an aggregation.
 
 ## Plots
 
-Plots are saved in a similar structure under `outputs/plots`, but the final-object quickstart selection does not request every checkpoint plot. To build and review those outputs, follow the GEX, ATAC, and multimodal selections in [Running the workflow](main_running.qmd).
+Open the [main pipeline gallery](gallery_main.qmd) to see example QC,
+RNA, ATAC, and WNN plots. These are saved documentation snapshots, so you can
+browse them without running the demo. They do not show the state of your own
+analysis.
 
 Requested plots use the same scope-based layout under `outputs/plots/`.
 
-The [main pipeline output gallery](gallery_main.qmd) contains curated snapshots showing what representative checkpoint outputs look like. Gallery assets are documentation snapshots; they are not evidence that the corresponding target was built in your local store.
+The final-object demo command does not build all these plots. See
+[Request an additional result](main_running.qmd#request-an-additional-result)
+for how to build a named gallery target. The organized QC checkpoint
+procedure remains under development.
 
 ## Next steps
 
 - To adopt the workflow, continue with the [main-pipeline overview](main_overview.qmd) and [configuration walkthrough](main_inputs.qmd).
-- To generate all checkpoint review outputs for an aggregation, use [Running the workflow](main_running.qmd).
+- To request more results or rerun after a change, use [Run your analysis](main_running.qmd).
 - To diagnose a failed or unexpectedly stale target, use [Troubleshooting](troubleshooting.qmd).

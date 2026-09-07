@@ -5,6 +5,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+source("../packages/multiomeRCore/R/null_default.R")
 source("../R/output_gallery_helpers.R")
 gallery_items <- check_output_gallery_assets(
   manifest_file = "output_gallery.yaml",
@@ -12,7 +13,7 @@ gallery_items <- check_output_gallery_assets(
 )
 ```
 
-These curated outputs use the larger `PBMC_human_6x` aggregation, not the quickstart with two GEM wells, and show selected SCAVENGE/WNN results rather than every attribution output. See [Genetic enrichment](downstream_genetic_enrichment.qmd) for prerequisites, checkpoint targets, and interpretation guidance.
+These curated outputs use the larger `PBMC_human_6x` aggregation, not the quickstart with two GEM wells, and show selected SCAVENGE/WNN results rather than every attribution output. See [Genetic enrichment](downstream_genetic_enrichment.qmd) for prerequisites, module target selection, and interpretation guidance.
 
 ```{r, echo = FALSE, results = "asis"}
 render_gallery_section(

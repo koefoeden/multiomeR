@@ -1,34 +1,20 @@
-Approach to generating graphs that are both human readable and still somewhat reflect the actual graph structure:
+# Implementation graph views
 
-1) Select a "topic" of interest, i.e. parallel processing, GEX aggregation, ATAC, WNN, differential analyses, cell-type genetic contributions, and single-cell genetic enrichment.
-2) Find downstream target(s) that capture this topic meaningfully
-3) Use tar_mermaid() to generate the draft .mmd file
-4) use 'python mermaid_gen_patterns.py' to draft a list of all current nodes
-5) Iteratively edit the pattern-nodes-list while running 'python mermaid_bypass_patterns.py' to discard uninformative notes
-6) Perform final clean-up, i.e. remove aggregations-specific suffixes etc.
+`graphs_v2.R` generates every `*_v2.mmd` view from the active manifest and
+`[part_of_graph:<graph_id>]` tags in target descriptions. From the repository root:
 
-## Source-level graph labels
-
-Curated graph membership is recorded in target descriptions with repeated
-single-value tags:
-
-```r
-description = "Harmony-corrected SCTransform GEX PCA embeddings. [part_of_graph:GEX] [part_of_graph:WNN] [part_of_graph:seurat_export]"
+```bash
+pixi run --use-environment-activation-cache Rscript website/figures/human_curated/graphs_v2.R
 ```
 
-`[part_of_graph:<graph_id>]` means that the target should remain visible as an
-explicit node in that named graph after graph-pruning code bypasses
-uninformative dependencies. It is not a target-run selector, a checkpoint, or a
-global importance label.
+Edit membership in the owning target fragment, then regenerate all views.
+Graph IDs contain letters, numbers, and underscores; repeat the tag to include
+a target in multiple views. A tag selects visible nodes, not targets to execute.
 
-Current graph IDs are:
+The generator bypasses untagged intermediate nodes, normalizes configured
+suffixes, and merges duplicate labels. These diagrams explain dependencies;
+use `targets::tar_network()` for the exact configured graph.
 
-- `parallel`
-- `GEX`
-- `ATAC`
-- `WNN`
-- `full_subgroups`
-- `seurat_export`
-- `differential_analyses`
-- `genetic_enrichment_single_nucleus`
-- `genetic_enrichment_cell_type_contributions`
+Keep manually drawn conceptual overviews in separately named files. Do not
+hand-edit generated `*_v2.mmd` files. After changes, render both documentation
+books and refresh the Markdown export as described in the root `AGENTS.md`.

@@ -882,7 +882,7 @@ make_consensus_peak_locus_track <- function(consensus_peak_GRanges, region) {
   )
 }
 
-#' Plot variant-level contribution details for top loci
+#' Prepare variant-level contribution detail records for top loci
 #'
 #' @param variant_contribution_tibble Variant-level contribution.
 #' @param locus_contribution_tibble Locus-level contribution used to select loci.
@@ -892,10 +892,10 @@ make_consensus_peak_locus_track <- function(consensus_peak_GRanges, region) {
 #' @param n_top_cell_types Number of highest-deviation cell types detailed per GWAS.
 #' @param n_top_loci Number of loci plotted per GWAS and cell type.
 #' @param flank Bases added around the selected locus.
-#' @return Named list of variant, accessibility, and peak track plots.
+#' @return Named list of plot-ready variant, accessibility, and peak-track records.
 #' @keywords internal
 
-plot_GWAS_variant_contribution_details <- function(
+prepare_GWAS_variant_contribution_detail_records <- function(
   variant_contribution_tibble,
   locus_contribution_tibble,
   consensus_peak_GRanges,
@@ -943,7 +943,7 @@ plot_GWAS_variant_contribution_details <- function(
   locus_tibble_list <- selected_locus_tibble |>
     dplyr::group_by(.data$GWAS_ID, .data$cluster, .data$studyLocusId, .data$detail_rank) |>
     dplyr::group_split()
-  plots <- locus_tibble_list |>
+  plot_records <- locus_tibble_list |>
     purrr::map(\(locus_tibble) {
       GWAS_ID <- locus_tibble$GWAS_ID[[1]]
       cluster <- locus_tibble$cluster[[1]]
@@ -977,16 +977,15 @@ plot_GWAS_variant_contribution_details <- function(
         "{GWAS_ID} - {cluster} - {locus_tibble$locus_label[[1]]}; ",
         "locus contribution={round(locus_tibble$relative_deviation_contribution[[1]], 3)}"
       )
-      detail_plot <- BPCells::trackplot_combine(
-        tracks = list(
-          make_GWAS_variant_contribution_track(variant_tibble, region),
-          make_BPCells_ATAC_coverage_track_from_tibble(coverage_tibble, region, colors = coverage_colors),
-          make_consensus_peak_locus_track(consensus_peak_GRanges, region)
-        ),
-        title = plot_title
+      list(
+        GWAS_ID = GWAS_ID,
+        variant_tibble = variant_tibble,
+        coverage_tibble = coverage_tibble,
+        coverage_colors = coverage_colors,
+        consensus_peak_GRanges = IRanges::subsetByOverlaps(consensus_peak_GRanges, region),
+        region = region,
+        plot_title = plot_title
       )
-      detail_plot$labels$title <- ggplot2::waiver()
-      detail_plot
     })
   plot_names <- purrr::map_chr(locus_tibble_list, \(locus_tibble) {
     stringr::str_c(
@@ -998,5 +997,41 @@ plot_GWAS_variant_contribution_details <- function(
     ) |>
       stringr::str_replace_all("[^A-Za-z0-9_.-]+", "_")
   })
-  rlang::set_names(plots, plot_names)
+  rlang::set_names(plot_records, plot_names)
+}
+
+#' Plot one variant-level contribution detail record
+#'
+#' @param plot_record Plot-ready record from
+#'   `prepare_GWAS_variant_contribution_detail_records()`.
+#' @return Combined variant, accessibility, and peak-track plot.
+#' @keywords internal
+
+plot_GWAS_variant_contribution_detail_record <- function(plot_record) {
+  detail_plot <- BPCells::trackplot_combine(
+    tracks = list(
+      make_GWAS_variant_contribution_track(plot_record$variant_tibble, plot_record$region),
+      make_BPCells_ATAC_coverage_track_from_tibble(
+        plot_record$coverage_tibble,
+        plot_record$region,
+        colors = plot_record$coverage_colors
+      ),
+      make_consensus_peak_locus_track(plot_record$consensus_peak_GRanges, plot_record$region)
+    ),
+    title = plot_record$plot_title
+  )
+  detail_plot$labels$title <- ggplot2::waiver()
+  detail_plot
+}
+
+#' Plot variant-level contribution details
+#'
+#' @param plot_records Named list of plot-ready records from
+#'   `prepare_GWAS_variant_contribution_detail_records()`.
+#' @return Named list of variant, accessibility, and peak-track plots.
+#' @keywords internal
+
+plot_GWAS_variant_contribution_details <- function(plot_records) {
+  plot_records |>
+    purrr::map(plot_GWAS_variant_contribution_detail_record)
 }

@@ -1,6 +1,20 @@
 # Troubleshooting
 
-Start with the narrowest failing target or checkpoint. `{targets}` preserves successful work, so fixing the cause and rerunning the same selection is normally safer and faster than deleting `outputs/` or starting a broad workflow again.
+Find the target name and first error message in the run output. Fix that
+cause, then rerun the same selection: `targets` can reuse completed work.
+Keep the store intact, since it also contains the records needed to diagnose
+the failure.
+
+| What happened? | Start here |
+|---|---|
+| Setup fails before any data processing | [The manifest does not build](#the-manifest-does-not-build) |
+| A target reports an error | [A run reports errored targets](#a-run-reports-errored-targets) |
+| A completed result needs rebuilding | [A target is unexpectedly outdated](#a-target-is-unexpectedly-outdated) |
+| Workers do not start or are killed | [Controller and scheduler failures](#controller-and-scheduler-failures) |
+
+Run these commands in the repository's Pixi R session. For general debugging
+techniques beyond the project helpers below, see the
+[targets debugging guide](https://books.ropensci.org/targets/debugging.html).
 
 ## The manifest does not build
 
@@ -11,7 +25,7 @@ load_project_runtime(force = TRUE)
 targets::tar_manifest(callr_function = NULL)
 ```
 
-Manifest-time failures usually indicate one of these contracts:
+Failures at this stage usually indicate:
 
 - an unknown, misspelled, wrongly typed, or required YAML parameter;
 - an aggregation referencing a GEM well absent from `cfg_GEM_wells.tsv`;
@@ -19,11 +33,13 @@ Manifest-time failures usually indicate one of these contracts:
 - a malformed `crew_controllers.R` return value; or
 - an R package or startup problem.
 
-Fix the named configuration or controller boundary first. Do not launch `tar_make()` until the manifest builds.
+Correct the field or file named in the error, then repeat the manifest check
+before running the analysis.
 
 ## A run reports errored targets
 
-The project runtime provides helpers that collapse repeated branch failures into a readable first triage:
+List the errors with the project's helper. It groups repeated failures so
+you can start with their common cause:
 
 ```{.r filename="R"}
 list_distinct_errored_targets()
@@ -37,7 +53,9 @@ list_distinct_errored_targets_w_tracebacks(
 )
 ```
 
-Use the full target or dynamic-branch name from that output. Inspect the saved target workspace before loading large dependencies into the interactive session:
+Some targets run separately for multiple groups; these runs are called
+**branches**. Copy the full target or branch name from the error listing to
+inspect its saved workspace:
 
 ```{.r filename="R"}
 inspect_target_workspace("full_target_or_branch_name")
@@ -90,7 +108,8 @@ If a worker does not start or no controller can satisfy a target request:
 
 ## Rerun safely
 
-After fixing the cause, rerun the same narrow target or checkpoint selector. Successful upstream targets remain cached.
+After fixing the cause, rerun the same target selection. Successful upstream
+results remain cached.
 
 ```{.r filename="R"}
 targets::tar_make(

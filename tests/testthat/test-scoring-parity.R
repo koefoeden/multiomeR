@@ -1,39 +1,14 @@
-#!/usr/bin/env Rscript
-
-if (!exists("calculate_BPCells_UCell_scores_from_matrix", mode = "function")) {
-  source("R/bootstrap_helpers.R")
-  load_project_runtime()
-}
-
-fail <- function(...) {
-  stop(paste0(...), call. = FALSE)
-}
-
-ucell_reference_version <- as.character(utils::packageVersion("UCell"))
-if (!identical(ucell_reference_version, "2.14.0")) {
-  fail(
-    "UCell reference version changed from 2.14.0 to ",
-    ucell_reference_version,
-    "; review exact-parity expectations"
-  )
+load_scoring_test_runtime <- function() {
+  if (!exists("calculate_BPCells_UCell_scores_from_matrix", mode = "function")) {
+    load_project_test_runtime()
+  }
 }
 
 expect_identical_scores <- function(observed, expected, label) {
   observed <- as.matrix(observed)
   expected <- as.matrix(expected)
 
-  if (!identical(dim(observed), dim(expected))) {
-    fail(label, ": dimension mismatch")
-  }
-  if (!identical(dimnames(observed), dimnames(expected))) {
-    fail(label, ": dimname mismatch")
-  }
-  if (!identical(observed, expected)) {
-    max_delta <- max(abs(observed - expected))
-    fail(label, ": values are not identical; max delta = ", format(max_delta, digits = 16))
-  }
-
-  invisible(TRUE)
+  testthat::expect_identical(observed, expected, info = label)
 }
 
 make_counts_matrix <- function() {
@@ -60,6 +35,8 @@ make_bpcells_matrix <- function(counts) {
 }
 
 run_ucell_reference <- function(counts, marker_genes, method, missing_genes = "impute") {
+  require_reference_version("UCell", "2.14.0")
+
   # UCell 2.14.0 can emit non-fatal R stack-imbalance warnings for the
   # missing-gene fixture under R 4.5. Run only the reference implementation in
   # a disposable process so those package-level warnings cannot corrupt this
@@ -108,6 +85,19 @@ run_ucell_reference <- function(counts, marker_genes, method, missing_genes = "i
       missing_genes = missing_genes
     ),
     show = FALSE
+  )
+}
+
+make_scoring_fixture <- function() {
+  counts <- make_counts_matrix()
+  list(
+    counts = counts,
+    bpcells_counts = make_bpcells_matrix(counts),
+    marker_genes = list(
+      alpha = c("gene003+", "gene017", "gene029-", "missing_alpha+"),
+      beta = c("gene041", "gene053+", "gene067-", "gene079-", "missing_beta-"),
+      gamma = c("gene101+", "gene113", "gene127-")
+    )
   )
 }
 
@@ -245,9 +235,7 @@ compare_cell_cycle_scores <- function(counts, bpcells_counts) {
     expected = expected[, c("S.Score", "G2M.Score"), drop = FALSE],
     label = "cell-cycle Seurat::AddModuleScore scores"
   )
-  if (!identical(observed$Phase, expected$Phase)) {
-    fail("cell-cycle Seurat::AddModuleScore phase mismatch")
-  }
+  testthat::expect_identical(observed$Phase, expected$Phase)
 }
 
 compare_metadata_join <- function(bpcells_counts, marker_genes) {
@@ -266,33 +254,65 @@ compare_metadata_join <- function(bpcells_counts, marker_genes) {
     missing_genes = "impute"
   )
 
-  if (!identical(scored_metadata$barcode_w_prefix, metadata$barcode_w_prefix)) {
-    fail("add_GEX_UCell_scores_to_metadata: metadata row order changed")
-  }
+  testthat::expect_identical(
+    scored_metadata$barcode_w_prefix,
+    metadata$barcode_w_prefix
+  )
   missing_row <- scored_metadata$barcode_w_prefix == "missing_cell"
-  if (!all(is.na(scored_metadata[missing_row, names(marker_genes)]))) {
-    fail("add_GEX_UCell_scores_to_metadata: unmatched metadata barcode should keep NA scores")
-  }
-  if (anyNA(scored_metadata[!missing_row, names(marker_genes)])) {
-    fail("add_GEX_UCell_scores_to_metadata: matched metadata barcodes received NA scores")
-  }
-
-  invisible(TRUE)
+  testthat::expect_true(
+    all(is.na(scored_metadata[missing_row, names(marker_genes)]))
+  )
+  testthat::expect_false(
+    anyNA(scored_metadata[!missing_row, names(marker_genes)])
+  )
 }
 
-counts <- make_counts_matrix()
-bpcells_counts <- make_bpcells_matrix(counts)
-marker_genes <- list(
-  alpha = c("gene003+", "gene017", "gene029-", "missing_alpha+"),
-  beta = c("gene041", "gene053+", "gene067-", "gene079-", "missing_beta-"),
-  gamma = c("gene101+", "gene113", "gene127-")
-)
+testthat::test_that("integration: BPCells UCell scores match imputed reference scores", {
+  load_scoring_test_runtime()
+  fixture <- make_scoring_fixture()
+  compare_score_signatures_ucell(
+    fixture$counts,
+    fixture$bpcells_counts,
+    fixture$marker_genes,
+    missing_genes = "impute"
+  )
+})
 
-compare_score_signatures_ucell(counts, bpcells_counts, marker_genes, missing_genes = "impute")
-compare_score_signatures_ucell(counts, bpcells_counts, marker_genes, missing_genes = "skip")
-compare_add_module_score_ucell(counts, bpcells_counts, marker_genes)
-compare_seurat_module_scores(counts, bpcells_counts)
-compare_cell_cycle_scores(counts, bpcells_counts)
-compare_metadata_join(bpcells_counts, marker_genes)
+testthat::test_that("integration: BPCells UCell scores match skipped reference scores", {
+  load_scoring_test_runtime()
+  fixture <- make_scoring_fixture()
+  compare_score_signatures_ucell(
+    fixture$counts,
+    fixture$bpcells_counts,
+    fixture$marker_genes,
+    missing_genes = "skip"
+  )
+})
 
-cat("scoring parity ok: UCell ", ucell_reference_version, "\n", sep = "")
+testthat::test_that("integration: BPCells UCell scores match AddModuleScore_UCell", {
+  load_scoring_test_runtime()
+  fixture <- make_scoring_fixture()
+  compare_add_module_score_ucell(
+    fixture$counts,
+    fixture$bpcells_counts,
+    fixture$marker_genes
+  )
+})
+
+testthat::test_that("integration: BPCells module scores match Seurat", {
+  load_scoring_test_runtime()
+  fixture <- make_scoring_fixture()
+  compare_seurat_module_scores(fixture$counts, fixture$bpcells_counts)
+})
+
+testthat::test_that("integration: BPCells cell-cycle scores and phases match Seurat", {
+  load_scoring_test_runtime()
+  fixture <- make_scoring_fixture()
+  compare_cell_cycle_scores(fixture$counts, fixture$bpcells_counts)
+})
+
+testthat::test_that("integration: UCell scores join metadata without changing row order", {
+  load_scoring_test_runtime()
+  fixture <- make_scoring_fixture()
+  compare_metadata_join(fixture$bpcells_counts, fixture$marker_genes)
+})

@@ -217,6 +217,53 @@ get_psbulk_sample_tibble <- function(psbulk_data_matrix) {
 }
 
 
+#' Get donor metadata columns required by configured differential analyses
+#'
+#' Collect donor-level variables from pseudobulk model formulas, pairing and
+#' correlation fields, and differential cell-type composition settings.
+#' @keywords internal
+
+get_differential_analysis_metadata_columns <- function(
+  models,
+  DCTC_formula_chr,
+  DCTC_plot_phenotype_vars,
+  DCTC_color_by_categorical_metadata_column
+) {
+  model_columns <- models |>
+    purrr::map(function(model) {
+      formula_columns <- c(model$formula, model$cell_type_formula) |>
+        purrr::compact() |>
+        purrr::map(stats::as.formula) |>
+        purrr::map(stats::terms) |>
+        purrr::map(stats::delete.response) |>
+        purrr::map(base::all.vars) |>
+        unlist(use.names = FALSE)
+
+      c(
+        formula_columns,
+        model$pairing_variable,
+        model$correlation_block,
+        model$random_effect
+      )
+    }) |>
+    unlist(use.names = FALSE)
+
+  DCTC_columns <- DCTC_formula_chr |>
+    stats::as.formula() |>
+    stats::terms() |>
+    stats::delete.response() |>
+    base::all.vars()
+
+  c(
+    model_columns,
+    DCTC_columns,
+    DCTC_plot_phenotype_vars,
+    DCTC_color_by_categorical_metadata_column
+  ) |>
+    setdiff("cluster") |>
+    unique()
+}
+
 #' Filter psbulk data matrix
 #'
 #' Align and filter a pseudobulk feature matrix before model fitting.
@@ -414,11 +461,38 @@ get_psbulk_cell_type_design <- function(sample_tibble, formula_chr) {
   design_matrix
 }
 
+fit_psbulk_voom <- function(..., correlation_max_features = Inf) {
+  stopifnot(length(correlation_max_features) == 1L, correlation_max_features > 0)
+  fit_function <- edgeR::voomLmFit
+  if (is.finite(correlation_max_features)) {
+    sampled_correlation <- function(object, design = NULL, block = NULL, weights = NULL, ...) {
+      rows <- if (nrow(object) > correlation_max_features) {
+        withr::with_seed(732L, sort(sample.int(nrow(object), correlation_max_features)))
+      } else {
+        seq_len(nrow(object))
+      }
+      limma::duplicateCorrelation(
+        object[rows, , drop = FALSE], design = design, block = block,
+        weights = if (is.null(weights)) NULL else weights[rows, , drop = FALSE], ...
+      )
+    }
+    # voomLmFit has no correlation-sampling argument. Override its imported
+    # estimator in a local function copy, retaining edgeR's two voom passes
+    # and sparse-count DF correction without changing either package namespace.
+    environment(fit_function) <- list2env(
+      list(duplicateCorrelation = sampled_correlation),
+      parent = environment(fit_function)
+    )
+  }
+  fit_function(...)
+}
+
 fit_psbulk_cell_type_matrix <- function(
   psbulk_feature_matrix,
   sample_tibble,
   formula_chr,
-  correlation_block = NULL
+  correlation_block = NULL,
+  correlation_max_features = Inf
 ) {
   design_matrix <- get_psbulk_cell_type_design(sample_tibble, formula_chr)
   is_count_data <- is_count_matrix(psbulk_feature_matrix)
@@ -447,12 +521,13 @@ fit_psbulk_cell_type_matrix <- function(
       glue_info = "No valid cell-type-specific count model remains after filtering."
     )
 
-    fit <- edgeR::voomLmFit(
+    fit <- fit_psbulk_voom(
       DGE_list,
       design = design_matrix,
       block = if (has_correlation_block) factor(DGE_list$samples[[correlation_block]]) else NULL,
       normalize.method = "none",
-      keep.EList = TRUE
+      keep.EList = TRUE,
+      correlation_max_features = correlation_max_features
     )
     retained_samples <- DGE_list$samples
   } else {
@@ -693,7 +768,9 @@ fit_psbulk_feature_matrix_by_cell_type <- function(
 #' @param extended_donor_id_metadata_tibble Donor/sample metadata containing the
 #'   covariates referenced by the configured model.
 #' @param psbulk_feature_dynamic_tibble Dynamic-branch metadata row describing the model, contrast, and feature matrix being processed.
-#' @return A named matrix-like object with rows and columns aligned to the input feature/cell identifiers.
+#' @return An edgeR `DGEGLM`, limma `MArrayLM`, or paired-cell-type
+#'   `psbulk_cell_type_fit`, with sample/design information and an
+#'   `analysis_type` field.
 #' @keywords internal
 
 fit_psbulk_feature_matrix_model <- function(psbulk_feature_matrix, extended_donor_id_metadata_tibble, psbulk_feature_dynamic_tibble) {

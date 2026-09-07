@@ -1,5 +1,18 @@
 # multiomeR 0.4.1.9000
 
+- Added ordered QC checkpoints, per-GEM-well cutoff comparisons, and clearer
+  PCA review plots, with an informational QC metric manifest.
+
+- Fixed exact subgroup selection, subgroup plotting metadata, and peak
+  retention when no blacklist intervals overlap. Limited differential-analysis
+  metadata dependencies to the configured donors and variables.
+
+- Split chromVAR detail preparation from rendering and cache details per GWAS;
+  added optional deterministic sampling for pseudobulk correlation estimation.
+
+- Moved validation into a root testthat suite and simplified helper ownership,
+  implementation diagrams, and reader documentation.
+
 - Made fresh clones directly runnable after downloading the public demo data:
   configuration and local controller files are now regular files, and only the
   two `immune_human_2x` GEM wells and that aggregation are active by default.

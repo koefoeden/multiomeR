@@ -127,18 +127,49 @@ subset_keyed_metadata_tibble <- function(metadata_tibble, key_col, keys, source_
   ]
 }
 
-project_keyed_metadata_tibble <- function(metadata_tibble, key_col, requested_columns = NULL) {
+project_keyed_metadata_tibble <- function(
+  metadata_tibble,
+  key_col,
+  requested_columns = NULL,
+  strict = FALSE,
+  canonical = FALSE
+) {
   requested_columns <- requested_columns %||% character()
   requested_columns <- unique(as.character(unlist(requested_columns, use.names = FALSE)))
   requested_columns <- requested_columns[
     !is.na(requested_columns) & nzchar(requested_columns) & requested_columns != "NULL"
   ]
 
-  metadata_tibble |>
+  if (strict) {
+    missing_columns <- setdiff(
+      requested_columns,
+      c(key_col, colnames(metadata_tibble))
+    )
+    if (length(missing_columns) > 0L) {
+      stop(
+        "Metadata is missing requested column(s): ",
+        paste(missing_columns, collapse = ", "),
+        call. = FALSE
+      )
+    }
+  }
+
+  if (canonical) {
+    requested_columns <- sort(setdiff(requested_columns, key_col))
+  }
+
+  projected_metadata <- metadata_tibble |>
     dplyr::select(
       dplyr::all_of(key_col),
       dplyr::any_of(requested_columns)
     )
+
+  if (canonical) {
+    projected_metadata <- projected_metadata |>
+      dplyr::arrange(.data[[key_col]])
+  }
+
+  projected_metadata
 }
 
 metadata_columns_in_filter_expressions <- function(filter_expressions) {
@@ -429,6 +460,17 @@ build_aggregation_tibble <- function(
         aggregation_GEM_well_IDs,
         \(ids) GEM_well_tibble$dataset[match(ids, GEM_well_tibble$GEM_well_ID)] |>
           unique()
+      ),
+      aggregation_GEM_well_QC_exclude_list = purrr::map(
+        aggregation_GEM_well_IDs,
+        \(ids) {
+          stats::setNames(
+            GEM_well_tibble$GEM_well_QC_exclude_list[
+              match(ids, GEM_well_tibble$GEM_well_ID)
+            ],
+            ids
+          )
+        }
       )
     ) |>
     add_target_sym_cols(
@@ -475,6 +517,10 @@ build_dataset_tibble <- function(GEM_well_tibble) {
   GEM_well_tibble |>
     dplyr::summarise(
       dataset_GEM_well_IDs = list(GEM_well_ID),
+      dataset_GEM_well_QC_exclude_list = list(stats::setNames(
+        GEM_well_QC_exclude_list,
+        GEM_well_ID
+      )),
       .by = dataset
     ) |>
     add_target_sym_cols(

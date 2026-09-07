@@ -311,7 +311,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = excluded_barcodes_by_type_upset,
-    description = "Plot an UpSet plot of per GEM well QC exclusion overlaps and save to file",
+    description = "Plot an UpSet plot of per GEM well QC exclusion overlaps and save to file. [checkpoint:1_pre-aggregation-QC]",
     command = plot_upset_from_excluded_BCs_list(
       QC_excluded_BCs_list = excluded_barcodes_by_type_list,
       n_total = unfiltered_cells_n_vecs
@@ -327,7 +327,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = excluded_cellranger_only_barcodes_by_type_upset,
-    description = "Plot an UpSet plot of CellRanger-only QC exclusion overlaps and save to file",
+    description = "Plot an UpSet plot of CellRanger-only QC exclusion overlaps and save to file. [checkpoint:1_pre-aggregation-QC]",
     command = plot_upset_from_excluded_BCs_list(
       QC_excluded_BCs_list = excluded_cellranger_only_barcodes_by_type_list,
       n_total = nrow(cellranger_kept_metadata_tibble)

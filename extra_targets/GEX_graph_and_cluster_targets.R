@@ -73,7 +73,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = scDblFinder_score_violins_plot.GEX,
-    description = "Violin plots of scDblFinder doublet scores per cluster and cell type. [checkpoint:GEX]",
+    description = "Violin plots of scDblFinder doublet scores per cluster and cell type. [checkpoint:3_GEX-QC]",
     command = {
       scDblFinder_metadata <- metadata_w_cell_types_unfiltered_tibble.GEX |>
         dplyr::left_join(scDblFinder_results_df.GEX |> tibble::rownames_to_column("barcode_w_prefix"), by = "barcode_w_prefix")
@@ -230,7 +230,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = harmony.categorical.UMAPs.GEX,
-    description = "UMAPs colored by categorical metadata variables. [checkpoint:GEX]",
+    description = "UMAPs colored by categorical metadata variables. [checkpoint:3_GEX-QC]",
     command = metadata_w_cell_types_analysis_tibble.GEX |>
       plot_UMAP_from_metadata(variable = categorical_UMAP_var.GEX, umap_cols = c("GEX_UMAP_1", "GEX_UMAP_2")) |>
       save_plots_structured(
@@ -242,7 +242,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = harmony.continuous.UMAPs.GEX,
-    description = "UMAPs colored by continuous QC and gene expression features. [checkpoint:GEX]",
+    description = "UMAPs colored by continuous QC and gene expression features. [checkpoint:3_GEX-QC]",
     command = plot_UMAP_from_metadata(
       metadata_tibble = metadata_w_cell_types_analysis_tibble.GEX,
       variable = harmony_continuous_UMAP_spec.GEX$variable,
@@ -259,7 +259,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = non_harmony.categorical.UMAPs.GEX,
-    description = "UMAPs colored by categorical metadata variables on the uncorrected PCA embedding. [checkpoint:GEX]",
+    description = "UMAPs colored by categorical metadata variables on the uncorrected PCA embedding. [checkpoint:3_GEX-QC]",
     command = metadata_w_cell_types_analysis_tibble.GEX |>
       plot_UMAP_from_metadata(variable = categorical_UMAP_var.GEX, umap_cols = c("GEX_non_harmony_UMAP_1", "GEX_non_harmony_UMAP_2")) |>
       save_plots_structured(
@@ -271,7 +271,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = non_harmony.continuous.UMAPs.GEX,
-    description = "UMAPs colored by continuous features on the uncorrected PCA embedding. [checkpoint:GEX]",
+    description = "UMAPs colored by continuous features on the uncorrected PCA embedding. [checkpoint:3_GEX-QC]",
     command = plot_UMAP_from_metadata(
       metadata_tibble = metadata_w_cell_types_analysis_tibble.GEX,
       variable = non_harmony_continuous_UMAP_spec.GEX$variable,
@@ -288,7 +288,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = markers_dot_plot.GEX,
-    description = "Dot plot of marker gene expression per GEX cell type. [checkpoint:GEX]",
+    description = "Dot plot of marker gene expression per GEX cell type. [checkpoint:3_GEX-QC]",
     command = {
       plot <- plot_marker_expression_dot_BPCells(
         feature_matrix = aggregated_counts_BPCells_matrix.GEX,
@@ -302,7 +302,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = continuous_by_cell_type_violin_plot.GEX,
-    description = "Violin plots of continuous QC and cell-cycle features per cell type. [checkpoint:GEX]",
+    description = "Violin plots of continuous QC and cell-cycle features per cell type. [checkpoint:3_GEX-QC]",
     command = {
       plot <- metadata_w_cell_types_analysis_tibble.GEX |>
         dplyr::select(PCA_harmony_SNN_cluster_cell_type, dplyr::any_of(aggregation_continuous_features_vec.GEX)) |>
@@ -321,7 +321,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = continuous_by_cluster_violin_plot.GEX,
-    description = "Violin plots of continuous QC and cell-cycle features per SNN cluster. [checkpoint:GEX]",
+    description = "Violin plots of continuous QC and cell-cycle features per SNN cluster. [checkpoint:3_GEX-QC]",
     command = {
       plot <- metadata_w_cell_types_analysis_tibble.GEX |>
         dplyr::select(PCA_harmony_SNN_cluster_named, dplyr::any_of(aggregation_continuous_features_vec.GEX)) |>
@@ -340,7 +340,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = module_scores_dot_plot.GEX,
-    description = "Dot plot of marker UCell scores per GEX cell type. [checkpoint:GEX]",
+    description = "Dot plot of marker UCell scores per GEX cell type. [checkpoint:3_GEX-QC]",
     command = plot_module_scores_dot_for_metadata(
       metadata_tibble = metadata_w_cell_types_analysis_tibble.GEX,
       marker_genes_list = UCell_GEX_marker_genes_list,
@@ -350,7 +350,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = categorical_bars_plots.GEX,
-    description = "Bar plots of categorical metadata composition per cell type. [checkpoint:GEX]",
+    description = "Bar plots of categorical metadata composition per cell type. [checkpoint:3_GEX-QC]",
     command = plot_categorical_bars_plot(
       metadata_tibble = metadata_w_cell_types_analysis_tibble.GEX,
       metadata_cols = aggregation_GEX_categorical_vars,
@@ -360,14 +360,14 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = marker_volcano_plots.GEX,
-    description = "Facetted volcano plot of BPCells marker genes per SNN cluster. [checkpoint:GEX]",
+    description = "Facetted volcano plot of BPCells marker genes per SNN cluster. [checkpoint:3_GEX-QC]",
     command = SNN_cluster_marker_tibbles.GEX |>
       plot_markers_volcano_simple() |>
       save_plots_structured()
   ),
   tarchetypes::tar_file(
     name = cell_type_marker_volcano_plots.GEX,
-    description = "Facetted volcano plot of BPCells marker genes per GEX cell type. [checkpoint:GEX]",
+    description = "Facetted volcano plot of BPCells marker genes per GEX cell type. [checkpoint:3_GEX-QC]",
     command = cell_type_marker_tibbles.GEX |>
       plot_markers_volcano_simple() |>
       save_plots_structured()

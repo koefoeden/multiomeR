@@ -1,8 +1,32 @@
 BENCHMARK_OPTIONAL_PREPROCESSING_REGEX <- c(
-  "^amulet_metrics_tibble(\\.|$)",
+  "^amulet_",
   "^(cellsnp_dir|vireo_donor_ids_tibble)(\\.|$)"
 )
 
+# Target families outside the standard Seurat/Signac WNN vignette corridor.
+# Their runtimes are set to zero, while the DAG topology is retained, when the
+# sequential reference workflow is used as a comparator.
+BENCHMARK_SEURAT_SIGNAC_COMPARABLE_EXCLUSION_REGEX <- c(
+  BENCHMARK_OPTIONAL_PREPROCESSING_REGEX,
+  "^GEM_well_metadata_(tibble|tsv)(\\.|$)",
+  "^harmony_embeddings_matrix(\\.|$)",
+  "^PCA_clusters[.]GEX(\\.|$)",
+  "^LSI_clusters[.]ATAC(\\.|$)",
+  "^metadata_w_cell_types(_unfiltered)?_tibble(\\.|$)",
+  "^scDblFinder_",
+  "^BCs_per_peak_cluster_list[.]ATAC(\\.|$)",
+  "^peak_calling_cluster_(names|discovery_tibble)[.]ATAC(\\.|$)",
+  "^fragments_per_peak_calling_cluster_discovery[.]fragments[.]ATAC(\\.|$)",
+  "^peaks_per_cluster_narrowPeaks[.]peaks[.]ATAC(\\.|$)",
+  "^peak_GRanges_per_cluster[.]ATAC(\\.|$)",
+  "^within_clusters_collapsed_peaks_per_cluster_GRanges[.]ATAC(\\.|$)",
+  "^chromHMMs_list_proj[.]ATAC(\\.|$)",
+  "^consensus_peak_annotated_GRanges[.]ATAC(\\.|$)",
+  "^peak_TF_motif_matrix[.]ATAC(\\.|$)",
+  "^chromVAR_",
+  "^motif_chromVAR_",
+  "^TF_activity_"
+)
 
 benchmark_targets_match_regex <- function(target_names, regex) {
   regex <- regex[!is.na(regex) & nzchar(regex)]
@@ -395,7 +419,8 @@ cache_multimodal_seurat_walltime <- function(
 
   if (file.exists(cache_file) && !isTRUE(force)) {
     summary <- readRDS(cache_file)
-    cache_is_current <- "cellranger_input_nuclei" %in% colnames(summary) &&
+    cache_is_current <- "cellranger_input_nuclei" %in%
+      colnames(summary) &&
       identical(attr(summary, "benchmark_aggregations"), aggregations) &&
       identical(attr(summary, "benchmark_branch_parallel"), branch_parallel) &&
       identical(attr(summary, "benchmark_exclude_target_regex"), exclude_target_regex) &&
@@ -520,6 +545,10 @@ benchmark_walltime_composition_tibble <- function(benchmark_results, top_n_targe
 #' @param color_critical_path_steps If `TRUE`, color and show a legend for
 #'   critical-path bar segments. If `FALSE`, use a single neutral fill and hide
 #'   the fill legend.
+#' @param comparison_results Optional data frame of observed comparator runs
+#'   with `method`, `cellranger_input_nuclei`, and `walltime_minutes` columns.
+#'   Comparators are drawn as labelled points over the multiomeR bars so the
+#'   graph-estimated critical path and observed end-to-end time remain distinct.
 #' @return ggplot object.
 #' @keywords internal
 plot_multimodal_seurat_walltime <- function(
@@ -527,7 +556,8 @@ plot_multimodal_seurat_walltime <- function(
   time_col = "critical_path_minutes",
   top_n_targets = 10,
   target_step_labels = NULL,
-  color_critical_path_steps = TRUE
+  color_critical_path_steps = TRUE,
+  comparison_results = NULL
 ) {
   if (!identical(time_col, "critical_path_minutes")) {
     stop("The composition plot only supports time_col = 'critical_path_minutes'.", call. = FALSE)
@@ -552,13 +582,87 @@ plot_multimodal_seurat_walltime <- function(
     dplyr::mutate(
       walltime_hours = .data[[time_col]] / 60
     )
+  if (is.null(comparison_results)) {
+    comparison_plot_tibble <- tibble::tibble(
+      method = character(),
+      cellranger_input_nuclei = numeric(),
+      walltime_hours = numeric(),
+      label = character()
+    )
+  } else {
+    comparison_required_cols <- c("method", "cellranger_input_nuclei", "walltime_minutes")
+    comparison_missing_cols <- setdiff(comparison_required_cols, names(comparison_results))
+    if (length(comparison_missing_cols)) {
+      stop(
+        "comparison_results is missing required column(s): ",
+        paste(comparison_missing_cols, collapse = ", "),
+        call. = FALSE
+      )
+    }
+    if (
+      anyNA(comparison_results[comparison_required_cols]) ||
+        any(comparison_results$cellranger_input_nuclei <= 0) ||
+        any(comparison_results$walltime_minutes <= 0)
+    ) {
+      stop("Comparator nuclei counts and wall times must be positive and non-missing.", call. = FALSE)
+    }
+    comparison_labels <- if ("label" %in% names(comparison_results)) {
+      as.character(comparison_results$label)
+    } else {
+      paste0(
+        stringr::str_wrap(as.character(comparison_results$method), width = 34),
+        "\nObserved: ",
+        scales::number(as.numeric(comparison_results$walltime_minutes) / 60, accuracy = 0.01),
+        " h"
+      )
+    }
+    if (anyNA(comparison_labels) || any(!nzchar(comparison_labels))) {
+      stop("Comparator labels must be non-missing and non-empty.", call. = FALSE)
+    }
+    comparison_plot_tibble <- comparison_results |>
+      dplyr::mutate(.comparison_label = comparison_labels) |>
+      dplyr::transmute(
+        method = as.character(.data$method),
+        cellranger_input_nuclei = as.numeric(.data$cellranger_input_nuclei),
+        walltime_hours = as.numeric(.data$walltime_minutes) / 60,
+        label = .data$.comparison_label
+      )
+  }
   composition_tibble <- composition_tibble |>
     dplyr::mutate(runtime_hours = .data$runtime_minutes / 60)
-  unique_x <- sort(unique(plot_tibble$cellranger_input_nuclei))
+  unique_x <- sort(unique(c(
+    plot_tibble$cellranger_input_nuclei,
+    comparison_plot_tibble$cellranger_input_nuclei
+  )))
   if (any(unique_x <= 0)) {
     stop("cellranger_input_nuclei must be positive for a log10 x axis.", call. = FALSE)
   }
-  y_plot_limit <- 10
+  max_walltime_hours <- max(c(
+    plot_tibble$walltime_hours,
+    comparison_plot_tibble$walltime_hours
+  ))
+  if (nrow(comparison_plot_tibble)) {
+    y_plot_limit <- max(0.25, max_walltime_hours * 1.3)
+    y_breaks <- scales::breaks_pretty(n = 6)
+    y_labels <- scales::label_number(accuracy = 0.1)
+  } else {
+    y_required_limit <- max_walltime_hours * 1.08
+    y_break_interval <- max(1, ceiling(y_required_limit / 10))
+    y_plot_limit <- max(
+      10,
+      ceiling(y_required_limit / y_break_interval) * y_break_interval
+    )
+    y_breaks <- seq(0, y_plot_limit, by = y_break_interval)
+    y_labels <- scales::label_number(accuracy = 1)
+  }
+  comparison_plot_tibble <- comparison_plot_tibble |>
+    dplyr::mutate(
+      label_hjust = dplyr::if_else(
+        .data$cellranger_input_nuclei == max(unique_x),
+        1.05,
+        -0.05
+      )
+    )
   linear_anchor_x <- unique_x[[1]]
   linear_anchor_y <- plot_tibble$walltime_hours[[1]]
   if (linear_anchor_y <= 0) {
@@ -640,6 +744,15 @@ plot_multimodal_seurat_walltime <- function(
     }
     stringr::str_wrap(labels, width = 34)
   }
+  comparison_methods <- unique(comparison_plot_tibble$method)
+  comparison_colors <- if (length(comparison_methods)) {
+    stats::setNames(
+      scales::hue_pal(h = c(20, 80), c = 100, l = 50)(length(comparison_methods)),
+      comparison_methods
+    )
+  } else {
+    character()
+  }
 
   ggplot2::ggplot() +
     ggplot2::geom_rect(
@@ -667,6 +780,31 @@ plot_multimodal_seurat_walltime <- function(
       linewidth = 0.35,
       alpha = 0.65
     ) +
+    ggplot2::geom_point(
+      data = comparison_plot_tibble,
+      ggplot2::aes(
+        x = .data$cellranger_input_nuclei,
+        y = .data$walltime_hours,
+        color = .data$method
+      ),
+      shape = 18,
+      size = 4
+    ) +
+    ggplot2::geom_label(
+      data = comparison_plot_tibble,
+      ggplot2::aes(
+        x = .data$cellranger_input_nuclei,
+        y = .data$walltime_hours,
+        label = .data$label,
+        color = .data$method,
+        hjust = .data$label_hjust
+      ),
+      fill = scales::alpha("white", 0.9),
+      linewidth = 0.2,
+      vjust = -0.45,
+      size = 3,
+      show.legend = FALSE
+    ) +
     ggplot2::geom_line(
       data = linear_reference_tibble,
       ggplot2::aes(x = .data$cellranger_input_nuclei, y = .data$walltime_hours),
@@ -685,7 +823,7 @@ plot_multimodal_seurat_walltime <- function(
     ggplot2::geom_text(
       data = linear_label_tibble,
       ggplot2::aes(x = .data$cellranger_input_nuclei, y = .data$walltime_hours, label = .data$label),
-      hjust = 0,
+      hjust = 1.05,
       vjust = 1.15,
       size = 3,
       color = "#8B1E3F"
@@ -704,16 +842,21 @@ plot_multimodal_seurat_walltime <- function(
       labels = fill_labels,
       guide = if (isTRUE(color_critical_path_steps)) "legend" else "none"
     ) +
+    ggplot2::scale_color_manual(
+      values = comparison_colors,
+      guide = if (length(comparison_methods)) "legend" else "none"
+    ) +
     ggplot2::scale_y_continuous(
-      breaks = seq(0, y_plot_limit, by = 1),
-      labels = scales::label_number(accuracy = 1),
+      breaks = y_breaks,
+      labels = y_labels,
       limits = c(0, NA),
       expand = ggplot2::expansion(mult = c(0, 0.08))
     ) +
     ggplot2::labs(
       x = "CellRanger input nuclei",
       y = "Wall time (hours)",
-      fill = "Critical-path step"
+      fill = "Critical-path step",
+      color = "Observed comparator"
     ) +
     ggplot2::coord_cartesian(ylim = c(0, y_plot_limit), clip = "off") +
     ggplot2::theme_minimal(base_size = 11) +

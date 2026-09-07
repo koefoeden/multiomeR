@@ -13,7 +13,7 @@ rlang::list2(
     command = filter_psbulk_data_matrix(
       psbulk_data_matrix = map_psbulk_data_matrix,
       psbulk_feature_dynamic_tibble = dynamic_tibble,
-      extended_donor_id_metadata_tibble = donor_id_metadata_tibble.extended,
+      extended_donor_id_metadata_tibble = donor_id_metadata_tibble.analysis,
       sample_depth_tibble = if (identical(map_psbulk_DX_tar_suffix, "DTFA")) pseudobulk_depth_tibble.ATAC else NULL,
       min_sample_counts = if (identical(map_psbulk_DX_tar_suffix, "DTFA")) differential_analyses_DTFA_min_ATAC_counts else NULL
     ),
@@ -25,7 +25,7 @@ rlang::list2(
     description = "Fit edgeR/limma models to pseudobulk feature matrices for each model [part_of_graph:differential_analyses]",
     command = fit_psbulk_feature_matrix_model(
       psbulk_feature_matrix = filtered_mat_per_model,
-      extended_donor_id_metadata_tibble = donor_id_metadata_tibble.extended,
+      extended_donor_id_metadata_tibble = donor_id_metadata_tibble.analysis,
       psbulk_feature_dynamic_tibble = dynamic_tibble
     ),
     pattern = map(filtered_mat_per_model, dynamic_tibble),
@@ -111,16 +111,6 @@ rlang::list2(
     },
     pattern = map(results_tibble, top_features_tibble, dynamic_tibble, top_feature_OT_evidence_tibble)
   ),
-  # tarchetypes::tar_file(
-  #   name = volcano_plots_files,
-  #   description = "Save volcano plots of pseudobulk DX results per model and contrast to file",
-  #   command = save_plots_structured(
-  #     plots = volcano_plots,
-  #     override_suffix = dynamic_tibble$model_name,
-  #     dyn_suffix_in_subdir = TRUE
-  #   ),
-  #   pattern = map(volcano_plots, dynamic_tibble)
-  # ),
   targets::tar_target(
     name = PValue_density_plot,
     description = "Plot P-value density histograms across all pseudobulk DX models",

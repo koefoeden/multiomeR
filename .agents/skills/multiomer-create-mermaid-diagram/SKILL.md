@@ -5,35 +5,16 @@ description: Generate or revise Mermaid dependency diagrams for the active multi
 
 # multiomeR Create Mermaid Diagram
 
-
 ## Manifest-derived diagrams
 
-Implementation-book graphs are generated from target descriptions tagged with
-`[part_of_graph:<graph_id>]`.
+Read `website/figures/human_curated/README.md` for the tag contract and canonical
+regeneration command. Inspect the owning target fragments and keep graph
+membership focused on reader-relevant inputs, transformations, checkpoints,
+and outputs.
 
-1. Inspect existing graph IDs and the relevant target fragment:
-
-```bash
-rg -n "part_of_graph:" _targets.R extra_targets module_*
-```
-
-2. Add or remove graph tags in target descriptions. Keep membership focused on
-   reader-relevant inputs, transformations, checkpoints, and outputs.
-3. Regenerate every tagged view through the live manifest:
-
-```bash
-pixi run --use-environment-activation-cache Rscript website/figures/human_curated/graphs_v2.R
-```
-
-4. Review the changed `website/figures/human_curated/<graph_id>_v2.mmd` files
-   and render the implementation book:
-
-```bash
-pixi run --use-environment-activation-cache quarto render website/implementation
-```
-
-Do not depend on `website/cache/targets_graphs`; that cache is optional and is
-not the source for current implementation-book diagrams.
+After changing membership, regenerate every tagged view and review the changed
+`*_v2.mmd` files. Follow the root `AGENTS.md` workflow to render both books and
+refresh the Markdown export. Graph generation must not execute targets.
 
 ## Hand-curated overviews
 
@@ -42,9 +23,3 @@ abstraction that the dependency graph cannot express. Use `flowchart TB`, keep
 the node set small, and use the canonical theme and legend under
 `website/figures/`. Use a filename distinct from generated `*_v2.mmd` files so
 regeneration cannot overwrite it.
-
-## Output Expectations
-
-- Updated target graph tags and generated `*_v2.mmd` files, or a separately
-  named hand-curated `.mmd` file.
-- A successful implementation-book render.

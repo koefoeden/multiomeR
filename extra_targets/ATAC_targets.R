@@ -155,13 +155,6 @@ rlang::list2(
         peak_GRanges
       }
     ),
-    # tar_target(
-    #   within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC |>
-    #     map(\(x) mutate(as_tibble(as.data.frame(x)), chr = seqnames)) |>
-    #     bind_rows() |>
-    #     arrange(desc(fold_change)) |>
-    #     BPCells::merge_peaks_iterative() # TODO: doesn't give the same result at all? 150 k peaks for muscle test, vs 250 k for traditional approach. Bug in BPCells?
-    # ),
     tarchetypes::tar_file(
       name = consensus_peak_BPCells_matrix_dir.ATAC,
       description = "Compute the consensus peak-by-cell count matrix using BPCells [part_of_graph:ATAC] [part_of_graph:seurat_export]",
@@ -552,23 +545,6 @@ rlang::list2(
       pattern = map(scDblFinder_GEM_well_tibble.ATAC),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
-    # Previous full-peak ATAC scDblFinder path. Kept as fallback, but disabled because
-    # scDblFinder::aggregateFeatures() recomputes TF-IDF and can OOM before aggregation.
-    # tar_target(
-    #   name = scDblFinder_results_by_GEM_well_tibble.ATAC,
-    #   description = "Run ATAC scDblFinder independently for each 10x Genomics GEM well from BPCells peak-count slices",
-    #   command = run_scDblFinder_BPCells_GEM_well(
-    #     feature_matrix = peak_QC_filtered_BPCells_matrix.ATAC,
-    #     scDblFinder_GEM_well_tibble = scDblFinder_GEM_well_tibble.ATAC,
-    #     output_suffix = "ATAC",
-    #     dbr.sd = 1.0,
-    #     aggregateFeatures = TRUE,
-    #     nfeatures = 50,
-    #     processing = "normFeatures"
-    #   ),
-    #   pattern = map(scDblFinder_GEM_well_tibble.ATAC),
-    #   resources = get_tar_resources(RAM_GB_req = 16)
-    # ),
     targets::tar_target(
       name = scDblFinder_results_df.ATAC,
       description = "Combine per GEM well ATAC scDblFinder classifications [part_of_graph:ATAC] [part_of_graph:seurat_export]",
@@ -920,7 +896,7 @@ rlang::list2(
       name = continuous.UMAPs.ATAC,
       description = "UMAPs colored by continuous motif-family accessibility and peak accessibility metrics. [checkpoint:ATAC]",
       command = plot_UMAP_from_metadata(
-        metadata_tibble = metadata_w_cell_types_tibble.ATAC,
+        metadata_tibble = metadata_w_cell_types_analysis_tibble.ATAC,
         variable = continuous_UMAP_spec.ATAC$variable,
         value_source = continuous_UMAP_spec.ATAC$value_source,
         feature_matrix = motif_family_accessibility_BPCells_matrix.ATAC

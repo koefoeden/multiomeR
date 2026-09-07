@@ -1,6 +1,9 @@
 # Introduction
 
-This book collects developer-facing details for readers who want to understand or modify the internals of multiomeR. It complements the [main user manual](../), which covers installation, configuration, checkpoint-based execution, and output inspection.
+Use this book to trace a result back to its code or change how multiomeR
+works. For installation, configuration, execution, and output inspection,
+start with the [user manual](../). You do not need to read this book to run
+the demo.
 
 Use this book when you need to trace a configuration value into mapped targets, understand how the simplified graph views relate to the real `{targets}` graph, or decide where an implementation change belongs.
 
@@ -22,7 +25,7 @@ The [differential analyses](implementation_differential_analyses.qmd) and [genet
 | Add or revise a YAML parameter | `cfg_pipeline_parameters.tsv`, then the owning config reader or target. |
 | Change GEM well preprocessing | `_targets.R` mapping plus `extra_targets/per_GEM_well_targets.R`. |
 | Change aggregation GEX, ATAC, or WNN processing | The corresponding graph section and `extra_targets/*_targets.R` file. |
-| Add a review boundary | Existing `[checkpoint:<name>]` description tags and the user-manual selector contract. |
+| Inspect existing review selections | `[checkpoint:<name>]` description tags; the user-facing QC procedure is under development. |
 | Add a graph-visible target | Existing `[part_of_graph:<graph_id>]` tags and graph-pruning rules. |
 | Change resource routing | `crew_controllers.R`, `packages/multiomeRCore/R/resource_helpers.R`, and the runtime bootstrap convention. |
 

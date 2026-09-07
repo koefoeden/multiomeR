@@ -1,40 +1,60 @@
 ![](figures/multiomeR-logo.svg){fig-alt="multiomeR logo" width="100%"}
 
-# Introduction
+# Start here
 
 ## What is multiomeR?
 multiomeR is a [targets](https://books.ropensci.org/targets/)-based workflow for processing and analyzing single-nucleus 10x Genomics Multiome ATAC + Gene Expression datasets. It is meant to be adapted to your own data, compute setup, and biological questions.
 
 The workflow starts from `cellranger-arc count` outputs, processes gene-expression (GEX) and ATAC data, builds multimodal aggregations, and supports optional downstream modules for differential analyses and genetic enrichment for human datasets.
 
-## Development status
-multiomeR is currently in beta. Expect breaking changes as the workflow is maturing. Report issues, questions, and feature requests on GitHub.
+## Your first analysis
 
-## Why use it?
-- **Adaptable framework**: The repository is meant to be modified through config files, target selections, helper functions, and optional modules.
-- **Transparent execution**: Each processing and analysis step is represented as an explicit `targets` target.
-- **Efficient reruns**: `targets` reruns only the parts of the workflow affected by changed inputs, code, or config.
-- **Multimodal analysis**: The main pipeline covers RNA/ATAC processing, clustering, cell typing, WNN integration, and optional downstream modules.
+Start with the public demo: two human GEM wells with supplied configuration.
+You will install the software, run one joint analysis, and read its cell
+metadata and multimodal object. This gives you a working example before you
+choose settings for your own study.
 
-## Choose your route
+You need basic R skills, a Linux terminal, and a machine with sufficient
+[memory and disk space](demo_installation.qmd#system-requirements). You do not
+need to know how to write a `targets` pipeline. Commands labelled **Bash** run
+in the terminal; commands labelled **R** run in the R session opened during
+installation. Run both from the repository folder unless stated otherwise.
+
+## Find what you need
 
 | If you want to... | Start here |
 |---|---|
 | See what the workflow produces | Browse the [main pipeline output gallery](gallery_main.qmd). |
 | Try multiomeR on public data | Follow the three-part quickstart: [install](demo_installation.qmd), [run](demo_running.qmd), then [inspect the outputs](demo_outputs.qmd). |
-| Configure your own data | Read the [main-pipeline overview](main_overview.qmd), prepare the [configuration and inputs](main_inputs.qmd), then [run the checkpoints](main_running.qmd). |
+| Configure your own data | Read the [main-pipeline overview](main_overview.qmd), prepare the [configuration and inputs](main_inputs.qmd), then [run one aggregation](main_running.qmd). |
 | Add a downstream analysis | Check the prerequisites for [differential analyses](downstream_differential_analyses.qmd) or [genetic enrichment](downstream_genetic_enrichment.qmd). |
 | Understand or modify the internals | Use the separate [implementation book](implementation/). |
 
-Before starting, you need Linux and basic familiarity with R, tabular metadata, and `targets`. The demo supplies a working configuration; your own analysis also needs complete `cellranger-arc count` outputs, the matching reference metadata JSON, and keyed GEM well and donor metadata. Tutorial pages provide a safe route through the workflow; searchable parameter tables and the implementation book are references to consult as needed.
+## Terms used in this manual
 
 In this manual, a **GEM well** is one configured 10x library and output
 directory, an **aggregation** is a joint analysis of one or more GEM wells, and
 a **donor** is the individual identified by `donor_id`. One GEM well may contain
 multiple donors.
 
+A **target** is a named result, such as a metadata table, matrix directory, or
+plot. Its **dependencies** are the inputs and earlier results needed to build
+it. You request the result you want; `targets` works out the order and reuses
+results that are up to date. The **store** is the folder where it keeps results
+and the records needed for reruns. For a small worked introduction, see the
+[targets walkthrough](https://books.ropensci.org/targets/walkthrough.html).
+
 ## Workflow at a glance
 
 The **main pipeline** processes each GEM well, aggregates selected GEM wells, and builds multimodal RNA/ATAC outputs for clustering, cell typing, and WNN integration. Two optional modules extend completed aggregations with differential analyses or genetic enrichment.
 
 ![multiomeR workflow from Cell Ranger ARC GEM well outputs through per GEM well processing, aggregation-level GEX and ATAC analysis, WNN integration, and optional downstream modules](figures/multiomeR_overview_simplified.drawio.svg)
+
+## Development status
+
+multiomeR is in beta and may introduce breaking changes. The QC checkpoint
+procedure is [under development](main_running.qmd#qc-checkpoints); it is not
+yet a finished guide to accepting or rejecting an analysis. Report problems
+or questions through [GitHub issues](https://github.com/koefoeden/multiomeR/issues).
+
+Continue to [Install and prepare the demo](demo_installation.qmd).

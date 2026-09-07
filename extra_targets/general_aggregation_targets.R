@@ -50,6 +50,32 @@ rlang::list2(
     ) |>
       save_plots_structured(width = 20, height = 7)
   ),
+  tarchetypes::tar_file(
+    name = per_aggregation_GEM_well_QC_comparisons,
+    description = "Compare pre-filter QC distributions and configured cutoffs across GEM wells in this aggregation. [checkpoint:1_pre-aggregation-QC]",
+    command = {
+      metadata_tibble <- dplyr::bind_rows(
+        aggregation_cellranger_kept_metadata_tibble_syms
+      ) |>
+        dplyr::select(dplyr::any_of(c(
+          "GEM_well_ID",
+          "dataset",
+          QC_metric_manifest_tibble$metric_id[
+            QC_metric_manifest_tibble$available_from_stage == "GEM_well" &
+              QC_metric_manifest_tibble$do_plot
+          ]
+        )))
+      plot_GEM_well_QC_comparisons(
+        metadata_tibble = metadata_tibble,
+        QC_metric_manifest_tibble = QC_metric_manifest_tibble,
+        QC_exclude_per_GEM_well_list = aggregation_GEM_well_QC_exclude_list
+      ) |>
+        save_plots_structured(
+          width = max(10, 4 + 0.35 * dplyr::n_distinct(metadata_tibble$GEM_well_ID))
+        )
+    },
+    resources = get_tar_resources(RAM_GB_req = 32)
+  ),
   targets::tar_target(
     name = UCell_GEX_marker_genes_list,
     description = "Validate configured UCell-syntax GEX marker genes against Cell Ranger feature names [part_of_graph:ATAC] [part_of_graph:GEX] [part_of_graph:WNN] [part_of_graph:seurat_export]",
@@ -274,6 +300,7 @@ rlang::list2(
       donor_id_metadata_tibble,
       "donor_id",
       c(
+        aggregation_harmony_correction_metadata_col_names,
         aggregation_subgroups_col,
         aggregation_subgroups_SCT_regress_vars,
         aggregation_subgroups_extra_harmony_covars
@@ -287,6 +314,7 @@ rlang::list2(
       GEM_well_metadata_tibble,
       "GEM_well_ID",
       c(
+        aggregation_harmony_correction_metadata_col_names,
         aggregation_subgroups_col,
         aggregation_subgroups_SCT_regress_vars,
         aggregation_subgroups_extra_harmony_covars

@@ -5,12 +5,10 @@ pipeline_name <- "processing_and_aggregation"
 source("helpers/_setup.R")
 ```
 
-multiomeR uses two linked configuration layers. A **GEM well** points to one
-`cellranger-arc count` output and defines its pre-aggregation processing and QC.
-An **aggregation** selects GEM wells for joint GEX, ATAC, and WNN analysis.
+multiomeR uses two linked configuration layers. A **GEM well** points to one `cellranger-arc count` output and defines its pre-aggregation processing and QC. An **aggregation** selects GEM wells for joint GEX, ATAC, and WNN analysis.
 
 | Layer | Configuration | Key relationship |
-|---|---|---|
+|------------------------|------------------------|------------------------|
 | GEM well | `cfg_GEM_wells.tsv` | Aggregations refer to one or more `GEM_well_ID` values. |
 | Aggregation | `cfg_aggregations.yaml` | Selects GEM wells and points to donor-level metadata. |
 
@@ -27,9 +25,9 @@ must reference active GEM wells. Before an unqualified `targets::tar_make()`,
 deactivate every GEM well and aggregation you are not ready to run. The
 committed quickstart configuration already follows this rule.
 
-The following minimum example shows the relationship between the two layers.
-Replace the paths, identifiers, and marker genes with values appropriate for
-your study.
+The example below describes one non-multiplexed GEM well from one donor.
+Replace the paths, identifiers, and marker genes for your study. It illustrates
+how the files connect; one donor is not enough for a replicated comparison.
 
 ### 1. Define one GEM well
 
@@ -48,14 +46,35 @@ separated by ` ;; `. Expressions are evaluated individually against per-barcode
 metadata, preserving their order and their separate exclusion reasons. An empty
 field applies no pre-aggregation QC filters.
 
-multiomeR always runs its
-[validated BPCells-native AMULET implementation](implementation/algorithm_validation.html#bpcells-native-amulet)
-on the existing fragment directory. There is no per-GEM-well switch because
-the implementation is fast enough to be part of the standard QC path.
+| Column | Example value |
+|---|---|
+| `GEM_well_ID` | `your_GEM_well` |
+| `GEM_well_dataset` | `your_dataset` |
+| `GEM_well_donor_id` | `donor_1` |
+| `GEM_well_n_donors` | `1` |
+| `GEM_well_cellranger_arc_count_dir` | `/path/to/your_GEM_well` |
+| `GEM_well_cellranger_arc_reference_json` | `/path/to/reference.json` |
+| `GEM_well_add_cellbender` | `FALSE` |
+| `GEM_well_cellbender_h5_file` | `NA` |
+| `GEM_well_donors_VCF_file` | `NA` |
+| `GEM_well_is_active` | `TRUE` |
+| `GEM_well_multiplex_batch` | `batch_1` |
+
+Set `GEM_well_QC_exclude_list` to the exclusions chosen for your data. The
+[checkpoint guidance](main_running.qmd#qc-checkpoints) is under development;
+do not treat the example's numerical cutoffs as recommendations for your tissue.
+
+`GEM_well_cellranger_arc_reference_json` must point to the `reference.json` from the exact Cell Ranger ARC reference used to create that GEM well's output. multiomeR checks that the JSON genome matches the feature HDF5 and rejects aggregations whose GEM wells use different references.
+
+`GEM_well_QC_exclude_list` contains zero or more complete R filter expressions separated by `;;`. Expressions are evaluated individually against per-barcode metadata, preserving their order and their separate exclusion reasons. An empty field applies no pre-aggregation QC filters.
+
+AMULET doublet detection runs as part of the standard QC calculation; see the
+[implementation and validation](implementation/algorithm_validation.html#bpcells-native-amulet)
+for details.
 
 `GEM_well_cellranger_arc_count_dir` points to the directory containing `outs/`, not to `outs/` itself. The baseline pipeline requires:
 
-```{.text filename="Text"}
+``` {.text filename="Text"}
 <GEM_well_cellranger_arc_count_dir>/outs/
 |-- summary.csv
 |-- filtered_feature_bc_matrix.h5
@@ -70,26 +89,16 @@ If `GEM_well_donors_VCF_file` is configured, `atac_possorted_bam.bam` is also re
 
 The donor metadata table must contain one unique row per `donor_id`:
 
-```{.text filename="donor_metadata.tsv"}
+``` {.text filename="donor_metadata.tsv"}
 donor_id	condition
 donor_1	control
 ```
 
-Put donor-specific phenotypes and covariates in the donor table. Put library-,
-run-, or batch-specific variables directly in `cfg_GEM_wells.tsv`, using a
-`GEM_well_` prefix. Apart from their key columns, donor and GEM-well metadata
-must not reuse column names.
-
-The canonical GEM-well table may contain rows for multiple aggregations. Each
-aggregation first subsets and orders it by `aggregation_GEM_well_IDs`, then
-projects only the columns requested for SCT, Harmony, subgroup modelling, or
-configured analyses. Consequently, changing an unused annotation or a GEM well
-outside the aggregation does not invalidate expensive processing targets. The
-complete annotation view is attached only to explicit export targets.
+Put donor-specific phenotypes and covariates in the donor table. Put library-, run-, or batch-specific variables directly in `cfg_GEM_wells.tsv`, using a `GEM_well_` prefix. Apart from their key columns, donor and GEM-well metadata must not reuse column names.
 
 ### 3. Define one aggregation
 
-```{.yaml filename="cfg_aggregations.yaml"}
+``` {.yaml filename="cfg_aggregations.yaml"}
 your_aggregation:
   aggregation_GEM_well_IDs: [your_GEM_well]
   aggregation_donor_id_metadata_tsv: /path/to/donor_metadata.tsv
@@ -99,13 +108,16 @@ your_aggregation:
   is_active: true
 ```
 
-Omit `modules` for the first main-pipeline run. Add optional module names and matching module-config rows only after the main aggregation has passed its review checkpoints.
+Replace `GENE1`–`GENE4` with gene symbols appropriate for the tissue and
+reference. Omit `modules` for the first run. After reviewing the main results,
+you can enable optional analyses by adding their module names here and a
+matching aggregation entry in each module's configuration.
 
 ### 4. Validate before running
 
 From the repository-root R session, construct the graph and inspect the targets created for the aggregation:
 
-```{.r filename="R"}
+``` {.r filename="R"}
 manifest <- targets::tar_manifest(callr_function = NULL)
 
 manifest |>
@@ -121,10 +133,11 @@ The searchable overviews below are generated from `cfg_pipeline_parameters.tsv`,
 
 ### GEM well columns
 
-GEM well-level configuration lives in [`cfg_GEM_wells.tsv`](`r GEM_wells_github_file`).
+Use the [GEM-well example](https://github.com/koefoeden/multiomeR/blob/main/cfg_GEM_wells.tsv)
+to check the full set of columns.
 
 | Column | Meaning |
-|---|---|
+|------------------------------------|------------------------------------|
 | `GEM_well_ID` | Stable GEM well identifier used in target names and aggregation config. |
 | `GEM_well_dataset` | Internal grouping key for pre-aggregation QC summaries. |
 | `GEM_well_donor_id` | Donor assigned to a non-multiplexed GEM well; use `NA` when donor identities are resolved from a VCF. |
@@ -140,13 +153,17 @@ GEM well-level configuration lives in [`cfg_GEM_wells.tsv`](`r GEM_wells_github_
 
 ### Aggregation parameters
 
-Aggregation-level settings live in [`cfg_aggregations.yaml`](`r aggregations_github_file`). Required parameters must resolve to a non-missing value after defaults and optional `inherits:` parents are applied. Optional parameters can remain `NULL` to disable the corresponding behavior.
+See the [aggregation example](https://github.com/koefoeden/multiomeR/blob/main/cfg_aggregations.yaml)
+for complete examples. Required parameters need a value, supplied directly,
+by a default, or by an `inherits:` parent. Optional parameters can remain
+`NULL` where the reference below allows it.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_parameter_overview("aggregation")
 ```
 
 <details>
+
 <summary>Show the public <code>immune_human_2x</code> example</summary>
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}

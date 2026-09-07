@@ -9,6 +9,19 @@ get_controller_names <- function(controller_list) {
   )
 }
 
+order_controller_resources <- function(controller_resources) {
+  controller_resources[
+    order(
+      controller_resources$gpus,
+      controller_resources$cores,
+      controller_resources$RAM_GB,
+      controller_resources$controller_name
+    ),
+    ,
+    drop = FALSE
+  ]
+}
+
 #' Validate controller setup
 #'
 #' Validate the controller/resource table returned by the crew setup file.
@@ -98,7 +111,9 @@ validate_controller_setup <- function(controller_setup) {
 apply_crew_controller_options <- function(controller_setup) {
   validate_controller_setup(controller_setup)
 
-  controller_resources_tibble <- controller_setup$controller_resources_tibble
+  controller_resources_tibble <- order_controller_resources(
+    controller_setup$controller_resources_tibble
+  )
   controller_list <- controller_setup$controller_list
   default_controller_name <- controller_resources_tibble$controller_name[[1]]
 
@@ -154,6 +169,7 @@ get_tar_resources <- function(
       )
     }
   }
+  controller_resources <- order_controller_resources(controller_resources)
 
   default_controller_row <- controller_resources[1, , drop = FALSE]
 

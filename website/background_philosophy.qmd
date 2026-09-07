@@ -1,21 +1,33 @@
-# Background and design philosophy
+# Why an editable workflow?
 
-## Philosophy
+multiomeR keeps the analysis steps in an editable repository. Configuration
+covers common choices such as inputs, markers, dimensions, and models; R
+helpers and target definitions are available when a study needs a change
+beyond those settings. This flexibility also means that users must review
+which methods and assumptions fit their data.
 
-multiomeR challenges the commonly used single-cell & single-nucleus processing workflows, where most processing steps are run sequentially and are implemented in hard-to-customize packaged functions. Widely used examples include brilliant packages such as Seurat and Signac. However, while offering superb ease-of-use, this traditional workflow has two important downsides:
+## Reuse completed work
 
-1) The built-in processing steps (usually functions) are only customizable to levels chosen by the package developers, which often falls short in the face of the enormous variance and complexity of real-life single-cell and single-nucleus sequencing datasets
-2) The traditional workflows leave a lot of performance on the table, since they rarely take advantage of the inherent parallelism when processing these large sequencing datasets. This includes commonly found multiplicities of independent experimental samples (donors, GEM wells), data modalities, data representations, downstream analyses, etc.
+`targets` records dependencies between results so that a change can rebuild
+the affected parts of an analysis. Independent tasks can run concurrently
+when worker capacity permits. This is useful when processing several GEM
+wells or repeating analyses with revised settings. The
+[targets manual](https://books.ropensci.org/targets/) explains the execution
+model and its limits.
 
-Until recently, this simplified and easy-to-use workflow has been necessary to make the tools practically usable in a busy research environment. However, with the recent advent of powerful, AI coding agents, which can quickly ingest large complex codebases, this inherent tug-of-war between performance/customizability and ease-of-use/code interpretability has started to move the needle in favor of complex, performant, and customizable approaches. This is especially relevant because single-cell and single-nucleus datasets continue to grow faster than routine compute capacity. These observations, together with a lack of an established framework for the processing of Multiome data, constitute the main motivation for the development of this pipeline.
+## Keep large matrices on disk
 
-## Achieving customizability
+BPCells provides disk-backed matrices and streaming operations that can
+reduce the need to hold full matrices in memory. Some analysis steps still
+need substantial RAM, and performance depends on the data, storage, and
+available workers. See the [BPCells documentation](https://bnprks.github.io/BPCells/)
+for its matrix operations and [Performance and scaling](../performance_overview.html)
+for multiomeR examples.
 
-By not packaging the pipeline into an ordinary R package, users retain straightforward access to the codebase and can modify any part of the workflow to fit their needs. The pipeline thus functions as a template of suggested best practices, which can be used as-is, modified, or extended as needed.
+## Keep the analysis inspectable
 
-## Achieving performance
-
-multiomeR achieves its high performance through two key design choices:
-
-1) The workflow is implemented as a `targets` pipeline, which explicitly represents each processing and analysis step as a node, and the dependencies between them as edges, in a directed acyclic graph (DAG). This allows `targets` to automatically determine which parts of the workflow can be run in parallel, and which parts need to run sequentially - and whether they need to run at all through the use of cached data and intelligent invalidation.
-2) multiomeR builds heavily on the BPCells R package, which is designed from the ground up for computational efficiency through lazy, streaming data processing and on-disk storage. Please see the BPCells documentation for more details.
+Separate targets make intermediate tables, matrices, and files available for
+inspection. Seurat/Signac exports provide another way to explore completed
+results. The [implementation conventions](implementation_conventions.qmd)
+explain where to change parameters, helpers, and target definitions; the
+[user manual](../) covers running an existing configuration.

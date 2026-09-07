@@ -6,6 +6,74 @@ rlang::list2(
     deployment = "main"
   ),
   tarchetypes::tar_file(
+    name = QC_metric_manifest_tsv,
+    description = "Track the informational QC metric manifest",
+    command = "QC_metric_manifest.tsv",
+    deployment = "main"
+  ),
+  targets::tar_target(
+    name = QC_metric_manifest_tibble,
+    description = "Read and validate the informational QC metric manifest",
+    command = {
+      manifest <- readr::read_tsv(
+        QC_metric_manifest_tsv,
+        col_types = readr::cols(
+          metric_id = readr::col_character(),
+          display_name = readr::col_character(),
+          description = readr::col_character(),
+          available_from_stage = readr::col_character(),
+          plot_min_q = readr::col_double(),
+          plot_max_q = readr::col_double(),
+          do_plot = readr::col_logical()
+        ),
+        show_col_types = FALSE
+      )
+      expected_columns <- c(
+        "metric_id",
+        "display_name",
+        "description",
+        "available_from_stage",
+        "plot_min_q",
+        "plot_max_q",
+        "do_plot"
+      )
+      required_values <- manifest |>
+        dplyr::select(
+          metric_id,
+          display_name,
+          description,
+          available_from_stage,
+          do_plot
+        )
+      plotting_quantiles <- c(manifest$plot_min_q, manifest$plot_max_q)
+      invalid_quantiles <- any(
+        !is.na(plotting_quantiles) &
+          (!is.finite(plotting_quantiles) |
+            plotting_quantiles < 0 |
+            plotting_quantiles > 1)
+      )
+      invalid_quantile_intervals <- any(
+        !is.na(manifest$plot_min_q) &
+          !is.na(manifest$plot_max_q) &
+          manifest$plot_min_q >= manifest$plot_max_q
+      )
+      if (
+        !identical(colnames(manifest), expected_columns) ||
+          anyDuplicated(manifest$metric_id) ||
+          any(!stats::complete.cases(required_values)) ||
+          invalid_quantiles ||
+          invalid_quantile_intervals
+      ) {
+        stop(
+          "QC_metric_manifest.tsv must contain the expected columns, complete ",
+          "required values, unique metric IDs, and valid plotting quantiles.",
+          call. = FALSE
+        )
+      }
+      manifest
+    }
+  ),
+  tarchetypes::tar_file(
     name = amulet_BPCells_native_source_file,
     description = "Track the native BPCells fragment iterator used by AMULET",
     command = "src/amulet_bpcells.cpp"

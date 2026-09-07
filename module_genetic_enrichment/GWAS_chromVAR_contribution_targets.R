@@ -44,7 +44,7 @@ rlang::list2(
       annotation_matrix = GWAS_peak_weight_matrix,
       GWAS_inputs_tibble = GWAS_inputs_tibble
     ),
-    resources = get_tar_resources(RAM_GB_req = 60)
+    resources = get_tar_resources(RAM_GB_req = 40)
   ),
   targets::tar_target(
     name = chromVAR_deviation_tibble.cell_type_pseudobulk,
@@ -97,17 +97,41 @@ rlang::list2(
       plot_GWAS_locus_contribution_waterfalls(n_top_loci = 15L) |>
       save_plots_structured(width = 15, height = 8)
   ),
-  tarchetypes::tar_file(
-    name = chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk,
-    description = "Save variant contribution, ATAC coverage, and consensus-peak tracks for top-contributing loci. [checkpoint:genetic_enrichment]",
-    command = plot_GWAS_variant_contribution_details(
+  targets::tar_target(
+    name = chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk,
+    description = "Group locus contributions by GWAS for independently cached detail plots",
+    command = chromVAR_locus_contribution_tibble.cell_type_pseudobulk |>
+      dplyr::group_by(GWAS_ID) |>
+      targets::tar_group(),
+    iteration = "group"
+  ),
+  targets::tar_target(
+    name = chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk,
+    description = "Prepare plot-ready variant, accessibility, and peak-track data for one GWAS",
+    command = prepare_GWAS_variant_contribution_detail_records(
       variant_contribution_tibble = chromVAR_variant_contribution_tibble.cell_type_pseudobulk,
-      locus_contribution_tibble = chromVAR_locus_contribution_tibble.cell_type_pseudobulk,
+      locus_contribution_tibble = chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk,
       consensus_peak_GRanges = consensus_peak_GRanges.ATAC,
       fragments = combined_BPCells_fragment_obj.ATAC,
       metadata_tibble = metadata_w_cell_types_tibble.WNN
-    ) |>
-      save_plots_structured(width = 13, height = 11),
+    ),
+    pattern = map(chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk),
+    iteration = "list",
     resources = get_tar_resources(RAM_GB_req = 40)
+  ),
+  tarchetypes::tar_file(
+    name = chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk,
+    description = "Save variant contribution, ATAC coverage, and consensus-peak tracks for one GWAS. [checkpoint:genetic_enrichment]",
+    command = chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk |>
+      plot_GWAS_variant_contribution_details() |>
+      save_plots_structured(
+        width = 13,
+        height = 11,
+        override_suffix = chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk[[1]]$GWAS_ID,
+        dyn_suffix_in_subdir = TRUE
+      ),
+    pattern = map(chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk),
+    iteration = "list",
+    resources = get_tar_resources(RAM_GB_req = 8)
   )
 )

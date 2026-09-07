@@ -7,7 +7,15 @@ source("helpers/_setup.R")
 
 ## When to use this module
 
-Use this optional module for a completed human aggregation when fine-mapped GWAS evidence should be integrated with chromatin accessibility. It maps published credible-set variants to consensus peaks, calculates GWAS chromVAR-style deviations with the pipeline's chromVAR/betterChromVAR machinery, propagates trait relevance with [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE), and attributes cell-type deviations back to loci and variants.
+Use this module to ask which cell types or nuclei have accessible regions
+overlapping genetic evidence for a human trait. It connects fine-mapped GWAS
+variants to ATAC peaks, calculates accessibility-based enrichment, and uses
+[`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) to summarize trait
+relevance across related nuclei.
+
+A **credible set** contains candidate causal variants at a GWAS locus, with
+probabilities from fine-mapping. Enrichment helps prioritize cellular contexts;
+it does not by itself identify a causal cell type, gene, or mechanism.
 
 See the [output gallery](gallery_genetic_enrichment.qmd) for representative results and the [implementation graph](implementation/implementation_genetic_enrichment.html) for upstream ATAC and WNN dependencies.
 
@@ -15,19 +23,24 @@ See the [output gallery](gallery_genetic_enrichment.qmd) for representative resu
 
 Before enabling the module, confirm that:
 
-- the aggregation is human and has passed the GEX, ATAC, and multimodal checkpoints;
+- the aggregation is human and you have reviewed its main results and cell-type annotations;
 - WNN metadata and graph results, consensus peaks, ATAC counts, chromVAR objects, and GEX/ATAC embeddings are available;
 - each configured `sourceId` represents the intended trait and population;
 - the machine can download and retain the Open Targets study and credible-set Parquet datasets; and
-- the biological question justifies cell-level, graph-propagated, or cell-type-pseudobulk enrichment rather than treating those summaries as interchangeable.
+- you have chosen whether to interpret individual nuclei, graph-smoothed scores, or cell-type summaries; these answer related but different questions.
 
 ## Outputs
 
-It produces source and fine-mapping metadata, posterior-weighted variant-to-peak mappings, single-nucleus GWAS deviations, SCAVENGE trait-relevance summaries, cell-type heatmaps, and peak-, locus-, and variant-level attribution outputs.
+| Result | What to inspect |
+|---|---|
+| Study and variant-to-peak tables | Which studies, variants, and accessible regions contributed |
+| Single-nucleus deviations | Accessibility enrichment for each nucleus |
+| SCAVENGE plots | Trait-relevance scores propagated through the cell-neighbor graph |
+| Cell-type heatmaps and attribution tables | Enrichment by cell type and the loci or variants contributing to it |
 
 ## Configure the module
 
-First opt a human aggregation into the module:
+Add `modules` to the existing human aggregation entry, keeping its other settings:
 
 ```{.yaml filename="cfg_aggregations.yaml"}
 your_aggregation:
@@ -43,9 +56,6 @@ your_aggregation:
       Category: positive_control
       sourceId: GCST90002388
       finemappingMethod: auto
-    published_local_study:
-      Category: trait_of_interest
-      sourceId: data/published_study.GRCh38.parquet
 ```
 
 `sourceId` values beginning with `GCST` use the pinned Open Targets datasets.
@@ -76,27 +86,44 @@ emit_yaml_entry(module_config_file, "immune_human_2x")
 
 ## Run and review
 
-Preview the selected checkpoint targets:
+The existing `checkpoint:genetic_enrichment` tag selects module outputs. It
+does not perform QC approval; the [QC checkpoint procedure](main_running.qmd#qc-checkpoints)
+is under development. Preview the selected targets:
 
 ```{.r filename="R"}
 targets::tar_manifest(
   names = targets::tar_described_as(
     tidyselect::contains("checkpoint:genetic_enrichment")
-  ) & tidyselect::matches("your_aggregation"),
+  ) & tidyselect::ends_with(".your_aggregation"),
   callr_function = NULL
 )[, c("name", "description")]
 ```
 
-Then run the checkpoint:
+Then run the same selection:
 
 ```{.r filename="R"}
 targets::tar_make(
   names = targets::tar_described_as(
     tidyselect::contains("checkpoint:genetic_enrichment")
-  ) & tidyselect::matches("your_aggregation")
+  ) & tidyselect::ends_with(".your_aggregation")
 )
 ```
 
 Before interpreting trait scores, verify the resolved source release and fine-mapping method, the number of credible-set loci and variants retained, and the overlap with consensus peaks. Then compare direct deviation summaries with SCAVENGE-propagated scores and use the heatmap glyphs to identify cluster-median enrichment supported by within-grouping BH-adjusted degree-matched permutation P-values.
 
 Runtime and disk use grow with studies, cells, graph representations, permutations, and attributed loci. The [gallery](gallery_genetic_enrichment.qmd) uses a larger aggregation with six GEM wells and is not produced by the minimal quickstart.
+
+## Parameter reference
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_parameter_overview("genetic_enrichment")
+```
+
+<details>
+<summary>Show the public <code>immune_human_2x</code> example</summary>
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_yaml_entry(module_config_file, "immune_human_2x")
+```
+
+</details>

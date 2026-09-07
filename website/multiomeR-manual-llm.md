@@ -328,20 +328,8 @@ how the files connect; one donor is not enough for a replicated comparison.
 
 ### 1. Define one GEM well
 
-```{.text filename="cfg_GEM_wells.tsv"}
-GEM_well_ID	GEM_well_dataset	GEM_well_donor_id	GEM_well_n_donors	GEM_well_cellranger_arc_count_dir	GEM_well_add_cellbender	GEM_well_cellbender_h5_file	GEM_well_donors_VCF_file	GEM_well_cellranger_arc_reference_json	GEM_well_QC_exclude_list	GEM_well_is_active	GEM_well_multiplex_batch
-your_GEM_well	your_dataset	donor_1	1	/path/to/your_GEM_well	FALSE	NA	NA	/path/to/reference.json	TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250	TRUE	batch_1
-```
-
-`GEM_well_cellranger_arc_reference_json` must point to the `reference.json`
-from the exact Cell Ranger ARC reference used to create that GEM well's output.
-multiomeR checks that the JSON genome matches the feature HDF5 and rejects
-aggregations whose GEM wells use different references.
-
-`GEM_well_QC_exclude_list` contains zero or more complete R filter expressions
-separated by ` ;; `. Expressions are evaluated individually against per-barcode
-metadata, preserving their order and their separate exclusion reasons. An empty
-field applies no pre-aggregation QC filters.
+Add a row to `cfg_GEM_wells.tsv` with these values. This vertical view is a
+reading aid; the saved TSV has one GEM well per row.
 
 | Column | Example value |
 |---|---|
@@ -761,17 +749,6 @@ than repeated in YAML.
 The root workflow currently pins Open Targets release `26.03`. That release identifier is recorded in downstream metadata and determines the available studies, credible sets, and fine-mapping methods.
 
 For `finemappingMethod: auto`, multiomeR selects the first available supported method in this order: `SuSie`, `SuSiE-inf`, then `PICS`. Specify a method explicitly when the method itself is part of the analysis contract; the workflow fails if that method is unavailable for the study.
-
-### Parameter reference
-
-[Generated Quarto chunk omitted: `emit_parameter_overview("genetic_enrichment")`]
-
-<details>
-<summary>Show the public <code>immune_human_2x</code> example</summary>
-
-[Generated Quarto chunk omitted: `emit_yaml_entry(module_config_file, "immune_human_2x")`]
-
-</details>
 
 ## Run and review
 

@@ -69,21 +69,6 @@ The root workflow currently pins Open Targets release `26.03`. That release iden
 
 For `finemappingMethod: auto`, multiomeR selects the first available supported method in this order: `SuSie`, `SuSiE-inf`, then `PICS`. Specify a method explicitly when the method itself is part of the analysis contract; the workflow fails if that method is unavailable for the study.
 
-### Parameter reference
-
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_parameter_overview("genetic_enrichment")
-```
-
-<details>
-<summary>Show the public <code>immune_human_2x</code> example</summary>
-
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_yaml_entry(module_config_file, "immune_human_2x")
-```
-
-</details>
-
 ## Run and review
 
 The existing `checkpoint:genetic_enrichment` tag selects module outputs. It

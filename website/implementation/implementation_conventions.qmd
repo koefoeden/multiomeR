@@ -27,11 +27,12 @@ The currently meaningful tag families are:
 ```
 
 `[checkpoint:<name>]` marks targets selectable with `targets::tar_described_as()`.
-Existing tags include GEX, ATAC, multimodal, differential analyses, and genetic
-enrichment. Selection matches description substrings; dependencies still come
-from the target commands. These tags do not establish a QC acceptance
-procedure: the [user-facing checkpoints](../main_running.html#qc-checkpoints)
-are under development.
+The seven numbered main-pipeline groups are listed in
+`QC_checkpoint_manifest.tsv`; optional module and supplementary GEX groups
+remain unnumbered. Selection matches description substrings; include the
+closing `]` to match a complete checkpoint tag. Dependencies still come from
+the target commands. The [review guide](../main_running.html#qc-checkpoints)
+explains each boundary; acceptance criteria depend on the study.
 
 `[part_of_graph:<graph_id>]` marks targets that should stay visible in a named implementation graph after graph-pruning helpers remove less informative intermediate nodes. This is the strictest tag family: `graph_id` must contain only letters, numbers, and underscores, and helper code parses these tags directly from target descriptions. A target may belong to several graph views.
 

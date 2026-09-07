@@ -40,13 +40,13 @@ rlang::list2(
   ),
   targets::tar_target(
     name = per_dataset_cellranger_kept_metadata_tibble,
-    description = "Combine CellRanger-kept metadata across GEM wells, selecting QC variables for per-dataset QC plots",
+    description = "Combine CellRanger-kept metadata across GEM wells, selecting QC variables for per-dataset QC plots. [checkpoint:1_pre-aggregation-QC]",
     command = dplyr::bind_rows(dataset_cellranger_kept_metadata_tibble_syms) |>
       dplyr::select(dplyr::any_of(c("GEM_well_ID", "dataset", PROCESSING_PER_GEM_well_QC_VARS))),
   ),
   tarchetypes::tar_file(
     name = per_dataset_QC_violins,
-    description = "Plot violin plots of QC metrics per GEM well for this dataset and save to file",
+    description = "Plot violin plots of QC metrics per GEM well for this dataset and save to file. [checkpoint:1_pre-aggregation-QC]",
     command = plot_per_dataset_QC_violins(
       metadata_tibble = per_dataset_cellranger_kept_metadata_tibble,
       feature_names = PROCESSING_PER_GEM_well_QC_VARS,

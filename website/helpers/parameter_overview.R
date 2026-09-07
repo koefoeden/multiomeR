@@ -106,202 +106,38 @@ render_parameter_overview_fragment <- function(
   scope,
   search_placeholder = NULL
 ) {
-  scope_label <- stringr::str_to_sentence(stringr::str_replace_all(scope, "_", " "))
-  search_placeholder <- search_placeholder %||% stringr::str_glue("Search {scope_label} parameters")
-  data_json <- jsonlite::toJSON(overview_data, auto_unbox = TRUE, pretty = TRUE, null = "null")
+  search_placeholder <- search_placeholder %||% "Search names, descriptions or values"
+  data_json <- jsonlite::toJSON(overview_data, auto_unbox = TRUE, null = "null")
+  # Prevent a manifest value from closing the inert JSON script element.
+  data_json <- gsub("<", "\\u003c", data_json, fixed = TRUE)
+  script <- paste(readLines(file.path(find_parameter_manifest_root(), "website", "helpers", "parameter_overview.js")), collapse = "\n")
+  search_placeholder <- htmltools::htmlEscape(search_placeholder, attribute = TRUE)
 
   glue::glue(
 '<div class="parameter-overview" data-parameter-overview>
 <div class="parameter-overview-toolbar">
-<label class="parameter-search-control">
-<span class="visually-hidden">{search_placeholder}</span>
-<input class="parameter-overview-search" type="search" placeholder="{search_placeholder}">
-</label>
-<div class="parameter-filter-group" role="group" aria-label="Filter parameters by requirement status">
-<button type="button" class="parameter-filter is-active" data-status="all" aria-pressed="true">
-All <span class="parameter-filter-count"></span>
-</button>
-<button type="button" class="parameter-filter" data-status="Must specify" aria-pressed="false">
-Required <span class="parameter-filter-count"></span>
-</button>
-<button type="button" class="parameter-filter" data-status="Defaulted" aria-pressed="false">
-Defaulted <span class="parameter-filter-count"></span>
-</button>
-<button type="button" class="parameter-filter" data-status="Optional" aria-pressed="false">
-Optional <span class="parameter-filter-count"></span>
-</button>
+<label class="parameter-search-control"><span>Find a parameter</span>
+<input class="parameter-overview-search" type="search" placeholder="{search_placeholder}"></label>
+<label class="parameter-topic-control"><span>Topic</span>
+<select><option value="">All topics</option></select></label>
 </div>
+<div class="parameter-filter-bar">
+<div class="parameter-filter-group" role="group" aria-label="Filter by requirement">
+<button type="button" class="parameter-filter is-active" data-status="all" aria-pressed="true">All <span></span></button>
+<button type="button" class="parameter-filter" data-status="Must specify" aria-pressed="false">Required <span></span></button>
+<button type="button" class="parameter-filter" data-status="Defaulted" aria-pressed="false">Defaulted <span></span></button>
+<button type="button" class="parameter-filter" data-status="Optional" aria-pressed="false">Optional <span></span></button>
 </div>
-<p class="parameter-overview-summary" aria-live="polite"></p>
+<button type="button" class="parameter-reset">Reset filters</button>
+</div>
+<p class="parameter-overview-help">Required: supply a value directly or through inheritance. Defaulted: a value is provided. Optional: may remain NULL. Open a parameter for its type, allowed values and example.</p>
+<p class="parameter-overview-summary" aria-live="polite" aria-atomic="true"></p>
 <div class="parameter-topic-list"></div>
-<div class="parameter-empty-state" role="status">No {scope_label} parameters match the current filters.</div>
-<noscript><p class="parameter-noscript">Enable JavaScript to browse the parameter reference.</p></noscript>
-<script type="application/json" class="parameter-overview-data">
-{data_json}
-</script>
+<p class="parameter-empty-state" hidden>No parameters match. Try another search or reset the filters.</p>
+<noscript><p>Enable JavaScript to browse this reference, or read <a href="https://github.com/koefoeden/multiomeR/blob/main/cfg_pipeline_parameters.tsv">the parameter manifest</a>.</p></noscript>
+<script type="application/json" class="parameter-overview-data">{data_json}</script>
 </div>
-<script>
-(() => {{
-  const widget = document.currentScript.previousElementSibling;
-  const data = JSON.parse(widget.querySelector(".parameter-overview-data").textContent);
-  const parameters = data.parameters;
-  const searchInput = widget.querySelector(".parameter-overview-search");
-  const filterButtons = Array.from(widget.querySelectorAll(".parameter-filter"));
-  const summary = widget.querySelector(".parameter-overview-summary");
-  const topicList = widget.querySelector(".parameter-topic-list");
-  const emptyState = widget.querySelector(".parameter-empty-state");
-  let activeStatus = "all";
-
-  const text = (value) => value === null || value === undefined ? "" : String(value);
-  const hasValue = (value) => text(value).trim() !== "";
-  const escapeHtml = (value) => text(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll(\'"\', "&quot;")
-    .replaceAll("\'", "&#039;");
-
-  function parameterSearchText(parameter) {{
-    return [
-      parameter.param_name,
-      parameter.description,
-      parameter.topic,
-      parameter.part_of,
-      parameter.data_type,
-      parameter.cardinality,
-      parameter.default_value,
-      parameter.allowed_values,
-      parameter.examples,
-      parameter.status
-    ].map(text).join(" ").toLowerCase();
-  }}
-
-  function badgeClass(status) {{
-    if (status === "Must specify") return "must";
-    if (status === "Defaulted") return "defaulted";
-    return "optional";
-  }}
-
-  function statusLabel(status) {{
-    return status === "Must specify" ? "Required" : status;
-  }}
-
-  function renderValue(value, fallback) {{
-    return hasValue(value)
-      ? `<span class="parameter-detail-value">${{escapeHtml(value)}}</span>`
-      : `<span class="parameter-detail-value parameter-empty-value">${{escapeHtml(fallback)}}</span>`;
-  }}
-
-  function renderParameterRow(parameter, searchIsActive) {{
-    const statusClass = badgeClass(parameter.status);
-    const open = searchIsActive ? " open" : "";
-
-    return `
-      <details class="parameter-row ${{statusClass}}" data-param="${{escapeHtml(parameter.param_name)}}"${{open}}>
-        <summary class="parameter-head">
-          <span class="parameter-name-wrap">
-            <code class="parameter-name">${{escapeHtml(parameter.param_name)}}</code>
-            <span class="parameter-status ${{statusClass}}">${{escapeHtml(statusLabel(parameter.status))}}</span>
-          </span>
-          <span class="parameter-description">${{escapeHtml(parameter.description)}}</span>
-        </summary>
-        <div class="parameter-details">
-          <div class="parameter-detail">
-            <span class="parameter-detail-label">Default</span>
-            ${{renderValue(parameter.default_value, "missing allowed")}}
-          </div>
-          <div class="parameter-detail">
-            <span class="parameter-detail-label">Type</span>
-            <span class="parameter-detail-value">${{escapeHtml(parameter.data_type)}} / ${{escapeHtml(parameter.cardinality)}}</span>
-          </div>
-          <div class="parameter-detail">
-            <span class="parameter-detail-label">Allowed values</span>
-            ${{renderValue(parameter.allowed_values, "any value matching the type")}}
-          </div>
-          <div class="parameter-detail">
-            <span class="parameter-detail-label">Example</span>
-            ${{renderValue(parameter.examples, "no example yet")}}
-          </div>
-          <div class="parameter-detail">
-            <span class="parameter-detail-label">Used by</span>
-            ${{renderValue(parameter.part_of, "not assigned")}}
-          </div>
-        </div>
-      </details>
-    `;
-  }}
-
-  function renderTopicGroup(topic, topicParameters, searchIsActive) {{
-    const requiredCount = topicParameters.filter((parameter) => parameter.status === "Must specify").length;
-    const shouldOpen = searchIsActive || activeStatus !== "all" || requiredCount > 0;
-    const open = shouldOpen ? " open" : "";
-    const requiredText = requiredCount > 0 ? ` · ${{requiredCount}} required` : "";
-
-    return `
-      <details class="parameter-topic"${{open}}>
-        <summary>
-          <span class="parameter-topic-title">${{escapeHtml(topic)}}</span>
-          <span class="parameter-topic-count">${{topicParameters.length}}${{requiredText}}</span>
-        </summary>
-        <div class="parameter-list">
-          ${{topicParameters.map((parameter) => renderParameterRow(parameter, searchIsActive)).join("")}}
-        </div>
-      </details>
-    `;
-  }}
-
-  function updateFilterCounts() {{
-    filterButtons.forEach((button) => {{
-      const status = button.dataset.status;
-      const count = status === "all"
-        ? parameters.length
-        : parameters.filter((parameter) => parameter.status === status).length;
-      button.querySelector(".parameter-filter-count").textContent = count;
-    }});
-  }}
-
-  function render() {{
-    const query = searchInput.value.trim().toLowerCase();
-    const visible = parameters.filter((parameter) => {{
-      const matchesSearch = !query || parameterSearchText(parameter).includes(query);
-      const matchesStatus = activeStatus === "all" || parameter.status === activeStatus;
-      return matchesSearch && matchesStatus;
-    }});
-    const topicGroups = new Map();
-
-    visible.forEach((parameter) => {{
-      if (!topicGroups.has(parameter.topic)) topicGroups.set(parameter.topic, []);
-      topicGroups.get(parameter.topic).push(parameter);
-    }});
-
-    topicList.innerHTML = Array.from(topicGroups)
-      .map(([topic, topicParameters]) => renderTopicGroup(topic, topicParameters, query.length > 0))
-      .join("");
-    emptyState.style.display = visible.length === 0 ? "block" : "none";
-    topicList.style.display = visible.length === 0 ? "none" : "grid";
-
-    const required = parameters.filter((parameter) => parameter.status === "Must specify").length;
-    summary.textContent = query || activeStatus !== "all"
-      ? `Showing ${{visible.length}} of ${{parameters.length}} parameters`
-      : `${{parameters.length}} parameters · ${{required}} required`;
-  }}
-
-  searchInput.addEventListener("input", render);
-  filterButtons.forEach((button) => {{
-    button.addEventListener("click", () => {{
-      activeStatus = button.dataset.status;
-      filterButtons.forEach((item) => {{
-        const active = item === button;
-        item.classList.toggle("is-active", active);
-        item.setAttribute("aria-pressed", String(active));
-      }});
-      render();
-    }});
-  }});
-  updateFilterCounts();
-  render();
-}})();
-</script>'
+<script>{script}</script>'
   )
 }
 
@@ -312,7 +148,7 @@ emit_parameter_overview <- function(
 ) {
   manifest <- read_parameter_manifest(manifest_file)
   overview_data <- parameter_overview_data(manifest, scope)
-  cat(render_parameter_overview_fragment(overview_data, scope, search_placeholder))
+  cat("```{=html}\n", render_parameter_overview_fragment(overview_data, scope, search_placeholder), "\n```\n", sep = "")
 }
 
 render_parameter_overview_document <- function(overview_data, scope, search_placeholder = NULL) {

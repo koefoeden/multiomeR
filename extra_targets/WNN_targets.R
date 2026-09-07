@@ -175,7 +175,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = categorical.UMAPs.WNN,
-      description = "UMAPs colored by categorical metadata variables on the WNN embedding. [checkpoint:multimodal]",
+      description = "UMAPs colored by categorical metadata variables on the WNN embedding. [checkpoint:7_multimodal-QC]",
       command = metadata_w_cell_types_analysis_tibble.WNN |>
         plot_UMAP_from_metadata(
           variable = categorical_UMAP_var.WNN,
@@ -190,7 +190,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = continuous.UMAPs.WNN,
-      description = "UMAPs colored by continuous QC and gene expression features on the WNN embedding. [checkpoint:multimodal]",
+      description = "UMAPs colored by continuous QC and gene expression features on the WNN embedding. [checkpoint:7_multimodal-QC]",
       command = plot_UMAP_from_metadata(
         metadata_tibble = metadata_w_cell_types_analysis_tibble.WNN,
         variable = continuous_UMAP_spec.WNN$variable,
@@ -207,7 +207,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = categorical_bars_plots.WNN,
-      description = "Bar plots of categorical metadata composition per WNN cell type. [checkpoint:multimodal]",
+      description = "Bar plots of categorical metadata composition per WNN cell type. [checkpoint:7_multimodal-QC]",
       command = plot_categorical_bars_plot(
         metadata_tibble = metadata_w_cell_types_analysis_tibble.WNN,
         metadata_cols = aggregation_WNN_categorical_vars,
@@ -218,7 +218,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = markers_violin_plot.WNN,
-      description = "Violin plots of marker gene expression per WNN cell type. [checkpoint:multimodal]",
+      description = "Violin plots of marker gene expression per WNN cell type. [checkpoint:7_multimodal-QC]",
       command = plot_WNN_marker_expression_violins(
         metadata_tibble = metadata_w_cell_types_tibble.WNN,
         feature_matrix = aggregated_counts_BPCells_matrix.GEX,
@@ -229,7 +229,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = confusion_matrices_plots.WNN,
-      description = "Pairwise row-normalized confusion matrices comparing RNA, ATAC, and WNN cluster assignments. [checkpoint:multimodal]",
+      description = "Pairwise row-normalized confusion matrices comparing RNA, ATAC, and WNN cluster assignments. [checkpoint:7_multimodal-QC]",
       command = {
         pairwise_comparison_tibble <- tibble::tribble(
           ~plot_name    , ~source_label , ~target_label , ~source_cluster_col             , ~target_cluster_col             , ~source_cell_type_col               , ~target_cell_type_col               ,
@@ -285,7 +285,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = ATAC_vs_RNA_weight_boxplots_plot.WNN,
-      description = "Boxplots of ATAC vs RNA modality weights per cell type. [checkpoint:multimodal]",
+      description = "Boxplots of ATAC vs RNA modality weights per cell type. [checkpoint:7_multimodal-QC]",
       command = metadata_w_cell_types_tibble.WNN |>
         plot_ATAC_vs_RNA_weight_boxplots() |>
         save_plots_structured(),
@@ -293,7 +293,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = cluster_named_dim_tri_plot.WNN,
-      description = "3×3 grid of UMAPs with cell-type-named cluster-level identities. [checkpoint:multimodal]",
+      description = "3×3 grid of UMAPs with cell-type-named cluster-level identities. [checkpoint:7_multimodal-QC]",
       command = metadata_w_cell_types_tibble.WNN |>
         plot_3_by_3_clusters_and_reduction_UMAPs_from_metadata(
           cluster_col_suffix = "named"
@@ -303,7 +303,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = cluster_cell_type_dim_tri_plot.WNN,
-      description = "3×3 grid of UMAPs with cell-type identities. [checkpoint:multimodal]",
+      description = "3×3 grid of UMAPs with cell-type identities. [checkpoint:7_multimodal-QC]",
       command = metadata_w_cell_types_tibble.WNN |>
         plot_3_by_3_clusters_and_reduction_UMAPs_from_metadata(
           cluster_col_suffix = "cell_type"
@@ -313,7 +313,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = cross.UMAPs.WNN,
-      description = "Compute WNN UMAPs across a sweep of nNN counts. [checkpoint:multimodal]",
+      description = "Compute WNN UMAPs across a sweep of nNN counts. [checkpoint:7_multimodal-QC]",
       command = {
         sweep_umap_tibble <- run_WNN_UMAP(
           WNN_results = WNN_results,

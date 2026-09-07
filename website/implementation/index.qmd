@@ -25,7 +25,7 @@ The [differential analyses](implementation_differential_analyses.qmd) and [genet
 | Add or revise a YAML parameter | `cfg_pipeline_parameters.tsv`, then the owning config reader or target. |
 | Change GEM well preprocessing | `_targets.R` mapping plus `extra_targets/per_GEM_well_targets.R`. |
 | Change aggregation GEX, ATAC, or WNN processing | The corresponding graph section and `extra_targets/*_targets.R` file. |
-| Inspect existing review selections | `[checkpoint:<name>]` description tags; the user-facing QC procedure is under development. |
+| Inspect existing review selections | `[checkpoint:<name>]` description tags and the numbered QC review guide. |
 | Add a graph-visible target | Existing `[part_of_graph:<graph_id>]` tags and graph-pruning rules. |
 | Change resource routing | `crew_controllers.R`, `packages/multiomeRCore/R/resource_helpers.R`, and the runtime bootstrap convention. |
 

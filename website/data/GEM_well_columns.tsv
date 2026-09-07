@@ -1,0 +1,13 @@
+column	label	category	purpose	details	is_required
+GEM_well_ID	GEM well ID	Identity and ownership	Stable ID used by aggregations and target names.	Must be unique. Use the same value in aggregation_GEM_well_IDs.	TRUE
+GEM_well_dataset	Dataset	Identity and ownership	Groups related GEM wells for pre-aggregation summaries.	This is a processing and reporting group, not the donor identifier.	TRUE
+GEM_well_donor_id	Donor ID	Identity and ownership	Links a non-multiplexed GEM well to donor metadata.	Use NA when donor identities will instead be resolved from a configured VCF.	TRUE
+GEM_well_n_donors	Expected donors	Identity and ownership	States how many donors are expected in the GEM well.	Use 1 for an unmultiplexed well containing one donor.	TRUE
+GEM_well_cellranger_arc_count_dir	Cell Ranger ARC count directory	Input files	Locates the Cell Ranger ARC count output for this GEM well.	Point to the directory containing outs, not to outs itself.	TRUE
+GEM_well_add_cellbender	Use CellBender	Input files	Chooses whether corrected GEX counts replace the Cell Ranger counts.	When TRUE, the configured or standard-layout CellBender H5 file must exist.	TRUE
+GEM_well_cellbender_h5_file	CellBender H5 file	Input files	Optionally gives the corrected GEX count file.	Leave as NA when CellBender is disabled or its standard-layout path is used.	TRUE
+GEM_well_donors_VCF_file	Donor VCF file	Input files	Optionally enables genotype-based donor demultiplexing.	Without a VCF, every called nucleus receives GEM_well_donor_id.	TRUE
+GEM_well_cellranger_arc_reference_json	Reference JSON	Input files	Identifies the exact Cell Ranger ARC reference used for count.	The genome must match the feature H5, and all GEM wells in an aggregation must use compatible references.	TRUE
+GEM_well_QC_exclude_list	Pre-aggregation QC filters	Processing and scope	Defines per-barcode filters applied before aggregation.	Write complete R expressions separated by ;;. An empty value applies no filters.	TRUE
+GEM_well_is_active	Active	Processing and scope	Controls whether processing targets are constructed for this GEM well.	Every GEM well selected by an active aggregation must also be active.	TRUE
+GEM_well_cell_sorting	Cell or nuclei sorting	Experimental metadata	Describes sorting or enrichment before library preparation.	Example optional metadata column for values such as sorted, depleted, or unsorted material. Add other GEM_well_ columns when your analysis needs them.	FALSE

@@ -49,6 +49,7 @@ repo_root <- find_repo_root(current_source_file())
 knitr::opts_knit$set(root.dir = repo_root)
 
 source(file.path(repo_root, "website", "helpers", "parameter_overview.R"))
+source(file.path(repo_root, "website", "helpers", "GEM_well_overview.R"))
 
 emit_mermaid <- function(path, theme_path = "website/figures/common_theme.mmd") {
   mermaid_lines <- readLines(path, warn = FALSE)

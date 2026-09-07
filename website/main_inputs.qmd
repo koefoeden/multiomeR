@@ -7,10 +7,14 @@ source("helpers/_setup.R")
 
 multiomeR uses two linked configuration layers. A **GEM well** points to one `cellranger-arc count` output and defines its pre-aggregation processing and QC. An **aggregation** selects GEM wells for joint GEX, ATAC, and WNN analysis.
 
+::: {.scrollable-table}
+
 | Layer | Configuration | Key relationship |
 |------------------------|------------------------|------------------------|
 | GEM well | `cfg_GEM_wells.tsv` | Aggregations refer to one or more `GEM_well_ID` values. |
 | Aggregation | `cfg_aggregations.yaml` | Selects GEM wells and points to donor-level metadata. |
+
+:::
 
 The committed `cfg_GEM_wells.tsv` and `cfg_aggregations.yaml` files are the
 active configuration files. They enable only the two GEM wells and the
@@ -34,6 +38,8 @@ how the files connect; one donor is not enough for a replicated comparison.
 Add a row to `cfg_GEM_wells.tsv` with these values. This vertical view is a
 reading aid; the saved TSV has one GEM well per row.
 
+::: {.scrollable-table}
+
 | Column | Example value |
 |---|---|
 | `GEM_well_ID` | `your_GEM_well` |
@@ -48,9 +54,11 @@ reading aid; the saved TSV has one GEM well per row.
 | `GEM_well_is_active` | `TRUE` |
 | `GEM_well_multiplex_batch` | `batch_1` |
 
-Set `GEM_well_QC_exclude_list` to the exclusions chosen for your data. The
-[checkpoint guidance](main_running.qmd#qc-checkpoints) is under development;
-do not treat the example's numerical cutoffs as recommendations for your tissue.
+:::
+
+Set `GEM_well_QC_exclude_list` to the exclusions chosen for your data. Follow the
+[numbered QC reviews](main_running.qmd#qc-checkpoints); do not treat the demo's
+numerical cutoffs as recommendations for your tissue.
 
 `GEM_well_cellranger_arc_reference_json` must point to the `reference.json` from the exact Cell Ranger ARC reference used to create that GEM well's output. multiomeR checks that the JSON genome matches the feature HDF5 and rejects aggregations whose GEM wells use different references.
 
@@ -124,27 +132,24 @@ The searchable overviews below are generated from `cfg_pipeline_parameters.tsv`,
 Use the [GEM-well example](https://github.com/koefoeden/multiomeR/blob/main/cfg_GEM_wells.tsv)
 to check the full set of columns.
 
-| Column | Meaning |
-|------------------------------------|------------------------------------|
-| `GEM_well_ID` | Stable GEM well identifier used in target names and aggregation config. |
-| `GEM_well_dataset` | Internal grouping key for pre-aggregation QC summaries. |
-| `GEM_well_donor_id` | Donor assigned to a non-multiplexed GEM well; use `NA` when donor identities are resolved from a VCF. |
-| `GEM_well_n_donors` | Expected donor count. |
-| `GEM_well_cellranger_arc_count_dir` | Path to the directory containing `outs/`. |
-| `GEM_well_add_cellbender` | Whether the standard-layout CellBender output should be used. |
-| `GEM_well_cellbender_h5_file` | CellBender-corrected GEX H5 path when enabled; otherwise `NA`. |
-| `GEM_well_donors_VCF_file` | Optional donor-genotype VCF for `cellsnp-lite` and `vireo`; otherwise `NA`. |
-| `GEM_well_cellranger_arc_reference_json` | `reference.json` from the Cell Ranger ARC reference used for this GEM well. |
-| `GEM_well_QC_exclude_list` | Complete per-barcode exclusion expressions separated by ` ;; `; empty applies none. |
-| `GEM_well_is_active` | Whether to construct this GEM well's processing targets. |
-| Other `GEM_well_*` columns | Optional annotations consumed only when requested by a downstream metadata view or export. |
+The table below is a documentation snapshot of the two public demo wells,
+showing the core columns and one optional annotation. Bold columns must be
+present in the TSV; some allow an NA value. Scroll horizontally and focus or
+hover over a column's **i** button for its meaning. The other inactive rows and
+metadata columns in the public configuration remain available as examples.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_GEM_well_demo_table(
+  GEM_well_config_file = "website/data/demo_GEM_wells.tsv",
+  dictionary_file = "website/data/GEM_well_columns.tsv"
+)
+```
 
 ### Aggregation parameters
 
 See the [aggregation example](https://github.com/koefoeden/multiomeR/blob/main/cfg_aggregations.yaml)
-for complete examples. Required parameters need a value, supplied directly,
-by a default, or by an `inherits:` parent. Optional parameters can remain
-`NULL` where the reference below allows it.
+for a complete configuration. Search by name or purpose, or choose a topic.
+Defaults are visible beside each parameter; open a row for its type and example.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_parameter_overview("aggregation")

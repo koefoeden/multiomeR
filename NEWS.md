@@ -1,5 +1,10 @@
 # multiomeR 0.4.1.9000
 
+- Redesigned the searchable parameter reference with topic filters, visible
+  defaults, readable expanded details, and a responsive layout.
+- Integrated the public demo gallery refresh and seven numbered QC reviews,
+  retaining a separate GEX PCA review before clustering.
+
 - Added ordered QC checkpoints, per-GEM-well cutoff comparisons, and clearer
   PCA review plots, with an informational QC metric manifest.
 

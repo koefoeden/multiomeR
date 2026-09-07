@@ -52,9 +52,9 @@ The **main pipeline** processes each GEM well, aggregates selected GEM wells, an
 
 ## Development status
 
-multiomeR is in beta and may introduce breaking changes. The QC checkpoint
-procedure is [under development](main_running.qmd#qc-checkpoints); it is not
-yet a finished guide to accepting or rejecting an analysis. Report problems
+multiomeR is in beta and may introduce breaking changes. The [numbered QC reviews](main_running.qmd#qc-checkpoints)
+show what to inspect before each analysis stage. Acceptance criteria still
+depend on the tissue, study design, and intended use. Report problems
 or questions through [GitHub issues](https://github.com/koefoeden/multiomeR/issues).
 
 Continue to [Install and prepare the demo](demo_installation.qmd).

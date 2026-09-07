@@ -65,8 +65,8 @@ Requested plots use the same scope-based layout under `outputs/plots/`.
 
 The final-object demo command does not build all these plots. See
 [Request an additional result](main_running.qmd#request-an-additional-result)
-for how to build a named gallery target. The organized QC checkpoint
-procedure remains under development.
+for how to build a named gallery target, or follow the
+[numbered QC reviews](main_running.qmd#qc-checkpoints) for the broader diagnostics.
 
 ## Next steps
 

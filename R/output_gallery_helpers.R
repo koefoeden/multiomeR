@@ -26,6 +26,7 @@ read_output_gallery_manifest <- function(manifest_file = file.path("website", "o
 
   purrr::map_dfr(items, \(item) {
     tibble::tibble(
+      id = item$id %||% NA_character_,
       section = item$section %||% NA_character_,
       subsection = item$subsection %||% NA_character_,
       title = item$title %||% NA_character_,
@@ -45,7 +46,20 @@ read_output_gallery_manifest <- function(manifest_file = file.path("website", "o
 #' @return Manifest tibble with resolved asset paths and existence flags.
 #' @keywords internal
 check_output_gallery_assets <- function(manifest_file = file.path("website", "output_gallery.yaml"), gallery_root = "website") {
-  read_output_gallery_manifest(manifest_file) |>
+  manifest <- read_output_gallery_manifest(manifest_file)
+  gallery_ids <- stats::na.omit(manifest$id)
+
+  if (anyDuplicated(gallery_ids)) {
+    stop("Output gallery IDs must be unique.", call. = FALSE)
+  }
+  if (any(!grepl("^[a-z][a-z0-9-]*$", gallery_ids))) {
+    stop(
+      "Output gallery IDs must start with a lowercase letter and contain only lowercase letters, numbers, and hyphens.",
+      call. = FALSE
+    )
+  }
+
+  manifest |>
     dplyr::mutate(
       asset_path = dplyr::if_else(
         is.na(.data$asset) | is_absolute_gallery_path(.data$asset),
@@ -61,13 +75,18 @@ check_output_gallery_assets <- function(manifest_file = file.path("website", "ou
 #' @param item One-row gallery item represented as a list.
 #' @keywords internal
 render_gallery_item <- function(item) {
+  id_attribute <- if (is.na(item$id)) {
+    ""
+  } else {
+    sprintf(' id="%s"', htmltools::htmlEscape(item$id))
+  }
   title <- htmltools::htmlEscape(item$title)
   description <- htmltools::htmlEscape(item$description)
   target <- htmltools::htmlEscape(item$target)
   asset <- item$asset
   asset_exists <- isTRUE(item$asset_exists)
 
-  cat('<article class="output-gallery-card">\n')
+  cat(sprintf('<article%s class="output-gallery-card">\n', id_attribute))
   if (asset_exists) {
     cat(sprintf('<a href="%s"><img src="%s" alt="%s"></a>\n', asset, asset, title))
   } else {
@@ -139,7 +158,11 @@ resolve_output_gallery_source_paths <- function(
 
   manifest |>
     dplyr::mutate(.gallery_row = dplyr::row_number()) |>
-    dplyr::left_join(path_records, by = c("target" = "name")) |>
+    dplyr::left_join(
+      path_records,
+      by = c("target" = "name"),
+      relationship = "many-to-many"
+    ) |>
     dplyr::slice_head(n = 1, by = ".gallery_row") |>
     dplyr::select(-".gallery_row") |>
     dplyr::mutate(

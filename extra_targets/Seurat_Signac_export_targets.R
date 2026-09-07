@@ -26,7 +26,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = multimodal_Seurat_object,
-    description = "Build a Seurat/Signac compatibility object backed by BPCells matrices where possible. [checkpoint:multimodal]",
+    description = "Build a Seurat/Signac compatibility object backed by BPCells matrices where possible. [checkpoint:7_multimodal-QC]",
     command = build_seurat_signac_convenience_object(
       GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX,
       ATAC_peak_matrix = peak_QC_filtered_BPCells_matrix.ATAC,

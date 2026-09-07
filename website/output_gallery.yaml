@@ -1,57 +1,121 @@
-- section: Main pipeline
-  subsection: Parallel GEM well pre-processing
-  title: QC metric distributions
-  description: Compares QC metric distributions across GEM wells to reveal outliers before aggregation.
+- id: pre-aggregation-qc-rna-counts
+  section: Main pipeline
+  subsection: Pre-aggregation QC
+  title: RNA count distributions
+  description: Compares Cell Ranger-called RNA count distributions across the two demo GEM wells before custom QC filters are applied.
   target: per_dataset_QC_violins.immune_human_dataset
   asset: gallery_assets/parallel_GEM_well_preprocessing/qc_violins.png
+  source_file: outputs/plots/immune_human_dataset/per_dataset_QC_violins/01_nCount_RNA.png
   status: available
 
-- section: Main pipeline
-  subsection: Parallel GEM well pre-processing
-  title: QC exclusion overlaps
-  description: Shows how different QC filters overlap when excluding low-quality cells.
-  target: per_dataset_excluded_upset.immune_human_dataset
+- id: pre-aggregation-qc-tss-enrichment
+  section: Main pipeline
+  subsection: Pre-aggregation QC
+  title: TSS enrichment distributions
+  description: Compares TSS enrichment across the two demo GEM wells before custom QC filters are applied.
+  target: per_dataset_QC_violins.immune_human_dataset
+  asset: gallery_assets/parallel_GEM_well_preprocessing/tss_enrichment.png
+  source_file: outputs/plots/immune_human_dataset/per_dataset_QC_violins/06_TSS.enrichment.png
+  status: available
+
+- id: aggregation-input-qc-exclusions
+  section: Main pipeline
+  subsection: Aggregation input QC
+  title: GEM-well QC exclusion overlaps
+  description: Shows the overlap between pre-aggregation filters among Cell Ranger-called cells entering the two-GEM-well aggregation.
+  target: aggregation_excluded_cellranger_only_barcodes_by_type_upset.immune_human_2x
   asset: gallery_assets/parallel_GEM_well_preprocessing/qc_excluded_upset.png
+  source_file: outputs/plots/immune_human_2x/aggregation_excluded_cellranger_only_barcodes_by_type_upset.png
   status: available
 
-- section: Main pipeline
+- id: gex-harmony-umap
+  section: Main pipeline
   subsection: GEX
   title: Harmony UMAP
-  description: Shows how cells separate in the gene-expression embedding after batch-aware integration.
+  description: Shows the gene-expression embedding and accepted cell-type labels for the two-GEM-well aggregation.
   target: harmony.categorical.UMAPs.GEX.immune_human_2x
   asset: gallery_assets/GEX/harmony_categorical_umap.png
+  source_file: outputs/plots/immune_human_2x/GEX/UMAPs/categorical/harmony/PCA_harmony_SNN_cluster_cell_type.png
   status: available
 
-- section: Main pipeline
+- id: gex-marker-dot-plot
+  section: Main pipeline
   subsection: GEX
   title: Marker dot plot
-  description: Highlights marker gene patterns that distinguish the inferred cell groups.
+  description: Highlights marker gene patterns used to evaluate the inferred GEX cell types.
   target: markers_dot_plot.GEX.immune_human_2x
   asset: gallery_assets/GEX/markers_dot_plot.png
+  source_file: outputs/plots/immune_human_2x/GEX/markers_dot_plot.png
   status: available
 
-- section: Main pipeline
+- id: gex-scdblfinder-scores
+  section: Main pipeline
+  subsection: GEX
+  title: scDblFinder scores
+  description: Compares GEX doublet scores and calls across clusters and cell types before choosing a removal policy.
+  target: scDblFinder_score_violins_plot.GEX.immune_human_2x
+  asset: gallery_assets/GEX/scdblfinder_scores.png
+  source_file: outputs/plots/immune_human_2x/GEX/scDblFinder_score_violins_plot.png
+  status: available
+
+- id: peak-qc-distributions
+  section: Main pipeline
+  subsection: Peak QC
+  title: Peak-based QC distributions
+  description: Compares peak enrichment, blacklist fraction, peak fraction, and ATAC counts across the two demo GEM wells before peak-based filtering.
+  target: peaks_QC_violins_plot.ATAC.immune_human_2x
+  asset: gallery_assets/ATAC/peak_qc_violins.png
+  source_file: outputs/plots/immune_human_2x/ATAC/peaks_QC_violins_plot.png
+  status: available
+
+- id: pre-lsi-qc-exclusions
+  section: Main pipeline
+  subsection: Pre-LSI QC
+  title: Peak-QC exclusion overlaps
+  description: Shows the overlap between aggregation-level peak-QC filters before LSI and ATAC clustering.
+  target: QC_excluded_upset_plot.ATAC.immune_human_2x
+  asset: gallery_assets/ATAC/qc_excluded_upset.png
+  source_file: outputs/plots/immune_human_2x/ATAC/QC_excluded_upset_plot.png
+  status: available
+
+- id: atac-harmony-umap
+  section: Main pipeline
   subsection: ATAC
   title: Harmony UMAP
-  description: Shows how cells separate in the chromatin-accessibility embedding after batch-aware integration.
+  description: Shows the chromatin-accessibility embedding and accepted cell-type labels for the two-GEM-well aggregation.
   target: categorical.UMAPs.ATAC.immune_human_2x
   asset: gallery_assets/ATAC/harmony_categorical_umap.png
+  source_file: outputs/plots/immune_human_2x/ATAC/UMAPs/categorical/LSI_harmony_SNN_cluster_cell_type.png
   status: available
 
-- section: Main pipeline
+- id: atac-scdblfinder-scores
+  section: Main pipeline
+  subsection: ATAC
+  title: scDblFinder scores
+  description: Compares ATAC doublet scores and calls across clusters and cell types before choosing a removal policy.
+  target: scDblFinder_score_violins_plot.ATAC.immune_human_2x
+  asset: gallery_assets/ATAC/scdblfinder_scores.png
+  source_file: outputs/plots/immune_human_2x/ATAC/scDblFinder_score_violins_plot.png
+  status: available
+
+- id: wnn-umap
+  section: Main pipeline
   subsection: WNN
-  title: Harmony UMAP
-  description: Combines RNA and ATAC information to show the integrated multimodal cell-state structure.
+  title: Integrated UMAP
+  description: Shows the integrated multimodal cell-state structure and accepted cell-type labels for the two-GEM-well aggregation.
   target: categorical.UMAPs.WNN.immune_human_2x
   asset: gallery_assets/WNN/harmony_categorical_umap.png
+  source_file: outputs/plots/immune_human_2x/WNN/UMAPs/categorical/WNN_harmony_SNN_cluster_cell_type.png
   status: available
 
-- section: Main pipeline
+- id: wnn-modality-weights
+  section: Main pipeline
   subsection: WNN
   title: Modality weights
-  description: Shows how RNA and ATAC evidence contribute differently across cell groups.
+  description: Shows how RNA and ATAC evidence contribute differently across cell groups in the two-GEM-well aggregation.
   target: ATAC_vs_RNA_weight_boxplots_plot.WNN.immune_human_2x
   asset: gallery_assets/WNN/atac_vs_rna_weight_boxplots.png
+  source_file: outputs/plots/immune_human_2x/WNN/ATAC_vs_RNA_weight_boxplots_plot.png
   status: available
 
 - section: Differential analyses module

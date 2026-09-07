@@ -35,5 +35,4 @@ outputs; the [implementation graph](implementation/implementation_main.html)
 provides the detailed computational dependencies when you need them.
 
 Continue to [Configuration and inputs](main_inputs.qmd) to connect your
-files. The [QC checkpoint procedure](main_running.qmd#qc-checkpoints) remains
-under development.
+files, then follow the [numbered QC reviews](main_running.qmd#qc-checkpoints).

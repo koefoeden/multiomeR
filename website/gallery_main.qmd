@@ -5,7 +5,6 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-source("../packages/multiomeRCore/R/null_default.R")
 source("../R/output_gallery_helpers.R")
 gallery_items <- check_output_gallery_assets(
   manifest_file = "output_gallery.yaml",
@@ -14,25 +13,23 @@ gallery_items <- check_output_gallery_assets(
 ```
 
 These documentation snapshots show representative outputs from the public
-`immune_human_2x` configuration. The first cards summarize pre-aggregation QC;
-GEX, ATAC, and WNN cards are aggregation-level. Each card names its target.
+`immune_human_2x` configuration with its two active GEM wells. The cards follow
+the numbered reviews in the adaptation guide. Each
+card names the target that generated the displayed demo result; click an image
+to open it at full resolution.
 
-Browse these examples before installing, or use them alongside your own
-results. To reproduce a plot, [install](demo_installation.qmd) the demo and
-[request the target named on its card](main_running.qmd#request-an-additional-result).
-The demo's final-object command does not build every gallery plot. The
-[QC checkpoint procedure](main_running.qmd#qc-checkpoints) is under development.
+To reproduce these plot families, [install](demo_installation.qmd) and [run](demo_running.qmd) the demo, then request the broader [review checkpoints](main_running.qmd). The endpoint-only quickstart does not build every gallery plot; [inspect its local outputs](demo_outputs.qmd) to see the distinction.
 
 ```{r, echo = FALSE, results = "asis"}
 render_gallery_section(
   gallery_items,
   "Main pipeline",
   subsection_descriptions = c(
-    "Parallel GEM well pre-processing" = paste(
-      "Cross-GEM-well summaries compare inputs before aggregation and help",
-      "identify GEM well-specific QC problems."
-    ),
+    "Pre-aggregation QC" = "Unfiltered distributions used to choose per-GEM-well QC expressions.",
+    "Aggregation input QC" = "Applied per-GEM-well filters and the cells retained for GEX.",
     "GEX" = "Aggregation-level RNA dimension-reduction and cell-type review outputs.",
+    "Peak QC" = "Peak-based ATAC distributions used to choose aggregation-level QC expressions.",
+    "Pre-LSI QC" = "Applied peak-based filters and the cells retained for ATAC dimensionality reduction.",
     "ATAC" = "Aggregation-level chromatin-accessibility dimension-reduction outputs.",
     "WNN" = "Integrated multimodal structure and modality-contribution outputs."
   )

@@ -130,4 +130,3 @@ emit_GEM_well_demo_table <- function(
     sep = ""
   )
 }
-

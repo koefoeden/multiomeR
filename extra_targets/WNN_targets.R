@@ -129,17 +129,6 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     targets::tar_target(
-      name = metadata_w_cell_types_subgroup_tibble.WNN,
-      description = "Join only configured subgroup model variables onto processed WNN metadata",
-      command = prepare_GEX_metadata_tibble(
-        metadata_tibble = metadata_w_cell_types_tibble.WNN,
-        barcode_vec = metadata_w_cell_types_tibble.WNN$barcode_w_prefix,
-        donor_id_metadata_tibble = donor_id_subgroup_metadata_tibble,
-        GEM_well_metadata_tibble = GEM_well_subgroup_metadata_tibble
-      ),
-      resources = get_tar_resources(RAM_GB_req = 16)
-    ),
-    targets::tar_target(
       name = metadata_w_cell_types_annotation_tibble.WNN,
       description = "Join complete donor and GEM well annotations onto processed WNN metadata",
       command = prepare_GEX_metadata_tibble(

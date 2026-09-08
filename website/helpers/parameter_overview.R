@@ -47,7 +47,6 @@ parameter_topic_order <- function(scope) {
       "GEX processing",
       "ATAC processing",
       "Multimodal processing",
-      "subgroup analysis",
       "plotting/UMAP",
       "miscellaneous"
     ),

@@ -91,7 +91,7 @@ run_GEX_PCA_BPCells <- function(
   feature_counts <- BPCells::rowSums(counts_matrix)
   keep_features <- names(feature_counts)[feature_counts > min_feature_count]
   if (length(keep_features) < 2) {
-    stop("Too few expressed GEX features remain for subgroup PCA.")
+    stop("Too few expressed GEX features remain for PCA.")
   }
   counts_matrix <- counts_matrix[keep_features, , drop = FALSE]
 
@@ -147,7 +147,7 @@ run_GEX_PCA_BPCells <- function(
 
   n_components <- min(as.integer(n_components), nrow(pearson_residuals) - 1L, ncol(pearson_residuals) - 1L)
   if (n_components < 1) {
-    stop("Too few cells or features remain for subgroup PCA.")
+    stop("Too few cells or features remain for PCA.")
   }
 
   pca_out <- run_dense_feature_gram_PCA(
@@ -254,7 +254,7 @@ run_BPCells_native_GEX_PCA <- function(
 
   n_components <- min(as.integer(n_components), nrow(pearson_residuals) - 1L, ncol(pearson_residuals) - 1L)
   if (n_components < 1) {
-    stop("Too few cells or features remain for subgroup PCA.")
+    stop("Too few cells or features remain for PCA.")
   }
 
   svd <- BPCells::svds(pearson_residuals, k = n_components, threads = threads)

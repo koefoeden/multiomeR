@@ -1620,7 +1620,7 @@ The core mapping flow is:
 Within each aggregation, `GEM_well_metadata_tibble` reads the same canonical
 file, subsets it to `aggregation_GEM_well_IDs`, and preserves that order. Cheap
 keyed projection targets then expose only the columns requested for SCT,
-Harmony, subgroup modelling, or configured analyses. Complete non-processing
+Harmony or configured analyses. Complete non-processing
 annotations are joined only for explicit export objects. These projection
 targets are cache boundaries: a newly added or edited online column can update
 the canonical table without changing expensive consumers whose selected view
@@ -1947,7 +1947,6 @@ complete command and resource declaration.
 | ATAC | `extra_targets/ATAC_targets.R` |
 | WNN | `extra_targets/WNN_targets.R` |
 | Compatibility export | `extra_targets/Seurat_Signac_export_targets.R` |
-| Subgroups | `extra_targets/subgroups.R` |
 
 ## Parallel pre-processing
 
@@ -1974,14 +1973,6 @@ This view covers GEX and ATAC embedding handoffs, WNN integration, modality weig
 The native implementation, its differences from Seurat, and the maintained similarity thresholds are recorded in [Algorithmic implementations, deviations and validation](algorithm_validation.qmd#native-weighted-nearest-neighbors).
 
 [Mermaid graph omitted; source: `website/figures/human_curated/WNN_v2.mmd`]
-
-## Subgroup reprocessing
-
-This view covers optional subgroup-native GEX, ATAC, and WNN reprocessing for sufficiently large parent groups.
-
-[Mermaid graph omitted; source: `website/figures/human_curated/full_subgroups_v2.mmd`]
-
-Subgroup reprocessing is configuration-dependent and should not be treated as part of the minimum main-pipeline path.
 
 <!-- end include: website/implementation_main.qmd -->
 

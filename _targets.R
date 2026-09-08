@@ -97,8 +97,7 @@ pipeline <- rlang::list2(
     source("extra_targets/GEX_graph_and_cluster_targets.R")$value,
     source("extra_targets/ATAC_targets.R")$value,
     source("extra_targets/WNN_targets.R")$value,
-    source("extra_targets/Seurat_Signac_export_targets.R")$value,
-    source("extra_targets/subgroups.R")$value
+    source("extra_targets/Seurat_Signac_export_targets.R")$value
   ),
   tarchetypes::tar_map(
     values = peak_gene_correlation_aggregation_tibble,

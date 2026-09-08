@@ -117,7 +117,7 @@ The core mapping flow is:
 Within each aggregation, `GEM_well_metadata_tibble` reads the same canonical
 file, subsets it to `aggregation_GEM_well_IDs`, and preserves that order. Cheap
 keyed projection targets then expose only the columns requested for SCT,
-Harmony, subgroup modelling, or configured analyses. Complete non-processing
+Harmony or configured analyses. Complete non-processing
 annotations are joined only for explicit export objects. These projection
 targets are cache boundaries: a newly added or edited online column can update
 the canonical table without changing expensive consumers whose selected view

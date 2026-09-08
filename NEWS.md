@@ -8,9 +8,8 @@
 - Added ordered QC checkpoints, per-GEM-well cutoff comparisons, and clearer
   PCA review plots, with an informational QC metric manifest.
 
-- Fixed exact subgroup selection, subgroup plotting metadata, and peak
-  retention when no blacklist intervals overlap. Limited differential-analysis
-  metadata dependencies to the configured donors and variables.
+- Fixed peak retention when no blacklist intervals overlap. Limited
+  differential-analysis metadata dependencies to the configured donors and variables.
 
 - Split chromVAR detail preparation from rendering and cache details per GWAS;
   added optional deterministic sampling for pseudobulk correlation estimation.

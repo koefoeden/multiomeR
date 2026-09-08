@@ -294,34 +294,6 @@ rlang::list2(
     )
   ),
   targets::tar_target(
-    name = donor_id_subgroup_metadata_tibble,
-    description = "Project donor metadata to subgroup model variables",
-    command = project_keyed_metadata_tibble(
-      donor_id_metadata_tibble,
-      "donor_id",
-      c(
-        aggregation_harmony_correction_metadata_col_names,
-        aggregation_subgroups_col,
-        aggregation_subgroups_SCT_regress_vars,
-        aggregation_subgroups_extra_harmony_covars
-      )
-    )
-  ),
-  targets::tar_target(
-    name = GEM_well_subgroup_metadata_tibble,
-    description = "Project GEM well metadata to subgroup model variables",
-    command = project_keyed_metadata_tibble(
-      GEM_well_metadata_tibble,
-      "GEM_well_ID",
-      c(
-        aggregation_harmony_correction_metadata_col_names,
-        aggregation_subgroups_col,
-        aggregation_subgroups_SCT_regress_vars,
-        aggregation_subgroups_extra_harmony_covars
-      )
-    )
-  ),
-  targets::tar_target(
     name = donor_id_analysis_metadata_tibble,
     description = "Project donor metadata to configured analysis variables",
     command = project_keyed_metadata_tibble(

@@ -276,25 +276,24 @@ make_peak_gene_correlation_cell_group_diagnostics <- function(
 #' Build the donor-aware peak gene correlation nuisance design
 #'
 #' @param aggregate_depth_tibble Donor-state aggregate metadata.
-#' @return A full-rank numeric design matrix containing donor, ATAC state, and
+#' @return A full-rank numeric design matrix containing donor and
 #'   library-depth terms.
 #' @keywords internal
 
 make_peak_gene_correlation_design_matrix <- function(aggregate_depth_tibble) {
-  design_data <- aggregate_depth_tibble |>
-    dplyr::transmute(
-      donor_id = factor(.data$donor_id),
-      state_bin = factor(.data$state_bin),
-      log_GEX_depth = log1p(.data$GEX_depth),
-      log_ATAC_depth = log1p(.data$ATAC_depth)
-    )
-
-  design <- stats::model.matrix(
-    ~ donor_id + state_bin + scale(log_GEX_depth) + scale(log_ATAC_depth),
-    data = design_data
-  )
-  finite_cols <- apply(design, 2, \(x) all(is.finite(x)))
-  design <- design[, finite_cols, drop = FALSE]
+  donor_id <- factor(aggregate_depth_tibble$donor_id)
+  design <- if (nlevels(donor_id) > 1L) {
+    stats::model.matrix(~ donor_id)
+  } else {
+    matrix(1, nrow(aggregate_depth_tibble), 1L, dimnames = list(NULL, "(Intercept)"))
+  }
+  for (depth_col in c("GEX_depth", "ATAC_depth")) {
+    depth <- log1p(aggregate_depth_tibble[[depth_col]])
+    if (all(is.finite(depth)) && isTRUE(stats::sd(depth) > 0)) {
+      design <- cbind(design, scale(depth))
+      colnames(design)[ncol(design)] <- depth_col
+    }
+  }
   design_qr <- qr(design)
   design[, design_qr$pivot[seq_len(design_qr$rank)], drop = FALSE]
 }
@@ -308,8 +307,8 @@ residualize_peak_gene_correlation_matrix <- function(feature_matrix, design) {
 #'
 #' Partition one broad cell group into mutually exclusive ATAC-defined states,
 #' then pseudobulk cells within donor and state. The retained table requires
-#' repeated state observations within donor and broad state support across
-#' donors, so donor fixed effects can be used in the association model.
+#' repeated state observations within donor. States need not be shared across
+#' donors: candidate discovery is allowed even in a single donor.
 #'
 #' @param cell_group_tibble One-row tibble from
 #'   `make_peak_gene_correlation_cell_groups()`.
@@ -335,8 +334,8 @@ make_peak_gene_correlation_donor_state_record <- function(
   donor_col = "donor_id",
   dims = 2:20,
   min_cells_per_donor_state = 20L,
-  min_donors = 30L,
-  min_donors_per_state = 20L,
+  min_donors = 1L,
+  min_donors_per_state = 1L,
   min_states_per_donor = 2L,
   max_state_bins = 20L,
   seed = 1L
@@ -473,10 +472,13 @@ make_peak_gene_correlation_donor_state_record <- function(
   state_fit <- stats::kmeans(
     x = group_embedding,
     centers = n_state_bins,
-    iter.max = 50L,
+    iter.max = 1000L,
     nstart = 1L,
     algorithm = "Lloyd"
   )
+  if (isTRUE(state_fit$ifault == 2L)) {
+    stop("ATAC state clustering did not converge for ", cell_group)
+  }
   state_width <- nchar(as.character(n_state_bins))
   group_metadata$state_bin <- sprintf(
     paste0("ATAC_state_%0", state_width, "d"),
@@ -559,12 +561,27 @@ make_peak_gene_correlation_group_chromosome_tibble <- function(
   cell_groups <- donor_state_aggregates_tibble |>
     dplyr::distinct(.data$cell_group)
 
+  if (nrow(cell_groups) == 0L) {
+    return(tibble::tibble(
+      cell_group = "__no_analyzable_cell_group__",
+      chr = NA_character_,
+      n_candidate_pairs = 0L,
+      branch_id = "__no_analyzable_branch__",
+      analyzable = FALSE
+    ) |>
+      dplyr::group_by(.data$branch_id) |>
+      targets::tar_group())
+  }
+
   tidyr::crossing(cell_groups, chromosome_tibble) |>
     dplyr::inner_join(
       candidate_pairs_tibble |> dplyr::count(.data$chr, name = "n_candidate_pairs"),
       by = "chr"
     ) |>
-    dplyr::mutate(branch_id = paste(.data$cell_group, .data$chr, sep = "__")) |>
+    dplyr::mutate(
+      branch_id = paste(.data$cell_group, .data$chr, sep = "__"),
+      analyzable = TRUE
+    ) |>
     dplyr::group_by(branch_id) |>
     targets::tar_group()
 }
@@ -617,6 +634,28 @@ make_peak_gene_correlation_aggregate_matrices <- function(
 ) {
   cell_group <- group_chromosome_tibble$cell_group[[1]]
   chr <- group_chromosome_tibble$chr[[1]]
+  if (!isTRUE(group_chromosome_tibble$analyzable[[1]])) {
+    empty_matrix <- Matrix::Matrix(
+      matrix(numeric(), nrow = 0L, ncol = 0L),
+      sparse = TRUE
+    )
+    return(list(
+      cell_group = cell_group,
+      chr = chr,
+      GEX_counts = empty_matrix,
+      ATAC_counts = empty_matrix,
+      aggregate_depth_tibble = tibble::tibble(
+        cell_group = character(),
+        chr = character(),
+        aggregate_id = character(),
+        donor_id = character(),
+        state_bin = character(),
+        n_cells = integer(),
+        GEX_depth = numeric(),
+        ATAC_depth = numeric()
+      )
+    ))
+  }
   branch_pairs <- candidate_pairs_tibble |>
     dplyr::filter(.data$chr == !!chr)
 
@@ -723,6 +762,7 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
 
   branch_links <- top_links_tibble |>
     dplyr::filter(
+      .data$is_analyzable_link,
       .data$chr == !!chr,
       .data$gene_matrix_feature %in% rownames(GEX_norm),
       .data$peak %in% rownames(ATAC_norm)
@@ -731,6 +771,7 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
   if (nrow(branch_links) == 0L) {
     return(tibble::tibble(
       scatter_plot_name = character(),
+      is_analyzable_link = logical(),
       primary_cell_group = character(),
       cell_group = character(),
       chr = character(),
@@ -748,7 +789,9 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
       GEX_depth = numeric(),
       ATAC_depth = numeric(),
       gene_expression_logCPM = numeric(),
-      peak_accessibility_logCPM = numeric()
+      peak_accessibility_logCPM = numeric(),
+      gene_expression_residual = numeric(),
+      peak_accessibility_residual = numeric()
     ))
   }
 
@@ -762,6 +805,7 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
       "ATAC_depth"
     )
   n_aggregates <- nrow(aggregate_depth_tibble)
+  design <- make_peak_gene_correlation_design_matrix(aggregate_depth_tibble)
 
   purrr::map_dfr(seq_len(nrow(branch_links)), \(index) {
     link_row <- branch_links[index, , drop = FALSE]
@@ -770,6 +814,7 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
       link_row[rep(1L, n_aggregates), , drop = FALSE] |>
         dplyr::transmute(
           scatter_plot_name = .data$scatter_plot_name,
+          is_analyzable_link = .data$is_analyzable_link,
           primary_cell_group = .data$cell_group,
           cell_group = !!cell_group,
           chr = .data$chr,
@@ -788,10 +833,34 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
         ),
         peak_accessibility_logCPM = as.numeric(
           ATAC_norm[link_row$peak[[1]], ]
-        )
+        ),
+        gene_expression_residual = as.numeric(qr.resid(qr(design), as.numeric(GEX_norm[link_row$gene_matrix_feature[[1]], ]))),
+        peak_accessibility_residual = as.numeric(qr.resid(qr(design), as.numeric(ATAC_norm[link_row$peak[[1]], ])))
       )
     )
   })
+}
+
+#' Plot primary-group donor/depth residuals corresponding to the reported score.
+#' Raw log1p CPM values remain available in the compact aggregate-value table.
+plot_peak_gene_correlation_aggregate_scatter <- function(plot_tibble) {
+  if (!isTRUE(plot_tibble$is_analyzable_link[[1]])) {
+    return(make_empty_peak_gene_correlation_plot("No exploratory candidate links"))
+  }
+  plot_tibble <- plot_tibble |>
+    dplyr::filter(.data$cell_group == .data$primary_cell_group)
+  ggplot2::ggplot(plot_tibble, ggplot2::aes(
+    x = .data$peak_accessibility_residual,
+    y = .data$gene_expression_residual
+  )) +
+    ggplot2::geom_point(ggplot2::aes(color = .data$donor_id), size = 1, alpha = 0.65) +
+    ggplot2::geom_smooth(method = "lm", se = FALSE, color = "black", linewidth = 0.4) +
+    ggplot2::labs(
+      title = paste(plot_tibble$TargetGene[[1]], plot_tibble$peak[[1]], plot_tibble$primary_cell_group[[1]], sep = " - "),
+      subtitle = paste0("Donor/depth-adjusted r = ", round(plot_tibble$correlation[[1]], 3), "; conditional BH FDR = ", signif(plot_tibble$FDR[[1]], 3)),
+      x = "ATAC log1p CPM residual", y = "GEX log1p CPM residual", color = "Donor",
+      caption = "Each point is a non-overlapping donor-by-state aggregate. No population-level significance claim."
+    )
 }
 
 #' Empty peak gene correlation results tibble
@@ -829,7 +898,12 @@ empty_peak_gene_correlation_results_tibble <- function() {
     raw_correlation = numeric(),
     correlation = numeric(),
     coefficient = numeric(),
-    cluster_robust_SE = numeric(),
+    n_informative_donors = integer(),
+    n_positive_donors = integer(),
+    donor_direction_agreement = numeric(),
+    max_donor_covariance_fraction = numeric(),
+    inference_status = character(),
+    association_SE = numeric(),
     nominal_pvalue = numeric()
   )
 }
@@ -864,12 +938,20 @@ prepare_peak_gene_correlation_branch <- function(
   n_aggregates <- ncol(normalized_aggregate_matrices$GEX_norm)
   aggregate_depth_tibble <- normalized_aggregate_matrices$aggregate_depth_tibble
   n_donors <- dplyr::n_distinct(aggregate_depth_tibble$donor_id)
-  design <- make_peak_gene_correlation_design_matrix(aggregate_depth_tibble)
-  design_rank <- qr(design)$rank
+  design <- if (n_aggregates == 0L) {
+    matrix(numeric(), nrow = 0L, ncol = 0L)
+  } else {
+    make_peak_gene_correlation_design_matrix(aggregate_depth_tibble)
+  }
+  design_rank <- if (n_aggregates == 0L) 0L else qr(design)$rank
   residual_df <- n_aggregates - design_rank - 1L
 
-  branch_pairs <- candidate_pairs_tibble |>
-    dplyr::filter(.data$chr == !!chr)
+  branch_pairs <- if (is.na(chr)) {
+    candidate_pairs_tibble[0, , drop = FALSE]
+  } else {
+    candidate_pairs_tibble |>
+      dplyr::filter(.data$chr == !!chr)
+  }
 
   detected_genes <- names(normalized_aggregate_matrices$gene_detected_frac)[
     normalized_aggregate_matrices$gene_detected_frac >= min_gene_detection
@@ -885,8 +967,8 @@ prepare_peak_gene_correlation_branch <- function(
     )
 
   skipped_reason <- dplyr::case_when(
+    n_aggregates == 0L ~ "no_analyzable_donor_state_aggregates",
     n_aggregates < min_aggregates ~ "too_few_donor_state_aggregates",
-    n_donors < 3L ~ "too_few_donors",
     residual_df < 5L ~ "insufficient_residual_degrees_of_freedom",
     nrow(branch_pairs) == 0L ~ "no_candidate_pairs",
     length(detected_genes) == 0L ~ "no_detected_genes",
@@ -974,8 +1056,10 @@ diagnose_peak_gene_correlation_branch <- function(
 #' @param min_aggregates Minimum number of accepted aggregates required before
 #'   correlations are computed.
 #' @return A result tibble with branch identifiers, feature means/detection
-#'   fractions, adjusted correlation, coefficient, cluster-robust standard
-#'   error, and nominal p value for each retained pair.
+#'   fractions, adjusted correlation, coefficient, donor-support diagnostics, and
+#'   approximate HC3 t tests conditional on sampled donors. Non-overlapping
+#'   aggregates are assumed to have independent errors after donor/depth
+#'   adjustment. These tests do not establish population-level replication.
 #' @keywords internal
 
 score_peak_gene_correlations_for_cell_group <- function(
@@ -1005,6 +1089,7 @@ score_peak_gene_correlations_for_cell_group <- function(
   design <- branch$design
   design_qr <- qr(design)
   residual_df <- branch$residual_df
+  nuisance_leverage <- rowSums(qr.Q(design_qr)^2)
 
   scored_pairs <- branch$candidate_pairs |>
     dplyr::group_by(gene_matrix_feature) |>
@@ -1024,6 +1109,10 @@ score_peak_gene_correlations_for_cell_group <- function(
       raw_peak_ss <- rowSums(peak_centered^2)
       peak_residual <- residualize_peak_gene_correlation_matrix(peak_matrix, design)
       residual_peak_ss <- rowSums(peak_residual^2)
+      # Avoid treating floating-point residuals of fully explained features as
+      # biological variation.
+      variable_pairs <- residual_peak_ss > 1e-12 * pmax(raw_peak_ss, 1) &
+        residual_gene_ss > 1e-12 * max(raw_gene_ss, 1)
 
       raw_denominator <- sqrt(raw_peak_ss * raw_gene_ss)
       raw_correlation <- as.numeric((peak_centered %*% gene_centered) / raw_denominator)
@@ -1033,39 +1122,39 @@ score_peak_gene_correlations_for_cell_group <- function(
       cross_product <- as.numeric(peak_residual %*% gene_residual)
       denominator <- sqrt(residual_peak_ss * residual_gene_ss)
       correlation <- cross_product / denominator
-      correlation[denominator == 0 | !is.finite(correlation)] <- NA_real_
+      correlation[!variable_pairs | !is.finite(correlation)] <- NA_real_
       correlation <- pmax(pmin(correlation, 1), -1)
 
       coefficient <- cross_product / residual_peak_ss
-      coefficient[residual_peak_ss == 0 | !is.finite(coefficient)] <- NA_real_
-      association_residual <-
-        matrix(
-          gene_residual,
-          nrow = nrow(peak_residual),
-          ncol = ncol(peak_residual),
-          byrow = TRUE
-        ) -
+      coefficient[!variable_pairs | !is.finite(coefficient)] <- NA_real_
+      association_residual <- matrix(gene_residual, nrow(peak_residual), ncol(peak_residual), byrow = TRUE) -
         sweep(peak_residual, 1, coefficient, "*")
-      cluster_scores <- rowsum(
-        t(peak_residual * association_residual),
-        group = donor_id,
-        reorder = FALSE
+      leverage <- sweep(sweep(peak_residual^2, 1, residual_peak_ss, "/"), 2, nuisance_leverage, "+")
+      HC3_scores <- peak_residual * association_residual / (1 - leverage)
+      association_SE <- sqrt(rowSums(HC3_scores^2)) / residual_peak_ss
+      association_SE[!variable_pairs | apply(leverage >= 1 - 1e-8, 1, any) | !is.finite(association_SE)] <- NA_real_
+      nominal_pvalue <- 2 * stats::pt(abs(coefficient / association_SE), df = residual_df, lower.tail = FALSE)
+      # Describe donor support independently of inferential eligibility. The
+      # score uses within-donor variation; donors need >=3 aggregates and
+      # nonzero residual variation in both features to inform direction.
+      donor_cross_products <- rowsum(
+        t(sweep(peak_residual, 2, gene_residual, "*")),
+        group = donor_id, reorder = FALSE
       )
-      cluster_meat <- colSums(cluster_scores^2)
-      small_sample_correction <-
-        n_donors / (n_donors - 1) *
-        (n_aggregates - 1) / residual_df
-      coefficient_variance <-
-        small_sample_correction * cluster_meat / residual_peak_ss^2
-      cluster_robust_SE <- sqrt(coefficient_variance)
-      cluster_robust_SE[!is.finite(cluster_robust_SE)] <- NA_real_
-      t_statistic <- coefficient / cluster_robust_SE
-      nominal_pvalue <- 2 * stats::pt(
-        abs(t_statistic),
-        df = n_donors - 1L,
-        lower.tail = FALSE
-      )
-      nominal_pvalue[is.na(coefficient) | is.na(cluster_robust_SE)] <- NA_real_
+      donor_peak_ss <- rowsum(t(peak_residual^2), group = donor_id, reorder = FALSE)
+      donor_gene_ss <- rowsum(matrix(gene_residual^2, ncol = 1), group = donor_id, reorder = FALSE)[, 1]
+      donor_n <- rowsum(matrix(1, n_aggregates, 1), group = donor_id, reorder = FALSE)[, 1]
+      informative <- donor_peak_ss > .Machine$double.eps &
+        donor_gene_ss > .Machine$double.eps & donor_n >= 3L
+      informative[, !variable_pairs] <- FALSE
+      n_informative_donors <- colSums(informative)
+      n_positive_donors <- colSums(informative & donor_cross_products > 0)
+      direction_agreement <- colSums(informative &
+        sweep(sign(donor_cross_products), 2, sign(cross_product), "==")) / n_informative_donors
+      direction_agreement[n_informative_donors == 0L] <- NA_real_
+      absolute_contribution <- abs(donor_cross_products)
+      max_donor_covariance_fraction <- apply(absolute_contribution, 2, max) / colSums(absolute_contribution)
+      max_donor_covariance_fraction[!variable_pairs | !is.finite(max_donor_covariance_fraction)] <- NA_real_
 
       gene_pairs |>
         dplyr::mutate(
@@ -1079,9 +1168,14 @@ score_peak_gene_correlations_for_cell_group <- function(
           peak_accessible_frac = normalized_aggregate_matrices$peak_accessible_frac[.data$peak],
           raw_correlation = raw_correlation,
           correlation = correlation,
-          coefficient = coefficient,
-          cluster_robust_SE = cluster_robust_SE,
-          nominal_pvalue = nominal_pvalue
+          coefficient = as.numeric(coefficient),
+          n_informative_donors = as.integer(n_informative_donors),
+          n_positive_donors = as.integer(n_positive_donors),
+          donor_direction_agreement = direction_agreement,
+          max_donor_covariance_fraction = max_donor_covariance_fraction,
+          inference_status = "conditional_aggregate_HC3",
+          association_SE = as.numeric(association_SE),
+          nominal_pvalue = as.numeric(nominal_pvalue)
         )
     }) |>
     dplyr::mutate(cell_group = branch$cell_group, .before = 1) |>
@@ -1092,27 +1186,19 @@ score_peak_gene_correlations_for_cell_group <- function(
 
 #' Finalize peak gene correlation results
 #'
-#' Add FDR, ranks, and aggregation label to scored peak-gene correlations.
+#' Add exploratory status, ranks, and aggregation label to peak-gene correlations.
 #'
-#' @param results_tibble Raw scored-pair tibble from branch scoring helpers.
+#' @param results_tibbles List of chromosome-level scored-pair tibbles.
 #' @param aggregation Aggregation label inserted into the first output column.
-#' @return A standardized results tibble with BH FDR per cell group plus
+#' @return A standardized results tibble with within-cell-group BH FDR plus
 #'   within-cell-group and within-gene ranks. Empty input returns the same schema.
 #' @keywords internal
 
-finalize_peak_gene_correlation_results <- function(results_tibble, aggregation) {
+finalize_peak_gene_correlation_results <- function(results_tibbles, aggregation) {
+  # Bypass targets/vctrs concatenation and bind once, without recycling the
+  # named numeric columns carried by the chromosome-level tibbles.
+  results_tibble <- data.table::rbindlist(results_tibbles, use.names = TRUE)
   aggregation_label <- aggregation
-
-  if (nrow(results_tibble) == 0L) {
-    return(empty_peak_gene_correlation_results_tibble() |>
-      dplyr::mutate(
-        aggregation = character(),
-        FDR = numeric(),
-        rank_in_cell_group = integer(),
-        rank_for_gene = integer(),
-        .before = 1
-      ))
-  }
 
   output_cols <- c(
     "aggregation",
@@ -1142,14 +1228,29 @@ finalize_peak_gene_correlation_results <- function(results_tibble, aggregation) 
     "raw_correlation",
     "correlation",
     "coefficient",
-    "cluster_robust_SE",
+    "n_informative_donors",
+    "n_positive_donors",
+    "donor_direction_agreement",
+    "max_donor_covariance_fraction",
+    "inference_status",
+    "association_SE",
     "nominal_pvalue",
     "FDR",
     "rank_in_cell_group",
     "rank_for_gene"
   )
 
-  data.table::setDT(results_tibble)
+  if (nrow(results_tibble) == 0L) {
+    return(empty_peak_gene_correlation_results_tibble() |>
+      dplyr::mutate(
+        aggregation = character(),
+        FDR = numeric(),
+        rank_in_cell_group = integer(),
+        rank_for_gene = integer(),
+        .before = 1
+      ) |> dplyr::select(dplyr::all_of(output_cols)))
+  }
+
   results_tibble[, FDR := stats::p.adjust(nominal_pvalue, method = "BH"), by = cell_group]
   data.table::setorderv(
     results_tibble,
@@ -1171,6 +1272,9 @@ finalize_peak_gene_correlation_results <- function(results_tibble, aggregation) 
     results_tibble[, (extra_cols) := NULL]
   }
   data.table::setcolorder(results_tibble, output_cols)
+  # as_tibble.data.frame otherwise dispatches to as.data.frame.data.table,
+  # which deep-copies every column before removing the data.table class.
+  data.table::setDF(results_tibble)
   tibble::as_tibble(results_tibble)
 }
 
@@ -1179,10 +1283,52 @@ make_peak_gene_correlation_links <- function(results_tibble) {
     dplyr::filter(
       .data$correlation >= 0.15,
       .data$FDR < 0.05,
-      !.data$isSelfPromoter,
-      !.data$isTargetGeneBody
+      !.data$isSelfPromoter
     ) |>
-    dplyr::arrange(.data$cell_group, .data$rank_in_cell_group)
+    dplyr::arrange(.data$cell_group, .data$rank_in_cell_group) |>
+    dplyr::mutate(
+      rank_in_cell_group = dplyr::row_number(),
+      .by = "cell_group"
+    )
+}
+
+make_peak_gene_correlation_top_links <- function(
+  links_tibble,
+  candidate_pairs_tibble,
+  n_per_cell_group = 3L
+) {
+  top_links <- links_tibble |>
+    dplyr::filter(.data$rank_in_cell_group <= n_per_cell_group) |>
+    dplyr::arrange(.data$cell_group, .data$rank_in_cell_group) |>
+    dplyr::mutate(
+      scatter_plot_name = paste(
+        make.names(.data$cell_group),
+        sprintf("rank%03d", .data$rank_in_cell_group),
+        make.names(.data$TargetGene),
+        .data$chr,
+        sep = "_"
+      ),
+      is_analyzable_link = TRUE
+    ) |>
+    dplyr::left_join(
+      candidate_pairs_tibble |>
+        dplyr::select("peak", "TargetGeneID", "gene_matrix_feature") |>
+        dplyr::distinct(),
+      by = c("peak", "TargetGeneID")
+    )
+
+  if (nrow(top_links) > 0L) {
+    return(top_links)
+  }
+
+  links_tibble[NA_integer_, , drop = FALSE] |>
+    dplyr::mutate(
+      cell_group = "__no_analyzable_link__",
+      chr = NA_character_,
+      scatter_plot_name = "no_analyzable_peak_gene_link",
+      is_analyzable_link = FALSE,
+      gene_matrix_feature = NA_character_
+    )
 }
 
 make_empty_peak_gene_correlation_plot <- function(message = "No analyzable peak-gene associations") {
@@ -1240,7 +1386,7 @@ plot_peak_gene_correlation_histogram <- function(
     ggplot2::geom_col(width = bin_width) +
     ggplot2::facet_wrap(~cell_group, scales = "free_y") +
     ggplot2::labs(
-      x = "Donor/state/depth-adjusted correlation",
+      x = "Donor/depth-adjusted correlation (exploratory candidates)",
       y = "Peak-gene pairs"
     )
 }
@@ -1262,12 +1408,11 @@ summarize_peak_gene_correlation_support_counts <- function(results_tibble) {
     ) |>
     dplyr::summarise(
       tested_pairs = dplyr::n(),
-      FDR_significant_pairs = sum(.data$FDR < 0.05, na.rm = TRUE),
+      FDR_significant_pairs = if (all(is.na(.data$FDR))) NA_integer_ else sum(.data$FDR < 0.05, na.rm = TRUE),
       candidate_enhancer_links = sum(
         .data$correlation >= 0.15 &
           .data$FDR < 0.05 &
-          !.data$isSelfPromoter &
-          !.data$isTargetGeneBody,
+          !.data$isSelfPromoter,
         na.rm = TRUE
       ),
       .by = "cell_group"
@@ -1334,7 +1479,7 @@ summarize_peak_gene_correlation_by_distance <- function(results_tibble) {
     dplyr::summarise(
       n_pairs = dplyr::n(),
       median_correlation = stats::median(.data$correlation, na.rm = TRUE),
-      significant_fraction = mean(.data$FDR < 0.05, na.rm = TRUE),
+      significant_fraction = if (all(is.na(.data$FDR))) NA_real_ else mean(.data$FDR < 0.05, na.rm = TRUE),
       .by = c("cell_group", "abs_distance_bin")
     )
 }

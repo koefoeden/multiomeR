@@ -637,69 +637,6 @@ build_WNN_metadata_tibble <- function(metadata_tibble, WNN_results, UMAP_embeddi
   metadata_out
 }
 
-add_module_score_agreement_to_metadata <- function(metadata_tibble, marker_genes_list, parent_cluster_col = "PCA_harmony_SNN_cluster_cell_type") {
-  score_cols <- intersect(names(marker_genes_list), colnames(metadata_tibble))
-  if (length(score_cols) == 0) {
-    stop("No module score columns were found in subgroup metadata.")
-  }
-
-  parent_cluster_agree_col <- paste0(parent_cluster_col, "_agreement")
-  metadata_tibble |>
-    dplyr::mutate(
-      best_col = {
-        score_matrix <- dplyr::pick(dplyr::any_of(score_cols))
-        idx <- max.col(replace(as.matrix(score_matrix), is.na(score_matrix), -Inf), ties.method = "first")
-        names(score_matrix)[idx]
-      },
-      !!parent_cluster_agree_col := stringr::str_detect(.data[[parent_cluster_col]], stringr::str_glue("{best_col}&|{best_col}$"))
-    )
-}
-
-#' Remove contaminated subclusters from metadata
-#'
-#' Drop subgroup clusters whose module-score agreement is below a threshold.
-#'
-#' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
-#' @param sub_cluster_col Metadata column containing the subgroup cluster labels
-#'   to keep or remove.
-#' @param parent_cluster_col Parent cluster/cell-type column used to find the
-#'   corresponding `<parent_cluster_col>_agreement` logical column.
-#' @param prop_threshold Minimum within-subcluster proportion of agreeing cells
-#'   required to retain a subgroup. `NULL` disables filtering.
-#' @return Filtered metadata tibble containing only surviving subgroup clusters.
-#' @keywords internal
-
-remove_contaminated_subclusters_from_metadata <- function(
-  metadata_tibble,
-  sub_cluster_col = "PCA_harmony_SNN_cluster_sub",
-  parent_cluster_col = "PCA_harmony_SNN_cluster_cell_type",
-  prop_threshold = NULL
-) {
-  if (is.null(prop_threshold)) {
-    return(metadata_tibble)
-  }
-
-  parent_cluster_agree_col <- paste0(parent_cluster_col, "_agreement")
-  disagreement_table <- metadata_tibble |>
-    dplyr::group_by(.data[[parent_cluster_agree_col]], .data[[sub_cluster_col]]) |>
-    dplyr::summarise(n = dplyr::n(), .groups = "drop_last") |>
-    dplyr::group_by(.data[[sub_cluster_col]]) |>
-    dplyr::mutate(prop = n / sum(n)) |>
-    dplyr::ungroup()
-
-  surviving_clusters <- disagreement_table |>
-    dplyr::filter(.data[[parent_cluster_agree_col]], prop > prop_threshold) |>
-    dplyr::pull(.data[[sub_cluster_col]]) |>
-    unique()
-
-  if (length(surviving_clusters) == 0) {
-    stop("No subgroup clusters survived contaminated-subcluster filtering.")
-  }
-
-  metadata_tibble |>
-    dplyr::filter(.data[[sub_cluster_col]] %in% surviving_clusters)
-}
-
 #' Get BPCells markers from matrix
 #'
 #' Run BPCells Wilcoxon marker testing for selected features and metadata groups.

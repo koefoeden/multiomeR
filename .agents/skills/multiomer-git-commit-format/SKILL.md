@@ -72,7 +72,7 @@ fix ATAC UMAP column filter
 
 str_starts("score_") returns logical; replace with str_subset("^score_")
 
-contained_target_breaking: categorical.UMAPs.ATAC
+contained_target_breaking: categorical.UMAPs.7_ATAC_QC
 
 Codex-Task-ID: <resolved task ID>
 ```

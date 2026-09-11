@@ -881,6 +881,16 @@ run_harmony_on_embedding_matrix <- function(embedding_matrix, metadata_tibble, h
   harmonized_embeddings
 }
 
+#' Number clusters from largest to smallest, retaining barcode order and membership.
+#' Break size ties by the original mixed-sort cluster ID.
+number_clusters_by_size <- function(clusters) {
+  original_ids <- levels(get_mixsorted_factor(as.character(clusters)))
+  sizes <- tabulate(match(as.character(clusters), original_ids), nbins = length(original_ids))
+  ordered_ids <- original_ids[order(-sizes, seq_along(sizes))]
+  factor(match(as.character(clusters), ordered_ids), levels = seq_along(ordered_ids)) |>
+    stats::setNames(names(clusters))
+}
+
 #' Cluster KNN SNN leiden
 #'
 #' Build an SNN graph from KNN output and cluster it with Leiden modularity.
@@ -888,7 +898,8 @@ run_harmony_on_embedding_matrix <- function(embedding_matrix, metadata_tibble, h
 #' @param knn Nearest-neighbor result with index and distance components, usually from BPCells HNSW helpers.
 #' @param resolution Leiden clustering resolution; higher values generally split clusters more finely.
 #' @param seed Random seed passed to stochastic clustering, sampling, or embedding code for reproducibility.
-#' @return A factor of Leiden cluster assignments in neighbor-graph vertex order.
+#' @return A factor of Leiden cluster assignments in neighbor-graph vertex order,
+#'   numbered from largest to smallest before minimum-size filtering.
 #' @keywords internal
 
 cluster_knn_snn_leiden <- function(knn, resolution, seed = 1) {
@@ -914,7 +925,7 @@ cluster_knn_snn_leiden <- function(knn, resolution, seed = 1) {
       objective_function = "modularity"
     ) |>
       igraph::membership() |>
-      as.factor()
+      number_clusters_by_size()
   )
 }
 

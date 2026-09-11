@@ -386,7 +386,7 @@ build_aggregation_tibble <- function(
       aggregation_excluded_barcodes_by_type_list_syms = target_sym_col("excluded_barcodes_by_type_list", "aggregation_GEM_well_IDs"),
       aggregation_excluded_cellranger_only_barcodes_by_type_list_syms = target_sym_col("excluded_cellranger_only_barcodes_by_type_list", "aggregation_GEM_well_IDs"),
       aggregation_cellranger_ref_list_syms = target_sym_col("cellranger_ref_list", "aggregation_GEM_well_IDs"),
-      aggregation_gene_features_df_syms = target_sym_col("gene_features_df", "aggregation_GEM_well_IDs", transform = \(ids) utils::head(ids, 1))
+      aggregation_gene_features_df_syms = target_sym_col("gene_features_df", "aggregation_GEM_well_IDs")
     )
 
   project_categorical_vars <- purrr::map(
@@ -431,18 +431,10 @@ build_aggregation_tibble <- function(
         nrow(aggregation_tibble)
       ),
       aggregation_non_peak_based_continuous_vars = non_peak_vars,
-      aggregation_peak_based_continuous_QC_vars = rep(
-        list(PROCESSING_CONTINUOUS_QC_FEATURES$peak_QC),
-        nrow(aggregation_tibble)
-      ),
       aggregation_w_peaks_continuous_vars = peak_vars,
       aggregation_w_WNN_continuous_vars = purrr::map(
         peak_vars,
         \(feature_names) c(feature_names, PROCESSING_CONTINUOUS_QC_FEATURES$WNN)
-      ),
-      aggregation_continuous_features_vec.GEX = purrr::map(
-        non_peak_vars,
-        \(feature_names) c(PROCESSING_CONTINUOUS_QC_FEATURES$GEX_cell_cycle, feature_names)
       )
     )
   )
@@ -476,7 +468,7 @@ build_aggregation_tibble <- function(
     add_target_sym_cols(
       per_dataset_excluded_upset_syms = target_sym_col("per_dataset_excluded_upset", "aggregation_dataset_vec"),
       per_dataset_excluded_cellranger_only_upset_syms = target_sym_col("per_dataset_excluded_cellranger_only_upset", "aggregation_dataset_vec"),
-      per_dataset_QC_violins_syms = target_sym_col("per_dataset_QC_violins", "aggregation_dataset_vec")
+      per_dataset_QC_violins_syms = target_sym_col("per_dataset_QC_violins.1_pre_aggregation_QC", "aggregation_dataset_vec")
     )
 }
 

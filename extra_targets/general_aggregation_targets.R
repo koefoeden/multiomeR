@@ -1,7 +1,25 @@
 rlang::list2(
   targets::tar_target(
+    name = cell_retention_tibble.GEX_input,
+    description = "Count Cell Ranger-called input and retained cells per configured GEM well after per-well QC, including empty wells. [checkpoint:1_pre-aggregation-QC]",
+    command = summarize_QC_cell_retention(
+      before_metadata = dplyr::bind_rows(aggregation_cellranger_kept_metadata_tibble_syms),
+      after_metadata = GEX_cellranger_kept_metadata_tibble,
+      GEM_well_IDs = aggregation_GEM_well_IDs,
+      stage = "checkpoint:1_pre-aggregation-QC",
+      discarded_barcodes = list("Per-well QC filters" = setdiff(
+        dplyr::bind_rows(aggregation_cellranger_kept_metadata_tibble_syms)$barcode_w_prefix,
+        GEX_cellranger_kept_metadata_tibble$barcode_w_prefix))
+    )
+  ),
+  tarchetypes::tar_file(
+    name = cell_retention_flow_plot.1_pre_aggregation_QC,
+    description = "Plot cumulative nuclei retention through per-well QC. [checkpoint:1_pre-aggregation-QC]",
+    command = save_QC_cell_retention_plot(cell_retention_tibble.GEX_input)
+  ),
+  targets::tar_target(
     name = aggregated_cellranger_ref_list,
-    description = "Validate and use the Cell Ranger reference metadata shared by this aggregation",
+    description = "Validate and use the Cell Ranger reference metadata shared by this aggregation. [checkpoint:1_pre-aggregation-QC]",
     command = resolve_aggregation_cellranger_reference(
       cellranger_references = aggregation_cellranger_ref_list_syms,
       GEM_well_IDs = aggregation_GEM_well_IDs,
@@ -10,8 +28,12 @@ rlang::list2(
   ),
   targets::tar_target(
     name = gene_features_df,
-    description = "Use the CellRanger gene metadata from this aggregation reference",
-    command = aggregation_gene_features_df_syms[[1]]
+    description = "Validate identical ordered gene definitions across the actual Cell Ranger inputs and use the shared metadata. [checkpoint:1_pre-aggregation-QC]",
+    command = resolve_aggregation_gene_features(
+      gene_features = aggregation_gene_features_df_syms,
+      GEM_well_IDs = aggregation_GEM_well_IDs,
+      aggregation = aggregation
+    )
   ),
   targets::tar_target(
     name = aggregation_unfiltered_cells_n,
@@ -26,7 +48,7 @@ rlang::list2(
     ))
   ),
   tarchetypes::tar_file(
-    name = aggregation_excluded_barcodes_by_type_upset,
+    name = aggregation_excluded_barcodes_by_type_upset.1_pre_aggregation_QC,
     description = "Plot an UpSet plot of aggregation-level QC exclusion overlaps across all GEM wells and save to file. [checkpoint:1_pre-aggregation-QC]",
     command = plot_upset_from_excluded_BCs_list(
       QC_excluded_BCs_list = aggregation_excluded_BCs_list,
@@ -42,7 +64,7 @@ rlang::list2(
     ))
   ),
   tarchetypes::tar_file(
-    name = aggregation_excluded_cellranger_only_barcodes_by_type_upset,
+    name = aggregation_excluded_cellranger_only_barcodes_by_type_upset.1_pre_aggregation_QC,
     description = "Plot an UpSet plot of aggregation-level CellRanger-only QC exclusion overlaps across all GEM wells and save to file. [checkpoint:1_pre-aggregation-QC]",
     command = plot_upset_from_excluded_BCs_list(
       QC_excluded_BCs_list = aggregation_excluded_cellranger_only_BCs_list,
@@ -51,7 +73,7 @@ rlang::list2(
       save_plots_structured(width = 20, height = 7)
   ),
   tarchetypes::tar_file(
-    name = per_aggregation_GEM_well_QC_comparisons,
+    name = per_aggregation_GEM_well_QC_comparisons.1_pre_aggregation_QC,
     description = "Compare pre-filter QC distributions and configured cutoffs across GEM wells in this aggregation. [checkpoint:1_pre-aggregation-QC]",
     command = {
       metadata_tibble <- dplyr::bind_rows(
@@ -61,13 +83,16 @@ rlang::list2(
           "GEM_well_ID",
           "dataset",
           QC_metric_manifest_tibble$metric_id[
-            QC_metric_manifest_tibble$available_from_stage == "GEM_well" &
+            QC_metric_manifest_tibble$available_from_checkpoint == "1_pre-aggregation-QC" &
               QC_metric_manifest_tibble$do_plot
           ]
         )))
-      plot_GEM_well_QC_comparisons(
+      plot_QC_metric_violins(
         metadata_tibble = metadata_tibble,
         QC_metric_manifest_tibble = QC_metric_manifest_tibble,
+        checkpoints = "1_pre-aggregation-QC",
+        group_col = "GEM_well_ID",
+        fill_col = "dataset",
         QC_exclude_per_GEM_well_list = aggregation_GEM_well_QC_exclude_list
       ) |>
         save_plots_structured(
@@ -294,34 +319,6 @@ rlang::list2(
     )
   ),
   targets::tar_target(
-    name = donor_id_subgroup_metadata_tibble,
-    description = "Project donor metadata to subgroup model variables",
-    command = project_keyed_metadata_tibble(
-      donor_id_metadata_tibble,
-      "donor_id",
-      c(
-        aggregation_harmony_correction_metadata_col_names,
-        aggregation_subgroups_col,
-        aggregation_subgroups_SCT_regress_vars,
-        aggregation_subgroups_extra_harmony_covars
-      )
-    )
-  ),
-  targets::tar_target(
-    name = GEM_well_subgroup_metadata_tibble,
-    description = "Project GEM well metadata to subgroup model variables",
-    command = project_keyed_metadata_tibble(
-      GEM_well_metadata_tibble,
-      "GEM_well_ID",
-      c(
-        aggregation_harmony_correction_metadata_col_names,
-        aggregation_subgroups_col,
-        aggregation_subgroups_SCT_regress_vars,
-        aggregation_subgroups_extra_harmony_covars
-      )
-    )
-  ),
-  targets::tar_target(
     name = donor_id_analysis_metadata_tibble,
     description = "Project donor metadata to configured analysis variables",
     command = project_keyed_metadata_tibble(
@@ -386,8 +383,8 @@ rlang::list2(
     )))
   ),
   tarchetypes::tar_file(
-    name = nuclei_per_donor_id_bars,
-    description = "Plot bar chart of nuclei counts per donor ID and save to file",
+    name = nuclei_per_donor_id_bars.8_multimodal_QC,
+    description = "Plot final WNN nuclei counts per donor ID. [checkpoint:8_multimodal-QC]",
     command = metadata_w_cell_types_tibble.WNN |>
       plot_nuclei_per_donor_id() |>
       save_plots_structured(width = 10)

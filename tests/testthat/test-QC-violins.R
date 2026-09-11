@@ -43,7 +43,10 @@ testthat::test_that("QC violin cutoff shading is confined to each GEM well", {
 })
 
 testthat::test_that("GEM-well QC comparisons use manifest selection and labels", {
-  plots <- plot_GEM_well_QC_comparisons(
+  plots <- plot_QC_metric_violins(
+    checkpoints = "1_pre-aggregation-QC",
+    group_col = "GEM_well_ID",
+    fill_col = "dataset",
     metadata_tibble = tibble::tibble(
       GEM_well_ID = rep(c("well_1", "well_2"), each = 20),
       dataset = rep(c("dataset_1", "dataset_2"), each = 20),
@@ -52,10 +55,10 @@ testthat::test_that("GEM-well QC comparisons use manifest selection and labels",
       scDblFinder.score_GEX = seq_len(40) / 40
     ),
     QC_metric_manifest_tibble = tibble::tribble(
-      ~metric_id, ~display_name, ~description, ~available_from_stage, ~plot_min_q, ~plot_max_q, ~do_plot,
-      "nCount_RNA", "RNA UMI count", "Total RNA UMI count.", "GEM_well", NA, 0.99, TRUE,
-      "log10_nCount_RNA", "Log10 RNA UMI count", "Log RNA UMI count.", "GEM_well", NA, NA, FALSE,
-      "scDblFinder.score_GEX", "GEX doublet score", "Doublet score.", "GEX", NA, NA, TRUE
+      ~metric_id, ~display_name, ~description, ~available_from_checkpoint, ~plot_min_q, ~plot_max_q, ~do_plot,
+      "nCount_RNA", "RNA UMI count", "Total RNA UMI count.", "1_pre-aggregation-QC", NA, 0.99, TRUE,
+      "log10_nCount_RNA", "Log10 RNA UMI count", "Log RNA UMI count.", "1_pre-aggregation-QC", NA, NA, FALSE,
+      "scDblFinder.score_GEX", "GEX doublet score", "Doublet score.", "3_GEX-QC", NA, NA, TRUE
     ),
     QC_exclude_per_GEM_well_list = list(
       well_1 = "nCount_RNA < 5",

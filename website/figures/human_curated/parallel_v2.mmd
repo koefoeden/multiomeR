@@ -3,12 +3,12 @@ flowchart TB
   cellranger_barcodes_tsv.healthy_PBMC_human(["cellranger_barcodes_tsv.&lt;GEM_well_ID&gt;"]):::none --> amulet_metrics_tibble.healthy_PBMC_human(["amulet_metrics_tibble.&lt;GEM_well_ID&gt;"]):::none
   cellranger_barcodes_tsv.healthy_PBMC_human(["cellranger_barcodes_tsv.&lt;GEM_well_ID&gt;"]):::none --> cellsnp_dir.healthy_PBMC_human(["cellsnp_dir.&lt;GEM_well_ID&gt;"]):::none
   full_metadata_tibble.healthy_PBMC_human(["full_metadata_tibble.&lt;GEM_well_ID&gt;"]):::none --> excluded_cellranger_only_barcodes_by_type_list.healthy_PBMC_human(["excluded_cellranger_only_barcodes_by_type_list.&lt;GEM_well_ID&gt;"]):::none
-  vireo_donor_ids_tibble.healthy_PBMC_human(["vireo_donor_ids_tibble.&lt;GEM_well_ID&gt;"]):::none --> full_metadata_tibble.healthy_PBMC_human(["full_metadata_tibble.&lt;GEM_well_ID&gt;"]):::none
   amulet_metrics_tibble.healthy_PBMC_human(["amulet_metrics_tibble.&lt;GEM_well_ID&gt;"]):::none --> full_metadata_tibble.healthy_PBMC_human(["full_metadata_tibble.&lt;GEM_well_ID&gt;"]):::none
+  vireo_donor_ids_tibble.healthy_PBMC_human(["vireo_donor_ids_tibble.&lt;GEM_well_ID&gt;"]):::none --> full_metadata_tibble.healthy_PBMC_human(["full_metadata_tibble.&lt;GEM_well_ID&gt;"]):::none
   ATAC_qc_metrics_tibble.healthy_PBMC_human(["ATAC_qc_metrics_tibble.&lt;GEM_well_ID&gt;"]):::none --> full_metadata_tibble.healthy_PBMC_human(["full_metadata_tibble.&lt;GEM_well_ID&gt;"]):::none
   cellbender_h5_file.healthy_PBMC_human(["cellbender_h5_file.&lt;GEM_well_ID&gt;"]):::none --> GEX_counts_BPcells_matrix_dir.healthy_PBMC_human(["GEX_counts_BPcells_matrix_dir.&lt;GEM_well_ID&gt;"]):::none
-  cellsnp_dir.healthy_PBMC_human(["cellsnp_dir.&lt;GEM_well_ID&gt;"]):::none --> vireo_donor_ids_tibble.healthy_PBMC_human(["vireo_donor_ids_tibble.&lt;GEM_well_ID&gt;"]):::none
   cellranger_barcodes_tsv.healthy_PBMC_human(["cellranger_barcodes_tsv.&lt;GEM_well_ID&gt;"]):::none --> vireo_donor_ids_tibble.healthy_PBMC_human(["vireo_donor_ids_tibble.&lt;GEM_well_ID&gt;"]):::none
+  cellsnp_dir.healthy_PBMC_human(["cellsnp_dir.&lt;GEM_well_ID&gt;"]):::none --> vireo_donor_ids_tibble.healthy_PBMC_human(["vireo_donor_ids_tibble.&lt;GEM_well_ID&gt;"]):::none
   fragments_w_prefix_bpcells_dir.healthy_PBMC_human(["fragments_w_prefix_bpcells_dir.&lt;GEM_well_ID&gt;"]):::none --> amulet_metrics_tibble.healthy_PBMC_human(["amulet_metrics_tibble.&lt;GEM_well_ID&gt;"]):::none
   fragments_w_prefix_bpcells_dir.healthy_PBMC_human(["fragments_w_prefix_bpcells_dir.&lt;GEM_well_ID&gt;"]):::none --> ATAC_qc_metrics_tibble.healthy_PBMC_human(["ATAC_qc_metrics_tibble.&lt;GEM_well_ID&gt;"]):::none
   fragments_w_prefix_bpcells_dir.healthy_PBMC_human(["fragments_w_prefix_bpcells_dir.&lt;GEM_well_ID&gt;"]):::none --> combined_BPCells_fragment_obj.ATAC.immune_human_2x(["combined_BPCells_fragment_obj.ATAC.&lt;aggregation_name&gt;"]):::none

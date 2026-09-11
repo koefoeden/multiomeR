@@ -33,6 +33,10 @@ Use this when adding or changing targets, helpers, or analysis steps.
 - Keep target names specific and modality-suffixed where relevant, e.g.
   `consensus_peak_BPCells_matrix.ATAC` and
   `metadata_w_cell_types_tibble.ATAC`.
+- Numbered checkpoint plot targets use the checkpoint suffix instead of a
+  modality suffix, with hyphens replaced by underscores (e.g.
+  `VizDimLoadings_plots.2_GEX_PCA_QC`). This places plots in stage folders;
+  non-plot targets retain their existing names.
 - Add aggregation-level downstream analyses as optional modules when they consume aggregation outputs. Use `module_<module>/`, opt in with the `modules` field in `cfg_aggregations.yaml`, and put module config in `module_<module>/cfg.yaml`.
 
 ## Target Patterns

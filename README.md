@@ -19,6 +19,8 @@ The active workflow is a single root `targets` project driven by `_targets.R`, `
 
 multiomeR is in beta. The workflow is actively changing, and public interfaces may still change.
 
+See [release notes and migration steps](NEWS.md) and the [release convention](RELEASES.md).
+
 ## User manual
 
 The user manual is built from the Quarto book in `website/`. It includes a quickstart guide, an output gallery and full implementation details: <https://koefoeden.github.io/multiomeR/>

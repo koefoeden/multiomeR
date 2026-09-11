@@ -91,7 +91,7 @@ run_GEX_PCA_BPCells <- function(
   feature_counts <- BPCells::rowSums(counts_matrix)
   keep_features <- names(feature_counts)[feature_counts > min_feature_count]
   if (length(keep_features) < 2) {
-    stop("Too few expressed GEX features remain for subgroup PCA.")
+    stop("Too few expressed GEX features remain for PCA.")
   }
   counts_matrix <- counts_matrix[keep_features, , drop = FALSE]
 
@@ -147,7 +147,7 @@ run_GEX_PCA_BPCells <- function(
 
   n_components <- min(as.integer(n_components), nrow(pearson_residuals) - 1L, ncol(pearson_residuals) - 1L)
   if (n_components < 1) {
-    stop("Too few cells or features remain for subgroup PCA.")
+    stop("Too few cells or features remain for PCA.")
   }
 
   pca_out <- run_dense_feature_gram_PCA(
@@ -254,7 +254,7 @@ run_BPCells_native_GEX_PCA <- function(
 
   n_components <- min(as.integer(n_components), nrow(pearson_residuals) - 1L, ncol(pearson_residuals) - 1L)
   if (n_components < 1) {
-    stop("Too few cells or features remain for subgroup PCA.")
+    stop("Too few cells or features remain for PCA.")
   }
 
   svd <- BPCells::svds(pearson_residuals, k = n_components, threads = threads)
@@ -949,97 +949,40 @@ calculate_UCell_score_from_indices <- function(rank_chunk, feature_idx, max_rank
   1 - (rank_sum - minimum_rank_sum) / (signature_length * max_rank - minimum_rank_sum)
 }
 
-#' Get BPCells markers within parent groups from matrix
-#'
-#' Run BPCells Wilcoxon marker testing within parent cluster groups.
-#'
-#' @param feature_matrix Feature-by-cell matrix-like object with row names as feature IDs and column names as cell barcodes.
-#' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
-#' @param group_col Single metadata column name used to group cells, samples, or features.
-#' @param parent_group_col Single column name used for parent group col; the column must exist in the relevant metadata tibble.
-#' @param features Character vector of feature names to extract from the matrix row names; missing features are handled by the called helper.
-#' @return A named matrix-like object with rows and columns aligned to the input feature/cell identifiers.
-#' @keywords internal
-
-get_BPCells_markers_within_parent_groups_from_matrix <- function(
-  feature_matrix,
-  metadata_tibble,
-  group_col,
-  parent_group_col,
-  features = NULL
-) {
-  group_to_parent_tibble <- metadata_tibble |>
-    dplyr::select(dplyr::all_of(c(group_col, parent_group_col))) |>
-    dplyr::distinct() |>
-    dplyr::filter(!is.na(.data[[parent_group_col]]) & !is.na(.data[[group_col]])) |>
-    dplyr::mutate(dplyr::across(dplyr::all_of(c(group_col, parent_group_col)), as.character))
-
-  marker_metadata <- metadata_tibble |>
-    dplyr::mutate(dplyr::across(dplyr::all_of(c(group_col, parent_group_col)), as.character)) |>
-    dplyr::semi_join(group_to_parent_tibble, by = c(group_col, parent_group_col))
-
-  reference_tibble <- group_to_parent_tibble |>
-    dplyr::left_join(
-      group_to_parent_tibble,
-      by = parent_group_col,
-      suffix = c("", "_reference"),
-      relationship = "many-to-many"
+#' Prepare one marker-comparison record per multicluster GEX cell type.
+make_cluster_marker_groups <- function(metadata_tibble) {
+  metadata_tibble |>
+    dplyr::transmute(
+      barcode_w_prefix,
+      cluster = as.character(PCA_harmony_SNN_cluster),
+      cell_type = as.character(PCA_harmony_SNN_cluster_cell_type)
     ) |>
-    dplyr::filter(.data[[group_col]] != .data[[paste0(group_col, "_reference")]]) |>
-    dplyr::group_by(.data[[group_col]], .data[[parent_group_col]]) |>
-    dplyr::summarise(reference_children = stringr::str_c(.data[[paste0(group_col, "_reference")]], collapse = ", "), .groups = "drop")
+    dplyr::filter(!is.na(cluster), !is.na(cell_type)) |>
+    tidyr::nest(metadata = c(barcode_w_prefix, cluster)) |>
+    dplyr::mutate(
+      clusters = purrr::map(metadata, \(cells) stringr::str_sort(unique(cells$cluster), numeric = TRUE))
+    ) |>
+    dplyr::filter(lengths(clusters) > 1L) |>
+    dplyr::arrange(cell_type)
+}
 
-  within_parent_groups_vec <- group_to_parent_tibble |>
-    dplyr::count(.data[[parent_group_col]], name = "n_groups") |>
-    dplyr::filter(.data$n_groups > 1) |>
-    dplyr::pull(.data[[parent_group_col]])
-
-  within_parent_marker_tibble <- within_parent_groups_vec |>
-    purrr::map(\(parent_group_name) {
-      get_BPCells_markers_from_matrix(
-        feature_matrix = feature_matrix,
-        metadata_tibble = dplyr::filter(marker_metadata, .data[[parent_group_col]] == parent_group_name),
-        group_col = group_col,
-        features = features
-      )
-    }) |>
-    dplyr::bind_rows()
-
-  if (nrow(within_parent_marker_tibble) > 0) {
-    within_parent_marker_tibble <- within_parent_marker_tibble |>
-      dplyr::left_join(reference_tibble, by = c("cluster" = group_col)) |>
-      dplyr::mutate(
-        child_cluster = .data$cluster,
-        parent_cluster = .data[[parent_group_col]]
-      )
+#' Test clusters within one cell type; adjust across genes per contrast.
+get_cluster_markers_from_matrix <- function(feature_matrix, group_record) {
+  clusters <- group_record$clusters[[1]]
+  markers <- get_BPCells_markers_from_matrix(
+    feature_matrix = feature_matrix,
+    metadata_tibble = group_record$metadata[[1]],
+    group_col = "cluster"
+  )
+  if (length(clusters) == 2L) {
+    markers <- dplyr::filter(markers, cluster == clusters[[1]])
   }
-
-  singleton_groups_vec <- group_to_parent_tibble |>
-    dplyr::add_count(.data[[parent_group_col]], name = "n_groups") |>
-    dplyr::filter(.data$n_groups == 1) |>
-    dplyr::pull(.data[[group_col]])
-
-  singleton_marker_tibble <- singleton_groups_vec |>
-    purrr::map(\(group_name) {
-      get_BPCells_markers_from_matrix(
-        feature_matrix = feature_matrix,
-        metadata_tibble = dplyr::mutate(
-          marker_metadata,
-          marker_group = dplyr::if_else(.data[[group_col]] == group_name, group_name, "background")
-        ),
-        group_col = "marker_group",
-        features = features
-      ) |>
-        dplyr::filter(.data$cluster == group_name) |>
-        dplyr::mutate(
-          child_cluster = group_name,
-          parent_cluster = group_to_parent_tibble[[parent_group_col]][group_to_parent_tibble[[group_col]] == group_name],
-          reference_children = "all"
-        )
-    }) |>
-    dplyr::bind_rows()
-
-  dplyr::bind_rows(within_parent_marker_tibble, singleton_marker_tibble)
+  markers <- markers |>
+    dplyr::group_by(cluster) |>
+    dplyr::mutate(p_val_adj = stats::p.adjust(p_val_raw, method = "BH")) |>
+    dplyr::ungroup() |>
+    dplyr::mutate(cluster = factor(cluster, levels = clusters))
+  list(cell_type = group_record$cell_type[[1]], clusters = clusters, markers = markers)
 }
 
 #' Plot embedding loadings from tibble

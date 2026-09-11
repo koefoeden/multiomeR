@@ -75,6 +75,12 @@ After `tar_make()` returns, inspect the selected endpoints. Report completion
 only when each endpoint has data, no error, and terminal progress; partial
 progress or a returned driver is not success.
 
+To verify dynamic branches, read metadata with `complete_only = FALSE` and
+follow `children` only for selected rows with `type == "pattern"`. Other
+targets can have slice identifiers in `children` that are not target names.
+Use these current branch lists rather than a name-prefix search that can
+include obsolete branches.
+
 Run all targets only when explicitly requested:
 
 ```bash
@@ -97,6 +103,7 @@ because it assumes those dependencies are already up to date. Keep the default
 
 ## Practical Notes
 
-- Use `load_CFG("<dataset>")` only for interactive configuration probes outside
-  target commands.
+- For resolved aggregation settings, filter `read_aggregation_config_tibble()`
+  by `aggregation`. `load_CFG("<dataset>")` loads dataset settings, not aggregation
+  settings, and is only for interactive probes outside target commands.
 - If targets error, switch to `multiomer-fix-errors`.

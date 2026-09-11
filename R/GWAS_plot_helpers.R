@@ -476,6 +476,7 @@ plot_GWAS_feature_heatmap <- function(
       ) +
       ggplot2::scale_size_manual(
         values = c("P <= 0.05" = 2.4, "P < 0.01" = 4.8),
+        limits = c("P <= 0.05", "P < 0.01"),
         drop = FALSE,
         name = "BH-adjusted P-value",
         guide = ggplot2::guide_legend(title.position = "top")
@@ -543,7 +544,11 @@ plot_GWAS_feature_heatmap <- function(
   compact_x_axis <- dplyr::n_distinct(score_plot_data[[feature_col]]) <= 8
   feature_plot +
     ggplot2::labs(x = NULL, y = NULL, title = title) +
-    ggplot2::coord_cartesian(clip = "off") +
+    ggplot2::coord_cartesian(
+      xlim = c(0.5, nlevels(score_plot_data[[feature_col]]) + 0.5),
+      ylim = c(0.5, nlevels(score_plot_data$GWAS_ID) + 0.5),
+      clip = "off"
+    ) +
     ggplot2::theme_minimal(base_size = 9) +
     ggplot2::theme(
       axis.text.x = ggplot2::element_text(
@@ -584,20 +589,17 @@ plot_GWAS_feature_support_tracks <- function(feature_metadata, feature_col = "cl
   support_plot_data <- feature_metadata |>
     dplyr::arrange(.data[[feature_col]]) |>
     dplyr::mutate(
-      panel_max = max(n_cells, na.rm = TRUE),
-      label = format_GWAS_bar_number(n_cells),
-      label_inside = n_cells / panel_max >= 0.28,
-      label_y = dplyr::if_else(label_inside, n_cells - 0.025 * panel_max, n_cells + 0.025 * panel_max),
-      label_hjust = dplyr::if_else(label_inside, 1, 0),
-      label_color = dplyr::if_else(label_inside, "white", "grey20")
+      label = format_GWAS_bar_number(n_cells)
     )
 
   support_plot_data |>
     ggplot2::ggplot(ggplot2::aes(x = .data[[feature_col]], y = n_cells)) +
     ggplot2::geom_col(fill = "#6B7280", color = "white", linewidth = 0.3, width = 1, na.rm = TRUE) +
     ggplot2::geom_text(
-      ggplot2::aes(y = label_y, label = label, hjust = label_hjust, color = label_color),
+      ggplot2::aes(label = label),
       angle = 90,
+      hjust = -0.15,
+      color = "grey20",
       size = 2.8,
       na.rm = TRUE
     ) +
@@ -605,9 +607,8 @@ plot_GWAS_feature_support_tracks <- function(feature_metadata, feature_col = "cl
     ggplot2::scale_y_continuous(
       position = "right",
       labels = scales::label_number(scale_cut = scales::cut_short_scale()),
-      expand = ggplot2::expansion(mult = c(0, 0.12))
+      expand = ggplot2::expansion(mult = c(0, 0.8))
     ) +
-    ggplot2::scale_color_identity() +
     ggplot2::coord_cartesian(clip = "off") +
     ggplot2::labs(x = NULL, y = "Nuclei") +
     ggplot2::theme_minimal(base_size = 8) +
@@ -651,25 +652,17 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
   bar_plot_data <- ordered_metadata |>
     dplyr::transmute(GWAS_ID, Loci = n_credible_set_loci, Samples = sample_size) |>
     tidyr::pivot_longer(-GWAS_ID, names_to = "track", values_to = "value") |>
-    dplyr::mutate(
-      panel_max = max(value, na.rm = TRUE),
-      label = format_GWAS_bar_number(value),
-      label_inside = value / panel_max >= 0.28,
-      label_x = dplyr::if_else(label_inside, value - 0.025 * panel_max, value + 0.025 * panel_max),
-      label_hjust = dplyr::if_else(label_inside, 1, 0),
-      label_color = dplyr::if_else(label_inside, "white", "grey20"),
-      .by = track
-    )
+    dplyr::mutate(label = format_GWAS_bar_number(value))
   ancestry_columns <- grep(
     "^ancestry_(EUR|EAS|AFR|AMR|SAS|OTH)$",
     colnames(ordered_metadata),
     value = TRUE
   )
-  ancestry_reported <- if (length(ancestry_columns) == 0L) {
-    rep(FALSE, nrow(ordered_metadata))
-  } else {
-    rowSums(!is.na(ordered_metadata[ancestry_columns])) > 0
+  if (length(ancestry_columns) == 0L) {
+    ordered_metadata$ancestry_OTH <- NA_real_
+    ancestry_columns <- "ancestry_OTH"
   }
+  ancestry_reported <- rowSums(!is.na(ordered_metadata[ancestry_columns])) > 0
   ancestry_plot_data <- ordered_metadata[ancestry_reported, , drop = FALSE] |>
     dplyr::select(GWAS_ID, dplyr::all_of(ancestry_columns)) |>
     tidyr::pivot_longer(-GWAS_ID, names_to = "ancestry_group", values_to = "fraction") |>
@@ -697,7 +690,7 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
       values = make_named_heatmap_palette(ordered_metadata$Category, "Set3"),
       labels = \(x) stringr::str_replace_all(x, "_", " "),
       name = "Category",
-      guide = ggplot2::guide_legend(ncol = 1, title.position = "top")
+      guide = ggplot2::guide_legend(ncol = min(4L, dplyr::n_distinct(ordered_metadata$Category)), byrow = TRUE, title.position = "top", order = 1)
     ) +
     ggplot2::labs(x = NULL, y = NULL) +
     gwas_heatmap_metadata_theme(show_y = TRUE)
@@ -711,7 +704,7 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
     ggplot2::scale_fill_manual(
       values = method_colors,
       name = "Method",
-      guide = ggplot2::guide_legend(ncol = 1, title.position = "top")
+      guide = ggplot2::guide_legend(ncol = 1, title.position = "top", order = 2)
     ) +
     ggplot2::labs(x = NULL, y = NULL) +
     gwas_heatmap_metadata_theme()
@@ -720,14 +713,15 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
     ggplot2::ggplot(ggplot2::aes(x = value, y = GWAS_ID)) +
     ggplot2::geom_col(fill = "grey45", width = 0.8, na.rm = TRUE) +
     ggplot2::geom_text(
-      ggplot2::aes(x = label_x, label = label, hjust = label_hjust, color = label_color),
+      ggplot2::aes(label = label),
+      hjust = -0.1,
+      color = "grey20",
       size = 3,
       na.rm = TRUE
     ) +
     ggplot2::geom_hline(yintercept = row_breaks, color = "grey25", linewidth = 0.35) +
     ggplot2::facet_grid(. ~ track, scales = "free_x", switch = "x") +
-    ggplot2::scale_color_identity() +
-    ggplot2::scale_x_continuous(expand = c(0, 0)) +
+    ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0, 0.6))) +
     ggplot2::scale_y_discrete(drop = FALSE, expand = c(0, 0)) +
     ggplot2::labs(x = NULL, y = NULL) +
     gwas_heatmap_metadata_theme()
@@ -749,12 +743,15 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
         "Unreported" = "#D9D9D9"
       ),
       name = "Ancestry",
-      guide = ggplot2::guide_legend(ncol = min(2L, get_heatmap_legend_ncol(ancestry_plot_data$ancestry_group, max_row_chars = 35)), byrow = TRUE, title.position = "top")
+      guide = ggplot2::guide_legend(ncol = 2, byrow = TRUE, title.position = "top", order = 3)
     ) +
     ggplot2::labs(x = NULL, y = NULL) +
     gwas_heatmap_metadata_theme(show_x = TRUE)
 
-  patchwork::wrap_plots(category_plot, method_plot, bar_plot, ancestry_plot, nrow = 1, widths = c(0.48, 0.48, 1.25, 1.15), guides = "collect") &
+  tracks <- lapply(list(category_plot, method_plot, bar_plot, ancestry_plot), \(plot) {
+    plot + ggplot2::coord_cartesian(ylim = c(0.5, length(row_levels) + 0.5), clip = "off")
+  })
+  patchwork::wrap_plots(tracks, nrow = 1, widths = c(0.48, 0.48, 1.25, 1.15), guides = "collect") &
     ggplot2::theme(legend.justification = "left", legend.box.just = "left")
 }
 
@@ -764,8 +761,8 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
 #'
 #' @param data_per_GWAS_and_cluster_df Score summary tibble with one row per
 #'   GWAS/cluster combination.
-#' @param GWAS_metadata_tracks_plot Patchwork/ggplot metadata track aligned to
-#'   the same GWAS ordering.
+#' @param GWAS_metadata_tracks_plot Four-track patchwork returned by
+#'   `plot_GWAS_metadata_tracks()`, aligned to the same GWAS ordering.
 #' @param compartments_patterns Optional named regex patterns used to group
 #'   clusters into compartments.
 #' @param scaled Logical; when `TRUE`, use 0.5 as the diverging color midpoint
@@ -818,13 +815,28 @@ plot_GWAS_by_cluster_heatmap <- function(
     point_size_col = point_size_col
   )
 
+  # Keep all body panels at the same layout level so axes and legends cannot
+  # independently resize the metadata rows or the score matrix.
+  plots <- lapply(seq_len(4L), \(i) GWAS_metadata_tracks_plot[[i]])
+  plots[[5]] <- score_plot
+  design <- "ABCDE"
+  heights <- grid::unit(1, "null")
   if (isTRUE(show_feature_support) && "n_cells" %in% colnames(ordered_data$clusters) && any(!is.na(ordered_data$clusters$n_cells))) {
-    left_panel <- patchwork::plot_spacer() / GWAS_metadata_tracks_plot + patchwork::plot_layout(heights = c(0.14, 1))
-    right_panel <- plot_GWAS_feature_support_tracks(ordered_data$clusters) / score_plot + patchwork::plot_layout(heights = c(0.14, 1))
-    return(patchwork::wrap_plots(left_panel, right_panel, nrow = 1, widths = c(4.8, 9)))
+    plots[[6]] <- plot_GWAS_feature_support_tracks(ordered_data$clusters)
+    design <- "####F\nABCDE"
+    heights <- grid::unit(c(28, 1), c("mm", "null"))
   }
 
-  patchwork::wrap_plots(GWAS_metadata_tracks_plot, score_plot, nrow = 1, widths = c(4.8, 9))
+  patchwork::wrap_plots(
+    plots, design = design, widths = c(0.35, 0.35, 2, 1.2, 9),
+    heights = heights, guides = "collect"
+  ) & ggplot2::theme(
+    legend.position = "bottom",
+    legend.box = "horizontal",
+    legend.justification = "left",
+    legend.box.just = "top",
+    legend.margin = ggplot2::margin(4, 8, 4, 0)
+  )
 }
 
 #' Plot grouped GWAS scores by cluster
@@ -835,8 +847,8 @@ plot_GWAS_by_cluster_heatmap <- function(
 #' @param data_per_GWAS_and_cluster_df Score summary tibble containing `split_col`
 #'   in addition to GWAS and cluster score fields.
 #' @param split_col Column used to split the data into one heatmap per value.
-#' @param GWAS_metadata_tracks_plot Patchwork/ggplot metadata track aligned to
-#'   the same GWAS ordering.
+#' @param GWAS_metadata_tracks_plot Four-track patchwork returned by
+#'   `plot_GWAS_metadata_tracks()`, aligned to the same GWAS ordering.
 #' @param name_suffix Optional suffix appended to names of returned plot-list
 #'   elements.
 #' @param compartments_patterns Optional named regex patterns used to group

@@ -18,7 +18,7 @@ not build every plot in the gallery.
 
 ```{.r filename="R"}
 targets::tar_make(
-  names = tidyselect::all_of("multimodal_Seurat_object.immune_human_2x")
+  names = tidyselect::all_of("multimodal_Seurat_object.8_multimodal_QC.immune_human_2x")
 )
 ```
 
@@ -33,7 +33,7 @@ After the run, the following command should return `character(0)`, meaning the r
 
 ```{.r filename="R"}
 targets::tar_outdated(
-  names = tidyselect::all_of("multimodal_Seurat_object.immune_human_2x"),
+  names = tidyselect::all_of("multimodal_Seurat_object.8_multimodal_QC.immune_human_2x"),
   callr_function = NULL
 )
 ```

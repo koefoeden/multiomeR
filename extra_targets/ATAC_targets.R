@@ -1,4 +1,46 @@
 rlang::list2(
+  targets::tar_target(
+    name = cell_retention_tibble.ATAC_input,
+    description = "Accumulate per-well retention counts through peak QC, including empty wells. [checkpoint:5_pre-LSI-QC]",
+    command = summarize_QC_cell_retention(
+      before_metadata = metadata_w_QC_tibble.ATAC,
+      after_metadata = metadata_filtered_tibble.ATAC,
+      GEM_well_IDs = aggregation_GEM_well_IDs,
+      stage = "checkpoint:5_pre-LSI-QC",
+      discarded_barcodes = list("Peak QC filters" = setdiff(
+        metadata_w_QC_tibble.ATAC$barcode_w_prefix, metadata_filtered_tibble.ATAC$barcode_w_prefix)),
+      previous_stages = cell_retention_tibble.GEX
+    )
+  ),
+  tarchetypes::tar_file(
+    name = cell_retention_flow_plot.5_pre_LSI_QC,
+    description = "Plot cumulative nuclei retention through peak QC. [checkpoint:5_pre-LSI-QC]",
+    command = save_QC_cell_retention_plot(cell_retention_tibble.ATAC_input)
+  ),
+  targets::tar_target(
+    name = cell_retention_tibble.ATAC,
+    description = "Accumulate per-well retention counts through ATAC clustering and doublet filtering. [checkpoint:7_ATAC-QC]",
+    command = summarize_QC_cell_retention(
+      before_metadata = metadata_filtered_tibble.ATAC,
+      after_metadata = metadata_w_cell_types_tibble.ATAC,
+      GEM_well_IDs = aggregation_GEM_well_IDs,
+      stage = "checkpoint:7_ATAC-QC",
+      discarded_barcodes = c(
+        list("Small ATAC clusters" = setdiff(metadata_filtered_tibble.ATAC$barcode_w_prefix,
+          metadata_w_clusters_tibble.ATAC$barcode_w_prefix)),
+        get_doublet_QC_discarded_barcodes(metadata_w_clusters_tibble.ATAC,
+          metadata_w_cell_types_tibble.ATAC, scDblFinder_results_df.ATAC,
+          class_col = "scDblFinder.class_ATAC",
+          remove_called_doublets = aggregation_scDblFinder_ATAC_remove_called_doublets)
+      ),
+      previous_stages = cell_retention_tibble.ATAC_input
+    )
+  ),
+  tarchetypes::tar_file(
+    name = cell_retention_flow_plot.7_ATAC_QC,
+    description = "Plot cumulative nuclei retention through ATAC QC. [checkpoint:7_ATAC-QC]",
+    command = save_QC_cell_retention_plot(cell_retention_tibble.ATAC)
+  ),
   ATAC_cluster_specific_fragment_file_generation = rlang::list2(
     targets::tar_target(
       name = blacklist_GRanges.ATAC,
@@ -109,8 +151,8 @@ rlang::list2(
       pattern = map(peak_GRanges_per_cluster.ATAC, peak_calling_cluster_names.ATAC)
     ),
     tarchetypes::tar_file(
-      name = peaks_similarity_tiles_plot.ATAC,
-      description = "Plot pairwise peak-set similarity matrix across clusters. [checkpoint:6_ATAC-QC]",
+      name = peaks_similarity_tiles_plot.4_peak_QC,
+      description = "Plot pairwise peak-set similarity matrix across clusters. [checkpoint:4_peak-QC]",
       command = {
         plot <- plot_similarity_matrix_from_GRanges_list(within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC)
         save_plots_structured(plot)
@@ -250,8 +292,8 @@ rlang::list2(
       iteration = "vector"
     ),
     tarchetypes::tar_file(
-      name = coverage_tracks_plots.ATAC,
-      description = "Plot ATAC coverage tracks at marker gene and DA peak loci. [checkpoint:6_ATAC-QC]",
+      name = coverage_tracks_plots.7_ATAC_QC,
+      description = "Plot ATAC coverage tracks at marker gene and DA peak loci. [checkpoint:7_ATAC-QC]",
       command = plot_coverage_at_region_BPCells(
         fragments = combined_BPCells_fragment_obj.ATAC,
         metadata_tibble = metadata_w_cell_types_tibble.ATAC,
@@ -399,43 +441,72 @@ rlang::list2(
         dplyr::mutate(LSI_harmony_SNN_cluster = LSI_clusters.ATAC[.data$barcode_w_prefix])
     ),
     targets::tar_target(
-      name = metadata_w_cell_types_unfiltered_tibble.ATAC,
-      description = "Assign cell type labels to BPCells-native ATAC clusters from GEX UCell marker scores in metadata",
-      command = add_cell_types_to_metadata_from_module_scores(
+      name = cluster_UCell_evidence.ATAC,
+      description = "Cache adjusted GEX marker scores and diagnostic perturbations for ATAC clusters independently of stringency",
+      command = prepare_cluster_UCell_evidence(
+        counts_matrix = aggregated_counts_BPCells_matrix.GEX,
         metadata_tibble = metadata_w_clusters_tibble.ATAC,
-        named_marker_genes_list = UCell_GEX_marker_genes_list,
-        allow_multiple_cell_types = aggregation_allow_multiple_cell_types,
+        control = cluster_UCell_controls.GEX,
+        cluster_column = "LSI_harmony_SNN_cluster",
+        workers = 2
+      ),
+      resources = get_tar_resources(cores_req = 2, RAM_GB_req = 32)
+    ),
+    targets::tar_target(
+      name = cluster_UCell_annotation.7_ATAC_QC,
+      description = "ATAC cluster assignments from minimum adjusted GEX score advantage with diagnostic stability. [checkpoint:7_ATAC-QC]",
+      command = evaluate_cluster_UCell_evidence(cluster_UCell_evidence.ATAC,
+        min_advantage = aggregation_cluster_annotation_min_advantage),
+      resources = get_tar_resources(RAM_GB_req = 8)
+    ),
+    tarchetypes::tar_file(
+      name = cluster_UCell_advantage_plots.7_ATAC_QC,
+      description = "Faceted ATAC cluster adjusted GEX scores with matched background and the competition cutoff. [checkpoint:7_ATAC-QC]",
+      command = plot_cluster_UCell_advantages(cluster_UCell_annotation.7_ATAC_QC) |>
+        save_plots_structured(width = 22, height = 15)
+    ),
+    targets::tar_target(
+      name = metadata_w_cell_types_unfiltered_tibble.ATAC,
+      description = "Attach supported ATAC cluster labels or explicit abstentions from GEX UCell evidence",
+      command = add_cluster_UCell_annotations(
+        metadata_tibble = metadata_w_clusters_tibble.ATAC,
+        annotation = cluster_UCell_annotation.7_ATAC_QC,
         cluster_column = "LSI_harmony_SNN_cluster"
       )
     ),
     tarchetypes::tar_file(
-      name = VizDimLoadings_plots.ATAC,
-      description = "Plot top feature loadings for each LSI dimension. [checkpoint:6_ATAC-QC]",
+      name = cluster_UCell_diagnostics.7_ATAC_QC,
+      description = "Export ATAC cluster decisions, GEX marker evidence, GEM-well agreement and control matching. [checkpoint:7_ATAC-QC]",
+      command = save_cluster_UCell_diagnostics(cluster_UCell_annotation.7_ATAC_QC, cluster_UCell_controls.GEX)
+    ),
+    tarchetypes::tar_file(
+      name = VizDimLoadings_plots.6_ATAC_LSI_QC,
+      description = "Plot top feature loadings for each LSI dimension. [checkpoint:6_ATAC-LSI-QC]",
       command = plot_LSI_loadings_from_tibble(
         LSI_loadings_tibble = LSI_loadings_tibble.ATAC,
-        dims = aggregation_ATAC_data_PCs,
+        dims = seq_len(ncol(LSI_BPCells.ATAC$cell_embeddings)),
         nfeatures = 50
       ) |>
         save_plots_structured()
     ),
     tarchetypes::tar_file(
-      name = LSI_singular_values_elbow_plot.ATAC,
-      description = "Elbow plot of native ATAC LSI singular values. [checkpoint:6_ATAC-QC]",
+      name = LSI_singular_values_elbow_plot.6_ATAC_LSI_QC,
+      description = "Elbow plot of native ATAC LSI singular values. [checkpoint:6_ATAC-LSI-QC]",
       command = {
         plot <- plot_embedding_singular_values(
           singular_values = LSI_BPCells.ATAC$singular_values,
-          dims = aggregation_ATAC_data_PCs
+          dims = seq_len(ncol(LSI_BPCells.ATAC$cell_embeddings))
         )
         save_plots_structured(plot)
       }
     ),
     tarchetypes::tar_file(
-      name = LSI_embedding_sdev_plot.ATAC,
-      description = "Non-Harmony and Harmony ATAC LSI embedding coordinate SD plot. [checkpoint:6_ATAC-QC]",
+      name = LSI_embedding_sdev_plot.6_ATAC_LSI_QC,
+      description = "Non-Harmony and Harmony ATAC LSI embedding coordinate SD plot. [checkpoint:6_ATAC-LSI-QC]",
       command = {
         plot <- plot_embedding_sdev(
           embedding_matrix = LSI_BPCells.ATAC$cell_embeddings,
-          dims = aggregation_ATAC_data_PCs,
+          dims = seq_len(ncol(LSI_BPCells.ATAC$cell_embeddings)),
           harmony_embedding_matrix = if (
             length(c(aggregation_harmony_correction_metadata_col_names, aggregation_extra_harmony_covars_ATAC) %||% character()) > 0
           ) {
@@ -449,10 +520,10 @@ rlang::list2(
       }
     ),
     tarchetypes::tar_file(
-      name = LSI_metadata_association_barplots.ATAC,
-      description = "Non-Harmony and Harmony ATAC LSI metadata association bar plots. [checkpoint:6_ATAC-QC]",
+      name = LSI_metadata_association_barplots.6_ATAC_LSI_QC,
+      description = "Non-Harmony and Harmony ATAC LSI metadata association bar plots. [checkpoint:6_ATAC-LSI-QC]",
       command = {
-        plots <- plot_embedding_metadata_association_barplots(
+        association_tibbles <- get_embedding_metadata_association_tibbles(
           embedding_matrix = LSI_BPCells.ATAC$cell_embeddings,
           harmony_embedding_matrix = if (
             length(c(aggregation_harmony_correction_metadata_col_names, aggregation_extra_harmony_covars_ATAC) %||% character()) > 0
@@ -462,7 +533,7 @@ rlang::list2(
             NULL
           },
           metadata_tibble = metadata_analysis_tibble.ATAC,
-          dims = aggregation_ATAC_data_PCs,
+          dims = seq_len(ncol(LSI_BPCells.ATAC$cell_embeddings)),
           dim_prefix = "LSI_",
           continuous_technical_cols = c(
             "log10_nCount_ATAC",
@@ -488,9 +559,28 @@ rlang::list2(
           continuous_biological_cols = aggregation_continuous_vars %||% character(),
           categorical_biological_cols = aggregation_categorical_vars %||% character()
         )
+        plot_tibble <- association_tibbles |>
+          purrr::keep(\(data) nrow(data) > 0 && !all(is.na(data$metric))) |>
+          dplyr::bind_rows()
+        if (nrow(plot_tibble) > 0) {
+          plot_tibble <- dplyr::distinct(plot_tibble, variable, dim, embedding_type, .keep_all = TRUE)
+        }
+        plot <- plot_embedding_metadata_association_tibble(
+          plot_tibble = plot_tibble,
+          dims = seq_len(ncol(LSI_BPCells.ATAC$cell_embeddings)),
+          title = "ATAC LSI associations with metadata"
+        ) + ggplot2::labs(
+          subtitle = paste(
+            "Bars show squared Pearson correlation (continuous variables) or between-group variance fraction (categorical variables).",
+            "Each variable is assessed separately; associations omit direction and may reflect technical-biological confounding.",
+            sep = "\n"
+          ),
+          x = "LSI dimension",
+          y = "LSI variance associated with metadata"
+        )
         save_plots_structured(
-          plots,
-          height = purrr::map_dbl(plots, \(plot) max(5, 0.75 * get_num_facet_rows(plot)))
+          plot,
+          height = max(5, 0.75 * get_num_facet_rows(plot))
         )
       },
       resources = get_tar_resources(RAM_GB_req = 16)
@@ -505,7 +595,7 @@ rlang::list2(
         metadata_tibble = metadata_w_cell_types_unfiltered_tibble.ATAC |>
           dplyr::filter(.data$barcode_w_prefix %in% QC_filtered_BCs.ATAC),
         cluster_collapse_list = aggregation_scDblFinder_GEX_cell_type_collapse_list,
-        cluster_col = "LSI_harmony_SNN_cluster_cell_type"
+        cluster_col = "LSI_harmony_SNN_cluster_scDblFinder_group"
       ),
       iteration = "vector"
     ),
@@ -554,8 +644,8 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 8)
     ),
     tarchetypes::tar_file(
-      name = scDblFinder_score_violins_plot.ATAC,
-      description = "Violin plots of scDblFinder doublet scores by cluster. [checkpoint:6_ATAC-QC]",
+      name = scDblFinder_score_violins_plot.7_ATAC_QC,
+      description = "Violin plots of scDblFinder doublet scores by cluster. [checkpoint:7_ATAC-QC]",
       command = {
         scDblFinder_metadata <- metadata_w_cell_types_unfiltered_tibble.ATAC |>
           dplyr::left_join(scDblFinder_results_df.ATAC, by = "barcode_w_prefix")
@@ -587,7 +677,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = metadata_w_cell_types_tibble.ATAC,
-      description = "Annotate ATAC metadata with scDblFinder QC and apply configured cell- and cluster-level doublet filters [part_of_graph:ATAC] [part_of_graph:WNN] [part_of_graph:seurat_export]",
+      description = "Annotate ATAC metadata with scDblFinder QC and apply configured cell- and cluster-level doublet filters [part_of_graph:ATAC] [part_of_graph:WNN] [part_of_graph:seurat_export] [checkpoint:7_ATAC-QC]",
       command = filter_metadata_by_scDblFinder(
         metadata_tibble = metadata_w_cell_types_unfiltered_tibble.ATAC,
         scDblFinder_results_df = scDblFinder_results_df.ATAC,
@@ -621,26 +711,31 @@ rlang::list2(
 
   ATAC_QC_plots_targets = rlang::list2(
     tarchetypes::tar_file(
-      name = peaks_QC_violins_plot.ATAC,
-      description = "Violin plots of peak-based ATAC QC metrics per GEM well. [checkpoint:4_peak-QC]",
-      command = {
-        plot_data <- metadata_w_QC_tibble.ATAC |>
-          dplyr::select(GEM_well_ID, "dataset", dplyr::any_of(aggregation_peak_based_continuous_QC_vars)) |>
-          tidyr::pivot_longer(cols = dplyr::any_of(aggregation_peak_based_continuous_QC_vars), names_to = "feature", values_to = "value")
-
-        plot <- plot_data |>
-          ggplot2::ggplot(ggplot2::aes(x = GEM_well_ID, y = value, fill = dataset)) +
-          ggplot2::geom_violin(scale = "width") +
-          ggplot2::facet_wrap(~feature, scales = "free", ncol = 1) +
-          ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)) +
-          ggplot2::theme(legend.position = "none") +
-          ggplot2::labs(x = ggplot2::element_blank())
-        save_plots_structured(plot)
-      }
+      name = confusion_matrices_plots.7_ATAC_QC,
+      description = "Paired RNA versus ATAC cluster and cell-type confusion matrices before WNN integration. [checkpoint:7_ATAC-QC]",
+      command = plot_modality_confusion_matrices(
+        metadata_tibble = metadata_w_cell_types_tibble.ATAC,
+        source_label = "RNA",
+        target_label = "ATAC"
+      ) |>
+        save_plots_structured(width = 22, height = 11),
+      resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
-      name = categorical_bars_plots.ATAC,
-      description = "Bar plots of categorical metadata proportions by cell-type cluster. [checkpoint:6_ATAC-QC]",
+      name = peaks_QC_violins_plot.4_peak_QC,
+      description = "Violin plots of peak-based ATAC QC metrics per GEM well. [checkpoint:4_peak-QC]",
+      command = plot_QC_metric_violins(
+        metadata_tibble = metadata_w_QC_tibble.ATAC,
+        QC_metric_manifest_tibble = QC_metric_manifest_tibble,
+        checkpoints = "4_peak-QC",
+        group_col = "GEM_well_ID",
+        fill_col = "dataset"
+      ) |>
+        save_plots_structured(width = max(10, 4 + 0.35 * dplyr::n_distinct(metadata_w_QC_tibble.ATAC$GEM_well_ID)))
+    ),
+    tarchetypes::tar_file(
+      name = categorical_bars_plots.7_ATAC_QC,
+      description = "Bar plots of categorical metadata proportions by cell-type cluster. [checkpoint:7_ATAC-QC]",
       command = {
         plot <- plot_categorical_bars_plot(
           metadata_w_cell_types_analysis_tibble.ATAC,
@@ -651,7 +746,7 @@ rlang::list2(
       }
     ),
     tarchetypes::tar_file(
-      name = QC_excluded_upset_plot.ATAC,
+      name = QC_excluded_upset_plot.5_pre_LSI_QC,
       description = "UpSet plot of overlapping ATAC QC exclusion reasons. [checkpoint:5_pre-LSI-QC]",
       command = {
         plot <- plot_upset_from_excluded_BCs_list(QC_excluded_BCs_list.ATAC, n_total = nrow(metadata_w_QC_tibble.ATAC))
@@ -665,8 +760,8 @@ rlang::list2(
       iteration = "vector"
     ),
     tarchetypes::tar_file(
-      name = categorical.UMAPs.ATAC,
-      description = "UMAPs colored by categorical metadata variables. [checkpoint:6_ATAC-QC]",
+      name = categorical.UMAPs.7_ATAC_QC,
+      description = "UMAPs colored by categorical metadata variables. [checkpoint:7_ATAC-QC]",
       command = metadata_w_cell_types_analysis_tibble.ATAC |>
         plot_UMAP_from_metadata(variable = categorical_UMAP_var.ATAC) |>
         save_plots_structured(
@@ -681,8 +776,8 @@ rlang::list2(
       command = round(seq(5, length(aggregation_ATAC_data_PCs), length.out = 3))
     ),
     tarchetypes::tar_file(
-      name = cross.UMAPs.ATAC,
-      description = "Compute ATAC UMAPs across a sweep of LSI dimension counts and neighbour counts. [checkpoint:6_ATAC-QC]",
+      name = cross.UMAPs.7_ATAC_QC,
+      description = "Compute ATAC UMAPs across a sweep of LSI dimension counts and neighbour counts. [checkpoint:7_ATAC-QC]",
       command = {
         sweep_umap <- run_UMAP_from_embedding_matrix(
           embedding_matrix = harmony_embeddings_matrix.ATAC[metadata_w_cell_types_tibble.ATAC$barcode_w_prefix, , drop = FALSE],
@@ -854,11 +949,14 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 60)
     ),
     tarchetypes::tar_file(
-      name = motif_family_accessibility_marker_volcano_plots.ATAC,
-      description = "Facetted volcano plot of marker motif-family accessibility per ATAC cell type. [checkpoint:6_ATAC-QC]",
+      name = motif_family_accessibility_marker_volcano_plots.7_ATAC_QC,
+      description = "Facetted volcano plot of marker motif-family accessibility per ATAC cell type. [checkpoint:7_ATAC-QC]",
       command = {
         plot <- motif_family_accessibility_markers.ATAC |>
-          dplyr::mutate(avg_log2FC = .data$avg_diff) |>
+          dplyr::mutate(
+            avg_log2FC = .data$avg_diff,
+            gene = label_motif_families(.data$gene, JASPAR_motif_family_labels)
+          ) |>
           plot_markers_volcano_simple() +
           ggplot2::labs(x = "Mean motif-family accessibility difference")
         save_plots_structured(plot)
@@ -866,14 +964,16 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
-      name = motif_family_accessibility_heatmap.ATAC,
-      description = "Heatmap of configured marker motif-family accessibility per ATAC cell type. [checkpoint:6_ATAC-QC]",
+      name = motif_family_accessibility_heatmap.7_ATAC_QC,
+      description = "Heatmap of configured marker motif-family accessibility per ATAC cell type. [checkpoint:7_ATAC-QC]",
       command = plot_feature_scores_heatmap_from_matrix(
         feature_matrix = motif_family_accessibility_BPCells_matrix.ATAC,
         metadata_tibble = metadata_w_cell_types_tibble.ATAC,
         features = ATAC_marker_motif_families_vec,
         group_col = "LSI_harmony_SNN_cluster_cell_type"
       ) |>
+        (\(plot) plot + ggplot2::scale_x_discrete(labels = JASPAR_motif_family_labels) +
+          ggplot2::labs(x = "Motif family", y = "ATAC cell type", fill = "Mean chromVAR Z-score"))() |>
         save_plots_structured(),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
@@ -893,14 +993,17 @@ rlang::list2(
       iteration = "vector"
     ),
     tarchetypes::tar_file(
-      name = continuous.UMAPs.ATAC,
-      description = "UMAPs colored by continuous motif-family accessibility and peak accessibility metrics. [checkpoint:6_ATAC-QC]",
+      name = continuous.UMAPs.7_ATAC_QC,
+      description = "UMAPs colored by continuous motif-family accessibility and peak accessibility metrics. [checkpoint:7_ATAC-QC]",
       command = plot_UMAP_from_metadata(
         metadata_tibble = metadata_w_cell_types_analysis_tibble.ATAC,
         variable = continuous_UMAP_spec.ATAC$variable,
         value_source = continuous_UMAP_spec.ATAC$value_source,
         feature_matrix = motif_family_accessibility_BPCells_matrix.ATAC
       ) |>
+        (\(plot) plot + ggplot2::labs(
+          title = label_motif_families(continuous_UMAP_spec.ATAC$variable, JASPAR_motif_family_labels)
+        ))() |>
         save_plots_structured(
           dyn_suffix_in_subdir = TRUE,
           override_suffix = stringr::str_replace_all(continuous_UMAP_spec.ATAC$variable, "[/\\\\]", "_")
@@ -958,16 +1061,16 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 8)
     ),
     tarchetypes::tar_file(
-      name = marker_gene_activity_dot_plot.ATAC,
-      description = "Dot plot of marker gene activity scores per ATAC cell type. [checkpoint:6_ATAC-QC]",
+      name = marker_gene_activity_dot_plot.7_ATAC_QC,
+      description = "Dot plot of marker gene activity scores per ATAC cell type. [checkpoint:7_ATAC-QC]",
       command = {
         plot <- plot_marker_gene_activity_dot_BPCells(
           feature_matrix = gene_score_archr_BPCells_matrix.ATAC,
           metadata_tibble = metadata_w_cell_types_tibble.ATAC,
-          features = GEX_marker_genes_vec,
+          marker_genes_list = UCell_GEX_marker_genes_list,
           group_col = "LSI_harmony_SNN_cluster_cell_type"
         )
-        save_plots_structured(plot)
+        save_plots_structured(plot, width = max(10, 4 + 0.35 * nlevels(plot$data$marker_feature)))
       },
       resources = get_tar_resources(RAM_GB_req = 16)
     )

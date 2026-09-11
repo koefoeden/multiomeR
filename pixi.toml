@@ -17,6 +17,7 @@ test-amulet-parity = { cmd = "Rscript -e 'testthat::test_file(\"tests/testthat/t
 test-algorithm-validation = { cmd = "Rscript -e 'testthat::test_dir(\"tests/testthat\", filter = \"scoring-parity|wnn-parity|scavenge-parity|amulet-parity\")'", description = "Run slow UCell, WNN, SCAVENGE, and AMULET parity and acceptance tests." }
 
 [dependencies]
+r-susier = ">=0.14.2,<0.15"
 r-testthat = ">=3.2.3,<4"
 r-tmb = "==1.9.19" # Match the glmmTMB binary ABI.
 # we still need some more general cleanup before we do a final dependency hygiene check. Lots of prefix calls in functions/targets that are not used anymore.

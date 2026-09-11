@@ -1,41 +1,31 @@
 ---
 name: multiomer-create-release
-description: Assess release readiness and draft or create a multiomeR GitHub release only when the repository has an explicit current versioning contract. Use for release planning, release drafts, tags, or publication. Do not recreate DESCRIPTION or invent a version source.
+description: Prepare or publish multiomeR releases using the repository release contract, destination-specific notes and explicit validation evidence.
 ---
 
 # multiomeR Create Release
 
-## Preflight
+Read `RELEASES.md`, `NEWS.md`, any downstream release notes, current remote refs,
+tags and GitHub releases before selecting a boundary. The workflow is not a root
+R package; never add `DESCRIPTION` for versioning. When the user asks you to
+establish or revise the convention, document that choice and proceed within the
+authorized scope instead of asking them to supply a version source.
 
-Before changing state:
+Distinguish preparation from publication. Preparation includes isolated topic
+branches, migration notes and destination validation. Publishing requires the
+user's authorization and a validated commit integrated into current `main`.
+Keep proposed notes marked unreleased until then. Follow the documented tag
+namespace; do not assume every downstream uses public `vX.Y.Z` tags.
 
-1. Inspect the latest Git tags and GitHub releases, `NEWS.md`, and any tracked
-   version source.
-2. Confirm the release commit is on an up-to-date `main` branch with a clean
-   worktree and completed validation.
-3. Determine whether the user requested release notes, a draft GitHub release,
-   or publication.
+Preserve running checkouts and their environments and stores. Review the final
+public diff for private material; merge accepted public work forward into the
+private destination and retain its own configuration and release record.
 
-For a release-note draft, return text only and make no repository or GitHub
-changes.
+For code and graph changes use `multiomer-validation-workflow`; regenerate
+manifest diagrams and render both books and the Markdown export when affected.
+State exactly which tests and runtime checks passed and which were not run.
 
-If no tracked version source or established tag history exists, stop and ask the
-user to define the versioning contract. Do not restore the deleted
-`DESCRIPTION` file merely to satisfy this skill.
-
-## Release workflow
-
-Once a version contract exists:
-
-1. Compare the release commit with the previous release boundary.
-2. Finalize the matching `NEWS.md` section from merged changes and PRs. Include
-   target-impact lines where relevant.
-3. Update the canonical version source if the contract requires it, then commit
-   with `multiomer-git-commit-format`.
-4. Create an annotated `v<x.y.z>` tag at the validated release commit and push
-   the commit and tag.
-5. Draft or publish the GitHub release exactly as requested, using the finalized
-   NEWS section, and verify its tag and URL.
-
-Do not perform an automatic post-release development-version bump unless the
-defined versioning contract explicitly requires one.
+At publication, update the release date, verify the destination commit and
+validation, create an annotated immutable tag, push that tag explicitly and
+publish the matching GitHub notes. Verify the resulting tag and release URL.
+Do not automatically bump a post-release development version.

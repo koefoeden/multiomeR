@@ -310,7 +310,7 @@ rlang::list2(
     command = get_excluded_BCs(full_metadata_tibble, QC_exclude_vector = GEM_well_QC_exclude_list)
   ),
   tarchetypes::tar_file(
-    name = excluded_barcodes_by_type_upset,
+    name = excluded_barcodes_by_type_upset.1_pre_aggregation_QC,
     description = "Plot an UpSet plot of per GEM well QC exclusion overlaps and save to file. [checkpoint:1_pre-aggregation-QC]",
     command = plot_upset_from_excluded_BCs_list(
       QC_excluded_BCs_list = excluded_barcodes_by_type_list,
@@ -326,7 +326,7 @@ rlang::list2(
       get_excluded_BCs(QC_exclude_vector = GEM_well_QC_exclude_list)
   ),
   tarchetypes::tar_file(
-    name = excluded_cellranger_only_barcodes_by_type_upset,
+    name = excluded_cellranger_only_barcodes_by_type_upset.1_pre_aggregation_QC,
     description = "Plot an UpSet plot of CellRanger-only QC exclusion overlaps and save to file. [checkpoint:1_pre-aggregation-QC]",
     command = plot_upset_from_excluded_BCs_list(
       QC_excluded_BCs_list = excluded_cellranger_only_barcodes_by_type_list,

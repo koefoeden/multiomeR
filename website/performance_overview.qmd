@@ -6,7 +6,7 @@ Actual wall time depends on input nuclei, retained cells, peak counts, enabled p
 
 ## Recorded examples
 
-The recorded benchmark below contains two public aggregations and estimates the critical path to each final `multimodal_Seurat_object` from recorded `{targets}` runtime metadata.
+The recorded benchmark below contains two public aggregations and estimates the critical path to each final `multimodal_Seurat_object.8_multimodal_QC` from recorded `{targets}` runtime metadata.
 
 | Aggregation | GEM wells | Cell Ranger input nuclei | Estimated critical path | Sum if ancestor targets ran serially |
 |---|---:|---:|---:|---:|

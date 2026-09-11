@@ -1,4 +1,22 @@
 rlang::list2(
+  targets::tar_target(
+    name = cell_retention_tibble.WNN,
+    description = "Accumulate per-well retention counts through final WNN filtering, including empty wells. [checkpoint:8_multimodal-QC]",
+    command = summarize_QC_cell_retention(
+      before_metadata = metadata_w_cell_types_tibble.ATAC,
+      after_metadata = metadata_w_cell_types_tibble.WNN,
+      GEM_well_IDs = aggregation_GEM_well_IDs,
+      stage = "checkpoint:8_multimodal-QC",
+      discarded_barcodes = list("Small WNN clusters" = setdiff(
+        clusters_tibble_raw.WNN$barcode_w_prefix, clusters_tibble.WNN$barcode_w_prefix)),
+      previous_stages = cell_retention_tibble.ATAC
+    )
+  ),
+  tarchetypes::tar_file(
+    name = cell_retention_flow_plot.8_multimodal_QC,
+    description = "Plot cumulative nuclei retention through final WNN QC. [checkpoint:8_multimodal-QC]",
+    command = save_QC_cell_retention_plot(cell_retention_tibble.WNN)
+  ),
   WNN_processing_targets = rlang::list2(
     targets::tar_target(
       name = embedding_matrices.WNN,
@@ -107,15 +125,44 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     targets::tar_target(
-      name = metadata_w_cell_types_tibble.WNN,
-      description = "Assign cell-type labels to native WNN clusters by GEX UCell marker scores [part_of_graph:WNN] [part_of_graph:seurat_export]",
-      command = add_cell_types_to_metadata_from_module_scores(
+      name = cluster_UCell_evidence.WNN,
+      description = "Cache adjusted GEX marker scores and diagnostic perturbations for WNN clusters independently of stringency",
+      command = prepare_cluster_UCell_evidence(
+        counts_matrix = aggregated_counts_BPCells_matrix.GEX,
         metadata_tibble = metadata_w_clusters_tibble.WNN,
-        named_marker_genes_list = UCell_GEX_marker_genes_list,
-        allow_multiple_cell_types = aggregation_allow_multiple_cell_types,
-        cluster_column = "WNN_harmony_SNN_cluster" 
+        control = cluster_UCell_controls.GEX,
+        cluster_column = "WNN_harmony_SNN_cluster",
+        workers = 2
+      ),
+      resources = get_tar_resources(cores_req = 2, RAM_GB_req = 32)
+    ),
+    targets::tar_target(
+      name = cluster_UCell_annotation.8_multimodal_QC,
+      description = "WNN assignments from minimum adjusted GEX score advantage with diagnostic stability. [checkpoint:8_multimodal-QC]",
+      command = evaluate_cluster_UCell_evidence(cluster_UCell_evidence.WNN,
+        min_advantage = aggregation_cluster_annotation_min_advantage),
+      resources = get_tar_resources(RAM_GB_req = 8)
+    ),
+    tarchetypes::tar_file(
+      name = cluster_UCell_advantage_plots.8_multimodal_QC,
+      description = "Faceted WNN adjusted GEX scores with matched background and the competition cutoff. [checkpoint:8_multimodal-QC]",
+      command = plot_cluster_UCell_advantages(cluster_UCell_annotation.8_multimodal_QC) |>
+        save_plots_structured(width = 22, height = 15)
+    ),
+    targets::tar_target(
+      name = metadata_w_cell_types_tibble.WNN,
+      description = "Attach supported WNN cluster labels or explicit abstentions from GEX UCell evidence [part_of_graph:WNN] [part_of_graph:seurat_export] [checkpoint:8_multimodal-QC]",
+      command = add_cluster_UCell_annotations(
+        metadata_tibble = metadata_w_clusters_tibble.WNN,
+        annotation = cluster_UCell_annotation.8_multimodal_QC,
+        cluster_column = "WNN_harmony_SNN_cluster"
       ),
       resources = get_tar_resources(RAM_GB_req = 16)
+    ),
+    tarchetypes::tar_file(
+      name = cluster_UCell_diagnostics.8_multimodal_QC,
+      description = "Export WNN cluster decisions, GEX marker evidence, GEM-well agreement and control matching. [checkpoint:8_multimodal-QC]",
+      command = save_cluster_UCell_diagnostics(cluster_UCell_annotation.8_multimodal_QC, cluster_UCell_controls.GEX)
     ),
     targets::tar_target(
       name = metadata_w_cell_types_analysis_tibble.WNN,
@@ -163,8 +210,8 @@ rlang::list2(
       iteration = "vector"
     ),
     tarchetypes::tar_file(
-      name = categorical.UMAPs.WNN,
-      description = "UMAPs colored by categorical metadata variables on the WNN embedding. [checkpoint:7_multimodal-QC]",
+      name = categorical.UMAPs.8_multimodal_QC,
+      description = "UMAPs colored by categorical metadata variables on the WNN embedding. [checkpoint:8_multimodal-QC]",
       command = metadata_w_cell_types_analysis_tibble.WNN |>
         plot_UMAP_from_metadata(
           variable = categorical_UMAP_var.WNN,
@@ -178,8 +225,8 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
-      name = continuous.UMAPs.WNN,
-      description = "UMAPs colored by continuous QC and gene expression features on the WNN embedding. [checkpoint:7_multimodal-QC]",
+      name = continuous.UMAPs.8_multimodal_QC,
+      description = "UMAPs colored by continuous QC and gene expression features on the WNN embedding. [checkpoint:8_multimodal-QC]",
       command = plot_UMAP_from_metadata(
         metadata_tibble = metadata_w_cell_types_analysis_tibble.WNN,
         variable = continuous_UMAP_spec.WNN$variable,
@@ -195,8 +242,8 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
-      name = categorical_bars_plots.WNN,
-      description = "Bar plots of categorical metadata composition per WNN cell type. [checkpoint:7_multimodal-QC]",
+      name = categorical_bars_plots.8_multimodal_QC,
+      description = "Bar plots of categorical metadata composition per WNN cell type. [checkpoint:8_multimodal-QC]",
       command = plot_categorical_bars_plot(
         metadata_tibble = metadata_w_cell_types_analysis_tibble.WNN,
         metadata_cols = aggregation_WNN_categorical_vars,
@@ -206,8 +253,8 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
-      name = markers_violin_plot.WNN,
-      description = "Violin plots of marker gene expression per WNN cell type. [checkpoint:7_multimodal-QC]",
+      name = markers_violin_plot.8_multimodal_QC,
+      description = "Violin plots of marker gene expression per WNN cell type. [checkpoint:8_multimodal-QC]",
       command = plot_WNN_marker_expression_violins(
         metadata_tibble = metadata_w_cell_types_tibble.WNN,
         feature_matrix = aggregated_counts_BPCells_matrix.GEX,
@@ -217,72 +264,40 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
-      name = confusion_matrices_plots.WNN,
-      description = "Pairwise row-normalized confusion matrices comparing RNA, ATAC, and WNN cluster assignments. [checkpoint:7_multimodal-QC]",
+      name = confusion_matrices_plots.8_multimodal_QC,
+      description = "Paired RNA versus WNN and ATAC versus WNN confusion matrices for SNN clusters and cell types. [checkpoint:8_multimodal-QC]",
       command = {
         pairwise_comparison_tibble <- tibble::tribble(
-          ~plot_name    , ~source_label , ~target_label , ~source_cluster_col             , ~target_cluster_col             , ~source_cell_type_col               , ~target_cell_type_col               ,
-          "RNA_vs_ATAC" , "RNA"         , "ATAC"        , "PCA_harmony_SNN_cluster_named" , "LSI_harmony_SNN_cluster_named" , "PCA_harmony_SNN_cluster_cell_type" , "LSI_harmony_SNN_cluster_cell_type" ,
-          "RNA_vs_WNN"  , "RNA"         , "WNN"         , "PCA_harmony_SNN_cluster_named" , "WNN_harmony_SNN_cluster_named" , "PCA_harmony_SNN_cluster_cell_type" , "WNN_harmony_SNN_cluster_cell_type" ,
-          "ATAC_vs_WNN" , "ATAC"        , "WNN"         , "LSI_harmony_SNN_cluster_named" , "WNN_harmony_SNN_cluster_named" , "LSI_harmony_SNN_cluster_cell_type" , "WNN_harmony_SNN_cluster_cell_type"
+          ~source_label, ~target_label,
+          "RNA",         "WNN",
+          "ATAC",        "WNN"
         )
 
         plots <- purrr::pmap(
           pairwise_comparison_tibble,
-          \(
-            plot_name,
-            source_label,
-            target_label,
-            source_cluster_col,
-            target_cluster_col,
-            source_cell_type_col,
-            target_cell_type_col
-          ) {
-            SNN_cluster_plot <- plot_cluster_confusion_matrix(
-              metadata_tibble = metadata_w_cell_types_tibble.WNN,
-              source_col = source_cluster_col,
-              target_col = target_cluster_col,
-              source_label = paste(source_label, "SNN clusters"),
-              target_label = paste(target_label, "SNN clusters"),
-              title = "SNN clusters"
-            )
-            cell_type_plot <- plot_cluster_confusion_matrix(
-              metadata_tibble = metadata_w_cell_types_tibble.WNN,
-              source_col = source_cell_type_col,
-              target_col = target_cell_type_col,
-              source_label = paste(source_label, "cell type"),
-              target_label = paste(target_label, "cell type"),
-              title = "Cell type"
-            )
-
-            patchwork::wrap_plots(
-              SNN_cluster_plot,
-              cell_type_plot,
-              nrow = 1,
-              guides = "collect"
-            ) +
-              patchwork::plot_annotation(
-                title = paste(source_label, "vs", target_label)
-              )
-          }
+          \(source_label, target_label) plot_modality_confusion_matrices(
+            metadata_tibble = metadata_w_cell_types_tibble.WNN,
+            source_label = source_label,
+            target_label = target_label
+          )
         )
-        names(plots) <- pairwise_comparison_tibble$plot_name
+        names(plots) <- paste(pairwise_comparison_tibble$source_label, pairwise_comparison_tibble$target_label, sep = "_vs_")
 
-        save_plots_structured(plots, width = 16, height = 7)
+        save_plots_structured(plots, width = 22, height = 11)
       },
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
-      name = ATAC_vs_RNA_weight_boxplots_plot.WNN,
-      description = "Boxplots of ATAC vs RNA modality weights per cell type. [checkpoint:7_multimodal-QC]",
+      name = ATAC_vs_RNA_weight_boxplots_plot.8_multimodal_QC,
+      description = "Boxplots of ATAC vs RNA modality weights per cell type. [checkpoint:8_multimodal-QC]",
       command = metadata_w_cell_types_tibble.WNN |>
         plot_ATAC_vs_RNA_weight_boxplots() |>
         save_plots_structured(),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
-      name = cluster_named_dim_tri_plot.WNN,
-      description = "3×3 grid of UMAPs with cell-type-named cluster-level identities. [checkpoint:7_multimodal-QC]",
+      name = cluster_named_dim_tri_plot.8_multimodal_QC,
+      description = "3×3 grid of UMAPs with cell-type-named cluster-level identities. [checkpoint:8_multimodal-QC]",
       command = metadata_w_cell_types_tibble.WNN |>
         plot_3_by_3_clusters_and_reduction_UMAPs_from_metadata(
           cluster_col_suffix = "named"
@@ -291,8 +306,8 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
-      name = cluster_cell_type_dim_tri_plot.WNN,
-      description = "3×3 grid of UMAPs with cell-type identities. [checkpoint:7_multimodal-QC]",
+      name = cluster_cell_type_dim_tri_plot.8_multimodal_QC,
+      description = "3×3 grid of UMAPs with cell-type identities. [checkpoint:8_multimodal-QC]",
       command = metadata_w_cell_types_tibble.WNN |>
         plot_3_by_3_clusters_and_reduction_UMAPs_from_metadata(
           cluster_col_suffix = "cell_type"
@@ -301,8 +316,8 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
-      name = cross.UMAPs.WNN,
-      description = "Compute WNN UMAPs across a sweep of nNN counts. [checkpoint:7_multimodal-QC]",
+      name = cross.UMAPs.8_multimodal_QC,
+      description = "Compute WNN UMAPs across a sweep of nNN counts. [checkpoint:8_multimodal-QC]",
       command = {
         sweep_umap_tibble <- run_WNN_UMAP(
           WNN_results = WNN_results,

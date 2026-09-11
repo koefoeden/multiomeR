@@ -316,3 +316,128 @@ testthat::test_that("integration: UCell scores join metadata without changing ro
   fixture <- make_scoring_fixture()
   compare_metadata_join(fixture$bpcells_counts, fixture$marker_genes)
 })
+
+testthat::test_that("cluster UCell summaries preserve per-cell scores and group means", {
+  load_scoring_test_runtime()
+  counts <- make_counts_matrix()
+  markers <- list(A = c("gene001", "gene003", "gene007"), B = c("gene010", "gene020"))
+  metadata <- data.frame(barcode_w_prefix = colnames(counts),
+    cluster = rep(c("1", "2"), length.out = ncol(counts)),
+    GEM_well_ID = c("singleton", rep(c("well_A", "well_B"), 18L)))
+  control <- prepare_cluster_UCell_controls(counts, metadata, markers)
+  testthat::expect_true(colnames(counts)[1] %in% control$reference_barcodes)
+  testthat::expect_false(any(control$reference_genes[control$draws] %in% unlist(markers)))
+  testthat::expect_true(all(apply(control$draws, 2L, anyDuplicated) == 0L))
+  control$max_rank <- 80L
+  summaries <- summarize_cluster_UCell_counts(counts, metadata, control, "cluster",
+    chunk_size = 7L, workers = 1L, include_cell_scores = TRUE)
+  expected <- calculate_BPCells_UCell_scores_from_matrix(counts, markers, max_rank = 80L)
+  testthat::expect_equal(summaries$cell_scores[rownames(expected), ], as.matrix(expected), tolerance = 1e-14)
+  for (index in which(summaries$groups$kind == "cluster")) {
+    selected <- metadata$cluster == summaries$groups$cluster[index]
+    observed <- vapply(markers, function(genes) score_UCell_rank_means(
+      summaries$rank_means[, summaries$groups$key[index], drop = FALSE], genes, 80L), numeric(1L))
+    testthat::expect_equal(observed, colMeans(expected[selected, ]), tolerance = 1e-14)
+  }
+  parallel_summary <- summarize_cluster_UCell_counts(counts, metadata, control, "cluster",
+    chunk_size = 7L, workers = 2L, include_cell_scores = TRUE)
+  testthat::expect_equal(parallel_summary$rank_means, summaries$rank_means, tolerance = 1e-14)
+  annotation <- evaluate_cluster_UCell_evidence(score_cluster_UCell_summaries(summaries, control))
+  joined <- add_cluster_UCell_annotations(metadata, annotation, "cluster")
+  testthat::expect_identical(joined$barcode_w_prefix, metadata$barcode_w_prefix)
+  testthat::expect_false(anyNA(joined$cluster_cell_type))
+  testthat::expect_equal(unname(as.matrix(joined[, names(markers)])), unname(as.matrix(expected)), tolerance = 1e-14)
+})
+
+testthat::test_that("cluster evidence abstains on unsupported and competing signatures", {
+  load_scoring_test_runtime()
+  genes <- sprintf("gene%03d", seq_len(500L))
+  markers <- list(A = genes[1:3], B = genes[4:6])
+  reference <- data.frame(gene = genes, abundance = rep(0.002, 500L), detection = rep(0.2, 500L))
+  control <- build_UCell_controls(reference, markers)
+  control$max_rank <- 500L
+  means <- matrix(0.01, 500L, 3L, dimnames = list(genes, c("clear", "tie", "absent")))
+  means[markers$A, "clear"] <- 0.9
+  means[unlist(markers), "tie"] <- 0.9
+  detection <- matrix(0.5, 500L, 3L, dimnames = dimnames(means))
+  evidence <- score_UCell_group_evidence(means, control, detection)
+  result <- list(decisions = assign_UCell_cluster_evidence(evidence))
+  testthat::expect_identical(result$decisions$status, c("Assigned", "Unassigned", "Unassigned"))
+  testthat::expect_identical(result$decisions$label, c("A", NA_character_, NA_character_))
+  metadata <- data.frame(barcode_w_prefix = c("x", "y", "z"), cluster = c("clear", "tie", "absent"))
+  annotated <- add_cluster_UCell_annotations(metadata, result, "cluster")
+  testthat::expect_identical(annotated$cluster_scDblFinder_group,
+    c("A", "Unassigned_cluster_tie", "Unassigned_cluster_absent"))
+  # Unavailable cell-stability diagnostics do not veto a sufficient advantage.
+  singleton_means <- cbind(means, means)
+  singleton_detection <- cbind(detection, detection)
+  colnames(singleton_means) <- colnames(singleton_detection) <- as.character(seq_len(6L))
+  singleton_groups <- data.frame(key = as.character(seq_len(6L)),
+    kind = rep(c("cluster", "block"), each = 3L),
+    cluster = rep(colnames(means), 2L), subgroup = rep(c("", "1"), each = 3L), cells = 1L)
+  singleton <- evaluate_cluster_UCell_evidence(score_cluster_UCell_summaries(list(rank_means = singleton_means,
+    detection = singleton_detection, groups = singleton_groups, n_blocks = 10L), control))
+  testthat::expect_identical(singleton$decisions$status, c("Assigned", "Unassigned", "Unassigned"))
+  testthat::expect_true(all(is.na(singleton$decisions$cell_stability)))
+  permissive <- assign_UCell_cluster_evidence(evidence, min_advantage = 0)
+  strict <- assign_UCell_cluster_evidence(evidence, min_advantage = 0.95)
+  testthat::expect_identical(permissive$status, c("Assigned", "Unassigned", "Unassigned"))
+  testthat::expect_identical(strict$candidate, permissive$candidate)
+  testthat::expect_true(all(strict$status == "Unassigned"))
+  boundary <- result$decisions$advantage[1]
+  testthat::expect_identical(assign_UCell_cluster_evidence(evidence, boundary)$status[1], "Assigned")
+  testthat::expect_identical(assign_UCell_cluster_evidence(evidence, boundary + 1e-8)$status[1], "Unassigned")
+  testthat::expect_error(assign_UCell_cluster_evidence(evidence, -0.1))
+  testthat::expect_equal(normalize_marker_panel(list(A = "gene001-", B = "gene002+"), genes),
+    list(A = "gene001-", B = "gene002"))
+})
+
+testthat::test_that("signed cluster scores and controls match per-cell UCell before averaging", {
+  load_scoring_test_runtime()
+  counts <- make_counts_matrix()
+  markers <- list(A = c("gene001+", "gene003", "gene007-"),
+    B = c("gene010", "gene020-"), negative_only = "gene030-")
+  metadata <- data.frame(barcode_w_prefix = colnames(counts),
+    cluster = rep(c("1", "2"), length.out = ncol(counts)), GEM_well_ID = "well")
+  control <- prepare_cluster_UCell_controls(counts, metadata, markers)
+  control$n_controls <- 9L
+  control$draws <- control$draws[, seq_len(control$n_controls), drop = FALSE]
+  control$max_rank <- 80L
+  summaries <- summarize_cluster_UCell_counts(counts, metadata, control, "cluster",
+    chunk_size = 7L, workers = 1L, include_cell_scores = TRUE)
+  reference <- function(signatures) callr::r(function(counts, signatures) {
+    as.matrix(UCell::ScoreSignatures_UCell(Matrix::Matrix(counts, sparse = TRUE),
+      features = signatures, maxRank = 80L, w_neg = 1, name = "", ncores = 1L))
+  }, args = list(counts = counts, signatures = signatures))
+  expected <- reference(markers)
+  testthat::expect_equal(summaries$cell_scores[rownames(expected), ], expected, tolerance = 1e-14)
+  for (label in names(control$markers)) {
+    genes <- control$markers[[label]]
+    variants <- c(list(genes), if (length(genes) > 1L) lapply(genes, function(gene) setdiff(genes, gene)))
+    for (variant in seq_along(variants)) {
+      signature <- variants[[variant]]
+      controls <- lapply(seq_len(control$n_controls), function(index) {
+        selected <- control$reference_genes[control$draws[sub("-$", "", signature), index]]
+        paste0(selected, ifelse(grepl("-$", signature), "-", ""))
+      })
+      signatures <- stats::setNames(c(list(signature), controls), paste0("signature", seq_len(control$n_controls + 1L)))
+      scores <- reference(signatures)
+      for (group in which(summaries$groups$kind == "cluster")) {
+        selected <- metadata$cluster == summaries$groups$cluster[group]
+        testthat::expect_equal(unname(summaries$signed_means[[label]][[variant]][, group]),
+          unname(colMeans(scores[selected, , drop = FALSE])), tolerance = 1e-14)
+      }
+    }
+  }
+  other <- summarize_cluster_UCell_counts(counts, metadata, control, "cluster",
+    chunk_size = 11L, workers = 2L, include_cell_scores = TRUE)
+  testthat::expect_equal(other$signed_means, summaries$signed_means, tolerance = 1e-14)
+  scored <- score_cluster_UCell_summaries(summaries, control)
+  testthat::expect_true(all(is.finite(scored$evidence$excess)))
+  testthat::expect_true(all(is.finite(scored$marker_deletions$excess)))
+  # A signed score clipped after averaging is generally a different quantity.
+  gap <- matrix(c(0.9, 0.1, 0.1, 0.9), 2L, dimnames = list(c("gene001", "gene007"), NULL))
+  exact <- mean(pmax(0, gap[1, ] - gap[2, ]))
+  shortcut <- max(0, mean(gap[1, ]) - mean(gap[2, ]))
+  testthat::expect_gt(exact, shortcut)
+})

@@ -1469,6 +1469,7 @@ get_GSEA_results <- function(
 #' Plot psbulk DGE volcano
 #'
 #' Plot a pseudobulk differential gene-expression volcano for one contrast.
+#' Optional feature labels affect displayed text only; joins retain feature IDs.
 #'
 #' @param psbulk_DX_results_tibble Differential result tibble with model,
 #'   contrast, feature, statistics, and significance columns.
@@ -1478,6 +1479,7 @@ get_GSEA_results <- function(
 #'   volcano labels.
 #' @param psbulk_DX_top_feature_OT_evidence_tibble Optional Open Targets evidence
 #'   annotations for labelled genes.
+#' @param feature_labels Named character vector of display labels keyed by feature ID.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for `save_plots_structured()` or composition.
 #' @keywords internal
 
@@ -1486,7 +1488,8 @@ plot_psbulk_DGE_volcano <- function(
   x_val = "logFC",
   y_val = c("log10pvalue", "log10FDR")[1],
   psbulk_DX_top_features_tibble = tibble::tibble(feature_id = character()),
-  psbulk_DX_top_feature_OT_evidence_tibble = tibble::tibble(feature_id = character(), OT_GWAS_evidence = logical())
+  psbulk_DX_top_feature_OT_evidence_tibble = tibble::tibble(feature_id = character(), OT_GWAS_evidence = logical()),
+  feature_labels = character()
 ) {
   test_results_formatted_tibble <- psbulk_DX_results_tibble |>
     dplyr::mutate(
@@ -1510,7 +1513,10 @@ plot_psbulk_DGE_volcano <- function(
 
   test_results_w_GWAS_evidence_tibble <- test_results_formatted_tibble |>
     dplyr::left_join(OT_evidence_tibble, by = "feature_id") |>
-    dplyr::mutate(OT_GWAS_evidence = tidyr::replace_na(as.character(OT_GWAS_evidence), "Not tested"))
+    dplyr::mutate(
+      OT_GWAS_evidence = tidyr::replace_na(as.character(OT_GWAS_evidence), "Not tested"),
+      feature_label = dplyr::coalesce(unname(feature_labels[as.character(feature_id)]), as.character(feature_id))
+    )
 
   volcano_plot <- ggplot2::ggplot(test_results_w_GWAS_evidence_tibble, ggplot2::aes(x = .data[[x_val]], y = .data[[y_val]], shape = FDR < 0.05)) +
     {
@@ -1524,7 +1530,7 @@ plot_psbulk_DGE_volcano <- function(
     ggplot2::labs(title = stringr::str_c(unique(test_results_formatted_tibble$model), ": ", unique(test_results_formatted_tibble$contrast))) +
     ggrepel::geom_text_repel(
       data = dplyr::filter(test_results_w_GWAS_evidence_tibble, feature_id %in% top_features, FDR < 0.05),
-      ggplot2::aes(label = feature_id),
+      ggplot2::aes(label = feature_label),
       size = 2,
       min.segment.length = 0,
       max.overlaps = 40
@@ -1540,7 +1546,8 @@ plot_psbulk_DGE_volcano <- function(
 plot_psbulk_DGE_volcanoes <- function(
   psbulk_DX_results_tibble,
   psbulk_DX_top_features_tibble = tibble::tibble(feature_id = character()),
-  psbulk_DX_top_feature_OT_evidence_tibble = tibble::tibble(feature_id = character(), OT_GWAS_evidence = logical())
+  psbulk_DX_top_feature_OT_evidence_tibble = tibble::tibble(feature_id = character(), OT_GWAS_evidence = logical()),
+  feature_labels = character()
 ) {
   psbulk_DX_results_tibble |>
     group_split_by("contrast") |>
@@ -1548,7 +1555,8 @@ plot_psbulk_DGE_volcanoes <- function(
       ~ plot_psbulk_DGE_volcano(
         psbulk_DX_results_tibble = .x,
         psbulk_DX_top_features_tibble = psbulk_DX_top_features_tibble,
-        psbulk_DX_top_feature_OT_evidence_tibble = psbulk_DX_top_feature_OT_evidence_tibble
+        psbulk_DX_top_feature_OT_evidence_tibble = psbulk_DX_top_feature_OT_evidence_tibble,
+        feature_labels = feature_labels
       )
     )
 }

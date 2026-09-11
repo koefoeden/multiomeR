@@ -21,7 +21,7 @@ rlang::list2(
           metric_id = readr::col_character(),
           display_name = readr::col_character(),
           description = readr::col_character(),
-          available_from_stage = readr::col_character(),
+          available_from_checkpoint = readr::col_character(),
           plot_min_q = readr::col_double(),
           plot_max_q = readr::col_double(),
           do_plot = readr::col_logical()
@@ -32,7 +32,7 @@ rlang::list2(
         "metric_id",
         "display_name",
         "description",
-        "available_from_stage",
+        "available_from_checkpoint",
         "plot_min_q",
         "plot_max_q",
         "do_plot"
@@ -42,10 +42,14 @@ rlang::list2(
           metric_id,
           display_name,
           description,
-          available_from_stage,
+          available_from_checkpoint,
           do_plot
         )
       plotting_quantiles <- c(manifest$plot_min_q, manifest$plot_max_q)
+      checkpoint_names <- readr::read_tsv(
+        QC_checkpoint_manifest_tsv,
+        col_types = readr::cols(.default = readr::col_character())
+      )$checkpoint_name
       invalid_quantiles <- any(
         !is.na(plotting_quantiles) &
           (!is.finite(plotting_quantiles) |
@@ -61,17 +65,24 @@ rlang::list2(
         !identical(colnames(manifest), expected_columns) ||
           anyDuplicated(manifest$metric_id) ||
           any(!stats::complete.cases(required_values)) ||
+          any(!manifest$available_from_checkpoint %in% checkpoint_names) ||
           invalid_quantiles ||
           invalid_quantile_intervals
       ) {
         stop(
           "QC_metric_manifest.tsv must contain the expected columns, complete ",
-          "required values, unique metric IDs, and valid plotting quantiles.",
+          "required values, unique metric IDs, known checkpoint names, and valid plotting quantiles.",
           call. = FALSE
         )
       }
       manifest
     }
+  ),
+  tarchetypes::tar_file(
+    name = QC_checkpoint_manifest_tsv,
+    description = "Track the QC checkpoint names and review guidance",
+    command = "QC_checkpoint_manifest.tsv",
+    deployment = "main"
   ),
   tarchetypes::tar_file(
     name = amulet_BPCells_native_source_file,
@@ -187,6 +198,26 @@ rlang::list2(
       }
 
       family_members
+    }
+  ),
+  tarchetypes::tar_file(
+    name = JASPAR_motif_family_annotations_tsv,
+    description = "Track readable JASPAR2026 motif-family labels and complete membership lookup",
+    command = "resources/JASPAR2026_vertebrate_motif_family_annotations.tsv"
+  ),
+  targets::tar_target(
+    name = JASPAR_motif_family_labels,
+    description = "Read unique display labels for all JASPAR2026 motif families without changing scoring identifiers",
+    command = {
+      annotations <- readr::read_tsv(JASPAR_motif_family_annotations_tsv, show_col_types = FALSE)
+      stopifnot(
+        !anyDuplicated(annotations$motif_family),
+        !anyDuplicated(annotations$display_name),
+        !anyNA(annotations$display_name),
+        all(nzchar(annotations$display_name)),
+        setequal(annotations$motif_family, JASPAR_motif_family_members_tibble$motif_family)
+      )
+      stats::setNames(annotations$display_name, annotations$motif_family)
     }
   ),
   targets::tar_target(

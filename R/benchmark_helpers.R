@@ -269,7 +269,7 @@ estimate_target_walltime <- function(
 
 #' Estimate wall time to aggregation-level multimodal Seurat export targets
 #'
-#' @param aggregations Aggregation names without the `multimodal_Seurat_object.`
+#' @param aggregations Aggregation names without the `multimodal_Seurat_object.8_multimodal_QC.`
 #'   prefix.
 #' @param store Targets store path.
 #' @param branch_parallel If `TRUE`, dynamic branches are assumed to run in
@@ -304,7 +304,7 @@ estimate_multimodal_seurat_walltime <- function(
     aggregations,
     \(aggregation) {
       estimate_target_walltime(
-        target_name = paste0("multimodal_Seurat_object.", aggregation),
+        target_name = paste0("multimodal_Seurat_object.8_multimodal_QC.", aggregation),
         network = network,
         meta = meta,
         branch_parallel = branch_parallel,
@@ -394,7 +394,7 @@ estimate_multimodal_seurat_walltime <- function(
 
 #' Estimate and cache multimodal Seurat wall-time benchmarks
 #'
-#' @param aggregations Aggregation names without the `multimodal_Seurat_object.`
+#' @param aggregations Aggregation names without the `multimodal_Seurat_object.8_multimodal_QC.`
 #'   prefix.
 #' @param cache_file RDS file used to cache the benchmark result object. If
 #'   `NULL`, cache below `store/benchmark/`.

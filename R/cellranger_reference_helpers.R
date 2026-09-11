@@ -5,6 +5,23 @@ CELLRANGER_REFERENCE_ANNOTATION_HUB_IDS <- c(
   "gencode.vM23" = "AH75036"
 )
 
+resolve_aggregation_gene_features <- function(gene_features, GEM_well_IDs, aggregation) {
+  shared_features <- gene_features[[1]]
+  matching_features <- vapply(gene_features, identical, logical(1), y = shared_features)
+  if (!all(matching_features)) {
+    stop(
+      "Aggregation '", aggregation,
+      "' has incompatible ordered gene definitions in the actual Cell Ranger inputs. ",
+      "Compared with GEM well '", GEM_well_IDs[[1]], "', mismatching wells: ",
+      paste(GEM_well_IDs[!matching_features], collapse = ", "),
+      ". Use inputs processed with the same reference; changing the configured ",
+      "reference path does not change the count matrices.",
+      call. = FALSE
+    )
+  }
+  shared_features
+}
+
 read_cellranger_reference_json <- function(reference_json_file) {
   required_fields <- c(
     "fasta_hash",

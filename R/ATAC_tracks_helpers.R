@@ -119,6 +119,11 @@ plot_coverage_at_region_BPCells <- function(
     dplyr::arrange(match(.data$barcode_w_prefix, fragment_cell_names))
 
   groups <- metadata[[group_cells_by_col]]
+  group_order <- gtools::mixedsort(unique(as.character(groups)))
+  coverage_colors <- stats::setNames(
+    grDevices::hcl.colors(length(group_order), palette = "Dark 3"),
+    group_order
+  )
   cell_read_counts <- if ("atac_fragments" %in% colnames(metadata)) metadata$atac_fragments else metadata$nCount_ATAC
 
   collapsed_peaks <- collapsed_peak_tibble |>
@@ -140,13 +145,15 @@ plot_coverage_at_region_BPCells <- function(
     region = region,
     groups = groups,
     cell_read_counts = cell_read_counts,
-    group_order = gtools::mixedsort(unique(as.character(groups))),
+    group_order = group_order,
+    colors = coverage_colors,
     bins = 500,
     return_data = TRUE
   )
   coverage_track <- make_BPCells_ATAC_coverage_track_from_tibble(
     coverage_tibble = coverage_tibble,
-    region = region
+    region = region,
+    colors = coverage_colors
   )
   collapsed_peaks <- collapsed_peaks |>
     dplyr::filter(
@@ -182,7 +189,7 @@ make_BPCells_ATAC_coverage_track_from_tibble <- function(
   coverage_tibble,
   region,
   clip_quantile = 0.999,
-  colors = BPCells:::discrete_palette("stallion")
+  colors = grDevices::hcl.colors(nlevels(coverage_tibble$group), palette = "Dark 3")
 ) {
   region <- BPCells:::normalize_ranges(region)
   ymax <- stats::quantile(coverage_tibble$normalized_insertions, clip_quantile)

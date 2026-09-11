@@ -3,6 +3,18 @@ rlang::list2(
     name = aggregated_GEX_BPCells_matrix_dir.GEX,
     description = "Write the combined GEX BPCells count matrix for all GEM wells in the dataset [part_of_graph:GEX] [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = {
+      matching_features <- vapply(
+        aggregation_GEX_counts_BPCells_matrix_syms,
+        \(counts) identical(rownames(counts), gene_features_df$gene_name_unique),
+        logical(1)
+      )
+      if (!all(matching_features)) {
+        stop(
+          "GEX matrix rows do not match the validated aggregation gene definitions for: ",
+          paste(aggregation_GEM_well_IDs[!matching_features], collapse = ", "),
+          call. = FALSE
+        )
+      }
       combined_counts_matrix <- purrr::reduce(aggregation_GEX_counts_BPCells_matrix_syms, cbind)
 
       out_dir <- get_structured_file_path()
@@ -122,11 +134,11 @@ rlang::list2(
     resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
   ),
   tarchetypes::tar_file(
-    name = VizDimLoadings_plots.GEX,
+    name = VizDimLoadings_plots.2_GEX_PCA_QC,
     description = "Plot top gene loadings for each GEX PCA dimension. [checkpoint:2_GEX-PCA-QC]",
     command = PCA_loadings_tibble.GEX |>
       plot_embedding_loadings_from_tibble(
-        dims = aggregation_GEX_data_PCs,
+        dims = seq_len(ncol(PCA_BPCells.GEX$cell_embeddings)),
         feature_col = "gene",
         dim_prefix = "PCA_",
         nfeatures = 50
@@ -143,7 +155,7 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
-    name = variable_feature_plot.GEX,
+    name = variable_feature_plot.2_GEX_PCA_QC,
     description = "Plot residual variance of top variable genes selected from SCTransform residuals. [checkpoint:2_GEX-PCA-QC]",
     command = {
       plot <- PCA_BPCells.GEX$variable_feature_stats |>
@@ -169,12 +181,12 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
-    name = PCA_singular_values_elbow_plot.GEX,
+    name = PCA_singular_values_elbow_plot.2_GEX_PCA_QC,
     description = "Elbow plot of native GEX PCA singular values. [checkpoint:2_GEX-PCA-QC]",
     command = {
       plot <- plot_embedding_singular_values(
         singular_values = PCA_BPCells.GEX$singular_values,
-        dims = aggregation_GEX_data_PCs
+        dims = seq_len(ncol(PCA_BPCells.GEX$cell_embeddings))
       ) + ggplot2::labs(
         title = "GEX PCA singular-value elbow",
         subtitle = paste(
@@ -188,12 +200,12 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
-    name = PCA_embedding_sdev_plot.GEX,
+    name = PCA_embedding_sdev_plot.2_GEX_PCA_QC,
     description = "Non-Harmony and Harmony GEX PCA embedding coordinate SD plot. [checkpoint:2_GEX-PCA-QC]",
     command = {
       plot <- plot_embedding_sdev(
         embedding_matrix = PCA_BPCells.GEX$cell_embeddings,
-        dims = aggregation_GEX_data_PCs,
+        dims = seq_len(ncol(PCA_BPCells.GEX$cell_embeddings)),
         harmony_embedding_matrix = if (length(aggregation_harmony_correction_metadata_col_names %||% character()) > 0) harmony_embeddings_matrix.GEX else NULL,
         dim_prefix = "PCA_"
       ) + ggplot2::labs(
@@ -209,14 +221,14 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
-    name = PCA_metadata_association_barplots.GEX,
+    name = PCA_metadata_association_barplots.2_GEX_PCA_QC,
     description = "Non-Harmony and Harmony GEX PCA metadata association bar plots. [checkpoint:2_GEX-PCA-QC]",
     command = {
       association_tibbles <- get_embedding_metadata_association_tibbles(
         embedding_matrix = PCA_BPCells.GEX$cell_embeddings,
         harmony_embedding_matrix = if (length(aggregation_harmony_correction_metadata_col_names %||% character()) > 0) harmony_embeddings_matrix.GEX else NULL,
         metadata_tibble = metadata_analysis_tibble.GEX,
-        dims = aggregation_GEX_data_PCs,
+        dims = seq_len(ncol(PCA_BPCells.GEX$cell_embeddings)),
         dim_prefix = "PCA_",
         continuous_technical_cols = c(
           "log10_nCount_RNA",
@@ -250,7 +262,7 @@ rlang::list2(
       }
       plot <- plot_embedding_metadata_association_tibble(
         plot_tibble = plot_tibble,
-        dims = aggregation_GEX_data_PCs,
+        dims = seq_len(ncol(PCA_BPCells.GEX$cell_embeddings)),
         title = "GEX PCA associations with metadata"
       ) + ggplot2::labs(
         subtitle = paste(

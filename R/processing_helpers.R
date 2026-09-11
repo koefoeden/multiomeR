@@ -191,7 +191,8 @@ plot_upset_from_excluded_BCs_list <- function(QC_excluded_BCs_list, n_total) {
     ggplot2::geom_col(width = 0.65, fill = "gray23") +
     ggplot2::geom_text(ggplot2::aes(label = .data$percent_label), angle = 45, hjust = 0, vjust = -0.5, size = 2.2) +
     ggplot2::scale_x_continuous(limits = c(0.5, nrow(intersection_tibble) + 0.5), expand = c(0, 0), breaks = NULL) +
-    ggplot2::scale_y_continuous(labels = format_QC_percent, expand = ggplot2::expansion(mult = c(0, 0.15))) +
+    ggplot2::scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 25), labels = format_QC_percent, expand = c(0, 0)) +
+    ggplot2::coord_cartesian(clip = "off") +
     ggplot2::labs(x = NULL, y = "Intersection size (% of input)") +
     ggplot2::theme(
       panel.background = ggplot2::element_rect(fill = "white"),
@@ -209,7 +210,7 @@ plot_upset_from_excluded_BCs_list <- function(QC_excluded_BCs_list, n_total) {
     ) +
     ggplot2::geom_point(data = dplyr::filter(matrix_tibble, .data$present), color = "gray23", size = 2.2) +
     ggplot2::scale_x_continuous(limits = c(0.5, nrow(intersection_tibble) + 0.5), expand = c(0, 0), breaks = NULL) +
-    ggplot2::scale_y_continuous(breaks = set_size_tibble$y, labels = set_size_tibble$set, expand = ggplot2::expansion(add = 0.5)) +
+    ggplot2::scale_y_continuous(limits = c(0.5, length(set_names) + 0.5), breaks = set_size_tibble$y, labels = set_size_tibble$set, expand = c(0, 0)) +
     ggplot2::labs(x = NULL, y = NULL) +
     ggplot2::theme(
       panel.background = ggplot2::element_rect(fill = "white"),
@@ -220,8 +221,8 @@ plot_upset_from_excluded_BCs_list <- function(QC_excluded_BCs_list, n_total) {
   set_size_plot <- set_size_tibble |>
     ggplot2::ggplot(ggplot2::aes(x = .data$percent, y = .data$y)) +
     ggplot2::geom_col(width = 0.65, fill = "gray23", orientation = "y") +
-    ggplot2::scale_x_reverse(labels = format_QC_percent, expand = ggplot2::expansion(mult = c(0.05, 0.05))) +
-    ggplot2::scale_y_continuous(breaks = set_size_tibble$y, labels = NULL, expand = ggplot2::expansion(add = 0.5)) +
+    ggplot2::scale_x_reverse(limits = c(100, 0), breaks = seq(0, 100, 25), labels = format_QC_percent, expand = c(0, 0)) +
+    ggplot2::scale_y_continuous(limits = c(0.5, length(set_names) + 0.5), breaks = set_size_tibble$y, labels = NULL, expand = c(0, 0)) +
     ggplot2::labs(x = "Set size (% of input)", y = NULL) +
     ggplot2::theme(
       panel.background = ggplot2::element_rect(fill = "white"),
@@ -230,8 +231,7 @@ plot_upset_from_excluded_BCs_list <- function(QC_excluded_BCs_list, n_total) {
       axis.ticks.y = ggplot2::element_blank()
     )
 
-  (patchwork::plot_spacer() + bar_plot) /
-    (set_size_plot + matrix_plot) +
-    patchwork::plot_layout(widths = c(0.35, 1), heights = c(0.65, 0.35)) +
+  patchwork::plot_spacer() + bar_plot + set_size_plot + matrix_plot +
+    patchwork::plot_layout(ncol = 2, widths = c(0.35, 1), heights = c(0.65, 0.35)) +
     patchwork::plot_annotation(title = stringr::str_glue("Excluded barcodes by QC filter type (input barcodes: {n_total})"))
 }

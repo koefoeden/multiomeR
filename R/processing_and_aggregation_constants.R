@@ -35,7 +35,6 @@ PROCESSING_QC_FEATURE_SETS <- list(
       "atac_peak_count_enrichment",
       "scDblFinder.score_ATAC"
     ),
-    GEX_cell_cycle = c("G2M.Score", "S.Score"),
     WNN = "ATAC.weight"
   ),
   categorical = list(

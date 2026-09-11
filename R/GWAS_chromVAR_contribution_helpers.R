@@ -962,16 +962,20 @@ prepare_GWAS_variant_contribution_detail_records <- function(
         )
       )
       group_levels <- c(cluster, setdiff(gtools::mixedsort(unique(group_values)), cluster))
+      coverage_colors <- stats::setNames(
+        c("#B40426", rep("grey75", length(group_levels) - 1L)),
+        group_levels
+      )
       coverage_tibble <- BPCells::trackplot_coverage(
         fragments = fragments,
         region = region,
         groups = factor(group_values, levels = group_levels),
         cell_read_counts = cell_read_counts,
         group_order = group_levels,
+        colors = coverage_colors,
         bins = 500,
         return_data = TRUE
       )
-      coverage_colors <- c("#B40426", rep("grey75", length(group_levels) - 1L))
 
       plot_title <- stringr::str_glue(
         "{GWAS_ID} - {cluster} - {locus_tibble$locus_label[[1]]}; ",

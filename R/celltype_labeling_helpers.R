@@ -76,6 +76,15 @@ get_motif_matrix_from_peak_ranges <- function(peak_ranges, motif_matrix_list, ge
   motif_matrix
 }
 
+#' Label motif families while preserving unrelated feature names
+#'
+#' @param features Feature IDs to display.
+#' @param family_labels Named character vector of labels keyed by motif-family ID.
+#' @return Display labels in the input order.
+label_motif_families <- function(features, family_labels) {
+  dplyr::coalesce(unname(family_labels[as.character(features)]), as.character(features))
+}
+
 resolve_marker_motif_families <- function(marker_TFs_list, motif_family_members_tibble) {
   resolve_marker <- function(marker_TF) {
     marker_suffix <- stringr::str_extract(marker_TF, "[+-]$")
@@ -423,85 +432,4 @@ get_marker_motif_family_accessibility_from_chromVAR_BPCells_z_scores <- function
       cluster = foreground,
       gene = feature
     )
-}
-
-#' Add cell types to metadata from module scores
-#'
-#' Assign cluster-level cell-type labels from marker module score columns.
-#'
-#' @param metadata_tibble Cell metadata tibble containing the clustering column
-#'   and one numeric module-score column per marker set name.
-#' @param named_marker_genes_list Named list of marker gene vectors. Only names
-#'   are used here; they define which score columns to compare.
-#' @param allow_multiple_cell_types Logical; when `TRUE`, the top two marker
-#'   labels are joined with `&` if their cluster mean scores differ by less than
-#'   `std_threshold`.
-#' @param cluster_column Metadata column containing the cluster labels to name.
-#' @param max_q_cap Upper quantile used to cap scaled module scores before
-#'   computing cluster means, reducing the influence of extreme cells.
-#' @param std_threshold Minimum standardized-score gap required to call only the
-#'   top marker label when multiple labels are allowed.
-#' @return `metadata_tibble` with `<cluster_column>_cell_type` and
-#'   `<cluster_column>_named` columns joined back by cluster.
-#' @keywords internal
-
-add_cell_types_to_metadata_from_module_scores <- function(
-  metadata_tibble,
-  named_marker_genes_list,
-  allow_multiple_cell_types,
-  cluster_column = "LSI_harmony_SNN_cluster",
-  max_q_cap = 0.95,
-  std_threshold = 0.5
-) {
-  cell_types <- names(named_marker_genes_list)
-  named_cluster_column <- paste0(cluster_column, "_named")
-  cell_type_column <- paste0(cluster_column, "_cell_type")
-
-  missing_score_cols <- setdiff(cell_types, colnames(metadata_tibble))
-  if (length(missing_score_cols) > 0) {
-    warning("Dropping marker modules without metadata score columns: ", paste(missing_score_cols, collapse = ", "))
-    cell_types <- intersect(cell_types, colnames(metadata_tibble))
-  }
-  if (length(cell_types) == 0) {
-    stop("No configured marker module score columns were found in metadata.")
-  }
-
-  mean_score_per_cell_type_and_cluster_capped <- metadata_tibble |>
-    dplyr::mutate(dplyr::across(dplyr::any_of(cell_types), ~ scale(.x, center = TRUE, scale = TRUE))) |>
-    dplyr::group_by(.data[[cluster_column]]) |>
-    dplyr::summarise(dplyr::across(
-      dplyr::any_of(cell_types),
-      ~ {
-        hi <- stats::quantile(.x, probs = max_q_cap, na.rm = TRUE)
-        vals <- .x[.x <= hi]
-        mean(vals, na.rm = TRUE)
-      }
-    ))
-
-  cell_type_cluster_mapping_table <- mean_score_per_cell_type_and_cluster_capped |>
-    dplyr::rowwise() |>
-    dplyr::mutate(
-      !!cell_type_column := {
-        score_vec <- dplyr::c_across(dplyr::all_of(cell_types))
-        names(score_vec) <- cell_types
-        sorted_scores_vec <- score_vec |> sort(decreasing = TRUE)
-        max_score <- sorted_scores_vec[1]
-        second_score <- sorted_scores_vec[2]
-
-        if (!is.na(second_score) && (max_score - second_score) < std_threshold && allow_multiple_cell_types) {
-          paste0(names(max_score), "&", names(second_score))
-        } else {
-          names(max_score)
-        }
-      }
-    ) |>
-    dplyr::ungroup() |>
-    dplyr::transmute(
-      !!cluster_column := as.character(.data[[cluster_column]]) |> get_mixsorted_factor(),
-      !!cell_type_column := .data[[cell_type_column]] |> get_mixsorted_factor(),
-      !!named_cluster_column := stringr::str_c(.data[[cluster_column]], "-", .data[[cell_type_column]]) |> get_mixsorted_factor()
-    )
-
-  metadata_tibble |>
-    dplyr::left_join(cell_type_cluster_mapping_table, by = cluster_column)
 }

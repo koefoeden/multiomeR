@@ -12,8 +12,8 @@ rlang::list2(
     ))
   ),
   tarchetypes::tar_file(
-    name = per_dataset_excluded_upset,
-    description = "Plot an UpSet plot of dataset-level QC exclusion overlaps across all GEM wells and save to file",
+    name = per_dataset_excluded_upset.1_pre_aggregation_QC,
+    description = "Plot an UpSet plot of dataset-level QC exclusion overlaps across all GEM wells and save to file [checkpoint:1_pre-aggregation-QC]",
     command = plot_upset_from_excluded_BCs_list(
       QC_excluded_BCs_list = per_dataset_excluded_BCs_list,
       n_total = per_dataset_unfiltered_cells_n
@@ -29,8 +29,8 @@ rlang::list2(
     ))
   ),
   tarchetypes::tar_file(
-    name = per_dataset_excluded_cellranger_only_upset,
-    description = "Plot an UpSet plot of dataset-level CellRanger-only QC exclusion overlaps and save to file",
+    name = per_dataset_excluded_cellranger_only_upset.1_pre_aggregation_QC,
+    description = "Plot an UpSet plot of dataset-level CellRanger-only QC exclusion overlaps and save to file [checkpoint:1_pre-aggregation-QC]",
     command = plot_upset_from_excluded_BCs_list(
       QC_excluded_BCs_list = per_dataset_excluded_cellranger_only_BCs_list,
       n_total = nrow(per_dataset_cellranger_kept_metadata_tibble)
@@ -45,7 +45,7 @@ rlang::list2(
       dplyr::select(dplyr::any_of(c("GEM_well_ID", "dataset", PROCESSING_PER_GEM_well_QC_VARS))),
   ),
   tarchetypes::tar_file(
-    name = per_dataset_QC_violins,
+    name = per_dataset_QC_violins.1_pre_aggregation_QC,
     description = "Plot violin plots of QC metrics per GEM well for this dataset and save to file. [checkpoint:1_pre-aggregation-QC]",
     command = plot_per_dataset_QC_violins(
       metadata_tibble = per_dataset_cellranger_kept_metadata_tibble,

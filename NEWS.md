@@ -1,4 +1,6 @@
-# multiomeR 0.5.0 (unreleased)
+# multiomeR 0.5.0 (2026-09-11)
+
+Released through [PR #5](https://github.com/koefoeden/multiomeR/pull/5).
 
 This release changes cluster annotations, cluster IDs, peak–gene inference and
 several target/output names. Review the migration notes before rerunning an

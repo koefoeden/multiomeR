@@ -100,7 +100,8 @@ rlang::list2(
         plots_list <- plot_psbulk_DGE_volcanoes(
           psbulk_DX_results_tibble = results_tibble,
           psbulk_DX_top_features_tibble = top_features_tibble,
-          psbulk_DX_top_feature_OT_evidence_tibble = top_feature_OT_evidence_tibble
+          psbulk_DX_top_feature_OT_evidence_tibble = top_feature_OT_evidence_tibble,
+          feature_labels = if (identical(map_psbulk_DX_tar_suffix, "DTFA")) JASPAR_motif_family_labels else character()
         )
       }
       save_plots_structured(

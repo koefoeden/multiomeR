@@ -33,6 +33,11 @@ git diff --check
 
 ## Target Execution
 
+For checkpoint-tag changes, validate the selected targets' transitive
+dependencies: a description tag does not prevent a downstream dependency from
+crossing the intended review boundary. Keep `QC_checkpoint_manifest.tsv`, the
+review guide, and the checkpoint-boundary regression test consistent.
+
 Run targets only when the changed behavior needs runtime proof. For a known
 exact target, run it directly. Preview new or regex-based selections and fail on
 an empty match:

@@ -25,7 +25,7 @@ cell_metadata <- targets::tar_read(
 dim(cell_metadata)
 head(cell_metadata)
 
-demo_object <- targets::tar_read(multimodal_Seurat_object.immune_human_2x)
+demo_object <- targets::tar_read(multimodal_Seurat_object.8_multimodal_QC.immune_human_2x)
 demo_object
 ```
 

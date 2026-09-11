@@ -6,8 +6,8 @@ description: Cancel a currently running multiomeR targets run by finding its PID
 # multiomeR Cancel Run
 
 The active root workflow records its orchestrator PID in the configured targets
-store. Resolve the store from `_targets.yaml`; do not use the retained legacy
-store under `pipelines/`.
+store. Resolve the store from `_targets.yaml`; that configured path is
+authoritative even when it is under `pipelines/`.
 
 ## Steps
 

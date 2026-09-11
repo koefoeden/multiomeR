@@ -27,12 +27,20 @@ The currently meaningful tag families are:
 ```
 
 `[checkpoint:<name>]` marks targets selectable with `targets::tar_described_as()`.
-The seven numbered main-pipeline groups are listed in
-`QC_checkpoint_manifest.tsv`; optional module and supplementary GEX groups
-remain unnumbered. Selection matches description substrings; include the
+The eight numbered main-pipeline groups are listed in
+`QC_checkpoint_manifest.tsv`; optional module groups remain unnumbered.
+UMAP parameter sweeps belong to their modality's numbered checkpoint, and
+compatibility objects belong to GEX checkpoint 3 or multimodal checkpoint 8.
+Selection matches description substrings; include the
 closing `]` to match a complete checkpoint tag. Dependencies still come from
 the target commands. The [review guide](../main_running.html#qc-checkpoints)
 explains each boundary; acceptance criteria depend on the study.
+
+Numbered checkpoint plot targets end in the checkpoint name with hyphens
+replaced by underscores, before the mapped dataset or aggregation suffix.
+For example, `VizDimLoadings_plots.2_GEX_PCA_QC.my_aggregation` writes beneath
+`<store>/plots/my_aggregation/2_GEX_PCA_QC/`. Only plot targets use this naming
+convention; computational and metadata targets retain their modality suffixes.
 
 `[part_of_graph:<graph_id>]` marks targets that should stay visible in a named implementation graph after graph-pruning helpers remove less informative intermediate nodes. This is the strictest tag family: `graph_id` must contain only letters, numbers, and underscores, and helper code parses these tags directly from target descriptions. A target may belong to several graph views.
 

@@ -11,7 +11,7 @@ FASTA, indexes, or annotation files themselves.
 | GRCh38 2024-A | <https://cf.10xgenomics.com/supp/cell-arc/refdata-cellranger-arc-GRCh38-2024-A.tar.gz> |
 | mm10 2020-A | <https://cf.10xgenomics.com/supp/cell-arc/refdata-cellranger-arc-mm10-2020-A-2.0.0.tar.gz> |
 
-For another standard or custom reference, copy its `reference.json` into the
-project and set `GEM_well_cellranger_arc_reference_json` to that file. Do not
-substitute metadata from a newer reference: the GTF release must match the
-reference used to create the Cell Ranger outputs.
+multiomeR matches the FASTA/GTF hashes in each `atac_fragments.tsv.gz` header
+against these JSON files. For another standard or custom reference, copy its
+`reference.json` into a subdirectory here. Exactly one JSON must match; no
+per-GEM-well reference configuration is needed.

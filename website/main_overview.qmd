@@ -7,8 +7,8 @@ need to remain distinguishable within it.
 
 ## What you need to prepare
 
-- Cell Ranger ARC outputs for each GEM well and the `reference.json` used to
-  produce them. All GEM wells in an aggregation must use the same reference.
+- Cell Ranger ARC outputs for each GEM well. References are identified
+  automatically; all GEM wells in an aggregation must use the same reference.
 - A GEM-well table linking stable identifiers to input paths and library
   annotations.
 - A donor table with one row per donor, including the phenotypes or covariates

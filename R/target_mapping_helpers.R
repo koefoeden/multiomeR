@@ -189,7 +189,6 @@ get_GEM_well_annotation_metadata_tibble <- function(GEM_well_metadata_tibble) {
     "GEM_well_add_cellbender",
     "GEM_well_cellbender_h5_file",
     "GEM_well_donors_VCF_file",
-    "GEM_well_cellranger_arc_reference_json",
     "GEM_well_QC_exclude_list",
     "GEM_well_is_active"
   )
@@ -262,7 +261,6 @@ build_GEM_well_tibble <- function(GEM_well_config_file = "cfg_GEM_wells.tsv") {
     "GEM_well_add_cellbender",
     "GEM_well_cellbender_h5_file",
     "GEM_well_donors_VCF_file",
-    "GEM_well_cellranger_arc_reference_json",
     "GEM_well_QC_exclude_list",
     "GEM_well_is_active"
   )
@@ -288,10 +286,6 @@ build_GEM_well_tibble <- function(GEM_well_config_file = "cfg_GEM_wells.tsv") {
       call. = FALSE
     )
   }
-  if (anyNA(GEM_well_tibble$GEM_well_cellranger_arc_reference_json) ||
-      any(!nzchar(GEM_well_tibble$GEM_well_cellranger_arc_reference_json))) {
-    stop("Every GEM well must define GEM_well_cellranger_arc_reference_json.", call. = FALSE)
-  }
   if (anyNA(GEM_well_tibble$GEM_well_add_cellbender) ||
       anyNA(GEM_well_tibble$GEM_well_is_active)) {
     stop("Every GEM well must define GEM_well_add_cellbender and GEM_well_is_active.", call. = FALSE)
@@ -311,10 +305,6 @@ build_GEM_well_tibble <- function(GEM_well_config_file = "cfg_GEM_wells.tsv") {
   GEM_well_tibble |>
     dplyr::mutate(
       dataset = .data$GEM_well_dataset,
-      GEM_well_cellranger_arc_reference_json = purrr::map(
-        .data$GEM_well_cellranger_arc_reference_json,
-        identity
-      ),
       GEM_well_QC_exclude_list = purrr::map2(
         .data$GEM_well_QC_exclude_list,
         .data$GEM_well_ID,
@@ -331,7 +321,6 @@ build_GEM_well_tibble <- function(GEM_well_config_file = "cfg_GEM_wells.tsv") {
         "GEM_well_cellranger_arc_count_dir",
         "GEM_well_cellbender_h5_file",
         "GEM_well_donors_VCF_file",
-        "GEM_well_cellranger_arc_reference_json",
         "GEM_well_QC_exclude_list",
         "is_active"
       ))

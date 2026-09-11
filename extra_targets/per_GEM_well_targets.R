@@ -62,8 +62,11 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = cellranger_reference_json_file,
-    description = "Track the Cell Ranger reference metadata JSON assigned to this GEM well",
-    command = GEM_well_cellranger_arc_reference_json
+    description = "Match the fragment header FASTA/GTF hashes to supplied Cell Ranger reference metadata",
+    command = resolve_cellranger_reference_json(
+      file.path(dirname(cellranger_summary_file), "atac_fragments.tsv.gz"),
+      cellranger_reference_json_files
+    )
   ),
   targets::tar_target(
     name = cellranger_ref_list,

@@ -1,5 +1,11 @@
 rlang::list2(
   tarchetypes::tar_file(
+    name = cellranger_reference_json_files,
+    description = "Discover and track supplied Cell Ranger reference metadata",
+    command = c(!!list.files("reference_metadata", pattern = "^reference[.]json$", recursive = TRUE, full.names = TRUE)),
+    deployment = "main"
+  ),
+  tarchetypes::tar_file(
     name = GEM_well_config_tsv,
     description = "Track the canonical GEM well processing and metadata TSV",
     command = "cfg_GEM_wells.tsv",

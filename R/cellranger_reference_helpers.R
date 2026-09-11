@@ -5,6 +5,40 @@ CELLRANGER_REFERENCE_ANNOTATION_HUB_IDS <- c(
   "gencode.vM23" = "AH75036"
 )
 
+resolve_cellranger_reference_json <- function(fragment_file, reference_json_files) {
+  connection <- gzfile(fragment_file, open = "rt")
+  on.exit(close(connection))
+  header <- character()
+  repeat {
+    line <- readLines(connection, n = 1L, warn = FALSE)
+    if (length(line) == 0L || !startsWith(line, "#")) break
+    header <- c(header, line)
+  }
+  hash_keys <- c("reference_fasta_hash", "reference_gtf_hash")
+  hashes <- vapply(hash_keys, function(key) {
+    prefix <- paste0("# ", key, "=")
+    value <- substring(header[startsWith(header, prefix)], nchar(prefix) + 1L)
+    if (length(value) != 1L || !nzchar(value)) {
+      stop("Missing or duplicated ", key, " in fragment header: ", fragment_file, call. = FALSE)
+    }
+    value
+  }, character(1))
+  matches <- vapply(reference_json_files, function(path) {
+    reference <- jsonlite::read_json(path)
+    identical(reference$fasta_hash, unname(hashes[[1]])) &&
+      identical(reference[["gtf_hash.gz"]], unname(hashes[[2]]))
+  }, logical(1))
+  if (sum(matches) != 1L) {
+    stop(
+      "Expected exactly one supplied reference JSON matching the FASTA/GTF hashes in ",
+      fragment_file, "; found ", sum(matches),
+      ". Supply the matching reference.json under reference_metadata/ and remove duplicate matches.",
+      call. = FALSE
+    )
+  }
+  reference_json_files[matches]
+}
+
 resolve_aggregation_gene_features <- function(gene_features, GEM_well_IDs, aggregation) {
   shared_features <- gene_features[[1]]
   matching_features <- vapply(gene_features, identical, logical(1), y = shared_features)

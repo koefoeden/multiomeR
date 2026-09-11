@@ -264,8 +264,8 @@ need to remain distinguishable within it.
 
 ## What you need to prepare
 
-- Cell Ranger ARC outputs for each GEM well and the `reference.json` used to
-  produce them. All GEM wells in an aggregation must use the same reference.
+- Cell Ranger ARC outputs for each GEM well. References are identified
+  automatically; all GEM wells in an aggregation must use the same reference.
 - A GEM-well table linking stable identifiers to input paths and library
   annotations.
 - A donor table with one row per donor, including the phenotypes or covariates
@@ -343,7 +343,6 @@ reading aid; the saved TSV has one GEM well per row.
 | `GEM_well_donor_id` | `donor_1` |
 | `GEM_well_n_donors` | `1` |
 | `GEM_well_cellranger_arc_count_dir` | `/path/to/your_GEM_well` |
-| `GEM_well_cellranger_arc_reference_json` | `/path/to/reference.json` |
 | `GEM_well_add_cellbender` | `FALSE` |
 | `GEM_well_cellbender_h5_file` | `NA` |
 | `GEM_well_donors_VCF_file` | `NA` |
@@ -356,7 +355,7 @@ Set `GEM_well_QC_exclude_list` to the exclusions chosen for your data. Follow th
 [numbered QC reviews](main_running.qmd#qc-checkpoints); do not treat the demo's
 numerical cutoffs as recommendations for your tissue.
 
-`GEM_well_cellranger_arc_reference_json` must point to the `reference.json` from the exact Cell Ranger ARC reference used to create that GEM well's output. multiomeR checks that the JSON genome matches the feature HDF5 and rejects aggregations whose GEM wells use different references.
+multiomeR identifies the reference from the FASTA/GTF hashes in `outs/atac_fragments.tsv.gz` and selects the matching `reference.json` under `reference_metadata/`. For another reference, add its JSON there. The fragment header must be intact and exactly one JSON must match. All GEM wells in an aggregation must use the same reference.
 
 `GEM_well_QC_exclude_list` contains zero or more complete R filter expressions separated by `;;`. Expressions are evaluated individually against per-barcode metadata, preserving their order and their separate exclusion reasons. An empty field applies no pre-aggregation QC filters.
 

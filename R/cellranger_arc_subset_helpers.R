@@ -118,7 +118,7 @@ cellranger_arc_subset_write_fragments <- function(input_file, output_file, barco
   }
   awk_program <- paste0(
     "BEGIN { FS = OFS = \"\\t\" } ",
-    "NR == FNR { keep[$1] = 1; next } ($4 in keep)"
+    "NR == FNR { keep[$1] = 1; next } /^#/ { print; next } ($4 in keep)"
   )
   command <- paste(
     "gzip -dc", shQuote(input_file), "|",

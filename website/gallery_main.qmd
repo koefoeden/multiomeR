@@ -14,11 +14,16 @@ gallery_items <- check_output_gallery_assets(
 
 These documentation snapshots show representative outputs from the public
 `immune_human_2x` configuration with its two active GEM wells. The cards follow
-the numbered reviews in the adaptation guide. Each
-card names the target that generated the displayed demo result; click an image
-to open it at full resolution.
+the steps in [Run your own analysis](main_running.qmd#steps), where each step
+also shows its own cards. Each card names the target that
+generated the displayed demo result; click an image to open it at full
+resolution.
 
-To reproduce these plot families, [install](demo_installation.qmd) and [run](demo_running.qmd) the demo, then request the broader [review checkpoints](main_running.qmd). The endpoint-only quickstart does not build every gallery plot; [inspect its local outputs](demo_outputs.qmd) to see the distinction.
+To reproduce these plot families, follow [Install and prepare the
+demo](demo_installation.qmd) and [Run the demo](demo_running.qmd), then run the
+steps in [Run your own analysis](main_running.qmd#steps). The
+demo command builds the final object and the WNN UMAPs only; [Inspect the demo
+results](demo_outputs.qmd) explains the distinction.
 
 ```{r, echo = FALSE, results = "asis"}
 render_gallery_section(

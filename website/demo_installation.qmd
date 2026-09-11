@@ -20,10 +20,31 @@ before running the demo commands.
 - At least 30 GB of free disk space for the public inputs, pixi environment, temporary files, and approximately 6 GB of demo outputs.
 - Multiple CPU cores are strongly recommended. The timing quoted in the next chapter was measured with 16 logical threads.
 
-The committed `crew_controllers.R` provides a local setup for a 16-CPU,
-256-GB workstation and can run several workers concurrently. Review
-[Distributed computing](performance_distributed_computing.qmd) before running
-on a smaller machine or a scheduler.
+::: {.callout-tip title="Machines with less than 256 GB of RAM"}
+The committed `crew_controllers.R` is sized for a 16-CPU, 256-GB workstation:
+four light workers and two heavy workers that may each use 60 GB. On a machine
+near the 60-GB minimum, edit the two `workers` values in `crew_controllers.R`
+before running the demo so that only one heavy target runs at a time:
+
+```{.r filename="crew_controllers.R"}
+controller_list <- list(
+  crew::crew_controller_local(
+    name = "local-light",
+    workers = 2
+  ),
+  crew::crew_controller_local(
+    name = "local-heavy",
+    workers = 1,
+    crashes_max = 1
+  )
+)
+```
+
+The `RAM_GB` values in the same file describe routing capacity, not enforced
+limits, so the workers that can run at once must fit in physical memory. To
+run on a SLURM or other scheduler instead, see [Choose where the analysis
+runs](performance_distributed_computing.qmd).
+:::
 
 
 ## Set up the demo

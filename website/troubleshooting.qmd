@@ -89,7 +89,7 @@ Code, configuration, input files, controller-independent global objects, or an u
 
 ## Input and metadata failures
 
-Check the contracts in [Configuration and inputs](main_inputs.qmd):
+Check the contracts in the [GEM well table](reference_GEM_wells.qmd), [Donor metadata table](reference_donor_metadata.qmd), and [Aggregation configuration](reference_aggregations.qmd) references:
 
 - `GEM_well_cellranger_arc_count_dir` contains the required `outs/` files;
 - VCF-backed demultiplexing also has `atac_possorted_bam.bam`;
@@ -101,7 +101,7 @@ Check the contracts in [Configuration and inputs](main_inputs.qmd):
 
 If a worker does not start or no controller can satisfy a target request:
 
-1. Validate the names, column order, numeric resource values, and controller membership described in [Distributed computing](performance_distributed_computing.qmd).
+1. Validate the names, column order, numeric resource values, and controller membership described in [Choose where the analysis runs](performance_distributed_computing.qmd).
 2. Reload with `load_project_runtime(force = TRUE)` after edits.
 3. For scheduler controllers, inspect the scheduler output/error log and confirm queue, account, wall time, memory, CPU, module, and filesystem settings.
 4. Reduce concurrency when local workers are being killed for memory pressure.

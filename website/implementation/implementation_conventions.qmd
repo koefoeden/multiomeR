@@ -33,7 +33,7 @@ UMAP parameter sweeps belong to their modality's numbered checkpoint, and
 compatibility objects belong to GEX checkpoint 3 or multimodal checkpoint 8.
 Selection matches description substrings; include the
 closing `]` to match a complete checkpoint tag. Dependencies still come from
-the target commands. The [review guide](../main_running.html#qc-checkpoints)
+the target commands. [Run your own analysis](../main_running.html#steps)
 explains each boundary; acceptance criteria depend on the study.
 
 Numbered checkpoint plot targets end in the checkpoint name with hyphens
@@ -255,7 +255,7 @@ targets::tar_target(
 )
 ```
 
-If `get_tar_resources()` is called before controller resources are loaded, it fails deliberately with an instruction to call `load_project_runtime()` first. Scheduler-specific examples belong in the main manual's [Distributed computing](../performance_distributed_computing.html) page; the implementation contract is that target code can request resources declaratively once the runtime has been loaded.
+If `get_tar_resources()` is called before controller resources are loaded, it fails deliberately with an instruction to call `load_project_runtime()` first. Scheduler-specific examples belong in the main manual's [Choose where the analysis runs](../performance_distributed_computing.html) page; the implementation contract is that target code can request resources declaratively once the runtime has been loaded.
 
 ## How to read the rest of the implementation book
 

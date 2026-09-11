@@ -7,6 +7,14 @@ multiomeR is a [targets](https://books.ropensci.org/targets/)-based workflow for
 
 The workflow starts from `cellranger-arc count` outputs, processes gene-expression (GEX) and ATAC data, builds multimodal aggregations, and supports optional downstream modules for differential analyses and genetic enrichment for human datasets.
 
+::: {.callout-warning title="Beta software"}
+multiomeR is in beta and may introduce breaking changes between releases. The
+steps in [Run your own analysis](main_running.qmd#steps)
+show what to inspect before each stage, but acceptance criteria still depend on
+the tissue, study design, and intended use. Report problems or questions
+through [GitHub issues](https://github.com/koefoeden/multiomeR/issues).
+:::
+
 ## Your first analysis
 
 Start with the public demo: two human GEM wells with supplied configuration.
@@ -24,10 +32,14 @@ installation. Run both from the repository folder unless stated otherwise.
 
 | If you want to... | Start here |
 |---|---|
-| See what the workflow produces | Browse the [main pipeline output gallery](gallery_main.qmd). |
-| Try multiomeR on public data | Follow the three-part quickstart: [install](demo_installation.qmd), [run](demo_running.qmd), then [inspect the outputs](demo_outputs.qmd). |
-| Configure your own data | Read the [main-pipeline overview](main_overview.qmd), prepare the [configuration and inputs](main_inputs.qmd), then [run one aggregation](main_running.qmd). |
-| Add a downstream analysis | Check the prerequisites for [differential analyses](downstream_differential_analyses.qmd) or [genetic enrichment](downstream_genetic_enrichment.qmd). |
+| See what the workflow produces | Browse the [Main pipeline gallery](gallery_main.qmd). |
+| Try multiomeR on public data | Follow [Install and prepare the demo](demo_installation.qmd), [Run the demo](demo_running.qmd), then [Inspect the demo results](demo_outputs.qmd). |
+| Analyze your own data | Check the inputs in [Plan your analysis](main_overview.qmd), then follow the steps in [Run your own analysis](main_running.qmd). |
+| Look up a configuration column or parameter | Open the [GEM well table](reference_GEM_wells.qmd), [Donor metadata table](reference_donor_metadata.qmd), or [Aggregation configuration](reference_aggregations.qmd) reference. |
+| Understand a review plot or table | Look it up in [Reading the review outputs](review_outputs.qmd). |
+| Add a downstream analysis | Check the prerequisites for [Differential analyses](downstream_differential_analyses.qmd) or [Genetic enrichment](downstream_genetic_enrichment.qmd). |
+| Run on a cluster or a smaller machine | Read [Choose where the analysis runs](performance_distributed_computing.qmd). |
+| Fix a failed or stale run | Start with [Troubleshooting](troubleshooting.qmd). |
 | Understand or modify the internals | Use the separate [implementation book](implementation/). |
 
 ## Terms used in this manual
@@ -49,12 +61,5 @@ and the records needed for reruns. For a small worked introduction, see the
 The **main pipeline** processes each GEM well, aggregates selected GEM wells, and builds multimodal RNA/ATAC outputs for clustering, cell typing, and WNN integration. Two optional modules extend completed aggregations with differential analyses or genetic enrichment.
 
 ![multiomeR workflow from Cell Ranger ARC GEM well outputs through per GEM well processing, aggregation-level GEX and ATAC analysis, WNN integration, and optional downstream modules](figures/multiomeR_overview_simplified.drawio.svg)
-
-## Development status
-
-multiomeR is in beta and may introduce breaking changes. The [numbered QC reviews](main_running.qmd#qc-checkpoints)
-show what to inspect before each analysis stage. Acceptance criteria still
-depend on the tissue, study design, and intended use. Report problems
-or questions through [GitHub issues](https://github.com/koefoeden/multiomeR/issues).
 
 Continue to [Install and prepare the demo](demo_installation.qmd).

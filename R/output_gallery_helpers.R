@@ -108,6 +108,20 @@ render_gallery_grid <- function(items) {
   cat('</div>\n')
 }
 
+#' Render selected output gallery cards
+#'
+#' @param gallery_items Gallery manifest rows from `check_output_gallery_assets()`.
+#' @param ids Gallery item IDs to render, in display order.
+#' @keywords internal
+render_gallery_cards <- function(gallery_items, ids) {
+  missing_ids <- setdiff(ids, gallery_items$id)
+  if (length(missing_ids) > 0) {
+    stop("Unknown output gallery IDs: ", paste(missing_ids, collapse = ", "), call. = FALSE)
+  }
+  render_gallery_grid(gallery_items[match(ids, gallery_items$id), , drop = FALSE])
+  invisible(NULL)
+}
+
 #' Render one output gallery section
 #'
 #' @param gallery_items Gallery manifest rows.

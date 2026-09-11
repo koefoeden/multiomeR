@@ -10,8 +10,10 @@ knitr::opts_chunk$set(
 
 A **worker** is an R process that runs an analysis task. A **controller** starts
 and manages those workers, either on your machine or through a cluster
-scheduler. multiomeR uses `crew` for this. Choose the setup below before the
-[first demo run](demo_running.qmd).
+scheduler. multiomeR uses `crew` for this. The committed configuration runs
+the demo unchanged on a machine that meets the [system
+requirements](demo_installation.qmd#system-requirements); adjust it as
+described below before running on a smaller machine or a scheduler.
 
 Use local workers on a suitable workstation. On a shared cluster, ask your
 support team which scheduler, account, and resource limits to use. The

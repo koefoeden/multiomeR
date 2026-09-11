@@ -11,7 +11,7 @@ Use this module to ask how cell-type proportions, gene expression, or chromatin 
 
 The module does not create biological replication. The donor structure, covariates, design formula, and contrasts must be defensible for the intended analysis before the workflow is run.
 
-See the [output gallery](gallery_differential_analyses.qmd) for representative diagnostics and the [implementation graph](implementation/implementation_differential_analyses.html) for target structure.
+See the [Differential analyses gallery](gallery_differential_analyses.qmd) for representative diagnostics and the [implementation graph](implementation/implementation_differential_analyses.html) for target structure.
 
 ## Prerequisites
 
@@ -82,8 +82,8 @@ and contrast to match your study.
 ## Run and review
 
 The existing `checkpoint:differential_analyses` tag selects module outputs.
-It does not perform QC approval; the [QC checkpoint procedure](main_running.qmd#qc-checkpoints)
-is under development. Preview the selected targets first:
+It does not perform QC approval; a review procedure like the steps in
+[Run your own analysis](main_running.qmd#steps) is under development. Preview the selected targets first:
 
 ```{.r filename="R"}
 targets::tar_manifest(
@@ -104,7 +104,7 @@ targets::tar_make(
 )
 ```
 
-Review pseudobulk depths and retained donor counts before interpreting coefficients. Check model-matrix terms, P-value distributions, effect directions, and agreement or disagreement across DGE, DCA, DTFA, and DCTA. The CollecTRI-DTFA concordance target summarizes family coverage, rank correlation, directional agreement, and joint FDR support for every configured contrast. These are complementary regulatory readouts: agreement strengthens a shared interpretation, while disagreement can reflect post-transcriptional regulation, motif-family ambiguity, or different evidence carried by expression and accessibility. Treat the [gallery](gallery_differential_analyses.qmd) as a visual reference, not as a statistical acceptance threshold.
+Review pseudobulk depths and retained donor counts before interpreting coefficients. Check model-matrix terms, P-value distributions, effect directions, and agreement or disagreement across DGE, DCA, DTFA, and DCTA. The CollecTRI-DTFA concordance target summarizes family coverage, rank correlation, directional agreement, and joint FDR support for every configured contrast. These are complementary regulatory readouts: agreement strengthens a shared interpretation, while disagreement can reflect post-transcriptional regulation, motif-family ambiguity, or different evidence carried by expression and accessibility. Treat the [Differential analyses gallery](gallery_differential_analyses.qmd) as a visual reference, not as a statistical acceptance threshold.
 
 Runtime depends on donors, cell types, models, contrasts, and gene-set analyses. Use [Troubleshooting](troubleshooting.qmd) if a formula, contrast, or metadata join fails.
 
@@ -116,11 +116,6 @@ The OLINK and bulk-RNA path fields are reserved optional integration inputs and 
 emit_parameter_overview("differential_analyses")
 ```
 
-<details>
-<summary>Show the public <code>immune_human_2x</code> example</summary>
-
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_yaml_entry(module_config_file, "immune_human_2x")
-```
-
-</details>
+The public demos leave this module disabled. Comparing one healthy PBMC donor
+with one lymphoma lymph-node donor cannot separate condition, donor, and tissue
+effects. Configure differential analyses for a design with biological replication.

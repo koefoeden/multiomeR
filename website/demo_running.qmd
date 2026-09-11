@@ -9,17 +9,22 @@ knitr::opts_chunk$set(
 ```
 
 In the R session opened during installation, run the command below to process
-`immune_human_2x`. It combines the two demo GEM wells and produces a
-Seurat/Signac object containing the multimodal results.
+`immune_human_2x`. It combines the two demo GEM wells, produces a
+Seurat/Signac object containing the multimodal results, and draws the
+integrated WNN UMAPs coloured by cluster, cell type, and the other categorical
+metadata.
 
-`names` selects the final result by its exact name using `all_of()`.
-`tar_make()` also builds the dependencies needed for that result, but does
+`names` selects these two results by their exact names using `all_of()`.
+`tar_make()` also builds the dependencies needed for them, but does
 not build every plot in the gallery.
 
 ```{.r filename="R"}
-targets::tar_make(
-  names = tidyselect::all_of("multimodal_Seurat_object.8_multimodal_QC.immune_human_2x")
+demo_results <- c(
+  "multimodal_Seurat_object.8_multimodal_QC.immune_human_2x",
+  "categorical.UMAPs.8_multimodal_QC.immune_human_2x"
 )
+
+targets::tar_make(names = tidyselect::all_of(demo_results))
 ```
 
 Keep the R session open until the command finishes. Progress messages report
@@ -29,11 +34,11 @@ threads took under 25 minutes and wrote about 6 GB; your runtime may differ.
 
 ## Confirm success
 
-After the run, the following command should return `character(0)`, meaning the requested endpoint and its dependencies are up to date:
+After the run, the following command should return `character(0)`, meaning the requested results and their dependencies are up to date:
 
 ```{.r filename="R"}
 targets::tar_outdated(
-  names = tidyselect::all_of("multimodal_Seurat_object.8_multimodal_QC.immune_human_2x"),
+  names = tidyselect::all_of(demo_results),
   callr_function = NULL
 )
 ```

@@ -17,7 +17,7 @@ A **credible set** contains candidate causal variants at a GWAS locus, with
 probabilities from fine-mapping. Enrichment helps prioritize cellular contexts;
 it does not by itself identify a causal cell type, gene, or mechanism.
 
-See the [output gallery](gallery_genetic_enrichment.qmd) for representative results and the [implementation graph](implementation/implementation_genetic_enrichment.html) for upstream ATAC and WNN dependencies.
+See the [Genetic enrichment gallery](gallery_genetic_enrichment.qmd) for representative results and the [implementation graph](implementation/implementation_genetic_enrichment.html) for upstream ATAC and WNN dependencies.
 
 ## Prerequisites
 
@@ -72,8 +72,8 @@ For `finemappingMethod: auto`, multiomeR selects the first available supported m
 ## Run and review
 
 The existing `checkpoint:genetic_enrichment` tag selects module outputs. It
-does not perform QC approval; the [QC checkpoint procedure](main_running.qmd#qc-checkpoints)
-is under development. Preview the selected targets:
+does not perform QC approval; a review procedure like the steps in
+[Run your own analysis](main_running.qmd#steps) is under development. Preview the selected targets:
 
 ```{.r filename="R"}
 targets::tar_manifest(
@@ -96,7 +96,7 @@ targets::tar_make(
 
 Before interpreting trait scores, verify the resolved source release and fine-mapping method, the number of credible-set loci and variants retained, and the overlap with consensus peaks. Then compare direct deviation summaries with SCAVENGE-propagated scores and use the heatmap glyphs to identify cluster-median enrichment supported by within-grouping BH-adjusted degree-matched permutation P-values.
 
-Runtime and disk use grow with studies, cells, graph representations, permutations, and attributed loci. The [gallery](gallery_genetic_enrichment.qmd) uses a larger aggregation with six GEM wells and is not produced by the minimal quickstart.
+Runtime and disk use grow with studies, cells, graph representations, permutations, and attributed loci. The [Genetic enrichment gallery](gallery_genetic_enrichment.qmd) uses a larger aggregation with six GEM wells and is not produced by the minimal quickstart.
 
 ## Parameter reference
 

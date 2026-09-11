@@ -6,6 +6,11 @@ knitr::opts_chunk$set(
   comment = "#>",
   eval = FALSE
 )
+source("../R/output_gallery_helpers.R")
+gallery_items <- check_output_gallery_assets(
+  manifest_file = "output_gallery.yaml",
+  gallery_root = "."
+)
 ```
 
 The public demo uses `outputs/` as its results store. Other checkouts may
@@ -56,20 +61,31 @@ GEM well, an internal pre-aggregation QC group, or an aggregation.
 
 ## Plots
 
-Open the [main pipeline gallery](gallery_main.qmd) to see example QC,
-RNA, ATAC, and WNN plots. These are saved documentation snapshots, so you can
-browse them without running the demo. They do not show the state of your own
-analysis.
+The demo command also built `categorical.UMAPs.8_multimodal_QC.immune_human_2x`.
+Plots use the same scope-based layout under `outputs/plots/`, so its files are
+in:
 
-Requested plots use the same scope-based layout under `outputs/plots/`.
+```text
+outputs/plots/immune_human_2x/8_multimodal_QC/UMAPs/categorical/
+```
 
-The final-object demo command does not build all these plots. See
-[Request an additional result](main_running.qmd#request-an-additional-result)
-for how to build a named gallery target, or follow the
-[numbered QC reviews](main_running.qmd#qc-checkpoints) for the broader diagnostics.
+Open `WNN_harmony_SNN_cluster_cell_type.png` there to see the integrated
+clusters and cell-type labels from your own run. It should resemble this
+documentation snapshot:
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+render_gallery_cards(gallery_items, "wnn-umap")
+```
+
+The [Main pipeline gallery](gallery_main.qmd) shows the other plot families
+the workflow produces. Those are saved snapshots and do not reflect the state of
+your analysis. To build one more of them, follow [Request an additional
+result](main_running.qmd#request-an-additional-result); to build all review
+plots for a stage, run its step in [Run your own
+analysis](main_running.qmd#steps).
 
 ## Next steps
 
-- To adopt the workflow, continue with the [main-pipeline overview](main_overview.qmd) and [configuration walkthrough](main_inputs.qmd).
-- To request more results or rerun after a change, use [Run your analysis](main_running.qmd).
+- To adopt the workflow, continue with [Plan your analysis](main_overview.qmd) and the steps in [Run your own analysis](main_running.qmd#steps).
+- To request more results or rerun after a change, use [Run your own analysis](main_running.qmd).
 - To diagnose a failed or unexpectedly stale target, use [Troubleshooting](troubleshooting.qmd).

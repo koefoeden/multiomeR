@@ -733,7 +733,10 @@ get_feature_groups_from_LSI_loadings <- function(LSI_loadings_tibble, dims, n_gr
     dplyr::select(dplyr::all_of(dim_cols)) |>
     as.matrix()
 
-  groups <- stats::kmeans(loadings_matrix, centers = n_groups, iter.max = 50, nstart = 1)$cluster
+  # Lloyd avoids Hartigan-Wong's Quick-Transfer step limit.
+  groups <- stats::kmeans(
+    loadings_matrix, centers = n_groups, iter.max = 1000, nstart = 1, algorithm = "Lloyd"
+  )$cluster
   stats::setNames(paste0("scDblFinder_feature_", groups), LSI_loadings_tibble$peak)
 }
 

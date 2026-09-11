@@ -336,7 +336,7 @@ weighted_nearest_neighbors_BPCells <- function(
   sd_scale = 1,
   kernel_power = 1,
   threads = 1,
-  ef = 500,
+  ef = 1000,
   seed = 1,
   native_source_file = file.path(
     get_project_root(),

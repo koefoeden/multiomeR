@@ -47,9 +47,8 @@ Keep their release metadata out of public history.
 
 ## Local candidate validation
 
-Pushing an immutable `vX.Y.Z-rc.N` tag on public `main` queues full-demo and private
-module validation on the configured local host. See
-[`scripts/local_validation/README.md`](scripts/local_validation/README.md).
-Before publishing, run `python3 scripts/local_validation/check_release.py <SHA>`
-for the exact release commit. All three validation statuses must pass; any change
-to the release commit requires a new candidate validation.
+Local validation lives on the `ci` branch, using the standard configuration
+files and the same targets store. With a clean checkout and no running pipeline,
+switch to `ci`, merge the candidate commit, then follow `CI.md` on that branch.
+Record the candidate and CI commit IDs with the validation report. This is
+incremental validation; unchanged targets may be reused.

@@ -25,6 +25,10 @@ For code and graph changes use `multiomer-validation-workflow`; regenerate
 manifest diagrams and render both books and the Markdown export when affected.
 State exactly which tests and runtime checks passed and which were not run.
 
+Before publication, run `python3 scripts/local_validation/check_release.py <SHA>`
+for the exact public release commit. Require successful public-demo and private
+module validation statuses; never transfer evidence from a different commit.
+
 At publication, update the release date, verify the destination commit and
 validation, create an annotated immutable tag, push that tag explicitly and
 publish the matching GitHub notes. Verify the resulting tag and release URL.

@@ -989,7 +989,7 @@ cluster_embedding_matrix_BPCells <- function(embedding_matrix, dims, k, resoluti
   )
   k <- min(as.integer(k), nrow(cluster_input) - 1L)
   clusters <- cluster_input |>
-    BPCells::knn_hnsw(k = k, metric = "cosine", threads = threads, ef = 500) |>
+    BPCells::knn_hnsw(k = k, metric = "cosine", threads = threads, ef = 1000) |>
     cluster_knn_snn_leiden(resolution = resolution, seed = seed)
 
   cluster_names <- rownames(cluster_input)

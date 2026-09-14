@@ -6,6 +6,8 @@ on:
       - pixi.toml
       - pixi.lock
       - scripts/install_r_github_packages.R
+      - scripts/github_packages.R
+      - validation/**
       - tests/**
       - R/**
       - packages/multiomeRCore/R/**
@@ -17,6 +19,8 @@ on:
       - pixi.toml
       - pixi.lock
       - scripts/install_r_github_packages.R
+      - scripts/github_packages.R
+      - validation/**
       - tests/**
       - R/**
       - packages/multiomeRCore/R/**

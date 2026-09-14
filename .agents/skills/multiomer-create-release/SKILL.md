@@ -25,9 +25,9 @@ For code and graph changes use `multiomer-validation-workflow`; regenerate
 manifest diagrams and render both books and the Markdown export when affected.
 State exactly which tests and runtime checks passed and which were not run.
 
-Before publication, validate the exact candidate merged into the `ci` branch.
-Record both commit IDs and the output-check report; reuse the existing targets
-store and let normal dependency invalidation determine what must rerun.
+Before publication, run the documented `validate-local` command on the exact
+candidate with a clean working tree. Retain the report and require all preflight
+and output checks to pass; cached target results may be reused.
 
 At publication, update the release date, verify the destination commit and
 validation, create an annotated immutable tag, push that tag explicitly and

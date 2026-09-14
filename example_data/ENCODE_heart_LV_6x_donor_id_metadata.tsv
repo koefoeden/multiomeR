@@ -1,0 +1,7 @@
+donor_id	sex	sexMale	age	health_status	source_url
+ENCDO528BHB	female	0	47	DM: yes; HTN: yes; CAD: no	https://www.encodeproject.org/human-donors/ENCDO528BHB/
+ENCDO575WHY	female	0	41	DM: no; HTN: no; CAD: no	https://www.encodeproject.org/human-donors/ENCDO575WHY/
+ENCDO411EVD	female	0	46	DM: no; HTN: no; CAD: no	https://www.encodeproject.org/human-donors/ENCDO411EVD/
+ENCDO856ZOJ	female	0	59	DM: yes; HTN: yes; CAD: no	https://www.encodeproject.org/human-donors/ENCDO856ZOJ/
+ENCDO529CYH	male	1	66	ischemic	https://www.encodeproject.org/human-donors/ENCDO529CYH/
+ENCDO520EJG	male	1	60	DM: no; HTN: yes; CAD: no; lungs with severe emphysema	https://www.encodeproject.org/human-donors/ENCDO520EJG/

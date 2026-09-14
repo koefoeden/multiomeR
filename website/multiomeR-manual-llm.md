@@ -256,6 +256,19 @@ the same `tar_make()` command again. Completed results can be reused.
 Continue to [Inspect the demo results](demo_outputs.qmd) to read the object
 and find the associated files.
 
+## Local validation
+
+The full local validation command also enables the inactive mouse and public
+ENCODE examples, checks external resources, and verifies analysis outputs:
+
+```sh
+pixi run --use-environment-activation-cache validate-local
+```
+
+It reuses the existing targets store. The extra inputs and validation scope are
+described in the repository's `validation/README.md`; the normal demo remains
+limited to `immune_human_2x`.
+
 
 <!-- source: website/demo_outputs.qmd -->
 
@@ -1687,8 +1700,8 @@ donor table.
 
 `cfg_aggregations.yaml` has one top-level entry per aggregation: a joint GEX,
 ATAC, and WNN analysis of one or more GEM wells. The committed file enables
-the two human GEM wells in `immune_human_2x` and the embryonic mouse brain well
-in `brain_mouse`; optional modules are disabled for these demos. Edit the file
+the two human GEM wells in `immune_human_2x`, with optional modules disabled.
+The mouse and ENCODE validation examples are inactive by default. Edit the file
 directly; the demo entries can stay as worked examples. This page describes the
 entry structure and lists every parameter. When to set each parameter, and how
 to review the effect, is given step by step in [Run your own

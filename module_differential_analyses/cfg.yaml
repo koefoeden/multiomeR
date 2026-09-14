@@ -1,16 +1,12 @@
-# Add one explicit row per aggregation that has `modules: [differential_analyses]`
-# in cfg_aggregations.yaml. Example:
-#
-# example_human:
-#   differential_analyses_DCTC_plot_phenotype_vars: condition
-#   differential_analyses_DCTC_formula_chr: cbind(n_nuclei, n_other_nuclei) ~ 0 + 1 + condition
-#   differential_analyses_psbulk_DX_models:
-#     simple:
-#       cell_type_subset: NULL
-#       design_matrix_func_name: NULL
-#       formula: ~ cluster:condition
-#       random_effect: NULL
-#       contrast_specs_vec:
-#         condition_effect_in_cell_type: clusterCellType.condition
-
-{}
+ENCODE_heart_LV_6x:
+  differential_analyses_psbulk_DX_models:
+    cardiomyocyte_sex:
+      cell_type_subset: Cardiomyocyte
+      design_matrix_func_name: ~
+      formula: ~ sexMale
+      random_effect: ~
+      contrast_specs_vec:
+        male_vs_female: sexMale
+  differential_analyses_DCTC_plot_phenotype_vars: sexMale
+  differential_analyses_DCTC_formula_chr: cbind(n_nuclei, n_other_nuclei) ~ sexMale
+  differential_analyses_DCTC_color_by_categorical_metadata_column: sex

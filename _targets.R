@@ -2,6 +2,9 @@
 GEM_well_tibble_all <- build_GEM_well_tibble()
 
 aggregation_tibble_all_from_yaml <- read_aggregation_config_tibble(config_file = "cfg_aggregations.yaml")
+if (length(validation_aggregations())) {
+  message("Validation aggregations: ", paste(validation_aggregations(), collapse = ", "))
+}
 aggregation_tibble <- build_aggregation_tibble(
   aggregation_tibble_all_from_yaml = aggregation_tibble_all_from_yaml,
   GEM_well_tibble = GEM_well_tibble_all

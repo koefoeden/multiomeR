@@ -44,3 +44,12 @@ release. Publish only the intended tag explicitly, never all local tags.
 Downstreams merge the public release forward, then record their own overlays
 and configurations in separate release notes and a distinct tag namespace.
 Keep their release metadata out of public history.
+
+## Local candidate validation
+
+Pushing an immutable `vX.Y.Z-rc.N` tag on public `main` queues full-demo and private
+module validation on the configured local host. See
+[`scripts/local_validation/README.md`](scripts/local_validation/README.md).
+Before publishing, run `python3 scripts/local_validation/check_release.py <SHA>`
+for the exact release commit. All three validation statuses must pass; any change
+to the release commit requires a new candidate validation.

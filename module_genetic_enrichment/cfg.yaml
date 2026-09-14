@@ -20,8 +20,3 @@ immune_human_2x:
       Category: brain_cognition
       sourceId: GCST90105038
       finemappingMethod: auto
-PBMC_human_6x:
-  inherits: immune_human_2x
-
-mixed_human_7x:
-  inherits: immune_human_2x

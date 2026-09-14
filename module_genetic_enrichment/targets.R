@@ -119,6 +119,7 @@ genetic_enrichment_tibble <- genetic_enrichment_tibble |>
   ))
 
 rlang::list2(
+  if (nrow(genetic_enrichment_aggregation_tibble) > 0L) source("module_genetic_enrichment/shared_targets.R")$value,
   tarchetypes::tar_map(
     values = genetic_enrichment_tibble,
     names = genetic_enrichment_target_suffix,

@@ -24,6 +24,7 @@ differential_analyses_tibble <- differential_analyses_aggregation_tibble |>
   ))
 
 rlang::list2(
+  if (nrow(differential_analyses_aggregation_tibble) > 0L) source("module_differential_analyses/shared_targets.R")$value,
   tarchetypes::tar_map(
     values = differential_analyses_tibble,
     names = differential_analyses_target_suffix,

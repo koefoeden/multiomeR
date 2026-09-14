@@ -98,13 +98,20 @@ read_aggregation_config_tibble <- function(
   manifest_file = "cfg_pipeline_parameters.tsv",
   verbose = FALSE
 ) {
-  read_manifest_config_tibble(
+  config <- read_manifest_config_tibble(
     config_file = config_file,
     manifest_file = manifest_file,
     scope = "aggregation",
     key_col = "aggregation",
     verbose = verbose
   )
+  selected <- validation_aggregations()
+  if (length(selected)) {
+    missing <- setdiff(selected, config$aggregation)
+    if (length(missing)) stop("Missing validation aggregations: ", paste(missing, collapse = ", "))
+    config$is_active <- as.list(config$aggregation %in% selected)
+  }
+  config
 }
 
 read_manifest_config_tibble <- function(config_file, manifest_file, scope, key_col, verbose = FALSE) {

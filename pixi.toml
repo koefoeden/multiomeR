@@ -8,6 +8,7 @@ channels = ["conda-forge", "bioconda"]
 platforms = ["linux-64"]
 
 [tasks]
+validate-local = { cmd = "Rscript validation/run.R", description = "Check external sources, run the three public validation aggregations, and verify outputs in the existing store." }
 test = { cmd = "Rscript tests/testthat.R", description = "Run fast unit tests and slow algorithm parity tests." }
 install-r-github-packages = { cmd = "Rscript scripts/install_r_github_packages.R", description = "Install GitHub-only R packages into the pixi R library." }
 download-demo-data = { cmd = "bash example_data/download_10X_cellranger_count_data.sh example_data/public_immune_human_2x_manifest.tsv", description = "Download the required subsets of two public Cell Ranger ARC outputs." }

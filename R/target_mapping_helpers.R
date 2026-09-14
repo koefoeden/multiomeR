@@ -302,6 +302,14 @@ build_GEM_well_tibble <- function(GEM_well_config_file = "cfg_GEM_wells.tsv") {
     )
   }
 
+  if (length(validation_aggregations())) {
+    config <- read_aggregation_config_tibble()
+    selected <- unlist(config$aggregation_GEM_well_IDs[vapply(config$is_active, isTRUE, logical(1))])
+    missing <- setdiff(selected, GEM_well_tibble$GEM_well_ID)
+    if (length(missing)) stop("Missing validation GEM wells: ", paste(missing, collapse = ", "))
+    GEM_well_tibble$GEM_well_is_active <- GEM_well_tibble$GEM_well_ID %in% selected
+  }
+
   GEM_well_tibble |>
     dplyr::mutate(
       dataset = .data$GEM_well_dataset,

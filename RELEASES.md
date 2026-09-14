@@ -47,8 +47,9 @@ Keep their release metadata out of public history.
 
 ## Local candidate validation
 
-Local validation lives on the `ci` branch, using the standard configuration
-files and the same targets store. With a clean checkout and no running pipeline,
-switch to `ci`, merge the candidate commit, then follow `CI.md` on that branch.
-Record the candidate and CI commit IDs with the validation report. This is
-incremental validation; unchanged targets may be reused.
+Run `pixi run --use-environment-activation-cache validate-local` on the candidate
+checkout with a clean working tree. It enables the three public validation
+aggregations, checks external sources, runs the pipeline incrementally in the
+existing store, and verifies outputs. Retain the report matching the exact
+release commit. See [validation/README.md](validation/README.md). No CI branch
+or separate profile repository is needed.

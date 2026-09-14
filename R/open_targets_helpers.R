@@ -19,10 +19,7 @@ download_open_targets_dataset <- function(dataset_url) {
   dir.create(output_path, recursive = TRUE, showWarnings = FALSE)
 
   dataset_index <- paste(readLines(dataset_url, warn = FALSE), collapse = "\n")
-  parquet_files <- stringr::str_match_all(dataset_index, 'href="([^"]+\\.parquet)"')[[1]][, 2]
-  if (length(parquet_files) == 0) {
-    stop("No Parquet files found at Open Targets dataset URL: ", dataset_url)
-  }
+  parquet_files <- parse_open_targets_listing(dataset_index)
 
   purrr::walk(parquet_files, \(file_name) {
     destfile <- file.path(output_path, file_name)

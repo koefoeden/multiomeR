@@ -117,7 +117,7 @@ rlang::list2(
       AnnotationHub::setAnnotationHubOption("CACHE", file.path(targets::tar_config_get("store"), "files", "AnnotationHub"))
       annot_hub_interface <- AnnotationHub::AnnotationHub(ask = FALSE)
 
-      c("AH113665", "AH113713", "AH75011", "AH75036") |>
+      annotation_hub_ensembl_ids() |>
         purrr::set_names() |>
         purrr::map(\(annotation_hub_id) {
           get_gene_annotation_GRanges_from_EnsDb(annot_hub_interface[[annotation_hub_id]])

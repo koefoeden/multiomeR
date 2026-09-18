@@ -319,7 +319,9 @@ rlang::list2(
       command = {
         plot <- plot_UCell_annotation_dot(cluster_UCell_annotation.8_multimodal_QC,
           metadata_w_cell_types_tibble.WNN, group_by = "cluster",
-          cluster_column = "WNN_harmony_SNN_cluster", group_label = "WNN cluster")
+          cluster_column = "WNN_harmony_SNN_cluster", group_label = "WNN cluster",
+          cell_scores = cluster_UCell_annotation.3_GEX_QC$cell_scores[
+            metadata_w_cell_types_tibble.WNN$barcode_w_prefix, , drop = FALSE])
         save_plots_structured(plot,
           width = max(16, 4 + 0.35 * nlevels(plot$data$module)),
           height = max(9, 4 + 0.25 * nlevels(plot$data$cluster)))

@@ -928,9 +928,11 @@ plot_marker_gene_activity_dot_BPCells <- function(feature_matrix, metadata_tibbl
 
 #' Plot cached annotation evidence, with one distance order shared by both views.
 #' Cell-type rows average cluster-adjusted scores by cell count, not a new null.
+#' Per-cell scores may come from another grouping of the same counts and marker controls.
 plot_UCell_annotation_dot <- function(annotation, metadata_tibble, group_by = c("cluster", "cell_type"),
                                        cluster_column = "PCA_harmony_SNN_cluster",
-                                       group_label = if (group_by == "cluster") "GEX cluster" else "GEX cell type") {
+                                       group_label = if (group_by == "cluster") "GEX cluster" else "GEX cell type",
+                                       cell_scores = annotation$cell_scores) {
   group_by <- match.arg(group_by)
   evidence <- annotation$evidence
   profiles <- stats::xtabs(excess ~ cluster + label, evidence)
@@ -944,9 +946,9 @@ plot_UCell_annotation_dot <- function(annotation, metadata_tibble, group_by = c(
     group = as.character(metadata_tibble[[group_col]])))
   stopifnot(!anyDuplicated(cluster_groups$cluster),
     setequal(cluster_groups$cluster, evidence$cluster),
-    setequal(metadata_tibble$barcode_w_prefix, rownames(annotation$cell_scores)))
+    setequal(metadata_tibble$barcode_w_prefix, rownames(cell_scores)))
   positive <- dplyr::bind_rows(lapply(module_names, function(label) {
-    percent <- tapply(annotation$cell_scores[metadata_tibble$barcode_w_prefix, label] > 0,
+    percent <- tapply(cell_scores[metadata_tibble$barcode_w_prefix, label] > 0,
       as.character(metadata_tibble[[group_col]]), mean) * 100
     data.frame(group = names(percent), label, pct_positive = unname(percent))
   }))

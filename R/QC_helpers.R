@@ -979,63 +979,62 @@ plot_UCell_annotation_dot <- function(annotation, metadata_tibble, group_by = c(
         "Cluster colours use exactly the evidence used for annotation. Positive evidence still needs sufficient separation from competing labels."))
 }
 
-#' Plot feature scores heatmap from matrix
-#'
-#' Summarize feature-matrix scores by metadata group in a heatmap.
-#'
-#' @param feature_matrix Feature-by-cell matrix-like object with row names as feature IDs and column names as cell barcodes.
-#' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
-#' @param features Character vector of feature names to extract from the matrix row names; missing features are handled by the called helper.
-#' @param group_col Single metadata column name used to group cells, samples, or features.
-#' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
-#' @keywords internal
-
-plot_feature_scores_heatmap_from_matrix <- function(feature_matrix, metadata_tibble, features, group_col) {
-  requested_features <- features
-  if (length(requested_features) == 0) {
-    return(
-      ggplot2::ggplot() +
-        ggplot2::theme_void()
-    )
+#' Order profiles by correlation, retaining constant profiles at the end.
+order_accessibility_profiles <- function(profiles) {
+  varying <- apply(profiles, 1L, function(x) length(x) > 1L && stats::sd(x) > 0)
+  selected <- which(varying)
+  if (length(selected) > 1L) {
+    distance <- 1 - stats::cor(t(profiles[selected, , drop = FALSE]))
+    distance[] <- pmax(0, pmin(2, distance))
+    selected <- selected[stats::hclust(stats::as.dist(distance), method = "average")$order]
   }
-  features <- intersect(requested_features, rownames(feature_matrix))
-  if (length(features) == 0) {
-    stop(
-      "None of the requested score features were found in the feature matrix: ",
-      paste(requested_features, collapse = ", "),
-      call. = FALSE
-    )
-  }
-
-  metadata <- metadata_tibble |>
-    dplyr::select(dplyr::all_of(c("barcode_w_prefix", group_col))) |>
-    dplyr::distinct(.data$barcode_w_prefix, .keep_all = TRUE) |>
-    dplyr::filter(.data$barcode_w_prefix %in% colnames(feature_matrix), !is.na(.data[[group_col]])) |>
-    dplyr::arrange(match(.data$barcode_w_prefix, colnames(feature_matrix)))
-
-  score_matrix <- as.matrix(feature_matrix[features, metadata$barcode_w_prefix, drop = FALSE])
-  plot_tibble <- t(score_matrix) |>
-    tibble::as_tibble(.name_repair = "minimal") |>
-    dplyr::mutate(group = metadata[[group_col]]) |>
-    tidyr::pivot_longer(cols = dplyr::all_of(features), names_to = "feature", values_to = "score") |>
-    dplyr::summarise(
-      mean_score = mean(.data$score),
-      .by = c("group", "feature")
-    ) |>
-    dplyr::mutate(
-      feature = factor(.data$feature, levels = features),
-      group = factor(.data$group, levels = levels(as.factor(metadata[[group_col]])))
-    )
-
-  plot_tibble |>
-    ggplot2::ggplot(ggplot2::aes(x = .data$feature, y = .data$group, fill = .data$mean_score)) +
-    ggplot2::geom_tile(color = "grey90", linewidth = 0.2) +
-    ggplot2::scale_fill_gradient2(low = "#2166AC", mid = "white", high = "#B2182B", midpoint = 0) +
-    ggplot2::labs(x = "Feature", y = group_col, fill = "Mean score") +
-    ggplot2::theme_classic() +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+  rownames(profiles)[c(selected, which(!varying))]
 }
 
+#' Plot all motif families using independently clustered mean accessibility profiles.
+plot_motif_family_accessibility_heatmap <- function(feature_matrix, ATAC_metadata, GEX_metadata,
+                                                     family_labels, group_by = c("ATAC_cluster", "GEX_cluster", "GEX_cell_type")) {
+  group_by <- match.arg(group_by)
+  barcodes <- colnames(feature_matrix)
+  stopifnot(!anyDuplicated(ATAC_metadata$barcode_w_prefix), !anyDuplicated(GEX_metadata$barcode_w_prefix),
+    all(barcodes %in% ATAC_metadata$barcode_w_prefix), all(barcodes %in% GEX_metadata$barcode_w_prefix))
+  ATAC_metadata <- ATAC_metadata[match(barcodes, ATAC_metadata$barcode_w_prefix), ]
+  GEX_metadata <- GEX_metadata[match(barcodes, GEX_metadata$barcode_w_prefix), ]
+  groups <- switch(group_by,
+    ATAC_cluster = as.character(ATAC_metadata$LSI_harmony_SNN_cluster),
+    GEX_cluster = as.character(GEX_metadata$PCA_harmony_SNN_cluster_named),
+    GEX_cell_type = as.character(GEX_metadata$PCA_harmony_SNN_cluster_cell_type))
+  stopifnot(length(groups) == length(barcodes), !anyNA(groups))
+  group_names <- levels(get_mixsorted_factor(groups))
+  means <- vapply(group_names, function(group) {
+    as.numeric(BPCells::rowMeans(feature_matrix[, barcodes[groups == group], drop = FALSE]))
+  }, numeric(nrow(feature_matrix)))
+  dimnames(means) <- list(rownames(feature_matrix), group_names)
+  stopifnot(all(is.finite(means)))
+  family_order <- order_accessibility_profiles(means)
+  group_order <- order_accessibility_profiles(t(means))
+  plot_data <- as.data.frame(as.table(means), stringsAsFactors = FALSE)
+  names(plot_data) <- c("family", "group", "mean_score")
+  plot_data$family <- factor(plot_data$family, levels = rev(family_order))
+  plot_data$group <- factor(plot_data$group, levels = group_order)
+  group_label <- switch(group_by, ATAC_cluster = "ATAC cluster", GEX_cluster = "GEX cluster (GEX-derived cell type)", GEX_cell_type = "GEX-derived cell type")
+  ggplot2::ggplot(plot_data, ggplot2::aes(x = .data$group, y = .data$family, fill = .data$mean_score)) +
+    ggplot2::geom_tile() +
+    ggplot2::scale_x_discrete(position = "top") +
+    ggplot2::scale_y_discrete(labels = function(x) label_motif_families(x, family_labels)) +
+    ggplot2::scale_fill_gradient2(low = "#2166AC", mid = "white", high = "#B2182B", midpoint = 0,
+      limits = c(-1, 1) * max(abs(means))) +
+    ggplot2::labs(title = paste("Motif-family accessibility by", group_label), x = group_label, y = NULL,
+      fill = "Mean chromVAR Z-score",
+      subtitle = stringr::str_wrap("Look for coherent motif-family patterns across groups; shared sequence preferences do not identify a specific active TF.\nCompare patterns alongside GEX markers; cell-type labels are GEX-derived.", width = 100),
+      caption = paste0("All views use the same cells in the retained ATAC motif-accessibility matrix; labels come from GEX clustering.\n",
+        "Colour: unscaled cell-weighted mean chromVAR Z-score. Average-linkage clustering uses 1 - Pearson correlation; constant profiles follow last.\n",
+        "Motif-family accessibility reflects shared sequence preferences, not TF-specific activity or a cell-type assignment.")) +
+    ggplot2::theme_classic() +
+    ggplot2::theme(axis.text.y = ggplot2::element_text(size = 8), axis.text.x = ggplot2::element_text(angle = 60, hjust = 0),
+      axis.ticks.y = ggplot2::element_blank(), plot.title.position = "plot", plot.caption.position = "plot",
+      plot.caption = ggplot2::element_text(hjust = 0), legend.position = "top")
+}
 
 #' Plot similarity matrix from GRanges list
 #'

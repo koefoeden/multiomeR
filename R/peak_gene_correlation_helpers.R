@@ -780,6 +780,9 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
       TargetGene = character(),
       correlation = numeric(),
       FDR = numeric(),
+      hierarchical_pvalue = numeric(),
+      hierarchical_df = numeric(),
+      hierarchical_FDR = numeric(),
       rank_in_cell_group = integer(),
       rank_for_gene = integer(),
       aggregate_id = character(),
@@ -823,6 +826,9 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
           TargetGene = .data$TargetGene,
           correlation = .data$correlation,
           FDR = .data$FDR,
+          hierarchical_pvalue = .data$hierarchical_pvalue,
+          hierarchical_df = .data$hierarchical_df,
+          hierarchical_FDR = .data$hierarchical_FDR,
           rank_in_cell_group = .data$rank_in_cell_group,
           rank_for_gene = .data$rank_for_gene
         ),
@@ -857,11 +863,15 @@ plot_peak_gene_correlation_aggregate_scatter <- function(plot_tibble) {
     ggplot2::geom_smooth(method = "lm", se = FALSE, color = "black", linewidth = 0.4) +
     ggplot2::labs(
       title = paste(plot_tibble$TargetGene[[1]], plot_tibble$peak[[1]], plot_tibble$primary_cell_group[[1]], sep = " - "),
-      subtitle = stringr::str_wrap("Check whether the trend is supported across donors or driven by a few aggregates; this is not a causal or population-level test.", width = 100),
+      subtitle = stringr::str_wrap("Full-scan hierarchical model: check whether the association is supported across donors or driven by a few aggregates; ranking alone does not establish significance.", width = 100),
       x = "ATAC log1p CPM residual", y = "GEX log1p CPM residual", color = "Donor",
-      caption = stringr::str_wrap(paste0("Each point is a non-overlapping donor-by-state aggregate in the named primary cell group; the line is a descriptive linear fit. Donor and depth effects are regressed from log1p CPM values. Reported adjusted r = ",
-        round(plot_tibble$correlation[[1]], 3), "; conditional BH FDR = ", signif(plot_tibble$FDR[[1]], 3),
-        ", adjusted across tested pairs within the cell group. Several points from one donor are not independent donor replicates."), width = 110)
+      caption = stringr::str_wrap(paste0(
+        "Points: non-overlapping donor-state aggregates, residualized for donor and depth; line: descriptive fit. Adjusted r = ",
+        round(plot_tibble$correlation[[1]], 3), ". Hierarchical Kenward-Roger p = ", signif(plot_tibble$hierarchical_pvalue[[1]], 3),
+        " (df = ", round(plot_tibble$hierarchical_df[[1]], 2), "); model: donor fixed intercepts, depth covariates and Gaussian random donor slopes. Hierarchical BH FDR = ",
+        signif(plot_tibble$hierarchical_FDR[[1]], 3), ", adjusted across all eligible pairs/cell type, counting unreliable fits in the family size. Ranked positive estimable nonpromoter slopes without an HC3 screen or significance cutoff. ",
+        "Arcs show original HC3 BH FDR (focal = ", signif(plot_tibble$FDR[[1]], 3),
+        "), adjusted across tested pairs/cell type. Width: shared HC3 -log10(FDR) scale; zero clamped to machine minimum, unavailable FDR uses minimum width. Focal link always included. Arrow/solid arc: focal link; other arcs: dashed. Focal colour matches insertions. Aggregates are not independent donor replicates."), width = 110)
     )
 }
 
@@ -1300,8 +1310,12 @@ make_peak_gene_correlation_top_links <- function(
   n_per_cell_group = 3L
 ) {
   top_links <- links_tibble |>
-    dplyr::filter(.data$rank_in_cell_group <= n_per_cell_group) |>
-    dplyr::arrange(.data$cell_group, .data$rank_in_cell_group) |>
+    dplyr::filter(.data$hierarchical_status == "estimable", .data$hierarchical_coefficient > 0) |>
+    dplyr::select(-dplyr::any_of("gene_matrix_feature")) |>
+    dplyr::arrange(.data$cell_group, .data$hierarchical_pvalue, dplyr::desc(.data$correlation),
+      .data$TargetGeneID, .data$peak) |>
+    dplyr::slice_head(n = n_per_cell_group, by = "cell_group") |>
+    dplyr::mutate(rank_in_cell_group = dplyr::row_number(), .by = "cell_group") |>
     dplyr::mutate(
       scatter_plot_name = paste(
         make.names(.data$cell_group),

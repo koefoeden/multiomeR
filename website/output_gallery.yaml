@@ -21,22 +21,11 @@
 - id: gex-marker-dot-plot
   section: Main pipeline
   subsection: GEX
-  title: Marker dot plot
+  title: Marker expression by cell type
   description: Highlights marker gene patterns used to evaluate the inferred GEX cell types.
-  target: markers_dot_plot.3_GEX_QC.immune_human_2x
-  asset: gallery_assets/GEX/markers_dot_plot.png
-  source_file: outputs/plots/immune_human_2x/3_GEX_QC/markers_dot_plot.png
-  status: available
-
-- id: gex-scdblfinder-scores
-  section: Main pipeline
-  subsection: GEX
-  title: scDblFinder scores
-  description: Compares GEX doublet scores and calls across clusters and cell types before choosing a removal policy.
-  target: scDblFinder_score_violins_plot.3_GEX_QC.immune_human_2x
-  asset: gallery_assets/GEX/scdblfinder_scores.png
-  source_file: outputs/plots/immune_human_2x/3_GEX_QC/scDblFinder_score_violins_plot.png
-  status: available
+  target: markers_by_cell_type_dot_plot.3_GEX_QC.immune_human_2x
+  asset: null
+  status: pending
 
 - id: peak-qc-distributions
   section: Main pipeline
@@ -68,16 +57,6 @@
   source_file: outputs/plots/immune_human_2x/7_ATAC_QC/UMAPs/categorical/LSI_harmony_SNN_cluster_cell_type.png
   status: available
 
-- id: atac-scdblfinder-scores
-  section: Main pipeline
-  subsection: ATAC
-  title: scDblFinder scores
-  description: Compares ATAC doublet scores and calls across clusters and cell types before choosing a removal policy.
-  target: scDblFinder_score_violins_plot.7_ATAC_QC.immune_human_2x
-  asset: gallery_assets/ATAC/scdblfinder_scores.png
-  source_file: outputs/plots/immune_human_2x/7_ATAC_QC/scDblFinder_score_violins_plot.png
-  status: available
-
 - id: wnn-umap
   section: Main pipeline
   subsection: WNN
@@ -91,12 +70,11 @@
 - id: wnn-modality-weights
   section: Main pipeline
   subsection: WNN
-  title: Modality weights
+  title: WNN weight associations
   description: Shows how RNA and ATAC evidence contribute differently across cell groups in the two-GEM-well aggregation.
-  target: ATAC_vs_RNA_weight_boxplots_plot.8_multimodal_QC.immune_human_2x
-  asset: gallery_assets/WNN/atac_vs_rna_weight_boxplots.png
-  source_file: outputs/plots/immune_human_2x/8_multimodal_QC/ATAC_vs_RNA_weight_boxplots_plot.png
-  status: available
+  target: WNN_weight_metadata_associations_plot.8_multimodal_QC.immune_human_2x
+  asset: null
+  status: pending
 
 - section: Differential analyses module
   subsection: Gene expression
@@ -148,11 +126,11 @@
 
 - section: Genetic enrichment module
   subsection: Single-nucleus chromVAR+SCAVENGE
-  title: Celltype by GWAS heatmap
+  title: Median SCAVENGE scores by cell type
   description: Summarizes graph-propagated trait relevance scores across cell groups and GWAS traits.
-  target: TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x
-  asset: gallery_assets/genetic_enrichment/single_nucleus_with_scavenge/TRS_heatmap.png
-  status: available
+  target: median_by_cell_types_scaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x
+  asset: null
+  status: pending
 
 - section: Genetic enrichment module
   subsection: Single-nucleus chromVAR+SCAVENGE

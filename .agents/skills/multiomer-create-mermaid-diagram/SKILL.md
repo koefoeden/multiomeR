@@ -12,6 +12,11 @@ regeneration command. Inspect the owning target fragments and keep graph
 membership focused on reader-relevant inputs, transformations, checkpoints,
 and outputs.
 
+Published website diagrams use an isolated public-demo configuration with the
+documented optional examples enabled. Synchronize those artifacts between both
+repositories; never overwrite them with diagrams from a private analysis.
+Keep analysis-specific graph exports outside `website/`.
+
 After changing membership, regenerate every tagged view and review the changed
 `*_v2.mmd` files. Follow the root `AGENTS.md` workflow to render both books and
 refresh the Markdown export. Graph generation must not execute targets.

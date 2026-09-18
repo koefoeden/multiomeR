@@ -1,0 +1,45 @@
+# Reading the graph views
+
+```{r setup, include = FALSE}
+pipeline_name <- "processing_and_aggregation"
+source("helpers/_setup.R")
+```
+
+The graph chapters collect simplified views of the real `{targets}` dependency graph. They are meant to make the workflow easier to reason about before reading the target code directly.
+
+The diagrams are generated from tagged target metadata and the real dependency graph, then simplified by pruning or bypassing lower-level nodes that would make each view harder to read. They keep real target names and preserve the dependency structure where practical, while staying compact enough to build intuition about the main control points.
+
+The following chapters cover the main pipeline, the differential analyses module, and the genetic enrichment module.
+
+## Trace one configured aggregation
+
+The quickest way to understand the implementation is to follow one value across the graph:
+
+1. `immune_human_2x` is a key in `cfg_aggregations.yaml`.
+2. `read_aggregation_config_tibble()` resolves manifest defaults and inheritance into one aggregation row.
+3. `build_aggregation_tibble()` filters active rows and adds symbols for GEM-well upstream targets, including those used for aggregation-level QC summaries.
+4. The root `_targets.R` passes that row through `tar_map(names = aggregation, delimiter = ".")`.
+5. A base target such as `multimodal_Seurat_object.8_multimodal_QC` becomes `multimodal_Seurat_object.8_multimodal_QC.immune_human_2x`.
+6. Description tags make selected targets discoverable as checkpoints or graph nodes, while structured file helpers derive output paths from the active target name.
+
+Inspect the exact target command and description without running it:
+
+```r
+targets::tar_manifest(
+  names = tidyselect::matches(
+    "^multimodal_Seurat_object[.]8_multimodal_QC[.]immune_human_2x$"
+  ),
+  fields = c(name, command, description),
+  callr_function = NULL
+)
+```
+
+This trace connects the [parameter manifest](implementation_conventions.md#parameter-manifest), [mapping tibbles](implementation_conventions.md#mapping-tibbles), and [target-symbol columns](implementation_conventions.md#target-symbol-columns) before the larger diagrams introduce many nodes at once.
+
+## What the diagrams omit
+
+The curated graph views are orientation aids, not alternate target definitions. A node can be absent because it was pruned as a lower-level implementation detail, bypassed to preserve a useful dependency path, or omitted because it lacks the graph-membership tag for that view. Use `tar_manifest()` or the source target files when exact completeness matters.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/standard_node_color_legend.mmd")
+```

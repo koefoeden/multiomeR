@@ -10,7 +10,7 @@ Hidden setup chunks, generated helper chunks, Mermaid graph bodies, and verbose 
 ## Part: Start here
 
 
-<!-- source: website/index.qmd -->
+<!-- source: website/index.md -->
 
 [Image omitted; source: `figures/multiomeR-logo.svg`; alt: Image]
 
@@ -23,7 +23,7 @@ The workflow starts from `cellranger-arc count` outputs, processes gene-expressi
 
 ::: {.callout-warning title="Beta software"}
 multiomeR is in beta and may introduce breaking changes between releases. The
-steps in [Run your own analysis](main_running.qmd#steps)
+steps in [Run your own analysis](main_running.md#steps)
 show what to inspect before each stage, but acceptance criteria still depend on
 the tissue, study design, and intended use. Report problems or questions
 through [GitHub issues](https://github.com/koefoeden/multiomeR/issues).
@@ -37,7 +37,7 @@ metadata and multimodal object. This gives you a working example before you
 choose settings for your own study.
 
 You need basic R skills, a Linux terminal, and a machine with sufficient
-[memory and disk space](demo_installation.qmd#system-requirements). You do not
+[memory and disk space](demo_installation.md#system-requirements). You do not
 need to know how to write a `targets` pipeline. Commands labelled **Bash** run
 in the terminal; commands labelled **R** run in the R session opened during
 installation. Run both from the repository folder unless stated otherwise.
@@ -46,14 +46,14 @@ installation. Run both from the repository folder unless stated otherwise.
 
 | If you want to... | Start here |
 |---|---|
-| See what the workflow produces | Browse the [Main pipeline gallery](gallery_main.qmd). |
-| Try multiomeR on public data | Follow [Install and prepare the demo](demo_installation.qmd), [Run the demo](demo_running.qmd), then [Inspect the demo results](demo_outputs.qmd). |
-| Analyze your own data | Check the inputs in [Plan your analysis](main_overview.qmd), then follow the steps in [Run your own analysis](main_running.qmd). |
-| Look up a configuration column or parameter | Open the [GEM well table](reference_GEM_wells.qmd), [Donor metadata table](reference_donor_metadata.qmd), or [Aggregation configuration](reference_aggregations.qmd) reference. |
-| Understand a review plot or table | Look it up in [Reading the review outputs](review_outputs.qmd). |
-| Add a downstream analysis | Check the prerequisites for [Differential analyses](downstream_differential_analyses.qmd) or [Genetic enrichment](downstream_genetic_enrichment.qmd). |
-| Run on a cluster or a smaller machine | Read [Choose where the analysis runs](performance_distributed_computing.qmd). |
-| Fix a failed or stale run | Start with [Troubleshooting](troubleshooting.qmd). |
+| See what the workflow produces | Browse the [Main pipeline gallery](gallery_main.md). |
+| Try multiomeR on public data | Follow [Install and prepare the demo](demo_installation.md), [Run the demo](demo_running.md), then [Inspect the demo results](demo_outputs.md). |
+| Analyze your own data | Check the inputs in [Plan your analysis](main_overview.md), then follow the steps in [Run your own analysis](main_running.md). |
+| Look up a configuration column or parameter | Open the [GEM well table](reference_GEM_wells.md), [Donor metadata table](reference_donor_metadata.md), or [Aggregation configuration](reference_aggregations.md) reference. |
+| Understand a review plot or table | Look it up in [Output files and metadata](review_outputs.md). |
+| Add a downstream analysis | Check the prerequisites for [Differential analyses](downstream_differential_analyses.md) or [Genetic enrichment](downstream_genetic_enrichment.md). |
+| Run on a cluster or a smaller machine | Read [Choose where the analysis runs](performance_distributed_computing.md). |
+| Fix a failed or stale run | Start with [Troubleshooting](troubleshooting.md). |
 | Understand or modify the internals | Use the separate [implementation book](implementation/). |
 
 ## Terms used in this manual
@@ -76,13 +76,13 @@ The **main pipeline** processes each GEM well, aggregates selected GEM wells, an
 
 [Image omitted; source: `figures/multiomeR_overview_simplified.drawio.svg`; alt: multiomeR workflow from Cell Ranger ARC GEM well outputs through per GEM well processing, aggregation-level GEX and A...]
 
-Continue to [Install and prepare the demo](demo_installation.qmd).
+Continue to [Install and prepare the demo](demo_installation.md).
 
 
 ## Part: Output gallery
 
 
-<!-- source: website/gallery_main.qmd -->
+<!-- source: website/gallery_main.md -->
 
 # Main pipeline gallery
 
@@ -90,27 +90,27 @@ Continue to [Install and prepare the demo](demo_installation.qmd).
 
 These documentation snapshots show representative outputs from the public
 `immune_human_2x` configuration with its two active GEM wells. The cards follow
-the steps in [Run your own analysis](main_running.qmd#steps), where each step
+the steps in [Run your own analysis](main_running.md#steps), where each step
 also shows its own cards. Each card names the target that
 generated the displayed demo result; click an image to open it at full
 resolution.
 
 To reproduce these plot families, follow [Install and prepare the
-demo](demo_installation.qmd) and [Run the demo](demo_running.qmd), then run the
-steps in [Run your own analysis](main_running.qmd#steps). The
+demo](demo_installation.md) and [Run the demo](demo_running.md), then run the
+steps in [Run your own analysis](main_running.md#steps). The
 demo command builds the final object and the WNN UMAPs only; [Inspect the demo
-results](demo_outputs.qmd) explains the distinction.
+results](demo_outputs.md) explains the distinction.
 
 [Generated Quarto chunk omitted: `render_gallery_section( gallery_items, "Main pipeline", subsection_descriptions = c( "Pre-aggregation QC" = "Unfilter...`]
 
 
-<!-- source: website/gallery_differential_analyses.qmd -->
+<!-- source: website/gallery_differential_analyses.md -->
 
 # Differential analyses gallery
 
 
 
-These cards are a curated subset from the public `immune_human_2x` configuration. They illustrate diagnostics, not acceptable effect sizes or significance patterns for another study. See [Differential analyses](downstream_differential_analyses.qmd) for prerequisites, models, and the module run command.
+These cards are a curated subset from the public `immune_human_2x` configuration. They illustrate diagnostics, not acceptable effect sizes or significance patterns for another study. See [Differential analyses](downstream_differential_analyses.md) for prerequisites, models, and the module run command.
 
 The full module additionally produces expression-derived CollecTRI activity results and a CollecTRI-JASPAR concordance plot. They are not shown below until stable public example assets are available.
 
@@ -119,13 +119,13 @@ Named abundance models now produce donor-proportion plots and contrast plots wit
 [Generated Quarto chunk omitted: `render_gallery_section( gallery_items, "Differential analyses module", subsection_descriptions = c( "Gene expression"...`]
 
 
-<!-- source: website/gallery_genetic_enrichment.qmd -->
+<!-- source: website/gallery_genetic_enrichment.md -->
 
 # Genetic enrichment gallery
 
 
 
-These curated outputs use the larger `PBMC_human_6x` aggregation, not the quickstart with two GEM wells, and show selected SCAVENGE/WNN results rather than every attribution output. See [Genetic enrichment](downstream_genetic_enrichment.qmd) for prerequisites, module target selection, and interpretation guidance.
+These curated outputs use the larger `PBMC_human_6x` aggregation, not the quickstart with two GEM wells, and show selected SCAVENGE/WNN results rather than every attribution output. See [Genetic enrichment](downstream_genetic_enrichment.md) for prerequisites, module target selection, and interpretation guidance.
 
 [Generated Quarto chunk omitted: `render_gallery_section( gallery_items, "Genetic enrichment module", subsection_descriptions = c( "Single-nucleus chro...`]
 
@@ -133,7 +133,7 @@ These curated outputs use the larger `PBMC_human_6x` aggregation, not the quicks
 ## Part: Try the public demo
 
 
-<!-- source: website/demo_installation.qmd -->
+<!-- source: website/demo_installation.md -->
 
 # Install and prepare the demo
 
@@ -174,7 +174,7 @@ controller_list <- list(
 The `RAM_GB` values in the same file describe routing capacity, not enforced
 limits, so the workers that can run at once must fit in physical memory. To
 run on a SLURM or other scheduler instead, see [Choose where the analysis
-runs](performance_distributed_computing.qmd).
+runs](performance_distributed_computing.md).
 :::
 
 
@@ -207,10 +207,10 @@ The download task is restart-safe: non-empty files already present under
 from the exact `refdata-cellranger-arc-GRCh38-2020-A-2.0.0` reference used for
 both public outputs, so the full Cell Ranger ARC reference is not required.
 
-Continue to [Run the demo](demo_running.qmd) from the R prompt.
+Continue to [Run the demo](demo_running.md) from the R prompt.
 
 
-<!-- source: website/demo_running.qmd -->
+<!-- source: website/demo_running.md -->
 
 # Run the demo
 
@@ -252,10 +252,10 @@ targets::tar_outdated(
 ```
 
 If names are returned, those results still need building. If the run failed,
-follow [Troubleshooting](troubleshooting.qmd), fix the reported cause, and run
+follow [Troubleshooting](troubleshooting.md), fix the reported cause, and run
 the same `tar_make()` command again. Completed results can be reused.
 
-Continue to [Inspect the demo results](demo_outputs.qmd) to read the object
+Continue to [Inspect the demo results](demo_outputs.md) to read the object
 and find the associated files.
 
 ## Local validation
@@ -272,7 +272,7 @@ described in the repository's `validation/README.md`; the normal demo remains
 limited to `immune_human_2x`.
 
 
-<!-- source: website/demo_outputs.qmd -->
+<!-- source: website/demo_outputs.md -->
 
 # Inspect the demo results
 
@@ -338,26 +338,26 @@ Open `WNN_harmony_SNN_cluster_cell_type.png` there to see the integrated
 clusters and cell-type labels from your own run. It should resemble this
 documentation snapshot:
 
-[Generated Quarto chunk omitted: `render_gallery_cards(gallery_items, "wnn-umap")`]
+[Generated Quarto chunk omitted: `render_gallery_grid(gallery_items[gallery_items$id == "wnn-umap", ])`]
 
-The [Main pipeline gallery](gallery_main.qmd) shows the other plot families
+The [Main pipeline gallery](gallery_main.md) shows the other plot families
 the workflow produces. Those are saved snapshots and do not reflect the state of
 your analysis. To build one more of them, follow [Request an additional
-result](main_running.qmd#request-an-additional-result); to build all review
+result](main_running.md#after-the-steps); to build all review
 plots for a stage, run its step in [Run your own
-analysis](main_running.qmd#steps).
+analysis](main_running.md#steps).
 
 ## Next steps
 
-- To adopt the workflow, continue with [Plan your analysis](main_overview.qmd) and the steps in [Run your own analysis](main_running.qmd#steps).
-- To request more results or rerun after a change, use [Run your own analysis](main_running.qmd).
-- To diagnose a failed or unexpectedly stale target, use [Troubleshooting](troubleshooting.qmd).
+- To adopt the workflow, continue with [Plan your analysis](main_overview.md) and the steps in [Run your own analysis](main_running.md#steps).
+- To request more results or rerun after a change, use [Run your own analysis](main_running.md).
+- To diagnose a failed or unexpectedly stale target, use [Troubleshooting](troubleshooting.md).
 
 
 ## Part: Analyze your own data
 
 
-<!-- source: website/main_overview.qmd -->
+<!-- source: website/main_overview.md -->
 
 # Plan your analysis
 
@@ -365,7 +365,7 @@ Before configuring anything, check that the inputs below are available. A
 **GEM well** is one 10x Multiome library with its `cellranger-arc count`
 output. An **aggregation** is a joint analysis of one or more GEM wells; its
 settings are chosen step by step in [Run your own
-analysis](main_running.qmd#steps).
+analysis](main_running.md#steps).
 
 ## Per GEM well
 
@@ -383,24 +383,24 @@ analysis](main_running.qmd#steps).
 
 - A donor metadata TSV with one row per donor and the phenotypes or
   covariates you will use; see the [donor metadata
-  table](reference_donor_metadata.qmd).
+  table](reference_donor_metadata.md).
 - Marker genes for the cell types you expect in the tissue, as gene symbols
   matching the reference annotation. Marker transcription factors for ATAC are
   optional.
 - For the optional modules: [differential
-  analyses](downstream_differential_analyses.qmd) require biological
+  analyses](downstream_differential_analyses.md) require biological
   replication across donors, and [genetic
-  enrichment](downstream_genetic_enrichment.qmd) requires a human aggregation
+  enrichment](downstream_genetic_enrichment.md) requires a human aggregation
   and network access to Open Targets.
 
 ## Compute
 
 - A Linux machine or scheduler meeting the [system
-  requirements](demo_installation.qmd#system-requirements), with
+  requirements](demo_installation.md#system-requirements), with
   `crew_controllers.R` adjusted as described in [Choose where the analysis
-  runs](performance_distributed_computing.qmd).
+  runs](performance_distributed_computing.md).
 - Disk space for the store: the two-GEM-well demo writes about 6 GB.
-- Time: the [recorded runtimes](performance_overview.qmd) for two and six GEM
+- Time: the [recorded runtimes](performance_overview.md) for two and six GEM
   wells indicate what to expect; each step is rerun several times while
   settings are tuned.
 
@@ -413,14 +413,14 @@ analysis](main_running.qmd#steps).
 | ATAC (chromatin accessibility) | Combines fragments, defines peaks, builds the peak-count matrix, and summarizes accessibility and motif signals. |
 | WNN (weighted nearest neighbors) | Combines RNA and ATAC representations to produce integrated clusters, metadata, and a Seurat/Signac export. |
 
-The [Main pipeline gallery](gallery_main.qmd) shows representative outputs;
+The [Main pipeline gallery](gallery_main.md) shows representative outputs;
 the [implementation graph](implementation/implementation_main.html) provides
 the detailed computational dependencies when you need them.
 
-Continue to [Run your own analysis](main_running.qmd#steps).
+Continue to [Run your own analysis](main_running.md#steps).
 
 
-<!-- source: website/main_running.qmd -->
+<!-- source: website/main_running.md -->
 
 # Run your own analysis
 
@@ -428,26 +428,30 @@ Start from the working demo and replace its inputs and settings one step at a
 time. Each step has three parts: **Configure** the relevant settings, **Run**
 the step, and **Review** its plots. Every plot carries a subtitle that states
 how to read it and what to look for, so this chapter only lists which plots to
-open. Revise the settings and rerun a step until its plots are acceptable, then
+open. The trees show the main review outputs; configured variables and optional
+analyses determine the additional files. Revise the settings and rerun a step until its plots are acceptable, then
 continue to the next.
 
 Conventions used below:
 
 - Commands run in a repository-root R session, opened as in [Install and
-  prepare the demo](demo_installation.qmd).
+  prepare the demo](demo_installation.md).
 - Replace `my_GEM_well` and `my_aggregation` with your identifiers.
 - `<store>` is the results folder configured in `_targets.yaml`, `outputs/` in
   the demo.
-- File formats are documented in the [GEM well table](reference_GEM_wells.qmd),
-  [donor metadata table](reference_donor_metadata.qmd), and [aggregation
-  configuration](reference_aggregations.qmd) references.
+- File formats are documented in the [GEM well table](reference_GEM_wells.md),
+  [donor metadata table](reference_donor_metadata.md), and [aggregation
+  configuration](reference_aggregations.md) references.
 - `crew_controllers.R` must describe your machine or scheduler; see [Choose
-  where the analysis runs](performance_distributed_computing.qmd).
+  where the analysis runs](performance_distributed_computing.md).
 
 Settings default to `configuration/`. To use your own directory, copy it and
 write the new directory path into the ignored root `configuration.local` file.
 Keep all settings together; disabled modules may omit their files. See the
 [configuration guide](https://github.com/koefoeden/multiomeR/blob/main/configuration/README.md).
+
+These instructions describe the public defaults. For installation-specific
+setup and reference selection, follow the README in your checkout.
 
 ## How a step is run {#how-to-run}
 
@@ -466,11 +470,11 @@ targets::tar_make(
 To preview a selection, pass the same `names` to `targets::tar_manifest()`
 with `callr_function = NULL`. An empty result means a wrong suffix. After
 editing configuration, `targets::tar_manifest(callr_function = NULL)` must
-build without errors; see [Troubleshooting](troubleshooting.qmd) if it does not.
+build without errors; see [Troubleshooting](troubleshooting.md) if it does not.
 
 In the trees below, a trailing `/` marks a folder with one plot per variable,
 metric, or component. How the plots and the tables behind them are constructed
-is documented in [Reading the review outputs](review_outputs.qmd).
+is documented in [Output files and metadata](review_outputs.md).
 
 ## 1. Process the GEM wells {#steps}
 
@@ -478,7 +482,7 @@ Reads each GEM well's Cell Ranger output and reviews per-well exclusions.
 Compare distributions across wells after defining an aggregation in step 2.
 
 **Configure** one row per GEM well in `cfg_GEM_wells.tsv`
-([GEM well table](reference_GEM_wells.qmd)):
+([GEM well table](reference_GEM_wells.md)):
 
 - a unique `GEM_well_ID` and an appropriate `GEM_well_dataset` label;
 - `GEM_well_cellranger_arc_count_dir`;
@@ -516,15 +520,15 @@ they share one reference and identical gene definitions.
 
 **Configure**
 
-- a [donor metadata table](reference_donor_metadata.qmd) with one row per
+- a [donor metadata table](reference_donor_metadata.md) with one row per
   `donor_id` holding the donor-level phenotypes and covariates;
 - an entry in `cfg_aggregations.yaml` ([aggregation
-  configuration](reference_aggregations.qmd)) with:
+  configuration](reference_aggregations.md)) with:
   - `aggregation_GEM_well_IDs`: the wells to analyze together. The group
     should reflect the biological comparison you intend to make, keep donor,
     preparation, and batch distinguishable, and share one reference;
   - `aggregation_donor_id_metadata_tsv`;
-  - `aggregation_GEX_marker_genes`: placeholders are enough until step 4;
+  - `aggregation_GEX_marker_genes`: valid positive marker genes for the expected cell types, refined in step 4;
   - `is_active: true`.
 
 **Run**
@@ -542,6 +546,7 @@ targets::tar_make(
 ├── per_aggregation_GEM_well_QC_comparisons/
 ├── aggregation_excluded_cellranger_only_barcodes_by_type_upset.png
 ├── aggregation_excluded_barcodes_by_type_upset.png
+├── nuclei_per_donor_id_bars.png
 └── cell_retention_flow_plot.png
 ```
 
@@ -558,7 +563,7 @@ optional Harmony correction.
   the first run and add it only if this step's association plots show batch
   structure;
 - normalization and variable-gene settings under the GEX topic of the
-  [parameter reference](reference_aggregations.qmd#parameter-reference).
+  [parameter reference](reference_aggregations.md#parameter-reference).
 
 **Run**
 
@@ -611,7 +616,8 @@ targets::tar_make(
 │   ├── categorical/{harmony,non_harmony}/
 │   ├── continuous/{harmony,non_harmony}/
 │   └── cross/
-├── categorical_bars_plots/
+├── categorical_by_cell_type_bars_plots/
+├── categorical_by_cluster_bars_plots/
 ├── continuous_by_cluster_violin_plot/
 ├── continuous_by_cell_type_violin_plot/
 ├── markers_by_cluster_dot_plot.png
@@ -621,7 +627,6 @@ targets::tar_make(
 ├── cluster_UCell_advantage_plots/
 ├── cluster_marker_volcano_plots/
 ├── cell_type_marker_volcano_plots.png
-├── scDblFinder_score_violins_plot.png
 └── cell_retention_flow_plot.png
 ```
 
@@ -736,7 +741,8 @@ targets::tar_make(
 ```{.text}
 <store>/plots/my_aggregation/7_ATAC_QC/
 ├── UMAPs/{categorical,continuous,cross}/
-├── categorical_bars_plots/
+├── categorical_by_cell_type_bars_plots/
+├── categorical_by_cluster_bars_plots/
 ├── marker_gene_activity_dot_plot.png
 ├── motif_family_accessibility_by_ATAC_cluster_heatmap.png
 ├── motif_family_accessibility_by_GEX_cluster_heatmap.png
@@ -745,7 +751,6 @@ targets::tar_make(
 ├── coverage_tracks_plots/
 ├── cluster_UCell_advantage_plots/
 ├── confusion_matrices_plots.png
-├── scDblFinder_score_violins_plot.png
 └── cell_retention_flow_plot.png
 ```
 
@@ -769,21 +774,24 @@ targets::tar_make(
 ```{.text}
 <store>/plots/my_aggregation/8_multimodal_QC/
 ├── UMAPs/{categorical,continuous,cross}/
-├── categorical_bars_plots/
-├── cluster_named_dim_tri_plot.png
-├── cluster_cell_type_dim_tri_plot.png
-├── markers_violin_plot.png
-├── ATAC_vs_RNA_weight_boxplots_plot.png
-├── nuclei_per_donor_id_bars.png
+├── categorical_by_cell_type_bars_plots/
+├── categorical_by_cluster_bars_plots/
+├── UMAPs/cluster_named_dim_tri_plot.png
+├── UMAPs/cluster_cell_type_dim_tri_plot.png
+├── markers_by_cluster_dot_plot.png
+├── module_scores_by_cluster_dot_plot.png
+├── continuous_by_cell_type_violin_plot/
+├── continuous_by_cluster_violin_plot/
+├── WNN_weight_metadata_associations_plot.png
 ├── confusion_matrices_plots/
 ├── cluster_UCell_advantage_plots/
 └── cell_retention_flow_plot.png
 ```
 
 The final object is `multimodal_Seurat_object.8_multimodal_QC.my_aggregation`;
-[Inspect the demo results](demo_outputs.qmd) shows how to read it. Continue to
-[Differential analyses](downstream_differential_analyses.qmd) or [Genetic
-enrichment](downstream_genetic_enrichment.qmd) once the aggregation is
+[Inspect the demo results](demo_outputs.md) shows how to read it. Continue to
+[Differential analyses](downstream_differential_analyses.md) or [Genetic
+enrichment](downstream_genetic_enrichment.md) once the aggregation is
 accepted.
 
 ## After the steps
@@ -809,7 +817,7 @@ demo entries, before running it.
 ## Part: Add an optional analysis
 
 
-<!-- source: website/downstream_differential_analyses.qmd -->
+<!-- source: website/downstream_differential_analyses.md -->
 
 # Differential analyses
 
@@ -821,7 +829,7 @@ Use this module to ask how cell-type proportions, gene expression, or chromatin 
 
 The module does not create biological replication. The donor structure, covariates, design formula, and contrasts must be defensible for the intended analysis before the workflow is run.
 
-See the [Differential analyses gallery](gallery_differential_analyses.qmd) for representative diagnostics and the [implementation graph](implementation/implementation_differential_analyses.html) for target structure.
+See the [Differential analyses gallery](gallery_differential_analyses.md) for representative diagnostics and the [implementation graph](implementation/implementation_differential_analyses.html) for target structure.
 
 ## Prerequisites
 
@@ -863,7 +871,7 @@ paths on the next run; existing output directories are not migrated.
 See the [method details](implementation/implementation_differential_analyses.html#method-details)
 for activity inference, motif-family definitions, and gene-set testing.
 
-## Configure the module
+## Configure
 
 Add `modules` to the existing aggregation entry, keeping its input and marker settings:
 
@@ -909,11 +917,9 @@ Check which group is the reference and what each model coefficient represents
 before using `conditiontreated` as a contrast. Replace the example formula
 and contrast to match your study.
 
-## Run and review
+## Run
 
-The existing `checkpoint:differential_analyses` tag selects module outputs.
-It does not perform QC approval; a review procedure like the steps in
-[Run your own analysis](main_running.qmd#steps) is under development. Preview the selected targets first:
+Preview the selected module outputs before running them:
 
 ```{.r filename="R"}
 targets::tar_manifest(
@@ -934,9 +940,11 @@ targets::tar_make(
 )
 ```
 
-Review pseudobulk depths and retained donor counts before interpreting coefficients. Check model-matrix terms, P-value distributions, effect directions, and agreement or disagreement across gene expression, chromatin accessibility, motif-family accessibility, and transcription-factor activity. The CollecTRI-JASPAR concordance target summarizes family coverage, rank correlation, directional agreement, and joint FDR support for every configured contrast. These are complementary regulatory readouts: agreement strengthens a shared interpretation, while disagreement can reflect post-transcriptional regulation, motif-family ambiguity, or different evidence carried by expression and accessibility. Treat the [gallery](gallery_differential_analyses.qmd) as a visual reference, not as a statistical acceptance threshold.
+## Review
 
-Runtime depends on donors, cell types, models, contrasts, and gene-set analyses. Use [Troubleshooting](troubleshooting.qmd) if a formula, contrast, or metadata join fails.
+Open the configured model outputs listed above and the [differential gallery](gallery_differential_analyses.md). Interpretation and method details are included in the plot subtitles and captions.
+
+Runtime depends on donors, cell types, models, contrasts, and gene-set analyses. Use [Troubleshooting](troubleshooting.md) if a formula, contrast, or metadata join fails.
 
 ## Parameter reference
 
@@ -949,7 +957,7 @@ with one lymphoma lymph-node donor cannot separate condition, donor, and tissue
 effects. Configure differential analyses for a design with biological replication.
 
 
-<!-- source: website/downstream_genetic_enrichment.qmd -->
+<!-- source: website/downstream_genetic_enrichment.md -->
 
 # Genetic enrichment
 
@@ -967,7 +975,7 @@ A **credible set** contains candidate causal variants at a GWAS locus, with
 probabilities from fine-mapping. Enrichment helps prioritize cellular contexts;
 it does not by itself identify a causal cell type, gene, or mechanism.
 
-See the [Genetic enrichment gallery](gallery_genetic_enrichment.qmd) for representative results and the [implementation graph](implementation/implementation_genetic_enrichment.html) for upstream ATAC and WNN dependencies.
+See the [Genetic enrichment gallery](gallery_genetic_enrichment.md) for representative results and the [implementation graph](implementation/implementation_genetic_enrichment.html) for upstream ATAC and WNN dependencies.
 
 ## Prerequisites
 
@@ -988,7 +996,7 @@ Before enabling the module, confirm that:
 | SCAVENGE plots | Trait-relevance scores propagated through the cell-neighbor graph |
 | Cell-type heatmaps and attribution tables | Enrichment by cell type and the loci or variants contributing to it |
 
-## Configure the module
+## Configure
 
 Add `modules` to the existing human aggregation entry, keeping its other settings:
 
@@ -1019,11 +1027,9 @@ The root workflow currently pins Open Targets release `26.03`. That release iden
 
 For `finemappingMethod: auto`, multiomeR selects the first available supported method in this order: `SuSie`, `SuSiE-inf`, then `PICS`. Specify a method explicitly when the method itself is part of the analysis contract; the workflow fails if that method is unavailable for the study.
 
-## Run and review
+## Run
 
-The existing `checkpoint:genetic_enrichment` tag selects module outputs. It
-does not perform QC approval; a review procedure like the steps in
-[Run your own analysis](main_running.qmd#steps) is under development. Preview the selected targets:
+Preview the selected module outputs before running them:
 
 ```{.r filename="R"}
 targets::tar_manifest(
@@ -1044,9 +1050,11 @@ targets::tar_make(
 )
 ```
 
-Before interpreting trait scores, verify the resolved source release and fine-mapping method, the number of credible-set loci and variants retained, and the overlap with consensus peaks. Then compare direct deviation summaries with SCAVENGE-propagated scores and use the heatmap glyphs to identify cluster-median enrichment supported by within-grouping BH-adjusted degree-matched permutation P-values.
+## Review
 
-Runtime and disk use grow with studies, cells, graph representations, permutations, and attributed loci. The [Genetic enrichment gallery](gallery_genetic_enrichment.qmd) uses a larger aggregation with six GEM wells and is not produced by the minimal quickstart.
+Open the study-selection summaries, chromVAR summaries, SCAVENGE heatmaps and locus-contribution plots produced for your configured studies. See the [genetic enrichment gallery](gallery_genetic_enrichment.md) for available previews; interpretation belongs to each plot.
+
+Runtime and disk use grow with studies, cells, graph representations, permutations, and attributed loci. The [Genetic enrichment gallery](gallery_genetic_enrichment.md) uses a larger aggregation with six GEM wells and is not produced by the minimal quickstart.
 
 ## Parameter reference
 
@@ -1060,7 +1068,7 @@ Runtime and disk use grow with studies, cells, graph representations, permutatio
 </details>
 
 
-<!-- source: website/downstream_peak_gene_correlation.qmd -->
+<!-- source: website/downstream_peak_gene_correlation.md -->
 
 # Peak–gene correlation
 
@@ -1068,9 +1076,11 @@ Run this optional module after accepting the final WNN cell set. It relates
 ATAC accessibility to RNA expression within broad GEX-derived cell types,
 using the retained WNN nuclei; it is no longer part of checkpoint 8.
 
+## Configure
+
 Add `peak_gene_correlation` to the aggregation's existing `modules` list in
 `cfg_aggregations.yaml`, and add a matching row in
-`configuration/cfg_module_peak_gene_correlation.yaml`:
+`cfg_module_peak_gene_correlation.yaml` in the selected configuration directory:
 
 ```yaml
 my_aggregation:
@@ -1082,11 +1092,15 @@ The top-link count controls the number of detail figures per cell type.
 `strict` measurement-support filtering. Disabled aggregations contribute no
 module targets.
 
+## Run
+
 ```r
 targets::tar_make(
   names = tidyselect::ends_with(".peak_gene_correlation.my_aggregation")
 )
 ```
+
+## Review
 
 All module targets have description tag `[checkpoint:peak_gene_correlation]`.
 Their paths are `<store>/plots/my_aggregation/peak_gene_correlation/`;
@@ -1098,6 +1112,8 @@ targets::tar_read(
   peak_gene_correlation_links_tibble.WNN.peak_gene_correlation.my_aggregation
 )
 ```
+
+## Model and scope
 
 Peak–gene links are candidate regulatory relationships. Cells are aggregated
 within donor and ATAC-defined state using WNN cell-type annotations, without
@@ -1123,7 +1139,7 @@ for inference limits, support thresholds and output details.
 ## Part: Operation and scaling
 
 
-<!-- source: website/performance_overview.qmd -->
+<!-- source: website/performance_overview.md -->
 
 # Performance and scaling
 
@@ -1149,10 +1165,10 @@ The critical path is the longest chain of dependent tasks: it estimates the fast
 - Inspect target-level runtime and memory on your own representative aggregation before sizing a production run.
 - Start with one aggregation and a selected result, then increase worker concurrency only when memory headroom is known.
 
-Configure execution capacity in [Choose where the analysis runs](performance_distributed_computing.qmd). If a run is unexpectedly slow or repeatedly rebuilds targets, use [Troubleshooting](troubleshooting.qmd).
+Configure execution capacity in [Choose where the analysis runs](performance_distributed_computing.md). If a run is unexpectedly slow or repeatedly rebuilds targets, use [Troubleshooting](troubleshooting.md).
 
 
-<!-- source: website/performance_distributed_computing.qmd -->
+<!-- source: website/performance_distributed_computing.md -->
 
 # Choose where the analysis runs
 
@@ -1162,7 +1178,7 @@ A **worker** is an R process that runs an analysis task. A **controller** starts
 and manages those workers, either on your machine or through a cluster
 scheduler. multiomeR uses `crew` for this. The committed configuration runs
 the demo unchanged on a machine that meets the [system
-requirements](demo_installation.qmd#system-requirements); adjust it as
+requirements](demo_installation.md#system-requirements); adjust it as
 described below before running on a smaller machine or a scheduler.
 
 Use local workers on a suitable workstation. On a shared cluster, ask your
@@ -1202,7 +1218,7 @@ For every scheduler tier:
 4. Keep GPU tiers separate; GPU controllers are considered only for targets requesting GPUs.
 5. Test a small target selection before increasing worker counts.
 
-Scheduler startup failures, resource-routing errors, and target failures are handled separately in [Troubleshooting](troubleshooting.qmd). Developer-facing details about runtime bootstrap and `get_tar_resources()` are in [Implementation conventions](implementation/implementation_conventions.html#runtime-bootstrap).
+Scheduler startup failures, resource-routing errors, and target failures are handled separately in [Troubleshooting](troubleshooting.md). Developer-facing details about runtime bootstrap and `get_tar_resources()` are in [Implementation conventions](implementation/implementation_conventions.html#runtime-bootstrap).
 
 ## Controller contract
 
@@ -1224,7 +1240,7 @@ controller_resources_tibble <- tibble::tribble(
 The table describes controller capacity for routing. A local controller does not create physical memory: its `workers` value must be low enough that concurrent jobs cannot exhaust the machine.
 
 
-<!-- source: website/troubleshooting.qmd -->
+<!-- source: website/troubleshooting.md -->
 
 # Troubleshooting
 
@@ -1317,7 +1333,7 @@ Code, configuration, input files, controller-independent global objects, or an u
 
 ## Input and metadata failures
 
-Check the contracts in the [GEM well table](reference_GEM_wells.qmd), [Donor metadata table](reference_donor_metadata.qmd), and [Aggregation configuration](reference_aggregations.qmd) references:
+Check the contracts in the [GEM well table](reference_GEM_wells.md), [Donor metadata table](reference_donor_metadata.md), and [Aggregation configuration](reference_aggregations.md) references:
 
 - `GEM_well_cellranger_arc_count_dir` contains the required `outs/` files;
 - VCF-backed demultiplexing also has `atac_possorted_bam.bam`;
@@ -1329,7 +1345,7 @@ Check the contracts in the [GEM well table](reference_GEM_wells.qmd), [Donor met
 
 If a worker does not start or no controller can satisfy a target request:
 
-1. Validate the names, column order, numeric resource values, and controller membership described in [Choose where the analysis runs](performance_distributed_computing.qmd).
+1. Validate the names, column order, numeric resource values, and controller membership described in [Choose where the analysis runs](performance_distributed_computing.md).
 2. Reload with `load_project_runtime(force = TRUE)` after edits.
 3. For scheduler controllers, inspect the scheduler output/error log and confirm queue, account, wall time, memory, CPU, module, and filesystem settings.
 4. Reduce concurrency when local workers are being killed for memory pressure.
@@ -1351,136 +1367,52 @@ Use an unqualified `targets::tar_make()` only when every active aggregation and 
 ## Part: Reference
 
 
-<!-- source: website/review_outputs.qmd -->
+<!-- source: website/review_outputs.md -->
 
-# Reading the review outputs
+# Output files and metadata
 
-This chapter explains how the review plots and tables produced by the
-steps in [Run your own analysis](main_running.qmd#steps) are constructed and
-how to read them. You do not need it to run a step.
-Open the relevant section when a plot or table is unclear, or when you want to
-adjust which metrics are shown.
+The [running guide](main_running.md#steps) lists the files to open after each
+checkpoint. Read each plot's subtitle and caption for interpretation and
+method details.
 
 ## Output folders and metric selection {#output-folders}
 
-Review plots are written under `<store>/plots/<scope>/<stage folder>/`, where
-`<store>` is the directory configured in `_targets.yaml` and the scope is a
-GEM well, a dataset, or an aggregation. Each step of [Run your own
-analysis](main_running.qmd#steps) lists the plots in its checkpoint folder.
-Rerun a step to populate its folder. Existing files in the older modality folders are
-retained; the folders identify review stages, not archived versions of
-successive runs.
+Plots live under `<store>/plots/<scope>/<checkpoint>/`. The store comes from
+`_targets.yaml`; scope is a GEM well or aggregation. Existing files are not a
+record of which targets are current: use `targets::tar_outdated()` before
+reviewing results after a configuration change.
 
-Parameter sweeps belong to checkpoints 3, 7, and 8 for GEX, ATAC, and WNN
-respectively. The GEX-only compatibility object belongs to checkpoint 3; the
-final multimodal compatibility object and peak–gene correlation plots belong to
-checkpoint 8. Optional modules keep their own output directories.
+`QC_metric_manifest.tsv` selects metrics, display labels and plotting quantiles.
+`do_plot = FALSE` hides a metric; plotting quantiles change the displayed range,
+not the cells retained by the pipeline. Filtering is configured separately in
+`cfg_GEM_wells.tsv` and `cfg_aggregations.yaml`.
 
-`QC_metric_manifest.tsv` controls metric selection, display labels and plotting
-quantiles for the per-aggregation GEM-well comparisons, GEX cell-type/cluster
-violins and peak-QC violins. Its `available_from_checkpoint` column uses names
-from `QC_checkpoint_manifest.tsv`. These targets share one helper and write
-one file per metric in a target-named subfolder, with the metric's display name
-as the title and its ID and description as the subtitle. GEM-well comparisons
-retain their configured cutoff overlays; cluster and cell-type plots use the
-same presentation without GEM-well-specific overlays. Input metrics are
-available at checkpoint 1, optional cell-cycle scores at 2, GEX doublet scores
-at 3, consensus-peak metrics at 4, ATAC doublet scores at 7 and WNN weights at
-8. Availability identifies the earliest review checkpoint; a plot still
-requires the metric in its input metadata. The GEX violins include enabled
-metrics available by checkpoint 3; the peak-QC violins show enabled metrics
-first available at checkpoint 4. `do_plot = FALSE` hides a metric in these
-plots. Blank `plot_min_q` and `plot_max_q` retain the full finite range;
-specified quantiles trim the displayed distribution within each group. These
-settings never filter pipeline cells or replace the configured QC exclusion
-rules.
+GEX, ATAC and WNN parameter sweeps belong to checkpoints 3, 7 and 8.
+The GEX compatibility object belongs to checkpoint 3 and the multimodal object
+to checkpoint 8. Peak–gene correlation is a separate optional module.
 
-## Cell retention tables and flow plots {#cell-retention}
+## Cell retention tables {#cell-retention}
 
-Retention tables accompany the cell-selection boundaries:
-`cell_retention_tibble.GEX_input` (checkpoint 1), `cell_retention_tibble.GEX`
-(3), `cell_retention_tibble.ATAC_input` (5), `cell_retention_tibble.ATAC` (7),
-and `cell_retention_tibble.WNN` (8). Append `.my_aggregation` to these stems
-when using `tar_read()`. Each includes every configured GEM well, including
-wells with zero retained cells. Tables are cumulative: each appends its stage
-to the preceding table, with a `stage` column containing the canonical
-`checkpoint:1_pre-aggregation-QC`-style label. The WNN table therefore contains
-all five stages. There is one row per GEM well and action, identified by
-`discard_action` and `action_order`. Within a stage, actions are counted in that
-order: `input_cells` is the population remaining before the action,
-`excluded_cells` is its additional loss, and `retained_cells` is the population
-remaining afterwards. `retained_fraction` uses the action's input as its
-denominator; a well with zero input has an undefined (`NA`) fraction. Do not add
-these percentages. The final action's retained count matches the next stage's
-first input per GEM well; the named exclusions must reproduce the retained
-barcode set exactly.
+Append `.my_aggregation` to these target names when reading them with
+`targets::tar_read()`:
 
-Each table feeds a `cell_retention_flow_plot` target at its numbered checkpoint.
-These plots sum counts across GEM wells and show count-proportional ribbons for
-nuclei continuing or being discarded, from Cell Ranger-called input through the
-current stage. Discarded branches terminate at their exclusion stage; labels
-show each discarding action and its excluded count, with canonical checkpoint
-labels on the x-axis and the remaining population below. GEX and ATAC separate
-small-cluster removal, called doublets, and additional cells removed with
-high-doublet clusters. Overlap is attributed once in that order, so the branches
-sum to the stage loss; this is not a claim of independent filter effects.
-Per-well and peak QC each retain one combined discard branch; their UpSet plots
-show the individual exclusion rules and overlaps. Zero-loss actions remain in
-the tables but have no discard branch.
+| Target | Checkpoint |
+|---|---|
+| `cell_retention_tibble.GEX_input` | 1 |
+| `cell_retention_tibble.GEX` | 3 |
+| `cell_retention_tibble.ATAC_input` | 5 |
+| `cell_retention_tibble.ATAC` | 7 |
+| `cell_retention_tibble.WNN` | 8 |
+
+Tables accumulate stages and retain wells with zero surviving cells. Rows identify
+an exclusion action and its order, input count, excluded count and retained count.
 
 ## Cluster numbering {#cluster-numbering}
 
-GEX, ATAC and WNN Leiden clusters receive size-ranked IDs: cluster 1 is the
-largest, cluster 2 the next largest, and so on. Equal-size clusters are ordered
-by their original cluster ID. Numbering happens before minimum-cluster-size
-filtering; subsequent QC preserves the assigned IDs rather than renumbering
-survivors. IDs therefore describe size at clustering time and may have gaps after
-later filtering. Existing stored results adopt this convention when their
-clustering targets are rebuilt.
+Leiden clusters receive size-ranked IDs before minimum-size filtering. Filtering
+does not renumber survivors, so IDs can have gaps.
 
-## Marker and module-score dot plots {#marker-dot-plots}
-
-GEX marker-expression and ATAC marker-activity dot plots group positive genes
-under their configured cell-type marker sets. Unsigned genes and entries ending
-in `+` are positive; entries ending in `-` are omitted from these gene-level
-plots. Shared positive genes appear under every set containing them, with the
-same values in each occurrence. Facets run left-to-right in the same order as
-matching cell-type rows run top-to-bottom; sets without an observed matching
-cell type follow on the right. Every gene is shown across all observed rows.
-Module-score dot plots instead order marker sets by their adjusted-score
-profiles and arrange matching rows accordingly, as described below.
-Gene-level dot colors show mean Z-scores on a diverging scale centred at zero.
-Faint boxes highlight each marker set's matching cell-type row as a configured
-expected match. These are visual guides, not independent validation of
-marker-derived cell-type labels.
-
-At GEX checkpoint 3, `markers_by_cell_type_dot_plot` and
-`module_scores_by_cell_type_dot_plot` provide cell-type overviews.
-`markers_by_cluster_dot_plot` and `module_scores_by_cluster_dot_plot` keep each
-named cluster separate, including clusters labelled `Unassigned`. All four use
-the annotation-stage cells before GEX doublet filtering, rather than the retained
-post-QC population. The cluster plots use `PCA_harmony_SNN_cluster_named` and
-grow vertically with the number of clusters. Both families share titles,
-interpretation guidance, captions and expected-match shading. Rows are grouped
-by assigned cell type in marker-set order, with clusters kept together within
-each type and unmatched rows last, so shaded matches form a descending
-staircase. Unassigned rows receive no expected-match highlight. Marker-set facet
-labels sit below the individual gene names in the expression plots. Read down
-score columns for broad or weak signals and compare columns for similar
-patterns; inspect the individual marker genes for coherent evidence rather than
-a score driven by one gene. Module-dot area measures the percentage of cells
-with scores above zero, not above matched background. Module colours use the
-cached cluster mean UCell minus its matched control 95th percentile, with a
-symmetric diverging scale centred at zero and negative values retained. Both
-module views use one marker-set column order: Euclidean distance and Ward
-(`ward.D2`) clustering across the unstandardized cluster-adjusted profiles, with
-equal weight per cluster. Rows follow the assigned cell types in that order to
-preserve the staircase. Cell-type colours are cell-count-weighted averages of
-these cluster-adjusted scores, not newly estimated pooled backgrounds.
-Marker-expression plots retain their configured marker-set ordering and
-per-gene scaled expression colours; they are not distance ordered.
-
-## Cluster annotation and its diagnostics {#cluster-annotation}
+## Cluster annotation {#cluster-annotation}
 
 Cluster labelling uses adjusted-score advantage over matched random controls.
 Marker lists accept unsigned genes, positive `+` suffixes and negative `-` suffixes.
@@ -1501,120 +1433,20 @@ not included. The former module-score labeller and its
 setting and `aggregation_cluster_annotation_method` from older configuration
 files; there is now one annotation method. Signed marker panels remain supported.
 
-### Diagnostic tables
+Annotation exports include `clusters.tsv`, `marker_evidence.tsv`,
+`control_gene_matching.tsv` and, where eligible, `GEM_well_agreement.tsv`.
+The `cluster_UCell_evidence` targets cache scoring separately from the
+threshold-dependent annotation. `marker_set_UCell_summary.3_GEX_QC` exports
+`marker_sets.tsv` and `method.txt` before GEX doublet filtering.
 
-Review `cluster_UCell_diagnostics` under checkpoints `3_GEX_QC`, `7_ATAC_QC`
-and `8_multimodal_QC` in the aggregation's structured `files` directory.
-`clusters.tsv` contains decisions, candidate/alternative labels and stability;
-`marker_evidence.tsv` contains all label comparisons;
-`control_gene_matching.tsv` reveals imperfect abundance/detection matches.
-`GEM_well_agreement.tsv` is produced when a cluster has at least 25 cells in a
-well. Marker detection, marker-deletion robustness, cell-deletion stability and
-well agreement are diagnostic only; none vetoes a sufficient advantage.
-Control tail scores are descriptive comparisons, not calibrated identity
-probabilities. ATAC/WNN labels still come from GEX expression and provide no
-independent cross-modality validation. Abstaining clusters retain separate
-scDblFinder groups so unrelated cells are not pooled into one artificial unknown
-population.
+## Further methods
 
-### Advantage plots
-
-`cluster_UCell_advantage_plots` at checkpoints 3, 7 and 8 shows all labels as
-adjusted-score bars, with six named-cluster facets per page and shared axes
-across pages. The solid zero line is matched background. Each facet's dashed
-line is its best adjusted score minus the configured minimum advantage.
-Assignment requires that line to be at or above zero, with no competing bar
-above it; exact ties remain unassigned. Increasing the threshold moves the line
-downward and makes assignment stricter. Non-leading negative scores are displayed
-at zero, while negative leading scores and cutoff lines remain visible.
-Assignments always use the original scores. Candidate and competing bars are
-highlighted without bracket annotations.
-
-### Cached evidence and marker-set summary
-
-The `cluster_UCell_evidence` targets cache score and perturbation evidence
-separately from the threshold-dependent annotation targets. Changing only the
-minimum advantage reuses these scores; it does not rerank counts. Downstream
-metadata and analyses can still need rebuilding when the resulting labels change.
-
-`marker_set_UCell_summary.3_GEX_QC` exports `marker_sets.tsv` and an interpretation
-guide, `method.txt`, using the GEX annotation evidence before doublet filtering.
-It contains one row per marker set: marker count, clusters above background,
-clusters meeting the background advantage threshold, leading and assigned
-clusters, maximum adjusted score, and best advantage over background and all
-competitors. The closest competitor is the strongest other set in the cluster
-with the best advantage; it is not a correlation-based partner. Original negative
-scores are retained. This distinguishes unsupported sets from supported sets
-that lose to competitors, without treating absent populations or correlated
-signals as automatic evidence of faulty markers. Exact ties can nominate a
-candidate but never assign it. The dot plots and summary use the same
-pre-filtering annotation population and reuse the same adjusted-score evidence.
-
-## Marker volcano plots {#marker-volcano-plots}
-
-`cluster_marker_volcano_plots.3_GEX_QC.my_aggregation` writes one file per
-cell type containing multiple accepted GEX clusters. For three or more
-clusters, each facet compares one cluster with the pooled remaining clusters
-within that cell type. Two clusters produce one unfaceted, explicitly directed
-comparison. BH correction is applied across genes separately for each contrast,
-as stated in the subtitles. Single-cluster cell types are omitted here because
-their markers are already represented in
-`cell_type_marker_volcano_plots.3_GEX_QC.my_aggregation`, which compares each
-cell type with the rest of the accepted GEX cells.
-
-## Confusion matrices {#confusion-matrices}
-
-`confusion_matrices_plots.7_ATAC_QC` writes paired RNA-versus-ATAC SNN cluster
-and cell-type matrices to `7_ATAC_QC/confusion_matrices_plots.png`. It uses accepted
-ATAC cells and does not require WNN integration. At checkpoint 8,
-`confusion_matrices_plots.8_multimodal_QC` retains a named list containing
-`RNA_vs_WNN` and `ATAC_vs_WNN`; each file compares both SNN clusters and cell
-types using the final WNN cell set. Matrix colors are normalized within each
-source row, with cell counts shown in the tiles.
-Both axes use the same cell-type order, with cluster number prefixes sorted
-numerically within each type. Thick outlines mark blocks comparing the same
-annotated cell type; the fill continues to show row-normalized cell overlap.
-Each pair shares one explanatory subtitle and legend. Wider cluster panels,
-density-adjusted count text, and contrasting labels keep dense matrices legible;
-counts of at least 1,000 use rounded `k` notation.
-
-## Motif-family labels {#motif-family-labels}
-
-Motif-family heatmaps, continuous UMAPs, marker volcanoes, and differential
-motif-accessibility volcanoes use readable labels such as
-`FOX / MEF2-rich · 007`. These describe sequence-similarity families, which can
-contain several biological TF families; they do not identify activity of one
-specific TF. The numeric suffix preserves the original `cluster_007` identity.
-The shared lookup in
-`resources/JASPAR2026_vertebrate_motif_family_annotations.tsv` contains all 233
-labels and their complete TF members, motif IDs, and classes. Labels can be
-edited without changing motif scanning or chromVAR scores.
-
-## Peak–gene links {#peak-gene-links}
-
-Peak–gene links are candidate regulatory relationships. Cells are aggregated
-within donor and ATAC-defined state, without reusing a cell across aggregates.
-The score adjusts for donor and RNA/ATAC library depth, while retaining
-variation between states. A single donor can contribute: eligibility depends
-on usable aggregates and feature variation, with at least 10 aggregates and
-5 residual degrees of freedom required. Non-promoter peaks within the target
-gene body remain eligible, including potential intronic enhancers.
-
-The reported p-values use an approximate heteroskedasticity-robust regression
-test (HC3), followed by BH correction across tested pairs within each cell
-group. These assess association among aggregates **conditional on the sampled
-donors**, assuming independent errors after adjustment; they do not establish
-replication across people or causal regulation. Candidate links require a
-positive adjusted correlation of at least 0.15 and conditional FDR below 0.05.
-Inspect `n_informative_donors`, `n_positive_donors`,
-`donor_direction_agreement`, and `max_donor_covariance_fraction` alongside the
-score. An informative donor has at least three aggregates and residual
-variation in both features; the covariance fraction shows how much one donor
-contributes to the total absolute cross-product. The scatterplot shows the
-same donor/depth-adjusted values used by the score, with donor-labelled points.
+See [algorithm validation](implementation/algorithm_validation.html) for reference
+comparisons and deviations, and the [peak–gene module](downstream_peak_gene_correlation.md)
+for its model, support filters and output paths.
 
 
-<!-- source: website/reference_GEM_wells.qmd -->
+<!-- source: website/reference_GEM_wells.md -->
 
 # GEM well table
 
@@ -1625,7 +1457,7 @@ output together with its donor assignment, optional inputs, and
 pre-aggregation QC filters. Aggregations refer to rows by `GEM_well_ID`. Edit
 the committed file directly; the demo rows can stay as worked examples. This
 page describes the columns. When to edit them, and how to review the effect,
-is step 1 of [Run your own analysis](main_running.qmd#steps).
+is step 1 of [Run your own analysis](main_running.md#steps).
 
 ## Minimal row
 
@@ -1653,9 +1485,8 @@ vertical view is a reading aid; the saved TSV has one GEM well per row.
 ## Identity and grouping
 
 `GEM_well_ID` must be unique and is used in target names, output folders, and
-`aggregation_GEM_well_IDs`. `GEM_well_dataset` groups GEM wells that should be
-compared with each other during pre-aggregation QC; it is a reporting group,
-not the donor or the biological design.
+`aggregation_GEM_well_IDs`. `GEM_well_dataset` is a reporting label, not the donor or the biological
+design. Cross-well QC comparisons follow the wells selected for an aggregation.
 
 ## Input files
 
@@ -1670,7 +1501,9 @@ not the donor or the biological design.
 `-- per_barcode_metrics.csv
 ```
 
-multiomeR identifies the reference from the FASTA/GTF hashes in `outs/atac_fragments.tsv.gz` and selects the matching `reference.json` under `reference_metadata/`. For another reference, add its JSON there. The fragment header must be intact and exactly one JSON must match. All GEM wells in an aggregation must use the same reference.
+multiomeR identifies the reference from the FASTA/GTF hashes in `outs/atac_fragments.tsv.gz` and selects the matching `reference.json` under `reference_metadata/`. For another reference, add its JSON there. The fragment header must be intact and exactly one JSON must match. All GEM wells in an aggregation must use the same reference. Deployments that
+require an explicit `GEM_well_cellranger_arc_reference_json` column must supply
+that path for each well; follow the checkout README for its input contract.
 
 `GEM_well_add_cellbender` set to `TRUE` replaces the Cell Ranger GEX counts
 with a CellBender H5 file produced outside multiomeR, given in
@@ -1681,7 +1514,7 @@ with a CellBender H5 file produced outside multiomeR, given in
 `GEM_well_n_donors` states how many donors the GEM well contains. For a
 non-multiplexed well, set it to `1` and put the donor's identifier in
 `GEM_well_donor_id`; every called nucleus receives that ID, which must match a
-`donor_id` row in the [donor metadata table](reference_donor_metadata.qmd).
+`donor_id` row in the [donor metadata table](reference_donor_metadata.md).
 
 For a multiplexed well, supply the donors' genotypes in
 `GEM_well_donors_VCF_file`. `atac_possorted_bam.bam` is then also required in
@@ -1699,7 +1532,7 @@ TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250
 Expressions are evaluated individually against per-barcode metadata,
 preserving their order and their separate exclusion reasons. An empty field
 (`NA`) applies no pre-aggregation QC filters. Leave it empty for a new GEM well
-until step 1 of [Run your own analysis](main_running.qmd#steps) has shown its
+until step 1 of [Run your own analysis](main_running.md#steps) has shown its
 distributions; do not treat the demo's numerical cutoffs as recommendations for
 your tissue.
 
@@ -1720,7 +1553,7 @@ Add library-, run-, or batch-specific variables as further columns with a
 `GEM_well_` prefix, such as `GEM_well_multiplex_batch` or
 `GEM_well_cell_sorting`. They are joined to the cell metadata and can be used
 as Harmony covariates or plotting variables. Donor-level phenotypes belong in
-the [donor metadata table](reference_donor_metadata.qmd) instead. Apart from
+the [donor metadata table](reference_donor_metadata.md) instead. Apart from
 their key columns, the two tables must not reuse column names.
 
 ## Column dictionary
@@ -1737,15 +1570,15 @@ metadata columns in the public configuration remain available as examples.
 [Generated Quarto chunk omitted: `emit_GEM_well_demo_table( GEM_well_config_file = "website/data/demo_GEM_wells.tsv", dictionary_file = "website/data/G...`]
 
 
-<!-- source: website/reference_donor_metadata.qmd -->
+<!-- source: website/reference_donor_metadata.md -->
 
 # Donor metadata table
 
 The donor metadata table is a TSV with one unique row per `donor_id`. Each
 aggregation points to one such file through
 `aggregation_donor_id_metadata_tsv` in the [aggregation
-configuration](reference_aggregations.qmd). It is created in step 2 of [Run
-your own analysis](main_running.qmd#steps).
+configuration](reference_aggregations.md). It is created in step 2 of [Run
+your own analysis](main_running.md#steps).
 
 ## Minimal table
 
@@ -1759,7 +1592,7 @@ donor_1	control
 Every nucleus receives a `donor_id` from its GEM well: the configured
 `GEM_well_donor_id` for a non-multiplexed well, or a genotype-based assignment
 for a well with a configured VCF. Each of those IDs must appear exactly once in
-this table; see the [GEM well table](reference_GEM_wells.qmd#donors).
+this table; see the [GEM well table](reference_GEM_wells.md#donors).
 
 ## Which variables belong here
 
@@ -1771,14 +1604,14 @@ their targets run, not when the manifest is built.
 
 ## Extended table for differential analyses
 
-The [differential analyses](downstream_differential_analyses.qmd) module can
+The [differential analyses](downstream_differential_analyses.md) module can
 read additional donor-level model variables from a second table given in
 `differential_analyses_extended_donor_id_metadata_tsv`. It must keep the same
 unique `donor_id` key. If it is not set, the module inherits the aggregation's
 donor table.
 
 
-<!-- source: website/reference_aggregations.qmd -->
+<!-- source: website/reference_aggregations.md -->
 
 # Aggregation configuration
 
@@ -1791,7 +1624,7 @@ The mouse and ENCODE validation examples are inactive by default. Edit the file
 directly; the demo entries can stay as worked examples. This page describes the
 entry structure and lists every parameter. When to set each parameter, and how
 to review the effect, is given step by step in [Run your own
-analysis](main_running.qmd#steps).
+analysis](main_running.md#steps).
 
 ## Minimal entry
 
@@ -1812,10 +1645,10 @@ the entry only when you want to change its default.
 ## Required keys
 
 - `aggregation_GEM_well_IDs`: the `GEM_well_ID` values to combine. Each must be
-  an active row of the [GEM well table](reference_GEM_wells.qmd), and all must
+  an active row of the [GEM well table](reference_GEM_wells.md), and all must
   use the same Cell Ranger reference.
 - `aggregation_donor_id_metadata_tsv`: the [donor metadata
-  table](reference_donor_metadata.qmd) for these GEM wells.
+  table](reference_donor_metadata.md) for these GEM wells.
 - `aggregation_GEX_marker_genes`: a named list of marker genes per expected
   cell type, used for cluster annotation and marker plots.
 - `is_active`: whether targets are constructed for the aggregation. Deactivate
@@ -1829,7 +1662,7 @@ reference. A gene listed without a suffix or with a `+` suffix is a positive
 marker; a `-` suffix marks a gene that should be absent. The optional
 `aggregation_ATAC_marker_TFs` list names transcription factors per cell type for
 the motif-activity plots. How the annotation uses these lists is described in
-[Reading the review outputs](review_outputs.qmd#cluster-annotation).
+[Output files and metadata](review_outputs.md#cluster-annotation).
 
 ## QC filters after peak calling
 
@@ -1844,7 +1677,7 @@ aggregation_QC_exclude_list_combined_object:
 ```
 
 Omit it or set it to `null` until step 5 of [Run your own
-analysis](main_running.qmd#steps) has shown the distributions.
+analysis](main_running.md#steps) has shown the distributions.
 
 ## Optional modules
 
@@ -1857,14 +1690,14 @@ your_aggregation:
   modules: [differential_analyses]
 ```
 
-See [Differential analyses](downstream_differential_analyses.qmd) and
-[Genetic enrichment](downstream_genetic_enrichment.qmd) for the module
+See [Differential analyses](downstream_differential_analyses.md) and
+[Genetic enrichment](downstream_genetic_enrichment.md) for the module
 entries and their parameters.
 
 ## Parameter reference {#parameter-reference}
 
 The searchable overview below is generated from `cfg_pipeline_parameters.tsv`,
-the same manifest used for runtime defaults and validation. Search by name or
+using a shared snapshot of the public runtime defaults and validation schema. Search by name or
 purpose, or choose a topic. Defaults are visible beside each parameter; open a
 row for its type and example. See the [committed
 example](https://github.com/koefoeden/multiomeR/blob/main/configuration/cfg_aggregations.yaml)
@@ -1884,7 +1717,7 @@ for a complete configuration.
 # Book: multiomeR Implementation
 
 
-<!-- source: website/implementation/index.qmd -->
+<!-- source: website/implementation/index.md -->
 
 # Introduction
 
@@ -1899,12 +1732,12 @@ Use this book when you need to trace a configuration value into mapped targets, 
 
 For a first implementation pass:
 
-1. Read [Reading the graph views](graph_methodology.qmd) and follow its configuration-to-target trace.
-2. Open the [main pipeline](implementation_main.qmd) graph for the modality or checkpoint you plan to change.
-3. Use [Implementation conventions](implementation_conventions.qmd) to understand the relevant manifest, mapping, symbol, tag, and runtime contracts.
-4. Read [Background and design philosophy](background_philosophy.qmd) when you need the rationale for the editable-workflow design.
+1. Read [Reading the graph views](graph_methodology.md) and follow its configuration-to-target trace.
+2. Open the [main pipeline](implementation_main.md) graph for the modality or checkpoint you plan to change.
+3. Use [Implementation conventions](implementation_conventions.md) to understand the relevant manifest, mapping, symbol, tag, and runtime contracts.
+4. Read [Background and design philosophy](background_philosophy.md) when you need the rationale for the editable-workflow design.
 
-The [differential analyses](implementation_differential_analyses.qmd) and [genetic enrichment](implementation_genetic_enrichment.qmd) chapters cover the optional module graphs.
+The [differential analyses](implementation_differential_analyses.md) and [genetic enrichment](implementation_genetic_enrichment.md) chapters cover the optional module graphs.
 
 ## Common entry points
 
@@ -1923,7 +1756,7 @@ If you are trying to run multiomeR rather than modify it, start with the [main m
 ## Part: Orientation
 
 
-<!-- source: website/implementation/graph_methodology.qmd -->
+<!-- source: website/implementation/graph_methodology.md -->
 
 # Reading the graph views
 
@@ -1958,7 +1791,7 @@ targets::tar_manifest(
 )
 ```
 
-This trace connects the [parameter manifest](implementation_conventions.qmd#parameter-manifest), [mapping tibbles](implementation_conventions.qmd#mapping-tibbles), and [target-symbol columns](implementation_conventions.qmd#target-symbol-columns) before the larger diagrams introduce many nodes at once.
+This trace connects the [parameter manifest](implementation_conventions.md#parameter-manifest), [mapping tibbles](implementation_conventions.md#mapping-tibbles), and [target-symbol columns](implementation_conventions.md#target-symbol-columns) before the larger diagrams introduce many nodes at once.
 
 ## What the diagrams omit
 
@@ -1967,7 +1800,7 @@ The curated graph views are orientation aids, not alternate target definitions. 
 [Mermaid graph omitted; source: `website/figures/standard_node_color_legend.mmd`]
 
 
-<!-- source: website/implementation/implementation_conventions.qmd -->
+<!-- source: website/implementation/implementation_conventions.md -->
 
 # Implementation conventions
 
@@ -2076,7 +1909,7 @@ named_list  list with non-empty names
 
 The `data_type` column checks the R type after YAML parsing. `path` and `regex` are currently character-like schema labels; the validator does not check file existence or compile regular expressions. `allowed_values` is a comma-separated allow-list checked after coercing resolved values to character.
 
-The website renders parameter tables from the same manifest rather than maintaining a second documentation schema. This keeps the user-facing configuration reference tied to the runtime validation contract.
+The website renders parameter tables from a generated snapshot of the public runtime manifest. Refresh that snapshot with the shared documentation inputs when public defaults change; private configuration is never used for these tables.
 
 Module-specific YAML uses the same mechanism. Aggregations opt into modules through the aggregation config, and each enabled aggregation must have a matching module config row. Some cross-scope fallbacks are still implemented by target code rather than by manifest inheritance; for example, a module parameter may intentionally allow `NULL` and then fall back to an aggregation-level path during module setup.
 
@@ -2248,7 +2081,7 @@ Renamed targets rebuild on the first module run; existing core target names
 and numerical analysis defaults are unchanged.
 
 
-<!-- source: website/implementation/algorithm_validation.qmd -->
+<!-- source: website/implementation/algorithm_validation.md -->
 
 # Algorithmic implementations, deviations and validation
 
@@ -2263,7 +2096,7 @@ The evidence labels used below are intentionally narrow:
 
 Passing these fixtures does not validate every dataset, parameter regime, approximate-neighbor realization, biological interpretation, or downstream target. The test suite distinguishes fast unit tests for isolated data contracts from slower parity and integration tests that load the project runtime or compare external reference implementations. The [CI workflow](https://github.com/koefoeden/multiomeR/blob/main/.github/workflows/algorithm-validation.yaml) runs the complete suite when tests, relevant helpers, or the Pixi environment change.
 
-Run the complete suite with `pixi run test`. The narrower `pixi run test-algorithm-validation` task runs only the slow UCell, AMULET, WNN, and SCAVENGE parity and acceptance tests.
+Run the complete suite with `pixi run --use-environment-activation-cache test`. The narrower `pixi run --use-environment-activation-cache test-algorithm-validation` task runs only the slow UCell, AMULET, WNN, and SCAVENGE parity and acceptance tests.
 
 | Implementation | Evidence status | Maintained reference | Current fixed-fixture result |
 |---|---|---|---|
@@ -2345,7 +2178,7 @@ The UCell 2.14.0 reference call with imputed missing genes can emit non-fatal R 
 **Status and rerun.** Reference-parity tested against UCell 2.14.0 with exact equality; passing in the current locked environment.
 
 ```bash
-pixi run test-scoring-parity
+pixi run --use-environment-activation-cache test-scoring-parity
 ```
 
 ## BPCells-native AMULET
@@ -2365,8 +2198,23 @@ pixi run test-scoring-parity
 **Status and rerun.** Reference-parity tested against scDblFinder 1.24.0 with exact equality; passing in the current locked environment.
 
 ```bash
-pixi run test-amulet-parity
+pixi run --use-environment-activation-cache test-amulet-parity
 ```
+
+## BPCells-backed ATAC scDblFinder feature aggregation
+
+
+**Reference algorithm.** [`scDblFinder::scDblFinder()`](https://bioconductor.org/packages/release/bioc/html/scDblFinder.html) can aggregate a high-dimensional ATAC count matrix before artificial-doublet classification. With `aggregateFeatures = TRUE`, scDblFinder performs its own TF-IDF-based feature clustering and sums peaks into the requested number of feature groups.
+
+**Reason for adaptation.** Materializing and transforming every peak within each GEM well can exhaust worker memory before scDblFinder reaches classification. The pipeline instead derives 50 feature groups once from the aggregation's global LSI loadings, sums the disk-backed peak matrix with BPCells, and passes the compact matrix to scDblFinder with `aggregateFeatures = FALSE`.
+
+**Behavior preserved.** This is not a reimplementation of scDblFinder's artificial-doublet classifier. Both paths use scDblFinder 1.24.0 with the same GEM-well barcodes, supplied biological cluster labels, `dbr.sd = 1`, 50 aggregated features, `processing = "normFeatures"`, serial BiocParallel execution, and returned score/class columns. Only the upstream construction of the 50-feature matrix changes.
+
+**Deliberate deviations and consequences.** Global LSI-derived groups replace scDblFinder's per-GEM-well TF-IDF feature groups. The global groups are reusable across GEM wells and let BPCells aggregate before sparse-matrix materialization, but the resulting feature matrix is not expected to equal scDblFinder's internal aggregation. Doublet scores and calls can therefore differ; agreement must be evaluated at the final score and call level; exact parity is not expected.
+
+**Implementation and wiring.** [`get_feature_groups_from_LSI_loadings()` and `aggregate_BPCells_rows_by_group()`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_GEX_helpers.R) construct the compact feature matrix. [`extra_targets/ATAC_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/ATAC_targets.R) computes the groups and aggregation once, then maps the unchanged scDblFinder classifier over GEM wells. The GEX path also uses the per-GEM-well wrapper but calls `scDblFinder::scDblFinder()` directly on GEX counts; it is a memory-bounding wrapper, not another algorithm reimplementation.
+
+**Validation scope.** The public reference-parity fixtures do not establish equivalence for this alternative feature-aggregation path.
 
 ## Native weighted nearest neighbors
 
@@ -2385,7 +2233,7 @@ pixi run test-amulet-parity
 **Status and rerun.** The small-SNN default is based on the reference-similarity pilot above; post-migration validation remains pending. This does not assert exact equality of selected neighbours, SNN weights, clustering, or UMAP.
 
 ```bash
-pixi run test-algorithm-validation
+pixi run --use-environment-activation-cache test-algorithm-validation
 ```
 
 ## Sparse SCAVENGE propagation and significance
@@ -2411,22 +2259,22 @@ with a maximum absolute tolerance of 1e-10; the current delta is 8.61e-13. Secon
 **Status and rerun.** Random-walk propagation is algorithmically derived against the closed form. Seed selection, binary propagation, transformed scores, sequential permutation sampling, streamed exceedance counts, empirical P-values, and significant-cell calls are reference-parity tested against the pinned source calculation; cluster summaries are documented pipeline extensions. This does not establish parity of mutual-kNN versus pipeline graph construction, chromVAR inputs, or biological interpretation.
 
 ```bash
-pixi run test-algorithm-validation
+pixi run --use-environment-activation-cache test-algorithm-validation
 ```
 
 Run the complete maintained test suite, including the fast helper contracts, with:
 
 ```bash
-pixi run test
+pixi run --use-environment-activation-cache test
 ```
 
 
 ## Part: Background
 
 
-<!-- source: website/implementation/background_philosophy.qmd -->
+<!-- source: website/implementation/background_philosophy.md -->
 
-<!-- begin include: website/background_philosophy.qmd -->
+<!-- begin include: website/background_philosophy.md -->
 
 # Why an editable workflow?
 
@@ -2458,19 +2306,19 @@ for multiomeR examples.
 
 Separate targets make intermediate tables, matrices, and files available for
 inspection. Seurat/Signac exports provide another way to explore completed
-results. The [implementation conventions](implementation_conventions.qmd)
+results. The [implementation conventions](implementation_conventions.md)
 explain where to change parameters, helpers, and target definitions; the
 [user manual](../) covers running an existing configuration.
 
-<!-- end include: website/background_philosophy.qmd -->
+<!-- end include: website/background_philosophy.md -->
 
 
 ## Part: Target graph views
 
 
-<!-- source: website/implementation/implementation_main.qmd -->
+<!-- source: website/implementation/implementation_main.md -->
 
-<!-- begin include: website/implementation_main.qmd -->
+<!-- begin include: website/implementation_main.md -->
 
 # Main pipeline
 
@@ -2512,16 +2360,16 @@ This view covers ATAC QC, peak calling, consensus peak construction, chromatin a
 
 This view covers GEX and ATAC embedding handoffs, WNN integration, modality weights, cluster comparison, and integrated metadata outputs.
 
-The native implementation, its differences from Seurat, and the maintained similarity thresholds are recorded in [Algorithmic implementations, deviations and validation](algorithm_validation.qmd#native-weighted-nearest-neighbors).
+The native implementation, its differences from Seurat, and the maintained similarity thresholds are recorded in [Algorithmic implementations, deviations and validation](algorithm_validation.md#native-weighted-nearest-neighbors).
 
 [Mermaid graph omitted; source: `website/figures/human_curated/WNN_v2.mmd`]
 
-<!-- end include: website/implementation_main.qmd -->
+<!-- end include: website/implementation_main.md -->
 
 
-<!-- source: website/implementation/implementation_differential_analyses.qmd -->
+<!-- source: website/implementation/implementation_differential_analyses.md -->
 
-<!-- begin include: website/implementation_differential_analyses.qmd -->
+<!-- begin include: website/implementation_differential_analyses.md -->
 
 # Differential analyses
 
@@ -2549,12 +2397,12 @@ Each gene-set collection is tested independently with `cameraPR`, `inter.gene.co
 
 For each aggregation, the module retains its own file and full-tibble targets, then projects a canonical analysis view containing only donors in that aggregation and columns required by its configured models and composition plots. Rows are ordered by `donor_id` and non-key columns by name. Changes to unused columns, out-of-aggregation donors, or source row and column order therefore stop at this inexpensive projection boundary.
 
-<!-- end include: website/implementation_differential_analyses.qmd -->
+<!-- end include: website/implementation_differential_analyses.md -->
 
 
-<!-- source: website/implementation/implementation_genetic_enrichment.qmd -->
+<!-- source: website/implementation/implementation_genetic_enrichment.md -->
 
-<!-- begin include: website/implementation_genetic_enrichment.qmd -->
+<!-- begin include: website/implementation_genetic_enrichment.md -->
 
 # Genetic enrichment
 
@@ -2568,15 +2416,17 @@ The main target fragments live in `setup_targets.R`, `gchromVAR_targets.R`, `SCA
 
 This view covers the configured GWAS inputs, single-nucleus enrichment state, graph propagation, and downstream trait summaries. Additional cell-type contribution and locus-attribution branches may be pruned from this compact orientation view; use the manifest for the complete graph.
 
-The sparse SCAVENGE reimplementation, deliberate graph and permutation differences, and validation evidence are recorded in [Algorithmic implementations, deviations and validation](algorithm_validation.qmd#sparse-scavenge-propagation-and-significance).
+The sparse SCAVENGE reimplementation, deliberate graph and permutation differences, and validation evidence are recorded in [Algorithmic implementations, deviations and validation](algorithm_validation.md#sparse-scavenge-propagation-and-significance).
 
 [Mermaid graph omitted; source: `website/figures/human_curated/genetic_enrichment_single_nucleus_v2.mmd`]
 
-<!-- end include: website/implementation_genetic_enrichment.qmd -->
+<!-- end include: website/implementation_genetic_enrichment.md -->
 
 
-# Orphaned QMD Pages
+# Orphaned Markdown Pages
 
-Tracked QMD files not reached from the Quarto book graph or include graph.
+Tracked Markdown files not reached from the Quarto book graph or include graph.
 
-- `website/helpers/_targets_graph_snippet.qmd`
+- `website/data/README.md`
+- `website/figures/human_curated/README.md`
+- `website/helpers/_targets_graph_snippet.md`

@@ -11,7 +11,7 @@ tracked here. A missing home-level file is normal.
 - Start with `website/multiomeR-manual-llm.md` when compact, repository-wide
   documentation context is useful. It combines the user and implementation
   books in authored order and retains source-file provenance comments.
-- The canonical documentation sources are the Quarto files under `website/`
+- The canonical documentation sources are the Markdown files under `website/`
   and `website/implementation/`; the LLM-oriented Markdown file is generated.
 - Use `.github/CONTRIBUTING.md` for contribution scope and validation guidance.
 
@@ -19,10 +19,19 @@ After changing either documentation book, render both books and refresh the
 LLM-oriented export:
 
 ```bash
-pixi run --use-environment-activation-cache quarto render website
-pixi run --use-environment-activation-cache quarto render website/implementation
+pixi run --use-environment-activation-cache -e dev render-website
 pixi run --use-environment-activation-cache -e dev export-website-llm-markdown
 ```
+
+The complete `website/` tree and `dev/render_website.py`,
+`dev/export_website_llm_markdown.py`, and `dev/refresh_website_inputs.py` are shared
+public documentation and must remain identical in both repositories. Keep
+private setup and benchmark notes in repository-local guides outside `website/`.
+Use Configure → Run → Review with output-file trees; interpretation belongs in
+the plots. Render from the shared public-default snapshot and regenerate graphs
+from an isolated public configuration, never the selected personal analysis.
+See `website/data/README.md` for refresh commands. Check both trees for equality
+and validate both renders before publishing a shared documentation change.
 
 ## Repository-specific agent workflows
 

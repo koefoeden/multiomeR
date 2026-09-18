@@ -12,27 +12,27 @@ book:
   sidebar:
     collapse-level: 2
   chapters:
-    - href: index.qmd
+    - href: index.md
       text: Introduction
     - part: "Orientation"
       chapters:
-        - href: graph_methodology.qmd
+        - href: graph_methodology.md
           text: Reading the graph views
-        - href: implementation_conventions.qmd
+        - href: implementation_conventions.md
           text: Implementation conventions
-        - href: algorithm_validation.qmd
+        - href: algorithm_validation.md
           text: Algorithmic implementations, deviations and validation
     - part: "Background"
       chapters:
-        - href: background_philosophy.qmd
+        - href: background_philosophy.md
           text: Why an editable workflow?
     - part: "Target graph views"
       chapters:
-        - href: implementation_main.qmd
+        - href: implementation_main.md
           text: Main pipeline
-        - href: implementation_differential_analyses.qmd
+        - href: implementation_differential_analyses.md
           text: Differential analyses
-        - href: implementation_genetic_enrichment.qmd
+        - href: implementation_genetic_enrichment.md
           text: Genetic enrichment
 
 format:

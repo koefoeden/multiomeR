@@ -821,79 +821,11 @@ plot_GWAS_locus_contribution_waterfalls <- function(locus_contribution_tibble, n
     rlang::set_names(stringr::str_replace_all(plot_names, "[^A-Za-z0-9_.-]+", "_"))
 }
 
-make_GWAS_variant_contribution_track <- function(variant_tibble, region) {
-  region <- BPCells:::normalize_ranges(region)
-  max_abs_contribution <- max(abs(variant_tibble$relative_deviation_contribution))
-  variant_tibble <- variant_tibble |>
-    dplyr::mutate(
-      direction = dplyr::if_else(.data$relative_deviation_contribution >= 0, "Positive", "Negative"),
-      variant_label = dplyr::if_else(
-        dplyr::min_rank(dplyr::desc(abs(.data$relative_deviation_contribution))) <= 3,
-        .data$variantId,
-        ""
-      )
-    )
-
-  BPCells:::wrap_trackplot(
-    ggplot2::ggplot(variant_tibble, ggplot2::aes(x = .data$position, y = .data$relative_deviation_contribution)) +
-      ggplot2::geom_hline(yintercept = 0, color = "grey60", linewidth = 0.3) +
-      ggplot2::geom_segment(
-        ggplot2::aes(xend = .data$position, y = 0, yend = .data$relative_deviation_contribution, color = .data$direction),
-        linewidth = 0.4
-      ) +
-      ggplot2::geom_point(ggplot2::aes(size = .data$posteriorProbability, color = .data$direction)) +
-      ggrepel::geom_text_repel(
-        data = dplyr::filter(variant_tibble, .data$variant_label != ""),
-        ggplot2::aes(label = .data$variant_label),
-        size = 2,
-        min.segment.length = 0,
-        max.overlaps = Inf
-      ) +
-      ggplot2::scale_color_manual(values = c(Positive = "#B40426", Negative = "#3B4CC0"), guide = "none") +
-      ggplot2::scale_size_continuous(range = c(1.5, 4), name = "PIP") +
-      ggplot2::scale_x_continuous(limits = c(region$start, region$end), expand = c(0, 0), labels = scales::label_number()) +
-      ggplot2::scale_y_continuous(limits = c(-max_abs_contribution, max_abs_contribution) * 1.15, expand = c(0, 0)) +
-      ggplot2::labs(x = "Genomic position (bp)", y = "Relative deviation contribution") +
-      BPCells:::trackplot_theme(),
-    ggplot2::unit(2, "null"),
-    region = region
-  )
-}
-
-#' Make consensus peak locus track
-#'
-#' Draw consensus ATAC peaks overlapping an contribution region.
-#'
-#' @param consensus_peak_GRanges Consensus peak ranges.
-#' @param region Genomic region accepted by BPCells trackplot helpers.
-#' @return A BPCells genome-annotation track.
-#' @keywords internal
-
-make_consensus_peak_locus_track <- function(consensus_peak_GRanges, region) {
-  peak_GRanges <- IRanges::subsetByOverlaps(consensus_peak_GRanges, region)
-  if (length(peak_GRanges) == 0L) {
-    return(BPCells:::trackplot_empty(region, "Consensus peaks"))
-  }
-
-  peak_tibble <- GenomicRanges::as.data.frame(peak_GRanges) |>
-    tibble::as_tibble() |>
-    dplyr::transmute(
-      chr = as.character(.data$seqnames),
-      start = .data$start,
-      end = .data$end
-    )
-
-  BPCells::trackplot_genome_annotation(
-    loci = peak_tibble,
-    region = region,
-    track_label = "Consensus peaks"
-  )
-}
-
 #' Prepare variant-level contribution detail records for top loci
 #'
 #' @param variant_contribution_tibble Variant-level contribution.
 #' @param locus_contribution_tibble Locus-level contribution used to select loci.
+#' @param absolute_effect_locus_tibble Loci ranked under absolute-effect weighting.
 #' @param consensus_peak_GRanges Consensus ATAC peaks.
 #' @param fragments BPCells fragment object.
 #' @param metadata_tibble Cell metadata with cell-type labels.
@@ -906,6 +838,7 @@ make_consensus_peak_locus_track <- function(consensus_peak_GRanges, region) {
 prepare_GWAS_variant_contribution_detail_records <- function(
   variant_contribution_tibble,
   locus_contribution_tibble,
+  absolute_effect_locus_tibble,
   consensus_peak_GRanges,
   fragments,
   metadata_tibble,
@@ -914,26 +847,8 @@ prepare_GWAS_variant_contribution_detail_records <- function(
   flank = 25000L,
   group_cells_by_col = "PCA_harmony_SNN_cluster_cell_type"
 ) {
-  selected_cell_type_tibble <- locus_contribution_tibble |>
-    dplyr::distinct(.data$GWAS_ID, .data$cluster, .data$relative_deviation) |>
-    dplyr::slice_max(
-      .data$relative_deviation,
-      n = n_top_cell_types,
-      with_ties = FALSE,
-      by = GWAS_ID
-    )
-  selected_locus_tibble <- locus_contribution_tibble |>
-    dplyr::semi_join(selected_cell_type_tibble, by = c("GWAS_ID", "cluster")) |>
-    dplyr::slice_max(
-      abs(.data$relative_deviation_contribution),
-      n = n_top_loci,
-      with_ties = FALSE,
-      by = c(GWAS_ID, cluster)
-    ) |>
-    dplyr::mutate(
-      detail_rank = dplyr::row_number(),
-      .by = c(GWAS_ID, cluster)
-    )
+  selected_locus_tibble <- select_GWAS_detail_loci(locus_contribution_tibble,
+    absolute_effect_locus_tibble, n_top_cell_types, n_top_loci)
 
   fragments <- BPCells::select_cells(fragments, metadata_tibble$barcode_w_prefix)
   fragment_cell_names <- BPCells::cellNames(fragments)
@@ -991,6 +906,7 @@ prepare_GWAS_variant_contribution_detail_records <- function(
       )
       list(
         GWAS_ID = GWAS_ID,
+        selection = locus_tibble$selection[[1]],
         variant_tibble = variant_tibble,
         coverage_tibble = coverage_tibble,
         coverage_colors = coverage_colors,
@@ -1012,42 +928,155 @@ prepare_GWAS_variant_contribution_detail_records <- function(
   rlang::set_names(plot_records, plot_names)
 }
 
-#' Plot one variant-level contribution detail record
+#' Plot aligned variant-detail tracks for one GWAS and cell type
 #'
-#' @param plot_record Plot-ready record from
-#'   `prepare_GWAS_variant_contribution_detail_records()`.
-#' @return Combined variant, accessibility, and peak-track plot.
-#' @keywords internal
-
-plot_GWAS_variant_contribution_detail_record <- function(plot_record) {
-  detail_plot <- BPCells::trackplot_combine(
-    tracks = list(
-      make_GWAS_variant_contribution_track(plot_record$variant_tibble, plot_record$region),
-      make_BPCells_ATAC_coverage_track_from_tibble(
-        plot_record$coverage_tibble,
-        plot_record$region,
-        colors = plot_record$coverage_colors
-      ),
-      make_consensus_peak_locus_track(plot_record$consensus_peak_GRanges, plot_record$region)
-    ),
-    title = paste("Variant contributions:", plot_record$plot_title)
-  ) + patchwork::plot_annotation(
-    subtitle = stringr::str_wrap("Compare variant contributions with nearby accessibility; a large contribution or peak overlap does not establish causality.", width = 100),
-    caption = stringr::str_wrap("Variant stems show signed relative-deviation contributions (red positive, blue negative); point size represents fine-mapping PIP. Coverage is depth-normalized in 500 bins and clipped at the 99.9th percentile, with the focal cell type highlighted. Consensus peaks provide genomic context; labels do not establish a target gene.", width = 110))
-  detail_plot$labels$title <- ggplot2::waiver()
-  detail_plot
+#' @param plot_records Cached locus coverage and contribution records.
+#' @param variants Effect metadata from the original credible sets.
+#' @param gene_GRanges Reference gene bodies.
+#' @return A patchwork with loci as columns and genomic tracks as rows.
+plot_GWAS_variant_contribution_detail_panels <- function(plot_records, variants, gene_GRanges) {
+  plot_records <- plot_records[order(vapply(plot_records, \(record)
+    abs(sum(record$variant_tibble$relative_deviation_contribution)), numeric(1)), decreasing = TRUE)]
+  loci <- purrr::imap_chr(unname(plot_records), \(record, index) {
+    variant <- record$variant_tibble
+    lead_id <- variants$lead_id[match(variant$studyLocusId[[1]], variants$studyLocusId)]
+    gene <- variants$top_L2G_gene[match(variant$studyLocusId[[1]], variants$studyLocusId)]
+    paste0("Locus ", index, ": ", lead_id,
+      if (!is.na(gene) && nzchar(gene)) paste0(" — L2G: ", gene) else "",
+      "\nContribution = ", signif(sum(variant$relative_deviation_contribution), 3),
+      if (!is.null(record$selection)) paste0("; selected: ", record$selection) else "")
+  })
+  bounds <- purrr::map2_dfr(plot_records, loci, \(record, locus) tibble::tibble(
+    locus = locus, position = c(GenomicRanges::start(record$region), GenomicRanges::end(record$region))))
+  contributions <- purrr::map2_dfr(plot_records, loci, \(record, locus) {
+    record$variant_tibble |> dplyr::mutate(locus = locus)
+  }) |>
+    dplyr::left_join(variants, by = c("studyLocusId", "variantId"), relationship = "many-to-one")
+  coverage <- purrr::map2_dfr(plot_records, loci, \(record, locus) {
+    ymax <- as.numeric(stats::quantile(record$coverage_tibble$normalized_insertions, 0.999))
+    record$coverage_tibble |> dplyr::mutate(locus = locus,
+      coverage = if (ymax > 0) pmin(normalized_insertions, ymax) / ymax else 0,
+      range_label = paste0("0–", signif(ymax, 3)))
+  })
+  genes <- purrr::map2_dfr(plot_records, loci, \(record, locus) {
+    region <- record$region
+    selected <- IRanges::subsetByOverlaps(gene_GRanges, region)
+    tibble::tibble(locus = locus, start = pmax(GenomicRanges::start(selected), GenomicRanges::start(region)),
+      end = pmin(GenomicRanges::end(selected), GenomicRanges::end(region)),
+      gene = as.character(selected$gene_name), strand = as.character(GenomicRanges::strand(selected))) |>
+      dplyr::arrange(start, end) |>
+      dplyr::mutate(lane = IRanges::disjointBins(IRanges::IRanges(start, end)))
+  })
+  peaks <- purrr::map2_dfr(plot_records, loci, \(record, locus) {
+    ranges <- record$consensus_peak_GRanges
+    tibble::tibble(locus = locus,
+      start = pmax(GenomicRanges::start(ranges), GenomicRanges::start(record$region)),
+      end = pmin(GenomicRanges::end(ranges), GenomicRanges::end(record$region)))
+  })
+  bounds$locus <- factor(bounds$locus, levels = loci)
+  contributions$locus <- factor(contributions$locus, levels = loci)
+  coverage$locus <- factor(coverage$locus, levels = loci)
+  genes$locus <- factor(genes$locus, levels = loci)
+  peaks$locus <- factor(peaks$locus, levels = loci)
+  facet <- ggplot2::facet_grid(cols = ggplot2::vars(locus), scales = "free_x")
+  track_theme <- ggplot2::theme_minimal(base_size = 10) + ggplot2::theme(
+    panel.grid.minor = ggplot2::element_blank(), panel.grid.major.x = ggplot2::element_blank(),
+    panel.border = ggplot2::element_rect(fill = NA, colour = "grey65"),
+    panel.spacing.x = grid::unit(1, "lines"),
+    strip.background = ggplot2::element_rect(fill = "grey90", colour = "grey65"),
+    strip.text = ggplot2::element_text(face = "bold"), legend.position = "top")
+  # Training every track on identical bounds keeps genomic coordinates aligned.
+  base_track <- ggplot2::ggplot() +
+    ggplot2::geom_blank(data = bounds, ggplot2::aes(position, 0)) + facet + track_theme +
+    ggplot2::scale_x_continuous(expand = c(0, 0), labels = scales::label_number())
+  effect_max <- max(c(0, contributions$effect_magnitude), na.rm = TRUE)
+  contribution_track <- base_track +
+    ggplot2::geom_hline(yintercept = 0, colour = "grey55", linewidth = 0.3) +
+    ggplot2::geom_segment(data = contributions, ggplot2::aes(x = position, xend = position,
+      y = 0, yend = relative_deviation_contribution, colour = effect_magnitude), linewidth = 0.4) +
+    ggplot2::geom_point(data = contributions, ggplot2::aes(position, relative_deviation_contribution,
+      size = posteriorProbability_raw, colour = effect_magnitude, shape = effect_source), stroke = 0.8, show.legend = TRUE) +
+    ggrepel::geom_text_repel(data = contributions |>
+      dplyr::slice_max(abs(relative_deviation_contribution), n = 3, with_ties = FALSE, by = locus),
+      ggplot2::aes(position, relative_deviation_contribution, label = variantId),
+      size = 2.3, seed = 1, min.segment.length = 0, max.overlaps = Inf) +
+    ggplot2::scale_size_area(max_size = 4, limits = c(0, 1), breaks = c(0.1, 0.5, 1), name = "PIP") +
+    ggplot2::scale_colour_viridis_c(option = "C", limits = c(0, if (effect_max > 0) effect_max else 1),
+      na.value = "grey60", breaks = scales::breaks_pretty(n = 3), name = "Effect magnitude |β|") +
+    ggplot2::scale_shape_manual(values = c(Variant = 16, `Lead variant proxy` = 1, Unavailable = 16),
+      limits = c("Variant", "Lead variant proxy", "Unavailable"), drop = FALSE, name = "Effect source") +
+    ggplot2::guides(shape = ggplot2::guide_legend(override.aes = list(colour = c("black", "black", "grey60")))) +
+    ggplot2::labs(x = NULL, y = "Relative\ndeviation\ncontribution") +
+    ggplot2::theme(axis.title.y = ggplot2::element_text(angle = 0, vjust = 0.5))
+  gene_track <- base_track +
+    ggplot2::geom_segment(data = genes, ggplot2::aes(
+      x = ifelse(strand == "-", end, start), xend = ifelse(strand == "-", start, end),
+      y = -lane, yend = -lane), arrow = grid::arrow(length = grid::unit(1.3, "mm")), linewidth = 0.5) +
+    ggplot2::geom_text(data = genes, ggplot2::aes((start + end) / 2, -lane, label = gene),
+      vjust = -0.7, size = 2.5, check_overlap = TRUE) +
+    ggplot2::geom_text(data = dplyr::filter(bounds, !locus %in% genes$locus) |>
+      dplyr::summarise(position = mean(position), .by = locus),
+      ggplot2::aes(position, 0, label = "No annotated genes overlap"), size = 3) +
+    ggplot2::labs(x = NULL, y = "Gene bodies") + ggplot2::guides(y = "none") +
+    ggplot2::theme(panel.grid = ggplot2::element_blank())
+  coverage_track <- base_track +
+    ggplot2::geom_area(data = coverage, ggplot2::aes(pos, coverage, fill = group)) +
+    ggplot2::geom_text(data = dplyr::distinct(coverage, locus, group, range_label),
+      ggplot2::aes(x = -Inf, y = 1, label = range_label), hjust = -0.1, vjust = 1.1, size = 2.2) +
+    ggplot2::facet_grid(rows = ggplot2::vars(group), cols = ggplot2::vars(locus), scales = "free_x") +
+    ggplot2::scale_fill_manual(values = plot_records[[1]]$coverage_colors, guide = "none") +
+    ggplot2::scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+    ggplot2::labs(x = NULL, y = "ATAC coverage (RPKM; range shown)") + ggplot2::guides(y = "none") +
+    ggplot2::theme(strip.text.y.right = ggplot2::element_text(angle = 0, size = 8),
+      panel.grid = ggplot2::element_blank(), panel.spacing.y = grid::unit(0.1, "lines"))
+  peak_track <- base_track +
+    ggplot2::geom_segment(data = peaks, ggplot2::aes(start, 0, xend = end, yend = 0), linewidth = 2) +
+    ggplot2::labs(x = "Genomic position (bp)", y = "Consensus peaks") + ggplot2::guides(y = "none") +
+    ggplot2::theme(axis.title.y = ggplot2::element_text(angle = 0, vjust = 0.5, size = 9),
+      panel.grid = ggplot2::element_blank())
+  tracks <- list(contribution_track, gene_track, coverage_track, peak_track)
+  tracks[1:3] <- purrr::map(tracks[1:3], \(plot) plot + ggplot2::theme(axis.text.x = ggplot2::element_blank(), axis.ticks.x = ggplot2::element_blank()))
+  tracks[2:4] <- purrr::map(tracks[2:4], \(plot) plot + ggplot2::theme(strip.text.x = ggplot2::element_blank()))
+  patchwork::wrap_plots(tracks, ncol = 1,
+    heights = grid::unit.c(grid::unit(c(1, max(1, 0.3 * max(c(0, genes$lane))),
+      0.45 * nlevels(coverage$group)), "null"), grid::unit(4, "mm")), guides = "collect") +
+    patchwork::plot_annotation(
+      title = paste("Variant contributions:", plot_records[[1]]$GWAS_ID, "—", plot_records[[1]]$variant_tibble$cluster[[1]]),
+      subtitle = "Compare loci on a shared contribution scale; point area shows PIP and colour shows effect magnitude.\nGene bodies and accessibility provide context, not proof of a causal variant or target gene.",
+      caption = stringr::str_wrap(paste(
+        "Loci are the union of the leading ordinary and absolute-effect-weighted contributions for the focal cell type; plotted stems remain ordinary contributions. PIP is the original fine-mapping probability, before effect weighting. Filled points use the variant's own |β|; hollow points inherit the locus lead variant's |β|; grey means unavailable.",
+        "The lead is the recorded lead variant, or the highest-PIP variant if no lead is recorded. No signed effects are inherited. Effect units are study-specific.",
+        "Facet genes are the top available Open Targets L2G predictions, not established causal genes. Gene arrows show strand; gene bodies are clipped to each window and overlapping labels may be omitted. Coverage uses cached depth-normalized 500-bin profiles, clipped at each locus's 99.9th percentile; displayed coverage ranges differ between loci."), 180),
+      theme = ggplot2::theme(plot.caption = ggplot2::element_text(hjust = 0))) &
+    ggplot2::theme(legend.position = "top")
 }
 
-#' Plot variant-level contribution details
-#'
-#' @param plot_records Named list of plot-ready records from
-#'   `prepare_GWAS_variant_contribution_detail_records()`.
-#' @return Named list of variant, accessibility, and peak-track plots.
-#' @keywords internal
-
-plot_GWAS_variant_contribution_details <- function(plot_records) {
-  plot_records |>
-    purrr::map(plot_GWAS_variant_contribution_detail_record)
+#' Plot one aligned locus figure per GWAS and focal cell type
+#' @param plot_records Cached locus records for one GWAS.
+#' @param GWAS_input_records Original credible sets, including effect metadata.
+#' @param gene_GRanges Reference gene-body annotations.
+#' @param locus_contribution_tibble Locus contributions with top L2G predictions.
+#' @return Named list of patchworks, one per focal cell type.
+plot_GWAS_variant_contribution_details <- function(plot_records, GWAS_input_records, gene_GRanges, locus_contribution_tibble) {
+  GWAS_ID <- plot_records[[1]]$GWAS_ID
+  input <- purrr::keep(GWAS_input_records, \(record) identical(record$GWAS_ID, GWAS_ID))[[1]]
+  variants <- tibble::as_tibble(as.data.frame(S4Vectors::mcols(input$credible_set_GRanges))) |>
+    dplyr::mutate(beta = dplyr::if_else(is.finite(beta), beta, NA_real_)) |>
+    dplyr::group_by(studyLocusId) |>
+    dplyr::arrange(dplyr::desc(posteriorProbability_raw), variantId, .by_group = TRUE) |>
+    dplyr::mutate(
+      lead_id = dplyr::coalesce(dplyr::first(lead_variantId), dplyr::first(variantId)),
+      lead_beta = beta[match(lead_id, variantId)],
+      effect_magnitude = abs(dplyr::coalesce(beta, lead_beta)),
+      effect_source = dplyr::case_when(!is.na(beta) ~ "Variant", !is.na(lead_beta) ~ "Lead variant proxy", TRUE ~ "Unavailable")) |>
+    dplyr::ungroup() |>
+    dplyr::select(studyLocusId, variantId, lead_id, effect_magnitude, effect_source) |>
+    dplyr::left_join(locus_contribution_tibble |>
+      dplyr::filter(.data$GWAS_ID == .env$GWAS_ID) |>
+      dplyr::distinct(studyLocusId, top_L2G_gene), by = "studyLocusId", relationship = "many-to-one")
+  groups <- split(plot_records, purrr::map_chr(plot_records, \(record) record$variant_tibble$cluster[[1]]))
+  purrr::map(groups, plot_GWAS_variant_contribution_detail_panels, variants = variants, gene_GRanges = gene_GRanges) |>
+    rlang::set_names(stringr::str_replace_all(names(groups), "[^A-Za-z0-9_.-]+", "_"))
 }
 
 #' Plot compact locus contributions across cell types for one GWAS
@@ -1097,4 +1126,44 @@ plot_GWAS_locus_contribution_bars <- function(locus_contribution_tibble, n_top_l
       strip.background = ggplot2::element_rect(fill = "grey90", colour = "grey55", linewidth = 0.5),
       strip.text = ggplot2::element_text(face = "bold", size = 11,
         margin = ggplot2::margin(7, 5, 7, 5)), plot.caption = ggplot2::element_text(hjust = 0))
+}
+
+#' Select the union of leading loci under ordinary and absolute-effect weighting
+#' @param locus_contribution_tibble Ordinary locus contributions for one or more GWAS.
+#' @param absolute_effect_locus_tibble Absolute-effect contributions, possibly empty.
+#' @param n_top_cell_types Number of focal cell types selected by ordinary deviation.
+#' @param n_top_loci Number of loci retained per ranking and focal cell type.
+#' @return Unique loci with selection provenance and coordinates from the ordinary analysis.
+select_GWAS_detail_loci <- function(locus_contribution_tibble, absolute_effect_locus_tibble,
+  n_top_cell_types = 1L, n_top_loci = 3L) {
+  focal <- locus_contribution_tibble |>
+    dplyr::distinct(GWAS_ID, cluster, relative_deviation) |>
+    dplyr::slice_max(relative_deviation, n = n_top_cell_types, with_ties = FALSE, by = GWAS_ID)
+  leading <- function(data, ranking) {
+    data |> dplyr::semi_join(focal, by = c("GWAS_ID", "cluster")) |>
+      dplyr::slice_max(abs(relative_deviation_contribution), n = n_top_loci,
+        with_ties = FALSE, by = c(GWAS_ID, cluster)) |>
+      dplyr::transmute(GWAS_ID, cluster, studyLocusId, selection = ranking)
+  }
+  selected <- dplyr::bind_rows(leading(locus_contribution_tibble, "Ordinary"),
+    leading(absolute_effect_locus_tibble, "Absolute effect")) |>
+    dplyr::summarise(selection = paste(selection, collapse = " + "), .by = c(GWAS_ID, cluster, studyLocusId))
+  locus_contribution_tibble |>
+    dplyr::inner_join(selected, by = c("GWAS_ID", "cluster", "studyLocusId"), relationship = "one-to-one") |>
+    dplyr::mutate(detail_rank = dplyr::row_number(), .by = c(GWAS_ID, cluster))
+}
+
+#' Plot absolute-effect locus contributions using the ordinary faceted layout
+#' @param locus_contribution_tibble Exact absolute-effect-weighted contributions.
+#' @return One named plot per eligible GWAS, or an empty plot list.
+plot_GWAS_absolute_effect_locus_bars <- function(locus_contribution_tibble) {
+  if (nrow(locus_contribution_tibble) == 0L) return(structure(list(), class = c("empty_plot_list", "list")))
+  split(locus_contribution_tibble, locus_contribution_tibble$GWAS_ID) |>
+    purrr::map(\(data) plot_GWAS_locus_contribution_bars(data, n_top_loci = 5L) +
+      ggplot2::labs(title = paste("Effect-weighted loci contributing to GWAS-linked accessibility:", data$GWAS_ID[[1]]),
+        subtitle = "Compare leading loci after PIP × |β| weighting; bar lengths share a scale across cell types.\nPositive loci drive the effect-weighted total and negative loci offset it; genetic effect direction is discarded.",
+        caption = stringr::str_wrap(paste(
+          "Weights match the absolute-effect heatmap: variant |β| when all variants have effects, otherwise the highest-PIP available |β| per locus. Only eligible GWAS are included.",
+          "Weights preserve retained PIP mass before peak weights are capped at one; contributions are recomputed and sum to the effect-weighted relative deviation.",
+          "Five loci per cell type are selected by absolute contribution. Unfilled remainder bars pool other positive and negative loci separately. Gene labels are top Open Targets L2G predictions, not proven causal genes."), 150)))
 }

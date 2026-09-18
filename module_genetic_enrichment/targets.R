@@ -105,6 +105,7 @@ genetic_enrichment_GWAS_config_tibble <- if (nrow(genetic_enrichment_tibble) == 
 genetic_enrichment_tibble <- genetic_enrichment_tibble |>
   dplyr::left_join(genetic_enrichment_GWAS_config_tibble, by = "aggregation") |>
   add_aggregation_target_syms(c(
+    "marker_validated_Ensembl_annotations_GRanges_list",
     "metadata_w_cell_types_tibble.WNN",
     "combined_BPCells_fragment_obj.ATAC",
     "consensus_peak_GRanges.ATAC",

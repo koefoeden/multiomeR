@@ -115,6 +115,7 @@ rlang::list2(
     command = prepare_GWAS_variant_contribution_detail_records(
       variant_contribution_tibble = chromVAR_variant_contribution_tibble.cell_type_pseudobulk,
       locus_contribution_tibble = chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk,
+      absolute_effect_locus_tibble = chromVAR_absolute_effect_locus_contribution_tibble.cell_type_pseudobulk,
       consensus_peak_GRanges = consensus_peak_GRanges.ATAC,
       fragments = combined_BPCells_fragment_obj.ATAC,
       metadata_tibble = metadata_w_cell_types_tibble.WNN
@@ -125,12 +126,17 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk,
-    description = "Save variant contribution, ATAC coverage, and consensus-peak tracks for one GWAS. [checkpoint:genetic_enrichment]",
+    description = "Save aligned locus facets with variant effects, gene bodies, ATAC coverage, and peaks per GWAS and focal cell type. [checkpoint:genetic_enrichment]",
     command = chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk |>
-      plot_GWAS_variant_contribution_details() |>
+      plot_GWAS_variant_contribution_details(
+        GWAS_input_records = GWAS_input_records,
+        gene_GRanges = marker_validated_Ensembl_annotations_GRanges_list$genes,
+        locus_contribution_tibble = chromVAR_locus_contribution_tibble.cell_type_pseudobulk) |>
       save_plots_structured(
-        width = 13,
-        height = 11,
+        width = max(20, 6 * max(table(purrr::map_chr(
+          chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk,
+          \(record) record$variant_tibble$cluster[[1]])))),
+        height = 15,
         override_suffix = chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk[[1]]$GWAS_ID,
         dyn_suffix_in_subdir = TRUE
       ),

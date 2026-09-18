@@ -319,3 +319,23 @@ get_GWAS_absolute_effect_chromVAR_deviation_tibble <- function(
       support_label
     )
 }
+
+#' Allocate absolute-effect peak weights to their contributing variants
+#' @param GWAS_input_records Original credible-set records.
+#' @param weighting_status_tibble Existing absolute-effect eligibility and routes.
+#' @param peak_ranges ATAC peaks used by the absolute-effect heatmap.
+#' @param posterior_probability_cutoff Raw PIP cutoff, applied before weighting.
+#' @return Peak-to-variant allocations using the heatmap's calibrated weights.
+get_GWAS_absolute_effect_peak_variant_weights <- function(GWAS_input_records,
+  weighting_status_tibble, peak_ranges, posterior_probability_cutoff = NULL) {
+  eligible <- dplyr::filter(weighting_status_tibble, eligible)
+  GWAS_input_records |>
+    purrr::keep(\(record) record$GWAS_ID %in% eligible$GWAS_ID) |>
+    purrr::map_dfr(\(record) {
+      route <- eligible$effect_weighting_route[match(record$GWAS_ID, eligible$GWAS_ID)]
+      ranges <- get_GWAS_absolute_effect_variant_GRanges(record, route, posterior_probability_cutoff)
+      ranges$posteriorProbability <- ranges$absolute_effect_weight
+      record$credible_set_GRanges <- ranges
+      get_GWAS_chromVAR_peak_variant_weight_tibble(record, peak_ranges)
+    })
+}

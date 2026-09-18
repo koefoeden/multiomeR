@@ -7,6 +7,10 @@ ENCODE_heart_LV_6x:
       random_effect: ~
       contrast_specs_vec:
         male_vs_female: sexMale
-  differential_analyses_DCTC_plot_phenotype_vars: sexMale
-  differential_analyses_DCTC_formula_chr: cbind(n_nuclei, n_other_nuclei) ~ sexMale
-  differential_analyses_DCTC_color_by_categorical_metadata_column: sex
+  differential_analyses_DCTC_models:
+    sex_abundance:
+      formula: cbind(n_nuclei, n_other_nuclei) ~ sexMale
+      contrast_specs_vec:
+        male_vs_female: sexMale
+      plot_phenotype_vars: sexMale
+      color_by: sex

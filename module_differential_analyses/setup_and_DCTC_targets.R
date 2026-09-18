@@ -1,105 +1,87 @@
 rlang::list2(
   tarchetypes::tar_file(
     name = donor_id_metadata_tsv.extended,
-    description = "Locate the extended donor ID metadata TSV for differential analyses",
-    command = differential_analyses_extended_donor_id_metadata_tsv %||%
-      aggregation_donor_id_metadata_tsv,
+    description = "Locate the extended donor metadata for differential analyses",
+    command = differential_analyses_extended_donor_id_metadata_tsv %||% aggregation_donor_id_metadata_tsv,
     deployment = "main"
   ),
   targets::tar_target(
     name = donor_id_metadata_tibble.extended,
-    description = "Read the extended donor ID metadata TSV into a tibble [part_of_graph:differential_analyses]",
+    description = "Read keyed differential-analysis donor metadata [part_of_graph:differential_analyses]",
     command = read_keyed_metadata_tibble(donor_id_metadata_tsv.extended, "donor_id")
   ),
   targets::tar_target(
     name = models,
-    description = "Build named list of configured pseudobulk DX model specifications [part_of_graph:differential_analyses]",
+    description = "Normalize named feature models [part_of_graph:differential_analyses]",
     command = normalize_psbulk_feature_models(differential_analyses_psbulk_DX_models)
   ),
-  tarchetypes::tar_file(
-    name = pseudobulk_depth_distribution_plot,
-    description = "Plot pseudobulk count depths and detected features per cluster-donor sample. [checkpoint:differential_analyses]",
-    command = dplyr::bind_rows(
-      pseudobulk_depth_tibble.GEX,
-      pseudobulk_depth_tibble.ATAC
-    ) |>
-      plot_pseudobulk_depth_distribution(
-        min_ATAC_sample_counts = differential_analyses_DTFA_min_ATAC_counts
-      ) |>
-      save_plots_structured()
-  ),
   targets::tar_target(
-    name = plot_phenotype_vars.DCTC,
-    description = "Assert and load the phenotype variable names for differential cell-type composition plots",
-    command = assert_cfg_is_set(differential_analyses_DCTC_plot_phenotype_vars, "differential_analyses_DCTC_plot_phenotype_vars")
+    name = models.DCTC,
+    description = "Normalize named abundance models [part_of_graph:differential_analyses]",
+    command = normalize_differential_models(differential_analyses_DCTC_models)
   ),
   targets::tar_target(
     name = donor_id_metadata_tibble.analysis,
-    description = "Project extended donor metadata to aggregation donors and configured differential-analysis variables [part_of_graph:differential_analyses]",
-    command = {
-      aggregation_donor_ids <- metadata_w_cell_types_tibble.WNN |>
-        dplyr::distinct(donor_id) |>
-        dplyr::pull(donor_id) |>
-        sort()
-      aggregation_donor_metadata <- subset_keyed_metadata_tibble(
-        donor_id_metadata_tibble.extended,
-        "donor_id",
-        aggregation_donor_ids,
-        donor_id_metadata_tsv.extended
-      )
-      project_keyed_metadata_tibble(
-        aggregation_donor_metadata,
-        "donor_id",
-        get_differential_analysis_metadata_columns(
-          models = models,
-          DCTC_formula_chr = differential_analyses_DCTC_formula_chr,
-          DCTC_plot_phenotype_vars = plot_phenotype_vars.DCTC,
-          DCTC_color_by_categorical_metadata_column = differential_analyses_DCTC_color_by_categorical_metadata_column
-        ),
-        strict = TRUE,
-        canonical = TRUE
-      )
-    }
+    description = "Project metadata to aggregation donors and all configured model variables [part_of_graph:differential_analyses]",
+    command = project_keyed_metadata_tibble(
+      subset_keyed_metadata_tibble(donor_id_metadata_tibble.extended, "donor_id",
+        sort(unique(metadata_w_cell_types_tibble.WNN$donor_id)), donor_id_metadata_tsv.extended),
+      "donor_id", get_differential_analysis_metadata_columns(models, models.DCTC),
+      strict = TRUE, canonical = TRUE
+    )
   ),
   tarchetypes::tar_file(
-    name = by_phenotype_per_cluster_plots.DCTC,
-    description = "Save DCTC scatter plot objects per cluster for each phenotype variable. [checkpoint:differential_analyses]",
-    command = {
-      metadata_tibble <- metadata_w_cell_types_tibble.WNN |>
-        dplyr::left_join(donor_id_metadata_tibble.analysis)
-
-      plot_DCTC_by_phenotype_per_cluster(
-        metadata_tibble = metadata_tibble,
-        DCTC_plot_phenotype_vars = plot_phenotype_vars.DCTC,
-        cluster_col = "PCA_harmony_SNN_cluster_cell_type",
-        DCTC_color_by_categorical_metadata_column = differential_analyses_DCTC_color_by_categorical_metadata_column
-      ) |>
-        save_plots_structured()
-    },
-    pattern = map(plot_phenotype_vars.DCTC)
+    name = pseudobulk_depth_distribution_plot,
+    description = "Plot depth and detected features per cluster-donor sample. [checkpoint:differential_analyses]",
+    command = dplyr::bind_rows(pseudobulk_depth_tibble.GEX, pseudobulk_depth_tibble.ATAC) |>
+      plot_pseudobulk_depth_distribution(min_ATAC_sample_counts = differential_analyses_DTFA_min_ATAC_counts) |>
+      save_plots_structured()
+  ),
+  targets::tar_target(
+    name = dynamic_tibble.DCTC,
+    description = "Branch over named abundance models",
+    command = tibble::enframe(models.DCTC, name = "model_name", value = "model") |>
+      dplyr::arrange(model_name),
+    iteration = "vector"
+  ),
+  targets::tar_target(
+    name = model_data.DCTC,
+    description = "Select model donors and wells; construct complete cell-type counts with fixed denominators [part_of_graph:differential_analyses]",
+    command = prepare_DCTC_model_data(metadata_w_cell_types_tibble.WNN,
+      donor_id_metadata_tibble.analysis, dynamic_tibble.DCTC$model[[1]], "PCA_harmony_SNN_cluster_cell_type"),
+    pattern = map(dynamic_tibble.DCTC),
+    iteration = "list"
   ),
   targets::tar_target(
     name = model_results.DCTC,
-    description = "Fit the configured differential cell-type composition model [part_of_graph:differential_analyses]",
-    command = metadata_w_cell_types_tibble.WNN |>
-      get_DCTC_model_results(
-        extended_donor_id_metadata_tibble = donor_id_metadata_tibble.analysis,
-        cluster_col = "PCA_harmony_SNN_cluster_cell_type",
-        DCTC_formula_chr = differential_analyses_DCTC_formula_chr
-      )
+    description = "Fit separate beta-binomial abundance models and named contrasts [part_of_graph:differential_analyses]",
+    command = fit_DCTC_model(model_data.DCTC, dynamic_tibble.DCTC$model[[1]], dynamic_tibble.DCTC$model_name),
+    pattern = map(model_data.DCTC, dynamic_tibble.DCTC)
   ),
   tarchetypes::tar_file(
-    name = model_change_per_unit_plot.DCTC,
-    description = "Plot modelled change in cell-type composition per unit of each phenotype and save to file. [checkpoint:differential_analyses]",
-    command = model_results.DCTC |>
-      plot_DCTC_model_change_per_unit() |>
-      save_plots_structured()
+    name = cohort_tsv.DCTC,
+    description = "Export donor eligibility, exclusions, selected wells and denominators by abundance model",
+    command = save_differential_model_table(model_data.DCTC$cohort, dynamic_tibble.DCTC$model_name),
+    pattern = map(model_data.DCTC, dynamic_tibble.DCTC)
   ),
   tarchetypes::tar_file(
-    name = model_coefs_forest.DCTC,
-    description = "Plot forest plot of DCTC model coefficients per cell type and save to file. [checkpoint:differential_analyses]",
-    command = model_results.DCTC |>
-      plot_DCTC_model_coefs_forest() |>
-      save_plots_structured()
+    name = counts_tsv.DCTC,
+    description = "Export the exact donor-cell-type counts used in abundance fits and plots",
+    command = save_differential_model_table(model_data.DCTC$counts, dynamic_tibble.DCTC$model_name),
+    pattern = map(model_data.DCTC, dynamic_tibble.DCTC)
+  ),
+  tarchetypes::tar_file(
+    name = results_tsv.DCTC,
+    description = "Export named abundance contrasts, BH FDR and fit diagnostics",
+    command = save_differential_model_table(model_results.DCTC, dynamic_tibble.DCTC$model_name),
+    pattern = map(model_results.DCTC, dynamic_tibble.DCTC)
+  ),
+  tarchetypes::tar_file(
+    name = model_plots.DCTC,
+    description = "Plot observed donor proportions and abundance contrasts per model. [checkpoint:differential_analyses]",
+    command = plot_DCTC_model(model_data.DCTC, dynamic_tibble.DCTC$model[[1]],
+      dynamic_tibble.DCTC$model_name, model_results.DCTC) |>
+      save_plots_structured(override_suffix = dynamic_tibble.DCTC$model_name, width = 12, height = 10),
+    pattern = map(model_data.DCTC, model_results.DCTC, dynamic_tibble.DCTC)
   )
 )

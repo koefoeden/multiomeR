@@ -470,12 +470,12 @@ rlang::list2(
         dplyr::distinct(.data$barcode_w_prefix, .keep_all = TRUE) |>
         dplyr::filter(
           .data$barcode_w_prefix %in% fragment_cell_names,
-          !is.na(.data[["PCA_harmony_SNN_cluster_cell_type"]])
+          !is.na(.data[["WNN_harmony_SNN_cluster_cell_type"]])
         ) |>
         dplyr::arrange(match(.data$barcode_w_prefix, fragment_cell_names))
       fragments <- BPCells::select_cells(fragments, metadata$barcode_w_prefix)
 
-      groups <- metadata[["PCA_harmony_SNN_cluster_cell_type"]]
+      groups <- metadata[["WNN_harmony_SNN_cluster_cell_type"]]
       cell_read_counts <- if ("atac_fragments" %in% colnames(metadata)) {
         metadata$atac_fragments
       } else {

@@ -195,7 +195,7 @@ make_peak_gene_correlation_cell_groups <- function(
   GEX_counts_matrix,
   ATAC_counts_matrix,
   embedding_matrix,
-  cell_group_col = "PCA_harmony_SNN_cluster_cell_type",
+  cell_group_col = "WNN_harmony_SNN_cluster_cell_type",
   min_cells = 200L
 ) {
   available_barcodes <- Reduce(
@@ -240,7 +240,7 @@ make_peak_gene_correlation_cell_group_diagnostics <- function(
   GEX_counts_matrix,
   ATAC_counts_matrix,
   embedding_matrix,
-  cell_group_col = "PCA_harmony_SNN_cluster_cell_type",
+  cell_group_col = "WNN_harmony_SNN_cluster_cell_type",
   min_cells = 200L
 ) {
   available_barcodes <- Reduce(

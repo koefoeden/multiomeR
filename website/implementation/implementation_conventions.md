@@ -1,10 +1,6 @@
 # Implementation conventions
 
-This chapter explains how configuration becomes target definitions: the
-parameter manifest supplies defaults and validation rules, mapping tables
-define repeated analyses, and target symbols connect their dependencies.
-Description tags support result selection and graph views. The final section
-covers project startup and resource configuration.
+This chapter explains how configuration becomes target definitions: the parameter manifest supplies defaults and validation rules, mapping tables define repeated analyses, and target symbols connect their dependencies. Description tags support result selection and graph views. The final section covers project startup and resource configuration.
 
 ## Target metadata tags
 
@@ -26,21 +22,9 @@ The currently meaningful tag families are:
 [resource_observation:<note>]   compact empirical resource note
 ```
 
-`[checkpoint:<name>]` marks targets selectable with `targets::tar_described_as()`.
-The eight numbered main-pipeline groups are listed in
-`QC_checkpoint_manifest.tsv`; optional module groups remain unnumbered.
-UMAP parameter sweeps belong to their modality's numbered checkpoint, and
-compatibility objects belong to GEX checkpoint 3 or multimodal checkpoint 8.
-Selection matches description substrings; include the
-closing `]` to match a complete checkpoint tag. Dependencies still come from
-the target commands. [Run your own analysis](../main_running.html#steps)
-explains each boundary; acceptance criteria depend on the study.
+`[checkpoint:<name>]` marks targets selectable with `targets::tar_described_as()`. The eight numbered main-pipeline groups are listed in `QC_checkpoint_manifest.tsv`; optional module groups remain unnumbered. UMAP parameter sweeps belong to their modality's numbered checkpoint, and compatibility objects belong to GEX checkpoint 3 or multimodal checkpoint 8. Selection matches description substrings; include the closing `]` to match a complete checkpoint tag. Dependencies still come from the target commands. [Run your own analysis](../main_running.html#steps) explains each boundary; acceptance criteria depend on the study.
 
-Numbered checkpoint plot targets end in the checkpoint name with hyphens
-replaced by underscores, before the mapped dataset or aggregation suffix.
-For example, `VizDimLoadings_plots.2_GEX_PCA_QC.my_aggregation` writes beneath
-`<store>/plots/my_aggregation/2_GEX_PCA_QC/`. Only plot targets use this naming
-convention; computational and metadata targets retain their modality suffixes.
+Numbered checkpoint plot targets end in the checkpoint name with hyphens replaced by underscores, before the mapped dataset or aggregation suffix. For example, `VizDimLoadings_plots.2_GEX_PCA_QC.my_aggregation` writes beneath `<store>/plots/my_aggregation/2_GEX_PCA_QC/`. Only plot targets use this naming convention; computational and metadata targets retain their modality suffixes.
 
 `[part_of_graph:<graph_id>]` marks targets that should stay visible in a named implementation graph after graph-pruning helpers remove less informative intermediate nodes. This is the strictest tag family: `graph_id` must contain only letters, numbers, and underscores, and helper code parses these tags directly from target descriptions. A target may belong to several graph views.
 
@@ -115,13 +99,7 @@ The root `_targets.R` builds the target graph from mapping tibbles. Each mapping
 
 The core mapping flow is:
 
-Configuration readers use `configuration_path()` to resolve a basename within
-`configuration/` or the directory named by the ignored `configuration.local`.
-Relative selections are anchored at the repository root. This selection does not
-change data-path interpretation or `_targets.yaml`. The selected GEM-well path
-is a graph global consumed by the file target, so changing directories also
-changes its dependency. Aggregation and enabled-module settings are resolved
-during graph construction. Disabled modules do not read their configuration.
+Configuration readers use `configuration_path()` to resolve a basename within `configuration/` or the directory named by the ignored `configuration.local`. Relative selections are anchored at the repository root. This selection does not change data-path interpretation or `_targets.yaml`. The selected GEM-well path is a graph global consumed by the file target, so changing directories also changes its dependency. Aggregation and enabled-module settings are resolved during graph construction. Disabled modules do not read their configuration.
 
 1. `GEM_well_tibble_all` reads only the pre-aggregation processing columns from every row in the canonical `cfg_GEM_wells.tsv`.
 2. `aggregation_tibble_all_from_yaml` is read from `cfg_aggregations.yaml`.
@@ -129,14 +107,7 @@ during graph construction. Disabled modules do not read their configuration.
 4. `GEM_well_tibble` keeps GEM wells whose `GEM_well_is_active` value is true.
 5. `_targets.R` expands active GEM wells and aggregations with `tar_map()`, then appends module target files. Cross-GEM-well QC summaries use the aggregation's selected wells.
 
-Within each aggregation, `GEM_well_metadata_tibble` reads the same canonical
-file, subsets it to `aggregation_GEM_well_IDs`, and preserves that order. Cheap
-keyed projection targets then expose only the columns requested for SCT,
-Harmony or configured analyses. Complete non-processing
-annotations are joined only for explicit export objects. These projection
-targets are cache boundaries: a newly added or edited online column can update
-the canonical table without changing expensive consumers whose selected view
-is identical.
+Within each aggregation, `GEM_well_metadata_tibble` reads the same canonical file, subsets it to `aggregation_GEM_well_IDs`, and preserves that order. Cheap keyed projection targets then expose only the columns requested for SCT, Harmony or configured analyses. Complete non-processing annotations are joined only for explicit export objects. These projection targets are cache boundaries: a newly added or edited online column can update the canonical table without changing expensive consumers whose selected view is identical.
 
 ```r
 tarchetypes::tar_map(
@@ -227,11 +198,7 @@ multiomeR assumes that the repository runtime is bootstrapped before the target 
 4. applying global plotting and `{targets}` options,
 5. sourcing `crew_controllers.R` and installing controller resources.
 
-The nested `multiomeRCore` directory is both ordinary editable pipeline source
-and an installable package boundary for standalone repositories. multiomeR does
-not install or attach that package itself: `targets::tar_source()` loads the
-same implementation files before the root helpers. Keep domain-specific code
-under `R/`, but do not duplicate the generally reusable implementations there.
+The nested `multiomeRCore` directory is both ordinary editable pipeline source and an installable package boundary for standalone repositories. multiomeR does not install or attach that package itself: `targets::tar_source()` loads the same implementation files before the root helpers. Keep domain-specific code under `R/`, but do not duplicate the generally reusable implementations there.
 
 For commands that intentionally bypass startup side effects, source the bootstrap helper directly and then load the runtime:
 
@@ -265,13 +232,4 @@ When modifying the implementation, preserve these contracts unless the change is
 
 ### Peak–gene correlation module
 
-`module_peak_gene_correlation/targets.R` maps only opted-in aggregations and
-binds their existing WNN metadata, GEX/ATAC matrices, ATAC embeddings,
-fragments and reference annotations. `correlation_targets.R` owns the analysis,
-SuSiE prioritization, exports and plots. Parameters use the
-`peak_gene_correlation` manifest scope and matching module YAML rows.
-Targets end in `.peak_gene_correlation.<aggregation>` (with `.WNN` before
-that suffix for intermediate results). Plot checkpoint tags use
-`peak_gene_correlation`, keeping this analysis outside numbered QC selections.
-Renamed targets rebuild on the first module run; existing core target names
-and numerical analysis defaults are unchanged.
+`module_peak_gene_correlation/targets.R` maps only opted-in aggregations and binds their existing WNN metadata, GEX/ATAC matrices, ATAC embeddings, fragments and reference annotations. `correlation_targets.R` owns the analysis, SuSiE prioritization, exports and plots. Parameters use the `peak_gene_correlation` manifest scope and matching module YAML rows. Targets end in `.peak_gene_correlation.<aggregation>` (with `.WNN` before that suffix for intermediate results). Plot checkpoint tags use `peak_gene_correlation`, keeping this analysis outside numbered QC selections. Renamed targets rebuild on the first module run; existing core target names and numerical analysis defaults are unchanged.

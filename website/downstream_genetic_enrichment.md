@@ -7,15 +7,9 @@ source("helpers/_setup.R")
 
 ## When to use this module
 
-Use this module to ask which cell types or nuclei have accessible regions
-overlapping genetic evidence for a human trait. It connects fine-mapped GWAS
-variants to ATAC peaks, calculates accessibility-based enrichment, and uses
-[`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) to summarize trait
-relevance across related nuclei.
+Use this module to ask which cell types or nuclei have accessible regions overlapping genetic evidence for a human trait. It connects fine-mapped GWAS variants to ATAC peaks, calculates accessibility-based enrichment, and uses [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) to summarize trait relevance across related nuclei.
 
-A **credible set** contains candidate causal variants at a GWAS locus, with
-probabilities from fine-mapping. Enrichment helps prioritize cellular contexts;
-it does not by itself identify a causal cell type, gene, or mechanism.
+A **credible set** contains candidate causal variants at a GWAS locus, with probabilities from fine-mapping. Enrichment helps prioritize cellular contexts; it does not by itself identify a causal cell type, gene, or mechanism.
 
 See the [Genetic enrichment gallery](gallery_genetic_enrichment.md) for representative results and the [implementation graph](implementation/implementation_genetic_enrichment.html) for upstream ATAC and WNN dependencies.
 
@@ -58,12 +52,7 @@ your_aggregation:
       finemappingMethod: auto
 ```
 
-`sourceId` values beginning with `GCST` use the pinned Open Targets datasets.
-Every other value is a local Parquet filename, resolved from the project root
-and tracked as a file target. Local files must satisfy the schema enforced by
-`validate_local_finemapped_GWAS_tibble()`; their study ID, fine-mapping method,
-build, credible-set probability, and provenance are read from the file rather
-than repeated in YAML.
+`sourceId` values beginning with `GCST` use the pinned Open Targets datasets. Every other value is a local Parquet filename, resolved from the project root and tracked as a file target. Local files must satisfy the schema enforced by `validate_local_finemapped_GWAS_tibble()`; their study ID, fine-mapping method, build, credible-set probability, and provenance are read from the file rather than repeated in YAML.
 
 The root workflow currently pins Open Targets release `26.03`. That release identifier is recorded in downstream metadata and determines the available studies, credible sets, and fine-mapping methods.
 

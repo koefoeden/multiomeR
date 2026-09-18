@@ -1,41 +1,22 @@
 # Run your own analysis
 
-Start from the working demo and replace its inputs and settings one step at a
-time. Each step has three parts: **Configure** the relevant settings, **Run**
-the step, and **Review** its plots. Every plot carries a subtitle that states
-how to read it and what to look for, so this chapter only lists which plots to
-open. The trees show the main review outputs; configured variables and optional
-analyses determine the additional files. Revise the settings and rerun a step until its plots are acceptable, then
-continue to the next.
+Start from the working demo and replace its inputs and settings one step at a time. Each step has three parts: **Configure** the relevant settings, **Run** the step, and **Review** its plots. Every plot carries a subtitle that states how to read it and what to look for, so this chapter only lists which plots to open. The trees show the main review outputs; configured variables and optional analyses determine the additional files. Revise the settings and rerun a step until its plots are acceptable, then continue to the next.
 
 Conventions used below:
 
-- Commands run in a repository-root R session, opened as in [Install and
-  prepare the demo](demo_installation.md).
+- Commands run in a repository-root R session, opened as in [Install and prepare the demo](demo_installation.md).
 - Replace `my_GEM_well` and `my_aggregation` with your identifiers.
-- `<store>` is the results folder configured in `_targets.yaml`, `outputs/` in
-  the demo.
-- File formats are documented in the [GEM well table](reference_GEM_wells.md),
-  [donor metadata table](reference_donor_metadata.md), and [aggregation
-  configuration](reference_aggregations.md) references.
-- `crew_controllers.R` must describe your machine or scheduler; see [Choose
-  where the analysis runs](performance_distributed_computing.md).
+- `<store>` is the results folder configured in `_targets.yaml`, `outputs/` in the demo.
+- File formats are documented in the [GEM well table](reference_GEM_wells.md), [donor metadata table](reference_donor_metadata.md), and [aggregation configuration](reference_aggregations.md) references.
+- `crew_controllers.R` must describe your machine or scheduler; see [Choose where the analysis runs](performance_distributed_computing.md).
 
-Settings default to `configuration/`. To use your own directory, copy it and
-write the new directory path into the ignored root `configuration.local` file.
-Keep all settings together; disabled modules may omit their files. See the
-[configuration guide](https://github.com/koefoeden/multiomeR/blob/main/configuration/README.md).
+Settings default to `configuration/`. To use your own directory, copy it and write the new directory path into the ignored root `configuration.local` file. Keep all settings together; disabled modules may omit their files. See the [configuration guide](https://github.com/koefoeden/multiomeR/blob/main/configuration/README.md).
 
-These instructions describe the public defaults. For installation-specific
-setup and reference selection, follow the README in your checkout.
+These instructions describe the public defaults. For installation-specific setup and reference selection, follow the README in your checkout.
 
 ## How a step is run {#how-to-run}
 
-Target names and plot folders contain the name of the step's **checkpoint**.
-For example, `harmony.categorical.UMAPs.3_GEX_QC.my_aggregation` is saved
-under `<store>/plots/my_aggregation/3_GEX_QC/UMAPs/categorical/harmony/`.
-Selecting by checkpoint name and scope suffix builds the step's plots; the
-tables they depend on are built automatically:
+Target names and plot folders contain the name of the step's **checkpoint**. For example, `harmony.categorical.UMAPs.3_GEX_QC.my_aggregation` is saved under `<store>/plots/my_aggregation/3_GEX_QC/UMAPs/categorical/harmony/`. Selecting by checkpoint name and scope suffix builds the step's plots; the tables they depend on are built automatically:
 
 ```{.r filename="R"}
 targets::tar_make(
@@ -43,34 +24,22 @@ targets::tar_make(
 )
 ```
 
-To preview a selection, pass the same `names` to `targets::tar_manifest()`
-with `callr_function = NULL`. An empty result means a wrong suffix. After
-editing configuration, `targets::tar_manifest(callr_function = NULL)` must
-build without errors; see [Troubleshooting](troubleshooting.md) if it does not.
+To preview a selection, pass the same `names` to `targets::tar_manifest()` with `callr_function = NULL`. An empty result means a wrong suffix. After editing configuration, `targets::tar_manifest(callr_function = NULL)` must build without errors; see [Troubleshooting](troubleshooting.md) if it does not.
 
-In the trees below, a trailing `/` marks a folder with one plot per variable,
-metric, or component. How the plots and the tables behind them are constructed
-is documented in [Output files and metadata](review_outputs.md).
+In the trees below, a trailing `/` marks a folder with one plot per variable, metric, or component. How the plots and the tables behind them are constructed is documented in [Output files and metadata](review_outputs.md).
 
 ## 1. Process the GEM wells {#steps}
 
-Reads each GEM well's Cell Ranger output and reviews per-well exclusions.
-Compare distributions across wells after defining an aggregation in step 2.
+Reads each GEM well's Cell Ranger output and reviews per-well exclusions. Compare distributions across wells after defining an aggregation in step 2.
 
-**Configure** one row per GEM well in `cfg_GEM_wells.tsv`
-([GEM well table](reference_GEM_wells.md)):
+**Configure** one row per GEM well in `cfg_GEM_wells.tsv` ([GEM well table](reference_GEM_wells.md)):
 
 - a unique `GEM_well_ID` and an appropriate `GEM_well_dataset` label;
 - `GEM_well_cellranger_arc_count_dir`;
-- donors: `GEM_well_n_donors` and `GEM_well_donor_id` for a single-donor
-  well, or `GEM_well_donors_VCF_file` to demultiplex several donors by
-  genotype;
-- `GEM_well_add_cellbender` and `GEM_well_cellbender_h5_file` to replace the
-  Cell Ranger counts with CellBender output;
-- further `GEM_well_` columns for library-level variables you will need as
-  batch covariates or plot variables later;
-- `GEM_well_QC_exclude_list`: `NA` for the first run, then filter expressions
-  such as `TSS.enrichment < 4 ;; nCount_RNA < 250`;
+- donors: `GEM_well_n_donors` and `GEM_well_donor_id` for a single-donor well, or `GEM_well_donors_VCF_file` to demultiplex several donors by genotype;
+- `GEM_well_add_cellbender` and `GEM_well_cellbender_h5_file` to replace the Cell Ranger counts with CellBender output;
+- further `GEM_well_` columns for library-level variables you will need as batch covariates or plot variables later;
+- `GEM_well_QC_exclude_list`: `NA` for the first run, then filter expressions such as `TSS.enrichment < 4 ;; nCount_RNA < 250`;
 - `GEM_well_is_active`: `TRUE`.
 
 **Run**
@@ -91,18 +60,13 @@ targets::tar_make(
 
 ## 2. Aggregate the GEM wells
 
-Applies the per-GEM-well filters, combines the selected wells, and checks that
-they share one reference and identical gene definitions.
+Applies the per-GEM-well filters, combines the selected wells, and checks that they share one reference and identical gene definitions.
 
 **Configure**
 
-- a [donor metadata table](reference_donor_metadata.md) with one row per
-  `donor_id` holding the donor-level phenotypes and covariates;
-- an entry in `cfg_aggregations.yaml` ([aggregation
-  configuration](reference_aggregations.md)) with:
-  - `aggregation_GEM_well_IDs`: the wells to analyze together. The group
-    should reflect the biological comparison you intend to make, keep donor,
-    preparation, and batch distinguishable, and share one reference;
+- a [donor metadata table](reference_donor_metadata.md) with one row per `donor_id` holding the donor-level phenotypes and covariates;
+- an entry in `cfg_aggregations.yaml` ([aggregation configuration](reference_aggregations.md)) with:
+  - `aggregation_GEM_well_IDs`: the wells to analyze together. The group should reflect the biological comparison you intend to make, keep donor, preparation, and batch distinguishable, and share one reference;
   - `aggregation_donor_id_metadata_tsv`;
   - `aggregation_GEX_marker_genes`: valid positive marker genes for the expected cell types, refined in step 4;
   - `is_active: true`.
@@ -128,18 +92,13 @@ targets::tar_make(
 
 ## 3. Build the GEX embedding
 
-Normalizes the GEX counts, selects variable genes, and computes PCA with
-optional Harmony correction.
+Normalizes the GEX counts, selects variable genes, and computes PCA with optional Harmony correction.
 
 **Configure**
 
 - `aggregation_GEX_data_PCs`: candidate PCA dimensions;
-- `aggregation_harmony_correction_metadata_col_names`: metadata columns to
-  correct with Harmony, such as `GEM_well_ID` or a batch column. Omit it for
-  the first run and add it only if this step's association plots show batch
-  structure;
-- normalization and variable-gene settings under the GEX topic of the
-  [parameter reference](reference_aggregations.md#parameter-reference).
+- `aggregation_harmony_correction_metadata_col_names`: metadata columns to correct with Harmony, such as `GEM_well_ID` or a batch column. Omit it for the first run and add it only if this step's association plots show batch structure;
+- normalization and variable-gene settings under the GEX topic of the [parameter reference](reference_aggregations.md#parameter-reference).
 
 **Run**
 
@@ -162,18 +121,13 @@ targets::tar_make(
 
 ## 4. Cluster and label cell types with GEX
 
-Builds the neighbour graph, clusters, annotates cell types from the marker
-genes, and scores doublets. The accepted cells and labels guide peak calling.
+Builds the neighbour graph, clusters, annotates cell types from the marker genes, and scores doublets. The accepted cells and labels guide peak calling.
 
 **Configure**
 
-- `aggregation_GEX_marker_genes`: marker genes per expected cell type, as
-  symbols in the reference annotation; a `-` suffix marks a gene that should
-  be absent;
+- `aggregation_GEX_marker_genes`: marker genes per expected cell type, as symbols in the reference annotation; a `-` suffix marks a gene that should be absent;
 - neighbour and clustering-resolution settings;
-- `aggregation_scDblFinder_GEX_remove_called_doublets: false` and
-  `aggregation_scDblFinder_GEX_max_doublet_fraction_per_cluster: null` for the
-  first run, then the chosen doublet policy;
+- `aggregation_scDblFinder_GEX_remove_called_doublets: false` and `aggregation_scDblFinder_GEX_max_doublet_fraction_per_cluster: null` for the first run, then the chosen doublet policy;
 - categorical and continuous metadata variables for the review plots.
 
 **Run**
@@ -208,13 +162,11 @@ targets::tar_make(
 
 ## 5. Call peaks and inspect ATAC quality
 
-Calls peaks per accepted GEX group, builds the consensus peak matrix, and
-computes peak-based QC metrics before any ATAC filter is applied.
+Calls peaks per accepted GEX group, builds the consensus peak matrix, and computes peak-based QC metrics before any ATAC filter is applied.
 
 **Configure**
 
-- `aggregation_QC_exclude_list_combined_object`: omit for the first run, then
-  filter expressions such as:
+- `aggregation_QC_exclude_list_combined_object`: omit for the first run, then filter expressions such as:
 
 ```{.yaml filename="cfg_aggregations.yaml"}
 aggregation_QC_exclude_list_combined_object:
@@ -268,9 +220,7 @@ Computes LSI on the retained nuclei with optional Harmony correction.
 **Configure**
 
 - `aggregation_ATAC_data_PCs`: candidate LSI components;
-- `aggregation_extra_harmony_covars_ATAC`: extra columns to correct in ATAC
-  only, added to the GEX Harmony columns; add them only if this step's
-  association plots show batch structure.
+- `aggregation_extra_harmony_covars_ATAC`: extra columns to correct in ATAC only, added to the GEX Harmony columns; add them only if this step's association plots show batch structure.
 
 **Run**
 
@@ -292,17 +242,13 @@ targets::tar_make(
 
 ## 8. Cluster and label cell types with ATAC
 
-Clusters the ATAC embedding, transfers cell-type labels from the GEX marker
-scores, scores doublets, and summarizes motif-family accessibility and gene
-activity.
+Clusters the ATAC embedding, transfers cell-type labels from the GEX marker scores, scores doublets, and summarizes motif-family accessibility and gene activity.
 
 **Configure**
 
 - neighbour and clustering-resolution settings;
 - `aggregation_ATAC_marker_TFs`: marker transcription factors per cell type;
-- `aggregation_scDblFinder_ATAC_remove_called_doublets: false` and
-  `aggregation_scDblFinder_ATAC_max_doublet_fraction_per_cluster: null` for the
-  first run, then the chosen doublet policy.
+- `aggregation_scDblFinder_ATAC_remove_called_doublets: false` and `aggregation_scDblFinder_ATAC_max_doublet_fraction_per_cluster: null` for the first run, then the chosen doublet policy.
 
 **Run**
 
@@ -332,8 +278,7 @@ targets::tar_make(
 
 ## 9. Integrate GEX and ATAC
 
-Combines the accepted GEX and ATAC representations with WNN, clusters and
-labels the integrated embedding, and exports the Seurat/Signac object.
+Combines the accepted GEX and ATAC representations with WNN, clusters and labels the integrated embedding, and exports the Seurat/Signac object.
 
 **Configure** the WNN neighbour, resolution, and UMAP settings.
 
@@ -364,16 +309,11 @@ targets::tar_make(
 └── cell_retention_flow_plot.png
 ```
 
-The final object is `multimodal_Seurat_object.8_multimodal_QC.my_aggregation`;
-[Inspect the demo results](demo_outputs.md) shows how to read it. Continue to
-[Differential analyses](downstream_differential_analyses.md) or [Genetic
-enrichment](downstream_genetic_enrichment.md) once the aggregation is
-accepted.
+The final object is `multimodal_Seurat_object.8_multimodal_QC.my_aggregation`; [Inspect the demo results](demo_outputs.md) shows how to read it. Continue to [Differential analyses](downstream_differential_analyses.md) or [Genetic enrichment](downstream_genetic_enrichment.md) once the aggregation is accepted.
 
 ## After the steps
 
-**Request one result.** Use its exact name; `all_of()` errors if the name is
-absent.
+**Request one result.** Use its exact name; `all_of()` errors if the name is absent.
 
 ```{.r filename="R"}
 targets::tar_make(
@@ -381,10 +321,6 @@ targets::tar_make(
 )
 ```
 
-**Rerun after a change.** Reuse the step's selection. `targets::tar_outdated()`
-with the same `names` and `callr_function = NULL` lists what will rebuild.
+**Rerun after a change.** Reuse the step's selection. `targets::tar_outdated()` with the same `names` and `callr_function = NULL` lists what will rebuild.
 
-**Build everything active.** `targets::tar_make()` without `names` builds
-every active GEM well, aggregation, and enabled module. Set `GEM_well_is_active`
-and `is_active` to `FALSE` for entries you do not want built, including unused
-demo entries, before running it.
+**Build everything active.** `targets::tar_make()` without `names` builds every active GEM well, aggregation, and enabled module. Set `GEM_well_is_active` and `is_active` to `FALSE` for entries you do not want built, including unused demo entries, before running it.

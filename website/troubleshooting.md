@@ -1,9 +1,6 @@
 # Troubleshooting
 
-Find the target name and first error message in the run output. Fix that
-cause, then rerun the same selection: `targets` can reuse completed work.
-Keep the store intact, since it also contains the records needed to diagnose
-the failure.
+Find the target name and first error message in the run output. Fix that cause, then rerun the same selection: `targets` can reuse completed work. Keep the store intact, since it also contains the records needed to diagnose the failure.
 
 | What happened? | Start here |
 |---|---|
@@ -12,9 +9,7 @@ the failure.
 | A completed result needs rebuilding | [A target is unexpectedly outdated](#a-target-is-unexpectedly-outdated) |
 | Workers do not start or are killed | [Controller and scheduler failures](#controller-and-scheduler-failures) |
 
-Run these commands in the repository's Pixi R session. For general debugging
-techniques beyond the project helpers below, see the
-[targets debugging guide](https://books.ropensci.org/targets/debugging.html).
+Run these commands in the repository's Pixi R session. For general debugging techniques beyond the project helpers below, see the [targets debugging guide](https://books.ropensci.org/targets/debugging.html).
 
 ## The manifest does not build
 
@@ -33,13 +28,11 @@ Failures at this stage usually indicate:
 - a malformed `crew_controllers.R` return value; or
 - an R package or startup problem.
 
-Correct the field or file named in the error, then repeat the manifest check
-before running the analysis.
+Correct the field or file named in the error, then repeat the manifest check before running the analysis.
 
 ## A run reports errored targets
 
-List the errors with the project's helper. It groups repeated failures so
-you can start with their common cause:
+List the errors with the project's helper. It groups repeated failures so you can start with their common cause:
 
 ```{.r filename="R"}
 list_distinct_errored_targets()
@@ -53,9 +46,7 @@ list_distinct_errored_targets_w_tracebacks(
 )
 ```
 
-Some targets run separately for multiple groups; these runs are called
-**branches**. Copy the full target or branch name from the error listing to
-inspect its saved workspace:
+Some targets run separately for multiple groups; these runs are called **branches**. Copy the full target or branch name from the error listing to inspect its saved workspace:
 
 ```{.r filename="R"}
 inspect_target_workspace("full_target_or_branch_name")
@@ -108,8 +99,7 @@ If a worker does not start or no controller can satisfy a target request:
 
 ## Rerun safely
 
-After fixing the cause, rerun the same target selection. Successful upstream
-results remain cached.
+After fixing the cause, rerun the same target selection. Successful upstream results remain cached.
 
 ```{.r filename="R"}
 targets::tar_make(

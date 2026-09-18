@@ -5,10 +5,7 @@ pipeline_name <- "processing_and_aggregation"
 source("helpers/_setup.R")
 ```
 
-The root `_targets.R` creates GEM-well and aggregation
-mapping rows, then maps target fragments from `extra_targets/`. Use the diagrams
-to find the relevant stage, then inspect the corresponding source file for the
-complete command and resource declaration.
+The root `_targets.R` creates GEM-well and aggregation mapping rows, then maps target fragments from `extra_targets/`. Use the diagrams to find the relevant stage, then inspect the corresponding source file for the complete command and resource declaration.
 
 | Stage | Primary source |
 |---|---|

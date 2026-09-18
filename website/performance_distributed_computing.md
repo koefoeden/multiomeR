@@ -8,27 +8,13 @@ knitr::opts_chunk$set(
 )
 ```
 
-A **worker** is an R process that runs an analysis task. A **controller** starts
-and manages those workers, either on your machine or through a cluster
-scheduler. multiomeR uses `crew` for this. The committed configuration runs
-the demo unchanged on a machine that meets the [system
-requirements](demo_installation.md#system-requirements); adjust it as
-described below before running on a smaller machine or a scheduler.
+A **worker** is an R process that runs an analysis task. A **controller** starts and manages those workers, either on your machine or through a cluster scheduler. multiomeR uses `crew` for this. The committed configuration runs the demo unchanged on a machine that meets the [system requirements](demo_installation.md#system-requirements); adjust it as described below before running on a smaller machine or a scheduler.
 
-Use local workers on a suitable workstation. On a shared cluster, ask your
-support team which scheduler, account, and resource limits to use. The
-[targets distributed-computing guide](https://books.ropensci.org/targets/crew.html)
-explains the general setup; this page covers multiomeR's configuration file.
+Use local workers on a suitable workstation. On a shared cluster, ask your support team which scheduler, account, and resource limits to use. The [targets distributed-computing guide](https://books.ropensci.org/targets/crew.html) explains the general setup; this page covers multiomeR's configuration file.
 
 ## Local execution
 
-A fresh clone includes a local `crew_controllers.R` sized for a 16-CPU,
-256-GB workstation, with four light workers and two heavy workers. A machine
-near the 60-GB minimum should reduce concurrency to one heavy worker and should
-not run several memory-intensive targets simultaneously. Edit the worker
-counts and resource tiers directly in `crew_controllers.R`, keeping controller
-names identical between `controller_list` and
-`controller_resources_tibble`.
+A fresh clone includes a local `crew_controllers.R` sized for a 16-CPU, 256-GB workstation, with four light workers and two heavy workers. A machine near the 60-GB minimum should reduce concurrency to one heavy worker and should not run several memory-intensive targets simultaneously. Edit the worker counts and resource tiers directly in `crew_controllers.R`, keeping controller names identical between `controller_list` and `controller_resources_tibble`.
 
 After changing the file, restart R or reload the project runtime explicitly:
 
@@ -40,9 +26,7 @@ Rebuild a narrow manifest selection before starting the data run to validate the
 
 ## Scheduler execution
 
-For SLURM, PBS, SGE, or LSF, replace the local controllers with the corresponding
-`crew.cluster` controllers. The commented SLURM section in
-`crew_controllers.R` shows the expected shape.
+For SLURM, PBS, SGE, or LSF, replace the local controllers with the corresponding `crew.cluster` controllers. The commented SLURM section in `crew_controllers.R` shows the expected shape.
 
 For every scheduler tier:
 

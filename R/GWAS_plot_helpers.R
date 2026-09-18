@@ -919,3 +919,44 @@ plot_grouped_GWAS_by_cluster_heatmaps <- function(
       plot + patchwork::plot_annotation(title = title, subtitle = subtitle, caption = caption)
     })
 }
+
+#' Plot ordinary or absolute-effect chromVAR deviations from cached summaries
+#' @param deviation_tibble Cached scores containing deviation, relative_deviation and support_label.
+#' @param GWAS_metadata_tracks_plot Metadata tracks for the same GWAS collection.
+#' @param compartments_patterns Optional cell-type compartment patterns.
+#' @param standardize Use the precomputed within-GWAS standardized deviation column.
+#' @param beta_weighted Label the input as PIP times absolute-effect weighted.
+#' @return Annotated heatmap, or an explicit empty-result plot.
+plot_GWAS_chromVAR_deviation_heatmap <- function(deviation_tibble,
+  GWAS_metadata_tracks_plot, compartments_patterns = NULL,
+  standardize = FALSE, beta_weighted = FALSE) {
+  if (nrow(deviation_tibble) == 0L) {
+    return(ggplot2::ggplot() + ggplot2::theme_void() +
+      ggplot2::annotate("text", x = 0, y = 0, label = "No eligible cell-type GWAS scores"))
+  }
+  quantity <- if (standardize) "Standardized deviation" else "Deviation"
+  plot_GWAS_by_cluster_heatmap(
+    deviation_tibble,
+    GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
+    compartments_patterns = compartments_patterns,
+    fill_col = if (standardize) "relative_deviation" else "deviation",
+    fill_label = paste(if (beta_weighted) "PIP × |β|" else "Ordinary", quantity),
+    support_label_col = "support_label"
+  ) + patchwork::plot_annotation(
+    title = paste(if (beta_weighted) "Effect-magnitude-weighted" else "Ordinary",
+      "GWAS-linked accessibility by cell type", if (standardize) "— standardized" else "— unscaled"),
+    subtitle = paste(
+      if (standardize) "Compare cell types within each trait; red indicates above-average deviation."
+      else "Positive values indicate accessibility above the weighted background expectation.",
+      "Stars show chromVAR z-score support, not adjusted-p significance or independent donor evidence.", sep = "\n"),
+    caption = stringr::str_wrap(paste(
+      "ATAC counts are summed by WNN cell type.",
+      if (beta_weighted) paste(
+        "PIP × |β| weighting uses variant effects when complete, otherwise the highest-PIP available effect per locus; only eligible GWAS are included.",
+        "Genetic effect direction is discarded. Weights preserve retained PIP mass before peak weights are capped at one."),
+      if (standardize) "Colour: deviation centred and divided by its SD across cell types within each GWAS."
+      else "Colour: weighted observed-minus-expected accessibility divided by the depth-adjusted expectation, without centring or SD scaling across cell types.",
+      "Stars: * z >= 2; ** z >= 3 against the betterChromVAR background for the corresponding weighting. Nuclei counts describe input support; this is a descriptive pooled comparison."
+    ), width = 150)
+  )
+}

@@ -63,33 +63,34 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 8)
   ),
   tarchetypes::tar_file(
-    name = chromVAR_absolute_effect_deviation_heatmap.cell_type_pseudobulk,
-    description = "Save the automatically eligible PIP x absolute-beta cell-type chromVAR relative-deviation heatmap. [checkpoint:genetic_enrichment]",
-    command = {
-      plot <- plot_GWAS_by_cluster_heatmap(
-        chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk,
-        GWAS_metadata_tracks_plot = GWAS_absolute_effect_metadata_tracks_plot,
-        compartments_patterns = genetic_enrichment_compartment_patterns,
-        fill_col = "relative_deviation",
-        fill_label = "PIP x |beta| relative deviation",
-        support_label_col = "support_label"
-      )
-      if (!inherits(plot, "empty_plot_list")) plot <- plot + patchwork::plot_annotation(
-        title = "Effect-magnitude-weighted GWAS accessibility by cell type",
-        subtitle = stringr::str_wrap("Compare cell types within a trait; absolute effect weighting removes the direction of genetic effects.", width = 100),
-        caption = stringr::str_wrap("Eligible GWAS variants are weighted by PIP x absolute beta. Colour is deviation standardized across cell types within each trait. Stars denote raw chromVAR z >= 2 (*) or z >= 3 (**), not adjusted-p significance. Pooled cell-type counts provide a descriptive comparison, not donor-level inference.", width = 110))
+    name = beta_weighted_unscaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk,
+    description = "Save absolute-effect-weighted GWAS deviations without within-GWAS scaling. [checkpoint:genetic_enrichment]",
+    command = plot_GWAS_chromVAR_deviation_heatmap(
+      chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk,
+      GWAS_metadata_tracks_plot = GWAS_absolute_effect_metadata_tracks_plot,
+      compartments_patterns = genetic_enrichment_compartment_patterns,
+      standardize = FALSE,
+      beta_weighted = TRUE
+    ) |>
       save_plots_structured(
-        plot,
-        filetype = "png",
-        width = 17,
-        height = max(
-          5.5,
-          0.3 * dplyr::n_distinct(
-            chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk$GWAS_ID
-          ) + 3.5
-        )
+        filetype = "png", width = 17,
+        height = max(5.5, 0.3 * dplyr::n_distinct(chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk$GWAS_ID) + 3.5)
       )
-    }
+  ),
+  tarchetypes::tar_file(
+    name = beta_weighted_scaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk,
+    description = "Save absolute-effect-weighted GWAS deviations standardized within each GWAS. [checkpoint:genetic_enrichment]",
+    command = plot_GWAS_chromVAR_deviation_heatmap(
+      chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk,
+      GWAS_metadata_tracks_plot = GWAS_absolute_effect_metadata_tracks_plot,
+      compartments_patterns = genetic_enrichment_compartment_patterns,
+      standardize = TRUE,
+      beta_weighted = TRUE
+    ) |>
+      save_plots_structured(
+        filetype = "png", width = 17,
+        height = max(5.5, 0.3 * dplyr::n_distinct(chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk$GWAS_ID) + 3.5)
+      )
   ),
   targets::tar_target(
     name = GWAS_absolute_effect_peak_variant_weight_tibble,

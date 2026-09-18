@@ -114,7 +114,8 @@ apply_runtime_options <- function(force = FALSE) {
   targets::tar_option_set(
     error = "trim",
     iteration = "list",
-    format = "qs"
+    format = "qs",
+    garbage_collection = 1L
   )
 
   bootstrap_state_env$runtime_options_applied <- TRUE

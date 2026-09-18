@@ -294,15 +294,36 @@ rlang::list2(
         save_plots_structured(height = max(9, 4 + 0.25 * dplyr::n_distinct(metadata_w_cell_types_analysis_tibble.WNN$WNN_harmony_SNN_cluster_named)))
     ),
     tarchetypes::tar_file(
-      name = markers_violin_plot.8_multimodal_QC,
-      description = "Violin plots of marker gene expression per WNN cell type. [checkpoint:8_multimodal-QC]",
-      command = plot_WNN_marker_expression_violins(
-        metadata_tibble = metadata_w_cell_types_tibble.WNN,
-        feature_matrix = aggregated_counts_BPCells_matrix.GEX,
-        marker_genes = GEX_marker_genes_vec
-      ) |>
-        save_plots_structured(),
+      name = markers_by_cluster_dot_plot.8_multimodal_QC,
+      description = "GEX marker expression per named WNN cluster, with nuclei counts and doublet evidence for retained WNN nuclei. [checkpoint:8_multimodal-QC]",
+      command = {
+        plot <- plot_marker_expression_dot_BPCells(
+          feature_matrix = aggregated_counts_BPCells_matrix.GEX,
+          metadata_tibble = metadata_w_cell_types_tibble.WNN,
+          marker_genes_list = UCell_GEX_marker_genes_list,
+          group_col = "WNN_harmony_SNN_cluster_named",
+          cell_type_col = "WNN_harmony_SNN_cluster_cell_type", group_label = "WNN cluster"
+        )
+        save_plots_structured(
+          add_cluster_doublet_bars(plot, metadata_w_cell_types_tibble.WNN,
+            scDblFinder_results_df.GEX, max_doublet_fraction = NULL,
+            group_col = "WNN_harmony_SNN_cluster_named"),
+          width = max(20, 8 + 0.35 * nlevels(plot$data$marker_feature)),
+          height = max(9, 4 + 0.25 * nlevels(plot$data$group)))
+      },
       resources = get_tar_resources(RAM_GB_req = 16)
+    ),
+    tarchetypes::tar_file(
+      name = module_scores_by_cluster_dot_plot.8_multimodal_QC,
+      description = "Cached adjusted GEX UCell evidence per WNN cluster, with distance-ordered marker sets. [checkpoint:8_multimodal-QC]",
+      command = {
+        plot <- plot_UCell_annotation_dot(cluster_UCell_annotation.8_multimodal_QC,
+          metadata_w_cell_types_tibble.WNN, group_by = "cluster",
+          cluster_column = "WNN_harmony_SNN_cluster", group_label = "WNN cluster")
+        save_plots_structured(plot,
+          width = max(16, 4 + 0.35 * nlevels(plot$data$module)),
+          height = max(9, 4 + 0.25 * nlevels(plot$data$cluster)))
+      }
     ),
     tarchetypes::tar_file(
       name = confusion_matrices_plots.8_multimodal_QC,

@@ -844,7 +844,7 @@ style_marker_dot_plot <- function(plot, matching_rows, group_label, score_type) 
         "Read across each marker set to check whether several genes support the same groups or one gene dominates.\n",
         "Look for coherent signal in matching rows, broad expression elsewhere, and markers with little detection."),
       caption = paste0(if (is_module)
-        "Colour: cached mean UCell minus the matched-control 95th percentile, before doublet filtering. Dot area: percentage of cells with raw UCell > 0.\n" else
+        "Colour: cached mean UCell minus the matched-control 95th percentile for the plotted nuclei. Dot area: percentage of cells with raw UCell > 0.\n" else
         "Colour: per-gene scaled mean signal across the plotted groups. Dot area: percentage of cells with detected signal.\n",
         "Shaded boxes mark assigned cell-type matches to marker sets; unassigned groups have no match. Labels derived from these markers are not independent validation.\n",
         if (is_module) "Column order: Euclidean distance and Ward clustering of unstandardized cluster-adjusted profiles; each cluster has equal weight. Negative scores are retained." else
@@ -987,7 +987,8 @@ plot_marker_gene_activity_dot_BPCells <- function(feature_matrix, metadata_tibbl
 #' Plot cached annotation evidence, with one distance order shared by both views.
 #' Cell-type rows average cluster-adjusted scores by cell count, not a new null.
 plot_UCell_annotation_dot <- function(annotation, metadata_tibble, group_by = c("cluster", "cell_type"),
-                                       cluster_column = "PCA_harmony_SNN_cluster") {
+                                       cluster_column = "PCA_harmony_SNN_cluster",
+                                       group_label = if (group_by == "cluster") "GEX cluster" else "GEX cell type") {
   group_by <- match.arg(group_by)
   evidence <- annotation$evidence
   profiles <- stats::xtabs(excess ~ cluster + label, evidence)
@@ -995,7 +996,6 @@ plot_UCell_annotation_dot <- function(annotation, metadata_tibble, group_by = c(
   module_names <- colnames(profiles)[ordering$order]
   cell_type_col <- paste0(cluster_column, "_cell_type")
   group_col <- if (group_by == "cluster") paste0(cluster_column, "_named") else cell_type_col
-  group_label <- if (group_by == "cluster") "GEX cluster" else "GEX cell type"
   group_cell_types <- get_marker_group_cell_types(metadata_tibble, group_col, cell_type_col)
   group_order <- get_marker_cell_type_order(metadata_tibble[[group_col]], module_names, group_cell_types)
   cluster_groups <- unique(data.frame(cluster = as.character(metadata_tibble[[cluster_column]]),
@@ -1348,18 +1348,19 @@ plot_WNN_weight_metadata_details <- function(summary) {
 #' Add cluster sizes and RNA/ATAC doublet evidence beside a marker dot plot
 #'
 #' @param plot Marker dot plot with discrete cluster rows in `plot$data$group`.
-#' @param metadata_tibble Pre-doublet-filter metadata, including named clusters.
+#' @param metadata_tibble Metadata for the plotted nuclei, including named clusters.
 #' @param scDblFinder_results_df Barcode-indexed GEX scDblFinder results.
 #' @param max_doublet_fraction Maximum allowed called-doublet fraction, or NULL.
+#' @param group_col Named-cluster column matching the marker plot rows.
 #' @return A patchwork with aligned counts, AMULET violins and marker rows.
 add_cluster_doublet_bars <- function(plot, metadata_tibble, scDblFinder_results_df,
-                                     max_doublet_fraction) {
+                                     max_doublet_fraction, group_col = "PCA_harmony_SNN_cluster_named") {
   row_order <- levels(plot$data$group)
   row_separators <- ggplot2::geom_hline(
     yintercept = seq(0.5, length(row_order) + 0.5),
     colour = "grey80", linewidth = 0.25)
   counts <- metadata_tibble |>
-    dplyr::select(barcode_w_prefix, group = PCA_harmony_SNN_cluster_named) |>
+    dplyr::transmute(barcode_w_prefix, group = .data[[group_col]]) |>
     dplyr::left_join(scDblFinder_results_df |>
       tibble::rownames_to_column("barcode_w_prefix") |>
       dplyr::select(barcode_w_prefix, scDblFinder.class_GEX), by = "barcode_w_prefix") |>
@@ -1385,7 +1386,7 @@ add_cluster_doublet_bars <- function(plot, metadata_tibble, scDblFinder_results_
     ggplot2::theme_classic() +
     ggplot2::theme(axis.text.y = ggtext::element_markdown(), legend.position = "bottom")
   amulet_data <- metadata_tibble |>
-    dplyr::transmute(group = factor(PCA_harmony_SNN_cluster_named, levels = row_order),
+    dplyr::transmute(group = factor(.data[[group_col]], levels = row_order),
       p_value = amulet_p.value) |>
     dplyr::filter(is.finite(p_value), p_value >= 0, p_value <= 1) |>
     dplyr::mutate(evidence = -log10(pmax(p_value, 1e-10)))
@@ -1402,7 +1403,7 @@ add_cluster_doublet_bars <- function(plot, metadata_tibble, scDblFinder_results_
     ggplot2::theme_classic() +
     ggplot2::theme(axis.text.y = ggplot2::element_blank(), axis.ticks.y = ggplot2::element_blank())
   note <- paste0("Left bars: black = non-doublet calls; red = doublet calls; grey = unclassified nuclei, when present. ",
-    if (is.null(max_doublet_fraction)) "Whole-cluster doublet filtering is disabled." else
+    if (is.null(max_doublet_fraction)) "No whole-cluster doublet threshold is applied to these rows." else
       paste0("Red cluster names: called doublets / all cluster nuclei > ",
         format(max_doublet_fraction), " (configured whole-cluster exclusion threshold)."))
   patchwork::wrap_plots(bars, amulet, plot + row_separators +

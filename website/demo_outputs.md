@@ -14,15 +14,21 @@ gallery_items <- check_output_gallery_assets(
 )
 ```
 
-The public demo uses `outputs/` as its results store. Other checkouts may use a different folder, recorded under `store` in `_targets.yaml`. The R commands below use that configuration automatically.
+The pipeline produces 4 main kinds of outputs in the targets-store, defaulted to `outputs/` (can be configured via the `store` parameter in `_targets.yaml)`
 
-The store contains serialized R objects in `objects/`, file artifacts in `files/`, and requested review figures in `plots/`.
+- Serialized R objects (qs2-format) in a flat file hierarchy managed by targets itself inside `objects/`.
+
+- Various file types inside `files/` in a structured folder hierarchy
+
+- Plots in .png-format inside `plots/` in a structured folder hierarchy
+
+- Serialized ggplot2-objects inside `plots_objects/` in a structured folder hierarchy
 
 ## Objects
 
-Most intermediate and final result objects are saved automatically by `targets` under `outputs/objects` during a pipeline run. Read them with `targets::tar_read()` from a repository-root R session after the demo has completed.
+Most intermediate and final result objects are saved automatically by `targets` and can be loaded into any repository-root R-session using `targets::tar_read()`:
 
-```{.r filename="R"}
+``` {.r filename="R"}
 cell_metadata <- targets::tar_read(
   metadata_w_cell_types_tibble.WNN.immune_human_2x
 )
@@ -37,28 +43,22 @@ The metadata table describes the retained nuclei and their annotations. WNN mean
 
 ## Files
 
-File targets also load with `targets::tar_read()`, but their value is a path rather than an in-memory result.
+File targets also load with `targets::tar_read()`, but their value is a path rather than an in-memory result, so you will have to load them yourself using the appropriate tool.
 
-```{.r filename="R"}
+``` {.r filename="R"}
 targets::tar_read(cellranger_barcodes_tsv.healthy_PBMC_human)
 targets::tar_read(aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x)
 targets::tar_read(consensus_peak_BPCells_matrix_dir.ATAC.immune_human_2x)
 ```
 
-For example, `aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x` is placed under:
-
-```text
-outputs/files/immune_human_2x/GEX/
-```
-
-Other files are grouped under `outputs/files/<scope>/`, where the scope is a GEM well, an internal pre-aggregation QC group, or an aggregation.
+As you can see from the output above, file-targets are always saved in a location derived directly from their target-name.
 
 ## Plots
 
-The demo command also built `categorical.UMAPs.8_multimodal_QC.immune_human_2x`. Plots use the same scope-based layout under `outputs/plots/`, so its files are in:
+The demo command also built `categorical.UMAPs.8_multimodal_QC.immune_human_2x`. Plots use the same scope-based layout as files, but under `outputs/plots/` instead. Note that a target might produce multiple files, as seen in the example below:
 
-```text
-outputs/plots/immune_human_2x/8_multimodal_QC/UMAPs/categorical/
+``` {.r filename="R"}
+targets::tar_read(categorical.UMAPs.8_multimodal_QC.immune_human_2x)
 ```
 
 Open `WNN_harmony_SNN_cluster_cell_type.png` there to see the integrated clusters and cell-type labels from your own run. It should resemble this documentation snapshot:
@@ -67,10 +67,13 @@ Open `WNN_harmony_SNN_cluster_cell_type.png` there to see the integrated cluster
 render_gallery_grid(gallery_items[gallery_items$id == "wnn-umap", ])
 ```
 
+## Plot objects
+
+\<WIP\>\
 The [Main pipeline gallery](gallery_main.md) shows the other plot families the workflow produces. Those are saved snapshots and do not reflect the state of your analysis. To build one more of them, follow [Request an additional result](main_running.md#after-the-steps); to build all review plots for a stage, run its step in [Run your own analysis](main_running.md#steps).
 
-## Next steps
+## Possible next steps
 
+- To continue with the demo-aggregation, and explore other outputs, try to run all targets in the pipeline by leaving out the `names` parameter in the `tar_make()`-call on the previous page.
 - To adopt the workflow, continue with [Plan your analysis](main_overview.md) and the steps in [Run your own analysis](main_running.md#steps).
-- To request more results or rerun after a change, use [Run your own analysis](main_running.md).
 - To diagnose a failed or unexpectedly stale target, use [Troubleshooting](troubleshooting.md).

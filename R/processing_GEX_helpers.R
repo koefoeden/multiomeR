@@ -346,6 +346,9 @@ prepare_SCT_cell_attr <- function(metadata_tibble, barcode_vec) {
 }
 
 run_Seurat_SCT_for_PCA <- function(counts_matrix, cell_attr, SCT_regress_vars = NULL, n_variable_features = 3000) {
+  previous_options <- options(future.globals.maxSize = 40 * 1024^3)
+  on.exit(options(previous_options), add = TRUE)
+
   sct_args <- list(
     object = SeuratObject::CreateAssay5Object(counts = counts_matrix),
     cell.attr = cell_attr,

@@ -112,7 +112,9 @@ results](demo_outputs.qmd) explains the distinction.
 
 These cards are a curated subset from the public `immune_human_2x` configuration. They illustrate diagnostics, not acceptable effect sizes or significance patterns for another study. See [Differential analyses](downstream_differential_analyses.qmd) for prerequisites, models, and the module run command.
 
-The full module additionally produces expression-derived CollecTRI activity results and a CollecTRI-DTFA concordance plot. They are not shown below until stable public example assets are available.
+The full module additionally produces expression-derived CollecTRI activity results and a CollecTRI-JASPAR concordance plot. They are not shown below until stable public example assets are available.
+
+Named abundance models now produce donor-proportion plots and contrast plots with 95% Wald intervals. The previous coefficient and pooled-baseline-change examples have been retired; updated public abundance examples are pending.
 
 [Generated Quarto chunk omitted: `render_gallery_section( gallery_items, "Differential analyses module", subsection_descriptions = c( "Gene expression"...`]
 
@@ -433,7 +435,7 @@ Conventions used below:
 
 - Commands run in a repository-root R session, opened as in [Install and
   prepare the demo](demo_installation.qmd).
-- Replace `my_dataset` and `my_aggregation` with your identifiers.
+- Replace `my_GEM_well` and `my_aggregation` with your identifiers.
 - `<store>` is the results folder configured in `_targets.yaml`, `outputs/` in
   the demo.
 - File formats are documented in the [GEM well table](reference_GEM_wells.qmd),
@@ -441,6 +443,11 @@ Conventions used below:
   configuration](reference_aggregations.qmd) references.
 - `crew_controllers.R` must describe your machine or scheduler; see [Choose
   where the analysis runs](performance_distributed_computing.qmd).
+
+Settings default to `configuration/`. To use your own directory, copy it and
+write the new directory path into the ignored root `configuration.local` file.
+Keep all settings together; disabled modules may omit their files. See the
+[configuration guide](https://github.com/koefoeden/multiomeR/blob/main/configuration/README.md).
 
 ## How a step is run {#how-to-run}
 
@@ -467,15 +474,13 @@ is documented in [Reading the review outputs](review_outputs.qmd).
 
 ## 1. Process the GEM wells {#steps}
 
-Reads each GEM well's Cell Ranger output and compares QC distributions across
-the GEM wells of a dataset before any filter is applied.
+Reads each GEM well's Cell Ranger output and reviews per-well exclusions.
+Compare distributions across wells after defining an aggregation in step 2.
 
 **Configure** one row per GEM well in `cfg_GEM_wells.tsv`
 ([GEM well table](reference_GEM_wells.qmd)):
 
-- `GEM_well_ID`, and a shared `GEM_well_dataset` for wells whose QC
-  distributions should be compared side by side, typically the same tissue and
-  protocol;
+- a unique `GEM_well_ID` and an appropriate `GEM_well_dataset` label;
 - `GEM_well_cellranger_arc_count_dir`;
 - donors: `GEM_well_n_donors` and `GEM_well_donor_id` for a single-donor
   well, or `GEM_well_donors_VCF_file` to demultiplex several donors by
@@ -492,17 +497,16 @@ the GEM wells of a dataset before any filter is applied.
 
 ```{.r filename="R"}
 targets::tar_make(
-  names = tidyselect::contains("1_pre_aggregation_QC") & tidyselect::ends_with(".my_dataset")
+  names = tidyselect::contains("1_pre_aggregation_QC") & tidyselect::ends_with(".my_GEM_well")
 )
 ```
 
 **Review**
 
 ```{.text}
-<store>/plots/my_dataset/1_pre_aggregation_QC/
-├── per_dataset_QC_violins/
-├── per_dataset_excluded_upset.png
-└── per_dataset_excluded_cellranger_only_upset.png
+<store>/plots/my_GEM_well/1_pre_aggregation_QC/
+├── excluded_barcodes_by_type_upset.png
+└── excluded_cellranger_only_barcodes_by_type_upset.png
 ```
 
 ## 2. Aggregate the GEM wells
@@ -734,7 +738,9 @@ targets::tar_make(
 ├── UMAPs/{categorical,continuous,cross}/
 ├── categorical_bars_plots/
 ├── marker_gene_activity_dot_plot.png
-├── motif_family_accessibility_heatmap.png
+├── motif_family_accessibility_by_ATAC_cluster_heatmap.png
+├── motif_family_accessibility_by_GEX_cluster_heatmap.png
+├── motif_family_accessibility_by_GEX_cell_type_heatmap.png
 ├── motif_family_accessibility_marker_volcano_plots.png
 ├── coverage_tracks_plots/
 ├── cluster_UCell_advantage_plots/
@@ -835,16 +841,24 @@ Choose the output that matches your question:
 
 | Question | Output family |
 |---|---|
-| Do cell-type proportions differ? | Differential cell-type composition (DCTC) |
-| Which genes change expression? | Differential gene expression (DGE) |
-| Which peaks change accessibility? | Differential chromatin accessibility (DCA) |
-| Which motif families change accessibility? | ATAC-derived differential TF activity (DTFA) |
-| Which regulators show altered expression-based activity? | CollecTRI-derived differential TF activity (DCTA) |
+| Do cell-type proportions differ? | `cell_type_composition` |
+| Which genes change expression? | `gene_expression` |
+| Which peaks change accessibility? | `chromatin_accessibility` |
+| Which motif families change accessibility? | `motif_family_accessibility` (JASPAR) |
+| Which regulators show altered expression-based activity? | `transcription_factor_activity` (CollecTRI) |
 
 The module also produces model diagnostics, comparisons across modalities,
-and gene-set tests for Hallmark and Reactome pathways. Activity scores are
-inferred from accessibility or expression; interpret them in the context of
-the measurement used.
+and gene-set tests for Hallmark and Reactome pathways. Motif-family accessibility
+summarizes ATAC evidence; transcription-factor activity is inferred from gene
+expression using CollecTRI. Interpret each in the context of its measurement.
+
+Plot directories use these descriptive family names below
+`plots/<aggregation>/differential_analyses/`. Gene-set plots appear under
+`gene_expression/gene_set_enrichment/Hallmark/enrichment_plots/<model>/`
+or the corresponding `Reactome` directory. Volcano outputs use
+`<family>/volcano_plots/<model>/`; saved plot targets omit redundant `_file`
+and `_files` suffixes. Renaming targets creates new cache entries and output
+paths on the next run; existing output directories are not migrated.
 
 See the [method details](implementation/implementation_differential_analyses.html#method-details)
 for activity inference, motif-family definitions, and gene-set testing.
@@ -859,14 +873,18 @@ your_aggregation:
 ```
 
 Then create a matching row directly in
-`module_differential_analyses/cfg.yaml`.
+`configuration/cfg_module_differential_analyses.yaml`.
 
-```{.yaml filename="module_differential_analyses/cfg.yaml"}
+```{.yaml filename="configuration/cfg_module_differential_analyses.yaml"}
 your_aggregation:
-  differential_analyses_DCTC_plot_phenotype_vars: condition
-  differential_analyses_DCTC_formula_chr: >-
-    cbind(n_nuclei, n_other_nuclei) ~ 0 + condition
-  differential_analyses_psbulk_DX_models:
+  differential_analyses_cell_type_composition_models:
+    condition_abundance:
+      formula: ~ condition
+      contrast_specs_vec:
+        treated_vs_control: conditiontreated
+      plot_phenotype_vars: condition
+      color_by: condition
+  differential_analyses_pseudobulk_models:
     condition_model:
       cell_type_subset: NULL
       design_matrix_func_name: NULL
@@ -876,7 +894,15 @@ your_aggregation:
         treated_vs_control: conditiontreated
 ```
 
-The module selection below requests both composition and pseudobulk outputs. Configure the DCTC phenotype/formula and at least one pseudobulk model before using that broad selector. Formula terms and contrast coefficients must match columns produced by the model matrix.
+Both branches use named models, donor eligibility checks and named contrasts. Abundance models use `differential_analyses_cell_type_composition_models`; feature models use `differential_analyses_pseudobulk_models`. Omitting abundance models disables that branch. The former aggregation-wide cell-type composition formula, phenotype and colour settings have been replaced by fields inside each named model.
+
+For mixed tissues, set `GEM_well_IDs` inside an abundance model to define its population, for example the six left-ventricle wells. Optional `donor_ids` can further restrict donors in either branch. Donors with missing model metadata or no selected samples are excluded and recorded in model-specific cohort TSVs. Feature cohorts also report retained pseudobulk sample counts and depth-filter exclusions.
+
+By default, abundance models test all cell-type labels observed in their eligible population, including unassigned labels. Optional `cell_types_to_test` restricts the response cell types **without changing the denominator**: every retained nucleus in the selected wells contributes to its donor's total. Zero donor–cell-type counts remain in the analysis. In contrast, feature-model `cell_type_subset` selects the cells represented by the pseudobulks. Feature matrices already pool wells within donors and cell types, so they cannot support a late `GEM_well_IDs` filter; the module rejects that field for feature models.
+
+Abundance models fit a separate fixed-effects beta-binomial logit model per cell type. Use a one-sided predictor formula, `formula: ~ ...`, and named `contrast_specs_vec`. The implementation supplies the fixed response `cbind(n_nuclei, n_other_nuclei)`; two-sided formulas are rejected. Custom design/contrast functions and random-effects formulas are not supported in this branch. Contrast tables report log-odds effects, Wald uncertainty, donor counts and BH FDR across tested cell types within each model/contrast. Failed fits are explicitly marked non-estimable. Counts, cohort tables and plots use the same eligible donors and denominators. Plot-only variables do not exclude donors from the fit.
+
+The module selection below requests both configured abundance and pseudobulk outputs. Formula terms and contrast coefficients must match columns produced by the model matrix. The two branches retain their distinct response construction and fitting methods; sharing configuration does not make their effect estimates interchangeable.
 
 The model example assumes `condition` distinguishes treated and control donors.
 Check which group is the reference and what each model coefficient represents
@@ -908,7 +934,7 @@ targets::tar_make(
 )
 ```
 
-Review pseudobulk depths and retained donor counts before interpreting coefficients. Check model-matrix terms, P-value distributions, effect directions, and agreement or disagreement across DGE, DCA, DTFA, and DCTA. The CollecTRI-DTFA concordance target summarizes family coverage, rank correlation, directional agreement, and joint FDR support for every configured contrast. These are complementary regulatory readouts: agreement strengthens a shared interpretation, while disagreement can reflect post-transcriptional regulation, motif-family ambiguity, or different evidence carried by expression and accessibility. Treat the [Differential analyses gallery](gallery_differential_analyses.qmd) as a visual reference, not as a statistical acceptance threshold.
+Review pseudobulk depths and retained donor counts before interpreting coefficients. Check model-matrix terms, P-value distributions, effect directions, and agreement or disagreement across gene expression, chromatin accessibility, motif-family accessibility, and transcription-factor activity. The CollecTRI-JASPAR concordance target summarizes family coverage, rank correlation, directional agreement, and joint FDR support for every configured contrast. These are complementary regulatory readouts: agreement strengthens a shared interpretation, while disagreement can reflect post-transcriptional regulation, motif-family ambiguity, or different evidence carried by expression and accessibility. Treat the [gallery](gallery_differential_analyses.qmd) as a visual reference, not as a statistical acceptance threshold.
 
 Runtime depends on donors, cell types, models, contrasts, and gene-set analyses. Use [Troubleshooting](troubleshooting.qmd) if a formula, contrast, or metadata join fails.
 
@@ -971,9 +997,9 @@ your_aggregation:
   modules: [genetic_enrichment]
 ```
 
-Then create a matching row directly in `module_genetic_enrichment/cfg.yaml`.
+Then create a matching row directly in `configuration/cfg_module_genetic_enrichment.yaml`.
 
-```{.yaml filename="module_genetic_enrichment/cfg.yaml"}
+```{.yaml filename="configuration/cfg_module_genetic_enrichment.yaml"}
 your_aggregation:
   genetic_enrichment_GWAS_studies:
     lymphocyte_count:
@@ -1032,6 +1058,66 @@ Runtime and disk use grow with studies, cells, graph representations, permutatio
 [Generated Quarto chunk omitted: `emit_yaml_entry(module_config_file, "immune_human_2x")`]
 
 </details>
+
+
+<!-- source: website/downstream_peak_gene_correlation.qmd -->
+
+# Peak–gene correlation
+
+Run this optional module after accepting the final WNN cell set. It relates
+ATAC accessibility to RNA expression within broad GEX-derived cell types,
+using the retained WNN nuclei; it is no longer part of checkpoint 8.
+
+Add `peak_gene_correlation` to the aggregation's existing `modules` list in
+`cfg_aggregations.yaml`, and add a matching row in
+`configuration/cfg_module_peak_gene_correlation.yaml`:
+
+```yaml
+my_aggregation:
+  peak_gene_correlation_top_links_per_cell_group: 3
+```
+
+The top-link count controls the number of detail figures per cell type.
+`peak_gene_correlation_filter` selects `lenient` (default), `moderate`, or
+`strict` measurement-support filtering. Disabled aggregations contribute no
+module targets.
+
+```r
+targets::tar_make(
+  names = tidyselect::ends_with(".peak_gene_correlation.my_aggregation")
+)
+```
+
+All module targets have description tag `[checkpoint:peak_gene_correlation]`.
+Their paths are `<store>/plots/my_aggregation/peak_gene_correlation/`;
+file exports use the corresponding `files` directory, with any modality
+suffixes as deeper subdirectories. For example, read selected links with:
+
+```r
+targets::tar_read(
+  peak_gene_correlation_links_tibble.WNN.peak_gene_correlation.my_aggregation
+)
+```
+
+Peak–gene links are candidate regulatory relationships. Cells are aggregated
+within donor and ATAC-defined state using WNN cell-type annotations, without
+reusing a cell across aggregates. Measurement-support filters select hypotheses
+before fitting; the default requires shared support from at least two donors,
+and the strict preset requires three. Review `filter_retention_plot` first.
+
+The hierarchical analysis fits a mean peak effect with donor-specific slope
+variation, donor intercepts and RNA/ATAC depth adjustment. It reports
+Kenward–Roger p-values, BH FDR and numerical reliability diagnostics. Top-link
+figures rank positive, estimable nonpromoter slopes by p-value without a
+significance cutoff, so appearing in a figure is not evidence of significance.
+They combine focal-cell-type coverage, gene context, hierarchical evidence and
+adjusted aggregate scatterplots.
+
+The existing HC3 correlation summaries remain a separate conditional analysis.
+Neither analysis establishes causal regulation; numerical reference parity does
+not establish statistical calibration across datasets. See the
+[module methods and filtering reference](https://github.com/koefoeden/multiomeR/blob/main/module_peak_gene_correlation/README.md)
+for inference limits, support thresholds and output details.
 
 
 ## Part: Operation and scaling
@@ -1639,7 +1725,7 @@ their key columns, the two tables must not reuse column names.
 
 ## Column dictionary
 
-Use the [committed example](https://github.com/koefoeden/multiomeR/blob/main/cfg_GEM_wells.tsv)
+Use the [committed example](https://github.com/koefoeden/multiomeR/blob/main/configuration/cfg_GEM_wells.tsv)
 to check the full set of columns.
 
 The table below is a documentation snapshot of the two public demo wells,
@@ -1781,7 +1867,7 @@ The searchable overview below is generated from `cfg_pipeline_parameters.tsv`,
 the same manifest used for runtime defaults and validation. Search by name or
 purpose, or choose a topic. Defaults are visible beside each parameter; open a
 row for its type and example. See the [committed
-example](https://github.com/koefoeden/multiomeR/blob/main/cfg_aggregations.yaml)
+example](https://github.com/koefoeden/multiomeR/blob/main/configuration/cfg_aggregations.yaml)
 for a complete configuration.
 
 [Generated Quarto chunk omitted: `emit_parameter_overview("aggregation")`]
@@ -1855,7 +1941,7 @@ The quickest way to understand the implementation is to follow one value across 
 
 1. `immune_human_2x` is a key in `cfg_aggregations.yaml`.
 2. `read_aggregation_config_tibble()` resolves manifest defaults and inheritance into one aggregation row.
-3. `build_aggregation_tibble()` filters active rows and adds symbols for GEM-well, derived QC-group, and aggregation-level upstream targets.
+3. `build_aggregation_tibble()` filters active rows and adds symbols for GEM-well upstream targets, including those used for aggregation-level QC summaries.
 4. The root `_targets.R` passes that row through `tar_map(names = aggregation, delimiter = ".")`.
 5. A base target such as `multimodal_Seurat_object.8_multimodal_QC` becomes `multimodal_Seurat_object.8_multimodal_QC.immune_human_2x`.
 6. Description tags make selected targets discoverable as checkpoints or graph nodes, while structured file helpers derive output paths from the active target name.
@@ -2000,12 +2086,19 @@ The root `_targets.R` builds the target graph from mapping tibbles. Each mapping
 
 The core mapping flow is:
 
+Configuration readers use `configuration_path()` to resolve a basename within
+`configuration/` or the directory named by the ignored `configuration.local`.
+Relative selections are anchored at the repository root. This selection does not
+change data-path interpretation or `_targets.yaml`. The selected GEM-well path
+is a graph global consumed by the file target, so changing directories also
+changes its dependency. Aggregation and enabled-module settings are resolved
+during graph construction. Disabled modules do not read their configuration.
+
 1. `GEM_well_tibble_all` reads only the pre-aggregation processing columns from every row in the canonical `cfg_GEM_wells.tsv`.
 2. `aggregation_tibble_all_from_yaml` is read from `cfg_aggregations.yaml`.
 3. `aggregation_tibble` keeps active aggregations, validates their GEM well references against the complete view, and adds upstream target-symbol columns.
 4. `GEM_well_tibble` keeps GEM wells whose `GEM_well_is_active` value is true.
-5. `dataset_tibble` derives internal cross-GEM-well QC groups from those active rows.
-6. `_targets.R` expands active GEM wells, derived QC summaries, and aggregations with `tar_map()`, then appends module target files.
+5. `_targets.R` expands active GEM wells and aggregations with `tar_map()`, then appends module target files. Cross-GEM-well QC summaries use the aggregation's selected wells.
 
 Within each aggregation, `GEM_well_metadata_tibble` reads the same canonical
 file, subsets it to `aggregation_GEM_well_IDs`, and preserves that order. Cheap
@@ -2025,11 +2118,10 @@ tarchetypes::tar_map(
 )
 ```
 
-With `GEM_well_ID = "healthy_PBMC_human"`, a target named `cellranger_summary_file` becomes `cellranger_summary_file.healthy_PBMC_human`. The same dot-delimited suffix convention is used for datasets, aggregations, module targets, and nested module maps.
+With `GEM_well_ID = "healthy_PBMC_human"`, a target named `cellranger_summary_file` becomes `cellranger_summary_file.healthy_PBMC_human`. The same dot-delimited suffix convention is used for aggregations, module targets, and nested module maps.
 
 ```text
 active cfg_GEM_wells.tsv row -> GEM_well_tibble row    -> per GEM well targets
-derived dataset group       -> dataset_tibble row     -> per-dataset targets
 cfg_aggregations.yaml key   -> aggregation_tibble row -> per-aggregation targets
 ```
 
@@ -2079,13 +2171,7 @@ combined_counts_matrix <- purrr::reduce(
 )
 ```
 
-Column names should describe the downstream scope, the upstream target, and the fact that the value is a symbol list. Existing symbol-list columns use the `*_syms` suffix, such as `aggregation_GEX_counts_BPCells_matrix_syms`, `dataset_unfiltered_cells_n_vecs_syms`, and `per_dataset_QC_violins_syms`.
-
-The shared pattern appears at three boundaries:
-
-- `aggregation_*_syms` columns splice per GEM well targets into aggregation-level targets.
-- `dataset_*_syms` columns splice per GEM well targets into dataset-level targets.
-- `per_dataset_*_syms` columns splice per-dataset targets into aggregation-level summary targets.
+Column names should describe the downstream scope, the upstream target, and the fact that the value is a symbol list. The `aggregation_*_syms` columns, such as `aggregation_GEX_counts_BPCells_matrix_syms`, splice per GEM well targets into aggregation-level targets.
 
 Module target files also need aggregation-specific references to main-pipeline targets. For this, `add_aggregation_target_syms()` creates one symbol per row, suffixed by the aggregation name. These columns are named like the target they replace rather than with `*_syms`, because each cell is a single symbol rather than a list.
 
@@ -2147,6 +2233,19 @@ If `get_tar_resources()` is called before controller resources are loaded, it fa
 These conventions are the connective tissue behind the graph chapters. The parameter manifest explains why config rows can be compact. Mapping tibbles explain why target names have stable suffixes. Target-symbol columns explain how mapped targets pass sets of upstream targets across graph levels. Target metadata tags explain why some nodes remain visible in curated graph views. The bootstrap contract explains why helper functions, controller resources, and target options are available before `_targets.R` is evaluated.
 
 When modifying the implementation, preserve these contracts unless the change is explicitly meant to replace one of them.
+
+### Peak–gene correlation module
+
+`module_peak_gene_correlation/targets.R` maps only opted-in aggregations and
+binds their existing WNN metadata, GEX/ATAC matrices, ATAC embeddings,
+fragments and reference annotations. `correlation_targets.R` owns the analysis,
+SuSiE prioritization, exports and plots. Parameters use the
+`peak_gene_correlation` manifest scope and matching module YAML rows.
+Targets end in `.peak_gene_correlation.<aggregation>` (with `.WNN` before
+that suffix for intermediate results). Plot checkpoint tags use
+`peak_gene_correlation`, keeping this analysis outside numbered QC selections.
+Renamed targets rebuild on the first module run; existing core target names
+and numerical analysis defaults are unchanged.
 
 
 <!-- source: website/implementation/algorithm_validation.qmd -->
@@ -2377,7 +2476,7 @@ explain where to change parameters, helpers, and target definitions; the
 
 
 
-The root `_targets.R` creates GEM-well, derived QC-group, and aggregation
+The root `_targets.R` creates GEM-well and aggregation
 mapping rows, then maps target fragments from `extra_targets/`. Use the diagrams
 to find the relevant stage, then inspect the corresponding source file for the
 complete command and resource declaration.
@@ -2385,7 +2484,6 @@ complete command and resource declaration.
 | Stage | Primary source |
 |---|---|
 | GEM well preprocessing | `extra_targets/per_GEM_well_targets.R` |
-| Cross-GEM-well QC summaries | `extra_targets/per_dataset_targets.R` |
 | Aggregation setup and shared QC | `extra_targets/general_aggregation_targets.R` |
 | GEX | `extra_targets/GEX_merge_and_dim_reduc_targets.R`, `extra_targets/GEX_graph_and_cluster_targets.R` |
 | ATAC | `extra_targets/ATAC_targets.R` |
@@ -2406,7 +2504,7 @@ This view covers merged RNA processing, clustering, marker detection, cell type 
 
 ## ATAC processing
 
-This view covers ATAC QC, peak calling, consensus peak construction, chromatin accessibility processing, chromVAR scoring, coverage tracks, and peak-gene links.
+This view covers ATAC QC, peak calling, consensus peak construction, chromatin accessibility processing, chromVAR scoring, and coverage tracks. Peak–gene correlation is a separate optional module.
 
 [Mermaid graph omitted; source: `website/figures/human_curated/ATAC_v2.mmd`]
 
@@ -2429,21 +2527,21 @@ The native implementation, its differences from Seurat, and the maintained simil
 
 
 
-`module_differential_analyses/targets.R` filters aggregations that enabled the module, joins their module config, attaches symbols for accepted WNN metadata and pseudobulk inputs, and maps the composition, pseudobulk, GSEA, and cross-modality target fragments. The generic pseudobulk model family is instantiated for DGE, DCA, DTFA, and expression-derived CollecTRI activity (DCTA). DCTA first converts filtered, normalized GEX pseudobulks to signed ULM scores and then reuses the same model and contrast machinery.
+`module_differential_analyses/targets.R` filters aggregations that enabled the module, joins their module config, attaches symbols for accepted WNN metadata and pseudobulk inputs, and maps the composition, pseudobulk, gene-set enrichment, and cross-modality target fragments. The generic pseudobulk model family is instantiated for gene expression, chromatin accessibility, motif-family accessibility, and expression-derived CollecTRI activity (transcription-factor activity). transcription-factor activity first converts filtered, normalized GEX pseudobulks to signed ULM scores and then reuses the same model and contrast machinery.
 
-DTFA uses the 233 official JASPAR2026 CORE vertebrate familial root motifs as its complete feature universe. The pipeline scans those family-level profiles directly, rather than scanning individual motifs and taking the union of their peak matches.
+motif-family accessibility uses the 233 official JASPAR2026 CORE vertebrate familial root motifs as its complete feature universe. The pipeline scans those family-level profiles directly, rather than scanning individual motifs and taking the union of their peak matches.
 
-The cross-modality fragment creates a CollecTRI-to-JASPAR family crosswalk, a detailed regulator-level table containing DCTA, DTFA, and TF-expression results, a family-level comparison table, a contrast-level concordance summary, and its plot. CollecTRI complexes remain intact in DCTA; complex-member mappings are introduced only by the comparison crosswalk.
+The cross-modality fragment creates a CollecTRI-to-JASPAR family crosswalk, a detailed regulator-level table containing transcription-factor activity, motif-family accessibility, and TF-expression results, a family-level comparison table, a contrast-level concordance summary, and its plot. CollecTRI complexes remain intact in transcription-factor activity; complex-member mappings are introduced only by the comparison crosswalk.
 
-The graph below is an orientation view. Inspect `setup_and_DCTC_targets.R`, `psbulk_DX_targets.R`, `GSEA_targets.R`, and `cross_modality_targets.R` for the complete model and plotting commands. The user-facing prerequisites and module selector are documented in [Differential analyses](../downstream_differential_analyses.html).
+The graph below is an orientation view. Inspect `setup_and_cell_type_composition_targets.R`, `pseudobulk_differential_targets.R`, `gene_set_enrichment_targets.R`, and `cross_modality_targets.R` for the complete model and plotting commands. The user-facing prerequisites and module selector are documented in [Differential analyses](../downstream_differential_analyses.html).
 
 [Mermaid graph omitted; source: `website/figures/human_curated/differential_analyses_v2.mmd`]
 
 ## Method details
 
-The DCTA branch infers signed TF or TF-complex activity from normalized GEX pseudobulks with CollecTRI regulons and the `decoupleR` univariate linear model (ULM). Genes are filtered for expression across cell-type pseudobulks, and each retained regulator must have at least five measured targets. Its inferred activities then use the same configured donor-level models and contrasts as DGE, DCA, and DTFA. The published human CollecTRI network is downloaded from the OmniPath rescue archive and accepted only when it matches the pipeline's pinned SHA-256 checksum.
+The transcription-factor activity branch infers signed TF or TF-complex activity from normalized GEX pseudobulks with CollecTRI regulons and the `decoupleR` univariate linear model (ULM). Genes are filtered for expression across cell-type pseudobulks, and each retained regulator must have at least five measured targets. Its inferred activities then use the same configured donor-level models and contrasts as gene expression, chromatin accessibility, and motif-family accessibility. The published human CollecTRI network is downloaded from the OmniPath rescue archive and accepted only when it matches the pipeline's pinned SHA-256 checksum.
 
-DTFA tests the 233 sequence-similarity families in the official JASPAR2026 CORE vertebrate clustering rather than individual TF motifs. Each family is represented by its published root motif, which is scanned directly against the consensus peaks; individual member motifs are used only as family metadata. The same family-level accessibility matrix supports marker plots and the Seurat compatibility export. The CollecTRI-DTFA comparison maps individual CollecTRI regulators to these JASPAR families and compares model t-statistics, not raw activity scales. AP1 and NFKB remain intact as complex regulons during activity inference; their canonical members are used only to associate the complexes with motif families for comparison. Detailed source-level results retain TF expression as a third reference, while family-level summaries use the median CollecTRI regulator t-statistic and report whether any mapped source is FDR-significant.
+motif-family accessibility tests the 233 sequence-similarity families in the official JASPAR2026 CORE vertebrate clustering rather than individual TF motifs. Each family is represented by its published root motif, which is scanned directly against the consensus peaks; individual member motifs are used only as family metadata. The same family-level accessibility matrix supports marker plots and the Seurat compatibility export. The CollecTRI-JASPAR comparison maps individual CollecTRI regulators to these JASPAR families and compares model t-statistics, not raw activity scales. AP1 and NFKB remain intact as complex regulons during activity inference; their canonical members are used only to associate the complexes with motif families for comparison. Detailed source-level results retain TF expression as a third reference, while family-level summaries use the median CollecTRI regulator t-statistic and report whether any mapped source is FDR-significant.
 
 Each gene-set collection is tested independently with `cameraPR`, `inter.gene.cor = 0.01`, and a minimum of 10 genes represented in the contrast-specific universe. A significant set is more strongly associated with the contrast than the remaining tested genes, rather than merely showing any collective change. Open Targets evidence annotation is optional.
 

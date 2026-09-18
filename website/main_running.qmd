@@ -314,7 +314,9 @@ targets::tar_make(
 ├── UMAPs/{categorical,continuous,cross}/
 ├── categorical_bars_plots/
 ├── marker_gene_activity_dot_plot.png
-├── motif_family_accessibility_heatmap.png
+├── motif_family_accessibility_by_ATAC_cluster_heatmap.png
+├── motif_family_accessibility_by_GEX_cluster_heatmap.png
+├── motif_family_accessibility_by_GEX_cell_type_heatmap.png
 ├── motif_family_accessibility_marker_volcano_plots.png
 ├── coverage_tracks_plots/
 ├── cluster_UCell_advantage_plots/

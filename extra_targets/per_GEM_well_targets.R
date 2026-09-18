@@ -320,6 +320,10 @@ rlang::list2(
       QC_excluded_BCs_list = excluded_barcodes_by_type_list,
       n_total = unfiltered_cells_n_vecs
     ) |>
+      add_plot_parameters(
+        "cfg_GEM_wells.tsv",
+        GEM_well_QC_exclude_list = GEM_well_QC_exclude_list
+      ) |>
       save_plots_structured(width = 10, height = 10)
   ),
   targets::tar_target(

@@ -13,6 +13,7 @@ rlang::list2(
     name = demultiplexing_assignment_bars.1_pre_aggregation_QC,
     description = "Plot 100-percent stacked assignment bars per GEM well, with donor labels inside singlet segments. [checkpoint:1_pre-aggregation-QC]",
     command = plot_demultiplexing_assignment_bars(demultiplexing_counts_tibble) |>
+      add_plot_parameters("cfg_aggregations.yaml", aggregation_GEM_well_IDs = aggregation_GEM_well_IDs) |>
       save_plots_structured(width = 16,
         height = max(6, 3 + 0.36 * length(aggregation_GEM_well_IDs)))
   ),
@@ -32,7 +33,17 @@ rlang::list2(
   tarchetypes::tar_file(
     name = cell_retention_flow_plot.1_pre_aggregation_QC,
     description = "Plot cumulative nuclei retention through per-well QC. [checkpoint:1_pre-aggregation-QC]",
-    command = save_QC_cell_retention_plot(cell_retention_tibble.GEX_input)
+    command = {
+      plot <- plot_QC_cell_retention(cell_retention_tibble.GEX_input) |>
+        add_plot_parameters("cfg_aggregations.yaml", aggregation_GEM_well_IDs = aggregation_GEM_well_IDs) |>
+        add_plot_parameters("cfg_GEM_wells.tsv", GEM_well_QC_exclude_list = aggregation_GEM_well_QC_exclude_list)
+      branches_per_stage <- plot$data |>
+        dplyr::filter(.data$excluded_cells > 0) |>
+        dplyr::count(.data$stage)
+      save_plots_structured(plot,
+        width = max(8, 4 * dplyr::n_distinct(cell_retention_tibble.GEX_input$stage) + 2),
+        height = max(6, 3 + max(c(0, branches_per_stage$n))))
+    }
   ),
   targets::tar_target(
     name = aggregated_cellranger_ref_list,
@@ -72,6 +83,8 @@ rlang::list2(
       QC_excluded_BCs_list = aggregation_excluded_BCs_list,
       n_total = aggregation_unfiltered_cells_n
     ) |>
+      add_plot_parameters("cfg_aggregations.yaml", aggregation_GEM_well_IDs = aggregation_GEM_well_IDs) |>
+      add_plot_parameters("cfg_GEM_wells.tsv", GEM_well_QC_exclude_list = aggregation_GEM_well_QC_exclude_list) |>
       save_plots_structured(width = 20, height = 7)
   ),
   targets::tar_target(
@@ -89,6 +102,8 @@ rlang::list2(
       QC_excluded_BCs_list = aggregation_excluded_cellranger_only_BCs_list,
       n_total = nrow(dplyr::bind_rows(aggregation_cellranger_kept_metadata_tibble_syms))
     ) |>
+      add_plot_parameters("cfg_aggregations.yaml", aggregation_GEM_well_IDs = aggregation_GEM_well_IDs) |>
+      add_plot_parameters("cfg_GEM_wells.tsv", GEM_well_QC_exclude_list = aggregation_GEM_well_QC_exclude_list) |>
       save_plots_structured(width = 20, height = 7)
   ),
   tarchetypes::tar_file(
@@ -114,6 +129,8 @@ rlang::list2(
         fill_col = "dataset",
         QC_exclude_per_GEM_well_list = aggregation_GEM_well_QC_exclude_list
       ) |>
+        add_plot_parameters("cfg_aggregations.yaml", aggregation_GEM_well_IDs = aggregation_GEM_well_IDs) |>
+        add_plot_parameters("cfg_GEM_wells.tsv", GEM_well_QC_exclude_list = aggregation_GEM_well_QC_exclude_list) |>
         save_plots_structured(
           width = max(10, 4 + 0.35 * dplyr::n_distinct(metadata_tibble$GEM_well_ID))
         )
@@ -406,6 +423,7 @@ rlang::list2(
     description = "Plot pre-QC assigned singlet nuclei per donor, excluding doublets and unassigned barcodes. [checkpoint:1_pre-aggregation-QC]",
     command = demultiplexing_counts_tibble |>
       plot_nuclei_per_donor_id() |>
+      add_plot_parameters("cfg_aggregations.yaml", aggregation_GEM_well_IDs = aggregation_GEM_well_IDs) |>
       save_plots_structured(width = 10,
         height = max(6, 3 + 0.22 * dplyr::n_distinct(stats::na.omit(demultiplexing_counts_tibble$donor_id))))
   ),

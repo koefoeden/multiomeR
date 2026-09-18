@@ -20,6 +20,14 @@ rlang::list2(
     pattern = map(dynamic_tibble),
     resources = get_tar_resources(RAM_GB_req = 60)
   ),
+  tarchetypes::tar_file(
+    name = cohort_tsv,
+    description = "Export model-specific donor eligibility, sample counts, contributing wells and exclusions",
+    command = get_feature_model_cohort(map_psbulk_data_matrix, filtered_mat_per_model, feature_matrix_fit,
+      donor_id_metadata_tibble.analysis, dynamic_tibble$model[[1]], metadata_w_cell_types_tibble.WNN) |>
+      save_differential_model_table(dynamic_tibble$model_name),
+    pattern = map(filtered_mat_per_model, feature_matrix_fit, dynamic_tibble)
+  ),
   targets::tar_target(
     name = feature_matrix_fit,
     description = "Fit edgeR/limma models to pseudobulk feature matrices for each model [part_of_graph:differential_analyses]",

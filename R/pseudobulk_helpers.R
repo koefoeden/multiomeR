@@ -166,20 +166,11 @@ plot_pseudobulk_depth_distribution <- function(pseudobulk_depth_tibble, min_ATAC
 }
 
 normalize_psbulk_feature_models <- function(cfg_psbulk_feature_models) {
-  if (is.null(cfg_psbulk_feature_models)) {
-    return(list())
-  }
-
-  assert_with_info(
-    is.list(cfg_psbulk_feature_models) && !is.null(names(cfg_psbulk_feature_models)) && all(names(cfg_psbulk_feature_models) != ""),
-    glue_info = "cfg_psbulk_feature_models must be a named list."
-  )
-
-  cfg_psbulk_feature_models |>
-    purrr::discard(is.null) |>
-    purrr::map(\(model_list) {
-      model_list$cell_type_subset <- normalize_psbulk_cell_type_subset(model_list$cell_type_subset)
-      model_list
+  normalize_differential_models(cfg_psbulk_feature_models) |>
+    purrr::map(function(model) {
+      if (!is.null(model$GEM_well_IDs)) stop("Feature pseudobulks already pool wells; GEM_well_IDs filtering must occur before aggregation.")
+      model$cell_type_subset <- normalize_psbulk_cell_type_subset(model$cell_type_subset)
+      model
     })
 }
 
@@ -226,45 +217,11 @@ get_psbulk_sample_tibble <- function(psbulk_data_matrix) {
 #' correlation fields, and differential cell-type composition settings.
 #' @keywords internal
 
-get_differential_analysis_metadata_columns <- function(
-  models,
-  DCTC_formula_chr,
-  DCTC_plot_phenotype_vars,
-  DCTC_color_by_categorical_metadata_column
-) {
-  model_columns <- models |>
-    purrr::map(function(model) {
-      formula_columns <- c(model$formula, model$cell_type_formula) |>
-        purrr::compact() |>
-        purrr::map(stats::as.formula) |>
-        purrr::map(stats::terms) |>
-        purrr::map(stats::delete.response) |>
-        purrr::map(base::all.vars) |>
-        unlist(use.names = FALSE)
-
-      c(
-        formula_columns,
-        model$pairing_variable,
-        model$correlation_block,
-        model$random_effect
-      )
-    }) |>
-    unlist(use.names = FALSE)
-
-  DCTC_columns <- DCTC_formula_chr |>
-    stats::as.formula() |>
-    stats::terms() |>
-    stats::delete.response() |>
-    base::all.vars()
-
-  c(
-    model_columns,
-    DCTC_columns,
-    DCTC_plot_phenotype_vars,
-    DCTC_color_by_categorical_metadata_column
-  ) |>
-    setdiff("cluster") |>
-    unique()
+get_differential_analysis_metadata_columns <- function(models, abundance_models) {
+  all_models <- c(models, abundance_models)
+  unique(unlist(lapply(all_models, function(model) {
+    c(get_differential_model_metadata_columns(model), model$plot_phenotype_vars, model$color_by)
+  }), use.names = FALSE))
 }
 
 #' Filter psbulk data matrix
@@ -292,18 +249,10 @@ filter_psbulk_data_matrix <- function(
   model_list <- psbulk_feature_dynamic_tibble$model[[1]]
   cell_type_subset <- model_list$cell_type_subset
 
-  # filter the full donor_cluster-x-Gene matrix, such that
-
-  # 1) donors with missing measurements (or missing entirely) that are part of the model model_formula are removed.
-  model_vars_vec <- all.vars(stats::as.formula(paste0("~", model_list$formula)))
-
-  donor_ids_keep <- extended_donor_id_metadata_tibble |>
-    dplyr::filter(dplyr::if_all(.cols = dplyr::any_of(model_vars_vec), .fns = ~ !is.na(.x))) |>
-    dplyr::pull(donor_id) |>
-    stringr::str_replace_all("_", "-")
-
-  sample_tibble <- get_psbulk_sample_tibble(psbulk_data_matrix) |>
-    dplyr::filter(.data$donor_id %in% donor_ids_keep)
+  sample_tibble <- get_psbulk_sample_tibble(psbulk_data_matrix)
+  cohort <- get_differential_model_cohort(extended_donor_id_metadata_tibble, model_list, sample_tibble$donor_id)
+  donor_ids_keep <- stringr::str_replace_all(cohort$donor_id[cohort$included], "_", "-")
+  sample_tibble <- dplyr::filter(sample_tibble, donor_id %in% donor_ids_keep)
 
   if (!is.null(cell_type_subset)) {
     sample_tibble <- sample_tibble |>
@@ -857,6 +806,8 @@ fit_psbulk_feature_matrix_model <- function(psbulk_feature_matrix, extended_dono
       )
     }
   }
+
+  validate_differential_design(design_matrix)
 
   # Fit model based on analysis_type
   random_effect <- model_list$random_effect
@@ -1782,73 +1733,6 @@ plot_psbulk_DX_PValue_density <- function(combined_psbulk_DX_results_tibble) {
     ggplot2::theme(legend.position = "bottom")
 }
 
-#' Plot DCTC by phenotype per cluster
-#'
-#' Plot donor cell-type composition against a phenotype for each cluster.
-#'
-#' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
-#' @param DCTC_plot_phenotype_vars Phenotype columns to plot against predicted or observed cell-type composition.
-#' @param cluster_col Single metadata column name used as the cluster/grouping variable.
-#' @param categorical Logical; TRUE treats phenotype variables as categorical, FALSE as continuous.
-#' @param DCTC_color_by_categorical_metadata_column Optional categorical metadata column used for point colors in DCTC plots.
-#' @return A ggplot, patchwork, or BPCells trackplot object ready for `save_plots_structured()` or composition.
-#' @keywords internal
-
-plot_DCTC_by_phenotype_per_cluster <- function(
-  metadata_tibble,
-  DCTC_plot_phenotype_vars,
-  cluster_col,
-  categorical = FALSE,
-  DCTC_color_by_categorical_metadata_column = NULL
-) {
-  w_pheno_class_tibble <-
-    if (is_non_binary_numeric_vec(metadata_tibble[[DCTC_plot_phenotype_vars]]) && categorical) {
-      get_grouped_phenotype(metadata_tibble, DCTC_plot_phenotype_vars)
-    } else {
-      dplyr::mutate(metadata_tibble, pheno_class = .data[[DCTC_plot_phenotype_vars]])
-    }
-
-  plot_tibble <- w_pheno_class_tibble |>
-    dplyr::mutate(
-      DTCT_color_by_col = as.factor(if (!is.null(DCTC_color_by_categorical_metadata_column)) .data[[DCTC_color_by_categorical_metadata_column]] else 1)
-    ) |>
-    dplyr::group_by(.data[[cluster_col]], donor_id, pheno_class, DTCT_color_by_col) |>
-    dplyr::tally() |>
-    dplyr::ungroup() |>
-    dplyr::group_by(donor_id, pheno_class, DTCT_color_by_col) |>
-    dplyr::mutate(prop = n / sum(n))
-
-  is_continuous <- is_non_binary_numeric_vec(plot_tibble$pheno_class)
-
-  geom_list <- if (is_continuous) {
-    list(
-      ggplot2::geom_point(alpha = 0.5),
-      ggplot2::geom_smooth(method = "lm", formula = y ~ stats::poly(x, 2), linetype = "dashed")
-    )
-  } else {
-    list(
-      ggplot2::geom_boxplot(outlier.shape = NA),
-      ggplot2::geom_jitter(width = 0.2, height = 0, alpha = 0.5),
-      ggplot2::theme(legend.position = "none", axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-    )
-  }
-
-  ggplot2::ggplot(plot_tibble, ggplot2::aes(x = pheno_class, y = prop, color = DTCT_color_by_col)) +
-    geom_list +
-    ggplot2::facet_grid(
-      rows = ggplot2::vars(.data[[cluster_col]]),
-      cols = ggplot2::vars(DTCT_color_by_col)
-    ) + # migth make sense to use facet_wrap to allow free scales - then limits below should also be removed.
-    ggplot2::scale_y_continuous(labels = scales::label_percent(), limits = c(0, 1)) +
-    ggplot2::labs(x = label_plot_variable(DCTC_plot_phenotype_vars), y = "Within-donor cell proportion",
-      title = paste("Cell-type composition and", label_plot_variable(DCTC_plot_phenotype_vars)),
-      subtitle = stringr::str_wrap("Look for donor-level trends and outliers; these are descriptive associations, not covariate-adjusted effects.", width = 100),
-      caption = stringr::str_wrap(paste("Each point represents an observed donor-group combination; proportions use that donor's cells within the phenotype/colour stratum. Absent donor-group combinations are not filled with zeros.",
-        if (is_continuous) "Dashed curves are quadratic fits with the default 95% confidence band." else
-          "Boxes show medians and interquartile ranges, with whiskers to 1.5 x IQR; jitter spreads points horizontally."), width = 110),
-      colour = if (is.null(DCTC_color_by_categorical_metadata_column)) NULL else label_plot_variable(DCTC_color_by_categorical_metadata_column))
-}
-
 #' Get one MSigDB gene-set collection
 #'
 #' Fetch one selected MSigDB collection or subcollection for competitive tests.
@@ -1885,110 +1769,6 @@ get_msigdb_gene_sets <- function(
   rlang::set_names(gene_sets_tibble$genes, gene_sets_tibble$gs_name)
 }
 
-
-#' Get DCTC model results
-#'
-#' Fit donor cell-type composition models from cell metadata and donor covariates.
-#'
-#' @param metadata_w_cell_types_tibble Cell metadata tibble after cell-type labels have been joined; used for composition or export helpers.
-#' @param extended_donor_id_metadata_tibble Donor metadata after GEM well/sample-level covariates have been added for model design.
-#' @param cluster_col Single metadata column name used as the cluster/grouping variable.
-#' @param DCTC_formula_chr Model formula string used for donor/cell-type composition testing.
-#' @return Donor cell-type composition model results for the requested formula
-#'   and cluster column.
-#' @keywords internal
-
-get_DCTC_model_results <- function(
-  metadata_w_cell_types_tibble,
-  extended_donor_id_metadata_tibble,
-  cluster_col,
-  DCTC_formula_chr
-) {
-  assert_cfg_is_set(cluster_col)
-  assert_cfg_is_set(DCTC_formula_chr, "cfg_DCTC_formula_chr")
-  formula <- stats::as.formula(DCTC_formula_chr)
-
-  count_tibble_w_phenotypes <- metadata_w_cell_types_tibble |>
-    dplyr::mutate(cluster = .data[[cluster_col]]) |>
-    dplyr::count(donor_id, cluster, name = "n_nuclei") |>
-    dplyr::group_by(donor_id) |>
-    dplyr::mutate(n_total_nuclei = sum(n_nuclei)) |>
-    dplyr::ungroup() |>
-    dplyr::mutate(n_other_nuclei = n_total_nuclei - n_nuclei) |>
-    dplyr::left_join(extended_donor_id_metadata_tibble, by = "donor_id") |>
-    dplyr::mutate(n_donors = dplyr::n_distinct(donor_id), .by = "cluster") |>
-    dplyr::filter(n_donors > 1)
-
-  results <- count_tibble_w_phenotypes |>
-    group_split_by("cluster") |>
-    purrr::imap(
-      \(cluster_tibble, cluster_name) {
-        glmmTMB::glmmTMB(
-          formula = formula,
-          family = glmmTMB::betabinomial(link = "logit"),
-          data = cluster_tibble
-        ) |>
-          broom.mixed::tidy(effects = "fixed")
-      }
-    ) |>
-    dplyr::bind_rows(.id = "cluster")
-
-  baseline_frac_tibble <- count_tibble_w_phenotypes |>
-    dplyr::group_by(cluster) |>
-    dplyr::summarise(baseline_frac = sum(n_nuclei) / sum(n_total_nuclei))
-
-  results_w_percent_change <- results |>
-    dplyr::left_join(baseline_frac_tibble) |>
-    dplyr::mutate(
-      new_frac = stats::plogis(stats::qlogis(baseline_frac) + estimate * 1),
-      middle_frac = (new_frac + baseline_frac) / 2,
-      frac_diff = new_frac - baseline_frac,
-      relative_frac_diff = frac_diff / baseline_frac,
-      model_name = "DCTC"
-    )
-
-  return(results_w_percent_change)
-}
-
-
-plot_DCTC_model_change_per_unit <- function(results_tibble) {
-  results_tibble |>
-    dplyr::filter(!stringr::str_detect(term, "Intercept")) |>
-    ggplot2::ggplot(ggplot2::aes(x = baseline_frac, y = cluster, fill = cluster, color = cluster, alpha = p.value < 0.05)) +
-    # geom_col(position = "dodge2", width = 1) +
-    ggplot2::geom_segment(ggplot2::aes(xend = new_frac), linewidth = 2, lineend = 'round', linejoin = 'round', arrow = grid::arrow(length = grid::unit(2, "mm"), type = "open")) +
-    ggplot2::geom_segment(ggplot2::aes(x = 0, xend = baseline_frac), linewidth = 0.5, lineend = 'round', linejoin = 'round', linetype = "dashed") +
-    ggplot2::scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.4)) +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "top") +
-    ggplot2::facet_wrap(~term, ncol = 1) +
-    ggplot2::geom_vline(xintercept = 0, lty = 2) +
-    ggplot2::geom_text(
-      ggplot2::aes(x = pmax(baseline_frac, new_frac), label = stringr::str_glue(" {round(relative_frac_diff * 100)}% (p = {signif(p.value, 2)})")),
-      hjust = "left",
-      nudge_x = 0.02
-    ) +
-    ggplot2::scale_x_continuous(labels = scales::label_percent(), limits = c(0, 0.60), expand = ggplot2::expansion(mult = c(0, 0))) +
-    ggplot2::labs(y = "Cell type", x = "Cell proportion", title = "Model-implied change in cell-type proportion",
-      subtitle = stringr::str_wrap("Arrows start at pooled observed proportions; compare direction and magnitude without interpreting them as causal effects.", width = 100),
-      caption = stringr::str_wrap("Beta-binomial logit coefficients are added to the logit of the pooled baseline proportion for a one-unit model-term change. Endpoints are illustrative, not donor-specific predictions. Text reports relative percent change and nominal p; opacity marks nominal p < 0.05 without multiple-testing correction. Display is limited to 0-60%.", width = 110),
-      alpha = "Nominal p < 0.05")
-}
-
-
-plot_DCTC_model_coefs_forest <- function(results_tibble) {
-  results_tibble |>
-    dplyr::filter(!stringr::str_detect(term, "Intercept")) |>
-    ggplot2::ggplot(ggplot2::aes(x = estimate, y = cluster, color = p.value < 0.05)) +
-    ggplot2::geom_point() +
-    ggplot2::geom_errorbarh(ggplot2::aes(xmin = estimate - std.error, xmax = estimate + std.error)) +
-    ggplot2::geom_vline(xintercept = 0) +
-    ggplot2::facet_wrap(~term, scales = "free_x") +
-    ggplot2::labs(title = "Cell-composition model coefficients",
-      subtitle = "Compare signs and uncertainty; intervals show one standard error, not 95% confidence intervals.",
-      caption = stringr::str_wrap("Fixed-effect coefficients from separate beta-binomial logit models per cell type. Points are estimates; intervals are estimate +/- one standard error. Colour uses nominal p < 0.05 without multiple-testing correction. Facets have separate x scales; intercepts are omitted.", width = 110),
-      x = "Log-odds coefficient", y = "Cell type", colour = "Nominal p < 0.05") +
-    ggplot2::scale_x_continuous(limits = symmetric_limits)
-}
 
 #' Convert between ENSEMBL and symbol
 #'

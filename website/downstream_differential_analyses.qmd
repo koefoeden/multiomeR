@@ -59,9 +59,13 @@ Then create a matching row directly in
 
 ```{.yaml filename="module_differential_analyses/cfg.yaml"}
 your_aggregation:
-  differential_analyses_DCTC_plot_phenotype_vars: condition
-  differential_analyses_DCTC_formula_chr: >-
-    cbind(n_nuclei, n_other_nuclei) ~ 0 + condition
+  differential_analyses_DCTC_models:
+    condition_abundance:
+      formula: cbind(n_nuclei, n_other_nuclei) ~ condition
+      contrast_specs_vec:
+        treated_vs_control: conditiontreated
+      plot_phenotype_vars: condition
+      color_by: condition
   differential_analyses_psbulk_DX_models:
     condition_model:
       cell_type_subset: NULL
@@ -72,7 +76,15 @@ your_aggregation:
         treated_vs_control: conditiontreated
 ```
 
-The module selection below requests both composition and pseudobulk outputs. Configure the DCTC phenotype/formula and at least one pseudobulk model before using that broad selector. Formula terms and contrast coefficients must match columns produced by the model matrix.
+Both branches use named models, donor eligibility checks and named contrasts. Abundance models use `differential_analyses_DCTC_models`; feature models use `differential_analyses_psbulk_DX_models`. Omitting abundance models disables that branch. The former aggregation-wide DCTC formula, phenotype and colour settings have been replaced by fields inside each named model.
+
+For mixed tissues, set `GEM_well_IDs` inside an abundance model to define its population, for example the six left-ventricle wells. Optional `donor_ids` can further restrict donors in either branch. Donors with missing model metadata or no selected samples are excluded and recorded in model-specific cohort TSVs. Feature cohorts also report retained pseudobulk sample counts and depth-filter exclusions.
+
+By default, abundance models test all cell-type labels observed in their eligible population, including unassigned labels. Optional `cell_types_to_test` restricts the response cell types **without changing the denominator**: every retained nucleus in the selected wells contributes to its donor's total. Zero donor–cell-type counts remain in the analysis. In contrast, feature-model `cell_type_subset` selects the cells represented by the pseudobulks. Feature matrices already pool wells within donors and cell types, so they cannot support a late `GEM_well_IDs` filter; the module rejects that field for feature models.
+
+Abundance models fit a separate fixed-effects beta-binomial logit model per cell type. Use `formula: cbind(n_nuclei, n_other_nuclei) ~ ...` and named `contrast_specs_vec`; custom design/contrast functions and random-effects formulas are not supported in this branch. Contrast tables report log-odds effects, Wald uncertainty, donor counts and BH FDR across tested cell types within each model/contrast. Failed fits are explicitly marked non-estimable. Counts, cohort tables and plots use the same eligible donors and denominators. Plot-only variables do not exclude donors from the fit.
+
+The module selection below requests both configured abundance and pseudobulk outputs. Formula terms and contrast coefficients must match columns produced by the model matrix. The two branches retain their distinct response construction and fitting methods; sharing configuration does not make their effect estimates interchangeable.
 
 The model example assumes `condition` distinguishes treated and control donors.
 Check which group is the reference and what each model coefficient represents

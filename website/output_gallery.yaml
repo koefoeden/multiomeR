@@ -146,22 +146,6 @@
   asset: gallery_assets/differential_analyses/transcription_factor_activity/significant_elements.png
   status: available
 
-- section: Differential analyses module
-  subsection: Cell-type composition
-  title: Modelled composition change
-  description: Shows how cell-type proportions vary with sample-level conditions or phenotypes.
-  target: model_change_per_unit_plot.DCTC.differential_analyses.immune_human_2x
-  asset: gallery_assets/differential_analyses/cell_type_composition/model_change_per_unit.png
-  status: available
-
-- section: Differential analyses module
-  subsection: Cell-type composition
-  title: Coefficient forest
-  description: Displays effect estimates and uncertainty for cell-type composition changes.
-  target: model_coefs_forest.DCTC.differential_analyses.immune_human_2x
-  asset: gallery_assets/differential_analyses/cell_type_composition/model_coefs_forest.png
-  status: available
-
 - section: Genetic enrichment module
   subsection: Single-nucleus chromVAR+SCAVENGE
   title: Celltype by GWAS heatmap

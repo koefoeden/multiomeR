@@ -17,6 +17,8 @@ These cards are a curated subset from the public `immune_human_2x` configuration
 
 The full module additionally produces expression-derived CollecTRI activity results and a CollecTRI-DTFA concordance plot. They are not shown below until stable public example assets are available.
 
+Named abundance models now produce donor-proportion plots and contrast plots with 95% Wald intervals. The previous coefficient and pooled-baseline-change examples have been retired; updated public abundance examples are pending.
+
 ```{r, echo = FALSE, results = "asis"}
 render_gallery_section(
   gallery_items,

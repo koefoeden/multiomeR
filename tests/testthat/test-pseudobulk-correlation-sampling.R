@@ -60,7 +60,7 @@ make_abundance_fixture <- function() {
     data.frame(donor_id = donors$donor_id[i], GEM_well_ID = paste0("w", i),
       cell_type = rep(c("Cardiomyocyte", "Other"), c(n[i], 100 - n[i])))
   }))
-  model <- list(formula = "cbind(n_nuclei, n_other_nuclei) ~ sexMale",
+  model <- list(formula = "~ sexMale",
     contrast_specs_vec = c(male_vs_female = "sexMale", female_vs_male = "-sexMale"))
   list(donors = donors, metadata = metadata, model = model)
 }
@@ -108,6 +108,8 @@ testthat::test_that("shared cohort validation rejects missing variables and non-
   input$model$donor_ids <- input$donors$donor_id[1:6]
   data <- prepare_DCTC_model_data(input$metadata, input$donors, input$model, "cell_type")
   testthat::expect_error(fit_DCTC_model(data, input$model, "sex"), "rank deficient")
+  input$model$formula <- "cbind(n_nuclei, n_other_nuclei) ~ sexMale"
+  testthat::expect_error(fit_DCTC_model(data, input$model, "sex"), "one-sided formula")
   testthat::expect_error(normalize_differential_models(stats::setNames(list(input$model, input$model), c("sex", "sex"))), "uniquely named")
 })
 

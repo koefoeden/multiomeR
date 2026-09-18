@@ -96,9 +96,10 @@ prepare_DCTC_model_data <- function(metadata, donor_metadata, model, cluster_col
 
 fit_DCTC_model <- function(model_data, model, model_name) {
   formula <- stats::as.formula(model$formula)
-  if (length(formula) != 3L || !identical(formula[[2]], quote(cbind(n_nuclei, n_other_nuclei)))) {
-    stop("Composition response must be cbind(n_nuclei, n_other_nuclei).")
+  if (length(formula) != 2L) {
+    stop("Composition models require a one-sided formula, e.g. ~ sexMale; the response is supplied automatically.")
   }
+  formula <- stats::update.formula(formula, cbind(n_nuclei, n_other_nuclei) ~ .)
   if (grepl("|", model$formula, fixed = TRUE)) stop("Composition models currently support fixed effects only.")
   if (!is.null(model$design_matrix_func_name) || !is.null(model$contrast_functions) ||
       !is.null(model$random_effect) || !is.null(model$cell_type_formula) ||

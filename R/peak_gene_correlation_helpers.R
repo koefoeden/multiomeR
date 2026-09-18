@@ -763,6 +763,7 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
   branch_links <- top_links_tibble |>
     dplyr::filter(
       .data$is_analyzable_link,
+      .data$cell_group == !!cell_group,
       .data$chr == !!chr,
       .data$gene_matrix_feature %in% rownames(GEX_norm),
       .data$peak %in% rownames(ATAC_norm)
@@ -779,12 +780,10 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
       TargetGeneID = character(),
       TargetGene = character(),
       correlation = numeric(),
-      FDR = numeric(),
       hierarchical_pvalue = numeric(),
       hierarchical_df = numeric(),
       hierarchical_FDR = numeric(),
       rank_in_cell_group = integer(),
-      rank_for_gene = integer(),
       aggregate_id = character(),
       donor_id = character(),
       state_bin = character(),
@@ -824,13 +823,10 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
           peak = .data$peak,
           TargetGeneID = .data$TargetGeneID,
           TargetGene = .data$TargetGene,
-          correlation = .data$correlation,
-          FDR = .data$FDR,
           hierarchical_pvalue = .data$hierarchical_pvalue,
           hierarchical_df = .data$hierarchical_df,
           hierarchical_FDR = .data$hierarchical_FDR,
-          rank_in_cell_group = .data$rank_in_cell_group,
-          rank_for_gene = .data$rank_for_gene
+          rank_in_cell_group = .data$rank_in_cell_group
         ),
       aggregate_depth_tibble,
       tibble::tibble(
@@ -843,7 +839,8 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
         gene_expression_residual = as.numeric(qr.resid(qr(design), as.numeric(GEX_norm[link_row$gene_matrix_feature[[1]], ]))),
         peak_accessibility_residual = as.numeric(qr.resid(qr(design), as.numeric(ATAC_norm[link_row$peak[[1]], ])))
       )
-    )
+    ) |>
+      dplyr::mutate(correlation = stats::cor(.data$peak_accessibility_residual, .data$gene_expression_residual))
   })
 }
 
@@ -869,9 +866,8 @@ plot_peak_gene_correlation_aggregate_scatter <- function(plot_tibble) {
         "Points: non-overlapping donor-state aggregates, residualized for donor and depth; line: descriptive fit. Adjusted r = ",
         round(plot_tibble$correlation[[1]], 3), ". Hierarchical Kenward-Roger p = ", signif(plot_tibble$hierarchical_pvalue[[1]], 3),
         " (df = ", round(plot_tibble$hierarchical_df[[1]], 2), "); model: donor fixed intercepts, depth covariates and Gaussian random donor slopes. Hierarchical BH FDR = ",
-        signif(plot_tibble$hierarchical_FDR[[1]], 3), ", adjusted across all eligible pairs/cell type, counting unreliable fits in the family size. Ranked positive estimable nonpromoter slopes without an HC3 screen or significance cutoff. ",
-        "Arcs show original HC3 BH FDR (focal = ", signif(plot_tibble$FDR[[1]], 3),
-        "), adjusted across tested pairs/cell type. Width: shared HC3 -log10(FDR) scale; zero clamped to machine minimum, unavailable FDR uses minimum width. Focal link always included. Arrow/solid arc: focal link; other arcs: dashed. Focal colour matches insertions. Aggregates are not independent donor replicates."), width = 110)
+        signif(plot_tibble$hierarchical_FDR[[1]], 3), ", adjusted across all eligible pairs/cell type, counting unreliable fits in the family size. Ranked positive estimable nonpromoter slopes without a significance cutoff. ",
+        "Aggregates are not independent donor replicates."), width = 110)
     )
 }
 
@@ -1312,7 +1308,7 @@ make_peak_gene_correlation_top_links <- function(
   top_links <- links_tibble |>
     dplyr::filter(.data$hierarchical_status == "estimable", .data$hierarchical_coefficient > 0) |>
     dplyr::select(-dplyr::any_of("gene_matrix_feature")) |>
-    dplyr::arrange(.data$cell_group, .data$hierarchical_pvalue, dplyr::desc(.data$correlation),
+    dplyr::arrange(.data$cell_group, .data$hierarchical_pvalue,
       .data$TargetGeneID, .data$peak) |>
     dplyr::slice_head(n = n_per_cell_group, by = "cell_group") |>
     dplyr::mutate(rank_in_cell_group = dplyr::row_number(), .by = "cell_group") |>

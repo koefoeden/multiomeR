@@ -28,11 +28,18 @@ power or influence validation and do not guarantee robustness to outliers.
 
 Top-link figures rank positive, estimable nonpromoter slopes by hierarchical
 p-value across the full scan, without a significance cutoff, and report the
-hierarchical BH FDR. Existing HC3 results and summary figures remain available
-as a distinct analysis. Contextual arcs show HC3-filtered links and HC3 FDR
-widths; the focal hierarchical link is included even when absent from that
-filter. Missing HC3 FDR uses minimum width. Plot captions distinguish the two
-analyses. Hierarchical fitting is cached separately from plot generation.
+hierarchical BH FDR. `top_link_aggregate_scatter_plots` combines strand-aware
+gene bodies, focal-cell-type insertion coverage, overlaid downward bars of
+hierarchical −log10(p), and the donor-residual scatter. Context includes all
+valid tested links to the focal gene across WNN cell types, without a p-value,
+slope or promoter cutoff. Consensus peaks are shaded; the focal peak is red
+and the gene TSS is dashed. The genomic axis uses Mb.
+
+Compact gene-context data and focal coverage are cached separately from
+rendering. The former `top_link_ATAC_tracks_plots` and its arc-track targets
+are retired. Existing HC3 results and other summary figures remain a distinct
+analysis pending their separate migration; the new top-link figures and
+selection do not depend on HC3 tests.
 
 ## Measurement-support filtering
 

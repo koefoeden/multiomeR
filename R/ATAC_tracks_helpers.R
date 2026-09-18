@@ -185,6 +185,7 @@ plot_coverage_at_region_BPCells <- function(
 #' @param coverage_tibble BPCells trackplot coverage tibble with genomic position, group, and coverage columns.
 #' @param region Genomic region accepted by BPCells trackplot helpers; normalized internally to a single plotting interval.
 #' @param clip_quantile Upper coverage quantile used to cap extreme track values; set near 1 to keep almost all signal.
+#' @param background_layers Optional ggplot layers drawn behind the coverage signal.
 #' @param colors Named or positional colors passed to BPCells/ggplot track layers for groups or links.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
@@ -193,7 +194,8 @@ make_BPCells_ATAC_coverage_track_from_tibble <- function(
   coverage_tibble,
   region,
   clip_quantile = 0.999,
-  colors = grDevices::hcl.colors(nlevels(coverage_tibble$group), palette = "Dark 3")
+  colors = grDevices::hcl.colors(nlevels(coverage_tibble$group), palette = "Dark 3"),
+  background_layers = NULL
 ) {
   region <- BPCells:::normalize_ranges(region)
   ymax <- stats::quantile(coverage_tibble$normalized_insertions, clip_quantile)
@@ -211,7 +213,7 @@ make_BPCells_ATAC_coverage_track_from_tibble <- function(
   colors <- colors[seq_len(length(levels(coverage_tibble$group)))]
 
   BPCells:::wrap_trackplot(
-    ggplot2::ggplot(coverage_tibble) +
+    ggplot2::ggplot(coverage_tibble) + background_layers +
       ggplot2::geom_area(
         ggplot2::aes(
           x = .data$pos,
@@ -349,5 +351,26 @@ make_BPCells_peak_gene_loop_track_from_tibble <- function(
       BPCells:::trackplot_theme(),
     ggplot2::unit(1, "null"),
     region = region
+  )
+}
+
+#' Prepare clipped, strand-aware gene bodies with nonoverlapping lanes
+prepare_genomic_gene_bodies <- function(gene_ranges, region) {
+  selected <- IRanges::subsetByOverlaps(gene_ranges, region)
+  tibble::tibble(start = pmax(GenomicRanges::start(selected), GenomicRanges::start(region)),
+    end = pmin(GenomicRanges::end(selected), GenomicRanges::end(region)),
+    gene = as.character(selected$gene_name), strand = as.character(GenomicRanges::strand(selected))) |>
+    dplyr::arrange(.data$start, .data$end) |>
+    dplyr::mutate(lane = IRanges::disjointBins(IRanges::IRanges(.data$start, .data$end)))
+}
+
+#' Shared strand arrows and labels for genomic gene tracks
+genomic_gene_body_layers <- function(genes) {
+  list(
+    ggplot2::geom_segment(data = genes, ggplot2::aes(
+      x = ifelse(strand == "-", end, start), xend = ifelse(strand == "-", start, end),
+      y = -lane, yend = -lane), arrow = grid::arrow(length = grid::unit(1.3, "mm")), linewidth = .5),
+    ggplot2::geom_text(data = genes, ggplot2::aes((start + end) / 2, -lane, label = gene),
+      vjust = -.7, size = 2.5, check_overlap = TRUE)
   )
 }

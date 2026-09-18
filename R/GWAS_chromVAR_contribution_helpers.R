@@ -876,12 +876,7 @@ plot_GWAS_variant_contribution_detail_panels <- function(plot_records, variants,
   })
   genes <- purrr::map2_dfr(plot_records, loci, \(record, locus) {
     region <- record$region
-    selected <- IRanges::subsetByOverlaps(gene_GRanges, region)
-    tibble::tibble(locus = locus, start = pmax(GenomicRanges::start(selected), GenomicRanges::start(region)),
-      end = pmin(GenomicRanges::end(selected), GenomicRanges::end(region)),
-      gene = as.character(selected$gene_name), strand = as.character(GenomicRanges::strand(selected))) |>
-      dplyr::arrange(start, end) |>
-      dplyr::mutate(lane = IRanges::disjointBins(IRanges::IRanges(start, end)))
+    prepare_genomic_gene_bodies(gene_GRanges, region) |> dplyr::mutate(locus = locus)
   })
   peaks <- purrr::map2_dfr(plot_records, loci, \(record, locus) {
     ranges <- record$consensus_peak_GRanges
@@ -925,11 +920,7 @@ plot_GWAS_variant_contribution_detail_panels <- function(plot_records, variants,
     ggplot2::labs(x = NULL, y = "Relative\ndeviation\ncontribution") +
     ggplot2::theme(axis.title.y = ggplot2::element_text(angle = 0, vjust = 0.5))
   gene_track <- base_track +
-    ggplot2::geom_segment(data = genes, ggplot2::aes(
-      x = ifelse(strand == "-", end, start), xend = ifelse(strand == "-", start, end),
-      y = -lane, yend = -lane), arrow = grid::arrow(length = grid::unit(1.3, "mm")), linewidth = 0.5) +
-    ggplot2::geom_text(data = genes, ggplot2::aes((start + end) / 2, -lane, label = gene),
-      vjust = -0.7, size = 2.5, check_overlap = TRUE) +
+    genomic_gene_body_layers(genes) +
     ggplot2::geom_text(data = dplyr::filter(bounds, !locus %in% genes$locus) |>
       dplyr::summarise(position = mean(position), .by = locus),
       ggplot2::aes(position, 0, label = "No annotated genes overlap"), size = 3) +

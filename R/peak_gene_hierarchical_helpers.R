@@ -145,20 +145,17 @@ finalize_peak_gene_hierarchical_results <- function(results_tibbles) {
   tibble::as_tibble(result)
 }
 
-#' Attach existing descriptive and HC3 results only to the selected full-scan links
+#' Select positive nonpromoter hierarchical links without an HC3 dependency
 select_peak_gene_hierarchical_top_links <- function(
-  hierarchical_results, HC3_results, candidate_pairs_tibble, n_per_cell_group
+  hierarchical_results, candidate_pairs_tibble, n_per_cell_group
 ) {
-  nonpromoter_pairs <- candidate_pairs_tibble |>
-    dplyr::filter(!.data$isSelfPromoter) |>
-    dplyr::select("peak", "TargetGeneID")
   selected <- hierarchical_results |>
     dplyr::filter(.data$hierarchical_status == "estimable", .data$hierarchical_coefficient > 0) |>
-    dplyr::semi_join(nonpromoter_pairs, by = c("peak", "TargetGeneID")) |>
+    dplyr::semi_join(dplyr::filter(candidate_pairs_tibble, !.data$isSelfPromoter),
+      by = c("peak", "TargetGeneID")) |>
     dplyr::arrange(.data$cell_group, .data$hierarchical_pvalue, .data$TargetGeneID, .data$peak) |>
-    dplyr::slice_head(n = n_per_cell_group, by = "cell_group")
-  links <- HC3_results |>
-    dplyr::semi_join(selected, by = c("cell_group", "peak", "TargetGeneID")) |>
-    dplyr::left_join(selected, by = c("cell_group", "peak", "TargetGeneID"), relationship = "one-to-one")
-  make_peak_gene_correlation_top_links(links, candidate_pairs_tibble, n_per_cell_group)
+    dplyr::slice_head(n = n_per_cell_group, by = "cell_group") |>
+    dplyr::left_join(candidate_pairs_tibble, by = c("peak", "TargetGeneID"),
+      relationship = "many-to-one")
+  make_peak_gene_correlation_top_links(selected, candidate_pairs_tibble, n_per_cell_group)
 }

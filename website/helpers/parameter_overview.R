@@ -142,7 +142,7 @@ render_parameter_overview_fragment <- function(
 
 emit_parameter_overview <- function(
   scope,
-  manifest_file = file.path(find_parameter_manifest_root(), "cfg_pipeline_parameters.tsv"),
+  manifest_file = file.path(find_parameter_manifest_root(), "website", "data", "public_defaults", "cfg_pipeline_parameters.tsv"),
   search_placeholder = NULL
 ) {
   manifest <- read_parameter_manifest(manifest_file)
@@ -174,7 +174,7 @@ render_parameter_overview_document <- function(overview_data, scope, search_plac
 
 render_parameter_overview_file <- function(
   scope = "aggregation",
-  manifest_file = file.path(find_parameter_manifest_root(), "cfg_pipeline_parameters.tsv"),
+  manifest_file = file.path(find_parameter_manifest_root(), "website", "data", "public_defaults", "cfg_pipeline_parameters.tsv"),
   output_file = NULL,
   search_placeholder = NULL
 ) {

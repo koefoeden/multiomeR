@@ -194,6 +194,8 @@ r-nanoparquet = ">=0.5.1,<0.6" # doesn't work?
 nodejs = ">=26.3.1,<26.4"
 imagemagick = ">=7.1.2_26,<8"
 pngquant = ">=2.17.0,<3"
+quarto = ">=1.9.36,<1.10"
 
 [feature.dev.tasks]
+render-website = { cmd = "python dev/render_website.py", description = "Render both Markdown documentation books through temporary Quarto sources." }
 export-website-llm-markdown = { cmd = "python dev/export_website_llm_markdown.py", description = "Export the Quarto website books to one LLM-friendly Markdown file." }

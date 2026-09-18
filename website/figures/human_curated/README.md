@@ -1,7 +1,13 @@
 # Implementation graph views
 
 `graphs_v2.R` generates every `*_v2.mmd` view from the active manifest and
-`[part_of_graph:<graph_id>]` tags in target descriptions. From the repository root:
+`[part_of_graph:<graph_id>]` tags in target descriptions. For the shared website,
+run it in an isolated public checkout configured with the public demo plus the
+documented optional examples: genetic enrichment and peak–gene correlation on
+`immune_human_2x`, and differential analyses on `ENCODE_heart_LV_6x` with its
+GEM wells active. Supply the matching module settings in that isolated
+configuration. Never switch a running analysis's configuration to make diagrams.
+From that checkout's root:
 
 ```bash
 pixi run --use-environment-activation-cache Rscript website/figures/human_curated/graphs_v2.R

@@ -45,7 +45,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--no-orphans",
         action="store_true",
-        help="Do not append a list of tracked QMD pages outside the book graph.",
+        help="Do not append a list of tracked Markdown pages outside the book graph.",
     )
     parser.add_argument(
         "--include-mermaid",
@@ -235,32 +235,34 @@ def truncate(text: str) -> str:
     return text[: MAX_PLACEHOLDER_TEXT - 3].rstrip() + "..."
 
 
-def tracked_qmd_files(site_dir: Path) -> set[Path]:
+def tracked_markdown_files(site_dir: Path) -> set[Path]:
     try:
         result = subprocess.run(
-            ["git", "ls-files", str(site_dir)],
+            ["git", "ls-files", "--cached", "--others", "--exclude-standard", str(site_dir)],
             check=True,
             text=True,
             capture_output=True,
         )
         paths = [Path(line) for line in result.stdout.splitlines()]
     except (subprocess.CalledProcessError, FileNotFoundError):
-        paths = list(site_dir.rglob("*.qmd"))
+        paths = list(site_dir.rglob("*.md"))
 
     return {
         path.resolve()
         for path in paths
-        if path.suffix == ".qmd" and path.is_file()
+        if path.suffix == ".md"
+        and path.is_file()
+        and path.name != "multiomeR-manual-llm.md"
     }
 
 
 def render_orphans(site_dir: Path, repo_root: Path, used_sources: set[Path]) -> str:
-    orphans = sorted(tracked_qmd_files(site_dir) - used_sources)
+    orphans = sorted(tracked_markdown_files(site_dir) - used_sources)
     if not orphans:
-        return "\n# Orphaned QMD Pages\n\nNone.\n"
+        return "\n# Orphaned Markdown Pages\n\nNone.\n"
 
-    lines = ["\n# Orphaned QMD Pages\n"]
-    lines.append("Tracked QMD files not reached from the Quarto book graph or include graph.\n")
+    lines = ["\n# Orphaned Markdown Pages\n"]
+    lines.append("Tracked Markdown files not reached from the Quarto book graph or include graph.\n")
     for path in orphans:
         lines.append(f"- `{path.relative_to(repo_root)}`")
     return "\n".join(lines) + "\n"

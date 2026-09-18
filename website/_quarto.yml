@@ -14,37 +14,37 @@ book:
   chapters:
     - part: "Start here"
       chapters:
-        - index.qmd
+        - index.md
     - part: "Output gallery"
       chapters:
-        - gallery_main.qmd
-        - gallery_differential_analyses.qmd
-        - gallery_genetic_enrichment.qmd
+        - gallery_main.md
+        - gallery_differential_analyses.md
+        - gallery_genetic_enrichment.md
     - part: "Try the public demo"
       chapters:
-        - demo_installation.qmd
-        - demo_running.qmd
-        - demo_outputs.qmd
+        - demo_installation.md
+        - demo_running.md
+        - demo_outputs.md
     - part: "Analyze your own data"
       chapters:
-        - main_overview.qmd
-        - main_running.qmd
+        - main_overview.md
+        - main_running.md
     - part: "Add an optional analysis"
       chapters:
-        - downstream_differential_analyses.qmd
-        - downstream_genetic_enrichment.qmd
-        - downstream_peak_gene_correlation.qmd
+        - downstream_differential_analyses.md
+        - downstream_genetic_enrichment.md
+        - downstream_peak_gene_correlation.md
     - part: "Operation and scaling"
       chapters:
-        - performance_overview.qmd
-        - performance_distributed_computing.qmd
-        - troubleshooting.qmd
+        - performance_overview.md
+        - performance_distributed_computing.md
+        - troubleshooting.md
     - part: "Reference"
       chapters:
-        - review_outputs.qmd
-        - reference_GEM_wells.qmd
-        - reference_donor_metadata.qmd
-        - reference_aggregations.qmd
+        - review_outputs.md
+        - reference_GEM_wells.md
+        - reference_donor_metadata.md
+        - reference_aggregations.md
         - href: implementation/
           text: Implementation book
 format:

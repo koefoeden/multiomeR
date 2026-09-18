@@ -1,0 +1,120 @@
+# Troubleshooting
+
+Find the target name and first error message in the run output. Fix that
+cause, then rerun the same selection: `targets` can reuse completed work.
+Keep the store intact, since it also contains the records needed to diagnose
+the failure.
+
+| What happened? | Start here |
+|---|---|
+| Setup fails before any data processing | [The manifest does not build](#the-manifest-does-not-build) |
+| A target reports an error | [A run reports errored targets](#a-run-reports-errored-targets) |
+| A completed result needs rebuilding | [A target is unexpectedly outdated](#a-target-is-unexpectedly-outdated) |
+| Workers do not start or are killed | [Controller and scheduler failures](#controller-and-scheduler-failures) |
+
+Run these commands in the repository's Pixi R session. For general debugging
+techniques beyond the project helpers below, see the
+[targets debugging guide](https://books.ropensci.org/targets/debugging.html).
+
+## The manifest does not build
+
+Run the project bootstrap and manifest in a repository-root R session:
+
+```{.r filename="R"}
+load_project_runtime(force = TRUE)
+targets::tar_manifest(callr_function = NULL)
+```
+
+Failures at this stage usually indicate:
+
+- an unknown, misspelled, wrongly typed, or required YAML parameter;
+- an aggregation referencing a GEM well absent from `cfg_GEM_wells.tsv`;
+- an unknown module or a missing module-config row;
+- a malformed `crew_controllers.R` return value; or
+- an R package or startup problem.
+
+Correct the field or file named in the error, then repeat the manifest check
+before running the analysis.
+
+## A run reports errored targets
+
+List the errors with the project's helper. It groups repeated failures so
+you can start with their common cause:
+
+```{.r filename="R"}
+list_distinct_errored_targets()
+```
+
+For commands and stored tracebacks matching a target, aggregation, or module:
+
+```{.r filename="R"}
+list_distinct_errored_targets_w_tracebacks(
+  target_name_pattern = "your_target_or_aggregation"
+)
+```
+
+Some targets run separately for multiple groups; these runs are called
+**branches**. Copy the full target or branch name from the error listing to
+inspect its saved workspace:
+
+```{.r filename="R"}
+inspect_target_workspace("full_target_or_branch_name")
+```
+
+The inspection reports the target command, stored error and traceback, plus compact summaries of its dependencies. Empty tables, zero-dimensional matrices, missing model columns, or unexpected labels usually point to an upstream data or configuration problem.
+
+## Inspect one upstream value
+
+Read a target by its full stored name when a focused probe is necessary:
+
+```{.r filename="R"}
+value <- targets::tar_read_raw("full_target_or_branch_name")
+value
+```
+
+Prefer `head()`, `dim()`, `names()`, or a small subset over printing a large object.
+
+## A target is unexpectedly outdated
+
+Ask `{targets}` which part of a narrow endpoint needs rebuilding:
+
+```{.r filename="R"}
+targets::tar_outdated(
+  names = tidyselect::matches("your_target.*your_aggregation"),
+  callr_function = NULL
+)
+```
+
+Code, configuration, input files, controller-independent global objects, or an upstream invalidation can all make downstream targets outdated. Review the returned upstream names before assuming the final target itself is the cause.
+
+## Input and metadata failures
+
+Check the contracts in the [GEM well table](reference_GEM_wells.md), [Donor metadata table](reference_donor_metadata.md), and [Aggregation configuration](reference_aggregations.md) references:
+
+- `GEM_well_cellranger_arc_count_dir` contains the required `outs/` files;
+- VCF-backed demultiplexing also has `atac_possorted_bam.bam`;
+- donor metadata keys and canonical `cfg_GEM_wells.tsv` keys are present and unique;
+- non-key metadata columns belong to only one metadata table; and
+- configured donor and GEM well IDs match the metadata values exactly.
+
+## Controller and scheduler failures
+
+If a worker does not start or no controller can satisfy a target request:
+
+1. Validate the names, column order, numeric resource values, and controller membership described in [Choose where the analysis runs](performance_distributed_computing.md).
+2. Reload with `load_project_runtime(force = TRUE)` after edits.
+3. For scheduler controllers, inspect the scheduler output/error log and confirm queue, account, wall time, memory, CPU, module, and filesystem settings.
+4. Reduce concurrency when local workers are being killed for memory pressure.
+
+## Rerun safely
+
+After fixing the cause, rerun the same target selection. Successful upstream
+results remain cached.
+
+```{.r filename="R"}
+targets::tar_make(
+  names = tidyselect::matches("your_target.*your_aggregation")
+)
+```
+
+Use an unqualified `targets::tar_make()` only when every active aggregation and enabled module is intentionally in scope. Avoid deleting the target store as a debugging step: it removes evidence and forces unrelated recomputation.

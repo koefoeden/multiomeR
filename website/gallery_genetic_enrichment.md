@@ -1,0 +1,30 @@
+# Genetic enrichment gallery
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+source("../packages/multiomeRCore/R/null_default.R")
+source("../R/output_gallery_helpers.R")
+gallery_items <- check_output_gallery_assets(
+  manifest_file = "output_gallery.yaml",
+  gallery_root = "."
+)
+```
+
+These curated outputs use the larger `PBMC_human_6x` aggregation, not the quickstart with two GEM wells, and show selected SCAVENGE/WNN results rather than every attribution output. See [Genetic enrichment](downstream_genetic_enrichment.md) for prerequisites, module target selection, and interpretation guidance.
+
+```{r, echo = FALSE, results = "asis"}
+render_gallery_section(
+  gallery_items,
+  "Genetic enrichment module",
+  subsection_descriptions = c(
+    "Single-nucleus chromVAR+SCAVENGE" = paste(
+      "These plots show graph-propagated SCAVENGE trait relevance scores.",
+      "The heatmap summarizes scores by cell type and GWAS trait, while the",
+      "UMAPs show per-cell scores across the WNN embedding."
+    )
+  )
+)
+```

@@ -37,7 +37,7 @@ emit_mermaid("website/figures/human_curated/GEX_v2.mmd")
 
 ## ATAC processing
 
-This view covers ATAC QC, peak calling, consensus peak construction, chromatin accessibility processing, chromVAR scoring, coverage tracks, and peak-gene links.
+This view covers ATAC QC, peak calling, consensus peak construction, chromatin accessibility processing, chromVAR scoring, and coverage tracks. Peak–gene correlation is a separate optional module.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_mermaid("website/figures/human_curated/ATAC_v2.mmd")

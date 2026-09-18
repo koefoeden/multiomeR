@@ -33,6 +33,7 @@ book:
       chapters:
         - downstream_differential_analyses.qmd
         - downstream_genetic_enrichment.qmd
+        - downstream_peak_gene_correlation.qmd
     - part: "Operation and scaling"
       chapters:
         - performance_overview.qmd

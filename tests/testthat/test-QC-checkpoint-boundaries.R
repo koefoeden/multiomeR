@@ -27,7 +27,7 @@ testthat::test_that("numbered checkpoint selections stop before later analysis s
     "^(QC_filtered_BCs[.]ATAC|LSI_BPCells|WNN_results)",
     "^(LSI_BPCells|WNN_results)",
     "^(LSI_clusters|scDblFinder_results_df[.]ATAC|motif_family_chromVAR|WNN_results)",
-    "^WNN_results", "[.]subgroups[.]"
+    "^WNN_results", "[.](subgroups|peak_gene_correlation)[.]"
   )
   aggregation_suffixes <- sub("^aggregated_cellranger_ref_list", "", grep(
     "^aggregated_cellranger_ref_list[.]", manifest$name, value = TRUE

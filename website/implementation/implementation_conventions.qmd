@@ -254,3 +254,16 @@ If `get_tar_resources()` is called before controller resources are loaded, it fa
 These conventions are the connective tissue behind the graph chapters. The parameter manifest explains why config rows can be compact. Mapping tibbles explain why target names have stable suffixes. Target-symbol columns explain how mapped targets pass sets of upstream targets across graph levels. Target metadata tags explain why some nodes remain visible in curated graph views. The bootstrap contract explains why helper functions, controller resources, and target options are available before `_targets.R` is evaluated.
 
 When modifying the implementation, preserve these contracts unless the change is explicitly meant to replace one of them.
+
+### Peak–gene correlation module
+
+`module_peak_gene_correlation/targets.R` maps only opted-in aggregations and
+binds their existing WNN metadata, GEX/ATAC matrices, ATAC embeddings,
+fragments and reference annotations. `correlation_targets.R` owns the analysis,
+SuSiE prioritization, exports and plots. Parameters use the
+`peak_gene_correlation` manifest scope and matching module YAML rows.
+Targets end in `.peak_gene_correlation.<aggregation>` (with `.WNN` before
+that suffix for intermediate results). Plot checkpoint tags use
+`peak_gene_correlation`, keeping this analysis outside numbered QC selections.
+Renamed targets rebuild on the first module run; existing core target names
+and numerical analysis defaults are unchanged.

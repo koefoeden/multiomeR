@@ -42,39 +42,19 @@ plot_GWAS_chromVAR_peak_weights_summary <- function(peak_weight_records, overlap
     )
 }
 
-scale_GWAS_heatmap_scores <- function(heatmap_data, group_cols = character(), score_col = "median_score") {
-  if (nrow(heatmap_data) == 0) {
-    return(heatmap_data)
-  }
-
+#' Add significance labels from cached BH-adjusted SCAVENGE permutation P-values
+#' @param heatmap_data Group summaries containing permutation_p_adj_BH.
+#' @return Input rows with support_label: stars, blank for non-significance,
+#'   or NA text for an unavailable significance result. Scores are never filtered.
+add_SCAVENGE_heatmap_significance <- function(heatmap_data) {
   heatmap_data |>
-    dplyr::group_by(dplyr::across(dplyr::all_of(c("GWAS_ID", group_cols)))) |>
-    dplyr::mutate(!!score_col := min_max_scale_vec(.data[[score_col]])) |>
-    dplyr::ungroup()
-}
-
-#' Add cluster-level permutation significance to SCAVENGE dotplot data
-#'
-#' Classify visible point sizes from within-grouping BH-adjusted empirical
-#' P-values for the cluster median TRS statistic.
-#'
-#' @param dotplot_data SCAVENGE group-summary data containing
-#'   `permutation_p_adj_BH`.
-#' @return `dotplot_data` with a `significance` factor. Values above 0.05 are
-#'   `NA` and therefore omitted from the dotplot.
-#' @keywords internal
-
-add_SCAVENGE_dotplot_significance <- function(dotplot_data) {
-  dotplot_data |>
-    dplyr::mutate(
-      significance = factor(
-        dplyr::case_when(
-          permutation_p_adj_BH < 0.01 ~ "P < 0.01",
-          permutation_p_adj_BH <= 0.05 ~ "P <= 0.05"
-        ),
-        levels = c("P <= 0.05", "P < 0.01")
-      )
-    )
+    dplyr::mutate(support_label = dplyr::case_when(
+      is.na(permutation_p_adj_BH) ~ "NA",
+      permutation_p_adj_BH <= 0.001 ~ "***",
+      permutation_p_adj_BH <= 0.01 ~ "**",
+      permutation_p_adj_BH <= 0.05 ~ "*",
+      .default = ""
+    ))
 }
 
 #' Get SCAVENGE TRS UMAP plots
@@ -849,75 +829,44 @@ plot_GWAS_by_cluster_heatmap <- function(
   )
 }
 
-#' Plot grouped GWAS scores by cluster
-#'
-#' Split GWAS cluster heatmaps or dotplots by a grouping column and return a
-#' named plot list.
-#'
-#' @param data_per_GWAS_and_cluster_df Score summary tibble containing `split_col`
-#'   in addition to GWAS and cluster score fields.
-#' @param split_col Column used to split the data into one heatmap per value.
-#' @param GWAS_metadata_tracks_plot Four-track patchwork returned by
-#'   `plot_GWAS_metadata_tracks()`, aligned to the same GWAS ordering.
-#' @param name_suffix Optional suffix appended to names of returned plot-list
-#'   elements.
-#' @param compartments_patterns Optional named regex patterns used to group
-#'   clusters into compartments.
-#' @param scaled Logical; when `TRUE`, use scaled-score color midpoint behavior.
-#' @param fill_label Legend label for the heatmap fill.
-#' @param fill_scale Color-scale type passed to `plot_GWAS_by_cluster_heatmap()`.
-#' @param fill_limits Optional numeric fill-scale limits.
-#' @param support_label_col Optional text column drawn on top of heatmap tiles.
-#' @param point_size_col Optional factor column mapped to dot size.
-#' @param caption Optional caption added below each grouped heatmap.
-#' @param title,subtitle Optional shared title and reading guidance for each plot.
-#' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
-#' @keywords internal
-
-plot_grouped_GWAS_by_cluster_heatmaps <- function(
-  data_per_GWAS_and_cluster_df,
-  split_col,
-  GWAS_metadata_tracks_plot,
-  name_suffix = NULL,
-  compartments_patterns = NULL,
-  scaled = FALSE,
-  fill_label = "Score",
-  fill_scale = c("diverging", "sequential"),
-  fill_limits = NULL,
-  support_label_col = NULL,
-  point_size_col = NULL,
-  caption = NULL,
-  title = NULL,
-  subtitle = NULL
-) {
-  if (nrow(data_per_GWAS_and_cluster_df) == 0) {
-    return(structure(list(), class = c("empty_plot_list", "list")))
-  }
-  fill_scale <- match.arg(fill_scale)
-
-  grouped_plot_data <- dplyr::group_by(data_per_GWAS_and_cluster_df, .data[[split_col]])
-  plot_names <- dplyr::group_keys(grouped_plot_data)[[split_col]]
-  if (!is.null(name_suffix)) {
-    plot_names <- stringr::str_c(plot_names, "_", name_suffix)
-  }
-
-  grouped_plot_data |>
-    dplyr::group_split() |>
-    purrr::set_names(plot_names) |>
-    purrr::map(\(group_data) {
-      plot <- plot_GWAS_by_cluster_heatmap(
-        group_data |> dplyr::select(-dplyr::all_of(split_col)),
-        GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
-        compartments_patterns = compartments_patterns,
-        scaled = scaled,
-        fill_label = fill_label,
-        fill_scale = fill_scale,
-        fill_limits = fill_limits,
-        support_label_col = support_label_col,
-        point_size_col = point_size_col
-      )
-      plot + patchwork::plot_annotation(title = title, subtitle = subtitle, caption = caption)
-    })
+#' Plot one WNN SCAVENGE median-TRS heatmap
+#' @param heatmap_data Cached WNN group scores and significance labels.
+#' @param GWAS_metadata_tracks_plot Shared GWAS metadata tracks.
+#' @param compartments_patterns Optional cell-type compartment patterns.
+#' @param grouping WNN cell types or named clusters.
+#' @param scaled Min-max scale medians within each GWAS for display only.
+#' @return One annotated heatmap, or an empty plot list.
+plot_WNN_TRS_heatmap <- function(heatmap_data, GWAS_metadata_tracks_plot,
+  compartments_patterns = NULL, grouping = c("cell_types", "clusters"), scaled = FALSE) {
+  grouping <- match.arg(grouping)
+  group_column <- if (grouping == "cell_types") "WNN_harmony_SNN_cluster_cell_type" else "WNN_harmony_SNN_cluster_named"
+  data <- heatmap_data |>
+    dplyr::filter(grouping_col == group_column) |>
+    dplyr::select(-grouping_col)
+  if (nrow(data) == 0L) return(structure(list(), class = c("empty_plot_list", "list")))
+  if (scaled) data <- data |>
+    dplyr::mutate(median_score = min_max_scale_vec(median_score), .by = GWAS_ID)
+  plot_GWAS_by_cluster_heatmap(data,
+    GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
+    compartments_patterns = compartments_patterns,
+    fill_label = if (scaled) "Relative median TRS" else "Median TRS",
+    fill_scale = "sequential", fill_limits = if (scaled) c(0, 1) else NULL,
+    support_label_col = "support_label"
+  ) + patchwork::plot_annotation(
+    title = paste(if (scaled) "Relative" else "Median", "SCAVENGE trait scores by WNN",
+      if (grouping == "cell_types") "cell type" else "cluster"),
+    subtitle = paste(
+      if (scaled) "Compare groups within each trait; colours do not measure absolute differences between traits."
+      else "Look for groups with high median trait scores and permutation support.",
+      "Stars mark BH-adjusted permutation significance; unstarred tiles retain their scores.", sep = "\n"),
+    caption = stringr::str_wrap(paste(
+      if (scaled) "Colour: median cell-level TRS min-max scaled to 0-1 across the displayed WNN groups within each GWAS."
+      else "Colour: median cell-level TRS within each WNN group, without display scaling.",
+      "All available scores are shown. Stars: * adjusted p <= 0.05; ** <= 0.01; *** <= 0.001.",
+      "Empirical permutation p-values test the group median and are BH-adjusted across groups within each GWAS and grouping. Scaling does not change significance.",
+      "No star means adjusted p > 0.05; NA means unavailable significance. These are group-level permutation results, not donor-level inference."
+    ), 150)
+  )
 }
 
 #' Plot ordinary or absolute-effect chromVAR deviations from cached summaries

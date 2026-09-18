@@ -5,6 +5,20 @@ pipeline_name <- "processing_and_aggregation"
 source("helpers/_setup.R")
 ```
 
+<integrate the text below into the rest to produce a much more succinct guide>
+a unique GEM_well_ID and an appropriate GEM_well_dataset label;
+
+GEM_well_cellranger_arc_count_dir;
+
+donors: GEM_well_n_donors and GEM_well_donor_id for a single-donor well, or GEM_well_donors_VCF_file to demultiplex several donors by genotype;
+
+GEM_well_add_cellbender and GEM_well_cellbender_h5_file to replace the Cell Ranger counts with CellBender output;
+
+further GEM_well_ columns for library-level variables you will need as batch covariates or plot variables later;
+
+GEM_well_QC_exclude_list: NA for the first run, then filter expressions such as TSS.enrichment < 4 ;; nCount_RNA < 250;
+
+GEM_well_is_active: TRUE.
 `cfg_GEM_wells.tsv` has one row per GEM well: one `cellranger-arc count` output together with its donor assignment, optional inputs, and pre-aggregation QC filters. Aggregations refer to rows by `GEM_well_ID`. Edit the committed file directly; the demo rows can stay as worked examples. This page describes the columns. When to edit them, and how to review the effect, is step 1 of [Run your own analysis](main_running.md#steps).
 
 ## Minimal row

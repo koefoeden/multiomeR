@@ -14,23 +14,9 @@ multiomeR is in beta and may introduce breaking changes between releases. The st
 
 ## Your first analysis
 
-Start with the public demo: two human GEM wells with supplied configuration. You will install the software, run one joint analysis, and read its cell metadata and multimodal object. This gives you a working example before you choose settings for your own study.
+Start with the public demo: two human GEM wells with supplied configuration. You will install the software, run one joint analysis, and read its cell metadata and multimodal Seurat object. This gives you a working example before you choose settings for your own study.
 
-You need basic R skills, a Linux terminal, and a machine with sufficient [memory and disk space](demo_installation.md#system-requirements). You do not need to know how to write a `targets` pipeline. Commands labelled **Bash** run in the terminal; commands labelled **R** run in the R session opened during installation. Run both from the repository folder unless stated otherwise.
-
-## Find what you need
-
-| If you want to... | Start here |
-|------------------------------------|------------------------------------|
-| See what the workflow produces | Browse the [Main pipeline gallery](gallery_main.md). |
-| Try multiomeR on public data | Follow [Install and prepare the demo](demo_installation.md), [Run the demo](demo_running.md), then [Inspect the demo results](demo_outputs.md). |
-| Analyze your own data | Check the inputs in [Plan your analysis](main_overview.md), then follow the steps in [Run your own analysis](main_running.md). |
-| Look up a configuration column or parameter | Open the [GEM well table](reference_GEM_wells.md), [Donor metadata table](reference_donor_metadata.md), or [Aggregation configuration](reference_aggregations.md) reference. |
-| Understand a review plot or table | Look it up in [Output files and metadata](review_outputs.md). |
-| Add a downstream analysis | Check the prerequisites for [Differential analyses](downstream_differential_analyses.md) or [Genetic enrichment](downstream_genetic_enrichment.md). |
-| Run on a cluster or a smaller machine | Read [Choose where the analysis runs](performance_distributed_computing.md). |
-| Fix a failed or stale run | Start with [Troubleshooting](troubleshooting.md). |
-| Understand or modify the internals | Use the separate [implementation book](implementation/). |
+You need basic R skills, a Linux terminal, and a machine with sufficient [memory and disk space](demo_installation.md#system-requirements). You do not need to know how to write a `targets` pipeline. Commands labeled **Bash** run in the terminal; commands labeled **R** run in the R session opened during installation. Run both from the repository folder unless stated otherwise.
 
 ## Terms used in this manual
 

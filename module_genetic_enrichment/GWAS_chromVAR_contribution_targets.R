@@ -116,6 +116,7 @@ rlang::list2(
       variant_contribution_tibble = chromVAR_variant_contribution_tibble.cell_type_pseudobulk,
       locus_contribution_tibble = chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk,
       absolute_effect_locus_tibble = chromVAR_absolute_effect_locus_contribution_tibble.cell_type_pseudobulk,
+      GWAS_input_records = GWAS_input_records,
       consensus_peak_GRanges = consensus_peak_GRanges.ATAC,
       fragments = combined_BPCells_fragment_obj.ATAC,
       metadata_tibble = metadata_w_cell_types_tibble.WNN,

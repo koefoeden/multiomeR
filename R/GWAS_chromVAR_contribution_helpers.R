@@ -725,7 +725,8 @@ prepare_GWAS_locus_contribution_waterfall_tibble <- function(locus_tibble, n_top
 #'
 #' @param variant_contribution_tibble Variant-level contribution.
 #' @param locus_contribution_tibble Locus-level contribution used to select loci.
-#' @param absolute_effect_locus_tibble Loci ranked under absolute-effect weighting.
+#' @param absolute_effect_locus_tibble Weighted scores used only for the z screen.
+#' @param GWAS_input_records Credible-set records supplying locus effects.
 #' @param consensus_peak_GRanges Consensus ATAC peaks.
 #' @param fragments BPCells fragment object.
 #' @param metadata_tibble Cell metadata with cell-type labels.
@@ -739,6 +740,7 @@ prepare_GWAS_variant_contribution_detail_records <- function(
   variant_contribution_tibble,
   locus_contribution_tibble,
   absolute_effect_locus_tibble,
+  GWAS_input_records,
   consensus_peak_GRanges,
   fragments,
   metadata_tibble,
@@ -748,7 +750,10 @@ prepare_GWAS_variant_contribution_detail_records <- function(
   group_cells_by_col = "PCA_harmony_SNN_cluster_cell_type"
 ) {
   selected_locus_tibble <- select_GWAS_detail_loci(locus_contribution_tibble,
-    absolute_effect_locus_tibble, min_z, n_top_loci)
+    absolute_effect_locus_tibble,
+    locus_effect_tibble = get_GWAS_locus_prioritization_effects(purrr::keep(GWAS_input_records,
+      \(record) record$GWAS_ID %in% locus_contribution_tibble$GWAS_ID)),
+    min_z = min_z, n_top_loci = n_top_loci)
   if (nrow(selected_locus_tibble) == 0L) return(list())
 
   fragments <- BPCells::select_cells(fragments, metadata_tibble$barcode_w_prefix)
@@ -808,6 +813,8 @@ prepare_GWAS_variant_contribution_detail_records <- function(
       list(
         GWAS_ID = GWAS_ID,
         selection = locus_tibble$selection[[1]],
+        prioritization = dplyr::select(locus_tibble, contribution_percentile, effect_percentile,
+          priority_score, locus_effect_magnitude, effect_variantId, locus_effect_source),
         variant_tibble = variant_tibble,
         coverage_tibble = coverage_tibble,
         coverage_colors = coverage_colors,
@@ -845,7 +852,15 @@ plot_GWAS_variant_contribution_detail_panels <- function(plot_records, variants,
     paste0("Locus ", index, ": ", lead_id,
       if (!is.na(gene) && nzchar(gene)) paste0(" — L2G: ", gene) else "",
       "\nContribution = ", signif(sum(variant$relative_deviation_contribution), 3),
-      if (!is.null(record$selection)) paste0("; selected: ", record$selection) else "")
+      if (!is.null(record$selection)) paste0("; selected: ", record$selection) else "",
+      if (!is.null(record$prioritization) && is.finite(record$prioritization$priority_score[[1]])) {
+        priority <- record$prioritization
+        paste0("\nPercentiles: contribution ", round(100 * priority$contribution_percentile[[1]]),
+          "; effect ", round(100 * priority$effect_percentile[[1]]),
+          "; minimum ", round(100 * priority$priority_score[[1]]),
+          "\n", priority$locus_effect_source[[1]], ": ", priority$effect_variantId[[1]],
+          " (|β| = ", signif(priority$locus_effect_magnitude[[1]], 3), ")")
+      } else "\nEffect-based priority unavailable")
   })
   bounds <- purrr::map2_dfr(plot_records, loci, \(record, locus) tibble::tibble(
     locus = locus, position = c(GenomicRanges::start(record$region), GenomicRanges::end(record$region))))
@@ -946,7 +961,7 @@ plot_GWAS_variant_contribution_detail_panels <- function(plot_records, variants,
       subtitle = "Compare loci on a shared contribution scale; point area shows PIP and colour shows effect magnitude.\nGene bodies and accessibility provide context, not proof of a causal variant or target gene.",
       caption = stringr::str_wrap(paste(
         "Cell types pass a descriptive screen: positive deviation and z at least the configured threshold in either the ordinary or absolute-effect analysis; this is not a significance cutoff.",
-        "Loci are the union of the leading ordinary and absolute-effect-weighted contributions for the focal cell type; plotted stems remain ordinary contributions. PIP is the original fine-mapping probability, before effect weighting. Filled points use the variant's own |β|; hollow points inherit the locus lead variant's |β|; grey means unavailable.",
+        "Loci combine the leading absolute ordinary contributions with a balanced priority ranking: the lower of the contribution and |β| percentiles within each GWAS and cell type, using loci with available effects. Percentiles use average ranks for ties; a single eligible locus receives 100%. Priority ties use the higher other percentile, then absolute contribution and locus ID. Locus |β| uses the recorded lead SNP when available, otherwise the highest-PIP available-effect variant (proxy). This prioritization does not reweight chromVAR; plotted stems remain ordinary contributions. PIP is the original fine-mapping probability, before effect weighting. Filled points use the variant's own |β|; hollow points inherit the locus lead variant's |β|; grey means unavailable.",
         "The lead is the recorded lead variant, or the highest-PIP variant if no lead is recorded. No signed effects are inherited. Effect units are study-specific.",
         "Facet genes are the top available Open Targets L2G predictions, not established causal genes. Gene arrows show strand; gene bodies are clipped to each window and overlapping labels may be omitted. Coverage uses cached depth-normalized 500-bin profiles, clipped at each locus's 99.9th percentile; displayed coverage ranges differ between loci."), 180),
       theme = ggplot2::theme(plot.caption = ggplot2::element_text(hjust = 0))) &
@@ -1034,29 +1049,66 @@ plot_GWAS_locus_contribution_bars <- function(locus_contribution_tibble, n_top_l
         margin = ggplot2::margin(7, 5, 7, 5)), plot.caption = ggplot2::element_text(hjust = 0))
 }
 
-#' Select the union of leading loci under ordinary and absolute-effect weighting
-#' @param locus_contribution_tibble Ordinary locus contributions for one or more GWAS.
-#' @param absolute_effect_locus_tibble Absolute-effect contributions, possibly empty.
+#' Resolve locus effects for prioritization, keeping explicit lead/proxy provenance
+#' @param GWAS_input_records Credible-set records with variant effects and lead IDs.
+#' @return One row per locus with a finite effect; missing-effect loci are absent.
+get_GWAS_locus_prioritization_effects <- function(GWAS_input_records) {
+  empty <- tibble::tibble(GWAS_ID = character(), studyLocusId = character(),
+    locus_effect_magnitude = double(), effect_variantId = character(), locus_effect_source = character())
+  dplyr::bind_rows(empty, purrr::map_dfr(GWAS_input_records, function(record) {
+    tibble::as_tibble(as.data.frame(S4Vectors::mcols(record$credible_set_GRanges))) |>
+      dplyr::filter(is.finite(beta)) |>
+      dplyr::mutate(is_lead = !is.na(lead_variantId) & variantId == lead_variantId) |>
+      dplyr::arrange(dplyr::desc(is_lead), dplyr::desc(posteriorProbability_raw), variantId) |>
+      dplyr::slice_head(n = 1L, by = studyLocusId) |>
+      dplyr::transmute(GWAS_ID = record$GWAS_ID, studyLocusId,
+        locus_effect_magnitude = abs(beta), effect_variantId = variantId,
+        locus_effect_source = dplyr::if_else(is_lead, "Lead SNP", "Highest-PIP proxy"))
+  }))
+}
+
+#' Select ordinary top loci plus loci scoring highly on both contribution and effect
+#' @param locus_contribution_tibble Ordinary locus contributions.
+#' @param absolute_effect_locus_tibble Absolute-effect contributions, used only for the z screen.
+#' @param locus_effect_tibble Locus effects and provenance from credible-set records.
 #' @param min_z Minimum z-score in either analysis, also requiring positive deviation.
 #' @param n_top_loci Number of loci retained per ranking and focal cell type.
-#' @return Unique loci with selection provenance and coordinates from the ordinary analysis.
+#' @return Unique loci with selection provenance, priority percentiles and ordinary contributions.
 select_GWAS_detail_loci <- function(locus_contribution_tibble, absolute_effect_locus_tibble,
-  min_z = 1, n_top_loci = 3L) {
+  locus_effect_tibble, min_z = 1, n_top_loci = 3L) {
   stopifnot(length(min_z) == 1L, is.finite(min_z), min_z >= 0)
   focal <- dplyr::bind_rows(locus_contribution_tibble, absolute_effect_locus_tibble) |>
     dplyr::filter(deviation > 0, z >= min_z) |>
     dplyr::distinct(GWAS_ID, cluster)
-  leading <- function(data, ranking) {
-    data |> dplyr::semi_join(focal, by = c("GWAS_ID", "cluster")) |>
-      dplyr::slice_max(abs(relative_deviation_contribution), n = n_top_loci,
-        with_ties = FALSE, by = c(GWAS_ID, cluster)) |>
-      dplyr::transmute(GWAS_ID, cluster, studyLocusId, selection = ranking)
+  ordinary <- locus_contribution_tibble |>
+    dplyr::semi_join(focal, by = c("GWAS_ID", "cluster"))
+  if (nrow(ordinary) == 0L) return(ordinary)
+  percentile <- function(x) {
+    if (length(x) == 1L) 1 else (rank(x, ties.method = "average") - 1) / (length(x) - 1)
   }
-  selected <- dplyr::bind_rows(leading(locus_contribution_tibble, "Ordinary"),
-    leading(absolute_effect_locus_tibble, "Absolute effect")) |>
+  ranked <- ordinary |>
+    dplyr::inner_join(locus_effect_tibble, by = c("GWAS_ID", "studyLocusId"), relationship = "many-to-one") |>
+    dplyr::filter(is.finite(relative_deviation_contribution), is.finite(locus_effect_magnitude)) |>
+    dplyr::mutate(contribution_percentile = percentile(abs(relative_deviation_contribution)),
+      effect_percentile = percentile(locus_effect_magnitude),
+      priority_score = pmin(contribution_percentile, effect_percentile), .by = c(GWAS_ID, cluster))
+  ordinary_top <- ordinary |>
+    dplyr::arrange(dplyr::desc(abs(relative_deviation_contribution)), studyLocusId) |>
+    dplyr::slice_head(n = n_top_loci, by = c(GWAS_ID, cluster)) |>
+    dplyr::transmute(GWAS_ID, cluster, studyLocusId, selection = "Ordinary")
+  balanced_top <- ranked |>
+    dplyr::arrange(dplyr::desc(priority_score),
+      dplyr::desc(pmax(contribution_percentile, effect_percentile)),
+      dplyr::desc(abs(relative_deviation_contribution)), studyLocusId) |>
+    dplyr::slice_head(n = n_top_loci, by = c(GWAS_ID, cluster)) |>
+    dplyr::transmute(GWAS_ID, cluster, studyLocusId, selection = "Balanced effect priority")
+  selected <- dplyr::bind_rows(ordinary_top, balanced_top) |>
     dplyr::summarise(selection = paste(selection, collapse = " + "), .by = c(GWAS_ID, cluster, studyLocusId))
-  locus_contribution_tibble |>
+  ordinary |>
     dplyr::inner_join(selected, by = c("GWAS_ID", "cluster", "studyLocusId"), relationship = "one-to-one") |>
+    dplyr::left_join(dplyr::select(ranked, GWAS_ID, cluster, studyLocusId,
+      contribution_percentile, effect_percentile, priority_score, locus_effect_magnitude,
+      effect_variantId, locus_effect_source), by = c("GWAS_ID", "cluster", "studyLocusId")) |>
     dplyr::mutate(detail_rank = dplyr::row_number(), .by = c(GWAS_ID, cluster))
 }
 

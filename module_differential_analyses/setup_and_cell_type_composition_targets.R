@@ -48,7 +48,7 @@ rlang::list2(
     name = model_data.cell_type_composition,
     description = "Select model donors and wells; construct complete cell-type counts with fixed denominators [part_of_graph:differential_analyses]",
     command = prepare_cell_type_composition_model_data(metadata_w_cell_types_tibble.WNN,
-      donor_id_metadata_tibble.analysis, dynamic_tibble.cell_type_composition$model[[1]], "PCA_harmony_SNN_cluster_cell_type"),
+      donor_id_metadata_tibble.analysis, dynamic_tibble.cell_type_composition$model[[1]], "WNN_harmony_SNN_cluster_cell_type"),
     pattern = map(dynamic_tibble.cell_type_composition),
     iteration = "list"
   ),

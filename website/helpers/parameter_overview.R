@@ -54,16 +54,21 @@ parameter_topic_order <- function(scope) {
   )
 }
 
-parameter_overview_data <- function(manifest, scope, topic_order = NULL) {
+parameter_overview_data <- function(manifest, scope = NULL, topic_order = NULL) {
   parameter_tibble <- manifest |>
     dplyr::mutate(manifest_row = dplyr::row_number()) |>
-    dplyr::filter(.data$scope == .env$scope)
+    dplyr::filter(is.null(.env$scope) | .data$scope %in% .env$scope)
 
   if (nrow(parameter_tibble) == 0) {
     stop("No parameters found for manifest scope: ", scope, call. = FALSE)
   }
 
-  topic_order <- topic_order %||% parameter_topic_order(scope) %||% unique(parameter_tibble$topic)
+  if (is.null(scope)) {
+    parameter_tibble <- parameter_tibble |>
+      dplyr::mutate(topic = paste(stringr::str_to_sentence(stringr::str_replace_all(.data$scope, "_", " ")), .data$topic, sep = " / "))
+  }
+
+  topic_order <- topic_order %||% (if (!is.null(scope)) parameter_topic_order(scope)) %||% unique(parameter_tibble$topic)
 
   parameter_tibble <- parameter_tibble |>
     dplyr::mutate(
@@ -86,6 +91,7 @@ parameter_overview_data <- function(manifest, scope, topic_order = NULL) {
     dplyr::arrange(.data$topic_sort, .data$sort_status, .data$topic, .data$param_name) |>
     dplyr::select(
       param_name,
+      short_name,
       data_type,
       cardinality,
       default_value,
@@ -151,7 +157,8 @@ emit_parameter_overview <- function(
 }
 
 render_parameter_overview_document <- function(overview_data, scope, search_placeholder = NULL) {
-  scope_label <- stringr::str_to_sentence(stringr::str_replace_all(scope, "_", " "))
+  scope_label <- if (is.null(scope)) "All" else stringr::str_to_sentence(stringr::str_replace_all(scope, "_", " "))
+  styles <- paste(readLines(file.path(find_parameter_manifest_root(), "website", "styles.css")), collapse = "\n")
   fragment <- render_parameter_overview_fragment(overview_data, scope, search_placeholder)
 
   glue::glue(
@@ -160,11 +167,13 @@ render_parameter_overview_document <- function(overview_data, scope, search_plac
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{scope_label} YAML parameters | multiomeR proof of concept</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>{scope_label} parameters | multiomeR</title>
+  <style>{styles}</style>
 </head>
 <body class="parameter-overview-standalone">
 <main>
+<h1>{scope_label} parameters</h1>
+<p>Search settings across the pipeline and optional modules. Open a parameter for details or use its permalink to share it.</p>
 {fragment}
 </main>
 </body>
@@ -173,19 +182,14 @@ render_parameter_overview_document <- function(overview_data, scope, search_plac
 }
 
 render_parameter_overview_file <- function(
-  scope = "aggregation",
+  scope = NULL,
   manifest_file = file.path(find_parameter_manifest_root(), "website", "data", "public_defaults", "cfg_pipeline_parameters.tsv"),
   output_file = NULL,
   search_placeholder = NULL
 ) {
   repo_root <- find_parameter_manifest_root()
   if (is.null(output_file)) {
-    output_name <- if (identical(scope, "aggregation")) {
-      "aggregation_parameter_overview_poc.html"
-    } else {
-      stringr::str_glue("{scope}_parameter_overview_poc.html")
-    }
-    output_file <- file.path(repo_root, "website", output_name)
+    output_file <- file.path(repo_root, "website", "parameters.html")
   }
 
   manifest <- read_parameter_manifest(manifest_file)

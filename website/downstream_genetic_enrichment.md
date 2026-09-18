@@ -34,7 +34,7 @@ Before enabling the module, confirm that:
 
 ## Configure
 
-Add `modules` to the existing human aggregation entry, keeping its other settings:
+Add [`modules`](parameters.html#modules) to the existing human aggregation entry, keeping its other settings:
 
 ```{.yaml filename="cfg_aggregations.yaml"}
 your_aggregation:
@@ -89,9 +89,7 @@ Runtime and disk use grow with studies, cells, graph representations, permutatio
 
 ## Parameter reference
 
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_parameter_overview("genetic_enrichment")
-```
+[Open the searchable parameter browser](parameters.html).
 
 <details>
 <summary>Show the public <code>immune_human_2x</code> example</summary>

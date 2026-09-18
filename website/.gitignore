@@ -1,6 +1,7 @@
 /.quarto/
 **/*.quarto_ipynb
 /*.html
+!/parameters.html
 /*.knit.md
 /*.rmarkdown
 /_targets.yaml

@@ -284,3 +284,6 @@
   display: block;
   min-width: 360px;
 }
+
+.parameter-row:target { outline: 2px solid #2674a5; outline-offset: 3px; scroll-margin-top: 2rem; }
+.parameter-permalink { font-size: .85rem; }

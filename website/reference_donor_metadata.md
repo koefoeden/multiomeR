@@ -1,6 +1,6 @@
 # Donor metadata table
 
-The donor metadata table is a TSV with one unique row per `donor_id`. Each aggregation points to one such file through `aggregation_donor_id_metadata_tsv` in the [aggregation configuration](reference_aggregations.md). It is created in step 2 of [Run your own analysis](main_running.md#steps).
+The donor metadata table is a TSV with one unique row per `donor_id`. Each aggregation points to one such file through [`aggregation_donor_id_metadata_tsv`](parameters.html#aggregation_donor_id_metadata_tsv) in the [aggregation configuration](reference_aggregations.md). It is created in step 2 of [Run your own analysis](main_running.md#steps).
 
 ## Minimal table
 
@@ -19,4 +19,4 @@ Put donor-specific phenotypes and covariates in this table, for example conditio
 
 ## Extended table for differential analyses
 
-The [differential analyses](downstream_differential_analyses.md) module can read additional donor-level model variables from a second table given in `differential_analyses_extended_donor_id_metadata_tsv`. It must keep the same unique `donor_id` key. If it is not set, the module inherits the aggregation's donor table.
+The [differential analyses](downstream_differential_analyses.md) module can read additional donor-level model variables from a second table given in [`differential_analyses_extended_donor_id_metadata_tsv`](parameters.html#differential_analyses_extended_donor_id_metadata_tsv). It must keep the same unique `donor_id` key. If it is not set, the module inherits the aggregation's donor table.

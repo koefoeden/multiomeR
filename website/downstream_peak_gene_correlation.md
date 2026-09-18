@@ -4,14 +4,14 @@ Run this optional module after accepting the final WNN cell set. It relates ATAC
 
 ## Configure
 
-Add `peak_gene_correlation` to the aggregation's existing `modules` list in `cfg_aggregations.yaml`, and add a matching row in `cfg_module_peak_gene_correlation.yaml` in the selected configuration directory:
+Add `peak_gene_correlation` to the aggregation's existing [`modules`](parameters.html#modules) list in `cfg_aggregations.yaml`, and add a matching row in `cfg_module_peak_gene_correlation.yaml` in the selected configuration directory:
 
 ```yaml
 my_aggregation:
   peak_gene_correlation_top_links_per_cell_group: 3
 ```
 
-The top-link count controls the number of detail figures per cell type. `peak_gene_correlation_filter` selects `lenient` (default), `moderate`, or `strict` measurement-support filtering. Disabled aggregations contribute no module targets.
+The top-link count controls the number of detail figures per cell type. [`peak_gene_correlation_filter`](parameters.html#peak_gene_correlation_filter) selects `lenient` (default), `moderate`, or `strict` measurement-support filtering. Disabled aggregations contribute no module targets.
 
 ## Run
 

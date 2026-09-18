@@ -23,20 +23,20 @@ Every other parameter has a default from `cfg_pipeline_parameters.tsv`, listed i
 
 ## Required keys
 
-- `aggregation_GEM_well_IDs`: the `GEM_well_ID` values to combine. Each must be an active row of the [GEM well table](reference_GEM_wells.md), and all must use the same Cell Ranger reference.
-- `aggregation_donor_id_metadata_tsv`: the [donor metadata table](reference_donor_metadata.md) for these GEM wells.
-- `aggregation_GEX_marker_genes`: a named list of marker genes per expected cell type, used for cluster annotation and marker plots.
-- `is_active`: whether targets are constructed for the aggregation. Deactivate aggregations you are not ready to run before an unqualified `targets::tar_make()`.
+- [`aggregation_GEM_well_IDs`](parameters.html#aggregation_GEM_well_IDs): the `GEM_well_ID` values to combine. Each must be an active row of the [GEM well table](reference_GEM_wells.md), and all must use the same Cell Ranger reference.
+- [`aggregation_donor_id_metadata_tsv`](parameters.html#aggregation_donor_id_metadata_tsv): the [donor metadata table](reference_donor_metadata.md) for these GEM wells.
+- [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes): a named list of marker genes per expected cell type, used for cluster annotation and marker plots.
+- [`is_active`](parameters.html#is_active): whether targets are constructed for the aggregation. Deactivate aggregations you are not ready to run before an unqualified `targets::tar_make()`.
 
 ## Marker genes and transcription factors
 
-Replace the placeholder genes with symbols appropriate for the tissue and reference. A gene listed without a suffix or with a `+` suffix is a positive marker; a `-` suffix marks a gene that should be absent. The optional `aggregation_ATAC_marker_TFs` list names transcription factors per cell type for the motif-activity plots. How the annotation uses these lists is described in [Output files and metadata](review_outputs.md#cluster-annotation).
+Replace the placeholder genes with symbols appropriate for the tissue and reference. A gene listed without a suffix or with a `+` suffix is a positive marker; a `-` suffix marks a gene that should be absent. The optional [`aggregation_ATAC_marker_TFs`](parameters.html#aggregation_ATAC_marker_TFs) list names transcription factors per cell type for the motif-activity plots. How the annotation uses these lists is described in [Output files and metadata](review_outputs.md#cluster-annotation).
 
 ## QC filters after peak calling
 
-`aggregation_QC_exclude_list_combined_object` lists dplyr filter expressions applied to the peak-based ATAC metrics of the combined object, for example:
+[`aggregation_QC_exclude_list_combined_object`](parameters.html#aggregation_QC_exclude_list_combined_object) lists dplyr filter expressions applied to the peak-based ATAC metrics of the combined object, for example:
 
-```{.yaml filename="cfg_aggregations.yaml"}
+``` {.yaml filename="cfg_aggregations.yaml"}
 aggregation_QC_exclude_list_combined_object:
   - nCount_ATAC < 1000
   - atac_peak_counts_frac < 0.1
@@ -47,9 +47,9 @@ Omit it or set it to `null` until step 4 of [Run your own analysis](main_running
 
 ## Optional modules
 
-Omit `modules` for the first run. After reviewing the main results, enable an optional analysis by listing its name and adding a matching entry for the aggregation in the module's own configuration file:
+Omit [`modules`](parameters.html#modules) for the first run. After reviewing the main results, enable an optional analysis by listing its name and adding a matching entry for the aggregation in the module's own configuration file:
 
-```{.yaml filename="cfg_aggregations.yaml"}
+``` {.yaml filename="cfg_aggregations.yaml"}
 your_aggregation:
   modules: [differential_analyses]
 ```
@@ -58,11 +58,7 @@ See [Differential analyses](downstream_differential_analyses.md) and [Genetic en
 
 ## Parameter reference {#parameter-reference}
 
-The searchable overview below is generated from `cfg_pipeline_parameters.tsv`, using a shared snapshot of the public runtime defaults and validation schema. Search by name or purpose, or choose a topic. Defaults are visible beside each parameter; open a row for its type and example. See the [committed example](https://github.com/koefoeden/multiomeR/blob/main/configuration/cfg_aggregations.yaml) for a complete configuration.
-
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_parameter_overview("aggregation")
-```
+The [standalone parameter browser](parameters.html) is generated from `cfg_pipeline_parameters.tsv`, using a shared snapshot of the public runtime defaults and validation schema. Search by name or purpose, or choose a topic. Defaults are visible beside each parameter; open a row for its type and example. See the [committed example](https://github.com/koefoeden/multiomeR/blob/main/configuration/cfg_aggregations.yaml) for a complete configuration.
 
 <details>
 

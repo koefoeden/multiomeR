@@ -1,6 +1,8 @@
 project:
   type: book
   output-dir: ../docs
+  resources:
+    - parameters.html
 
 book:
   title: "multiomeR Manual"

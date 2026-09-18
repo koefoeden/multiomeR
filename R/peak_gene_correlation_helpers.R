@@ -1441,13 +1441,20 @@ plot_peak_gene_correlation_support_counts <- function(plot_tibble) {
   if (nrow(plot_tibble) == 0L) {
     return(make_empty_peak_gene_correlation_plot())
   }
+  max_significant <- max(c(0, plot_tibble$n[
+    plot_tibble$metric == "FDR_significant_pairs"
+  ]), na.rm = TRUE)
+  display_limit <- if (max_significant > 0) 1.1 * max_significant else 1
   plot_tibble <- plot_tibble |>
     dplyr::mutate(
       metric = factor(.data$metric,
         levels = c("tested_pairs", "FDR_significant_pairs", "candidate_enhancer_links"),
         labels = c("Tested pairs", "FDR-significant pairs", "Candidate enhancer links")),
-      count_position = tidyr::replace_na(.data$n, 0),
-      count_label = dplyr::if_else(is.na(.data$n), "NA", as.character(.data$n))
+      truncated = !is.na(.data$n) & .data$n > display_limit,
+      count_position = pmin(tidyr::replace_na(.data$n, 0), display_limit),
+      count_label = dplyr::if_else(is.na(.data$n), "NA",
+        paste0(scales::comma(.data$n, accuracy = 1),
+          dplyr::if_else(.data$truncated, " \u00bb", "")))
     )
   ggplot2::ggplot(
     plot_tibble,
@@ -1458,16 +1465,137 @@ plot_peak_gene_correlation_support_counts <- function(plot_tibble) {
     )
   ) +
     ggplot2::geom_col(position = "dodge") +
-    ggplot2::geom_text(ggplot2::aes(label = .data$count_label),
-      position = ggplot2::position_dodge(width = 0.9), hjust = -0.15, size = 3) +
-    ggplot2::scale_x_continuous(transform = "log1p", expand = ggplot2::expansion(mult = c(0, 0.2))) +
+    ggplot2::geom_text(ggplot2::aes(label = .data$count_label,
+      hjust = dplyr::if_else(.data$truncated, 1.05, -0.15)),
+      position = ggplot2::position_dodge(width = 0.9), size = 3) +
+    ggplot2::scale_x_continuous(labels = scales::label_comma(),
+      expand = ggplot2::expansion(mult = c(0, 0))) +
+    ggplot2::coord_cartesian(xlim = c(0, display_limit), clip = "off") +
     ggplot2::labs(
       title = "Peak-gene association support by cell group",
-      subtitle = "Compare candidate links with the number of tested pairs; these are exploratory associations, not causal links.\nLabels distinguish zero qualifying pairs from unavailable significance (NA).",
-      caption = stringr::str_wrap("Significant: conditional BH FDR < 0.05 across tested pairs within each cell group. Candidates also require donor/depth-adjusted r >= 0.15 and exclude self-promoter pairs.\nCounts use a log(1 + count) axis, preserving zero. NA marks groups with no available FDR values; categories overlap.", width = 110),
-      x = "Pair count (log1p scale)",
+      subtitle = stringr::str_wrap("Compare significant pairs and candidate links across cell types; these are exploratory associations, not causal links. Bars marked \u00bb exceed the displayed range; labels retain their full counts.", width = 95),
+      caption = stringr::str_wrap("Significant: conditional BH FDR < 0.05 across tested pairs within each cell group. Candidates also require donor/depth-adjusted r >= 0.15 and exclude self-promoter pairs. The linear axis ends 10% above the largest significant-pair count (at 1 if none are positive). Longer bars are truncated. NA marks groups with no available FDR values; categories overlap.", width = 110),
+      x = "Pair count (linear scale; long bars truncated)",
       y = "Cell group",
       fill = NULL
+    )
+}
+
+#' Summarize technical features and significant peak-gene pair counts
+#'
+#' @param results_tibble Peak-gene correlation results.
+#' @param donor_state_aggregates_tibble Retained donor-state pseudobulk memberships.
+#' @return A compact table of technical features and descriptive correlations.
+#' @keywords internal
+
+prepare_peak_gene_support_technical_features <- function(
+  results_tibble,
+  donor_state_aggregates_tibble
+) {
+  support_tibble <- summarize_peak_gene_correlation_support_counts(results_tibble) |>
+    tidyr::pivot_wider(names_from = "metric", values_from = "n") |>
+    dplyr::filter(!is.na(.data$FDR_significant_pairs))
+  if (nrow(support_tibble) == 0L) {
+    return(tibble::tibble())
+  }
+  aggregate_tibble <- donor_state_aggregates_tibble |>
+    dplyr::summarise(
+      n_nuclei = sum(.data$n_cells),
+      n_donors = dplyr::n_distinct(.data$donor_id),
+      n_aggregates = dplyr::n(),
+      n_states = dplyr::n_distinct(.data$state_bin),
+      median_nuclei = stats::median(.data$n_cells),
+      GEX_depth = stats::median(.data$GEX_depth / .data$n_cells),
+      ATAC_depth = stats::median(.data$ATAC_depth / .data$n_cells),
+      .by = "cell_group"
+    )
+  donor_tibble <- donor_state_aggregates_tibble |>
+    dplyr::summarise(n_cells = sum(.data$n_cells), .by = c("cell_group", "donor_id")) |>
+    dplyr::summarise(largest_donor_fraction = max(.data$n_cells) / sum(.data$n_cells),
+      .by = "cell_group")
+  gene_tibble <- results_tibble |>
+    dplyr::distinct(.data$cell_group, .data$TargetGeneID, .data$gene_detected_frac) |>
+    dplyr::summarise(gene_detection = stats::median(.data$gene_detected_frac), .by = "cell_group")
+  peak_tibble <- results_tibble |>
+    dplyr::distinct(.data$cell_group, .data$peak, .data$peak_accessible_frac) |>
+    dplyr::summarise(peak_detection = stats::median(.data$peak_accessible_frac), .by = "cell_group")
+  design_tibble <- results_tibble |>
+    dplyr::distinct(.data$cell_group, .data$chr, .data$residual_df) |>
+    dplyr::summarise(residual_df = stats::median(.data$residual_df), .by = "cell_group")
+  feature_labels <- c(
+    n_nuclei = "Nuclei in retained pseudobulks",
+    n_donors = "Retained donors",
+    largest_donor_fraction = "Fraction of nuclei from largest donor",
+    n_aggregates = "Retained donor-state pseudobulks",
+    n_states = "Retained ATAC states",
+    median_nuclei = "Median nuclei per pseudobulk",
+    GEX_depth = "Median RNA depth per nucleus",
+    ATAC_depth = "Median ATAC depth per nucleus",
+    residual_df = "Median residual degrees of freedom",
+    gene_detection = "Median gene detection fraction",
+    peak_detection = "Median peak detection fraction",
+    tested_pairs = "Tested peak-gene pairs"
+  )
+  plot_tibble <- support_tibble |>
+    dplyr::inner_join(aggregate_tibble, by = "cell_group", relationship = "one-to-one") |>
+    dplyr::left_join(donor_tibble, by = "cell_group", relationship = "one-to-one") |>
+    dplyr::left_join(gene_tibble, by = "cell_group", relationship = "one-to-one") |>
+    dplyr::left_join(peak_tibble, by = "cell_group", relationship = "one-to-one") |>
+    dplyr::left_join(design_tibble, by = "cell_group", relationship = "one-to-one") |>
+    tidyr::pivot_longer(dplyr::all_of(names(feature_labels)), names_to = "feature", values_to = "value") |>
+    dplyr::filter(is.finite(.data$value))
+  correlations <- plot_tibble |>
+    dplyr::summarise(
+      rho = if (dplyr::n() >= 3L && dplyr::n_distinct(.data$value) > 1L &&
+          dplyr::n_distinct(.data$FDR_significant_pairs) > 1L) {
+        stats::cor(.data$value, .data$FDR_significant_pairs, method = "spearman")
+      } else NA_real_,
+      n_cell_types = dplyr::n(), .by = "feature"
+    ) |>
+    dplyr::mutate(facet_label = paste0(feature_labels[.data$feature],
+      "\nSpearman rho = ", ifelse(is.na(.data$rho), "NA", sprintf("%.2f", .data$rho)),
+      "; cell types = ", .data$n_cell_types))
+  plot_tibble <- plot_tibble |>
+    dplyr::left_join(correlations, by = "feature", relationship = "many-to-one") |>
+    dplyr::mutate(facet_label = factor(.data$facet_label,
+      levels = correlations$facet_label[match(names(feature_labels), correlations$feature)]))
+  plot_tibble
+}
+
+#' Plot significant peak-gene pair counts against technical features
+#'
+#' @param plot_tibble Output of `prepare_peak_gene_support_technical_features()`.
+#' @return A faceted labelled scatter plot with descriptive Spearman correlations.
+#' @keywords internal
+
+plot_peak_gene_significant_pairs_vs_technical_features <- function(plot_tibble) {
+  if (nrow(plot_tibble) == 0L) {
+    return(make_empty_peak_gene_correlation_plot())
+  }
+  cell_groups <- sort(unique(plot_tibble$cell_group))
+  ggplot2::ggplot(plot_tibble,
+    ggplot2::aes(x = .data$value, y = .data$FDR_significant_pairs,
+      colour = .data$cell_group)) +
+    ggplot2::geom_point(size = 2) +
+    ggrepel::geom_text_repel(
+      ggplot2::aes(label = gsub("_", " ", .data$cell_group)),
+      seed = 1, max.overlaps = Inf, box.padding = 0.4,
+      min.segment.length = 0, size = 2.8
+    ) +
+    ggplot2::scale_colour_manual(values = stats::setNames(
+      grDevices::hcl.colors(length(cell_groups), "Dark 3"), cell_groups
+    ), guide = "none") +
+    ggplot2::facet_wrap(~facet_label, scales = "free_x", ncol = 4) +
+    ggplot2::scale_x_continuous(labels = scales::label_comma(), limits = c(0, NA),
+      expand = ggplot2::expansion(mult = c(0, 0.2))) +
+    ggplot2::scale_y_continuous(labels = scales::label_comma(), limits = c(0, NA),
+      expand = ggplot2::expansion(mult = c(0, 0.15))) +
+    ggplot2::labs(
+      title = "Technical features associated with peak-gene discovery counts",
+      subtitle = "Each point is a WNN-derived cell type. Compare detection yield with sampling and measurement quality; these associations do not separate technical effects from biology.",
+      caption = stringr::str_wrap("Significant pairs have conditional BH FDR < 0.05 within each cell type, including self-promoter pairs. Sampling summaries use retained, mutually exclusive donor-state pseudobulks. Depth is the median across pseudobulks of total RNA UMIs or ATAC fragments divided by nuclei count. Detection fractions are medians across unique genes or peaks represented in tested pairs, measured as the fraction of pseudobulks with nonzero counts; they are conditional on feature filtering. Residual degrees of freedom are summarized across chromosomes. Facets use separate linear x-scales and a shared y-scale. Spearman correlations weight cell types equally and are descriptive; NA denotes insufficient variation or fewer than three points. Cell types with unavailable FDR are omitted; observed zeros are retained.", width = 190),
+      x = "Technical feature value",
+      y = "FDR-significant peak-gene pairs"
     )
 }
 
@@ -1490,7 +1618,7 @@ summarize_peak_gene_correlation_by_distance <- function(results_tibble) {
     dplyr::filter(!is.na(.data$correlation), !.data$isSelfPromoter) |>
     dplyr::mutate(
       abs_distance_bin = pmin(
-        250000,
+        245000,
         floor(abs(.data$distance) / 5000) * 5000
       )
     ) |>
@@ -1513,24 +1641,51 @@ plot_peak_gene_correlation_by_distance <- function(plot_tibble) {
   if (nrow(plot_tibble) == 0L) {
     return(make_empty_peak_gene_correlation_plot())
   }
+  endpoint_tibble <- plot_tibble |>
+    dplyr::slice_max(.data$abs_distance_bin, n = 1, with_ties = FALSE, by = "cell_group")
+  mean_tibble <- plot_tibble |>
+    dplyr::summarise(median_correlation = mean(.data$median_correlation),
+      .by = "abs_distance_bin")
+  cell_groups <- sort(unique(plot_tibble$cell_group))
   ggplot2::ggplot(
     plot_tibble,
     ggplot2::aes(
-      x = .data$abs_distance_bin / 1000,
-      y = .data$median_correlation
+      x = (.data$abs_distance_bin + 2500) / 1000,
+      y = .data$median_correlation,
+      colour = .data$cell_group
     )
   ) +
     ggplot2::geom_hline(
       yintercept = 0,
-      linetype = 2,
+      linetype = 3,
       color = "grey70"
     ) +
-    ggplot2::geom_line() +
-    ggplot2::facet_wrap(~cell_group) +
+    ggplot2::geom_line(linewidth = 0.7) +
+    ggplot2::geom_line(data = mean_tibble, colour = "black",
+      linetype = "dashed", linewidth = 1) +
+    ggrepel::geom_text_repel(
+      data = endpoint_tibble,
+      ggplot2::aes(label = gsub("_", " ", .data$cell_group)),
+      nudge_x = 15, direction = "y", hjust = 0,
+      box.padding = 0.4, min.segment.length = 0,
+      max.overlaps = Inf, max.iter = 10000, seed = 1, size = 3.5
+    ) +
+    ggrepel::geom_text_repel(
+      data = dplyr::slice_max(mean_tibble, .data$abs_distance_bin, n = 1),
+      label = "Mean across cell types", colour = "black", fontface = "bold",
+      nudge_x = -20, nudge_y = 0.015, min.segment.length = 0,
+      seed = 1, size = 3.5
+    ) +
+    ggplot2::scale_colour_manual(values = stats::setNames(
+      grDevices::hcl.colors(length(cell_groups), "Dark 3"), cell_groups
+    ), guide = "none") +
+    ggplot2::scale_x_continuous(breaks = seq(0, 250, 50),
+      expand = ggplot2::expansion(mult = c(0.01, 0.3))) +
+    ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = 0.15)) +
     ggplot2::labs(
       title = "Peak-gene correlation by distance from the gene TSS",
-      subtitle = stringr::str_wrap("Look for distance-dependent trends; nearby peaks are not necessarily regulatory and bin support may differ.", width = 100),
-      caption = stringr::str_wrap("Median donor/depth-adjusted correlation among non-missing, non-self-promoter pairs, with no FDR filter. Distances use absolute TSS separation in 5 kb bins; all distances at or above 250 kb share the final bin. The dashed line marks zero correlation.", width = 110),
+      subtitle = stringr::str_wrap("Compare distance-dependent trends across WNN-derived cell types; colours and endpoint labels identify each curve. Nearby peaks are not necessarily regulatory.", width = 110),
+      caption = stringr::str_wrap("Median donor/depth-adjusted correlation among non-missing, non-self-promoter pairs, with no FDR filter. Absolute peak-centre to TSS distances use 5 kb bins plotted at their midpoints; the final 245–250 kb bin includes the 250 kb boundary. The black dashed curve is the mean of the available cell-type medians in each bin, weighting cell types equally rather than pooling pairs. Pair counts vary between bins and cell types. The grey dotted line marks zero correlation.", width = 130),
       x = "Absolute TSS distance, kb",
       y = "Median correlation"
     )

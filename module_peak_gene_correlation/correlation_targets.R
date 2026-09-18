@@ -229,6 +229,23 @@ rlang::list2(
     },
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
+  targets::tar_target(
+    name = significant_pairs_technical_features_tibble.WNN,
+    description = "Summarize peak-gene discovery counts and technical features across WNN cell types [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = prepare_peak_gene_support_technical_features(
+      results_tibble = peak_gene_correlation_results_tibble.WNN,
+      donor_state_aggregates_tibble = peak_gene_correlation_donor_state_aggregates_tibble.WNN
+    ),
+    resources = get_tar_resources(RAM_GB_req = 32)
+  ),
+  tarchetypes::tar_file(
+    name = significant_pairs_vs_technical_features_plot,
+    description = "Compare FDR-significant peak-gene pairs with sampling and measurement features across WNN cell types [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = plot_peak_gene_significant_pairs_vs_technical_features(
+      significant_pairs_technical_features_tibble.WNN
+    ) |>
+      save_plots_structured(width = 24, height = 17)
+  ),
   tarchetypes::tar_file(
     name = distance_correlation_plot,
     description = "Save median peak-gene correlation by absolute TSS distance and cell group [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
@@ -237,7 +254,7 @@ rlang::list2(
         peak_gene_correlation_results_tibble.WNN
       )
       plot_peak_gene_correlation_by_distance(distance_plot_tibble) |>
-        save_plots_structured()
+        save_plots_structured(width = 14, height = 9)
     },
     resources = get_tar_resources(RAM_GB_req = 16)
   ),

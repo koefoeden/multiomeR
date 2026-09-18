@@ -779,7 +779,6 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
       peak = character(),
       TargetGeneID = character(),
       TargetGene = character(),
-      correlation = numeric(),
       hierarchical_pvalue = numeric(),
       hierarchical_df = numeric(),
       hierarchical_FDR = numeric(),
@@ -793,7 +792,8 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
       gene_expression_logCPM = numeric(),
       peak_accessibility_logCPM = numeric(),
       gene_expression_residual = numeric(),
-      peak_accessibility_residual = numeric()
+      peak_accessibility_residual = numeric(),
+      correlation = numeric()
     ))
   }
 
@@ -840,7 +840,9 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
         peak_accessibility_residual = as.numeric(qr.resid(qr(design), as.numeric(ATAC_norm[link_row$peak[[1]], ])))
       )
     ) |>
-      dplyr::mutate(correlation = stats::cor(.data$peak_accessibility_residual, .data$gene_expression_residual))
+      dplyr::mutate(correlation = if (stats::sd(.data$peak_accessibility_residual) > 0 &&
+        stats::sd(.data$gene_expression_residual) > 0)
+        stats::cor(.data$peak_accessibility_residual, .data$gene_expression_residual) else NA_real_)
   })
 }
 

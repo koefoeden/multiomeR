@@ -67,12 +67,9 @@ testthat::test_that("GEM-well QC comparisons use manifest selection and labels",
   )
 
   testthat::expect_named(plots, "nCount_RNA")
-  testthat::expect_identical(plots$nCount_RNA$labels$title, "RNA UMI count")
-  testthat::expect_identical(
-    plots$nCount_RNA$labels$subtitle,
-    "nCount_RNA: Total RNA UMI count."
-  )
-  testthat::expect_null(plots$nCount_RNA$labels$caption)
+  testthat::expect_identical(plots$nCount_RNA$labels$title, "RNA UMI count by GEM well")
+  testthat::expect_match(plots$nCount_RNA$labels$subtitle, "Compare group distributions")
+  testthat::expect_match(plots$nCount_RNA$labels$caption, "Total RNA UMI count.", fixed = TRUE)
   testthat::expect_identical(nrow(plots$nCount_RNA$data), 38L)
   testthat::expect_equal(range(plots$nCount_RNA$data$value), c(1, 39))
   testthat::expect_equal(

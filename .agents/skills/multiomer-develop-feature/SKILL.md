@@ -22,6 +22,7 @@ Use this when adding or changing targets, helpers, or analysis steps.
 
 ## Current Design Preferences
 
+- For new or revised plots, follow [multiomer-annotate-plots](../multiomer-annotate-plots/SKILL.md): title identifies the subject, subtitle guides interpretation, and caption explains relevant methods.
 - Prefer BPCells, matrices, `GRanges`, tibbles, and `SummarizedExperiment` over Seurat/Signac objects for new ATAC/GEX processing.
 - Keep Seurat compatibility only at explicit legacy boundaries. Do not create intermediate Seurat objects just to pass data between targets.
 - Use direct package APIs rather than compatibility wrappers when practical.

@@ -1,23 +1,3 @@
-- id: pre-aggregation-qc-rna-counts
-  section: Main pipeline
-  subsection: Pre-aggregation QC
-  title: RNA count distributions
-  description: Compares Cell Ranger-called RNA count distributions across the two demo GEM wells before custom QC filters are applied.
-  target: per_dataset_QC_violins.1_pre_aggregation_QC.immune_human_dataset
-  asset: gallery_assets/parallel_GEM_well_preprocessing/qc_violins.png
-  source_file: outputs/plots/immune_human_dataset/1_pre_aggregation_QC/per_dataset_QC_violins/01_nCount_RNA.png
-  status: available
-
-- id: pre-aggregation-qc-tss-enrichment
-  section: Main pipeline
-  subsection: Pre-aggregation QC
-  title: TSS enrichment distributions
-  description: Compares TSS enrichment across the two demo GEM wells before custom QC filters are applied.
-  target: per_dataset_QC_violins.1_pre_aggregation_QC.immune_human_dataset
-  asset: gallery_assets/parallel_GEM_well_preprocessing/tss_enrichment.png
-  source_file: outputs/plots/immune_human_dataset/1_pre_aggregation_QC/per_dataset_QC_violins/06_TSS.enrichment.png
-  status: available
-
 - id: aggregation-input-qc-exclusions
   section: Main pipeline
   subsection: Aggregation input QC

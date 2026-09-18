@@ -447,11 +447,6 @@ build_aggregation_tibble <- function(
 
   aggregation_tibble |>
     dplyr::mutate(
-      aggregation_dataset_vec = purrr::map(
-        aggregation_GEM_well_IDs,
-        \(ids) GEM_well_tibble$dataset[match(ids, GEM_well_tibble$GEM_well_ID)] |>
-          unique()
-      ),
       aggregation_GEM_well_QC_exclude_list = purrr::map(
         aggregation_GEM_well_IDs,
         \(ids) {
@@ -463,18 +458,13 @@ build_aggregation_tibble <- function(
           )
         }
       )
-    ) |>
-    add_target_sym_cols(
-      per_dataset_excluded_upset_syms = target_sym_col("per_dataset_excluded_upset", "aggregation_dataset_vec"),
-      per_dataset_excluded_cellranger_only_upset_syms = target_sym_col("per_dataset_excluded_cellranger_only_upset", "aggregation_dataset_vec"),
-      per_dataset_QC_violins_syms = target_sym_col("per_dataset_QC_violins.1_pre_aggregation_QC", "aggregation_dataset_vec")
     )
 }
 
 #' Build dataset config tibble
 #'
 #' Collapse GEM well-level settings by dataset for interactive configuration
-#' loading and dataset-level QC summaries.
+#' loading.
 #'
 #' @param GEM_well_tibble GEM well mapping tibble created by
 #'   `build_GEM_well_tibble()`.
@@ -491,36 +481,6 @@ build_dataset_config_tibble <- function(GEM_well_tibble) {
       is_active = list(any(unlist(.data$is_active))),
       .by = dataset
     )
-}
-
-#' Build dataset mapping tibble
-#'
-#' Collapse GEM well rows by dataset for the dataset QC-summary `tar_map()`.
-#'
-#' @inheritParams build_dataset_config_tibble
-#' @return A tibble with one row per dataset and GEM well target symbol
-#'   list-columns.
-#' @keywords internal
-
-build_dataset_tibble <- function(GEM_well_tibble) {
-  dataset_config_tibble <- build_dataset_config_tibble(GEM_well_tibble)
-
-  GEM_well_tibble |>
-    dplyr::summarise(
-      dataset_GEM_well_IDs = list(GEM_well_ID),
-      dataset_GEM_well_QC_exclude_list = list(stats::setNames(
-        GEM_well_QC_exclude_list,
-        GEM_well_ID
-      )),
-      .by = dataset
-    ) |>
-    add_target_sym_cols(
-      dataset_unfiltered_cells_n_vecs_syms = target_sym_col("unfiltered_cells_n_vecs", "dataset_GEM_well_IDs"),
-      dataset_cellranger_kept_metadata_tibble_syms = target_sym_col("cellranger_kept_metadata_tibble", "dataset_GEM_well_IDs"),
-      dataset_excluded_cellranger_only_barcodes_by_type_list_syms = target_sym_col("excluded_cellranger_only_barcodes_by_type_list", "dataset_GEM_well_IDs"),
-      dataset_excluded_barcodes_by_type_list_syms = target_sym_col("excluded_barcodes_by_type_list", "dataset_GEM_well_IDs")
-    ) |>
-    dplyr::left_join(dataset_config_tibble, by = "dataset")
 }
 
 #' Get Roadmap EDACC names

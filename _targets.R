@@ -49,7 +49,6 @@ aggregation_MACS3_tibble <- aggregation_tibble |>
     "peak_calling_cluster_discovery_tibble.ATAC"
   ))
 GEM_well_tibble <- build_active_GEM_well_tibble(GEM_well_tibble_all)
-dataset_tibble <- build_dataset_tibble(GEM_well_tibble = GEM_well_tibble)
 roadmap_EDACC_names <- get_roadmap_EDACC_names(aggregation_tibble = aggregation_tibble)
 
 known_aggregation_modules <- c(
@@ -82,13 +81,6 @@ pipeline <- rlang::list2(
     descriptions = NULL,
     delimiter = ".",
     source("extra_targets/per_GEM_well_targets.R")$value
-  ),
-  tarchetypes::tar_map(
-    values = dataset_tibble,
-    names = dataset,
-    descriptions = NULL,
-    delimiter = ".",
-    source("extra_targets/per_dataset_targets.R")$value
   ),
   tarchetypes::tar_map(
     values = aggregation_tibble,

@@ -1344,3 +1344,76 @@ plot_WNN_weight_metadata_details <- function(summary) {
   names(plots) <- make.unique(gsub("[^[:alnum:]_.-]", "_", names(plots)))
   plots
 }
+
+#' Add cluster sizes and RNA/ATAC doublet evidence beside a marker dot plot
+#'
+#' @param plot Marker dot plot with discrete cluster rows in `plot$data$group`.
+#' @param metadata_tibble Pre-doublet-filter metadata, including named clusters.
+#' @param scDblFinder_results_df Barcode-indexed GEX scDblFinder results.
+#' @param max_doublet_fraction Maximum allowed called-doublet fraction, or NULL.
+#' @return A patchwork with aligned counts, AMULET violins and marker rows.
+add_cluster_doublet_bars <- function(plot, metadata_tibble, scDblFinder_results_df,
+                                     max_doublet_fraction) {
+  row_order <- levels(plot$data$group)
+  row_separators <- ggplot2::geom_hline(
+    yintercept = seq(0.5, length(row_order) + 0.5),
+    colour = "grey80", linewidth = 0.25)
+  counts <- metadata_tibble |>
+    dplyr::select(barcode_w_prefix, group = PCA_harmony_SNN_cluster_named) |>
+    dplyr::left_join(scDblFinder_results_df |>
+      tibble::rownames_to_column("barcode_w_prefix") |>
+      dplyr::select(barcode_w_prefix, scDblFinder.class_GEX), by = "barcode_w_prefix") |>
+    dplyr::mutate(status = factor(dplyr::case_when(
+      scDblFinder.class_GEX == "doublet" ~ "Doublet",
+      scDblFinder.class_GEX == "singlet" ~ "Non-doublet",
+      .default = "Unclassified"), levels = c("Non-doublet", "Doublet", "Unclassified"))) |>
+    dplyr::count(group, status, name = "n") |>
+    dplyr::mutate(group = factor(group, levels = row_order))
+  summary <- counts |>
+    dplyr::summarise(fraction = sum(n[status == "Doublet"]) / sum(n), .by = group)
+  excluded <- if (is.null(max_doublet_fraction)) rep(FALSE, nrow(summary)) else
+    summary$fraction > max_doublet_fraction
+  labels <- stats::setNames(ifelse(excluded,
+    paste0("<span style='color:#D73027'>", htmltools::htmlEscape(as.character(summary$group)), "</span>"),
+    htmltools::htmlEscape(as.character(summary$group))), as.character(summary$group))
+  bars <- ggplot2::ggplot(counts, ggplot2::aes(x = n, y = group, fill = status)) +
+    row_separators +
+    ggplot2::geom_col(position = ggplot2::position_stack(reverse = TRUE), width = 0.75) +
+    ggplot2::scale_y_discrete(limits = row_order, labels = labels, drop = FALSE) +
+    ggplot2::scale_fill_manual(values = c("Non-doublet" = "black", "Doublet" = "#D73027", "Unclassified" = "grey70")) +
+    ggplot2::labs(x = "Nuclei", y = plot$labels$y, fill = NULL) +
+    ggplot2::theme_classic() +
+    ggplot2::theme(axis.text.y = ggtext::element_markdown(), legend.position = "bottom")
+  amulet_data <- metadata_tibble |>
+    dplyr::transmute(group = factor(PCA_harmony_SNN_cluster_named, levels = row_order),
+      p_value = amulet_p.value) |>
+    dplyr::filter(is.finite(p_value), p_value >= 0, p_value <= 1) |>
+    dplyr::mutate(evidence = -log10(pmax(p_value, 1e-10)))
+  amulet_medians <- amulet_data |>
+    dplyr::summarise(evidence = median(evidence), .by = group)
+  amulet <- ggplot2::ggplot(amulet_data, ggplot2::aes(x = evidence, y = group)) +
+    row_separators +
+    ggplot2::geom_violin(orientation = "y", scale = "width", width = 0.8,
+      fill = "grey75", colour = "grey40", linewidth = 0.2) +
+    ggplot2::geom_point(data = amulet_medians, shape = 124, size = 2) +
+    ggplot2::scale_y_discrete(limits = row_order, drop = FALSE) +
+    ggplot2::scale_x_continuous(limits = c(0, NA)) +
+    ggplot2::labs(x = "AMULET evidence\n−log10(P)", y = NULL) +
+    ggplot2::theme_classic() +
+    ggplot2::theme(axis.text.y = ggplot2::element_blank(), axis.ticks.y = ggplot2::element_blank())
+  note <- paste0("Left bars: black = non-doublet calls; red = doublet calls; grey = unclassified nuclei, when present. ",
+    if (is.null(max_doublet_fraction)) "Whole-cluster doublet filtering is disabled." else
+      paste0("Red cluster names: called doublets / all cluster nuclei > ",
+        format(max_doublet_fraction), " (configured whole-cluster exclusion threshold)."))
+  patchwork::wrap_plots(bars, amulet, plot + row_separators +
+    ggplot2::scale_y_discrete(limits = row_order, drop = FALSE) +
+    ggplot2::labs(title = NULL, subtitle = NULL, caption = NULL, y = NULL) +
+    ggplot2::theme(axis.text.y = ggplot2::element_blank(), axis.ticks.y = ggplot2::element_blank()),
+    nrow = 1, widths = c(2, 2, 10)) +
+    patchwork::plot_annotation(title = plot$labels$title, subtitle = plot$labels$subtitle,
+      caption = paste(plot$labels$caption, stringr::str_wrap(note, 150),
+        stringr::str_wrap(paste0("Middle violins: −log10(AMULET P), equal maximum widths; ticks mark medians. Higher values indicate stronger ATAC multiplet evidence. ",
+          "Values are capped at 10 (P <= 1e-10, including zero); missing or invalid P values are omitted. ",
+          "These nuclei have already passed configured upstream AMULET filters; weak evidence does not establish singlet status."), 150), sep = "\n"),
+      theme = ggplot2::theme(plot.caption = ggplot2::element_text(hjust = 0)))
+}

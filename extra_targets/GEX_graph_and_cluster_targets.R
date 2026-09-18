@@ -119,8 +119,10 @@ rlang::list2(
         group_col = "PCA_harmony_SNN_cluster_named",
         cell_type_col = "PCA_harmony_SNN_cluster_cell_type", group_label = "GEX cluster"
       )
-      save_plots_structured(plot,
-        width = max(16, 4 + 0.35 * nlevels(plot$data$marker_feature)),
+      save_plots_structured(
+        add_cluster_doublet_bars(plot, metadata_w_cell_types_unfiltered_tibble.GEX,
+          scDblFinder_results_df.GEX, aggregation_scDblFinder_GEX_max_doublet_fraction_per_cluster),
+        width = max(20, 8 + 0.35 * nlevels(plot$data$marker_feature)),
         height = max(9, 4 + 0.25 * nlevels(plot$data$group)))
     },
     resources = get_tar_resources(RAM_GB_req = 16)

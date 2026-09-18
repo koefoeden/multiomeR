@@ -64,6 +64,15 @@ rlang::list2(
         fill_label = "Relative deviation",
         support_label_col = "support_label"
       )
+      if (inherits(plot, "empty_plot_list")) {
+        plot <- ggplot2::ggplot() + ggplot2::theme_void() +
+          ggplot2::annotate("text", x = 0, y = 0, label = "No eligible cell-type GWAS scores")
+      }
+      plot <- plot + patchwork::plot_annotation(
+        title = "Relative GWAS-linked accessibility by cell type",
+        subtitle = "Compare cell types within each trait; red indicates above-average deviation.\nStars mark chromVAR z-score support, not adjusted-p significance or independent donor evidence.",
+        caption = "ATAC counts are summed by WNN cell type. Colour: deviation centred and divided by its SD across cell types within each GWAS.\nStars: * z >= 2; ** z >= 3 against the betterChromVAR background. Nuclei counts describe input support; this is a descriptive pooled comparison."
+      )
       save_plots_structured(
         plot,
         filetype = "png",
@@ -83,6 +92,15 @@ rlang::list2(
         fill_col = "deviation",
         fill_label = "Deviation",
         support_label_col = "support_label"
+      )
+      if (inherits(plot, "empty_plot_list")) {
+        plot <- ggplot2::ggplot() + ggplot2::theme_void() +
+          ggplot2::annotate("text", x = 0, y = 0, label = "No eligible cell-type GWAS scores")
+      }
+      plot <- plot + patchwork::plot_annotation(
+        title = "GWAS-linked accessibility deviation by cell type",
+        subtitle = "Positive values indicate accessibility above the weighted background expectation.\nStars mark chromVAR z-score support, not adjusted-p significance or independent donor evidence.",
+        caption = "ATAC counts are summed by WNN cell type. Colour: weighted observed-minus-expected accessibility divided by the depth-adjusted expectation.\nStars: * z >= 2; ** z >= 3 against the betterChromVAR background. Nuclei counts describe input support; this is a descriptive pooled comparison."
       )
       save_plots_structured(
         plot,

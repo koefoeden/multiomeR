@@ -768,8 +768,14 @@ plot_ATAC_vs_RNA_weight_boxplots <- function(
     ggplot2::ggplot(ggplot2::aes(x = value, y = sorted_cluster)) +
     ggplot2::geom_boxplot(ggplot2::aes(color = .data[[cluster_label_col]])) +
     ggplot2::theme(legend.position = "none") +
-    ggplot2::facet_wrap(~name, scales = "free_x") +
-    ggplot2::labs(x = "log10(counts) / WNN weight / log10(counts)", y = "Cluster")
+    ggplot2::facet_wrap(~name, scales = "free_x", labeller = ggplot2::as_labeller(c(
+      log10_nCount_RNA = "RNA depth (log10 counts)", ATAC.weight = "ATAC weight in WNN",
+      log10_nCount_ATAC = "ATAC depth (log10 counts)"))) +
+    ggplot2::labs(
+      title = "WNN modality weighting and sequencing depth by cluster",
+      subtitle = "Look for clusters where high ATAC weight accompanies differences in RNA or ATAC depth.\nDepth-associated weighting may reflect technical effects; weight alone is not a modality-quality score.",
+      caption = stringr::str_wrap("Each box summarizes cells in the WNN annotation metadata: median, interquartile range, and whiskers to 1.5 x IQR; remaining points are outliers.\nClusters are ordered by decreasing median ATAC weight. Depth panels use log10 counts; panels have separate x scales.", width = 110),
+      x = NULL, y = "WNN cluster")
 
   return(boxplot)
 }
@@ -1110,8 +1116,11 @@ plot_similarity_matrix_from_GRanges_list <- function(GRanges_list_in) {
   tile_plot <- result_tibble %>%
     ggplot2::ggplot(ggplot2::aes(x = x, y = y, fill = value)) +
     ggplot2::geom_tile() +
-    ggplot2::labs(x = "Cluster", y = "Cluster") +
-    ggplot2::ggtitle("Jaccard index (upper) vs overlap fraction (lower)") +
+    ggplot2::labs(
+      title = "Shared peak coverage between clusters",
+      subtitle = "High overlap with a lower Jaccard index suggests containment of a smaller peak set in a larger one.\nThese are base-pair coverage similarities, not fractions of matching peak records.",
+      caption = stringr::str_wrap("For x < y: Jaccard = intersection / union coverage. For x > y: overlap = intersection / smaller-set coverage.\nIntervals are reduced within each cluster and compared ignoring strand; coverage is measured in base pairs. Cluster numbers follow input-list order.", width = 110),
+      x = "Cluster", y = "Cluster", fill = "Coverage similarity") +
     ggplot2::geom_text(ggplot2::aes(label = round(value, 2)), size = 3) +
     ggplot2::scale_x_continuous(
       breaks = seq(1, length(set_names), 1),

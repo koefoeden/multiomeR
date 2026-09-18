@@ -1326,7 +1326,7 @@ get_psbulk_DX_significant_elements_tibble <- function(combined_psbulk_DX_results
     )
 }
 
-plot_psbulk_DX_significant_elements <- function(significant_elements_tibble) {
+plot_psbulk_DX_significant_elements <- function(significant_elements_tibble, modality = "features") {
   contrast_levels <- significant_elements_tibble |>
     dplyr::summarise(total_significant = sum(n_significant), .by = contrast) |>
     dplyr::arrange(total_significant, contrast) |>
@@ -1342,7 +1342,11 @@ plot_psbulk_DX_significant_elements <- function(significant_elements_tibble) {
     ggplot2::geom_hline(yintercept = 0, linewidth = 0.3) +
     ggplot2::coord_flip() +
     ggplot2::scale_y_continuous(labels = \(x) abs(x)) +
-    ggplot2::labs(x = NULL, y = "Significant elements", fill = "Model") +
+    ggplot2::labs(
+      title = paste("Differential", modality, "by contrast"),
+      subtitle = "Bars to the right count increases; bars to the left count decreases in the positive contrast direction.\nCompare direction and yield across models; more discoveries alone do not imply a stronger biological effect.",
+      caption = stringr::str_wrap("Counts include features with BH FDR < 0.05 and nonzero fitted effect, corrected within each model and contrast.\nTick labels show absolute counts; contrasts are ordered by total discoveries across models. Feature sets and sample support may differ between models.", width = 110),
+      x = NULL, y = "Significant features (left: decreases; right: increases)", fill = "Model") +
     ggplot2::theme(legend.position = "bottom")
 }
 
@@ -1585,7 +1589,16 @@ plot_psbulk_DCA_volcano_tibble <- function(
     ggplot2::aes(x = logFC, y = .data[[y_val]], color = type)
   ) +
     ggplot2::geom_point(ggplot2::aes(alpha = sig), size = 0.5) +
-    ggplot2::labs(title = title) +
+    ggplot2::labs(
+      title = paste("Differential chromatin accessibility:", title),
+      subtitle = "Positive log2 fold changes indicate higher accessibility in the positive contrast direction.\nPoint opacity marks FDR significance; the dashed line uses the threshold on the displayed p-value scale.",
+      caption = stringr::str_wrap(paste0(
+        "Each point is a peak. Opacity: BH FDR < 0.05 across tested peaks within this model and contrast. Dashed line: ",
+        if (y_val == "log10FDR") "FDR = 0.05." else "nominal p = 0.05, not an FDR cutoff.",
+        "\nColours group genomic annotations. Up to 30 peaks are selected for labels by -log10(p) x absolute log2 fold change; gene labels denote annotation, not proven targets."), width = 110),
+      x = "Log2 fold change", y = if (y_val == "log10FDR") "-log10(BH FDR)" else "-log10(nominal p-value)",
+      alpha = "FDR significance", colour = "Genomic annotation"
+    ) +
     ggplot2::geom_hline(yintercept = -log10(0.05), lty = 2) +
     ggrepel::geom_text_repel(
       data = label_tibble,

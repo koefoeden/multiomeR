@@ -1409,7 +1409,7 @@ summarize_peak_gene_correlation_support_counts <- function(results_tibble) {
     dplyr::summarise(
       tested_pairs = dplyr::n(),
       FDR_significant_pairs = if (all(is.na(.data$FDR))) NA_integer_ else sum(.data$FDR < 0.05, na.rm = TRUE),
-      candidate_enhancer_links = sum(
+      candidate_enhancer_links = if (all(is.na(.data$FDR))) NA_integer_ else sum(
         .data$correlation >= 0.15 &
           .data$FDR < 0.05 &
           !.data$isSelfPromoter,
@@ -1421,8 +1421,7 @@ summarize_peak_gene_correlation_support_counts <- function(results_tibble) {
       cols = -"cell_group",
       names_to = "metric",
       values_to = "n"
-    ) |>
-    dplyr::mutate(n_for_plot = pmax(.data$n, 1))
+    )
 }
 
 #' Plot peak-gene correlation support counts
@@ -1436,18 +1435,31 @@ plot_peak_gene_correlation_support_counts <- function(plot_tibble) {
   if (nrow(plot_tibble) == 0L) {
     return(make_empty_peak_gene_correlation_plot())
   }
+  plot_tibble <- plot_tibble |>
+    dplyr::mutate(
+      metric = factor(.data$metric,
+        levels = c("tested_pairs", "FDR_significant_pairs", "candidate_enhancer_links"),
+        labels = c("Tested pairs", "FDR-significant pairs", "Candidate enhancer links")),
+      count_position = tidyr::replace_na(.data$n, 0),
+      count_label = dplyr::if_else(is.na(.data$n), "NA", as.character(.data$n))
+    )
   ggplot2::ggplot(
     plot_tibble,
     ggplot2::aes(
-      x = .data$n_for_plot,
-      y = stats::reorder(.data$cell_group, .data$n_for_plot),
+      x = .data$count_position,
+      y = .data$cell_group,
       fill = .data$metric
     )
   ) +
     ggplot2::geom_col(position = "dodge") +
-    ggplot2::scale_x_log10() +
+    ggplot2::geom_text(ggplot2::aes(label = .data$count_label),
+      position = ggplot2::position_dodge(width = 0.9), hjust = -0.15, size = 3) +
+    ggplot2::scale_x_continuous(transform = "log1p", expand = ggplot2::expansion(mult = c(0, 0.2))) +
     ggplot2::labs(
-      x = "Count, log10 scale",
+      title = "Peak-gene association support by cell group",
+      subtitle = "Compare candidate links with the number of tested pairs; these are exploratory associations, not causal links.\nLabels distinguish zero qualifying pairs from unavailable significance (NA).",
+      caption = stringr::str_wrap("Significant: conditional BH FDR < 0.05 across tested pairs within each cell group. Candidates also require donor/depth-adjusted r >= 0.15 and exclude self-promoter pairs.\nCounts use a log(1 + count) axis, preserving zero. NA marks groups with no available FDR values; categories overlap.", width = 110),
+      x = "Pair count (log1p scale)",
       y = "Cell group",
       fill = NULL
     )

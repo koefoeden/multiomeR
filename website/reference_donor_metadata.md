@@ -5,13 +5,13 @@ The donor metadata table is a TSV with one unique row per `donor_id`. Each aggre
 ## Minimal table
 
 ``` {.text filename="donor_metadata.tsv"}
-donor_id    condition
-donor_1 control
+donor_id	condition
+donor_1	control
 ```
 
 ## Matching donors to nuclei
 
-Every nucleus receives a `donor_id` from its GEM well: the configured `GEM_well_donor_id` for a non-multiplexed well, or a genotype-based assignment for a well with a configured VCF. Each of those IDs must appear exactly once in this table; see the [GEM well table](reference_GEM_wells.md#donors).
+Every nucleus receives a `donor_id` from its GEM well: the configured `GEM_well_donor_id` for a non-multiplexed well, or a genotype-based assignment for a well with a configured VCF. Each of those IDs must appear exactly once in this table; see the [GEM well table](reference_GEM_wells.md#fill-in-a-row).
 
 ## Which variables belong here
 

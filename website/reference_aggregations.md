@@ -43,7 +43,7 @@ aggregation_QC_exclude_list_combined_object:
   - atac_peak_counts_blacklist_frac > 0.01
 ```
 
-Omit it or set it to `null` until step 5 of [Run your own analysis](main_running.md#steps) has shown the distributions.
+Omit it or set it to `null` until step 4 of [Run your own analysis](main_running.md#steps) has shown the distributions.
 
 ## Optional modules
 

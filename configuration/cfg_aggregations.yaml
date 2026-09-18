@@ -1,3 +1,11 @@
+template_aggregation:
+  is_active: false
+  aggregation_GEM_well_IDs: [my_GEM_well_ID_1, my_GEM_well_ID_2]
+  aggregation_donor_id_metadata_tsv: /path/to/donor_metadata.tsv
+  aggregation_GEX_marker_genes:
+    Cell_type_A: [GENE1, GENE2]
+    Cell_type_B: [GENE3, GENE4]
+
 immune_human_2x:
   is_active: true
   aggregation_donor_id_metadata_tsv: example_data/immune_human_dataset_donor_id_metadata.tsv

@@ -201,7 +201,7 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
-    name = peak_gene_correlation_correlation_histogram_plot,
+    name = correlation_histogram_plot,
     description = "Save a facetted histogram of peak-gene correlations by cell group [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = {
       correlation_bin_width <- 0.025
@@ -218,7 +218,7 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
-    name = peak_gene_correlation_support_counts_plot,
+    name = support_counts_plot,
     description = "Save peak-gene correlation tested, significant, and linked pair counts by cell group [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = {
       support_plot_tibble <- summarize_peak_gene_correlation_support_counts(
@@ -230,7 +230,7 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
-    name = peak_gene_correlation_distance_correlation_plot,
+    name = distance_correlation_plot,
     description = "Save median peak-gene correlation by absolute TSS distance and cell group [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = {
       distance_plot_tibble <- summarize_peak_gene_correlation_by_distance(
@@ -242,7 +242,7 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
-    name = peak_gene_correlation_diagnostics_plot,
+    name = diagnostics_plot,
     description = "Save peak-gene correlation retained and skipped branch diagnostics by cell group [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = {
       diagnostics_plot_tibble <- peak_gene_correlation_diagnostics_tibble.WNN |>
@@ -321,7 +321,7 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 32) # apparently 16 GB is not enough
   ),
   tarchetypes::tar_file(
-    name = peak_gene_correlation_top_link_aggregate_scatter_plots,
+    name = top_link_aggregate_scatter_plots,
     description = "Save aggregate-level scatterplots for top peak-gene links per cell group [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = (function() {
       plot_tibble <- peak_gene_correlation_top_link_aggregate_scatter_tibble.WNN
@@ -624,7 +624,7 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
-    name = peak_gene_correlation_top_link_ATAC_tracks_plots,
+    name = top_link_ATAC_tracks_plots,
     description = "Save combined genome annotation, ATAC coverage, and peak-gene loop tracks at top-link loci [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = (function() {
       locus_tibble <- peak_gene_correlation_top_link_loci_tibble.WNN

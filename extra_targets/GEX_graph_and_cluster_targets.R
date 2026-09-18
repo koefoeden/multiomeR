@@ -446,12 +446,17 @@ rlang::list2(
       metadata_tibble = metadata_w_cell_types_analysis_tibble.GEX,
       QC_metric_manifest_tibble = QC_metric_manifest_tibble,
       checkpoints = c("1_pre-aggregation-QC", "2_GEX-PCA-QC", "3_GEX-QC"),
-      group_col = "PCA_harmony_SNN_cluster_named"
+      group_col = "PCA_harmony_SNN_cluster_named",
+      group_order = get_marker_cell_type_order(
+        metadata_w_cell_types_unfiltered_tibble.GEX$PCA_harmony_SNN_cluster_named,
+        names(UCell_GEX_marker_genes_list),
+        get_marker_group_cell_types(metadata_w_cell_types_unfiltered_tibble.GEX,
+          "PCA_harmony_SNN_cluster_named", "PCA_harmony_SNN_cluster_cell_type"))
     ) |>
       save_plots_structured(width = max(10, 4 + 0.35 * dplyr::n_distinct(metadata_w_cell_types_analysis_tibble.GEX$PCA_harmony_SNN_cluster_named)))
   ),
   tarchetypes::tar_file(
-    name = categorical_bars_plots.3_GEX_QC,
+    name = categorical_by_cell_type_bars_plots.3_GEX_QC,
     description = "Bar plots of categorical metadata composition per cell type. [checkpoint:3_GEX-QC]",
     command = plot_categorical_bars_plot(
       metadata_tibble = metadata_w_cell_types_analysis_tibble.GEX,
@@ -459,6 +464,21 @@ rlang::list2(
       cluster_col = "PCA_harmony_SNN_cluster_cell_type"
     ) |>
       save_plots_structured()
+  ),
+  tarchetypes::tar_file(
+    name = categorical_by_cluster_bars_plots.3_GEX_QC,
+    description = "Bar plots of categorical metadata composition per SNN cluster. [checkpoint:3_GEX-QC]",
+    command = plot_categorical_bars_plot(
+      metadata_tibble = metadata_w_cell_types_analysis_tibble.GEX,
+      metadata_cols = aggregation_GEX_categorical_vars,
+      cluster_col = "PCA_harmony_SNN_cluster_named",
+      group_order = get_marker_cell_type_order(
+        metadata_w_cell_types_unfiltered_tibble.GEX$PCA_harmony_SNN_cluster_named,
+        names(UCell_GEX_marker_genes_list),
+        get_marker_group_cell_types(metadata_w_cell_types_unfiltered_tibble.GEX,
+          "PCA_harmony_SNN_cluster_named", "PCA_harmony_SNN_cluster_cell_type"))
+    ) |>
+      save_plots_structured(height = max(9, 4 + 0.25 * dplyr::n_distinct(metadata_w_cell_types_analysis_tibble.GEX$PCA_harmony_SNN_cluster_named)))
   ),
   tarchetypes::tar_file(
     name = cluster_marker_volcano_plots.3_GEX_QC,

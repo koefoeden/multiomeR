@@ -63,7 +63,9 @@ rlang::list2(
     name = significant_elements_plot,
     description = "Plot signed counts of FDR-significant pseudobulk DX elements per model and contrast. [checkpoint:differential_analyses]",
     command = significant_elements_tibble |>
-      plot_psbulk_DX_significant_elements() |>
+      plot_psbulk_DX_significant_elements(modality = switch(map_psbulk_DX_tar_suffix,
+        DGE = "gene expression", DCA = "chromatin accessibility", DTFA = "motif-family accessibility",
+        DCTA = "TF activity")) |>
       save_plots_structured()
   ),
   targets::tar_target(

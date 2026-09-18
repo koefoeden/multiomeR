@@ -860,6 +860,7 @@ plot_GWAS_by_cluster_heatmap <- function(
 #' @param support_label_col Optional text column drawn on top of heatmap tiles.
 #' @param point_size_col Optional factor column mapped to dot size.
 #' @param caption Optional caption added below each grouped heatmap.
+#' @param title,subtitle Optional shared title and reading guidance for each plot.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
@@ -875,7 +876,9 @@ plot_grouped_GWAS_by_cluster_heatmaps <- function(
   fill_limits = NULL,
   support_label_col = NULL,
   point_size_col = NULL,
-  caption = NULL
+  caption = NULL,
+  title = NULL,
+  subtitle = NULL
 ) {
   if (nrow(data_per_GWAS_and_cluster_df) == 0) {
     return(structure(list(), class = c("empty_plot_list", "list")))
@@ -903,9 +906,6 @@ plot_grouped_GWAS_by_cluster_heatmaps <- function(
         support_label_col = support_label_col,
         point_size_col = point_size_col
       )
-      if (!is.null(caption)) {
-        plot <- plot + patchwork::plot_annotation(caption = caption)
-      }
-      plot
+      plot + patchwork::plot_annotation(title = title, subtitle = subtitle, caption = caption)
     })
 }

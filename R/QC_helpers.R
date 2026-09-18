@@ -141,14 +141,15 @@ save_QC_cell_retention_plot <- function(retention_tibble) {
   )
 }
 
-plot_nuclei_per_donor_id <- function(
-  metadata_tibble,
-  fill_by = "PCA_harmony_SNN_cluster"
-) {
-  metadata_tibble %>%
-    ggplot2::ggplot(ggplot2::aes(x = donor_id, fill = .data[[fill_by]])) +
-    ggplot2::geom_bar() +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 60, vjust = 1, hjust = 1))
+plot_nuclei_per_donor_id <- function(demultiplexing_counts_tibble) {
+  demultiplexing_counts_tibble |>
+    dplyr::filter(.data$assignment_class == "singlet") |>
+    dplyr::summarise(n_nuclei = sum(.data$n_nuclei), .by = donor_id) |>
+    ggplot2::ggplot(ggplot2::aes(x = n_nuclei, y = donor_id)) +
+    ggplot2::geom_col(fill = "#009E73") +
+    ggplot2::labs(title = "Assigned singlet nuclei per donor before QC",
+      x = "Cell Ranger-called nuclei", y = "Donor ID",
+      caption = "Doublets and unassigned nuclei are excluded. Single-donor wells use their configured donor; they are not genotype-demultiplexed.")
 }
 
 #' Plot one per-dataset QC violin

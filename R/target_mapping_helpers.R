@@ -376,6 +376,8 @@ build_aggregation_tibble <- function(
   aggregation_tibble <- aggregation_tibble_from_yaml |>
     add_target_sym_cols(
       aggregation_GEX_counts_BPCells_matrix_syms = target_sym_col("GEX_counts_BPCells_matrix", "aggregation_GEM_well_IDs"),
+      aggregation_vireo_donor_ids_tibble_syms = target_sym_col("vireo_donor_ids_tibble", "aggregation_GEM_well_IDs"),
+      aggregation_cellranger_barcodes_tsv_syms = target_sym_col("cellranger_barcodes_tsv", "aggregation_GEM_well_IDs"),
       aggregation_fragments_w_prefix_bpcells_syms = target_sym_col("fragments_w_prefix_bpcells", "aggregation_GEM_well_IDs"),
       aggregation_cellranger_summary_file_syms = target_sym_col("cellranger_summary_file", "aggregation_GEM_well_IDs"),
       aggregation_cellranger_kept_metadata_tibble_syms = target_sym_col("cellranger_kept_metadata_tibble", "aggregation_GEM_well_IDs"),

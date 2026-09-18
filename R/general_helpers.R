@@ -578,44 +578,52 @@ plot_UMAP_from_metadata <- function(
 
 plot_3_by_3_clusters_and_reduction_UMAPs_from_metadata <- function(metadata_tibble, cluster_col_suffix = c("named", "cell_type")) {
   cluster_col_suffix <- match.arg(cluster_col_suffix)
-
-  dim_plot_list <- purrr::pmap(
-    tibble::tribble(
-      ~cluster_name    , ~cluster_col                                          ,
-      "RNA clusters"   , stringr::str_c("PCA_harmony_SNN_cluster_", cluster_col_suffix) ,
-      "Joint clusters" , stringr::str_c("WNN_harmony_SNN_cluster_", cluster_col_suffix) ,
-      "ATAC clusters"  , stringr::str_c("LSI_harmony_SNN_cluster_", cluster_col_suffix)
-    ),
-    \(cluster_name, cluster_col) {
-      tri_plot_list <- purrr::pmap(
-        tibble::tribble(
-          ~umap_cols                    , ~modality_title ,
-          c("GEX_UMAP_1", "GEX_UMAP_2") , "RNA"           ,
-          c("WNN_UMAP_1", "WNN_UMAP_2") , "Joint"         ,
-          c("LSI_UMAP_1", "LSI_UMAP_2") , "ATAC"
-        ),
-        \(umap_cols, modality_title) {
-          metadata_tibble |>
-            plot_UMAP_from_metadata(
-              variable = cluster_col,
-              umap_cols = umap_cols,
-              labels_discrete = TRUE
-            ) +
-            CONST_UMAP_ggplot2_theme +
-            ggplot2::theme(legend.position = "none") +
-            ggplot2::labs(title = modality_title, subtitle = NULL, caption = NULL,
-              x = NULL, y = cluster_name, color = cluster_col)
-        }
-      )
-
-      patchwork::wrap_plots(tri_plot_list, guides = "collect")
-    }
-  )
-
-  patchwork::wrap_plots(dim_plot_list, ncol = 1) + patchwork::plot_annotation(
-    title = "Cluster labels across GEX, ATAC and WNN embeddings",
-    subtitle = stringr::str_wrap("Compare each row across embeddings for splits or mixing; GEX-derived cell-type names are not independent agreement.", width = 100),
-    caption = stringr::str_wrap("Columns change the embedding; rows change the source of the labels. All panels use the same supplied cells. UMAP island distances and orientations are not directly comparable across embeddings.", width = 110))
+  modalities <- c(GEX = "PCA_harmony_SNN", WNN = "WNN_harmony_SNN", ATAC = "LSI_harmony_SNN")
+  embeddings <- list(GEX = c("GEX_UMAP_1", "GEX_UMAP_2"),
+    WNN = c("WNN_UMAP_1", "WNN_UMAP_2"), ATAC = c("LSI_UMAP_1", "LSI_UMAP_2"))
+  panels <- purrr::imap(modalities, function(cluster_prefix, modality) {
+    cluster_col <- paste0(cluster_prefix, "_cluster_", cluster_col_suffix)
+    row_title <- paste0(modality, "-derived ",
+      if (cluster_col_suffix == "named") "clusters" else "cell-type labels")
+    strip <- ggplot2::ggplot() +
+      ggplot2::annotate("text", x = 0, y = 0, label = row_title, hjust = 0,
+        size = 3.5, fontface = "bold", colour = "grey20") +
+      ggplot2::scale_x_continuous(limits = c(0, 1), expand = ggplot2::expansion(mult = c(.01, .01))) +
+      ggplot2::theme_void() +
+      ggplot2::theme(plot.background = ggplot2::element_rect(fill = "grey92", colour = "grey75"),
+        plot.margin = ggplot2::margin(0, 4, 0, 4))
+    plots <- purrr::imap(embeddings, function(umap_cols, embedding_name) {
+      centers <- metadata_tibble |>
+        dplyr::transmute(label = as.character(.data[[cluster_col]]),
+          x = .data[[umap_cols[[1]]]], y = .data[[umap_cols[[2]]]]) |>
+        dplyr::filter(!is.na(label), is.finite(x), is.finite(y)) |>
+        dplyr::summarise(x = median(x), y = median(y), .by = label)
+      plot_UMAP_from_metadata(metadata_tibble, variable = cluster_col,
+        umap_cols = umap_cols, labels_discrete = FALSE) +
+        ggrepel::geom_text_repel(data = centers, ggplot2::aes(x, y, label = label),
+          inherit.aes = FALSE, size = 2, colour = "grey20", seed = 1,
+          box.padding = 0.15, point.padding = 0.05, segment.size = 0.2,
+          segment.alpha = 0.5, max.overlaps = Inf) +
+        CONST_UMAP_ggplot2_theme +
+        ggplot2::theme(legend.position = "none", axis.line = ggplot2::element_blank(),
+          axis.line.x = ggplot2::element_blank(), axis.line.y = ggplot2::element_blank(),
+          panel.border = ggplot2::element_rect(colour = "grey85", fill = NA),
+          plot.title = ggplot2::element_text(size = 11, hjust = 0.5)) +
+        ggplot2::labs(title = paste(embedding_name, "UMAP"), subtitle = NULL, caption = NULL,
+          x = NULL, y = NULL)
+    })
+    c(list(strip), unname(plots))
+  }) |> purrr::flatten()
+  patchwork::wrap_plots(panels, design = "AAA\nBCD\nEEE\nFGH\nIII\nJKL",
+    heights = do.call(grid::unit.c, rep(list(grid::unit(7, "mm"), grid::unit(1, "null")), 3))) +
+    patchwork::plot_annotation(
+      title = paste(if (cluster_col_suffix == "named") "Cluster labels" else "Cell-type labels",
+        "across GEX, ATAC and WNN embeddings"),
+      subtitle = "Row strips identify the source of the labels; columns identify the embedding. Compare each row for splits or mixing.",
+      caption = stringr::str_wrap(paste(
+        "All nine panels use the same supplied cells. Small labels are repelled from each group's median coordinates; colours identify groups within each row.",
+        "GEX-derived cell-type names are not independent evidence of agreement. UMAP island distances and orientations are not directly comparable across embeddings."
+      ), 150))
 }
 
 

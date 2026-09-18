@@ -1,0 +1,56 @@
+# Peak–gene correlation
+
+Run this optional module after accepting the final WNN cell set. It relates
+ATAC accessibility to RNA expression within broad GEX-derived cell types,
+using the retained WNN nuclei; it is no longer part of checkpoint 8.
+
+Add `peak_gene_correlation` to the aggregation's existing `modules` list in
+`cfg_aggregations.yaml`, and add a matching row in
+`module_peak_gene_correlation/cfg.yaml`:
+
+```yaml
+my_aggregation:
+  peak_gene_correlation_top_links_per_cell_group: 3
+```
+
+This parameter controls the number of top-link scatterplots and locus tracks
+per cell group; the analysis and link-selection defaults are unchanged.
+Disabled aggregations contribute no module targets.
+
+```r
+targets::tar_make(
+  names = tidyselect::ends_with(".peak_gene_correlation.my_aggregation")
+)
+```
+
+All module targets have description tag `[checkpoint:peak_gene_correlation]`.
+Their paths are `<store>/plots/my_aggregation/peak_gene_correlation/`;
+file exports use the corresponding `files` directory, with any modality
+suffixes as deeper subdirectories. For example, read selected links with:
+
+```r
+targets::tar_read(
+  peak_gene_correlation_links_tibble.WNN.peak_gene_correlation.my_aggregation
+)
+```
+
+Peak–gene links are candidate regulatory relationships. Cells are aggregated
+within donor and ATAC-defined state, without reusing a cell across aggregates.
+The score adjusts for donor and RNA/ATAC library depth, while retaining
+variation between states. A single donor can contribute: eligibility depends
+on usable aggregates and feature variation, with at least 10 aggregates and
+5 residual degrees of freedom required. Non-promoter peaks within the target
+gene body remain eligible, including potential intronic enhancers.
+
+The reported p-values use an approximate heteroskedasticity-robust regression
+test (HC3), followed by BH correction across tested pairs within each cell
+group. These assess association among aggregates **conditional on the sampled
+donors**, assuming independent errors after adjustment; they do not establish
+replication across people or causal regulation. Candidate links require a
+positive adjusted correlation of at least 0.15 and conditional FDR below 0.05.
+Inspect `n_informative_donors`, `n_positive_donors`,
+`donor_direction_agreement`, and `max_donor_covariance_fraction` alongside the
+score. An informative donor has at least three aggregates and residual
+variation in both features; the covariance fraction shows how much one donor
+contributes to the total absolute cross-product. The scatterplot shows the
+same donor/depth-adjusted values used by the score, with donor-labelled points.

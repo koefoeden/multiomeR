@@ -61,18 +61,6 @@ validate_aggregation_module_names(
   known_modules = known_aggregation_modules
 )
 
-peak_gene_correlation_aggregation_tibble <- aggregation_tibble |>
-  dplyr::filter(aggregation_has_module(modules, "peak_gene_correlation")) |>
-  add_aggregation_target_syms(c(
-    "marker_validated_Ensembl_annotations_GRanges_list",
-    "aggregated_counts_BPCells_matrix.GEX",
-    "metadata_w_cell_types_tibble.WNN",
-    "consensus_peak_GRanges.ATAC",
-    "consensus_peak_BPCells_matrix.ATAC",
-    "harmony_embeddings_matrix.ATAC",
-    "combined_BPCells_fragment_obj.ATAC"
-  ))
-
 pipeline <- rlang::list2(
   source("extra_targets/setup_targets.R")$value,
   tarchetypes::tar_map(
@@ -95,13 +83,6 @@ pipeline <- rlang::list2(
     source("extra_targets/Seurat_Signac_export_targets.R")$value
   ),
   tarchetypes::tar_map(
-    values = peak_gene_correlation_aggregation_tibble,
-    names = aggregation,
-    descriptions = NULL,
-    delimiter = ".",
-    source("extra_targets/peak_gene_correlation_targets.R")$value
-  ),
-  tarchetypes::tar_map(
     values = aggregation_MACS3_tibble,
     names = aggregation,
     descriptions = NULL,
@@ -109,7 +90,8 @@ pipeline <- rlang::list2(
     source("extra_targets/ATAC_MACS3_targets.R")$value
   ),
   source("module_differential_analyses/targets.R")$value,
-  source("module_genetic_enrichment/targets.R")$value
+  source("module_genetic_enrichment/targets.R")$value,
+  source("module_peak_gene_correlation/targets.R")$value
 )
 
 pipeline

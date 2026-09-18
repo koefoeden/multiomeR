@@ -991,19 +991,51 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
-      name = motif_family_accessibility_heatmap.7_ATAC_QC,
-      description = "Heatmap of configured marker motif-family accessibility per ATAC cell type. [checkpoint:7_ATAC-QC]",
-      command = plot_feature_scores_heatmap_from_matrix(
-        feature_matrix = motif_family_accessibility_BPCells_matrix.ATAC,
-        metadata_tibble = metadata_w_cell_types_tibble.ATAC,
-        features = ATAC_marker_motif_families_vec,
-        group_col = "LSI_harmony_SNN_cluster_cell_type"
-      ) |>
-        (\(plot) plot + ggplot2::scale_x_discrete(labels = JASPAR_motif_family_labels) +
-          ggplot2::labs(x = "Motif family", y = "ATAC cell type", fill = "Mean chromVAR Z-score"))() |>
-        save_plots_structured(),
+      name = motif_family_accessibility_by_ATAC_cluster_heatmap.7_ATAC_QC,
+      description = "All motif families by ATAC_cluster with independently clustered rows and columns and GEX-derived labels. [checkpoint:7_ATAC-QC]",
+      command = {
+        plot <- plot_motif_family_accessibility_heatmap(
+          feature_matrix = motif_family_accessibility_BPCells_matrix.ATAC,
+          ATAC_metadata = metadata_w_cell_types_tibble.ATAC,
+          GEX_metadata = metadata_w_cell_types_tibble.GEX,
+          family_labels = JASPAR_motif_family_labels, group_by = "ATAC_cluster"
+        )
+        save_plots_structured(plot, width = max(12, 6 + 0.3 * nlevels(plot$data$group)),
+          height = max(10, 5 + 0.15 * nlevels(plot$data$family)), dpi = 150)
+      },
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
+    tarchetypes::tar_file(
+      name = motif_family_accessibility_by_GEX_cluster_heatmap.7_ATAC_QC,
+      description = "All motif families by GEX_cluster with independently clustered rows and columns and GEX-derived labels. [checkpoint:7_ATAC-QC]",
+      command = {
+        plot <- plot_motif_family_accessibility_heatmap(
+          feature_matrix = motif_family_accessibility_BPCells_matrix.ATAC,
+          ATAC_metadata = metadata_w_cell_types_tibble.ATAC,
+          GEX_metadata = metadata_w_cell_types_tibble.GEX,
+          family_labels = JASPAR_motif_family_labels, group_by = "GEX_cluster"
+        )
+        save_plots_structured(plot, width = max(12, 6 + 0.3 * nlevels(plot$data$group)),
+          height = max(10, 5 + 0.15 * nlevels(plot$data$family)), dpi = 150)
+      },
+      resources = get_tar_resources(RAM_GB_req = 16)
+    ),
+    tarchetypes::tar_file(
+      name = motif_family_accessibility_by_GEX_cell_type_heatmap.7_ATAC_QC,
+      description = "All motif families by GEX_cell_type with independently clustered rows and columns and GEX-derived labels. [checkpoint:7_ATAC-QC]",
+      command = {
+        plot <- plot_motif_family_accessibility_heatmap(
+          feature_matrix = motif_family_accessibility_BPCells_matrix.ATAC,
+          ATAC_metadata = metadata_w_cell_types_tibble.ATAC,
+          GEX_metadata = metadata_w_cell_types_tibble.GEX,
+          family_labels = JASPAR_motif_family_labels, group_by = "GEX_cell_type"
+        )
+        save_plots_structured(plot, width = max(12, 6 + 0.3 * nlevels(plot$data$group)),
+          height = max(10, 5 + 0.15 * nlevels(plot$data$family)), dpi = 150)
+      },
+      resources = get_tar_resources(RAM_GB_req = 16)
+    ),
+
     targets::tar_target(
       name = continuous_UMAP_spec.ATAC,
       description = "Continuous ATAC UMAP variables to plot one at a time",

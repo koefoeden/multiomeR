@@ -374,14 +374,6 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
-      name = ATAC_vs_RNA_weight_boxplots_plot.8_multimodal_QC,
-      description = "Boxplots of ATAC vs RNA modality weights per cell type. [checkpoint:8_multimodal-QC]",
-      command = metadata_w_cell_types_tibble.WNN |>
-        plot_ATAC_vs_RNA_weight_boxplots() |>
-        save_plots_structured(),
-      resources = get_tar_resources(RAM_GB_req = 16)
-    ),
-    tarchetypes::tar_file(
       name = cluster_named_dim_tri_plot.8_multimodal_QC,
       description = "3×3 grid of UMAPs with cell-type-named cluster-level identities. [checkpoint:8_multimodal-QC]",
       command = metadata_w_cell_types_tibble.WNN |>

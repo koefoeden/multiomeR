@@ -51,16 +51,16 @@ rlang::list2(
   ),
   targets::tar_target(
     name = chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk,
-    description = "Compute the automatically eligible PIP x absolute-beta cell-type chromVAR heatmap table [part_of_graph:genetic_enrichment_cell_type_absolute_effect]",
-    command = get_GWAS_absolute_effect_chromVAR_deviation_tibble(
-      psbulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
-      chromVAR_obj = chromVAR_obj.ATAC,
-      annotation_matrix = GWAS_absolute_effect_peak_weight_matrix,
-      background_record = chromVAR_background_record.cell_type_pseudobulk,
-      GWAS_inputs_tibble = GWAS_absolute_effect_inputs_tibble,
+    description = "Summarize absolute-effect peak contributions into the cell-type heatmap table [part_of_graph:genetic_enrichment_cell_type_absolute_effect]",
+    command = summarize_GWAS_chromVAR_peak_contributions(
+      peak_contribution_tibble = chromVAR_absolute_effect_peak_contribution_tibble.cell_type_pseudobulk,
       cell_type_support_tibble = cell_type_pseudobulk_support_tibble.ATAC
-    ),
-    resources = get_tar_resources(RAM_GB_req = 60)
+    ) |>
+      dplyr::left_join(
+        dplyr::select(GWAS_absolute_effect_inputs_tibble, GWAS_ID, effect_weighting_route),
+        by = "GWAS_ID", relationship = "many-to-one") |>
+      dplyr::relocate(effect_weighting_route, .after = variant_weighting_mode),
+    resources = get_tar_resources(RAM_GB_req = 8)
   ),
   tarchetypes::tar_file(
     name = chromVAR_absolute_effect_deviation_heatmap.cell_type_pseudobulk,

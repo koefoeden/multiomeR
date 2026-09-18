@@ -68,7 +68,7 @@ tar_target(
 
 - Add conda-forge or Bioconda dependencies to `pixi.toml` using the existing
   constraint style and refresh `pixi.lock`.
-- Add GitHub-only R packages to `scripts/install_r_github_packages.R` with a
+- Add GitHub-only R packages to `scripts/github_packages.R` with a
   pinned commit and add any required system or indirect dependencies to
   `pixi.toml`.
 - Do not create a root `DESCRIPTION`; the workflow itself is not maintained as

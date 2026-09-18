@@ -50,6 +50,10 @@ For code changes:
 
 ## Validation
 
+For new or revised plots, follow the [plot annotation specification](../.agents/skills/multiomer-annotate-plots/SKILL.md).
+Use a succinct descriptive title, a subtitle explaining how to read and interpret
+the plot, and a caption with relevant implementation details.
+
 Before opening a pull request, run the smallest validation that matches the change:
 
 ```bash

@@ -13,18 +13,9 @@ gallery_items <- check_output_gallery_assets(
 )
 ```
 
-These documentation snapshots show representative outputs from the public
-`immune_human_2x` configuration with its two active GEM wells. The cards follow
-the steps in [Run your own analysis](main_running.md#steps), where each step
-also shows its own cards. Each card names the target that
-generated the displayed demo result; click an image to open it at full
-resolution.
+These documentation snapshots show representative outputs from the public `immune_human_2x` configuration with its two active GEM wells. The cards follow the steps in [Run your own analysis](main_running.md#steps), where each step also shows its own cards. Each card names the target that generated the displayed demo result; click an image to open it at full resolution.
 
-To reproduce these plot families, follow [Install and prepare the
-demo](demo_installation.md) and [Run the demo](demo_running.md), then run the
-steps in [Run your own analysis](main_running.md#steps). The
-demo command builds the final object and the WNN UMAPs only; [Inspect the demo
-results](demo_outputs.md) explains the distinction.
+To reproduce these plot families, follow [Install and prepare the demo](demo_installation.md) and [Run the demo](demo_running.md), then run the steps in [Run your own analysis](main_running.md#steps). The demo command builds the final object and the WNN UMAPs only; [Inspect the demo results](demo_outputs.md) explains the distinction.
 
 ```{r, echo = FALSE, results = "asis"}
 render_gallery_section(

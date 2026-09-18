@@ -8,15 +8,9 @@ knitr::opts_chunk$set(
 )
 ```
 
-In the R session opened during installation, run the command below to process
-`immune_human_2x`. It combines the two demo GEM wells, produces a
-Seurat/Signac object containing the multimodal results, and draws the
-integrated WNN UMAPs coloured by cluster, cell type, and the other categorical
-metadata.
+In the R session opened during installation, run the command below to process `immune_human_2x`. It combines the two demo GEM wells, produces a Seurat/Signac object containing the multimodal results, and draws the integrated WNN UMAPs coloured by cluster, cell type, and the other categorical metadata.
 
-`names` selects these two results by their exact names using `all_of()`.
-`tar_make()` also builds the dependencies needed for them, but does
-not build every plot in the gallery.
+`names` selects these two results by their exact names using `all_of()`. `tar_make()` also builds the dependencies needed for them, but does not build every plot in the gallery.
 
 ```{.r filename="R"}
 demo_results <- c(
@@ -27,10 +21,7 @@ demo_results <- c(
 targets::tar_make(names = tidyselect::all_of(demo_results))
 ```
 
-Keep the R session open until the command finishes. Progress messages report
-targets being dispatched, completed, or skipped because they are already
-up to date. A previous demo run on an AMD EPYC 7543 system with 16 logical
-threads took under 25 minutes and wrote about 6 GB; your runtime may differ.
+Keep the R session open until the command finishes. Progress messages report targets being dispatched, completed, or skipped because they are already up to date. A previous demo run on an AMD EPYC 7543 system with 16 logical threads took under 25 minutes and wrote about 6 GB; your runtime may differ.
 
 ## Confirm success
 
@@ -43,22 +34,16 @@ targets::tar_outdated(
 )
 ```
 
-If names are returned, those results still need building. If the run failed,
-follow [Troubleshooting](troubleshooting.md), fix the reported cause, and run
-the same `tar_make()` command again. Completed results can be reused.
+If names are returned, those results still need building. If the run failed, follow [Troubleshooting](troubleshooting.md), fix the reported cause, and run the same `tar_make()` command again. Completed results can be reused.
 
-Continue to [Inspect the demo results](demo_outputs.md) to read the object
-and find the associated files.
+Continue to [Inspect the demo results](demo_outputs.md) to read the object and find the associated files.
 
 ## Local validation
 
-The full local validation command also enables the inactive mouse and public
-ENCODE examples, checks external resources, and verifies analysis outputs:
+The full local validation command also enables the inactive mouse and public ENCODE examples, checks external resources, and verifies analysis outputs:
 
 ```sh
 pixi run --use-environment-activation-cache validate-local
 ```
 
-It reuses the existing targets store. The extra inputs and validation scope are
-described in the repository's `validation/README.md`; the normal demo remains
-limited to `immune_human_2x`.
+It reuses the existing targets store. The extra inputs and validation scope are described in the repository's `validation/README.md`; the normal demo remains limited to `immune_human_2x`.

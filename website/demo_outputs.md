@@ -14,9 +14,7 @@ gallery_items <- check_output_gallery_assets(
 )
 ```
 
-The public demo uses `outputs/` as its results store. Other checkouts may
-use a different folder, recorded under `store` in `_targets.yaml`.
-The R commands below use that configuration automatically.
+The public demo uses `outputs/` as its results store. Other checkouts may use a different folder, recorded under `store` in `_targets.yaml`. The R commands below use that configuration automatically.
 
 The store contains serialized R objects in `objects/`, file artifacts in `files/`, and requested review figures in `plots/`.
 
@@ -35,11 +33,7 @@ demo_object <- targets::tar_read(multimodal_Seurat_object.8_multimodal_QC.immune
 demo_object
 ```
 
-The metadata table describes the retained nuclei and their annotations.
-WNN means *weighted nearest neighbors*: the integrated representation uses
-information from both RNA and ATAC. The Seurat/Signac object is a convenient
-export for further exploration; the pipeline also retains its matrices in
-BPCells format on disk.
+The metadata table describes the retained nuclei and their annotations. WNN means *weighted nearest neighbors*: the integrated representation uses information from both RNA and ATAC. The Seurat/Signac object is a convenient export for further exploration; the pipeline also retains its matrices in BPCells format on disk.
 
 ## Files
 
@@ -57,33 +51,23 @@ For example, `aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x` is placed u
 outputs/files/immune_human_2x/GEX/
 ```
 
-Other files are grouped under `outputs/files/<scope>/`, where the scope is a
-GEM well, an internal pre-aggregation QC group, or an aggregation.
+Other files are grouped under `outputs/files/<scope>/`, where the scope is a GEM well, an internal pre-aggregation QC group, or an aggregation.
 
 ## Plots
 
-The demo command also built `categorical.UMAPs.8_multimodal_QC.immune_human_2x`.
-Plots use the same scope-based layout under `outputs/plots/`, so its files are
-in:
+The demo command also built `categorical.UMAPs.8_multimodal_QC.immune_human_2x`. Plots use the same scope-based layout under `outputs/plots/`, so its files are in:
 
 ```text
 outputs/plots/immune_human_2x/8_multimodal_QC/UMAPs/categorical/
 ```
 
-Open `WNN_harmony_SNN_cluster_cell_type.png` there to see the integrated
-clusters and cell-type labels from your own run. It should resemble this
-documentation snapshot:
+Open `WNN_harmony_SNN_cluster_cell_type.png` there to see the integrated clusters and cell-type labels from your own run. It should resemble this documentation snapshot:
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 render_gallery_grid(gallery_items[gallery_items$id == "wnn-umap", ])
 ```
 
-The [Main pipeline gallery](gallery_main.md) shows the other plot families
-the workflow produces. Those are saved snapshots and do not reflect the state of
-your analysis. To build one more of them, follow [Request an additional
-result](main_running.md#after-the-steps); to build all review
-plots for a stage, run its step in [Run your own
-analysis](main_running.md#steps).
+The [Main pipeline gallery](gallery_main.md) shows the other plot families the workflow produces. Those are saved snapshots and do not reflect the state of your analysis. To build one more of them, follow [Request an additional result](main_running.md#after-the-steps); to build all review plots for a stage, run its step in [Run your own analysis](main_running.md#steps).
 
 ## Next steps
 

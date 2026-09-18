@@ -1,33 +1,15 @@
 # Why an editable workflow?
 
-multiomeR keeps the analysis steps in an editable repository. Configuration
-covers common choices such as inputs, markers, dimensions, and models; R
-helpers and target definitions are available when a study needs a change
-beyond those settings. This flexibility also means that users must review
-which methods and assumptions fit their data.
+multiomeR keeps the analysis steps in an editable repository. Configuration covers common choices such as inputs, markers, dimensions, and models; R helpers and target definitions are available when a study needs a change beyond those settings. This flexibility also means that users must review which methods and assumptions fit their data.
 
 ## Reuse completed work
 
-`targets` records dependencies between results so that a change can rebuild
-the affected parts of an analysis. Independent tasks can run concurrently
-when worker capacity permits. This is useful when processing several GEM
-wells or repeating analyses with revised settings. The
-[targets manual](https://books.ropensci.org/targets/) explains the execution
-model and its limits.
+`targets` records dependencies between results so that a change can rebuild the affected parts of an analysis. Independent tasks can run concurrently when worker capacity permits. This is useful when processing several GEM wells or repeating analyses with revised settings. The [targets manual](https://books.ropensci.org/targets/) explains the execution model and its limits.
 
 ## Keep large matrices on disk
 
-BPCells provides disk-backed matrices and streaming operations that can
-reduce the need to hold full matrices in memory. Some analysis steps still
-need substantial RAM, and performance depends on the data, storage, and
-available workers. See the [BPCells documentation](https://bnprks.github.io/BPCells/)
-for its matrix operations and [Performance and scaling](../performance_overview.html)
-for multiomeR examples.
+BPCells provides disk-backed matrices and streaming operations that can reduce the need to hold full matrices in memory. Some analysis steps still need substantial RAM, and performance depends on the data, storage, and available workers. See the [BPCells documentation](https://bnprks.github.io/BPCells/) for its matrix operations and [Performance and scaling](../performance_overview.html) for multiomeR examples.
 
 ## Keep the analysis inspectable
 
-Separate targets make intermediate tables, matrices, and files available for
-inspection. Seurat/Signac exports provide another way to explore completed
-results. The [implementation conventions](implementation_conventions.md)
-explain where to change parameters, helpers, and target definitions; the
-[user manual](../) covers running an existing configuration.
+Separate targets make intermediate tables, matrices, and files available for inspection. Seurat/Signac exports provide another way to explore completed results. The [implementation conventions](implementation_conventions.md) explain where to change parameters, helpers, and target definitions; the [user manual](../) covers running an existing configuration.

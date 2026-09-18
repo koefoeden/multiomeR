@@ -1,9 +1,6 @@
 # Introduction
 
-Use this book to trace a result back to its code or change how multiomeR
-works. For installation, configuration, execution, and output inspection,
-start with the [user manual](../). You do not need to read this book to run
-the demo.
+Use this book to trace a result back to its code or change how multiomeR works. For installation, configuration, execution, and output inspection, start with the [user manual](../). You do not need to read this book to run the demo.
 
 Use this book when you need to trace a configuration value into mapped targets, understand how the simplified graph views relate to the real `{targets}` graph, or decide where an implementation change belongs.
 

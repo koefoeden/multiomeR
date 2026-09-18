@@ -32,59 +32,17 @@ Run the complete suite with `pixi run --use-environment-activation-cache test`. 
 
 **Implementation and wiring.** The scorer is [`calculate_BPCells_UCell_scores_from_matrix()` in `R/processing_GEX_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_GEX_helpers.R). [`extra_targets/general_aggregation_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/general_aggregation_targets.R) validates `UCell_GEX_marker_genes_list`. The matched-control annotation method in `R/cluster_annotation_helpers.R` ranks bounded GEX count chunks once per modality's cluster partition, retaining exact sufficient statistics for positive signatures and per-cell scores for GEX metadata. For signed signatures, it scores and clips each cell before aggregation, preserving positive/negative membership in observed signatures, matched controls and marker-deletion variants. This costs more computation than the positive-only rank-summary shortcut; cell chunks bound temporary memory.
 
-**Matched-control cluster annotation.** The method freezes 999 random gene mappings
-using up to 50 reference cells per GEM well. Controls exclude all marker genes,
-match normalized abundance and detection in standardized transformed coordinates,
-and preserve signature overlap through one mapping per marker and replicate.
-Each mapping samples without replacement from the nearest 50 eligible candidates.
-Reference and matching diagnostics remain available for review.
+**Matched-control cluster annotation.** The method freezes 999 random gene mappings using up to 50 reference cells per GEM well. Controls exclude all marker genes, match normalized abundance and detection in standardized transformed coordinates, and preserve signature overlap through one mapping per marker and replicate. Each mapping samples without replacement from the nearest 50 eligible candidates. Reference and matching diagnostics remain available for review.
 
-For each label, the adjusted score is its observed cluster mean UCell score
-minus its matched-control 95th percentile. The highest adjusted score nominates
-the candidate, with no preliminary tail-score or marker-detection filter.
-Its advantage is `best - max(0, second_best)`. The sole assignment threshold is
-`aggregation_cluster_annotation_min_advantage`, default 0.05. Assignment requires
-an advantage at least this large, a positive best score and no exact tie. Otherwise
-the result is `Unassigned`, with the candidate and abstention reason retained.
-Candidate ordering is independent of this threshold, so increasing stringency
-can only withdraw assignments. Scores are cached separately from decisions.
+For each label, the adjusted score is its observed cluster mean UCell score minus its matched-control 95th percentile. The highest adjusted score nominates the candidate, with no preliminary tail-score or marker-detection filter. Its advantage is `best - max(0, second_best)`. The sole assignment threshold is `aggregation_cluster_annotation_min_advantage`, default 0.05. Assignment requires an advantage at least this large, a positive best score and no exact tie. Otherwise the result is `Unassigned`, with the candidate and abstention reason retained. Candidate ordering is independent of this threshold, so increasing stringency can only withdraw assignments. Scores are cached separately from decisions.
 
-Marker-deletion diagnostics remove one candidate marker and its matched control
-gene from each signature, then compare the resulting adjusted score against the
-unchanged competing labels and zero background. Their agreement fraction never
-vetoes assignment. Single-marker signatures have no deletion diagnostic.
-Ten deterministic deletion blocks stratified by cluster and GEM well assess
-the fraction retaining the same assigned candidate at the selected threshold.
-Fewer than two assessable deletions yield an undefined diagnostic without
-overriding the label. Detection counts (positive markers detected in at least 10% of cells)
-and GEM-well subgroup agreement (groups of at least 25 cells) are also diagnostic
-only. No mixture subdivision is performed.
+Marker-deletion diagnostics remove one candidate marker and its matched control gene from each signature, then compare the resulting adjusted score against the unchanged competing labels and zero background. Their agreement fraction never vetoes assignment. Single-marker signatures have no deletion diagnostic. Ten deterministic deletion blocks stratified by cluster and GEM well assess the fraction retaining the same assigned candidate at the selected threshold. Fewer than two assessable deletions yield an undefined diagnostic without overriding the label. Detection counts (positive markers detected in at least 10% of cells) and GEM-well subgroup agreement (groups of at least 25 cells) are also diagnostic only. No mixture subdivision is performed.
 
-Faceted advantage plots use shared label order and y limits across pages,
-display non-leading negative scores at zero, and mark zero background and the facet-specific cutoff
-`best - min_advantage`. Thus the plotted decision geometry matches the numerical
-rule, including explicit handling of exact ties at a zero threshold. Negative
-leading scores and cutoff lines remain visible; display clipping never alters
-the scores used for assignment.
+Faceted advantage plots use shared label order and y limits across pages, display non-leading negative scores at zero, and mark zero background and the facet-specific cutoff `best - min_advantage`. Thus the plotted decision geometry matches the numerical rule, including explicit handling of exact ties at a zero threshold. Negative leading scores and cutoff lines remain visible; display clipping never alters the scores used for assignment.
 
-The GEX module dot plots reuse this pre-doublet-filtering evidence directly.
-Both views order marker sets by Euclidean distance between unstandardized
-cluster-adjusted profiles and `hclust(method = "ward.D2")`, weighting clusters
-equally. Rows follow the assigned cell types in that order, leaving unassigned
-groups last. Cluster colours equal the cached adjusted scores; cell-type colours
-are cell-count-weighted averages of those scores, rather than a recalculated
-background for pooled cells. Both views share symmetric colour limits centred
-at zero. Dot area reports the fraction of the same pre-filtering cells with raw
-UCell above zero. Marker-expression plots also use pre-filtering cells but keep
-their existing configured marker-set order.
+The GEX module dot plots reuse this pre-doublet-filtering evidence directly. Both views order marker sets by Euclidean distance between unstandardized cluster-adjusted profiles and `hclust(method = "ward.D2")`, weighting clusters equally. Rows follow the assigned cell types in that order, leaving unassigned groups last. Cluster colours equal the cached adjusted scores; cell-type colours are cell-count-weighted averages of those scores, rather than a recalculated background for pooled cells. Both views share symmetric colour limits centred at zero. Dot area reports the fraction of the same pre-filtering cells with raw UCell above zero. Marker-expression plots also use pre-filtering cells but keep their existing configured marker-set order.
 
-These are shared technical defaults, not learned identity probabilities or
-validated biological error rates. The control comparison can remain imperfect
-for unusually abundant or rare markers. Scoring-parity tests cover exact
-positive-signature aggregation, chunk/worker agreement, singleton reference
-sampling, threshold boundaries, ties, monotonic abstention and separate
-doublet-detection groups. The
-signed cluster tests compare cell scores, observed cluster means and matched controls with UCell 2.14.0, including marker deletions and chunk/worker agreement.
+These are shared technical defaults, not learned identity probabilities or validated biological error rates. The control comparison can remain imperfect for unusually abundant or rare markers. Scoring-parity tests cover exact positive-signature aggregation, chunk/worker agreement, singleton reference sampling, threshold boundaries, ties, monotonic abstention and separate doublet-detection groups. The signed cluster tests compare cell scores, observed cluster means and matched controls with UCell 2.14.0, including marker deletions and chunk/worker agreement.
 
 **Validation.** [`tests/testthat/test-scoring-parity.R`](https://github.com/koefoeden/multiomeR/blob/main/tests/testthat/test-scoring-parity.R) creates a deterministic 500-gene by 37-cell matrix, writes the project input as BPCells, and compares signed signatures with imputed and skipped missing genes. It requires `identical()` values, dimensions, and dimnames against UCell 2.14.0. It also retains exact Seurat `AddModuleScore` and cell-cycle helper checks plus a metadata-join contract.
 
@@ -165,9 +123,7 @@ pixi run --use-environment-activation-cache test-algorithm-validation
 
 **Validation.** [`tests/testthat/test-scavenge-parity.R`](https://github.com/koefoeden/multiomeR/blob/main/tests/testthat/test-scavenge-parity.R) uses a deterministic 60-cell fixture with repeated heterogeneous-degree graph blocks, nonuniform input edge weights, and three enriched seeds. The production helper receives the weighted graph, so the fixture also tests conversion to binary adjacency. First, the iterative sparse random walk is compared with the closed-form solution
 
-\[
-s = r\left(I - (1-r)P\right)^{-1}p_0,
-\]
+\[ s = r\left(I - (1-r)P\right)^{-1}p_0, \]
 
 with a maximum absolute tolerance of 1e-10; the current delta is 8.61e-13. Second, compact local reference functions reproduce the relevant SCAVENGE 1.0.2 code at the pinned commit without installing its historical dependency stack. The random-walk delta against that reference is 1.11e-16, the transformed-score delta is 3.33e-16, and all 199 fixed-RNG degree-matched seed samples, streamed per-cell exceedance counts, empirical P-values, and significant-cell calls are identical. One- and two-core native results are also identical.
 

@@ -37,21 +37,11 @@ Choose the output that matches your question:
 | Which motif families change accessibility? | `motif_family_accessibility` (JASPAR) |
 | Which regulators show altered expression-based activity? | `transcription_factor_activity` (CollecTRI) |
 
-The module also produces model diagnostics, comparisons across modalities,
-and gene-set tests for Hallmark and Reactome pathways. Motif-family accessibility
-summarizes ATAC evidence; transcription-factor activity is inferred from gene
-expression using CollecTRI. Interpret each in the context of its measurement.
+The module also produces model diagnostics, comparisons across modalities, and gene-set tests for Hallmark and Reactome pathways. Motif-family accessibility summarizes ATAC evidence; transcription-factor activity is inferred from gene expression using CollecTRI. Interpret each in the context of its measurement.
 
-Plot directories use these descriptive family names below
-`plots/<aggregation>/differential_analyses/`. Gene-set plots appear under
-`gene_expression/gene_set_enrichment/Hallmark/enrichment_plots/<model>/`
-or the corresponding `Reactome` directory. Volcano outputs use
-`<family>/volcano_plots/<model>/`; saved plot targets omit redundant `_file`
-and `_files` suffixes. Renaming targets creates new cache entries and output
-paths on the next run; existing output directories are not migrated.
+Plot directories use these descriptive family names below `plots/<aggregation>/differential_analyses/`. Gene-set plots appear under `gene_expression/gene_set_enrichment/Hallmark/enrichment_plots/<model>/` or the corresponding `Reactome` directory. Volcano outputs use `<family>/volcano_plots/<model>/`; saved plot targets omit redundant `_file` and `_files` suffixes. Renaming targets creates new cache entries and output paths on the next run; existing output directories are not migrated.
 
-See the [method details](implementation/implementation_differential_analyses.html#method-details)
-for activity inference, motif-family definitions, and gene-set testing.
+See the [method details](implementation/implementation_differential_analyses.html#method-details) for activity inference, motif-family definitions, and gene-set testing.
 
 ## Configure
 
@@ -62,8 +52,7 @@ your_aggregation:
   modules: [differential_analyses]
 ```
 
-Then create a matching row directly in
-`configuration/cfg_module_differential_analyses.yaml`.
+Then create a matching row directly in `configuration/cfg_module_differential_analyses.yaml`.
 
 ```{.yaml filename="configuration/cfg_module_differential_analyses.yaml"}
 your_aggregation:
@@ -94,10 +83,7 @@ Abundance models fit a separate fixed-effects beta-binomial logit model per cell
 
 The module selection below requests both configured abundance and pseudobulk outputs. Formula terms and contrast coefficients must match columns produced by the model matrix. The two branches retain their distinct response construction and fitting methods; sharing configuration does not make their effect estimates interchangeable.
 
-The model example assumes `condition` distinguishes treated and control donors.
-Check which group is the reference and what each model coefficient represents
-before using `conditiontreated` as a contrast. Replace the example formula
-and contrast to match your study.
+The model example assumes `condition` distinguishes treated and control donors. Check which group is the reference and what each model coefficient represents before using `conditiontreated` as a contrast. Replace the example formula and contrast to match your study.
 
 ## Run
 
@@ -136,6 +122,4 @@ The OLINK and bulk-RNA path fields are reserved optional integration inputs and 
 emit_parameter_overview("differential_analyses")
 ```
 
-The public demos leave this module disabled. Comparing one healthy PBMC donor
-with one lymphoma lymph-node donor cannot separate condition, donor, and tissue
-effects. Configure differential analyses for a design with biological replication.
+The public demos leave this module disabled. Comparing one healthy PBMC donor with one lymphoma lymph-node donor cannot separate condition, donor, and tissue effects. Configure differential analyses for a design with biological replication.

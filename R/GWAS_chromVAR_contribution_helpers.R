@@ -829,7 +829,7 @@ plot_GWAS_locus_contribution_waterfalls <- function(locus_contribution_tibble, n
 #' @param consensus_peak_GRanges Consensus ATAC peaks.
 #' @param fragments BPCells fragment object.
 #' @param metadata_tibble Cell metadata with cell-type labels.
-#' @param n_top_cell_types Number of highest-deviation cell types detailed per GWAS.
+#' @param min_z Minimum z-score in either analysis, also requiring positive deviation.
 #' @param n_top_loci Number of loci plotted per GWAS and cell type.
 #' @param flank Bases added around the selected locus.
 #' @return Named list of plot-ready variant, accessibility, and peak-track records.
@@ -842,13 +842,14 @@ prepare_GWAS_variant_contribution_detail_records <- function(
   consensus_peak_GRanges,
   fragments,
   metadata_tibble,
-  n_top_cell_types = 1L,
+  min_z = 1,
   n_top_loci = 3L,
   flank = 25000L,
   group_cells_by_col = "PCA_harmony_SNN_cluster_cell_type"
 ) {
   selected_locus_tibble <- select_GWAS_detail_loci(locus_contribution_tibble,
-    absolute_effect_locus_tibble, n_top_cell_types, n_top_loci)
+    absolute_effect_locus_tibble, min_z, n_top_loci)
+  if (nrow(selected_locus_tibble) == 0L) return(list())
 
   fragments <- BPCells::select_cells(fragments, metadata_tibble$barcode_w_prefix)
   fragment_cell_names <- BPCells::cellNames(fragments)
@@ -1044,6 +1045,7 @@ plot_GWAS_variant_contribution_detail_panels <- function(plot_records, variants,
       title = paste("Variant contributions:", plot_records[[1]]$GWAS_ID, "—", plot_records[[1]]$variant_tibble$cluster[[1]]),
       subtitle = "Compare loci on a shared contribution scale; point area shows PIP and colour shows effect magnitude.\nGene bodies and accessibility provide context, not proof of a causal variant or target gene.",
       caption = stringr::str_wrap(paste(
+        "Cell types pass a descriptive screen: positive deviation and z at least the configured threshold in either the ordinary or absolute-effect analysis; this is not a significance cutoff.",
         "Loci are the union of the leading ordinary and absolute-effect-weighted contributions for the focal cell type; plotted stems remain ordinary contributions. PIP is the original fine-mapping probability, before effect weighting. Filled points use the variant's own |β|; hollow points inherit the locus lead variant's |β|; grey means unavailable.",
         "The lead is the recorded lead variant, or the highest-PIP variant if no lead is recorded. No signed effects are inherited. Effect units are study-specific.",
         "Facet genes are the top available Open Targets L2G predictions, not established causal genes. Gene arrows show strand; gene bodies are clipped to each window and overlapping labels may be omitted. Coverage uses cached depth-normalized 500-bin profiles, clipped at each locus's 99.9th percentile; displayed coverage ranges differ between loci."), 180),
@@ -1061,6 +1063,7 @@ plot_GWAS_variant_contribution_detail_panels <- function(plot_records, variants,
 #' @param locus_contribution_tibble Locus contributions with top L2G predictions.
 #' @return Named list of patchworks, one per focal cell type.
 plot_GWAS_variant_contribution_details <- function(plot_records, GWAS_input_records, gene_GRanges, locus_contribution_tibble) {
+  if (length(plot_records) == 0L) return(structure(list(), class = c("empty_plot_list", "list")))
   GWAS_ID <- plot_records[[1]]$GWAS_ID
   input <- purrr::keep(GWAS_input_records, \(record) identical(record$GWAS_ID, GWAS_ID))[[1]]
   variants <- tibble::as_tibble(as.data.frame(S4Vectors::mcols(input$credible_set_GRanges))) |>
@@ -1134,14 +1137,15 @@ plot_GWAS_locus_contribution_bars <- function(locus_contribution_tibble, n_top_l
 #' Select the union of leading loci under ordinary and absolute-effect weighting
 #' @param locus_contribution_tibble Ordinary locus contributions for one or more GWAS.
 #' @param absolute_effect_locus_tibble Absolute-effect contributions, possibly empty.
-#' @param n_top_cell_types Number of focal cell types selected by ordinary deviation.
+#' @param min_z Minimum z-score in either analysis, also requiring positive deviation.
 #' @param n_top_loci Number of loci retained per ranking and focal cell type.
 #' @return Unique loci with selection provenance and coordinates from the ordinary analysis.
 select_GWAS_detail_loci <- function(locus_contribution_tibble, absolute_effect_locus_tibble,
-  n_top_cell_types = 1L, n_top_loci = 3L) {
-  focal <- locus_contribution_tibble |>
-    dplyr::distinct(GWAS_ID, cluster, relative_deviation) |>
-    dplyr::slice_max(relative_deviation, n = n_top_cell_types, with_ties = FALSE, by = GWAS_ID)
+  min_z = 1, n_top_loci = 3L) {
+  stopifnot(length(min_z) == 1L, is.finite(min_z), min_z >= 0)
+  focal <- dplyr::bind_rows(locus_contribution_tibble, absolute_effect_locus_tibble) |>
+    dplyr::filter(deviation > 0, z >= min_z) |>
+    dplyr::distinct(GWAS_ID, cluster)
   leading <- function(data, ranking) {
     data |> dplyr::semi_join(focal, by = c("GWAS_ID", "cluster")) |>
       dplyr::slice_max(abs(relative_deviation_contribution), n = n_top_loci,

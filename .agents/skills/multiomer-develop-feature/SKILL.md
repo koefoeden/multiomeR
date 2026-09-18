@@ -38,7 +38,7 @@ Use this when adding or changing targets, helpers, or analysis steps.
   modality suffix, with hyphens replaced by underscores (e.g.
   `VizDimLoadings_plots.2_GEX_PCA_QC`). This places plots in stage folders;
   non-plot targets retain their existing names.
-- Add aggregation-level downstream analyses as optional modules when they consume aggregation outputs. Use `module_<module>/`, opt in with the `modules` field in `cfg_aggregations.yaml`, and put module config in `module_<module>/cfg.yaml`.
+- Add aggregation-level downstream analyses as optional modules when they consume aggregation outputs. Use `module_<module>/`, opt in with the `modules` field in `cfg_aggregations.yaml`, and read flat `cfg_module_<module>.yaml` files through `configuration_path()` from the selected configuration directory.
 
 ## Target Patterns
 

@@ -1,7 +1,8 @@
 # Mapping tibbles ---------------------------------------------------------------
-GEM_well_tibble_all <- build_GEM_well_tibble()
+GEM_well_config_file <- configuration_path("cfg_GEM_wells.tsv")
+GEM_well_tibble_all <- build_GEM_well_tibble(GEM_well_config_file)
 
-aggregation_tibble_all_from_yaml <- read_aggregation_config_tibble(config_file = "cfg_aggregations.yaml")
+aggregation_tibble_all_from_yaml <- read_aggregation_config_tibble(config_file = configuration_path("cfg_aggregations.yaml"))
 if (length(validation_aggregations())) {
   message("Validation aggregations: ", paste(validation_aggregations(), collapse = ", "))
 }

@@ -96,15 +96,15 @@ emit_yaml_entry <- function(path, key) {
 
 github_repo <- "https://github.com/koefoeden/multiomeR/tree/main"
 pipeline_github_file <- file.path(github_repo, "_targets.R")
-aggregations_config_file <- "cfg_aggregations.yaml"
+aggregations_config_file <- "configuration/cfg_aggregations.yaml"
 pipeline_parameters_file <- "cfg_pipeline_parameters.tsv"
-GEM_wells_github_file <- file.path(github_repo, "cfg_GEM_wells.tsv")
-aggregations_github_file <- file.path(github_repo, "cfg_aggregations.yaml")
+GEM_wells_github_file <- file.path(github_repo, "configuration", "cfg_GEM_wells.tsv")
+aggregations_github_file <- file.path(github_repo, "configuration", "cfg_aggregations.yaml")
 pipeline_parameters_github_file <- file.path(github_repo, "cfg_pipeline_parameters.tsv")
 
 module_config_file <- switch(
   pipeline_name,
-  "differential_analyses" = "module_differential_analyses/cfg.yaml",
-  "genetic_enrichment" = "module_genetic_enrichment/cfg.yaml",
+  "differential_analyses" = "configuration/cfg_module_differential_analyses.yaml",
+  "genetic_enrichment" = "configuration/cfg_module_genetic_enrichment.yaml",
   NULL
 )

@@ -63,9 +63,9 @@ your_aggregation:
 ```
 
 Then create a matching row directly in
-`module_differential_analyses/cfg.yaml`.
+`configuration/cfg_module_differential_analyses.yaml`.
 
-```{.yaml filename="module_differential_analyses/cfg.yaml"}
+```{.yaml filename="configuration/cfg_module_differential_analyses.yaml"}
 your_aggregation:
   differential_analyses_cell_type_composition_models:
     condition_abundance:

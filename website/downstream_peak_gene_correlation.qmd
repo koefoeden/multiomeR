@@ -6,7 +6,7 @@ using the retained WNN nuclei; it is no longer part of checkpoint 8.
 
 Add `peak_gene_correlation` to the aggregation's existing `modules` list in
 `cfg_aggregations.yaml`, and add a matching row in
-`module_peak_gene_correlation/cfg.yaml`:
+`configuration/cfg_module_peak_gene_correlation.yaml`:
 
 ```yaml
 my_aggregation:

@@ -110,7 +110,7 @@ their key columns, the two tables must not reuse column names.
 
 ## Column dictionary
 
-Use the [committed example](https://github.com/koefoeden/multiomeR/blob/main/cfg_GEM_wells.tsv)
+Use the [committed example](https://github.com/koefoeden/multiomeR/blob/main/configuration/cfg_GEM_wells.tsv)
 to check the full set of columns.
 
 The table below is a documentation snapshot of the two public demo wells,

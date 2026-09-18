@@ -8,7 +8,7 @@ rlang::list2(
   tarchetypes::tar_file(
     name = GEM_well_config_tsv,
     description = "Track the canonical GEM well processing and metadata TSV",
-    command = "cfg_GEM_wells.tsv",
+    command = GEM_well_config_file,
     deployment = "main"
   ),
   tarchetypes::tar_file(

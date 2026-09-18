@@ -47,9 +47,9 @@ your_aggregation:
   modules: [genetic_enrichment]
 ```
 
-Then create a matching row directly in `module_genetic_enrichment/cfg.yaml`.
+Then create a matching row directly in `configuration/cfg_module_genetic_enrichment.yaml`.
 
-```{.yaml filename="module_genetic_enrichment/cfg.yaml"}
+```{.yaml filename="configuration/cfg_module_genetic_enrichment.yaml"}
 your_aggregation:
   genetic_enrichment_GWAS_studies:
     lymphocyte_count:

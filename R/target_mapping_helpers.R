@@ -14,8 +14,8 @@
 validate_processing_and_aggregation_config <- function(
   GEM_well_tibble,
   aggregation_tibble_from_yaml,
-  GEM_well_config_file = "cfg_GEM_wells.tsv",
-  aggregation_config_file = "cfg_aggregations.yaml"
+  GEM_well_config_file = configuration_path("cfg_GEM_wells.tsv"),
+  aggregation_config_file = configuration_path("cfg_aggregations.yaml")
 ) {
   configured_aggregation_GEM_well_IDs <- unique(unlist(
     aggregation_tibble_from_yaml$aggregation_GEM_well_IDs
@@ -251,7 +251,7 @@ parse_GEM_well_QC_exclude_list <- function(value, GEM_well_ID) {
   parsed
 }
 
-build_GEM_well_tibble <- function(GEM_well_config_file = "cfg_GEM_wells.tsv") {
+build_GEM_well_tibble <- function(GEM_well_config_file = configuration_path("cfg_GEM_wells.tsv")) {
   required_columns <- c(
     "GEM_well_ID",
     "GEM_well_dataset",
@@ -367,8 +367,8 @@ build_active_GEM_well_tibble <- function(GEM_well_tibble) {
 build_aggregation_tibble <- function(
   aggregation_tibble_all_from_yaml,
   GEM_well_tibble,
-  aggregation_config_file = "cfg_aggregations.yaml",
-  GEM_well_config_file = "cfg_GEM_wells.tsv"
+  aggregation_config_file = configuration_path("cfg_aggregations.yaml"),
+  GEM_well_config_file = configuration_path("cfg_GEM_wells.tsv")
 ) {
   aggregation_tibble_from_yaml <- aggregation_tibble_all_from_yaml |>
     dplyr::filter(purrr::map_lgl(is_active, isTRUE))
@@ -549,7 +549,7 @@ aggregation_has_module <- function(modules, module_name) {
 validate_aggregation_module_names <- function(
   aggregation_tibble,
   known_modules,
-  aggregation_config_file = "cfg_aggregations.yaml"
+  aggregation_config_file = configuration_path("cfg_aggregations.yaml")
 ) {
   configured_modules <- aggregation_tibble$modules |>
     as.list() |>
@@ -592,9 +592,15 @@ read_module_config_tibble <- function(
   module_name,
   module_aggregation_tibble,
   aggregation_tibble,
-  aggregation_config_file = "cfg_aggregations.yaml",
+  aggregation_config_file = configuration_path("cfg_aggregations.yaml"),
   manifest_file = "cfg_pipeline_parameters.tsv"
 ) {
+  if (nrow(module_aggregation_tibble) == 0L) {
+    return(tibble::tibble(aggregation = character()))
+  }
+  if (!file.exists(config_file)) {
+    stop("Missing configuration for enabled module '", module_name, "': ", config_file, call. = FALSE)
+  }
   module_config_tibble <- read_manifest_config_tibble(
     config_file = config_file,
     manifest_file = manifest_file,

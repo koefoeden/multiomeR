@@ -134,7 +134,7 @@ rlang::list2(
         GWAS_input_records = GWAS_input_records,
         gene_GRanges = marker_validated_Ensembl_annotations_GRanges_list$genes,
         locus_contribution_tibble = chromVAR_locus_contribution_tibble.cell_type_pseudobulk) |>
-      add_plot_parameters("module_genetic_enrichment/cfg.yaml",
+      add_plot_parameters("cfg_module_genetic_enrichment.yaml",
         genetic_enrichment_variant_detail_min_z = genetic_enrichment_variant_detail_min_z) |>
       save_plots_structured(
         width = max(20, 6 * max(0, table(purrr::map_chr(

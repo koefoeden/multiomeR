@@ -45,7 +45,7 @@ selection do not depend on HC3 tests.
 
 `peak_gene_correlation_filter` is a module setting with allowed values `lenient`
 (default in `cfg_pipeline_parameters.tsv`), `moderate`, and `strict`. Override
-it for an aggregation in `module_peak_gene_correlation/cfg.yaml`.
+it for an aggregation in `configuration/cfg_module_peak_gene_correlation.yaml`.
 
 | Preset | RNA / ATAC counts at median library depth | Minimum supported aggregates per feature | Shared supported donors | Supported aggregates per feature/donor |
 |---|---:|---|---:|---:|

@@ -94,7 +94,7 @@ manifest_defaults <- function(manifest_tibble) {
 }
 
 read_aggregation_config_tibble <- function(
-  config_file = "cfg_aggregations.yaml",
+  config_file = configuration_path("cfg_aggregations.yaml"),
   manifest_file = "cfg_pipeline_parameters.tsv",
   verbose = FALSE
 ) {

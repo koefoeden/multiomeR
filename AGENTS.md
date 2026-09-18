@@ -41,6 +41,14 @@ is explicitly read-only, revise the relevant skill when its use reveals
 materially stale, ambiguous, or missing guidance. Keep revisions succinct and
 high-level; omit details reliably implied by the code or existing instructions.
 
+## Configuration
+
+Use `configuration_path()` for settings reads. The public defaults live in
+`configuration/`; the ignored root `configuration.local` selects one alternate
+directory. Use flat `cfg_module_<module>.yaml` files, never mix directories,
+and resolve the selection during graph construction. Preserve data-path and
+targets-store semantics. Do not change the selection during a run.
+
 ## Reusable helper source
 
 The generally reusable process, resource, and structured-output helpers live

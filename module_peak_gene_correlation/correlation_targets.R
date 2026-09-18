@@ -284,16 +284,48 @@ rlang::list2(
     },
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
+  tarchetypes::tar_file(
+    name = peak_gene_KR_native_source_file,
+    description = "Track the batched Kenward-Roger C++ source [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = "src/peak_gene_KR.cpp",
+    deployment = "main"
+  ),
+  tarchetypes::tar_file(
+    name = peak_gene_REML_native_source_file,
+    description = "Track the profiled donor-slope REML C++ source [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = "src/peak_gene_REML.cpp",
+    deployment = "main"
+  ),
+  targets::tar_target(
+    name = peak_gene_correlation_hierarchical_results_tibbles.WNN,
+    description = "Scan all eligible pairs with donor-varying slopes and Kenward-Roger inference [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = score_peak_gene_hierarchical_associations(
+      normalized_aggregate_matrices = peak_gene_correlation_normalized_aggregate_matrices.WNN,
+      candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.WNN,
+      REML_source_file = peak_gene_REML_native_source_file,
+      KR_source_file = peak_gene_KR_native_source_file
+    ),
+    pattern = map(peak_gene_correlation_normalized_aggregate_matrices.WNN),
+    iteration = "list",
+    resources = get_tar_resources(RAM_GB_req = 16)
+  ),
+  targets::tar_target(
+    name = peak_gene_correlation_hierarchical_results_tibble.WNN,
+    description = "Combine full-scan hierarchical fits and adjust p-values within cell type [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = finalize_peak_gene_hierarchical_results(peak_gene_correlation_hierarchical_results_tibbles.WNN),
+    resources = get_tar_resources(RAM_GB_req = 60)
+  ),
   targets::tar_target(
     name = peak_gene_correlation_top_links_tibble.WNN,
-    description = "Split top peak-gene links per cell group for downstream QC plots [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
-    command = make_peak_gene_correlation_top_links(
-      links_tibble = peak_gene_correlation_links_tibble.WNN,
+    description = "Select lowest reliable hierarchical p-values across the full scan for QC plots [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = select_peak_gene_hierarchical_top_links(
+      hierarchical_results = peak_gene_correlation_hierarchical_results_tibble.WNN,
+      HC3_results = peak_gene_correlation_results_tibble.WNN,
       candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.WNN,
       n_per_cell_group = peak_gene_correlation_top_links_per_cell_group
     ),
     iteration = "vector",
-    resources = get_tar_resources(RAM_GB_req = 16)
+    resources = get_tar_resources(RAM_GB_req = 60)
   ),
   targets::tar_target(
     name = peak_gene_correlation_top_link_aggregate_values_tibbles.WNN,
@@ -368,7 +400,12 @@ rlang::list2(
         genome_annotation_track,
         primary_ATAC_track,
         peak_gene_correlation_top_link_peak_gene_loop_track.WNN,
-        ncol = 1
+        ncol = 1,
+        guides = "collect"
+      ) & ggplot2::theme(
+        legend.position = "bottom",
+        legend.text = ggplot2::element_text(size = 8),
+        legend.title = ggplot2::element_text(size = 9)
       )
       plot <- patchwork::wrap_plots(
         track_panel,
@@ -380,7 +417,8 @@ rlang::list2(
       plot |>
         save_plots_structured(
           override_suffix = plot_tibble$scatter_plot_name[[1]],
-          dyn_suffix_in_subdir = TRUE
+          dyn_suffix_in_subdir = TRUE,
+          width = 12, height = 14
         )
     })(),
     pattern = map(
@@ -540,7 +578,9 @@ rlang::list2(
         droplevels()
       make_BPCells_ATAC_coverage_track_from_tibble(
         coverage_tibble = primary_coverage_tibble,
-        region = region
+        region = region,
+        colors = get_peak_gene_track_colors(levels(primary_coverage_tibble$group),
+          primary_cell_group)
       )
     })(),
     pattern = map(
@@ -565,10 +605,12 @@ rlang::list2(
         )
       )
 
+      coverage_tibble <- peak_gene_correlation_top_link_ATAC_coverage_tibble.WNN
       make_BPCells_ATAC_coverage_track_from_tibble(
-        coverage_tibble =
-          peak_gene_correlation_top_link_ATAC_coverage_tibble.WNN,
-        region = region
+        coverage_tibble = coverage_tibble,
+        region = region,
+        colors = get_peak_gene_track_colors(levels(coverage_tibble$group),
+          locus_tibble$cell_group[[1]])
       )
     })(),
     pattern = map(
@@ -602,24 +644,29 @@ rlang::list2(
           .data$TargetGeneTSS >= locus_tibble$locus_start[[1]],
           .data$TargetGeneTSS <= locus_tibble$locus_end[[1]]
         ) |>
+        dplyr::bind_rows(locus_tibble) |>
+        dplyr::distinct(.data$cell_group, .data$peak, .data$TargetGeneID, .keep_all = TRUE) |>
         dplyr::mutate(
           peak_position = as.integer(round((.data$start + .data$end) / 2)),
           cell_group = factor(.data$cell_group),
-          abs_correlation = abs(.data$correlation)
+          neg_log10_FDR = dplyr::coalesce(-log10(pmax(.data$FDR, .Machine$double.xmin)), 0),
+          is_focal = .data$peak == locus_tibble$peak[[1]] &
+            .data$cell_group == locus_tibble$cell_group[[1]]
         ) |>
         dplyr::transmute(
           chr = .data$chr,
           start = pmin(.data$peak_position, .data$TargetGeneTSS),
           end = pmax(.data$peak_position, .data$TargetGeneTSS),
           cell_group = .data$cell_group,
-          abs_correlation = .data$abs_correlation
+          neg_log10_FDR = .data$neg_log10_FDR,
+          is_focal = .data$is_focal
         )
 
       loop_track_tibble <- loops_tibble |>
         dplyr::select("chr", "start", "end", "cell_group")
       loop_width_tibble <- loops_tibble |>
         dplyr::mutate(loop_id = dplyr::row_number()) |>
-        dplyr::select("loop_id", "abs_correlation")
+        dplyr::select("loop_id", "neg_log10_FDR", "is_focal")
 
       loop_data_tibble <- BPCells::trackplot_loop(
         loops = loop_track_tibble,
@@ -633,7 +680,11 @@ rlang::list2(
 
       loop_track <- make_BPCells_peak_gene_loop_track_from_tibble(
         loop_data_tibble = loop_data_tibble,
-        region = region
+        region = region,
+        max_neg_log10_FDR = ceiling(max(1, -log10(pmax(
+          c(peak_gene_correlation_links_tibble.WNN$FDR,
+            peak_gene_correlation_top_links_tibble.WNN$FDR), .Machine$double.xmin
+        )), na.rm = TRUE))
       )
       loop_track
     })(),
@@ -666,7 +717,7 @@ rlang::list2(
         )
       ) + patchwork::plot_annotation(
         subtitle = stringr::str_wrap("Read candidate loops alongside local accessibility; arcs represent statistical associations, not measured chromatin contacts.", width = 100),
-        caption = stringr::str_wrap("Loops connect peak midpoints to gene TSSs for candidate links in this window (adjusted r >= 0.15, conditional BH FDR < 0.05, excluding self-promoters). Coverage uses 500 bins normalized by bin width and group depth, with extremes clipped at the 99.9th percentile. Groups use GEX-derived cell types; pooled coverage does not establish donor replication or causality.", width = 110))
+        caption = stringr::str_wrap("Loops include the focal hierarchical link plus contextual HC3 candidates (adjusted r >= 0.15, conditional BH FDR < 0.05, excluding self-promoters). Coverage uses 500 bins normalized by bin width and group depth, with extremes clipped at the 99.9th percentile. Groups use WNN-derived cell types. Arc widths show HC3 -log10(FDR) on a shared aggregation-wide scale (unavailable HC3 FDR uses minimum width); the arrow marks the solid focal link, selected by hierarchical nominal p-value across the full eligible scan. Other arcs are dashed; the focal cell type uses the same reddish colour in the links and insertion tracks. Zero FDR uses the smallest positive normalized double for display. Pooled coverage does not establish donor replication or causality.", width = 110))
 
       plot |>
         save_plots_structured(

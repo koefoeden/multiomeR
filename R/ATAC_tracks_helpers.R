@@ -263,12 +263,22 @@ make_BPCells_ATAC_coverage_track_from_tibble <- function(
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
+get_peak_gene_track_colors <- function(cell_groups, focal_cell_group) {
+  colors <- stats::setNames(
+    grDevices::hcl.colors(length(cell_groups) + 1L, "Dark 3")[-1], cell_groups
+  )
+  colors[focal_cell_group] <- grDevices::hcl.colors(1, "Dark 3")
+  colors
+}
+
 make_BPCells_peak_gene_loop_track_from_tibble <- function(
   loop_data_tibble,
   region,
+  max_neg_log10_FDR,
   track_label = "Peak-gene links",
   color_label = "cell_group",
-  colors = BPCells:::discrete_palette("tableau", length(levels(loop_data_tibble$color)))
+  colors = get_peak_gene_track_colors(levels(loop_data_tibble$color),
+    unique(as.character(loop_data_tibble$color[loop_data_tibble$is_focal])))
 ) {
   region <- BPCells:::normalize_ranges(region)
   if (nrow(loop_data_tibble) == 0L) {
@@ -284,6 +294,14 @@ make_BPCells_peak_gene_loop_track_from_tibble <- function(
       y = pmax(.data$y, 1.05 * ymin),
       x = pmax(region$start, pmin(region$end, .data$x))
     )
+  focal_arrow <- loop_data_tibble |>
+    dplyr::filter(.data$is_focal) |>
+    dplyr::slice_min(abs(.data$x - (.data$start + .data$end) / 2),
+      n = 1, with_ties = FALSE) |>
+    dplyr::mutate(
+      arrow_x = .data$x + 0.025 * (region$end - region$start),
+      arrow_y = .data$y + 0.18 * diff(range(loop_data_tibble$y))
+    )
 
   BPCells:::wrap_trackplot(
     ggplot2::ggplot(
@@ -293,12 +311,23 @@ make_BPCells_peak_gene_loop_track_from_tibble <- function(
         y = .data$y,
         group = .data$loop_id,
         color = .data$color,
-        linewidth = .data$abs_correlation
+        linewidth = .data$neg_log10_FDR,
+        linetype = .data$is_focal
       )
     ) +
       ggplot2::geom_line() +
+      ggplot2::geom_segment(data = focal_arrow,
+        ggplot2::aes(x = .data$arrow_x, y = .data$arrow_y,
+          xend = .data$x, yend = .data$y),
+        inherit.aes = FALSE, colour = "black", linewidth = 0.5,
+        arrow = grid::arrow(length = grid::unit(2, "mm"), type = "closed")) +
       ggplot2::scale_color_manual(values = colors) +
-      ggplot2::scale_linewidth(range = c(0.2, 1.5), guide = "none") +
+      ggplot2::scale_linetype_manual(values = c(`FALSE` = "dashed", `TRUE` = "solid"),
+        guide = "none") +
+      ggplot2::scale_linewidth(name = expression(-log[10](FDR)),
+        limits = c(0, max_neg_log10_FDR), range = c(0.2, 2),
+        breaks = c(2, 5, 10, 25, 50)[c(2, 5, 10, 25, 50) <= max_neg_log10_FDR],
+        guide = ggplot2::guide_legend(override.aes = list(colour = "grey30", linetype = "solid"))) +
       ggplot2::scale_x_continuous(
         limits = c(region$start, region$end),
         expand = c(0, 0),
@@ -309,7 +338,8 @@ make_BPCells_peak_gene_loop_track_from_tibble <- function(
         breaks = NULL,
         expand = c(0.05, 0, 0, 0)
       ) +
-      ggplot2::guides(size = "none") +
+      ggplot2::guides(size = "none", colour = ggplot2::guide_legend(
+        override.aes = list(linetype = "solid"))) +
       ggplot2::labs(
         x = "Genomic Position (bp)",
         y = NULL,

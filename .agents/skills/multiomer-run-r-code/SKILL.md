@@ -29,9 +29,11 @@ status, separate their output, and avoid concurrent writes to the same files or
 targets store.
 
 Use ordinary `Rscript` startup so the repository's `.Rprofile` initializes the
-project runtime. Do not suppress repository startup: target and helper checks
-may depend on that bootstrap even when they look structural. Never use bare `R`
-or `Rscript` outside a verified Pixi shell. Confirm important REPL-derived
+project runtime. Do not suppress repository startup for `_targets.R` or project
+helpers that assume bootstrap has happened. Standalone documentation generators
+may disable `.Rprofile` when they load their own dependencies and read only the
+shared public documentation inputs, as the website builder does. Never use bare `R` or
+`Rscript` outside a verified Pixi shell. Confirm important REPL-derived
 conclusions in a fresh `Rscript` process.
 
 ## One-Off Check

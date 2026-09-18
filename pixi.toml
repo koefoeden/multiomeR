@@ -197,5 +197,6 @@ pngquant = ">=2.17.0,<3"
 quarto = ">=1.9.36,<1.10"
 
 [feature.dev.tasks]
+render-parameter-overview = { cmd = "Rscript dev/render_parameter_overview.R", env = { R_PROFILE_USER = "/dev/null" }, description = "Regenerate the standalone parameter browser from shared public defaults." }
 render-website = { cmd = "python dev/render_website.py", description = "Render both Markdown documentation books through temporary Quarto sources." }
 export-website-llm-markdown = { cmd = "python dev/export_website_llm_markdown.py", description = "Export the Quarto website books to one LLM-friendly Markdown file." }

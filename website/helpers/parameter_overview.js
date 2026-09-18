@@ -21,13 +21,14 @@
   function renderRow(parameter) {
     const defaultValue = parameter.status === 'Must specify' ? 'Supply a value' : parameter.default_value;
     const detail = (label, value, code = true) => value ? `<div class="parameter-detail"><dt>${escape(label)}</dt><dd>${code ? `<code>${escape(value)}</code>` : escape(value)}</dd></div>` : '';
-    return `<details class="parameter-row" data-param="${escape(parameter.param_name)}"${expanded.has(parameter.param_name) ? ' open' : ''}>
+    return `<details class="parameter-row" id="${escape(parameter.param_name)}" tabindex="-1" data-param="${escape(parameter.param_name)}"${expanded.has(parameter.param_name) ? ' open' : ''}>
       <summary class="parameter-head">
         <span class="parameter-name-wrap"><code class="parameter-name">${escape(parameter.param_name)}</code>
           <span class="parameter-status ${statusClass(parameter.status)}">${statusLabel(parameter.status)}</span></span>
         <span class="parameter-default"><span>Default</span><code>${escape(defaultValue)}</code></span>
-        <span class="parameter-description">${escape(parameter.description)}</span>
+        <span class="parameter-description"><strong>${escape(parameter.short_name)}:</strong> ${escape(parameter.description)}</span>
       </summary>
+      <p><a href="#${encodeURIComponent(parameter.param_name)}" class="parameter-permalink">Link to this parameter</a></p>
       <dl class="parameter-details">
         ${detail('Type', `${parameter.data_type} · ${parameter.cardinality}`, false)}
         ${detail('Allowed values', parameter.allowed_values || 'Any value matching the type', Boolean(parameter.allowed_values))}
@@ -66,5 +67,21 @@
   widget.querySelector('.parameter-reset').addEventListener('click', () => {
     search.value = ''; topic.value = ''; status = 'all'; render(); search.focus();
   });
+  function revealParameter() {
+    let name;
+    try { name = decodeURIComponent(window.location.hash.slice(1)); } catch { return; }
+    if (!parameters.some(parameter => parameter.param_name === name)) return;
+    search.value = ''; topic.value = ''; status = 'all';
+    expanded.add(name);
+    render();
+    const row = document.getElementById(name);
+    row.focus({preventScroll: true});
+    row.scrollIntoView({block: 'center'});
+  }
+  window.addEventListener('hashchange', revealParameter);
+  widget.addEventListener('click', event => {
+    if (event.target.closest('.parameter-permalink')?.hash === window.location.hash) revealParameter();
+  });
   render();
+  revealParameter();
 })();

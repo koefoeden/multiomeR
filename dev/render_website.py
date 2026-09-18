@@ -10,6 +10,8 @@ import tempfile
 
 def main():
     root = Path(__file__).resolve().parents[1]
+    subprocess.run(["Rscript", "dev/render_parameter_overview.R"], cwd=root, check=True,
+                   env={**os.environ, "R_PROFILE_USER": os.devnull})
     with tempfile.TemporaryDirectory(prefix="multiomer-docs-") as directory:
         stage = Path(directory)
         for path in root.iterdir():

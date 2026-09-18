@@ -23,7 +23,7 @@ Before enabling the module, confirm that:
 - model variables are donor- or pseudobulk-sample-level variables, not duplicated cell-level measurements; and
 - the number and distribution of donors support the specified design and contrasts.
 
-Use `differential_analyses_extended_donor_id_metadata_tsv` when the modelling table needs variables beyond the aggregation's normal donor metadata. It must retain the same unique `donor_id` key.
+Use [`differential_analyses_extended_donor_id_metadata_tsv`](parameters.html#differential_analyses_extended_donor_id_metadata_tsv) when the modelling table needs variables beyond the aggregation's normal donor metadata. It must retain the same unique `donor_id` key.
 
 ## Outputs
 
@@ -45,7 +45,7 @@ See the [method details](implementation/implementation_differential_analyses.htm
 
 ## Configure
 
-Add `modules` to the existing aggregation entry, keeping its input and marker settings:
+Add [`modules`](parameters.html#modules) to the existing aggregation entry, keeping its input and marker settings:
 
 ``` {.yaml filename="cfg_aggregations.yaml"}
 your_aggregation:
@@ -73,7 +73,7 @@ your_aggregation:
         treated_vs_control: conditiontreated
 ```
 
-Both branches use named models, donor eligibility checks and named contrasts. Abundance models use `differential_analyses_cell_type_composition_models`; feature models use `differential_analyses_pseudobulk_models`. Omitting abundance models disables that branch. The former aggregation-wide cell-type composition formula, phenotype and colour settings have been replaced by fields inside each named model.
+Both branches use named models, donor eligibility checks and named contrasts. Abundance models use [`differential_analyses_cell_type_composition_models`](parameters.html#differential_analyses_cell_type_composition_models); feature models use [`differential_analyses_pseudobulk_models`](parameters.html#differential_analyses_pseudobulk_models). Omitting abundance models disables that branch. The former aggregation-wide cell-type composition formula, phenotype and colour settings have been replaced by fields inside each named model.
 
 For mixed tissues, set `GEM_well_IDs` inside an abundance model to define its population, for example the six left-ventricle wells. Optional `donor_ids` can further restrict donors in either branch. Donors with missing model metadata or no selected samples are excluded and recorded in model-specific cohort TSVs. Feature cohorts also report retained pseudobulk sample counts and depth-filter exclusions.
 
@@ -118,8 +118,6 @@ Runtime depends on donors, cell types, models, contrasts, and gene-set analyses.
 
 The OLINK and bulk-RNA path fields are reserved optional integration inputs and are not consumed by the current public differential-analysis selection. Leave them `NULL` unless the corresponding integration is implemented in your downstream workflow.
 
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-emit_parameter_overview("differential_analyses")
-```
+[Open the searchable parameter browser](parameters.html).
 
 The public demos leave this module disabled. Comparing one healthy PBMC donor with one lymphoma lymph-node donor cannot separate condition, donor, and tissue effects. Configure differential analyses for a design with biological replication.

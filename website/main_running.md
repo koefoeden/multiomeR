@@ -74,7 +74,7 @@ targets::tar_make(
 
 **Initial configuration:**
 
-Set `aggregation_GEX_marker_genes`, `aggregation_categorical_vars` & `aggregation_continuous_vars`
+Set [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes), [`aggregation_categorical_vars`](parameters.html#aggregation_categorical_vars) & [`aggregation_continuous_vars`](parameters.html#aggregation_continuous_vars)
 
 ``` {.r filename="R"}
 targets::tar_make(

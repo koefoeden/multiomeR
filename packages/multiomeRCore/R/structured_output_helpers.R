@@ -1,3 +1,29 @@
+#' Append relevant configuration values to a plot caption
+#'
+#' @param plot A ggplot or patchwork composite.
+#' @param config_file Configuration filename displayed in the caption.
+#' @param ... Named resolved parameter values; names identify configuration keys.
+#' @param .max_value_chars Maximum characters per displayed value, including the
+#'   trailing `...` when truncated. Applied after collapsing vectors and whitespace.
+#' @return The plot with its existing caption followed by the parameter summary.
+#' @keywords internal
+add_plot_parameters <- function(plot, config_file, ..., .max_value_chars = 120L) {
+  parameters <- list(...)
+  values <- vapply(parameters, \(value) {
+    if (length(value) == 0L) "(none)" else paste(value, collapse = ", ")
+  }, character(1)) |>
+    stringr::str_squish() |>
+    stringr::str_trunc(width = .max_value_chars, ellipsis = "...")
+  parameter_caption <- stringr::str_wrap(paste0(
+    "Relevant parameters (", config_file, "): ",
+    paste(names(parameters), values, sep = ": ", collapse = "; ")
+  ), width = 110)
+  is_composite <- inherits(plot, "patchwork")
+  existing_caption <- if (is_composite) plot$patches$annotation$caption else plot$labels$caption
+  caption <- paste(c(existing_caption, parameter_caption), collapse = "\n\n")
+  plot + if (is_composite) patchwork::plot_annotation(caption = caption) else ggplot2::labs(caption = caption)
+}
+
 tar_name_wo_suffixes <- function(target_name = targets::tar_name()) {
   target_name %>%
     stringr::str_remove("_[[:alnum:]]{16}$") %>%

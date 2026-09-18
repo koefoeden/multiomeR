@@ -24,5 +24,6 @@ Imports:
 Suggests:
     crew,
     ggplot2,
+    patchwork,
     ragg,
     svglite

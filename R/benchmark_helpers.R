@@ -88,7 +88,7 @@ target_runtime_weights <- function(
 
 benchmark_aggregation_tibble <- function(aggregations) {
   GEM_well_tibble <- build_GEM_well_tibble()
-  aggregation_tibble_all_from_yaml <- read_aggregation_config_tibble(config_file = "cfg_aggregations.yaml")
+  aggregation_tibble_all_from_yaml <- read_aggregation_config_tibble(config_file = configuration_path("cfg_aggregations.yaml"))
   aggregation_tibble <- build_aggregation_tibble(
     aggregation_tibble_all_from_yaml = aggregation_tibble_all_from_yaml,
     GEM_well_tibble = GEM_well_tibble

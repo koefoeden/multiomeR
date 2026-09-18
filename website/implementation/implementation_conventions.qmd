@@ -115,6 +115,14 @@ The root `_targets.R` builds the target graph from mapping tibbles. Each mapping
 
 The core mapping flow is:
 
+Configuration readers use `configuration_path()` to resolve a basename within
+`configuration/` or the directory named by the ignored `configuration.local`.
+Relative selections are anchored at the repository root. This selection does not
+change data-path interpretation or `_targets.yaml`. The selected GEM-well path
+is a graph global consumed by the file target, so changing directories also
+changes its dependency. Aggregation and enabled-module settings are resolved
+during graph construction. Disabled modules do not read their configuration.
+
 1. `GEM_well_tibble_all` reads only the pre-aggregation processing columns from every row in the canonical `cfg_GEM_wells.tsv`.
 2. `aggregation_tibble_all_from_yaml` is read from `cfg_aggregations.yaml`.
 3. `aggregation_tibble` keeps active aggregations, validates their GEM well references against the complete view, and adds upstream target-symbol columns.

@@ -20,6 +20,11 @@ Conventions used below:
 - `crew_controllers.R` must describe your machine or scheduler; see [Choose
   where the analysis runs](performance_distributed_computing.qmd).
 
+Settings default to `configuration/`. To use your own directory, copy it and
+write the new directory path into the ignored root `configuration.local` file.
+Keep all settings together; disabled modules may omit their files. See the
+[configuration guide](https://github.com/koefoeden/multiomeR/blob/main/configuration/README.md).
+
 ## How a step is run {#how-to-run}
 
 Target names and plot folders contain the name of the step's **checkpoint**.

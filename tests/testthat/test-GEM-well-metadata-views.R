@@ -1,6 +1,47 @@
 source_project_file("packages/multiomeRCore/R/null_default.R")
 source_project_file("R/general_helpers.R")
 source_project_file("R/target_mapping_helpers.R")
+source_project_file("R/configuration_helpers.R")
+
+testthat::test_that("configuration selection is local, explicit and never falls back", {
+  root <- normalizePath(withr::local_tempdir())
+  dir.create(file.path(root, "configuration"))
+  dir.create(file.path(root, "configuration_my_project"))
+  filename <- "cfg_GEM_wells.tsv"
+  default_file <- file.path(root, "configuration", filename)
+  selected_file <- file.path(root, "configuration_my_project", filename)
+  writeLines("default", default_file)
+  writeLines("selected", selected_file)
+  selector <- file.path(root, "configuration.local")
+  testthat::expect_identical(configuration_path(filename, root), normalizePath(default_file))
+  writeLines("configuration_my_project", selector)
+  withr::local_dir(tempdir())
+  testthat::expect_identical(configuration_path(filename, root), normalizePath(selected_file))
+  writeLines(file.path(root, "configuration_my_project"), selector)
+  testthat::expect_identical(configuration_path(filename, root), normalizePath(selected_file))
+  unlink(selected_file)
+  testthat::expect_error(configuration_path(filename, root), "Missing file in selected")
+  testthat::expect_identical(configuration_path(filename, root, must_exist = FALSE), selected_file)
+  writeLines("missing", selector)
+  testthat::expect_error(configuration_path(filename, root), "directory does not exist")
+  writeLines("", selector)
+  testthat::expect_error(configuration_path(filename, root), "exactly one non-empty")
+  writeLines(c("configuration", "configuration_my_project"), selector)
+  testthat::expect_error(configuration_path(filename, root), "exactly one non-empty")
+})
+
+testthat::test_that("disabled modules do not read configuration files", {
+  aggregations <- tibble::tibble(aggregation = "example")
+  testthat::expect_identical(
+    read_module_config_tibble("missing.yaml", "differential_analyses", aggregations[0, ], aggregations),
+    aggregations[0, ]
+  )
+  testthat::expect_error(
+    read_module_config_tibble("missing.yaml", "differential_analyses", aggregations, aggregations,
+      manifest_file = file.path(multiomeR_project_root, "cfg_pipeline_parameters.tsv")),
+    "missing.yaml"
+  )
+})
 
 make_GEM_well_metadata_fixture <- function() {
   tibble::tibble(

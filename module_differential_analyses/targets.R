@@ -2,7 +2,7 @@ differential_analyses_aggregation_tibble <- aggregation_tibble |>
   dplyr::filter(aggregation_has_module(modules, "differential_analyses"))
 
 differential_analyses_config_tibble <- read_module_config_tibble(
-  config_file = "module_differential_analyses/cfg.yaml",
+  config_file = configuration_path("cfg_module_differential_analyses.yaml", must_exist = FALSE),
   module_name = "differential_analyses",
   module_aggregation_tibble = differential_analyses_aggregation_tibble,
   aggregation_tibble = aggregation_tibble_all_from_yaml

@@ -2,7 +2,7 @@ peak_gene_correlation_aggregation_tibble <- aggregation_tibble |>
   dplyr::filter(aggregation_has_module(modules, "peak_gene_correlation"))
 
 peak_gene_correlation_config_tibble <- read_module_config_tibble(
-  config_file = "module_peak_gene_correlation/cfg.yaml",
+  config_file = configuration_path("cfg_module_peak_gene_correlation.yaml", must_exist = FALSE),
   module_name = "peak_gene_correlation",
   module_aggregation_tibble = peak_gene_correlation_aggregation_tibble,
   aggregation_tibble = aggregation_tibble_all_from_yaml

@@ -53,3 +53,6 @@ node_modules/
 .pixi/
 outputs
 manuscript_figures/outputs/
+
+# Checkout-local configuration selection
+/configuration.local

@@ -2,19 +2,7 @@ rlang::list2(
   targets::tar_target(
     name = graph_matrix,
     description = "Build the SNN graph matrix used for SCAVENGE TRS propagation [part_of_graph:genetic_enrichment_single_nucleus]",
-    command = {
-      if (identical(map_SCAVENGE_graph_input_type, "WNN")) {
-        get_SNN_matrix_from_WNN_results(map_SCAVENGE_graph_input)
-      } else {
-        get_SNN_matrix_from_embedding_matrix(
-          embedding_matrix = map_SCAVENGE_graph_input,
-          dims = map_SCAVENGE_embedding_dims,
-          k = aggregation_data_nNNs,
-          dim_prefix = map_SCAVENGE_dim_prefix,
-          threads = 6
-        )
-      }
-    },
+    command = get_SNN_matrix_from_WNN_results(WNN_results),
     resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
   ),
   targets::tar_target(

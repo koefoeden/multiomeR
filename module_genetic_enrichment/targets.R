@@ -133,29 +133,9 @@ rlang::list2(
     source("module_genetic_enrichment/GWAS_chromVAR_contribution_targets.R")$value,
     tarchetypes::tar_map(
       values = tibble::tibble(
-        map_SCAVENGE_tar_suffix = c(
-          "PCA_harmony_SNN.SCAVENGE.single_nucleus",
-          "LSI_harmony_SNN.SCAVENGE.single_nucleus",
-          "WNN_harmony_SNN.SCAVENGE.single_nucleus"
-        ), # TODO: Use SCAVENGE as suffix here. And remove "SCAVENGE" from the graph name and input type vectors below
-        map_SCAVENGE_graph_name = c("PCA_harmony_SNN", "LSI_harmony_SNN", "WNN_harmony_SNN"),
-        map_SCAVENGE_graph_input_type = c("embedding", "embedding", "WNN"),
-        map_SCAVENGE_graph_input = rlang::syms(c(
-          "harmony_embeddings_matrix.GEX",
-          "harmony_embeddings_matrix.ATAC",
-          "WNN_results"
-        )),
-        map_SCAVENGE_embedding_dims = rlang::syms(c(
-          "aggregation_GEX_data_PCs",
-          "aggregation_ATAC_data_PCs",
-          "aggregation_GEX_data_PCs"
-        )),
-        map_SCAVENGE_dim_prefix = c("PCA_", "LSI_", NA_character_),
-        map_SCAVENGE_umap_cols = list(
-          c("GEX_UMAP_1", "GEX_UMAP_2"),
-          c("LSI_UMAP_1", "LSI_UMAP_2"),
-          c("WNN_UMAP_1", "WNN_UMAP_2")
-        )
+        map_SCAVENGE_tar_suffix = "WNN_harmony_SNN.SCAVENGE.single_nucleus",
+        map_SCAVENGE_graph_name = "WNN_harmony_SNN",
+        map_SCAVENGE_umap_cols = list(c("WNN_UMAP_1", "WNN_UMAP_2"))
       ),
       names = map_SCAVENGE_tar_suffix,
       descriptions = NULL,

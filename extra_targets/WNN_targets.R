@@ -369,23 +369,23 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
-      name = cluster_named_dim_tri_plot.8_multimodal_QC,
+      name = cluster_named_dim_tri_plot.UMAPs.8_multimodal_QC,
       description = "3×3 grid of UMAPs with cell-type-named cluster-level identities. [checkpoint:8_multimodal-QC]",
       command = metadata_w_cell_types_tibble.WNN |>
         plot_3_by_3_clusters_and_reduction_UMAPs_from_metadata(
           cluster_col_suffix = "named"
         ) |>
-        save_plots_structured(),
+        save_plots_structured(width = 18, height = 18),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
-      name = cluster_cell_type_dim_tri_plot.8_multimodal_QC,
+      name = cluster_cell_type_dim_tri_plot.UMAPs.8_multimodal_QC,
       description = "3×3 grid of UMAPs with cell-type identities. [checkpoint:8_multimodal-QC]",
       command = metadata_w_cell_types_tibble.WNN |>
         plot_3_by_3_clusters_and_reduction_UMAPs_from_metadata(
           cluster_col_suffix = "cell_type"
         ) |>
-        save_plots_structured(),
+        save_plots_structured(width = 18, height = 18),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(

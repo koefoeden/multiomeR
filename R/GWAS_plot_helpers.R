@@ -35,6 +35,7 @@ plot_GWAS_chromVAR_peak_weights_summary <- function(peak_weight_records, overlap
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)) +
     ggplot2::labs(
       title = stringr::str_glue("Peak x GWAS posterior-probability overlap summary, from {total_peaks} total peaks"),
+      subtitle = stringr::str_wrap("Look for traits with limited peak overlap before interpreting enrichment; low representation can limit downstream sensitivity.", width = 100),
       caption = stringr::str_glue(
         "Dashed line in the frac_overlapped_peaks facet marks {overlap_threshold} overlapped peaks ({scales::percent(overlap_threshold_fraction)} of all peaks)."
       )
@@ -115,7 +116,10 @@ get_SCAVENGE_TRS_UMAP_plots <- function(TRS_tibble, metadata_tibble, umap_cols, 
 
   plot <- plot +
     ggplot2::scale_color_viridis_c(name = "TRS score") +
-    ggplot2::labs(subtitle = NULL)
+    ggplot2::labs(title = paste("SCAVENGE trait relevance:", GWAS_ID[[1]]),
+      subtitle = stringr::str_wrap("Look for localized high trait-relevance scores; these are propagated scores, not probabilities of causal involvement.", width = 100),
+      caption = stringr::str_wrap(paste(plot$labels$caption,
+        "Colours show SCAVENGE TRS on the supplied graph embedding. Cell-type labels, when present, come from GEX-derived annotations."), width = 110))
 
   if (!is.null(label_col)) {
     if (!is.character(label_col) || length(label_col) != 1 || is.na(label_col) || !nzchar(label_col)) {
@@ -175,7 +179,10 @@ plot_SCAVENGE_summary_sig_proportion <- function(summary_tibble) {
         ggplot2::facet_wrap(~GWAS_ID, scales = "free") +
         tidytext::scale_x_reordered(labels = function(x) gsub("___.*$", "", x)) +
         ggplot2::geom_bar(stat = "identity") +
-        ggplot2::labs(x = "", y = "Proportion of enriched cells") +
+        ggplot2::labs(title = "SCAVENGE enriched-cell fraction by group",
+          subtitle = stringr::str_wrap("Compare the fraction of cells called enriched within each group; this differs from a test of the group median.", width = 100),
+          caption = stringr::str_wrap("Numerator: cells flagged significant by the cell-level SCAVENGE procedure. Denominator: all scored cells in the group. Groups are ordered within each trait; these fractions do not use the group-median BH permutation test shown in the dotplots.", width = 110),
+          x = NULL, y = "Proportion of enriched cells", fill = "Group") +
         ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "top")
     })
 }
@@ -198,7 +205,10 @@ plot_SCAVENGE_summary_score_intervals <- function(summary_tibble) {
         ggplot2::geom_crossbar(ggplot2::aes(y = median_score, ymin = q25_score, ymax = q75_score), width = 0.6) +
         ggplot2::facet_wrap(~GWAS_ID, scales = "free") +
         tidytext::scale_x_reordered(labels = function(x) gsub("___.*$", "", x)) +
-        ggplot2::labs(x = "", y = "SCAVENGE TRS") +
+        ggplot2::labs(title = "SCAVENGE score distributions by group",
+          subtitle = "Compare median scores and spread; wide ranges can indicate a subset of high-scoring cells.",
+          caption = stringr::str_wrap("Centre: group median; box: 25th-75th percentiles; line: full minimum-maximum range. These are cell-score distributions, not confidence intervals. Groups are ordered separately within each trait; facet scales may differ.", width = 110),
+          x = NULL, y = "SCAVENGE TRS", fill = "Group") +
         ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "top")
     })
 }

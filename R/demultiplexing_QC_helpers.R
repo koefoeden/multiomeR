@@ -58,6 +58,7 @@ plot_demultiplexing_assignment_bars <- function(counts) {
       labels = levels(counts$GEM_well_ID)) +
     ggplot2::scale_fill_manual(values = c(unassigned = "#999999", doublet = "#D55E00", singlet = "#009E73"), drop = FALSE) +
     ggplot2::labs(title = "Donor assignments per GEM well before QC",
+      subtitle = "Look for excess doublet or unassigned calls and uneven donor representation before pooling wells.",
       x = "Fraction of all Cell Ranger-called nuclei", y = NULL, fill = "Assignment",
       caption = "Singlet segments are labelled by donor ID. Single-donor wells use their configured donor and are shown as singlets; genotype doublets were not assessed in those wells.") +
     ggplot2::theme(legend.position = "top", panel.grid.major.y = ggplot2::element_blank())

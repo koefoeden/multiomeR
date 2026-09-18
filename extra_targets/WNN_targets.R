@@ -356,7 +356,7 @@ rlang::list2(
           plot_UMAP_from_metadata(
             variable = "WNN_harmony_SNN_cluster_cell_type",
             umap_cols = c("WNN_UMAP_1", "WNN_UMAP_2")
-          )
+          ) + ggplot2::labs(subtitle = sprintf("Neighbours: %s. Compare label stability across the WNN UMAP sweep; shared GEX-derived labels are not independent validation.", UMAP_neighbors_seq))
       } |>
         save_plots_structured(
           dyn_suffix_in_subdir = TRUE,

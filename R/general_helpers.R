@@ -433,6 +433,20 @@ get_embedding_matrix_from_metadata <- function(metadata_tibble, umap_cols) {
   embedding_matrix
 }
 
+label_plot_variable <- function(variable) {
+  labels <- c(nCount_RNA = "RNA UMI count", nFeature_RNA = "Detected RNA genes",
+    RNA_mito_percent = "Mitochondrial RNA (%)", GEM_well_ID = "GEM well", donor_id = "Donor",
+    log10_nCount_RNA = "Log10 RNA UMI count", nCount_ATAC = "ATAC peak count",
+    log10_nCount_ATAC = "Log10 ATAC peak count", ATAC.weight = "ATAC WNN weight",
+    PCA_harmony_SNN_cluster = "GEX cluster", PCA_harmony_SNN_cluster_named = "Named GEX cluster",
+    PCA_harmony_SNN_cluster_cell_type = "GEX-assigned cell type",
+    LSI_harmony_SNN_cluster = "ATAC cluster", LSI_harmony_SNN_cluster_named = "Named ATAC cluster",
+    LSI_harmony_SNN_cluster_cell_type = "ATAC-cluster cell type (GEX-derived)",
+    WNN_harmony_SNN_cluster = "WNN cluster", WNN_harmony_SNN_cluster_named = "Named WNN cluster",
+    WNN_harmony_SNN_cluster_cell_type = "WNN-cluster cell type (GEX-derived)")
+  dplyr::coalesce(unname(labels[variable]), gsub("[_.]", " ", variable))
+}
+
 #' Plot UMAP from metadata
 #'
 #' Draw a UMAP overlay for one metadata column or feature-expression row.
@@ -452,6 +466,7 @@ get_embedding_matrix_from_metadata <- function(metadata_tibble, umap_cols) {
 #' @param raster_pixels Pixel width/height used for rasterized embedding layers.
 #' @param randomize_order Logical; when `TRUE`, randomize plotting order to avoid
 #'   systematic overplotting by cell order.
+#' @param quantile_range Numeric colour-clipping quantiles, or NULL for the full range.
 #' @param ... Additional arguments passed to `BPCells::plot_embedding()`.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
@@ -467,6 +482,7 @@ plot_UMAP_from_metadata <- function(
   rasterize = TRUE,
   raster_pixels = 1024,
   randomize_order = TRUE,
+  quantile_range = c(0.01, 0.99),
   ...
 ) {
   value_source <- match.arg(value_source)
@@ -529,14 +545,25 @@ plot_UMAP_from_metadata <- function(
     rasterize = rasterize,
     raster_pixels = raster_pixels,
     randomize_order = randomize_order,
+    quantile_range = quantile_range %||% c(0, 1),
     labels_discrete = labels_discrete,
-    legend_continuous = legend_continuous,
+    legend_continuous = if (is.null(quantile_range) && legend_continuous == "quantile") "value" else legend_continuous,
     return_plot_list = TRUE,
     apply_styling = TRUE,
     ...
   ) |>
     apply_alpha_to_plot_embedding(alpha_size_list$alpha) |>
-    (\(plot) plot + ggplot2::labs(title = variable))() # feature var name is dropped for one-column dataframes, and replaced with generic "value" so we add it back as title. PR candidate for BPCells.
+    (\(plot) plot + ggplot2::labs(
+      title = paste(if (value_source == "feature") variable else label_plot_variable(variable),
+        "on", gsub("LSI", "ATAC", gsub("_", " ", sub("_UMAP.*", "", umap_cols[[1]]))), "UMAP"),
+      subtitle = stringr::str_wrap("Look for coherent local patterns or sample-specific separation; distances between islands do not measure biological difference.", width = 100),
+      caption = stringr::str_wrap(paste(
+        "Each point is a cell from the supplied metadata; only finite values are shown for numeric features.",
+        if (is.numeric(plot_col_data[[1]])) paste0(
+          if (is.null(quantile_range)) "Colour spans the full value range." else paste0("Colour limits use quantiles ", paste(quantile_range, collapse = "-"), "; values outside are clipped for display."),
+          if (legend_continuous == "quantile" && !is.null(quantile_range)) " Legend endpoints identify quantiles, not absolute values.") else
+          "Colours identify categories; categorical labels do not establish independent biological validation.",
+        if (value_source == "feature") "Feature values come directly from the supplied matrix without normalization in this plotting helper."), width = 110)))()
 }
 
 #' Plot 3 by 3 clusters and reduction UMAPs from metadata
@@ -571,11 +598,13 @@ plot_3_by_3_clusters_and_reduction_UMAPs_from_metadata <- function(metadata_tibb
           metadata_tibble |>
             plot_UMAP_from_metadata(
               variable = cluster_col,
-              umap_cols = umap_cols
+              umap_cols = umap_cols,
+              labels_discrete = TRUE
             ) +
             CONST_UMAP_ggplot2_theme +
             ggplot2::theme(legend.position = "none") +
-            ggplot2::labs(title = modality_title, x = NULL, y = cluster_name, color = cluster_col)
+            ggplot2::labs(title = modality_title, subtitle = NULL, caption = NULL,
+              x = NULL, y = cluster_name, color = cluster_col)
         }
       )
 
@@ -583,7 +612,10 @@ plot_3_by_3_clusters_and_reduction_UMAPs_from_metadata <- function(metadata_tibb
     }
   )
 
-  patchwork::wrap_plots(dim_plot_list, ncol = 1)
+  patchwork::wrap_plots(dim_plot_list, ncol = 1) + patchwork::plot_annotation(
+    title = "Cluster labels across GEX, ATAC and WNN embeddings",
+    subtitle = stringr::str_wrap("Compare each row across embeddings for splits or mixing; GEX-derived cell-type names are not independent agreement.", width = 100),
+    caption = stringr::str_wrap("Columns change the embedding; rows change the source of the labels. All panels use the same supplied cells. UMAP island distances and orientations are not directly comparable across embeddings.", width = 110))
 }
 
 

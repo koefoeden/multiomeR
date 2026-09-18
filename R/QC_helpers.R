@@ -120,6 +120,7 @@ plot_QC_cell_retention <- function(retention_tibble) {
     ggplot2::scale_y_continuous(labels = scales::comma,
       expand = ggplot2::expansion(mult = c(0.02, 0.08))) +
     ggplot2::labs(title = "Nuclei retained through QC", x = NULL, y = "Nuclei",
+      subtitle = stringr::str_wrap("Follow the continuing ribbon to locate the largest losses; compare exclusion reasons before changing filters.", width = 90),
       fill = NULL, caption = stringr::str_wrap(paste(
         "Counts summed across all configured GEM wells. Ribbon thickness represents nuclei.",
         "Overlapping exclusions are counted once, in listed action order (top to bottom at each stage).",
@@ -148,6 +149,7 @@ plot_nuclei_per_donor_id <- function(demultiplexing_counts_tibble) {
     ggplot2::ggplot(ggplot2::aes(x = n_nuclei, y = donor_id)) +
     ggplot2::geom_col(fill = "#009E73") +
     ggplot2::labs(title = "Assigned singlet nuclei per donor before QC",
+      subtitle = stringr::str_wrap("Look for underrepresented donors before pooling; nuclei counts describe yield, not independent sample size.", width = 100),
       x = "Cell Ranger-called nuclei", y = "Donor ID",
       caption = "Doublets and unassigned nuclei are excluded. Single-donor wells use their configured donor; they are not genotype-demultiplexed.")
 }
@@ -305,7 +307,11 @@ plot_per_dataset_QC_violins <- function(
           .data$feature == .env$feature
         ),
         show_dataset_legend = show_dataset_legend
-      )
+      ) + ggplot2::labs(
+        title = paste(label_plot_variable(feature), "by GEM well"),
+        subtitle = stringr::str_wrap("Compare well distributions and their overlap with exclusion regions to identify uneven quality or stringent cutoffs.", width = 100),
+        caption = stringr::str_wrap("Cell Ranger-called nuclei before per-well QC. Each violin has equal maximum width; only the within-well 2nd-98th percentile is displayed. Grey regions and dashed boundaries show simple numeric exclusion rules when available; compound rules are not drawn. Display trimming does not remove cells from the analysis.", width = 110),
+        y = label_plot_variable(feature), fill = "Dataset")
     })
 }
 
@@ -445,14 +451,17 @@ plot_QC_metric_violins <- function(
           labels = group_levels
         ) +
         ggplot2::labs(
-          title = display_name,
-          subtitle = stringr::str_wrap(
-            stringr::str_c(metric_id, ": ", description),
-            width = 120
-          ),
+          title = paste(display_name, "by", label_plot_variable(group_col)),
+          subtitle = stringr::str_wrap(if (grepl("scDblFinder", metric_id))
+            "Look for groups enriched in doublet-like profiles; scores are not calibrated probabilities or universal cutoffs." else
+            "Compare group distributions and unusual tails; interpret differences alongside sample composition and the metric definition.", width = 100),
+          caption = stringr::str_wrap(paste(description,
+            "Finite values only; violins have equal maximum width, not width proportional to cell count.",
+            paste0("Displayed within-group quantiles: ", ifelse(is.na(plot_min_q), 0, plot_min_q), "-", ifelse(is.na(plot_max_q), 1, plot_max_q), "."),
+            if (!is.null(QC_exclude_per_GEM_well_list)) "Grey regions and dashed lines show simple numeric exclusion rules per well; compound rules are not drawn."), width = 110),
           x = NULL,
           y = display_name,
-          fill = if (fill_col == "dataset") "Dataset" else fill_col
+          fill = if (fill_col == "dataset") "Dataset" else label_plot_variable(fill_col)
         ) +
         ggplot2::theme(
           axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
@@ -473,6 +482,11 @@ plot_QC_metric_violins <- function(
 #' @keywords internal
 
 plot_markers_volcano_simple <- function(markers_tibble) {
+  if (nrow(markers_tibble) == 0L) {
+    return(ggplot2::ggplot() + ggplot2::theme_void() +
+      ggplot2::annotate("text", x = 0, y = 0, label = "No marker tests available") +
+      ggplot2::labs(title = "Marker differences between groups"))
+  }
   markers_tibble_formatted <- markers_tibble %>%
     dplyr::mutate(
       p_val = dplyr::case_when(p_val == 0 ~ .Machine$double.xmin, .default = p_val),
@@ -497,7 +511,12 @@ plot_markers_volcano_simple <- function(markers_tibble) {
       label = gene
     )) +
     ggrastr::geom_point_rast(alpha = 0.5, size = 0.5) +
-    ggplot2::theme(legend.position = "none") +
+    ggplot2::scale_color_manual(values = c(`FALSE` = "grey65", `TRUE` = "#C23B23"),
+      labels = c(`FALSE` = "No", `TRUE` = "Yes"), name = "Adjusted p < 0.05") +
+    ggplot2::labs(title = "Marker differences between groups",
+      subtitle = stringr::str_wrap("Look for large effects with statistical support; small p-values alone do not establish marker specificity.", width = 100),
+      caption = stringr::str_wrap("Each point is a feature tested against the comparison background. Height shows nominal p; colour uses the supplied adjusted p-value. Up to 20 labels per direction and group are selected by nominal p then absolute effect; labels may be omitted to avoid overlap. Facets use separate scales.", width = 110),
+      x = "Log2 fold change", y = "-log10(nominal p-value)") +
     ggrepel::geom_text_repel(
       data = top_labels,
       ggplot2::aes(label = gene),
@@ -526,8 +545,9 @@ plot_cluster_marker_volcano <- function(marker_result) {
     comparison <- "Each cluster versus the pooled remaining clusters within this cell type."
   }
   plot + ggplot2::labs(
-    title = marker_result$cell_type,
-    subtitle = paste(comparison, "BH-adjusted across genes separately for each contrast.", sep = "\n"),
+    title = paste("GEX cluster markers within", marker_result$cell_type),
+    subtitle = paste(comparison, "Check effect size and marker coherence as well as significance.", sep = "\n"),
+    caption = stringr::str_wrap(paste(plot$labels$caption, "Adjustment: BH across genes separately within each contrast. Cells are not independent donor replicates."), width = 110),
     x = "Log2 fold change (cluster / background)",
     y = "-log10(p-value)"
   )
@@ -577,6 +597,10 @@ plot_categorical_bars_plot <- function(
         dplyr::summarise(n_nuclei = dplyr::n(), .by = dplyr::all_of(c(.x, cluster_col))) %>%
         ggplot2::ggplot(ggplot2::aes(y = .data[[cluster_col]], x = n_nuclei, fill = .data[[.x]])) +
         ggplot2::geom_col() +
+        ggplot2::labs(title = paste(label_plot_variable(.x), "composition by", label_plot_variable(cluster_col)),
+          subtitle = stringr::str_wrap("Look for groups dominated by a donor or technical category; count differences also reflect unequal sampling.", width = 100),
+          caption = stringr::str_wrap("Stacked segments count cells in the supplied metadata. Bar totals are group sizes, not normalized proportions; missing categories remain a separate segment when present.", width = 110),
+          x = "Nuclei", y = label_plot_variable(cluster_col), fill = label_plot_variable(.x)) +
         ggplot2::theme(legend.position = "bottom")
     )
 }
@@ -717,7 +741,8 @@ plot_modality_confusion_matrices <- function(metadata_tibble, source_label, targ
   ) +
     patchwork::plot_annotation(
       title = paste(source_label, "vs", target_label),
-      subtitle = "Colors: fraction of cells within each row. Labels: cell counts (k = 1,000). Outlines: matching cell types."
+      subtitle = stringr::str_wrap("Read across each row for splitting or reassignment between modalities; shared GEX-derived labels are not independent validation.", width = 100),
+      caption = stringr::str_wrap("Colours: fraction of cells within each row, not symmetric agreement. Labels: counts (k = 1,000); outlines: matching cell-type labels. Only cells with both labels contribute; the same checkpoint population is used in both panels.", width = 110)
     ) &
     ggplot2::theme(legend.position = "bottom")
 }
@@ -944,7 +969,10 @@ plot_marker_gene_activity_dot_BPCells <- function(feature_matrix, metadata_tibbl
     marker_genes_list = marker_genes_list,
     groups = metadata[[group_col]],
     group_col = group_col, score_type = "Marker gene activity"
-  )
+  ) + ggplot2::labs(
+    title = "ATAC gene activity by GEX-derived cell type",
+    subtitle = stringr::str_wrap("Look for accessibility support across several marker genes; gene activity is not measured RNA expression.", width = 100),
+    caption = stringr::str_wrap("BPCells ArchR-style gene scores are log1p-transformed, then group means are scaled per gene across plotted groups. Dot area: percent of cells with positive gene activity. Available positive markers are shown; shaded boxes mark label matches. Labels were derived from GEX, and accessibility near a gene does not establish its transcription.", width = 110))
 }
 
 #' Plot cached annotation evidence, with one distance order shared by both views.

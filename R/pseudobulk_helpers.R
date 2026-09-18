@@ -141,7 +141,9 @@ plot_pseudobulk_depth_distribution <- function(pseudobulk_depth_tibble, min_ATAC
     ggplot2::labs(
       x = "Cluster",
       y = NULL,
-      title = "Pseudobulk depth per cluster-donor sample"
+      title = "Pseudobulk depth per cluster-donor sample",
+      subtitle = stringr::str_wrap("Look for sparse donor-group samples before fitting models; pooled depth can conceal uneven donor support.", width = 100),
+      caption = stringr::str_wrap("Points represent cluster-donor samples; boxes show medians and interquartile ranges, with whiskers to 1.5 x IQR. Rows use separate logarithmic depth scales. Detected features have positive counts; counts per feature use only detected features.", width = 110)
     )
 
   if (!is.null(min_ATAC_sample_counts)) {
@@ -156,7 +158,8 @@ plot_pseudobulk_depth_distribution <- function(pseudobulk_depth_tibble, min_ATAC
         linetype = "dashed",
         inherit.aes = FALSE
       ) +
-      ggplot2::labs(caption = stringr::str_glue("Dashed line marks DTFA minimum ATAC count threshold: {min_ATAC_sample_counts}."))
+      ggplot2::labs(caption = stringr::str_wrap(paste(plot$labels$caption,
+        stringr::str_glue("Dashed line marks DTFA minimum ATAC count threshold: {min_ATAC_sample_counts}.")), width = 110))
   }
 
   plot
@@ -1390,7 +1393,9 @@ plot_psbulk_DX_significant_elements_modality_distribution <- function(significan
           x = NULL,
           y = "Share of significant elements within modality",
           fill = "Modality",
-          title = model_name
+          title = paste("Distribution of discoveries across contrasts:", model_name),
+          subtitle = stringr::str_wrap("Compare which contrasts account for most discoveries within each modality; this is not the fraction of tested features found significant.", width = 100),
+          caption = stringr::str_wrap("Numerator: FDR-significant features in this contrast. Denominator: discoveries summed across contrasts within the same model and modality. Labels give counts; features can contribute to several contrasts. A modality with no discoveries is displayed as zero.", width = 110)
         ) +
         ggplot2::theme(legend.position = "bottom")
     })
@@ -1531,7 +1536,12 @@ plot_psbulk_DGE_volcano <- function(
       }
     } +
     ggplot2::scale_shape_manual(values = c("TRUE" = 16, "FALSE" = 1)) +
-    ggplot2::labs(title = stringr::str_c(unique(test_results_formatted_tibble$model), ": ", unique(test_results_formatted_tibble$contrast))) +
+    ggplot2::labs(title = paste("Differential feature evidence:", stringr::str_c(unique(test_results_formatted_tibble$model), ": ", unique(test_results_formatted_tibble$contrast))),
+      subtitle = stringr::str_wrap("Look for sizeable effects with FDR support; positive values follow the positive model-contrast direction.", width = 100),
+      caption = stringr::str_wrap(paste("Points are tested features; filled points mark BH FDR < 0.05 within this model and contrast. The x-axis uses the fitted model effect (log2 fold change for gene counts; activity-scale difference for activity models).",
+        "Labels are selected from the top nominal-p features and shown only when FDR < 0.05. Open Targets colours, when present, describe external evidence and do not prove causality."), width = 110),
+      x = "Fitted effect (model scale)", y = if (y_val == "log10FDR") "-log10(BH FDR)" else "-log10(nominal p-value)",
+      shape = "BH FDR < 0.05", colour = "Open Targets evidence") +
     ggrepel::geom_text_repel(
       data = dplyr::filter(test_results_w_GWAS_evidence_tibble, feature_id %in% top_features, FDR < 0.05),
       ggplot2::aes(label = feature_label),
@@ -1736,12 +1746,15 @@ plot_GSEA_contrast_results <- function(GSEA_results_tibble) {
     ggplot2::scale_color_manual(values = c(`TRUE` = "#D55E00", `FALSE` = "grey55")) +
     ggplot2::labs(
       title = stringr::str_c(
+        "Competitive pathway enrichment: ",
         unique(plotting_tibble$model),
         ": ",
         unique(plotting_tibble$contrast)
       ) |>
         stringr::str_replace_all("_", " ") |>
         stringr::str_wrap(width = 70),
+      subtitle = stringr::str_wrap("Read direction from the sign and support from the magnitude; enrichment is relative to genes outside each set.", width = 100),
+      caption = stringr::str_wrap("cameraPR results: up to 25 terms with the smallest nominal p-values are displayed, including non-significant terms. Position is signed -log10(FDR), not an enrichment effect size. Dashed lines and colour mark FDR = 0.05. Overlapping gene sets are not independent findings.", width = 110),
       x = paste(
         "Signed -log10(FDR)",
         "Positive values indicate enrichment among positive statistics",
@@ -1762,6 +1775,10 @@ plot_psbulk_DX_PValue_density <- function(combined_psbulk_DX_results_tibble) {
     ggplot2::ggplot(ggplot2::aes(x = PValue, color = model)) +
     ggplot2::geom_density() +
     ggplot2::facet_wrap(~model, scales = "free_y") +
+    ggplot2::labs(title = "Nominal p-value distributions by differential model",
+      subtitle = stringr::str_wrap("Inspect excess small p-values and unusual shapes; a left-hand peak can reflect signal or model misspecification.", width = 100),
+      caption = stringr::str_wrap("Kernel densities pool feature tests and contrasts within each model. These are unadjusted p-values; smoothing can extend beyond 0-1. Facets use separate density scales, and density height is not a count of discoveries.", width = 110),
+      x = "Nominal p-value", y = "Density", colour = "Model") +
     ggplot2::theme(legend.position = "bottom")
 }
 
@@ -1823,7 +1840,13 @@ plot_DCTC_by_phenotype_per_cluster <- function(
       cols = ggplot2::vars(DTCT_color_by_col)
     ) + # migth make sense to use facet_wrap to allow free scales - then limits below should also be removed.
     ggplot2::scale_y_continuous(labels = scales::label_percent(), limits = c(0, 1)) +
-    ggplot2::labs(x = stringr::str_glue("Phenotype class ({DCTC_plot_phenotype_vars})"), y = "Proportion of nuclei per cluster", title = stringr::str_glue("{DCTC_plot_phenotype_vars}"))
+    ggplot2::labs(x = label_plot_variable(DCTC_plot_phenotype_vars), y = "Within-donor cell proportion",
+      title = paste("Cell-type composition and", label_plot_variable(DCTC_plot_phenotype_vars)),
+      subtitle = stringr::str_wrap("Look for donor-level trends and outliers; these are descriptive associations, not covariate-adjusted effects.", width = 100),
+      caption = stringr::str_wrap(paste("Each point represents an observed donor-group combination; proportions use that donor's cells within the phenotype/colour stratum. Absent donor-group combinations are not filled with zeros.",
+        if (is_continuous) "Dashed curves are quadratic fits with the default 95% confidence band." else
+          "Boxes show medians and interquartile ranges, with whiskers to 1.5 x IQR; jitter spreads points horizontally."), width = 110),
+      colour = if (is.null(DCTC_color_by_categorical_metadata_column)) NULL else label_plot_variable(DCTC_color_by_categorical_metadata_column))
 }
 
 #' Get one MSigDB gene-set collection
@@ -1945,7 +1968,10 @@ plot_DCTC_model_change_per_unit <- function(results_tibble) {
       nudge_x = 0.02
     ) +
     ggplot2::scale_x_continuous(labels = scales::label_percent(), limits = c(0, 0.60), expand = ggplot2::expansion(mult = c(0, 0))) +
-    ggplot2::labs(y = "Variable", x = "Absolute cell proportion", title = "Absolute change in cell type proportion per unit increase in variable")
+    ggplot2::labs(y = "Cell type", x = "Cell proportion", title = "Model-implied change in cell-type proportion",
+      subtitle = stringr::str_wrap("Arrows start at pooled observed proportions; compare direction and magnitude without interpreting them as causal effects.", width = 100),
+      caption = stringr::str_wrap("Beta-binomial logit coefficients are added to the logit of the pooled baseline proportion for a one-unit model-term change. Endpoints are illustrative, not donor-specific predictions. Text reports relative percent change and nominal p; opacity marks nominal p < 0.05 without multiple-testing correction. Display is limited to 0-60%.", width = 110),
+      alpha = "Nominal p < 0.05")
 }
 
 
@@ -1957,6 +1983,10 @@ plot_DCTC_model_coefs_forest <- function(results_tibble) {
     ggplot2::geom_errorbarh(ggplot2::aes(xmin = estimate - std.error, xmax = estimate + std.error)) +
     ggplot2::geom_vline(xintercept = 0) +
     ggplot2::facet_wrap(~term, scales = "free_x") +
+    ggplot2::labs(title = "Cell-composition model coefficients",
+      subtitle = "Compare signs and uncertainty; intervals show one standard error, not 95% confidence intervals.",
+      caption = stringr::str_wrap("Fixed-effect coefficients from separate beta-binomial logit models per cell type. Points are estimates; intervals are estimate +/- one standard error. Colour uses nominal p < 0.05 without multiple-testing correction. Facets have separate x scales; intercepts are omitted.", width = 110),
+      x = "Log-odds coefficient", y = "Cell type", colour = "Nominal p < 0.05") +
     ggplot2::scale_x_continuous(limits = symmetric_limits)
 }
 

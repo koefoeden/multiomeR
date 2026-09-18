@@ -149,7 +149,8 @@ rlang::list2(
           "Largest absolute loadings identify genes defining this PC; opposite signs mark opposing expression patterns.",
           "Look for coherent markers or dominance by technical gene sets; the overall PC sign is arbitrary.",
           sep = "\n"
-        )
+        ),
+        caption = paste(nrow(plot$data), "genes selected by absolute pre-Harmony PCA loading; ties are retained. Loadings are signed coefficients, not expression levels.")
       )) |>
       save_plots_structured(),
     resources = get_tar_resources(RAM_GB_req = 16)
@@ -170,10 +171,11 @@ rlang::list2(
         ggplot2::labs(
           title = "GEX variable genes after SCTransform",
           subtitle = paste(
-            "50 selected variable genes, ordered by residual variance; colour shows weighted loading strength across computed PCs.",
+            "Selected variable genes are ordered by residual variance; colour shows weighted loading strength across computed PCs.",
             "Check whether variable genes reflect cell biology or are dominated by mitochondrial, ribosomal or stress genes.",
             sep = "\n"
           ),
+          caption = stringr::str_wrap("Up to 50 entries from the selected variable-gene table. Colour = sqrt(sum((loading x singular value)^2)) across all computed PCs. Selection and residual variance come from SCTransform before Harmony.", width = 110),
           x = "SCT residual variance", y = NULL, color = "Weighted PCA loading strength"
         )
       save_plots_structured(plot)

@@ -220,10 +220,13 @@ rlang::list2(
           alpha = 0.5,
           width = 0.2
         ) +
-        ggplot2::facet_wrap(~cluster_type, scales = "free_x") +
-        ggplot2::labs(subtitle = "Points are cells classified as doublet by scDblFinder, colored by GEM well.") +
+        ggplot2::facet_wrap(~cluster_type, scales = "free_x", labeller = ggplot2::labeller(cluster_type = label_plot_variable)) +
+        ggplot2::labs(title = "GEX doublet-like profiles by cluster and cell type",
+          subtitle = "Look for groups enriched in high scores or doublet calls; scores are not calibrated probabilities.",
+          caption = stringr::str_wrap("Before doublet filtering. Violins show score distributions with equal maximum width; points mark scDblFinder doublet calls. Classification is fitted separately per GEM well; numeric cutoffs need not match across wells.", width = 110),
+          x = NULL, y = "GEX scDblFinder score", colour = "GEM well") +
         ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)) +
-        ggplot2::theme(legend.position = "none")
+        ggplot2::theme(legend.position = "bottom")
 
       save_plots_structured(plot)
     },
@@ -359,7 +362,9 @@ rlang::list2(
       metadata_w_cell_types_tibble.GEX |>
         dplyr::select(-dplyr::any_of(c("GEX_UMAP_1", "GEX_UMAP_2"))) |>
         dplyr::left_join(sweep_umap, by = "barcode_w_prefix") |>
-        plot_UMAP_from_metadata(variable = "PCA_harmony_SNN_cluster_cell_type", umap_cols = c("GEX_UMAP_1", "GEX_UMAP_2"))
+        plot_UMAP_from_metadata(variable = "PCA_harmony_SNN_cluster_cell_type", umap_cols = c("GEX_UMAP_1", "GEX_UMAP_2")) +
+        ggplot2::labs(subtitle = sprintf("PCs: %s; neighbours: %s; min_dist: %s. Compare label stability across settings; island spacing is not biological distance.",
+          UMAP_n_dims_seq.GEX, UMAP_neighbors_seq, aggregation_UMAP_min_dist))
     } |>
       save_plots_structured(dyn_suffix_in_subdir = TRUE, override_suffix = paste0(UMAP_n_dims_seq.GEX, "_", UMAP_neighbors_seq)),
     pattern = cross(UMAP_n_dims_seq.GEX, UMAP_neighbors_seq),
@@ -470,6 +475,9 @@ rlang::list2(
     description = "Facetted volcano plot of BPCells marker genes per GEX cell type. [checkpoint:3_GEX-QC]",
     command = cell_type_marker_tibbles.GEX |>
       plot_markers_volcano_simple() |>
+      (\(plot) plot + ggplot2::labs(title = "GEX markers by assigned cell type",
+        caption = stringr::str_wrap(paste(plot$labels$caption,
+          "Wilcoxon comparisons against pooled remaining cells; BH adjustment spans all returned gene-by-group tests. Cell-level tests do not establish donor-level replication."), width = 110)))() |>
       save_plots_structured()
   ),
   targets::tar_target(

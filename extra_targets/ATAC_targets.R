@@ -496,7 +496,8 @@ rlang::list2(
         plot <- plot_embedding_singular_values(
           singular_values = LSI_BPCells.ATAC$singular_values,
           dims = seq_len(ncol(LSI_BPCells.ATAC$cell_embeddings))
-        )
+        ) + ggplot2::labs(title = "ATAC LSI singular-value elbow",
+          subtitle = stringr::str_wrap("Look for diminishing returns, then check loadings and depth associations before choosing dimensions.\nLSI1 is not automatically a technical component and should not be discarded from this curve alone.", width = 100))
         save_plots_structured(plot)
       }
     ),
@@ -515,7 +516,8 @@ rlang::list2(
             NULL
           },
           dim_prefix = "LSI_"
-        )
+        ) + ggplot2::labs(title = "ATAC LSI coordinate spread",
+          subtitle = stringr::str_wrap("Look for dimensions strongly altered or collapsed by Harmony; coordinate spread is not explained variance.", width = 100))
         save_plots_structured(plot)
       }
     ),
@@ -667,10 +669,13 @@ rlang::list2(
             alpha = 0.5,
             width = 0.2
           ) +
-          ggplot2::facet_wrap(~cluster_type, scales = "free_x") +
-          ggplot2::labs(subtitle = "Points are cells classified as doublet by scDblFinder, colored by GEM well.") +
+          ggplot2::facet_wrap(~cluster_type, scales = "free_x", labeller = ggplot2::labeller(cluster_type = label_plot_variable)) +
+          ggplot2::labs(title = "ATAC doublet-like profiles by cluster and cell type",
+          subtitle = "Look for groups enriched in high scores or doublet calls; scores are not calibrated probabilities.",
+          caption = stringr::str_wrap("Before doublet filtering. Violins show score distributions with equal maximum width; points mark scDblFinder doublet calls. Classification is fitted separately per GEM well; numeric cutoffs need not match across wells.", width = 110),
+          x = NULL, y = "ATAC scDblFinder score", colour = "GEM well") +
           ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)) +
-          ggplot2::theme(legend.position = "none")
+          ggplot2::theme(legend.position = "bottom")
 
         save_plots_structured(plot)
       }
@@ -749,7 +754,8 @@ rlang::list2(
       name = QC_excluded_upset_plot.5_pre_LSI_QC,
       description = "UpSet plot of overlapping ATAC QC exclusion reasons. [checkpoint:5_pre-LSI-QC]",
       command = {
-        plot <- plot_upset_from_excluded_BCs_list(QC_excluded_BCs_list.ATAC, n_total = nrow(metadata_w_QC_tibble.ATAC))
+        plot <- plot_upset_from_excluded_BCs_list(QC_excluded_BCs_list.ATAC, n_total = nrow(metadata_w_QC_tibble.ATAC),
+          input_label = "GEX-retained nuclei before aggregation-level peak QC")
         save_plots_structured(plot)
       }
     ),
@@ -791,7 +797,9 @@ rlang::list2(
         plot <- metadata_w_cell_types_tibble.ATAC |>
           dplyr::select(-dplyr::any_of(c("LSI_UMAP_1", "LSI_UMAP_2"))) |>
           dplyr::left_join(sweep_umap, by = "barcode_w_prefix") |>
-          plot_UMAP_from_metadata(variable = "LSI_harmony_SNN_cluster_cell_type")
+          plot_UMAP_from_metadata(variable = "LSI_harmony_SNN_cluster_cell_type") +
+          ggplot2::labs(subtitle = sprintf("LSI dimensions: %s; neighbours: %s; min_dist: %s. Compare label stability across settings; labels are GEX-derived.",
+            UMAP_n_dims_seq.ATAC, UMAP_neighbors_seq, aggregation_UMAP_min_dist))
 
         save_plots_structured(plot, dyn_suffix_in_subdir = TRUE, override_suffix = paste0(UMAP_n_dims_seq.ATAC, "_", UMAP_neighbors_seq))
       },
@@ -958,7 +966,10 @@ rlang::list2(
             gene = label_motif_families(.data$gene, JASPAR_motif_family_labels)
           ) |>
           plot_markers_volcano_simple() +
-          ggplot2::labs(x = "Mean motif-family accessibility difference")
+          ggplot2::labs(title = "Motif-family accessibility markers by ATAC cell type",
+            subtitle = stringr::str_wrap("Look for coherent accessibility differences; motif families reflect shared sequence preferences, not TF-specific activity.", width = 100),
+            caption = stringr::str_wrap("Cell-level Wilcoxon tests compare each group with pooled remaining cells. BH adjustment spans all returned family-by-group tests. Height: nominal p-value; colour: adjusted p < 0.05. Labels select up to 20 families per direction and group. The x-axis is a mean chromVAR Z-score difference, not log fold change; labels are GEX-derived.", width = 110),
+            x = "Mean motif-family accessibility difference")
         save_plots_structured(plot)
       },
       resources = get_tar_resources(RAM_GB_req = 16)
@@ -1002,7 +1013,11 @@ rlang::list2(
         feature_matrix = motif_family_accessibility_BPCells_matrix.ATAC
       ) |>
         (\(plot) plot + ggplot2::labs(
-          title = label_motif_families(continuous_UMAP_spec.ATAC$variable, JASPAR_motif_family_labels)
+          title = paste(if (continuous_UMAP_spec.ATAC$value_source == "feature")
+            label_motif_families(continuous_UMAP_spec.ATAC$variable, JASPAR_motif_family_labels) else
+            label_plot_variable(continuous_UMAP_spec.ATAC$variable), "on ATAC UMAP"),
+          caption = stringr::str_wrap(paste(plot$labels$caption,
+            if (continuous_UMAP_spec.ATAC$value_source == "feature") "Values are motif-family chromVAR Z-scores, not TF-specific activity."), width = 110)
         ))() |>
         save_plots_structured(
           dyn_suffix_in_subdir = TRUE,

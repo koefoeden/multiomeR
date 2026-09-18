@@ -1008,7 +1008,10 @@ plot_LSI_loadings_from_tibble <- function(LSI_loadings_tibble, dims, nfeatures =
         dplyr::mutate(peak = forcats::fct_reorder(.data$peak, .data$loading)) |>
         ggplot2::ggplot(ggplot2::aes(x = loading, y = peak)) +
         ggplot2::geom_col() +
-        ggplot2::labs(title = dim_col, x = "Loading", y = ggplot2::element_blank())
+        ggplot2::labs(title = paste("ATAC peak loadings:", dim_col),
+          subtitle = "Inspect the peaks defining each dimension alongside depth associations; loading sign is arbitrary.",
+          caption = paste("Peaks ranked by absolute pre-Harmony LSI loading;", nfeatures, "requested, with ties retained. Loadings are coefficients, not accessibility levels."),
+          x = "Signed LSI loading", y = NULL)
     })
 }
 
@@ -1024,7 +1027,8 @@ plot_embedding_singular_values <- function(singular_values, dims) {
     ggplot2::geom_point() +
     ggplot2::geom_line() +
     ggplot2::scale_x_continuous(breaks = plot_tibble$dim) +
-    ggplot2::labs(x = "Dimension", y = "Singular value")
+    ggplot2::labs(x = "Dimension", y = "Singular value",
+      caption = stringr::str_wrap("Native pre-Harmony singular values for all displayed dimensions; values are not percentages of variance explained.", width = 110))
 }
 
 #' Plot embedding sdev
@@ -1069,7 +1073,8 @@ plot_embedding_sdev <- function(embedding_matrix, dims, harmony_embedding_matrix
     ggplot2::geom_line() +
     ggplot2::scale_x_continuous(breaks = sort(unique(plot_tibble$dim))) +
     ggplot2::scale_color_manual(values = c("Non-Harmony" = "#999999", "Harmony" = "#2166AC")) +
-    ggplot2::labs(x = "Dimension", y = "Embedding SD", color = NULL) +
+    ggplot2::labs(x = "Dimension", y = "Embedding SD", color = NULL,
+      caption = stringr::str_wrap("Sample standard deviation of cell coordinates per dimension. Harmony is shown only when supplied; these are coordinate spreads, not singular values or explained-variance fractions.", width = 110)) +
     ggplot2::theme(legend.position = "top")
 }
 
@@ -1213,7 +1218,8 @@ plot_embedding_metadata_association_tibble <- function(plot_tibble, dims, title)
       expand = ggplot2::expansion(mult = c(0, 0.05))
     ) +
     ggplot2::scale_fill_manual(values = c("Non-Harmony" = "#999999", "Harmony" = "#2166AC")) +
-    ggplot2::labs(title = title, x = "Dimension", y = "Variance explained", fill = NULL) +
+    ggplot2::labs(title = title, x = "Dimension", y = "Variance explained", fill = NULL,
+      caption = stringr::str_wrap("Each variable is assessed separately on non-missing cells with finite coordinates. Continuous scores are squared Pearson correlations; categorical scores are between-group / total sums of squares. Missing or constant variables yield no estimate. Associations are descriptive, unsigned and unadjusted for other covariates.", width = 110)) +
     ggplot2::theme(
       legend.position = "top",
       strip.text.y.right = ggplot2::element_text(angle = 0, hjust = 0)

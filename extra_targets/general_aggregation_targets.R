@@ -1,5 +1,22 @@
 rlang::list2(
   targets::tar_target(
+    name = demultiplexing_counts_tibble,
+    description = "Count pre-QC donor assignments per GEM well and verify coverage of every Cell Ranger-called barcode. [checkpoint:1_pre-aggregation-QC]",
+    command = summarize_demultiplexing_assignments(
+      aggregation_vireo_donor_ids_tibble_syms,
+      aggregation_cellranger_barcodes_tsv_syms,
+      aggregation_GEM_well_IDs
+    ),
+    resources = get_tar_resources(cores_req = 1, RAM_GB_req = 16)
+  ),
+  tarchetypes::tar_file(
+    name = demultiplexing_assignment_bars.1_pre_aggregation_QC,
+    description = "Plot 100-percent stacked assignment bars per GEM well, with donor labels inside singlet segments. [checkpoint:1_pre-aggregation-QC]",
+    command = plot_demultiplexing_assignment_bars(demultiplexing_counts_tibble) |>
+      save_plots_structured(width = 16,
+        height = max(6, 3 + 0.36 * length(aggregation_GEM_well_IDs)))
+  ),
+  targets::tar_target(
     name = cell_retention_tibble.GEX_input,
     description = "Count Cell Ranger-called input and retained cells per configured GEM well after per-well QC, including empty wells. [checkpoint:1_pre-aggregation-QC]",
     command = summarize_QC_cell_retention(
@@ -383,11 +400,12 @@ rlang::list2(
     )))
   ),
   tarchetypes::tar_file(
-    name = nuclei_per_donor_id_bars.8_multimodal_QC,
-    description = "Plot final WNN nuclei counts per donor ID. [checkpoint:8_multimodal-QC]",
-    command = metadata_w_cell_types_tibble.WNN |>
+    name = nuclei_per_donor_id_bars.1_pre_aggregation_QC,
+    description = "Plot pre-QC assigned singlet nuclei per donor, excluding doublets and unassigned barcodes. [checkpoint:1_pre-aggregation-QC]",
+    command = demultiplexing_counts_tibble |>
       plot_nuclei_per_donor_id() |>
-      save_plots_structured(width = 10)
+      save_plots_structured(width = 10,
+        height = max(6, 3 + 0.22 * dplyr::n_distinct(stats::na.omit(demultiplexing_counts_tibble$donor_id))))
   ),
   tarchetypes::tar_file(
     name = pseudobulk_counts_BPCells_matrix_dir.GEX,

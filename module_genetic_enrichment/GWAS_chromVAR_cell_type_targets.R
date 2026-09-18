@@ -53,61 +53,33 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 60)
   ),
   tarchetypes::tar_file(
-    name = chromVAR_deviation_heatmap.cell_type_pseudobulk,
-    description = "Save cell-type pseudobulk GWAS chromVAR relative-deviation heatmap with z-score support labels and nuclei counts. [checkpoint:genetic_enrichment]",
-    command = {
-      plot <- plot_GWAS_by_cluster_heatmap(
-        chromVAR_deviation_tibble.cell_type_pseudobulk,
-        GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
-        compartments_patterns = genetic_enrichment_compartment_patterns,
-        fill_col = "relative_deviation",
-        fill_label = "Relative deviation",
-        support_label_col = "support_label"
-      )
-      if (inherits(plot, "empty_plot_list")) {
-        plot <- ggplot2::ggplot() + ggplot2::theme_void() +
-          ggplot2::annotate("text", x = 0, y = 0, label = "No eligible cell-type GWAS scores")
-      }
-      plot <- plot + patchwork::plot_annotation(
-        title = "Relative GWAS-linked accessibility by cell type",
-        subtitle = "Compare cell types within each trait; red indicates above-average deviation.\nStars mark chromVAR z-score support, not adjusted-p significance or independent donor evidence.",
-        caption = "ATAC counts are summed by WNN cell type. Colour: deviation centred and divided by its SD across cell types within each GWAS.\nStars: * z >= 2; ** z >= 3 against the betterChromVAR background. Nuclei counts describe input support; this is a descriptive pooled comparison."
-      )
+    name = raw_deviation_unscaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk,
+    description = "Save ordinary GWAS deviations without within-GWAS scaling. [checkpoint:genetic_enrichment]",
+    command = plot_GWAS_chromVAR_deviation_heatmap(
+      chromVAR_deviation_tibble.cell_type_pseudobulk,
+      GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
+      compartments_patterns = genetic_enrichment_compartment_patterns,
+      standardize = FALSE,
+      beta_weighted = FALSE
+    ) |>
       save_plots_structured(
-        plot,
-        filetype = "png",
-        width = 17,
+        filetype = "png", width = 17,
         height = max(5.5, 0.3 * dplyr::n_distinct(chromVAR_deviation_tibble.cell_type_pseudobulk$GWAS_ID) + 3.5)
       )
-    }
   ),
   tarchetypes::tar_file(
-    name = chromVAR_deviation_heatmap_unscaled.cell_type_pseudobulk,
-    description = "Save cell-type pseudobulk GWAS chromVAR raw-deviation heatmap with z-score support labels and nuclei counts. [checkpoint:genetic_enrichment]",
-    command = {
-      plot <- plot_GWAS_by_cluster_heatmap(
-        chromVAR_deviation_tibble.cell_type_pseudobulk,
-        GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
-        compartments_patterns = genetic_enrichment_compartment_patterns,
-        fill_col = "deviation",
-        fill_label = "Deviation",
-        support_label_col = "support_label"
-      )
-      if (inherits(plot, "empty_plot_list")) {
-        plot <- ggplot2::ggplot() + ggplot2::theme_void() +
-          ggplot2::annotate("text", x = 0, y = 0, label = "No eligible cell-type GWAS scores")
-      }
-      plot <- plot + patchwork::plot_annotation(
-        title = "GWAS-linked accessibility deviation by cell type",
-        subtitle = "Positive values indicate accessibility above the weighted background expectation.\nStars mark chromVAR z-score support, not adjusted-p significance or independent donor evidence.",
-        caption = "ATAC counts are summed by WNN cell type. Colour: weighted observed-minus-expected accessibility divided by the depth-adjusted expectation.\nStars: * z >= 2; ** z >= 3 against the betterChromVAR background. Nuclei counts describe input support; this is a descriptive pooled comparison."
-      )
+    name = raw_deviation_scaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk,
+    description = "Save ordinary GWAS deviations standardized within each GWAS. [checkpoint:genetic_enrichment]",
+    command = plot_GWAS_chromVAR_deviation_heatmap(
+      chromVAR_deviation_tibble.cell_type_pseudobulk,
+      GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
+      compartments_patterns = genetic_enrichment_compartment_patterns,
+      standardize = TRUE,
+      beta_weighted = FALSE
+    ) |>
       save_plots_structured(
-        plot,
-        filetype = "png",
-        width = 17,
+        filetype = "png", width = 17,
         height = max(5.5, 0.3 * dplyr::n_distinct(chromVAR_deviation_tibble.cell_type_pseudobulk$GWAS_ID) + 3.5)
       )
-    }
   )
 )

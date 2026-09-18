@@ -30,12 +30,12 @@ rlang::list2(
     names = differential_analyses_target_suffix,
     descriptions = NULL,
     delimiter = ".",
-    source("module_differential_analyses/setup_and_DCTC_targets.R")$value,
+    source("module_differential_analyses/setup_and_cell_type_composition_targets.R")$value,
     targets::tar_target(
       name = pseudobulk_CollecTRI_TF_activity_matrix.GEX,
       description = "Infer signed CollecTRI ULM TF activities from GEX pseudobulks [part_of_graph:differential_analyses]",
       command = get_pseudobulk_CollecTRI_TF_activity_matrix(
-        psbulk_GEX_counts_matrix = pseudobulk_counts_matrix.GEX,
+        pseudobulk_GEX_counts_matrix = pseudobulk_counts_matrix.GEX,
         CollecTRI_network_tibble = CollecTRI_human_network_tibble
       ),
       packages = w_def("decoupleR"),
@@ -43,28 +43,28 @@ rlang::list2(
     ),
     tarchetypes::tar_map(
       values = tibble::tribble(
-        ~map_psbulk_DX_tar_suffix , ~map_psbulk_data_matrix                      ,
-        "DGE"                     , rlang::sym("pseudobulk_counts_matrix.GEX")   ,
-        "DCA"                     , rlang::sym("pseudobulk_counts_matrix.ATAC")  ,
-        "DTFA"                    , rlang::sym("pseudobulk_motif_family_accessibility_matrix.ATAC"),
-        "DCTA"                    , rlang::sym("pseudobulk_CollecTRI_TF_activity_matrix.GEX")
+        ~map_analysis_suffix, ~map_pseudobulk_data_matrix,
+        "gene_expression", rlang::sym("pseudobulk_counts_matrix.GEX"),
+        "chromatin_accessibility", rlang::sym("pseudobulk_counts_matrix.ATAC"),
+        "motif_family_accessibility", rlang::sym("pseudobulk_motif_family_accessibility_matrix.ATAC"),
+        "transcription_factor_activity", rlang::sym("pseudobulk_CollecTRI_TF_activity_matrix.GEX")
       ),
-      names = map_psbulk_DX_tar_suffix,
+      names = map_analysis_suffix,
       descriptions = NULL,
       delimiter = ".",
-      source("module_differential_analyses/psbulk_DX_targets.R")$value
+      source("module_differential_analyses/pseudobulk_differential_targets.R")$value
     ),
     source("module_differential_analyses/cross_modality_targets.R")$value,
     tarchetypes::tar_map(
       values = tibble::tribble(
-        ~map_psbulk_DX_GSEA_tar_suffix, ~map_MSigDB_collection, ~map_MSigDB_subcollection,
-        "H.GSEA.DGE",                   "H",                   NA_character_,
-        "CP_REACTOME.GSEA.DGE",         "C2",                  "CP:REACTOME"
+        ~map_gene_set_enrichment_suffix, ~map_MSigDB_collection, ~map_MSigDB_subcollection,
+        "Hallmark.gene_set_enrichment.gene_expression", "H", NA_character_,
+        "Reactome.gene_set_enrichment.gene_expression", "C2", "CP:REACTOME"
       ),
-      names = map_psbulk_DX_GSEA_tar_suffix,
+      names = map_gene_set_enrichment_suffix,
       descriptions = NULL,
       delimiter = ".",
-      source("module_differential_analyses/GSEA_targets.R")$value
+      source("module_differential_analyses/gene_set_enrichment_targets.R")$value
     )
   )
 )

@@ -51,7 +51,7 @@ get_BPCells_group_pseudobulk_matrix <- function(feature_matrix, metadata_tibble,
   )
 }
 
-psbulk_rowSums <- function(x) {
+pseudobulk_rowSums <- function(x) {
   if (inherits(x, "IterableMatrix")) {
     BPCells::rowSums(x)
   } else {
@@ -59,7 +59,7 @@ psbulk_rowSums <- function(x) {
   }
 }
 
-psbulk_colSums <- function(x) {
+pseudobulk_colSums <- function(x) {
   if (inherits(x, "IterableMatrix")) {
     BPCells::colSums(x)
   } else {
@@ -67,14 +67,14 @@ psbulk_colSums <- function(x) {
   }
 }
 
-get_pseudobulk_depth_tibble <- function(psbulk_data_matrix, count_col = "n_counts") {
-  n_counts <- as.numeric(psbulk_colSums(psbulk_data_matrix))
-  n_features <- as.numeric(psbulk_colSums(psbulk_data_matrix > 0))
+get_pseudobulk_depth_tibble <- function(pseudobulk_data_matrix, count_col = "n_counts") {
+  n_counts <- as.numeric(pseudobulk_colSums(pseudobulk_data_matrix))
+  n_features <- as.numeric(pseudobulk_colSums(pseudobulk_data_matrix > 0))
 
-  get_psbulk_sample_tibble(psbulk_data_matrix) |>
+  get_pseudobulk_sample_tibble(pseudobulk_data_matrix) |>
     dplyr::mutate(
-      !!count_col := n_counts[match(sample_name, colnames(psbulk_data_matrix))],
-      n_features = n_features[match(sample_name, colnames(psbulk_data_matrix))],
+      !!count_col := n_counts[match(sample_name, colnames(pseudobulk_data_matrix))],
+      n_features = n_features[match(sample_name, colnames(pseudobulk_data_matrix))],
       counts_per_feature = .data[[count_col]] / n_features,
       log10_n_counts = log10(.data[[count_col]]),
       log10_n_features = log10(n_features),
@@ -82,12 +82,12 @@ get_pseudobulk_depth_tibble <- function(psbulk_data_matrix, count_col = "n_count
     )
 }
 
-get_group_pseudobulk_depth_tibble <- function(psbulk_data_matrix, group_col = "cluster", count_col = "n_counts") {
-  n_counts <- as.numeric(psbulk_colSums(psbulk_data_matrix))
-  n_features <- as.numeric(psbulk_colSums(psbulk_data_matrix > 0))
+get_group_pseudobulk_depth_tibble <- function(pseudobulk_data_matrix, group_col = "cluster", count_col = "n_counts") {
+  n_counts <- as.numeric(pseudobulk_colSums(pseudobulk_data_matrix))
+  n_features <- as.numeric(pseudobulk_colSums(pseudobulk_data_matrix > 0))
 
   tibble::tibble(
-    !!group_col := colnames(psbulk_data_matrix),
+    !!group_col := colnames(pseudobulk_data_matrix),
     !!count_col := n_counts,
     n_features = n_features,
     counts_per_feature = n_counts / n_features,
@@ -159,23 +159,23 @@ plot_pseudobulk_depth_distribution <- function(pseudobulk_depth_tibble, min_ATAC
         inherit.aes = FALSE
       ) +
       ggplot2::labs(caption = stringr::str_wrap(paste(plot$labels$caption,
-        stringr::str_glue("Dashed line marks DTFA minimum ATAC count threshold: {min_ATAC_sample_counts}.")), width = 110))
+        stringr::str_glue("Dashed line marks motif_family_accessibility minimum ATAC count threshold: {min_ATAC_sample_counts}.")), width = 110))
   }
 
   plot
 }
 
-normalize_psbulk_feature_models <- function(cfg_psbulk_feature_models) {
-  normalize_differential_models(cfg_psbulk_feature_models) |>
+normalize_pseudobulk_feature_models <- function(cfg_pseudobulk_feature_models) {
+  normalize_differential_models(cfg_pseudobulk_feature_models) |>
     purrr::map(function(model) {
       if (!is.null(model$GEM_well_IDs)) stop("Feature pseudobulks already pool wells; GEM_well_IDs filtering must occur before aggregation.")
-      model$cell_type_subset <- normalize_psbulk_cell_type_subset(model$cell_type_subset)
+      model$cell_type_subset <- normalize_pseudobulk_cell_type_subset(model$cell_type_subset)
       model
     })
 }
 
 
-normalize_psbulk_cell_type_subset <- function(cell_type_subset) {
+normalize_pseudobulk_cell_type_subset <- function(cell_type_subset) {
   if (is.null(cell_type_subset)) {
     return(NULL)
   }
@@ -184,7 +184,7 @@ normalize_psbulk_cell_type_subset <- function(cell_type_subset) {
 }
 
 
-get_psbulk_cell_type_subset_label <- function(cell_type_subset) {
+get_pseudobulk_cell_type_subset_label <- function(cell_type_subset) {
   if (is.null(cell_type_subset)) {
     return("all")
   }
@@ -193,8 +193,8 @@ get_psbulk_cell_type_subset_label <- function(cell_type_subset) {
 }
 
 
-get_psbulk_sample_tibble <- function(psbulk_data_matrix) {
-  sample_tibble <- tibble::tibble(sample_name = colnames(psbulk_data_matrix)) |>
+get_pseudobulk_sample_tibble <- function(pseudobulk_data_matrix) {
+  sample_tibble <- tibble::tibble(sample_name = colnames(pseudobulk_data_matrix)) |>
     tidyr::extract(
       col = sample_name,
       into = c("cluster", "donor_id"),
@@ -224,12 +224,12 @@ get_differential_analysis_metadata_columns <- function(models, abundance_models)
   }), use.names = FALSE))
 }
 
-#' Filter psbulk data matrix
+#' Filter pseudobulk data matrix
 #'
 #' Align and filter a pseudobulk feature matrix before model fitting.
 #'
-#' @param psbulk_data_matrix Feature-by-pseudobulk-sample count/activity matrix.
-#' @param psbulk_feature_dynamic_tibble Dynamic-branch metadata row describing the model, contrast, and feature matrix being processed.
+#' @param pseudobulk_data_matrix Feature-by-pseudobulk-sample count/activity matrix.
+#' @param pseudobulk_feature_dynamic_tibble Dynamic-branch metadata row describing the model, contrast, and feature matrix being processed.
 #' @param extended_donor_id_metadata_tibble Donor metadata after GEM well/sample-level covariates have been added for model design.
 #' @param sample_depth_tibble Optional sample depth tibble used to remove low
 #'   count pseudobulk columns before modeling.
@@ -239,17 +239,17 @@ get_differential_analysis_metadata_columns <- function(models, abundance_models)
 #'   features passing expression/support filters.
 #' @keywords internal
 
-filter_psbulk_data_matrix <- function(
-  psbulk_data_matrix,
-  psbulk_feature_dynamic_tibble,
+filter_pseudobulk_data_matrix <- function(
+  pseudobulk_data_matrix,
+  pseudobulk_feature_dynamic_tibble,
   extended_donor_id_metadata_tibble,
   sample_depth_tibble = NULL,
   min_sample_counts = NULL
 ) {
-  model_list <- psbulk_feature_dynamic_tibble$model[[1]]
+  model_list <- pseudobulk_feature_dynamic_tibble$model[[1]]
   cell_type_subset <- model_list$cell_type_subset
 
-  sample_tibble <- get_psbulk_sample_tibble(psbulk_data_matrix)
+  sample_tibble <- get_pseudobulk_sample_tibble(pseudobulk_data_matrix)
   cohort <- get_differential_model_cohort(extended_donor_id_metadata_tibble, model_list, sample_tibble$donor_id)
   donor_ids_keep <- stringr::str_replace_all(cohort$donor_id[cohort$included], "_", "-")
   sample_tibble <- dplyr::filter(sample_tibble, donor_id %in% donor_ids_keep)
@@ -272,29 +272,29 @@ filter_psbulk_data_matrix <- function(
     glue_info = "No pseudobulk samples remain after donor/model and cell-type-subset filtering."
   )
 
-  filtered_psbulk_data_matrix <- psbulk_data_matrix[, surviving_col_names, drop = FALSE]
-  if (inherits(filtered_psbulk_data_matrix, "IterableMatrix")) {
-    filtered_psbulk_data_matrix <- methods::as(filtered_psbulk_data_matrix, "dgCMatrix")
+  filtered_pseudobulk_data_matrix <- pseudobulk_data_matrix[, surviving_col_names, drop = FALSE]
+  if (inherits(filtered_pseudobulk_data_matrix, "IterableMatrix")) {
+    filtered_pseudobulk_data_matrix <- methods::as(filtered_pseudobulk_data_matrix, "dgCMatrix")
   }
-  assertthat::assert_that(is.matrix(filtered_psbulk_data_matrix) || inherits(filtered_psbulk_data_matrix, "dgCMatrix"))
-  filtered_psbulk_data_matrix
+  assertthat::assert_that(is.matrix(filtered_pseudobulk_data_matrix) || inherits(filtered_pseudobulk_data_matrix, "dgCMatrix"))
+  filtered_pseudobulk_data_matrix
 }
 
 #' Get pseudobulk chromVAR background record
 #'
 #' Fit the betterChromVAR background model for a pseudobulk count matrix.
 #'
-#' @param psbulk_ATAC_data_matrix Peak-by-pseudobulk-sample ATAC count matrix.
+#' @param pseudobulk_ATAC_data_matrix Peak-by-pseudobulk-sample ATAC count matrix.
 #' @param chromVAR_obj chromVAR SummarizedExperiment containing deviations, annotations, and background metadata.
 #' @return A list containing the fitted background and retained peak names.
 #' @keywords internal
 
 get_pseudobulk_chromVAR_background_record <- function(
-  psbulk_ATAC_data_matrix,
+  pseudobulk_ATAC_data_matrix,
   chromVAR_obj
 ) {
-  peaks_above_cut_off_names <- psbulk_ATAC_data_matrix |>
-    psbulk_rowSums() |>
+  peaks_above_cut_off_names <- pseudobulk_ATAC_data_matrix |>
+    pseudobulk_rowSums() |>
     magrittr::is_greater_than(0) |>
     which() |>
     names()
@@ -306,56 +306,56 @@ get_pseudobulk_chromVAR_background_record <- function(
   }
   filtered_rowranges <- rowranges[peak_range_idx]
 
-  peak_filtered_psbulk_ATAC_data_matrix <- psbulk_ATAC_data_matrix[peaks_above_cut_off_names, , drop = FALSE]
-  if (inherits(peak_filtered_psbulk_ATAC_data_matrix, "IterableMatrix")) {
-    peak_filtered_psbulk_ATAC_data_matrix <- methods::as(peak_filtered_psbulk_ATAC_data_matrix, "dgCMatrix")
+  peak_filtered_pseudobulk_ATAC_data_matrix <- pseudobulk_ATAC_data_matrix[peaks_above_cut_off_names, , drop = FALSE]
+  if (inherits(peak_filtered_pseudobulk_ATAC_data_matrix, "IterableMatrix")) {
+    peak_filtered_pseudobulk_ATAC_data_matrix <- methods::as(peak_filtered_pseudobulk_ATAC_data_matrix, "dgCMatrix")
   }
-  psbulk_chromVAR_obj <- SummarizedExperiment::SummarizedExperiment(
-    assays = list(counts = peak_filtered_psbulk_ATAC_data_matrix),
+  pseudobulk_chromVAR_obj <- SummarizedExperiment::SummarizedExperiment(
+    assays = list(counts = peak_filtered_pseudobulk_ATAC_data_matrix),
     rowRanges = filtered_rowranges
   )
-  SummarizedExperiment::rowData(psbulk_chromVAR_obj) <- SummarizedExperiment::rowData(chromVAR_obj)[peak_range_idx, , drop = FALSE]
+  SummarizedExperiment::rowData(pseudobulk_chromVAR_obj) <- SummarizedExperiment::rowData(chromVAR_obj)[peak_range_idx, , drop = FALSE]
 
-  expectation_vec <- betterChromVAR::getExpectation(psbulk_chromVAR_obj)
+  expectation_vec <- betterChromVAR::getExpectation(pseudobulk_chromVAR_obj)
   background_bins <- betterChromVAR::getBackgroundBins(
     x = expectation_vec,
-    bias = SummarizedExperiment::rowData(psbulk_chromVAR_obj)$bias,
-    flbias = SummarizedExperiment::rowData(psbulk_chromVAR_obj)$flbias,
+    bias = SummarizedExperiment::rowData(pseudobulk_chromVAR_obj)$bias,
+    flbias = SummarizedExperiment::rowData(pseudobulk_chromVAR_obj)$flbias,
     verbose = FALSE
   )
   background <- betterChromVAR::computeBackgrounds(
-    object = peak_filtered_psbulk_ATAC_data_matrix,
+    object = peak_filtered_pseudobulk_ATAC_data_matrix,
     bins = background_bins,
     expectation = expectation_vec,
     verbose = FALSE
   )
   list(
     background = background,
-    peak_names = rownames(peak_filtered_psbulk_ATAC_data_matrix)
+    peak_names = rownames(peak_filtered_pseudobulk_ATAC_data_matrix)
   )
 }
 
 compute_pseudobulk_chromVAR_deviation_SE <- function(
-  psbulk_ATAC_data_matrix,
+  pseudobulk_ATAC_data_matrix,
   chromVAR_obj,
   annotation_matrix,
   background_record
 ) {
   peak_names <- background_record$peak_names
-  counts_matrix <- psbulk_ATAC_data_matrix[peak_names, , drop = FALSE]
+  counts_matrix <- pseudobulk_ATAC_data_matrix[peak_names, , drop = FALSE]
   if (inherits(counts_matrix, "IterableMatrix")) {
     counts_matrix <- methods::as(counts_matrix, "dgCMatrix")
   }
   rowranges <- SummarizedExperiment::rowRanges(chromVAR_obj)
   peak_range_idx <- match(peak_names, get_peak_names_from_GRanges(rowranges))
-  psbulk_chromVAR_obj <- SummarizedExperiment::SummarizedExperiment(
+  pseudobulk_chromVAR_obj <- SummarizedExperiment::SummarizedExperiment(
     assays = list(counts = counts_matrix),
     rowRanges = rowranges[peak_range_idx]
   )
-  SummarizedExperiment::rowData(psbulk_chromVAR_obj) <- SummarizedExperiment::rowData(chromVAR_obj)[peak_range_idx, , drop = FALSE]
+  SummarizedExperiment::rowData(pseudobulk_chromVAR_obj) <- SummarizedExperiment::rowData(chromVAR_obj)[peak_range_idx, , drop = FALSE]
 
   betterChromVAR::computeDeviationsAnalytic(
-    object = psbulk_chromVAR_obj,
+    object = pseudobulk_chromVAR_obj,
     background = background_record$background,
     annotations = annotation_matrix[peak_names, , drop = FALSE],
     verbose = FALSE,
@@ -365,17 +365,17 @@ compute_pseudobulk_chromVAR_deviation_SE <- function(
 }
 
 get_pseudobulk_chromVAR_accessibility_matrix <- function(
-  psbulk_ATAC_data_matrix,
+  pseudobulk_ATAC_data_matrix,
   chromVAR_obj,
   annotation_matrix,
   normalize = TRUE
 ) {
   background_record <- get_pseudobulk_chromVAR_background_record(
-    psbulk_ATAC_data_matrix = psbulk_ATAC_data_matrix,
+    pseudobulk_ATAC_data_matrix = pseudobulk_ATAC_data_matrix,
     chromVAR_obj = chromVAR_obj
   )
   chromVAR_dev <- compute_pseudobulk_chromVAR_deviation_SE(
-    psbulk_ATAC_data_matrix = psbulk_ATAC_data_matrix,
+    pseudobulk_ATAC_data_matrix = pseudobulk_ATAC_data_matrix,
     chromVAR_obj = chromVAR_obj,
     annotation_matrix = annotation_matrix,
     background_record = background_record
@@ -392,19 +392,19 @@ get_pseudobulk_chromVAR_accessibility_matrix <- function(
 }
 
 get_pseudobulk_motif_family_accessibility_matrix <- function(
-  psbulk_ATAC_data_matrix,
+  pseudobulk_ATAC_data_matrix,
   chromVAR_obj,
   chromVAR_motif_family_matrix
 ) {
   get_pseudobulk_chromVAR_accessibility_matrix(
-    psbulk_ATAC_data_matrix = psbulk_ATAC_data_matrix,
+    pseudobulk_ATAC_data_matrix = pseudobulk_ATAC_data_matrix,
     chromVAR_obj = chromVAR_obj,
     annotation_matrix = chromVAR_motif_family_matrix,
     normalize = TRUE
   )
 }
 
-get_psbulk_cell_type_design <- function(sample_tibble, formula_chr) {
+get_pseudobulk_cell_type_design <- function(sample_tibble, formula_chr) {
   design_matrix <- stats::model.matrix(stats::as.formula(formula_chr), data = sample_tibble)
   colnames(design_matrix) <- colnames(design_matrix) |>
     stringr::str_replace_all(":", ".") |>
@@ -413,7 +413,7 @@ get_psbulk_cell_type_design <- function(sample_tibble, formula_chr) {
   design_matrix
 }
 
-fit_psbulk_voom <- function(..., correlation_max_features = Inf) {
+fit_pseudobulk_voom <- function(..., correlation_max_features = Inf) {
   stopifnot(length(correlation_max_features) == 1L, correlation_max_features > 0)
   fit_function <- edgeR::voomLmFit
   if (is.finite(correlation_max_features)) {
@@ -439,15 +439,15 @@ fit_psbulk_voom <- function(..., correlation_max_features = Inf) {
   fit_function(...)
 }
 
-fit_psbulk_cell_type_matrix <- function(
-  psbulk_feature_matrix,
+fit_pseudobulk_cell_type_matrix <- function(
+  pseudobulk_feature_matrix,
   sample_tibble,
   formula_chr,
   correlation_block = NULL,
   correlation_max_features = Inf
 ) {
-  design_matrix <- get_psbulk_cell_type_design(sample_tibble, formula_chr)
-  is_count_data <- is_count_matrix(psbulk_feature_matrix)
+  design_matrix <- get_pseudobulk_cell_type_design(sample_tibble, formula_chr)
+  is_count_data <- is_count_matrix(pseudobulk_feature_matrix)
 
   has_correlation_block <- !is.null(correlation_block) && nzchar(correlation_block)
   if (has_correlation_block) {
@@ -458,34 +458,34 @@ fit_psbulk_cell_type_matrix <- function(
   }
 
   if (is_count_data) {
-    DGE_list <- edgeR::DGEList(
-      counts = psbulk_feature_matrix,
+    gene_expression_list <- edgeR::DGEList(
+      counts = pseudobulk_feature_matrix,
       samples = tibble::column_to_rownames(sample_tibble, var = "ID")
     )
-    sample_cols_expressed <- psbulk_colSums(DGE_list$counts) > 0
-    DGE_list <- DGE_list[, sample_cols_expressed, keep.lib.sizes = FALSE]
+    sample_cols_expressed <- pseudobulk_colSums(gene_expression_list$counts) > 0
+    gene_expression_list <- gene_expression_list[, sample_cols_expressed, keep.lib.sizes = FALSE]
     design_matrix <- design_matrix[sample_cols_expressed, , drop = FALSE]
-    feature_rows_expressed <- edgeR::filterByExpr(DGE_list, design = design_matrix)
-    DGE_list <- edgeR::normLibSizes(DGE_list[feature_rows_expressed, , keep.lib.sizes = FALSE])
+    feature_rows_expressed <- edgeR::filterByExpr(gene_expression_list, design = design_matrix)
+    gene_expression_list <- edgeR::normLibSizes(gene_expression_list[feature_rows_expressed, , keep.lib.sizes = FALSE])
 
     assert_with_info(
-      nrow(DGE_list) > 0 && nrow(design_matrix) > ncol(design_matrix),
+      nrow(gene_expression_list) > 0 && nrow(design_matrix) > ncol(design_matrix),
       glue_info = "No valid cell-type-specific count model remains after filtering."
     )
 
-    fit <- fit_psbulk_voom(
-      DGE_list,
+    fit <- fit_pseudobulk_voom(
+      gene_expression_list,
       design = design_matrix,
-      block = if (has_correlation_block) factor(DGE_list$samples[[correlation_block]]) else NULL,
+      block = if (has_correlation_block) factor(gene_expression_list$samples[[correlation_block]]) else NULL,
       normalize.method = "none",
       keep.EList = TRUE,
       correlation_max_features = correlation_max_features
     )
-    retained_samples <- DGE_list$samples
+    retained_samples <- gene_expression_list$samples
   } else {
     retained_samples <- tibble::column_to_rownames(sample_tibble, var = "ID")
     expression_object <- structure(
-      list(E = psbulk_feature_matrix, samples = retained_samples),
+      list(E = pseudobulk_feature_matrix, samples = retained_samples),
       class = "EList"
     )
     if (has_correlation_block) {
@@ -517,7 +517,7 @@ fit_psbulk_cell_type_matrix <- function(
   )
 }
 
-get_psbulk_standardized_residuals <- function(cell_type_record, feature_ids, donor_ids, random_effect) {
+get_pseudobulk_standardized_residuals <- function(cell_type_record, feature_ids, donor_ids, random_effect) {
   sample_idx <- match(donor_ids, cell_type_record$samples[[random_effect]])
   feature_idx <- match(feature_ids, rownames(cell_type_record$fit$coefficients))
   expression_matrix <- cell_type_record$fit$EList$E[feature_idx, sample_idx, drop = FALSE]
@@ -531,7 +531,7 @@ get_psbulk_standardized_residuals <- function(cell_type_record, feature_ids, don
   residual_matrix - rowMeans(residual_matrix)
 }
 
-estimate_psbulk_cell_type_residual_correlations <- function(cell_type_records, random_effect, max_features = 2000L) {
+estimate_pseudobulk_cell_type_residual_correlations <- function(cell_type_records, random_effect, max_features = 2000L) {
   cell_types <- names(cell_type_records)
   correlation_matrix <- diag(length(cell_types))
   dimnames(correlation_matrix) <- list(cell_types, cell_types)
@@ -565,10 +565,10 @@ estimate_psbulk_cell_type_residual_correlations <- function(cell_type_records, r
         glue_info = "Too few paired donors remain to estimate cross-cell-type residual correlation."
       )
 
-      residuals_i <- get_psbulk_standardized_residuals(
+      residuals_i <- get_pseudobulk_standardized_residuals(
         cell_type_records[[cell_type_i]], common_feature_ids, common_donor_ids, random_effect
       )
-      residuals_j <- get_psbulk_standardized_residuals(
+      residuals_j <- get_pseudobulk_standardized_residuals(
         cell_type_records[[cell_type_j]], common_feature_ids, common_donor_ids, random_effect
       )
       denominator <- sqrt(rowSums(residuals_i^2) * rowSums(residuals_j^2))
@@ -584,7 +584,7 @@ estimate_psbulk_cell_type_residual_correlations <- function(cell_type_records, r
   correlation_matrix
 }
 
-get_psbulk_stacked_cell_type_design <- function(cell_type_records, joint_design_matrix) {
+get_pseudobulk_stacked_cell_type_design <- function(cell_type_records, joint_design_matrix) {
   retained_sample_ids <- purrr::map(cell_type_records, ~ rownames(.x$design)) |>
     unlist(use.names = FALSE)
   separate_coefficient_names <- purrr::imap(
@@ -624,8 +624,8 @@ get_psbulk_stacked_cell_type_design <- function(cell_type_records, joint_design_
   )
 }
 
-fit_psbulk_feature_matrix_by_cell_type <- function(
-  psbulk_feature_matrix,
+fit_pseudobulk_feature_matrix_by_cell_type <- function(
+  pseudobulk_feature_matrix,
   final_sample_tibble,
   model_list,
   design_matrix,
@@ -651,8 +651,8 @@ fit_psbulk_feature_matrix_by_cell_type <- function(
       !anyDuplicated(cell_type_samples[[pairing_variable]]),
       glue_info = "Cell-type-specific pseudobulk fits require at most one sample per pairing unit and cell type."
     )
-    fit_psbulk_cell_type_matrix(
-      psbulk_feature_matrix = psbulk_feature_matrix[, sample_idx, drop = FALSE],
+    fit_pseudobulk_cell_type_matrix(
+      pseudobulk_feature_matrix = pseudobulk_feature_matrix[, sample_idx, drop = FALSE],
       sample_tibble = cell_type_samples,
       formula_chr = model_list$cell_type_formula,
       correlation_block = correlation_block
@@ -678,11 +678,11 @@ fit_psbulk_feature_matrix_by_cell_type <- function(
   cell_type_records <- cell_type_records |>
     purrr::set_names(cell_types)
 
-  residual_correlations <- estimate_psbulk_cell_type_residual_correlations(
+  residual_correlations <- estimate_pseudobulk_cell_type_residual_correlations(
     cell_type_records = cell_type_records,
     random_effect = pairing_variable
   )
-  stacked_design <- get_psbulk_stacked_cell_type_design(cell_type_records, design_matrix)
+  stacked_design <- get_pseudobulk_stacked_cell_type_design(cell_type_records, design_matrix)
   cell_type_fits <- purrr::map(cell_type_records, function(record) {
     record$fit$EList <- NULL
     record$fit
@@ -708,35 +708,35 @@ fit_psbulk_feature_matrix_by_cell_type <- function(
         "limma_cell_type_paired_blocked"
       }
     ),
-    class = c("psbulk_cell_type_fit", "list")
+    class = c("pseudobulk_cell_type_fit", "list")
   )
 }
 
-#' Fit psbulk feature matrix model
+#' Fit pseudobulk feature matrix model
 #'
 #' Fit the configured pseudobulk model for one feature matrix branch.
 #'
-#' @param psbulk_feature_matrix Feature-by-sample matrix to fit with voom/edgeR.
+#' @param pseudobulk_feature_matrix Feature-by-sample matrix to fit with voom/edgeR.
 #' @param extended_donor_id_metadata_tibble Donor/sample metadata containing the
 #'   covariates referenced by the configured model.
-#' @param psbulk_feature_dynamic_tibble Dynamic-branch metadata row describing the model, contrast, and feature matrix being processed.
+#' @param pseudobulk_feature_dynamic_tibble Dynamic-branch metadata row describing the model, contrast, and feature matrix being processed.
 #' @return An edgeR `DGEGLM`, limma `MArrayLM`, or paired-cell-type
-#'   `psbulk_cell_type_fit`, with sample/design information and an
+#'   `pseudobulk_cell_type_fit`, with sample/design information and an
 #'   `analysis_type` field.
 #' @keywords internal
 
-fit_psbulk_feature_matrix_model <- function(psbulk_feature_matrix, extended_donor_id_metadata_tibble, psbulk_feature_dynamic_tibble) {
+fit_pseudobulk_feature_matrix_model <- function(pseudobulk_feature_matrix, extended_donor_id_metadata_tibble, pseudobulk_feature_dynamic_tibble) {
   formatted_extended_donor_id_metadata_tibble <- extended_donor_id_metadata_tibble |>
     dplyr::mutate(donor_id = stringr::str_replace_all(donor_id, "_", "-"))
 
   # set up sample tibble
-  final_sample_tibble <- colnames(psbulk_feature_matrix) |>
+  final_sample_tibble <- colnames(pseudobulk_feature_matrix) |>
     tibble::enframe(value = "ID", name = NULL) |>
     tidyr::separate(ID, into = c("cluster", "donor_id"), sep = "_", remove = FALSE) |>
     dplyr::left_join(formatted_extended_donor_id_metadata_tibble, by = "donor_id")
 
   # Set up design
-  model_list <- psbulk_feature_dynamic_tibble$model[[1]]
+  model_list <- pseudobulk_feature_dynamic_tibble$model[[1]]
   design_and_basis_matrices <- get_design_and_basis_matrices_from_model_list(sample_tibble = final_sample_tibble, model_list = model_list)
   design_matrix <- design_and_basis_matrices$design_matrix
   basis_matrix <- design_and_basis_matrices$basis_matrix
@@ -750,7 +750,7 @@ fit_psbulk_feature_matrix_model <- function(psbulk_feature_matrix, extended_dono
   )
 
   # Determine analysis type based on data characteristics and model configuration
-  is_count_data <- is_count_matrix(psbulk_feature_matrix)
+  is_count_data <- is_count_matrix(pseudobulk_feature_matrix)
   has_random_effect <- !(is.null(model_list$random_effect) || model_list$random_effect == "")
   has_sufficient_params <- n_params > 1
 
@@ -767,38 +767,38 @@ fit_psbulk_feature_matrix_model <- function(psbulk_feature_matrix, extended_dono
 
   if (analysis_type == "edgeR" || (analysis_type == "limma_duplicateCorrelation" && is_count_data)) {
     # EdgeR or limma_duplicateCorrelation with count data requires DGEList
-    DGE_list <- edgeR::DGEList(counts = psbulk_feature_matrix, samples = final_sample_tibble)
+    gene_expression_list <- edgeR::DGEList(counts = pseudobulk_feature_matrix, samples = final_sample_tibble)
 
-    sample_cols_expressed <- DGE_list$counts |>
+    sample_cols_expressed <- gene_expression_list$counts |>
       colSums() |>
       magrittr::is_greater_than(0)
 
-    DGE_list <- DGE_list[, sample_cols_expressed, keep.lib.sizes = FALSE]
+    gene_expression_list <- gene_expression_list[, sample_cols_expressed, keep.lib.sizes = FALSE]
     design_matrix <- design_matrix[sample_cols_expressed, , drop = FALSE]
-    feature_rows_expressed <- edgeR::filterByExpr(DGE_list, design = design_matrix)
+    feature_rows_expressed <- edgeR::filterByExpr(gene_expression_list, design = design_matrix)
 
-    DGE_list <- edgeR::normLibSizes(DGE_list[feature_rows_expressed, , keep.lib.sizes = FALSE]) # consider using method="TMMwsp" that is designed for 0-inflated data. However, needs quantification of 0-inflatedness.
+    gene_expression_list <- edgeR::normLibSizes(gene_expression_list[feature_rows_expressed, , keep.lib.sizes = FALSE]) # consider using method="TMMwsp" that is designed for 0-inflated data. However, needs quantification of 0-inflatedness.
     residual_df <- nrow(design_matrix) - ncol(design_matrix)
 
     assert_with_info(
-      assertthat::not_empty(DGE_list$counts) && residual_df > 0,
+      assertthat::not_empty(gene_expression_list$counts) && residual_df > 0,
       glue_info = "No valid count model remains after expression/sample filtering. Please check count depth and model complexity."
     )
   } else {
     # limma framework for continuous data (limma_basic or limma_duplicateCorrelation without count data)
-    DGE_list <- {
-      features_tibble <- tibble::enframe(rownames(psbulk_feature_matrix), value = "feature_id", name = NULL)
+    gene_expression_list <- {
+      features_tibble <- tibble::enframe(rownames(pseudobulk_feature_matrix), value = "feature_id", name = NULL)
 
       # sanity check that sample order matches
       assert_with_info(
-        identical(colnames(psbulk_feature_matrix), final_sample_tibble$ID),
-        glue_info = "Sample order mismatch between psbulk_feature_matrix and final_sample_tibble$ID."
+        identical(colnames(pseudobulk_feature_matrix), final_sample_tibble$ID),
+        glue_info = "Sample order mismatch between pseudobulk_feature_matrix and final_sample_tibble$ID."
       )
 
       # build EList for limma
       structure(
         list(
-          E = psbulk_feature_matrix,
+          E = pseudobulk_feature_matrix,
           samples = tibble::column_to_rownames(final_sample_tibble, var = "ID"),
           genes = features_tibble
         ),
@@ -811,38 +811,38 @@ fit_psbulk_feature_matrix_model <- function(psbulk_feature_matrix, extended_dono
 
   # Fit model based on analysis_type
   random_effect <- model_list$random_effect
-  DGE_list_fit <- if (analysis_type == "limma_duplicateCorrelation") {
+  gene_expression_list_fit <- if (analysis_type == "limma_duplicateCorrelation") {
     # Limma with duplicateCorrelation for random effects
     # Apply voom transformation only for count data; use EList directly for non-count data
     expression_object <- if (is_count_data) {
-      limma::voom(DGE_list, design = design_matrix, plot = FALSE)
+      limma::voom(gene_expression_list, design = design_matrix, plot = FALSE)
     } else {
-      DGE_list
+      gene_expression_list
     }
-    corfit <- limma::duplicateCorrelation(expression_object, design = design_matrix, block = DGE_list$samples[[random_effect]])
+    corfit <- limma::duplicateCorrelation(expression_object, design = design_matrix, block = gene_expression_list$samples[[random_effect]])
     expression_object |>
-      limma::lmFit(design = design_matrix, correlation = corfit$consensus, block = DGE_list$samples[[random_effect]]) |>
-      magrittr::inset2("samples", DGE_list$samples) |>
-      magrittr::inset2("data_matrix", dplyr::coalesce(DGE_list$E, DGE_list$counts))
+      limma::lmFit(design = design_matrix, correlation = corfit$consensus, block = gene_expression_list$samples[[random_effect]]) |>
+      magrittr::inset2("samples", gene_expression_list$samples) |>
+      magrittr::inset2("data_matrix", dplyr::coalesce(gene_expression_list$E, gene_expression_list$counts))
   } else if (analysis_type == "edgeR") {
     # EdgeR for count data without random effects
-    DGE_list |>
+    gene_expression_list |>
       edgeR::estimateDisp.DGEList(design = design_matrix) |>
       edgeR::glmQLFit(design = design_matrix, robust = TRUE)
   } else {
     # limma_basic as fallback for continuous data or insufficient parameters
-    DGE_list |>
+    gene_expression_list |>
       limma::lmFit(design = design_matrix) |>
-      magrittr::inset2("samples", DGE_list$samples) |>
-      magrittr::inset2("data_matrix", DGE_list$E %||% DGE_list$counts)
+      magrittr::inset2("samples", gene_expression_list$samples) |>
+      magrittr::inset2("data_matrix", gene_expression_list$E %||% gene_expression_list$counts)
   }
   # add basis matrix possibly required for complex contrast functions
-  psbulk_feature_matrix_fit <- DGE_list_fit |>
+  pseudobulk_feature_matrix_fit <- gene_expression_list_fit |>
     magrittr::inset2("basis_matrix", basis_matrix) |>
     magrittr::inset2("analysis_type", analysis_type) |>
-    magrittr::inset2("samples", DGE_list$samples) |>
-    magrittr::inset2("data_matrix", DGE_list$E %||% DGE_list$counts)
-  return(psbulk_feature_matrix_fit)
+    magrittr::inset2("samples", gene_expression_list$samples) |>
+    magrittr::inset2("data_matrix", gene_expression_list$E %||% gene_expression_list$counts)
+  return(pseudobulk_feature_matrix_fit)
 }
 
 #' Get design and basis matrices from model list
@@ -902,14 +902,14 @@ normalize_contrast_result <- function(contrast_result, contrast_name) {
 #'
 #' Build model contrast vectors from literal specs or custom contrast functions.
 #'
-#' @param psbulk_feature_matrix_fit Fitted pseudobulk model object with design
+#' @param pseudobulk_feature_matrix_fit Fitted pseudobulk model object with design
 #'   matrix and sample metadata.
 #' @param model_list Model specification list containing literal contrast specs
 #'   and/or custom contrast function names.
 #' @return A named list whose elements preserve downstream branch or plot labels where applicable.
 #' @keywords internal
 
-get_contrast_vec_list <- function(psbulk_feature_matrix_fit, model_list) {
+get_contrast_vec_list <- function(pseudobulk_feature_matrix_fit, model_list) {
   contrast_specs <- model_list$contrast_specs_vec
   suppress_warnings_matching(
     expr = {
@@ -922,7 +922,7 @@ get_contrast_vec_list <- function(psbulk_feature_matrix_fit, model_list) {
 
         contrast_vec_list <- c(
           contrast_vec_list,
-          limma::makeContrasts(contrasts = sanitized_contrast_specs, levels = psbulk_feature_matrix_fit$design) |>
+          limma::makeContrasts(contrasts = sanitized_contrast_specs, levels = pseudobulk_feature_matrix_fit$design) |>
             as.data.frame() |>
             as.list() |>
             purrr::set_names(names(contrast_specs))
@@ -935,7 +935,7 @@ get_contrast_vec_list <- function(psbulk_feature_matrix_fit, model_list) {
           model_list$contrast_functions |>
           as.list() |>
           purrr::imap(\(function_name, contrast_name) {
-            get(function_name)(psbulk_feature_matrix_fit) |>
+            get(function_name)(pseudobulk_feature_matrix_fit) |>
               normalize_contrast_result(contrast_name = contrast_name)
           }) |>
           purrr::flatten()
@@ -958,20 +958,20 @@ get_contrast_vec_list <- function(psbulk_feature_matrix_fit, model_list) {
   )
 }
 
-#' Get psbulk feature model contrast support
+#' Get pseudobulk feature model contrast support
 #'
 #' Count samples and donors supporting each side of a model contrast.
 #'
-#' @param psbulk_feature_matrix_fit Fitted pseudobulk model object with design
+#' @param pseudobulk_feature_matrix_fit Fitted pseudobulk model object with design
 #'   matrix and sample metadata.
 #' @param contrast_vec Named numeric contrast vector aligned to the model coefficient columns.
 #' @return One-row tibble describing contrast support: sample counts, donor
 #'   counts, positive/negative side counts, paired donors, and analysis type.
 #' @keywords internal
 
-get_psbulk_feature_model_contrast_support <- function(psbulk_feature_matrix_fit, contrast_vec) {
-  design_matrix <- psbulk_feature_matrix_fit$design
-  samples_tibble <- psbulk_feature_matrix_fit$samples |>
+get_pseudobulk_feature_model_contrast_support <- function(pseudobulk_feature_matrix_fit, contrast_vec) {
+  design_matrix <- pseudobulk_feature_matrix_fit$design
+  samples_tibble <- pseudobulk_feature_matrix_fit$samples |>
     tibble::as_tibble(rownames = ".sample_id")
   if (!"ID" %in% names(samples_tibble)) {
     samples_tibble <- samples_tibble |>
@@ -1002,26 +1002,26 @@ get_psbulk_feature_model_contrast_support <- function(psbulk_feature_matrix_fit,
     n_negative_samples = n_negative_samples,
     min_group_n_samples = min(n_positive_samples, n_negative_samples),
     n_paired_donors = sum(donor_support_tibble$has_positive_side & donor_support_tibble$has_negative_side),
-    analysis_type = psbulk_feature_matrix_fit$analysis_type %||% NA_character_
+    analysis_type = pseudobulk_feature_matrix_fit$analysis_type %||% NA_character_
   )
 }
 
-get_psbulk_cell_type_contrasts <- function(psbulk_feature_matrix_fit, joint_contrast_vec) {
-  separate_contrast_vec <- drop(t(psbulk_feature_matrix_fit$joint_from_separate) %*% joint_contrast_vec)
-  names(separate_contrast_vec) <- colnames(psbulk_feature_matrix_fit$joint_from_separate)
+get_pseudobulk_cell_type_contrasts <- function(pseudobulk_feature_matrix_fit, joint_contrast_vec) {
+  separate_contrast_vec <- drop(t(pseudobulk_feature_matrix_fit$joint_from_separate) %*% joint_contrast_vec)
+  names(separate_contrast_vec) <- colnames(pseudobulk_feature_matrix_fit$joint_from_separate)
 
-  purrr::map(names(psbulk_feature_matrix_fit$cell_type_fits), function(cell_type) {
+  purrr::map(names(pseudobulk_feature_matrix_fit$cell_type_fits), function(cell_type) {
     coefficient_prefix <- paste0(cell_type, "::")
     coefficient_idx <- startsWith(names(separate_contrast_vec), coefficient_prefix)
     cell_type_contrast <- separate_contrast_vec[coefficient_idx]
     names(cell_type_contrast) <- substring(names(cell_type_contrast), nchar(coefficient_prefix) + 1L)
     cell_type_contrast
   }) |>
-    purrr::set_names(names(psbulk_feature_matrix_fit$cell_type_fits)) |>
+    purrr::set_names(names(pseudobulk_feature_matrix_fit$cell_type_fits)) |>
     purrr::keep(~ any(abs(.x) > sqrt(.Machine$double.eps)))
 }
 
-get_psbulk_cell_type_contrast_statistics <- function(cell_type_fit, contrast_vec) {
+get_pseudobulk_cell_type_contrast_statistics <- function(cell_type_fit, contrast_vec) {
   contrast_fit <- cell_type_fit |>
     limma::contrasts.fit(contrast = contrast_vec) |>
     limma::eBayes()
@@ -1039,7 +1039,7 @@ get_psbulk_cell_type_contrast_statistics <- function(cell_type_fit, contrast_vec
   )
 }
 
-get_psbulk_paired_cell_type_contrast_statistics <- function(psbulk_feature_matrix_fit, cell_type_contrasts) {
+get_pseudobulk_paired_cell_type_contrast_statistics <- function(pseudobulk_feature_matrix_fit, cell_type_contrasts) {
   active_cell_types <- names(cell_type_contrasts)
   reference_contrast <- cell_type_contrasts[[1]]
   reference_unit <- reference_contrast / sqrt(sum(reference_contrast^2))
@@ -1055,9 +1055,9 @@ get_psbulk_paired_cell_type_contrast_statistics <- function(psbulk_feature_matri
   )
 
   cell_type_statistics <- purrr::map2(
-    psbulk_feature_matrix_fit$cell_type_fits[active_cell_types],
+    pseudobulk_feature_matrix_fit$cell_type_fits[active_cell_types],
     cell_type_contrasts,
-    get_psbulk_cell_type_contrast_statistics
+    get_pseudobulk_cell_type_contrast_statistics
   )
   common_feature_ids <- Reduce(intersect, purrr::map(cell_type_statistics, ~ .x$feature_id))
   assert_with_info(
@@ -1073,7 +1073,7 @@ get_psbulk_paired_cell_type_contrast_statistics <- function(psbulk_feature_matri
   variance <- Reduce(`+`, purrr::map(cell_type_statistics, ~ .x$standard_error^2))
   for (i in seq_len(length(active_cell_types) - 1L)) {
     for (j in seq.int(i + 1L, length(active_cell_types))) {
-      correlation <- psbulk_feature_matrix_fit$residual_correlations[
+      correlation <- pseudobulk_feature_matrix_fit$residual_correlations[
         active_cell_types[[i]], active_cell_types[[j]]
       ]
       covariance_sign <- sign(contrast_scales[[i]] * contrast_scales[[j]])
@@ -1105,14 +1105,14 @@ get_psbulk_paired_cell_type_contrast_statistics <- function(psbulk_feature_matri
   )
 }
 
-get_psbulk_cell_type_contrast_support <- function(
-  psbulk_feature_matrix_fit,
+get_pseudobulk_cell_type_contrast_support <- function(
+  pseudobulk_feature_matrix_fit,
   cell_type_contrasts,
   pairing_variable
 ) {
   active_cell_types <- names(cell_type_contrasts)
   sample_tibbles <- purrr::map(
-    psbulk_feature_matrix_fit$cell_type_fits[active_cell_types],
+    pseudobulk_feature_matrix_fit$cell_type_fits[active_cell_types],
     "samples"
   )
   assert_with_info(
@@ -1143,28 +1143,28 @@ get_psbulk_cell_type_contrast_support <- function(
     } else {
       0L
     },
-    analysis_type = psbulk_feature_matrix_fit$analysis_type %||% NA_character_
+    analysis_type = pseudobulk_feature_matrix_fit$analysis_type %||% NA_character_
   )
 }
 
-get_psbulk_cell_type_model_results <- function(
-  psbulk_feature_matrix_fit,
+get_pseudobulk_cell_type_model_results <- function(
+  pseudobulk_feature_matrix_fit,
   contrast_vec_list,
   pairing_variable = "donor_id"
 ) {
   purrr::imap(
     contrast_vec_list,
     function(contrast_vec, contrast_name) {
-      cell_type_contrasts <- get_psbulk_cell_type_contrasts(psbulk_feature_matrix_fit, contrast_vec)
+      cell_type_contrasts <- get_pseudobulk_cell_type_contrasts(pseudobulk_feature_matrix_fit, contrast_vec)
       statistics <- if (length(cell_type_contrasts) == 1L) {
         cell_type <- names(cell_type_contrasts)[[1]]
-        get_psbulk_cell_type_contrast_statistics(
-          psbulk_feature_matrix_fit$cell_type_fits[[cell_type]],
+        get_pseudobulk_cell_type_contrast_statistics(
+          pseudobulk_feature_matrix_fit$cell_type_fits[[cell_type]],
           cell_type_contrasts[[cell_type]]
         )
       } else {
-        get_psbulk_paired_cell_type_contrast_statistics(
-          psbulk_feature_matrix_fit,
+        get_pseudobulk_paired_cell_type_contrast_statistics(
+          pseudobulk_feature_matrix_fit,
           cell_type_contrasts
         )
       }
@@ -1177,8 +1177,8 @@ get_psbulk_cell_type_model_results <- function(
         ) |>
         dplyr::arrange(PValue) |>
         dplyr::bind_cols(
-          get_psbulk_cell_type_contrast_support(
-            psbulk_feature_matrix_fit = psbulk_feature_matrix_fit,
+          get_pseudobulk_cell_type_contrast_support(
+            pseudobulk_feature_matrix_fit = pseudobulk_feature_matrix_fit,
             cell_type_contrasts = cell_type_contrasts,
             pairing_variable = pairing_variable
           )
@@ -1187,90 +1187,90 @@ get_psbulk_cell_type_model_results <- function(
   )
 }
 
-#' Get psbulk feature model results
+#' Get pseudobulk feature model results
 #'
 #' Run configured contrasts and collect pseudobulk model test results.
 #'
-#' @param psbulk_feature_matrix_fit Fitted pseudobulk model object, either an
+#' @param pseudobulk_feature_matrix_fit Fitted pseudobulk model object, either an
 #'   edgeR GLM fit or limma/voom fit.
-#' @param psbulk_feature_dynamic_tibble Dynamic-branch metadata row describing the model, contrast, and feature matrix being processed.
+#' @param pseudobulk_feature_dynamic_tibble Dynamic-branch metadata row describing the model, contrast, and feature matrix being processed.
 #' @return Long differential-result tibble with one row per feature/contrast,
 #'   model metadata, and contrast-support diagnostics.
 #' @keywords internal
 
-get_psbulk_feature_model_results <- function(psbulk_feature_matrix_fit, psbulk_feature_dynamic_tibble) {
-  model_list <- psbulk_feature_dynamic_tibble$model[[1]]
-  contrast_vec_list <- get_contrast_vec_list(psbulk_feature_matrix_fit, model_list)
+get_pseudobulk_feature_model_results <- function(pseudobulk_feature_matrix_fit, pseudobulk_feature_dynamic_tibble) {
+  model_list <- pseudobulk_feature_dynamic_tibble$model[[1]]
+  contrast_vec_list <- get_contrast_vec_list(pseudobulk_feature_matrix_fit, model_list)
 
-  test_table_list <- if (inherits(psbulk_feature_matrix_fit, "psbulk_cell_type_fit")) {
-    get_psbulk_cell_type_model_results(
-      psbulk_feature_matrix_fit,
+  test_table_list <- if (inherits(pseudobulk_feature_matrix_fit, "pseudobulk_cell_type_fit")) {
+    get_pseudobulk_cell_type_model_results(
+      pseudobulk_feature_matrix_fit,
       contrast_vec_list,
       pairing_variable = model_list$pairing_variable %||% model_list$random_effect %||% "donor_id"
     )
-  } else if (class(psbulk_feature_matrix_fit) == "DGEGLM") {
+  } else if (class(pseudobulk_feature_matrix_fit) == "DGEGLM") {
     purrr::imap(
       contrast_vec_list,
-      ~ edgeR::glmQLFTest(psbulk_feature_matrix_fit, contrast = .x)$table |>
+      ~ edgeR::glmQLFTest(pseudobulk_feature_matrix_fit, contrast = .x)$table |>
         dplyr::rename(AveExpr = logCPM) |>
         tibble::rownames_to_column("feature_id") |>
         dplyr::mutate(FDR = stats::p.adjust(PValue, method = "BH"), contrast = .y) |>
-        dplyr::bind_cols(get_psbulk_feature_model_contrast_support(psbulk_feature_matrix_fit, .x))
+        dplyr::bind_cols(get_pseudobulk_feature_model_contrast_support(pseudobulk_feature_matrix_fit, .x))
     )
-  } else if (class(psbulk_feature_matrix_fit) == "MArrayLM") {
+  } else if (class(pseudobulk_feature_matrix_fit) == "MArrayLM") {
     purrr::imap(
       contrast_vec_list,
-      ~ psbulk_feature_matrix_fit |>
+      ~ pseudobulk_feature_matrix_fit |>
         limma::contrasts.fit(contrast = .x) |>
         limma::eBayes() |>
         limma::topTable(coef = 1, number = Inf) |>
         dplyr::rename(PValue = P.Value, FDR = adj.P.Val) |>
         tibble::rownames_to_column("feature_id") |>
         dplyr::mutate(contrast = .y) |>
-        dplyr::bind_cols(get_psbulk_feature_model_contrast_support(psbulk_feature_matrix_fit, .x))
+        dplyr::bind_cols(get_pseudobulk_feature_model_contrast_support(pseudobulk_feature_matrix_fit, .x))
     ) # format to EdgeR style
   }
 
   formatted_out <- test_table_list |>
     dplyr::bind_rows() |>
     dplyr::mutate(
-      cell_type_subset = psbulk_feature_dynamic_tibble$cell_type_subset,
-      model = psbulk_feature_dynamic_tibble$model_name
+      cell_type_subset = pseudobulk_feature_dynamic_tibble$cell_type_subset,
+      model = pseudobulk_feature_dynamic_tibble$model_name
     ) |>
     tibble::as_tibble()
 
   return(formatted_out)
 }
 
-#' Get psbulk DX significant elements tibble
+#' Get pseudobulk differential significant elements tibble
 #'
 #' Extract significant pseudobulk differential features at an FDR threshold.
 #'
-#' @param combined_psbulk_DX_results_tibble Combined differential-results tibble across models and contrasts.
+#' @param combined_pseudobulk_differential_results_tibble Combined differential-results tibble across models and contrasts.
 #' @param FDR_threshold Adjusted-P-value cutoff used to classify features as significant.
 #' @param FDR_col Name of the adjusted-P-value column to threshold, commonly `FDR`.
 #' @return A tibble with stable identifiers and derived columns consumed by downstream targets.
 #' @keywords internal
 
-get_psbulk_DX_significant_elements_tibble <- function(combined_psbulk_DX_results_tibble, FDR_threshold = 0.05, FDR_col = "FDR") {
-  psbulk_DX_results_tibble <- combined_psbulk_DX_results_tibble |>
+get_pseudobulk_differential_significant_elements_tibble <- function(combined_pseudobulk_differential_results_tibble, FDR_threshold = 0.05, FDR_col = "FDR") {
+  pseudobulk_differential_results_tibble <- combined_pseudobulk_differential_results_tibble |>
     dplyr::bind_rows()
 
-  if (nrow(psbulk_DX_results_tibble) == 0) {
+  if (nrow(pseudobulk_differential_results_tibble) == 0) {
     return(tibble::tibble(model = character(), contrast = character(), direction = character(), n_significant = integer(), n_signed = integer()))
   }
 
   assert_with_info(
-    FDR_col %in% names(psbulk_DX_results_tibble),
-    glue_info = "psbulk_DX_results_tibble must contain the requested FDR column: {FDR_col}."
+    FDR_col %in% names(pseudobulk_differential_results_tibble),
+    glue_info = "pseudobulk_differential_results_tibble must contain the requested FDR column: {FDR_col}."
   )
 
-  significant_elements_tibble <- psbulk_DX_results_tibble |>
+  significant_elements_tibble <- pseudobulk_differential_results_tibble |>
     dplyr::filter(.data[[FDR_col]] < FDR_threshold, logFC != 0) |>
     dplyr::mutate(direction = dplyr::if_else(logFC > 0, "up", "down")) |>
     dplyr::count(model, contrast, direction, name = "n_significant")
 
-  psbulk_DX_results_tibble |>
+  pseudobulk_differential_results_tibble |>
     dplyr::distinct(model, contrast) |>
     tidyr::expand_grid(direction = c("down", "up")) |>
     dplyr::left_join(significant_elements_tibble, by = c("model", "contrast", "direction")) |>
@@ -1280,7 +1280,7 @@ get_psbulk_DX_significant_elements_tibble <- function(combined_psbulk_DX_results
     )
 }
 
-plot_psbulk_DX_significant_elements <- function(significant_elements_tibble, modality = "features") {
+plot_pseudobulk_differential_significant_elements <- function(significant_elements_tibble, modality = "features") {
   contrast_levels <- significant_elements_tibble |>
     dplyr::summarise(total_significant = sum(n_significant), .by = contrast) |>
     dplyr::arrange(total_significant, contrast) |>
@@ -1304,7 +1304,7 @@ plot_psbulk_DX_significant_elements <- function(significant_elements_tibble, mod
     ggplot2::theme(legend.position = "bottom")
 }
 
-#' Plot psbulk DX significant elements modality distribution
+#' Plot pseudobulk differential significant elements modality distribution
 #'
 #' Plot the modality/category composition of significant differential features.
 #'
@@ -1312,7 +1312,7 @@ plot_psbulk_DX_significant_elements <- function(significant_elements_tibble, mod
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for `save_plots_structured()` or composition.
 #' @keywords internal
 
-plot_psbulk_DX_significant_elements_modality_distribution <- function(significant_elements_modality_distribution_tibble) {
+plot_pseudobulk_differential_significant_elements_modality_distribution <- function(significant_elements_modality_distribution_tibble) {
   if (nrow(significant_elements_modality_distribution_tibble) == 0) {
     return(structure(list(), class = c("empty_plot_list", "list")))
   }
@@ -1328,7 +1328,7 @@ plot_psbulk_DX_significant_elements_modality_distribution <- function(significan
       model_tibble |>
         dplyr::mutate(
           contrast = factor(contrast, levels = contrast_levels),
-          modality = get_mixsorted_factor(modality)
+          modality = get_mixsorted_factor(stringr::str_replace_all(modality, "_", " "))
         ) |>
         ggplot2::ggplot(ggplot2::aes(x = contrast, y = prop_significant, fill = modality)) +
         ggplot2::geom_col(position = ggplot2::position_dodge(width = 0.8), width = 0.7) +
@@ -1365,26 +1365,26 @@ get_cameraPR_statistic <- function(contrast_statistics) {
   }
 }
 
-#' Get GSEA results
+#' Get gene-set enrichment results
 #'
 #' Run competitive limma cameraPR gene-set tests for pseudobulk contrasts.
 #'
-#' @param psbulk_feature_matrix_fit Fitted pseudobulk model object.
+#' @param pseudobulk_feature_matrix_fit Fitted pseudobulk model object.
 #' @param gene_sets Named list of detected gene identifiers per gene set.
-#' @param psbulk_feature_dynamic_tibble Dynamic-branch metadata row describing the model, contrast, and feature matrix being processed.
+#' @param pseudobulk_feature_dynamic_tibble Dynamic-branch metadata row describing the model, contrast, and feature matrix being processed.
 #' @param min_genes_per_set Minimum number of contrast-tested genes required per gene set.
 #' @return Competitive cameraPR result tibble for each contrast and gene set.
 #' @keywords internal
 
-get_GSEA_results <- function(
-  psbulk_feature_matrix_fit,
+get_gene_set_enrichment_results <- function(
+  pseudobulk_feature_matrix_fit,
   gene_sets,
-  psbulk_feature_dynamic_tibble,
+  pseudobulk_feature_dynamic_tibble,
   min_genes_per_set = 10L
 ) {
-  contrast_statistics <- get_psbulk_feature_model_results(
-    psbulk_feature_matrix_fit = psbulk_feature_matrix_fit,
-    psbulk_feature_dynamic_tibble = psbulk_feature_dynamic_tibble
+  contrast_statistics <- get_pseudobulk_feature_model_results(
+    pseudobulk_feature_matrix_fit = pseudobulk_feature_matrix_fit,
+    pseudobulk_feature_dynamic_tibble = pseudobulk_feature_dynamic_tibble
   ) |>
     dplyr::mutate(cameraPR_statistic = get_cameraPR_statistic(dplyr::pick(dplyr::everything()))) |>
     dplyr::filter(is.finite(cameraPR_statistic))
@@ -1415,8 +1415,8 @@ get_GSEA_results <- function(
           method = "cameraPR",
           `-log10(PValue)` = -log10(PValue),
           `-log10(FDR)` = -log10(FDR),
-          cell_type_subset = psbulk_feature_dynamic_tibble$cell_type_subset,
-          model = psbulk_feature_dynamic_tibble$model_name,
+          cell_type_subset = pseudobulk_feature_dynamic_tibble$cell_type_subset,
+          model = pseudobulk_feature_dynamic_tibble$model_name,
           color_category = dplyr::case_when(
             FDR < 0.05 & Direction == "Up" ~ "SigUP",
             FDR < 0.05 & Direction == "Down" ~ "SigDown",
@@ -1426,32 +1426,32 @@ get_GSEA_results <- function(
     })
 }
 
-#' Plot psbulk DGE volcano
+#' Plot pseudobulk gene expression volcano
 #'
 #' Plot a pseudobulk differential gene-expression volcano for one contrast.
 #' Optional feature labels affect displayed text only; joins retain feature IDs.
 #'
-#' @param psbulk_DX_results_tibble Differential result tibble with model,
+#' @param pseudobulk_differential_results_tibble Differential result tibble with model,
 #'   contrast, feature, statistics, and significance columns.
 #' @param x_val Column name mapped to the volcano plot x-axis.
 #' @param y_val Column name mapped to the volcano plot y-axis, usually a P-value/FDR-derived statistic.
-#' @param psbulk_DX_top_features_tibble Optional top-feature annotations used for
+#' @param pseudobulk_differential_top_features_tibble Optional top-feature annotations used for
 #'   volcano labels.
-#' @param psbulk_DX_top_feature_OT_evidence_tibble Optional Open Targets evidence
+#' @param pseudobulk_differential_top_feature_open_targets_evidence_tibble Optional Open Targets evidence
 #'   annotations for labelled genes.
 #' @param feature_labels Named character vector of display labels keyed by feature ID.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for `save_plots_structured()` or composition.
 #' @keywords internal
 
-plot_psbulk_DGE_volcano <- function(
-  psbulk_DX_results_tibble,
+plot_pseudobulk_feature_volcano <- function(
+  pseudobulk_differential_results_tibble,
   x_val = "logFC",
   y_val = c("log10pvalue", "log10FDR")[1],
-  psbulk_DX_top_features_tibble = tibble::tibble(feature_id = character()),
-  psbulk_DX_top_feature_OT_evidence_tibble = tibble::tibble(feature_id = character(), OT_GWAS_evidence = logical()),
+  pseudobulk_differential_top_features_tibble = tibble::tibble(feature_id = character()),
+  pseudobulk_differential_top_feature_open_targets_evidence_tibble = tibble::tibble(feature_id = character(), OT_GWAS_evidence = logical()),
   feature_labels = character()
 ) {
-  test_results_formatted_tibble <- psbulk_DX_results_tibble |>
+  test_results_formatted_tibble <- pseudobulk_differential_results_tibble |>
     dplyr::mutate(
       log10FDR = -log10(FDR),
       log10pvalue = -log10(PValue),
@@ -1460,12 +1460,12 @@ plot_psbulk_DGE_volcano <- function(
     ) |>
     dplyr::ungroup()
 
-  top_features <- psbulk_DX_top_features_tibble |>
-    dplyr::filter(.data$contrast %in% unique(psbulk_DX_results_tibble$contrast)) |>
+  top_features <- pseudobulk_differential_top_features_tibble |>
+    dplyr::filter(.data$contrast %in% unique(pseudobulk_differential_results_tibble$contrast)) |>
     dplyr::pull(feature_id) |>
     unique()
 
-  OT_evidence_tibble <- psbulk_DX_top_feature_OT_evidence_tibble |>
+  OT_evidence_tibble <- pseudobulk_differential_top_feature_open_targets_evidence_tibble |>
     dplyr::select(feature_id, OT_GWAS_evidence) |>
     dplyr::distinct(feature_id, .keep_all = TRUE)
 
@@ -1478,7 +1478,25 @@ plot_psbulk_DGE_volcano <- function(
       feature_label = dplyr::coalesce(unname(feature_labels[as.character(feature_id)]), as.character(feature_id))
     )
 
-  volcano_plot <- ggplot2::ggplot(test_results_w_GWAS_evidence_tibble, ggplot2::aes(x = .data[[x_val]], y = .data[[y_val]], shape = FDR < 0.05)) +
+  plot_tibble <- test_results_w_GWAS_evidence_tibble |>
+    dplyr::select(dplyr::all_of(c(x_val, y_val)), FDR, OT_GWAS_evidence, feature_label, feature_id)
+  label_tibble <- plot_tibble |>
+    dplyr::filter(feature_id %in% top_features, FDR < 0.05)
+
+  build_pseudobulk_feature_volcano_plot(
+    plot_tibble, label_tibble, x_val, y_val, has_OT_evidence,
+    title = stringr::str_c(unique(test_results_formatted_tibble$model), ": ", unique(test_results_formatted_tibble$contrast))
+  )
+}
+
+build_pseudobulk_feature_volcano_plot <- function(plot_tibble, label_tibble, x_val, y_val, has_OT_evidence, title) {
+  force(plot_tibble)
+  force(label_tibble)
+  force(x_val)
+  force(y_val)
+  force(has_OT_evidence)
+  force(title)
+  ggplot2::ggplot(plot_tibble, ggplot2::aes(x = .data[[x_val]], y = .data[[y_val]], shape = FDR < 0.05)) +
     {
       if (has_OT_evidence) {
         ggplot2::geom_point(ggplot2::aes(color = OT_GWAS_evidence), alpha = 0.5)
@@ -1487,14 +1505,14 @@ plot_psbulk_DGE_volcano <- function(
       }
     } +
     ggplot2::scale_shape_manual(values = c("TRUE" = 16, "FALSE" = 1)) +
-    ggplot2::labs(title = paste("Differential feature evidence:", stringr::str_c(unique(test_results_formatted_tibble$model), ": ", unique(test_results_formatted_tibble$contrast))),
+    ggplot2::labs(title = paste("Differential feature evidence:", title),
       subtitle = stringr::str_wrap("Look for sizeable effects with FDR support; positive values follow the positive model-contrast direction.", width = 100),
       caption = stringr::str_wrap(paste("Points are tested features; filled points mark BH FDR < 0.05 within this model and contrast. The x-axis uses the fitted model effect (log2 fold change for gene counts; activity-scale difference for activity models).",
         "Labels are selected from the top nominal-p features and shown only when FDR < 0.05. Open Targets colours, when present, describe external evidence and do not prove causality."), width = 110),
       x = "Fitted effect (model scale)", y = if (y_val == "log10FDR") "-log10(BH FDR)" else "-log10(nominal p-value)",
       shape = "BH FDR < 0.05", colour = "Open Targets evidence") +
     ggrepel::geom_text_repel(
-      data = dplyr::filter(test_results_w_GWAS_evidence_tibble, feature_id %in% top_features, FDR < 0.05),
+      data = label_tibble,
       ggplot2::aes(label = feature_label),
       size = 2,
       min.segment.length = 0,
@@ -1502,33 +1520,30 @@ plot_psbulk_DGE_volcano <- function(
     ) +
     ggplot2::scale_x_continuous(limits = symmetric_limits) +
     ggplot2::theme(legend.position = "bottom")
-  # scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.5)) +
-
-  volcano_plot
 }
 
 
-plot_psbulk_DGE_volcanoes <- function(
-  psbulk_DX_results_tibble,
-  psbulk_DX_top_features_tibble = tibble::tibble(feature_id = character()),
-  psbulk_DX_top_feature_OT_evidence_tibble = tibble::tibble(feature_id = character(), OT_GWAS_evidence = logical()),
+plot_pseudobulk_feature_volcanoes <- function(
+  pseudobulk_differential_results_tibble,
+  pseudobulk_differential_top_features_tibble = tibble::tibble(feature_id = character()),
+  pseudobulk_differential_top_feature_open_targets_evidence_tibble = tibble::tibble(feature_id = character(), OT_GWAS_evidence = logical()),
   feature_labels = character()
 ) {
-  psbulk_DX_results_tibble |>
+  pseudobulk_differential_results_tibble |>
     group_split_by("contrast") |>
     purrr::map(
-      ~ plot_psbulk_DGE_volcano(
-        psbulk_DX_results_tibble = .x,
-        psbulk_DX_top_features_tibble = psbulk_DX_top_features_tibble,
-        psbulk_DX_top_feature_OT_evidence_tibble = psbulk_DX_top_feature_OT_evidence_tibble,
+      ~ plot_pseudobulk_feature_volcano(
+        pseudobulk_differential_results_tibble = .x,
+        pseudobulk_differential_top_features_tibble = pseudobulk_differential_top_features_tibble,
+        pseudobulk_differential_top_feature_open_targets_evidence_tibble = pseudobulk_differential_top_feature_open_targets_evidence_tibble,
         feature_labels = feature_labels
       )
     )
 }
 
-#' Plot a formatted psbulk DCA volcano
+#' Plot a formatted pseudobulk chromatin accessibility volcano
 #'
-#' Construct a DCA volcano from minimal point and label tibbles.
+#' Construct a chromatin accessibility volcano from minimal point and label tibbles.
 #'
 #' @param plot_tibble Point data containing `logFC`, the requested y-value
 #'   column, `type`, and `sig`.
@@ -1539,12 +1554,16 @@ plot_psbulk_DGE_volcanoes <- function(
 #' @return A ggplot ready for saving or composition.
 #' @keywords internal
 
-plot_psbulk_DCA_volcano_tibble <- function(
+plot_pseudobulk_chromatin_accessibility_volcano_tibble <- function(
   plot_tibble,
   label_tibble,
   y_val,
   title
 ) {
+  force(plot_tibble)
+  force(label_tibble)
+  force(y_val)
+  force(title)
   ggplot2::ggplot(
     plot_tibble,
     ggplot2::aes(x = logFC, y = .data[[y_val]], color = type)
@@ -1574,19 +1593,19 @@ plot_psbulk_DCA_volcano_tibble <- function(
     ignore_aes_in_color_legend()
 }
 
-#' Plot psbulk DCA volcano
+#' Plot pseudobulk chromatin accessibility volcano
 #'
 #' Plot differential chromatin-accessibility peaks as genomic volcano panels.
 #'
-#' @param psbulk_DX_results_tibble_per_contrast Differential accessibility result
+#' @param pseudobulk_differential_results_tibble_per_contrast Differential accessibility result
 #'   tibble for one contrast, including peak IDs, log fold changes, and statistics.
 #' @param ATAC_consensus_peak_GRanges GRanges object containing ATAC consensus peak GRanges coordinates and metadata.
 #' @param y_val Column name mapped to the volcano plot y-axis, usually a P-value/FDR-derived statistic.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
-plot_psbulk_DCA_volcano <- function(
-  psbulk_DX_results_tibble_per_contrast,
+plot_pseudobulk_chromatin_accessibility_volcano <- function(
+  pseudobulk_differential_results_tibble_per_contrast,
   ATAC_consensus_peak_GRanges,
   y_val = c("log10pvalue", "log10FDR")
 ) {
@@ -1599,7 +1618,7 @@ plot_psbulk_DCA_volcano <- function(
       geneName = dplyr::case_when(is.na(geneName) ~ region_vec, .default = geneName)
     )
 
-  combined_coef_test_results_formatted <- psbulk_DX_results_tibble_per_contrast |>
+  combined_coef_test_results_formatted <- pseudobulk_differential_results_tibble_per_contrast |>
     dplyr::select(feature_id, logFC, PValue, contrast, model) |>
     dplyr::left_join(annot_tibble, by = c("feature_id" = "region_vec")) |>
     dplyr::mutate(
@@ -1623,7 +1642,7 @@ plot_psbulk_DCA_volcano <- function(
     dplyr::arrange(dplyr::desc(importance)) |>
     dplyr::slice_head(n = 30)
 
-  plot_psbulk_DCA_volcano_tibble(
+  plot_pseudobulk_chromatin_accessibility_volcano_tibble(
     plot_tibble = combined_coef_test_results_formatted |>
       dplyr::select(logFC, dplyr::all_of(y_val), type, sig),
     label_tibble = top_peaks_tibble |>
@@ -1638,39 +1657,39 @@ plot_psbulk_DCA_volcano <- function(
 }
 
 
-plot_psbulk_DCA_volcanoes <- function(psbulk_DX_results_tibble, ATAC_consensus_peak_GRanges) {
-  psbulk_DX_results_tibble |>
+plot_pseudobulk_chromatin_accessibility_volcanoes <- function(pseudobulk_differential_results_tibble, ATAC_consensus_peak_GRanges) {
+  pseudobulk_differential_results_tibble |>
     group_split_by("contrast") |>
     purrr::map(
-      ~ plot_psbulk_DCA_volcano(
-        psbulk_DX_results_tibble_per_contrast = .x,
+      ~ plot_pseudobulk_chromatin_accessibility_volcano(
+        pseudobulk_differential_results_tibble_per_contrast = .x,
         ATAC_consensus_peak_GRanges = ATAC_consensus_peak_GRanges
       )
     )
 }
 
 
-plot_GSEA_results <- function(GSEA_results_tibble) {
-  if (nrow(GSEA_results_tibble) == 0) {
+plot_gene_set_enrichment_results <- function(gene_set_enrichment_results_tibble) {
+  if (nrow(gene_set_enrichment_results_tibble) == 0) {
     return(structure(list(), class = c("empty_plot_list", "list")))
   }
 
-  GSEA_results_tibble |>
+  gene_set_enrichment_results_tibble |>
     group_split_by("contrast") |>
-    purrr::map(plot_GSEA_contrast_results)
+    purrr::map(plot_gene_set_enrichment_contrast_results)
 }
 
 
-#' Plot GSEA contrast results
+#' Plot gene-set enrichment contrast results
 #'
 #' Plot top competitive cameraPR terms for one pseudobulk contrast.
 #'
-#' @param GSEA_results_tibble GSEA result tibble with contrast, pathway, enrichment score, and adjusted P-value columns.
+#' @param gene_set_enrichment_results_tibble gene-set enrichment result tibble with contrast, pathway, enrichment score, and adjusted P-value columns.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for `save_plots_structured()` or composition.
 #' @keywords internal
 
-plot_GSEA_contrast_results <- function(GSEA_results_tibble) {
-  plotting_tibble <- GSEA_results_tibble |>
+plot_gene_set_enrichment_contrast_results <- function(gene_set_enrichment_results_tibble) {
+  plotting_tibble <- gene_set_enrichment_results_tibble |>
     dplyr::mutate(
       ID = stringr::str_remove(ID, "^HALLMARK_|^WP_|^GOBP_|^GOCC_|^GOMF_|^HP_|^REACTOME_|^PID_|^MODULE_|^GAVISH_3CA_|^KEGG_"),
       ID = stringr::str_replace_all(ID, "_", " "),
@@ -1682,7 +1701,15 @@ plot_GSEA_contrast_results <- function(GSEA_results_tibble) {
       )
     ) |>
     dplyr::slice_min(PValue, n = 25, with_ties = FALSE) |>
-    dplyr::mutate(ID = stats::reorder(ID, signed_log10_FDR))
+    dplyr::mutate(ID = stats::reorder(ID, signed_log10_FDR)) |>
+    dplyr::select(ID, signed_log10_FDR, FDR, model, contrast)
+
+  build_gene_set_enrichment_plot(plotting_tibble)
+}
+
+# Keep the plot environment separate from the full enrichment results.
+build_gene_set_enrichment_plot <- function(plotting_tibble) {
+  force(plotting_tibble)
 
   ggplot2::ggplot(
     plotting_tibble,
@@ -1720,9 +1747,16 @@ plot_GSEA_contrast_results <- function(GSEA_results_tibble) {
     )
 }
 
-plot_psbulk_DX_PValue_density <- function(combined_psbulk_DX_results_tibble) {
-  combined_psbulk_DX_results_tibble |>
-    dplyr::mutate(model = get_mixsorted_factor(model)) |>
+plot_pseudobulk_p_value_distribution <- function(combined_pseudobulk_differential_results_tibble) {
+  combined_pseudobulk_differential_results_tibble |>
+    dplyr::transmute(PValue, model = get_mixsorted_factor(model)) |>
+    build_pseudobulk_p_value_distribution_plot()
+}
+
+# Force the compact input so its promise cannot retain the preparation scope.
+build_pseudobulk_p_value_distribution_plot <- function(plotting_tibble) {
+  force(plotting_tibble)
+  plotting_tibble |>
     ggplot2::ggplot(ggplot2::aes(x = PValue, color = model)) +
     ggplot2::geom_density() +
     ggplot2::facet_wrap(~model, scales = "free_y") +

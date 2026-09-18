@@ -139,7 +139,7 @@ read_CollecTRI_human_network <- function(network_csv) {
 #' Convert cluster-donor pseudobulk counts to filtered log-CPM values and infer
 #' one signed ULM activity score per CollecTRI regulator and sample.
 #'
-#' @param psbulk_GEX_counts_matrix Gene-by-pseudobulk-sample count matrix.
+#' @param pseudobulk_GEX_counts_matrix Gene-by-pseudobulk-sample count matrix.
 #' @param CollecTRI_network_tibble Signed CollecTRI network with `source`,
 #'   `target`, and `mor` columns.
 #' @param min_targets Minimum detected regulon targets required per source.
@@ -147,26 +147,26 @@ read_CollecTRI_human_network <- function(network_csv) {
 #' @keywords internal
 
 get_pseudobulk_CollecTRI_TF_activity_matrix <- function(
-  psbulk_GEX_counts_matrix,
+  pseudobulk_GEX_counts_matrix,
   CollecTRI_network_tibble,
   min_targets = 5L
 ) {
-  counts_matrix <- if (inherits(psbulk_GEX_counts_matrix, "IterableMatrix")) {
-    methods::as(psbulk_GEX_counts_matrix, "dgCMatrix")
+  counts_matrix <- if (inherits(pseudobulk_GEX_counts_matrix, "IterableMatrix")) {
+    methods::as(pseudobulk_GEX_counts_matrix, "dgCMatrix")
   } else {
-    psbulk_GEX_counts_matrix
+    pseudobulk_GEX_counts_matrix
   }
 
-  sample_tibble <- get_psbulk_sample_tibble(counts_matrix)
-  DGE_list <- edgeR::DGEList(counts = counts_matrix)
+  sample_tibble <- get_pseudobulk_sample_tibble(counts_matrix)
+  gene_expression_list <- edgeR::DGEList(counts = counts_matrix)
   expressed_features <- edgeR::filterByExpr(
-    DGE_list,
+    gene_expression_list,
     group = sample_tibble$cluster
   )
-  DGE_list <- edgeR::normLibSizes(
-    DGE_list[expressed_features, , keep.lib.sizes = FALSE]
+  gene_expression_list <- edgeR::normLibSizes(
+    gene_expression_list[expressed_features, , keep.lib.sizes = FALSE]
   )
-  log_CPM_matrix <- edgeR::cpm(DGE_list, log = TRUE, prior.count = 2)
+  log_CPM_matrix <- edgeR::cpm(gene_expression_list, log = TRUE, prior.count = 2)
 
   activity_matrix <- decoupleR::run_ulm(
     mat = log_CPM_matrix,
@@ -250,16 +250,16 @@ get_CollecTRI_JASPAR_family_map <- function(
 #' Match expression- and accessibility-derived TF results
 #'
 #' @param CollecTRI_results_tibble Differential CollecTRI activity results.
-#' @param DTFA_results_tibble Differential JASPAR motif-family accessibility results.
-#' @param DGE_results_tibble Differential gene-expression results.
+#' @param motif_family_accessibility_results_tibble Differential JASPAR motif-family accessibility results.
+#' @param gene_expression_results_tibble Differential gene-expression results.
 #' @param CollecTRI_JASPAR_family_map CollecTRI-to-JASPAR crosswalk.
 #' @return A regulator-level cross-modality comparison tibble.
 #' @keywords internal
 
-get_CollecTRI_DTFA_comparison_tibble <- function(
+get_CollecTRI_JASPAR_comparison_tibble <- function(
   CollecTRI_results_tibble,
-  DTFA_results_tibble,
-  DGE_results_tibble,
+  motif_family_accessibility_results_tibble,
+  gene_expression_results_tibble,
   CollecTRI_JASPAR_family_map
 ) {
   join_keys <- c("model", "contrast", "cell_type_subset")
@@ -273,29 +273,29 @@ get_CollecTRI_DTFA_comparison_tibble <- function(
       PValue_CollecTRI = PValue,
       FDR_CollecTRI = FDR
     )
-  DTFA_results <- DTFA_results_tibble |>
+  motif_family_accessibility_results <- motif_family_accessibility_results_tibble |>
     dplyr::bind_rows() |>
     dplyr::transmute(
       dplyr::across(dplyr::all_of(join_keys)),
       motif_family = feature_id,
-      logFC_DTFA = logFC,
-      t_DTFA = t,
-      PValue_DTFA = PValue,
-      FDR_DTFA = FDR
+      logFC_motif_family_accessibility = logFC,
+      t_motif_family_accessibility = t,
+      PValue_motif_family_accessibility = PValue,
+      FDR_motif_family_accessibility = FDR
     )
-  DGE_results <- DGE_results_tibble |>
+  gene_expression_results <- gene_expression_results_tibble |>
     dplyr::bind_rows()
-  DGE_t_statistic <- if ("t" %in% names(DGE_results)) {
-    DGE_results$t
+  gene_expression_t_statistic <- if ("t" %in% names(gene_expression_results)) {
+    gene_expression_results$t
   } else {
-    rep(NA_real_, nrow(DGE_results))
+    rep(NA_real_, nrow(gene_expression_results))
   }
-  DGE_results <- DGE_results |>
+  gene_expression_results <- gene_expression_results |>
     dplyr::transmute(
       dplyr::across(dplyr::all_of(join_keys)),
       source = stringr::str_to_upper(feature_id),
       logFC_TF_expression = logFC,
-      t_TF_expression = DGE_t_statistic,
+      t_TF_expression = gene_expression_t_statistic,
       FDR_TF_expression = FDR
     )
 
@@ -306,12 +306,12 @@ get_CollecTRI_DTFA_comparison_tibble <- function(
       relationship = "many-to-many"
     ) |>
     dplyr::left_join(
-      DTFA_results,
+      motif_family_accessibility_results,
       by = c(join_keys, "motif_family"),
       relationship = "many-to-one"
     ) |>
     dplyr::left_join(
-      DGE_results,
+      gene_expression_results,
       by = c(join_keys, "source"),
       relationship = "many-to-one"
     ) |>
@@ -319,10 +319,10 @@ get_CollecTRI_DTFA_comparison_tibble <- function(
       motif_mapping_status = dplyr::if_else(is.na(motif_family), "unmapped", "mapped"),
       direction_concordant = dplyr::if_else(
         motif_mapping_status == "mapped",
-        sign(t_CollecTRI) == sign(t_DTFA),
+        sign(t_CollecTRI) == sign(t_motif_family_accessibility),
         NA
       ),
-      jointly_FDR_significant = FDR_CollecTRI < 0.05 & FDR_DTFA < 0.05
+      jointly_FDR_significant = FDR_CollecTRI < 0.05 & FDR_motif_family_accessibility < 0.05
     ) |>
     dplyr::arrange(model, contrast, source, motif_family)
 }
@@ -330,16 +330,16 @@ get_CollecTRI_DTFA_comparison_tibble <- function(
 
 #' Collapse CollecTRI comparisons to motif families
 #'
-#' @param comparison_tibble Output from `get_CollecTRI_DTFA_comparison_tibble()`.
+#' @param comparison_tibble Output from `get_CollecTRI_JASPAR_comparison_tibble()`.
 #' @return One row per model, contrast, and mapped motif family.
 #' @keywords internal
 
-get_CollecTRI_DTFA_family_comparison_tibble <- function(comparison_tibble) {
+get_CollecTRI_JASPAR_family_comparison_tibble <- function(comparison_tibble) {
   comparison_tibble |>
-    dplyr::filter(motif_mapping_status == "mapped", is.finite(t_DTFA)) |>
+    dplyr::filter(motif_mapping_status == "mapped", is.finite(t_motif_family_accessibility)) |>
     dplyr::summarise(
       t_CollecTRI = stats::median(t_CollecTRI, na.rm = TRUE),
-      t_DTFA = dplyr::first(t_DTFA),
+      t_motif_family_accessibility = dplyr::first(t_motif_family_accessibility),
       t_TF_expression = if (all(is.na(t_TF_expression))) {
         NA_real_
       } else {
@@ -347,49 +347,49 @@ get_CollecTRI_DTFA_family_comparison_tibble <- function(comparison_tibble) {
       },
       min_source_FDR_CollecTRI = min(FDR_CollecTRI, na.rm = TRUE),
       any_source_FDR_significant = any(FDR_CollecTRI < 0.05, na.rm = TRUE),
-      FDR_DTFA = dplyr::first(FDR_DTFA),
+      FDR_motif_family_accessibility = dplyr::first(FDR_motif_family_accessibility),
       n_CollecTRI_sources = dplyr::n_distinct(source),
       CollecTRI_sources = paste(sort(unique(source)), collapse = ";"),
       .by = c(model, contrast, cell_type_subset, motif_family)
     ) |>
     dplyr::mutate(
-      direction_concordant = sign(t_CollecTRI) == sign(t_DTFA),
-      jointly_FDR_significant = any_source_FDR_significant & FDR_DTFA < 0.05
+      direction_concordant = sign(t_CollecTRI) == sign(t_motif_family_accessibility),
+      jointly_FDR_significant = any_source_FDR_significant & FDR_motif_family_accessibility < 0.05
     )
 }
 
 
-#' Summarize CollecTRI-DTFA concordance by contrast
+#' Summarize CollecTRI-JASPAR concordance by contrast
 #'
-#' @param family_comparison_tibble Family-level CollecTRI-DTFA comparison.
+#' @param family_comparison_tibble Family-level CollecTRI-JASPAR comparison.
 #' @return Contrast-level mapping, direction, significance, and correlation summary.
 #' @keywords internal
 
-get_CollecTRI_DTFA_concordance_tibble <- function(family_comparison_tibble) {
+get_CollecTRI_JASPAR_concordance_tibble <- function(family_comparison_tibble) {
   family_comparison_tibble |>
     dplyr::summarise(
       n_motif_families = dplyr::n(),
       spearman_rho = if (dplyr::n() >= 3L) {
-        stats::cor(t_CollecTRI, t_DTFA, method = "spearman", use = "complete.obs")
+        stats::cor(t_CollecTRI, t_motif_family_accessibility, method = "spearman", use = "complete.obs")
       } else {
         NA_real_
       },
       direction_concordance = mean(direction_concordant, na.rm = TRUE),
       n_CollecTRI_FDR = sum(any_source_FDR_significant, na.rm = TRUE),
-      n_DTFA_FDR = sum(FDR_DTFA < 0.05, na.rm = TRUE),
+      n_motif_family_accessibility_FDR = sum(FDR_motif_family_accessibility < 0.05, na.rm = TRUE),
       n_joint_FDR = sum(jointly_FDR_significant, na.rm = TRUE),
       .by = c(model, contrast, cell_type_subset)
     )
 }
 
 
-#' Plot CollecTRI-DTFA concordance across contrasts
+#' Plot CollecTRI-JASPAR concordance across contrasts
 #'
-#' @param concordance_tibble Contrast-level CollecTRI-DTFA summary.
+#' @param concordance_tibble Contrast-level CollecTRI-JASPAR summary.
 #' @return A list of ggplots split by pseudobulk model.
 #' @keywords internal
 
-plot_CollecTRI_DTFA_concordance <- function(concordance_tibble) {
+plot_CollecTRI_JASPAR_concordance <- function(concordance_tibble) {
   concordance_tibble |>
     group_split_by("model") |>
     purrr::imap(\(model_tibble, model_name) {
@@ -430,7 +430,7 @@ plot_CollecTRI_DTFA_concordance <- function(concordance_tibble) {
         ggplot2::labs(
           title = paste("Expression-accessibility TF concordance:", stringr::str_replace_all(model_name, "_", " ")),
           subtitle = stringr::str_wrap("Look for consistent ranks and directions across modalities; motif-family agreement does not identify one causal TF.", width = 100),
-          x = "Spearman correlation: CollecTRI versus DTFA t-statistics",
+          x = "Spearman correlation: CollecTRI activity versus motif accessibility t-statistics",
           y = NULL,
           color = "Direction concordance",
           caption = paste0(

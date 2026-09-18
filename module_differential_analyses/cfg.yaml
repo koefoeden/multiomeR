@@ -1,5 +1,5 @@
 ENCODE_heart_LV_6x:
-  differential_analyses_psbulk_DX_models:
+  differential_analyses_pseudobulk_models:
     cardiomyocyte_sex:
       cell_type_subset: Cardiomyocyte
       design_matrix_func_name: ~
@@ -7,7 +7,7 @@ ENCODE_heart_LV_6x:
       random_effect: ~
       contrast_specs_vec:
         male_vs_female: sexMale
-  differential_analyses_DCTC_models:
+  differential_analyses_cell_type_composition_models:
     sex_abundance:
       formula: ~ sexMale
       contrast_specs_vec:

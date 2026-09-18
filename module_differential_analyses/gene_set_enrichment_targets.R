@@ -12,27 +12,21 @@ rlang::list2(
   targets::tar_target(
     name = results,
     description = "Run competitive cameraPR enrichment on pseudobulk contrasts for each gene-set subcollection [part_of_graph:differential_analyses]",
-    command = get_GSEA_results(
-      psbulk_feature_matrix_fit = feature_matrix_fit.DGE,
+    command = get_gene_set_enrichment_results(
+      pseudobulk_feature_matrix_fit = feature_matrix_fit.gene_expression,
       gene_sets = gene_sets,
-      psbulk_feature_dynamic_tibble = dynamic_tibble.DGE
+      pseudobulk_feature_dynamic_tibble = dynamic_tibble.gene_expression
     ),
-    pattern = map(dynamic_tibble.DGE, feature_matrix_fit.DGE)
-  ),
-  targets::tar_target(
-    name = plots,
-    description = "Plot competitive cameraPR results per contrast",
-    command = plot_GSEA_results(results),
-    pattern = map(results)
+    pattern = map(dynamic_tibble.gene_expression, feature_matrix_fit.gene_expression)
   ),
   tarchetypes::tar_file(
-    name = plots_file,
+    name = enrichment_plots,
     description = "Save competitive cameraPR plots per model and contrast to file. [checkpoint:differential_analyses]",
     command = save_plots_structured(
-      plots = plots,
-      override_suffix = dynamic_tibble.DGE$model_name,
+      plots = plot_gene_set_enrichment_results(results),
+      override_suffix = dynamic_tibble.gene_expression$model_name,
       dyn_suffix_in_subdir = TRUE
     ),
-    pattern = map(plots, dynamic_tibble.DGE)
+    pattern = map(results, dynamic_tibble.gene_expression)
   )
 )

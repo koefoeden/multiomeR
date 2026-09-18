@@ -741,6 +741,18 @@ fit_pseudobulk_feature_matrix_model <- function(pseudobulk_feature_matrix, exten
   design_matrix <- design_and_basis_matrices$design_matrix
   basis_matrix <- design_and_basis_matrices$basis_matrix
 
+  rownames(design_matrix) <- final_sample_tibble$ID
+
+  if (!is.null(model_list$cell_type_formula) && model_list$cell_type_formula != "") {
+    return(fit_pseudobulk_feature_matrix_by_cell_type(
+      pseudobulk_feature_matrix = pseudobulk_feature_matrix,
+      final_sample_tibble = final_sample_tibble,
+      model_list = model_list,
+      design_matrix = design_matrix,
+      basis_matrix = basis_matrix
+    ))
+  }
+
   n_samples <- nrow(design_matrix)
   n_params <- ncol(design_matrix)
   residual_df <- n_samples - n_params

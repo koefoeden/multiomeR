@@ -25,6 +25,11 @@ cat("manifest ok\n")
 EOF
 ```
 
+For configuration-directory changes, compare resolved settings and manifest
+names before/after, check the default and selected directories independently,
+and exercise invalid selections and disabled modules without changing the live
+selector or store. Shared documentation examples use `configuration/`.
+
 Finish code edits with:
 
 ```bash

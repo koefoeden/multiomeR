@@ -16,3 +16,8 @@ lines in pull requests or release notes.
 
 List multiple earliest affected targets when no single upstream target captures
 the invalidation boundary. Do not replace target names with vague families.
+
+For PR and release summaries, use commit impact lines as evidence and reconcile
+them with the final diff against the destination base or previous release.
+Drop effects from reverted or superseded changes, deduplicate surviving lines,
+and retain the cascading classification when it applies to the same target.

@@ -54,26 +54,18 @@ For new or revised plots, follow the [plot annotation specification](../.agents/
 Use a succinct descriptive title, a subtitle explaining how to read and interpret
 the plot, and a caption with relevant implementation details.
 
-Before opening a pull request, run the smallest validation that matches the change:
-
-```bash
-pixi shell
-R
-```
-
-```r
-targets::tar_manifest(callr_function = NULL)
-targets::tar_make(names = matches("healthy_PBMC_human|blood_human|brain_mouse"))
-```
+Use the [validation workflow](../.agents/skills/multiomer-validation-workflow/SKILL.md)
+for the smallest check that matches the change. Documentation-only changes need
+link and whitespace checks. For target-graph changes, construct the manifest
+through Pixi; run only the affected target and configured scope when runtime
+proof is needed. Avoid broad dataset runs as a routine PR check.
 
 ```bash
 git diff --check
 ```
 
-For target behavior changes, also run a narrow `targets::tar_make()` selection that exercises the affected target family.
-
 For BPCells-native scoring-helper changes, run the synthetic parity check:
 
 ```bash
-pixi run test-scoring-parity
+pixi run --use-environment-activation-cache test-scoring-parity
 ```

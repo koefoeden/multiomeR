@@ -1037,7 +1037,7 @@ plot_GWAS_variant_contribution_detail_panels <- function(plot_records, variants,
   tracks <- list(contribution_track, gene_track, coverage_track, peak_track)
   tracks[1:3] <- purrr::map(tracks[1:3], \(plot) plot + ggplot2::theme(axis.text.x = ggplot2::element_blank(), axis.ticks.x = ggplot2::element_blank()))
   tracks[2:4] <- purrr::map(tracks[2:4], \(plot) plot + ggplot2::theme(strip.text.x = ggplot2::element_blank()))
-  patchwork::wrap_plots(tracks, ncol = 1,
+  plot <- patchwork::wrap_plots(tracks, ncol = 1,
     heights = grid::unit.c(grid::unit(c(1, max(1, 0.3 * max(c(0, genes$lane))),
       0.45 * nlevels(coverage$group)), "null"), grid::unit(4, "mm")), guides = "collect") +
     patchwork::plot_annotation(
@@ -1049,6 +1049,9 @@ plot_GWAS_variant_contribution_detail_panels <- function(plot_records, variants,
         "Facet genes are the top available Open Targets L2G predictions, not established causal genes. Gene arrows show strand; gene bodies are clipped to each window and overlapping labels may be omitted. Coverage uses cached depth-normalized 500-bin profiles, clipped at each locus's 99.9th percentile; displayed coverage ranges differ between loci."), 180),
       theme = ggplot2::theme(plot.caption = ggplot2::element_text(hjust = 0))) &
     ggplot2::theme(legend.position = "top")
+  # The composite already has a title; prevent list saving from titling its last track.
+  plot$labels$title <- ggplot2::waiver()
+  plot
 }
 
 #' Plot one aligned locus figure per GWAS and focal cell type

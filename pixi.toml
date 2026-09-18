@@ -177,6 +177,10 @@ r-fastmatch = ">=1.1_8,<2" # indirect dependency of Signac v2
 r-rcpproll = ">=0.3.2,<0.4" # indirect dependency of Signac v2
 bioconductor-sparsematrixstats = ">=1.22.0,<2" # indirect dependency of Signac v2
 bioconductor-decoupler = ">=2.16.0,<3"
+r-lme4 = "==2.0.1"
+r-pbkrtest = ">=0.5.5,<0.6"
+r-rcpp = "==1.1.1_1.1"
+r-rcppeigen = ">=0.3.4.0.2,<0.4"
 
 [feature.dev.dependencies]
 python = ">=3.12,<3.13"

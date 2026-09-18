@@ -127,11 +127,13 @@ testthat::test_that("detail loci combine both rankings without duplicates for el
   ordinary <- tibble::tibble(GWAS_ID = "trait", cluster = "focal", studyLocusId = letters[1:4],
     deviation = 0.2, z = 1, relative_deviation = 2, relative_deviation_contribution = c(4, 3, 2, 1))
   weighted <- dplyr::mutate(ordinary, relative_deviation_contribution = c(1, 4, 2, 3))
-  selected <- select_GWAS_detail_loci(ordinary, weighted, n_top_loci = 2L)
-  testthat::expect_setequal(selected$studyLocusId, c("a", "b", "d"))
-  testthat::expect_equal(selected$selection[selected$studyLocusId == "b"], "Ordinary + Absolute effect")
+  effects <- tibble::tibble(GWAS_ID = "trait", studyLocusId = letters[1:4],
+    locus_effect_magnitude = c(1, 2, 4, 3), effect_variantId = letters[1:4], locus_effect_source = "Lead SNP")
+  selected <- select_GWAS_detail_loci(ordinary, weighted, effects, n_top_loci = 2L)
+  testthat::expect_setequal(selected$studyLocusId, c("a", "b", "c"))
+  testthat::expect_equal(selected$selection[selected$studyLocusId == "b"], "Ordinary + Balanced effect priority")
   testthat::expect_false(anyDuplicated(selected$studyLocusId) > 0L)
-  testthat::expect_setequal(select_GWAS_detail_loci(ordinary, weighted[0, ], n_top_loci = 2L)$studyLocusId, c("a", "b"))
+  testthat::expect_setequal(select_GWAS_detail_loci(ordinary, weighted[0, ], effects[0, ], n_top_loci = 2L)$studyLocusId, c("a", "b"))
   testthat::expect_s3_class(plot_GWAS_absolute_effect_locus_bars(weighted[0, ]), "empty_plot_list")
 })
 
@@ -139,9 +141,41 @@ testthat::test_that("detail loci combine both rankings without duplicates for el
   ordinary <- tibble::tibble(GWAS_ID = "trait", cluster = letters[1:5], studyLocusId = "locus",
     deviation = c(1, 1, -1, 1, 1), z = c(1, 0, 2, NA, 0.9), relative_deviation_contribution = 1)
   weighted <- dplyr::mutate(ordinary, deviation = c(1, 1, -1, 1, 1), z = c(0, 1, 2, NA, 0.9))
-  testthat::expect_setequal(select_GWAS_detail_loci(ordinary, weighted)$cluster, c("a", "b"))
+  testthat::expect_setequal(select_GWAS_detail_loci(ordinary, weighted, get_GWAS_locus_prioritization_effects(list()))$cluster, c("a", "b"))
   testthat::expect_equal(nrow(select_GWAS_detail_loci(ordinary, weighted, min_z = 3)), 0L)
   testthat::expect_identical(prepare_GWAS_variant_contribution_detail_records(
     locus_contribution_tibble = ordinary, absolute_effect_locus_tibble = weighted, min_z = 3), list())
   testthat::expect_s3_class(plot_GWAS_variant_contribution_details(list()), "empty_plot_list")
+})
+
+
+testthat::test_that("balanced locus priority uses the lower percentile and is scale invariant", {
+  data <- tibble::tibble(GWAS_ID = "trait", cluster = "cell", studyLocusId = letters[1:5],
+    deviation = 1, z = 2, relative_deviation_contribution = c(100, 80, -70, 2, 1))
+  effects <- tibble::tibble(GWAS_ID = "trait", studyLocusId = letters[1:5],
+    locus_effect_magnitude = c(1, 80, 70, 100, NA), effect_variantId = letters[1:5], locus_effect_source = "Lead SNP")
+  x <- select_GWAS_detail_loci(data, data[0, ], effects, n_top_loci = 1L)
+  testthat::expect_setequal(x$studyLocusId, c("a", "b"))
+  testthat::expect_equal(x$priority_score[x$studyLocusId == "b"], 2/3)
+  testthat::expect_equal(x$priority_score, pmin(x$contribution_percentile,x$effect_percentile))
+  y <- select_GWAS_detail_loci(data, data[0, ], dplyr::mutate(effects,locus_effect_magnitude=locus_effect_magnitude*100),n_top_loci=1L)
+  testthat::expect_equal(x$studyLocusId,y$studyLocusId)
+  # Tied contributions use average ranks; a singleton gets 100% on both criteria.
+  tied <- dplyr::mutate(data, relative_deviation_contribution = 1)
+  z <- select_GWAS_detail_loci(tied, data[0, ], effects, n_top_loci=5L)
+  testthat::expect_equal(z$contribution_percentile[is.finite(z$priority_score)], rep(.5,4))
+  single <- select_GWAS_detail_loci(data[1,],data[0,],effects,n_top_loci=1L)
+  testthat::expect_equal(single$priority_score,1)
+})
+
+testthat::test_that("locus effects prefer the lead and explicitly identify proxies", {
+  record <- make_test_record("trait",c(2,5,NA,-3))
+  record$credible_set_GRanges$variantId <- letters[1:4]
+  record$credible_set_GRanges$lead_variantId <- c("b","b","c","c")
+  x <- get_GWAS_locus_prioritization_effects(list(record))
+  testthat::expect_equal(x$effect_variantId,c("b","d"))
+  testthat::expect_equal(x$locus_effect_magnitude,c(5,3))
+  testthat::expect_equal(x$locus_effect_source,c("Lead SNP","Highest-PIP proxy"))
+  record$credible_set_GRanges$beta <- rep(NA_real_,4)
+  testthat::expect_equal(nrow(get_GWAS_locus_prioritization_effects(list(record))),0L)
 })

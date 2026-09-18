@@ -118,7 +118,8 @@ rlang::list2(
       absolute_effect_locus_tibble = chromVAR_absolute_effect_locus_contribution_tibble.cell_type_pseudobulk,
       consensus_peak_GRanges = consensus_peak_GRanges.ATAC,
       fragments = combined_BPCells_fragment_obj.ATAC,
-      metadata_tibble = metadata_w_cell_types_tibble.WNN
+      metadata_tibble = metadata_w_cell_types_tibble.WNN,
+      min_z = genetic_enrichment_variant_detail_min_z
     ),
     pattern = map(chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk),
     iteration = "list",
@@ -132,15 +133,18 @@ rlang::list2(
         GWAS_input_records = GWAS_input_records,
         gene_GRanges = marker_validated_Ensembl_annotations_GRanges_list$genes,
         locus_contribution_tibble = chromVAR_locus_contribution_tibble.cell_type_pseudobulk) |>
+      add_plot_parameters("module_genetic_enrichment/cfg.yaml",
+        genetic_enrichment_variant_detail_min_z = genetic_enrichment_variant_detail_min_z) |>
       save_plots_structured(
-        width = max(20, 6 * max(table(purrr::map_chr(
+        width = max(20, 6 * max(0, table(purrr::map_chr(
           chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk,
           \(record) record$variant_tibble$cluster[[1]])))),
         height = 15,
-        override_suffix = chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk[[1]]$GWAS_ID,
+        override_suffix = chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk$GWAS_ID[[1]],
         dyn_suffix_in_subdir = TRUE
       ),
-    pattern = map(chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk),
+    pattern = map(chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk,
+      chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk),
     iteration = "list",
     resources = get_tar_resources(RAM_GB_req = 8)
   )

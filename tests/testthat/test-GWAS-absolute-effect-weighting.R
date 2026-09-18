@@ -123,9 +123,9 @@ testthat::test_that("variant allocations exactly reproduce absolute-effect heatm
     fixture$records, dplyr::mutate(fixture$status, eligible = FALSE), peaks)), 0L)
 })
 
-testthat::test_that("detail loci combine both rankings without duplicates or changing focal cells", {
+testthat::test_that("detail loci combine both rankings without duplicates for eligible cells", {
   ordinary <- tibble::tibble(GWAS_ID = "trait", cluster = "focal", studyLocusId = letters[1:4],
-    relative_deviation = 2, relative_deviation_contribution = c(4, 3, 2, 1))
+    deviation = 0.2, z = 1, relative_deviation = 2, relative_deviation_contribution = c(4, 3, 2, 1))
   weighted <- dplyr::mutate(ordinary, relative_deviation_contribution = c(1, 4, 2, 3))
   selected <- select_GWAS_detail_loci(ordinary, weighted, n_top_loci = 2L)
   testthat::expect_setequal(selected$studyLocusId, c("a", "b", "d"))
@@ -133,4 +133,15 @@ testthat::test_that("detail loci combine both rankings without duplicates or cha
   testthat::expect_false(anyDuplicated(selected$studyLocusId) > 0L)
   testthat::expect_setequal(select_GWAS_detail_loci(ordinary, weighted[0, ], n_top_loci = 2L)$studyLocusId, c("a", "b"))
   testthat::expect_s3_class(plot_GWAS_absolute_effect_locus_bars(weighted[0, ]), "empty_plot_list")
+})
+
+ testthat::test_that("detail screening admits either positive analysis and skips empty coverage", {
+  ordinary <- tibble::tibble(GWAS_ID = "trait", cluster = letters[1:5], studyLocusId = "locus",
+    deviation = c(1, 1, -1, 1, 1), z = c(1, 0, 2, NA, 0.9), relative_deviation_contribution = 1)
+  weighted <- dplyr::mutate(ordinary, deviation = c(1, 1, -1, 1, 1), z = c(0, 1, 2, NA, 0.9))
+  testthat::expect_setequal(select_GWAS_detail_loci(ordinary, weighted)$cluster, c("a", "b"))
+  testthat::expect_equal(nrow(select_GWAS_detail_loci(ordinary, weighted, min_z = 3)), 0L)
+  testthat::expect_identical(prepare_GWAS_variant_contribution_detail_records(
+    locus_contribution_tibble = ordinary, absolute_effect_locus_tibble = weighted, min_z = 3), list())
+  testthat::expect_s3_class(plot_GWAS_variant_contribution_details(list()), "empty_plot_list")
 })

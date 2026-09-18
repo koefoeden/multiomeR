@@ -255,6 +255,9 @@ rlang::list2(
       ) +
         ggplot2::geom_col() +
         ggplot2::labs(
+          title = "Peak-gene analysis coverage and skipped groups",
+          subtitle = stringr::str_wrap("Check skipped analyses before interpreting sparse results; insufficient data are not evidence of absent associations.", width = 100),
+          caption = stringr::str_wrap("Bars count analysis branches by reported status within each cell group. A retained branch completed eligibility checks; it does not imply a significant link. Counts refer to computational branches, not cells, donors or peak-gene pairs.", width = 110),
           x = "Branches",
           y = "Cell group",
           fill = "Status"
@@ -643,7 +646,9 @@ rlang::list2(
           peak_gene_correlation_top_link_loci_tibble.peak_gene_correlation.WNN$cell_group[[1]],
           sep = " - "
         )
-      )
+      ) + patchwork::plot_annotation(
+        subtitle = stringr::str_wrap("Read candidate loops alongside local accessibility; arcs represent statistical associations, not measured chromatin contacts.", width = 100),
+        caption = stringr::str_wrap("Loops connect peak midpoints to gene TSSs for candidate links in this window (adjusted r >= 0.15, conditional BH FDR < 0.05, excluding self-promoters). Coverage uses 500 bins normalized by bin width and group depth, with extremes clipped at the 99.9th percentile. Groups use GEX-derived cell types; pooled coverage does not establish donor replication or causality.", width = 110))
 
       plot |>
         save_plots_structured(

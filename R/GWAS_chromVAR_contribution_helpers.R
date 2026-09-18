@@ -654,7 +654,10 @@ plot_GWAS_locus_contribution_heatmaps <- function(
       )
 
     combined_plot <- patchwork::wrap_plots(heatmap_plot, total_plot, nrow = 1, widths = c(5, 1.2)) +
-      patchwork::plot_annotation(title = GWAS_ID)
+      patchwork::plot_annotation(title = paste("Locus contributions to GWAS-linked accessibility:", GWAS_ID),
+        subtitle = stringr::str_wrap("Look for enrichment dominated by a few loci versus distributed support; the adjacent bar shows the total.", width = 100),
+        caption = stringr::str_wrap(paste("Loci are ranked by their largest absolute relative-deviation contribution across cell types; up to", n_top_loci,
+          "are shown individually. Remaining contributions are summed as Other positive/negative. Contributions sum to the total deviation standardized across cell types. Total-bar stars mark background Z >= 2 (*) or >= 3 (**), not FDR. Open Targets gene labels are prioritizations, not causal assignments."), width = 110))
     combined_plot$labels$title <- ggplot2::waiver()
     combined_plot
   })
@@ -777,8 +780,9 @@ plot_GWAS_locus_contribution_waterfall <- function(waterfall_tibble, title) {
     ggplot2::labs(
       x = "Credible-set locus (lead variant)",
       y = "Cumulative relative deviation",
-      title = title,
-      caption = "Labels show the top Open Targets L2G gene and score for each locus."
+      title = paste("Locus contributions:", title),
+      subtitle = stringr::str_wrap("Follow positive and negative steps to see which loci drive or offset the total; the ordering is not genomic.", width = 100),
+      caption = stringr::str_wrap("Step height is a locus's relative-deviation contribution; the final bar is their sum. Selected loci are shown individually; others are pooled by sign. Labels show the top Open Targets L2G gene and score, not a proven causal gene. These are descriptive contributions to a pooled cell-type score.", width = 110)
     ) +
     ggplot2::theme_minimal(base_size = 9) +
     ggplot2::theme(
@@ -1022,8 +1026,10 @@ plot_GWAS_variant_contribution_detail_record <- function(plot_record) {
       ),
       make_consensus_peak_locus_track(plot_record$consensus_peak_GRanges, plot_record$region)
     ),
-    title = plot_record$plot_title
-  )
+    title = paste("Variant contributions:", plot_record$plot_title)
+  ) + patchwork::plot_annotation(
+    subtitle = stringr::str_wrap("Compare variant contributions with nearby accessibility; a large contribution or peak overlap does not establish causality.", width = 100),
+    caption = stringr::str_wrap("Variant stems show signed relative-deviation contributions (red positive, blue negative); point size represents fine-mapping PIP. Coverage is depth-normalized in 500 bins and clipped at the 99.9th percentile, with the focal cell type highlighted. Consensus peaks provide genomic context; labels do not establish a target gene.", width = 110))
   detail_plot$labels$title <- ggplot2::waiver()
   detail_plot
 }

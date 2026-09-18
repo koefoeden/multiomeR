@@ -857,9 +857,11 @@ plot_peak_gene_correlation_aggregate_scatter <- function(plot_tibble) {
     ggplot2::geom_smooth(method = "lm", se = FALSE, color = "black", linewidth = 0.4) +
     ggplot2::labs(
       title = paste(plot_tibble$TargetGene[[1]], plot_tibble$peak[[1]], plot_tibble$primary_cell_group[[1]], sep = " - "),
-      subtitle = paste0("Donor/depth-adjusted r = ", round(plot_tibble$correlation[[1]], 3), "; conditional BH FDR = ", signif(plot_tibble$FDR[[1]], 3)),
+      subtitle = stringr::str_wrap("Check whether the trend is supported across donors or driven by a few aggregates; this is not a causal or population-level test.", width = 100),
       x = "ATAC log1p CPM residual", y = "GEX log1p CPM residual", color = "Donor",
-      caption = "Each point is a non-overlapping donor-by-state aggregate. No population-level significance claim."
+      caption = stringr::str_wrap(paste0("Each point is a non-overlapping donor-by-state aggregate in the named primary cell group; the line is a descriptive linear fit. Donor and depth effects are regressed from log1p CPM values. Reported adjusted r = ",
+        round(plot_tibble$correlation[[1]], 3), "; conditional BH FDR = ", signif(plot_tibble$FDR[[1]], 3),
+        ", adjusted across tested pairs within the cell group. Several points from one donor are not independent donor replicates."), width = 110)
     )
 }
 
@@ -1386,6 +1388,10 @@ plot_peak_gene_correlation_histogram <- function(
     ggplot2::geom_col(width = bin_width) +
     ggplot2::facet_wrap(~cell_group, scales = "free_y") +
     ggplot2::labs(
+      title = "Peak-gene correlation distributions by cell group",
+      subtitle = stringr::str_wrap("Look for shifts or long tails before focusing on selected links; correlation alone does not establish regulation.", width = 100),
+      caption = paste("All non-missing donor/depth-adjusted correlations in the result table; no FDR or enhancer filter is applied here. Bin width:", bin_width,
+        ". Facets have independent count scales; pair counts are not independent biological replicates."),
       x = "Donor/depth-adjusted correlation (exploratory candidates)",
       y = "Peak-gene pairs"
     )
@@ -1522,6 +1528,9 @@ plot_peak_gene_correlation_by_distance <- function(plot_tibble) {
     ggplot2::geom_line() +
     ggplot2::facet_wrap(~cell_group) +
     ggplot2::labs(
+      title = "Peak-gene correlation by distance from the gene TSS",
+      subtitle = stringr::str_wrap("Look for distance-dependent trends; nearby peaks are not necessarily regulatory and bin support may differ.", width = 100),
+      caption = stringr::str_wrap("Median donor/depth-adjusted correlation among non-missing, non-self-promoter pairs, with no FDR filter. Distances use absolute TSS separation in 5 kb bins; all distances at or above 250 kb share the final bin. The dashed line marks zero correlation.", width = 110),
       x = "Absolute TSS distance, kb",
       y = "Median correlation"
     )

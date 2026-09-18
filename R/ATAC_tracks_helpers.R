@@ -170,8 +170,12 @@ plot_coverage_at_region_BPCells <- function(
 
   BPCells::trackplot_combine(
     tracks = list(coverage_track, peak_track),
-    title = region_id
-  )
+    title = paste("ATAC coverage:", region_id)
+  ) + patchwork::plot_annotation(
+    subtitle = stringr::str_wrap("Compare local accessibility across groups; overlapping peaks do not prove regulation of a nearby gene.", width = 100),
+    caption = stringr::str_wrap(paste("Coverage uses 500 bins, normalized by bin width and summed group depth; extremes are clipped at the 99.9th percentile.",
+      "Depth denominator:", if ("atac_fragments" %in% colnames(metadata)) "total ATAC fragments." else "ATAC peak counts.",
+      "Groups:", label_plot_variable(group_cells_by_col), ". Tracks share the displayed coverage scale. Collapsed peaks are shown below; gene-centred windows extend 50 kb on each side."), width = 110))
 }
 
 #' Make BPCells ATAC coverage track from tibble

@@ -428,14 +428,15 @@ plot_CollecTRI_DTFA_concordance <- function(concordance_tibble) {
         ) +
         ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0.05, 0.2))) +
         ggplot2::labs(
-          title = stringr::str_replace_all(model_name, "_", " "),
+          title = paste("Expression-accessibility TF concordance:", stringr::str_replace_all(model_name, "_", " ")),
+          subtitle = stringr::str_wrap("Look for consistent ranks and directions across modalities; motif-family agreement does not identify one causal TF.", width = 100),
           x = "Spearman correlation: CollecTRI versus DTFA t-statistics",
           y = NULL,
           color = "Direction concordance",
           caption = paste0(
             "CollecTRI values are median regulator t-statistics for ",
             family_count_label,
-            " mapped motif families per contrast"
+            " mapped motif families per contrast. Colour: fraction with matching effect directions; joint labels count families significant in both analyses. Scores summarize family-level concordance, not independent donor replication."
           )
         ) +
         ggplot2::theme(legend.position = "bottom")

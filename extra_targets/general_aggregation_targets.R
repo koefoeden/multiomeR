@@ -68,6 +68,7 @@ rlang::list2(
     name = aggregation_excluded_barcodes_by_type_upset.1_pre_aggregation_QC,
     description = "Plot an UpSet plot of aggregation-level QC exclusion overlaps across all GEM wells and save to file. [checkpoint:1_pre-aggregation-QC]",
     command = plot_upset_from_excluded_BCs_list(
+      input_label = "barcodes in the full QC metadata across this aggregation",
       QC_excluded_BCs_list = aggregation_excluded_BCs_list,
       n_total = aggregation_unfiltered_cells_n
     ) |>
@@ -84,6 +85,7 @@ rlang::list2(
     name = aggregation_excluded_cellranger_only_barcodes_by_type_upset.1_pre_aggregation_QC,
     description = "Plot an UpSet plot of aggregation-level CellRanger-only QC exclusion overlaps across all GEM wells and save to file. [checkpoint:1_pre-aggregation-QC]",
     command = plot_upset_from_excluded_BCs_list(
+      input_label = "Cell Ranger-called nuclei across this aggregation",
       QC_excluded_BCs_list = aggregation_excluded_cellranger_only_BCs_list,
       n_total = nrow(dplyr::bind_rows(aggregation_cellranger_kept_metadata_tibble_syms))
     ) |>

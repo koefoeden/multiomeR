@@ -113,10 +113,11 @@ get_GEM_well_QC_exclude_threshold_tibble <- function(
 #'
 #' @param QC_excluded_BCs_list Named list of barcode vectors, one element per QC exclusion reason.
 #' @param n_total Denominator used when reporting exclusion-set and intersection percentages.
+#' @param input_label Human-readable input population used for the denominator.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
-plot_upset_from_excluded_BCs_list <- function(QC_excluded_BCs_list, n_total) {
+plot_upset_from_excluded_BCs_list <- function(QC_excluded_BCs_list, n_total, input_label = "input barcodes") {
   format_QC_percent <- function(percent) {
     dplyr::case_when(
       percent >= 10 ~ stringr::str_c(round(percent), "%"),
@@ -133,7 +134,8 @@ plot_upset_from_excluded_BCs_list <- function(QC_excluded_BCs_list, n_total) {
       ggplot2::ggplot() +
         ggplot2::annotate("text", x = 0, y = 0, label = "No excluded barcodes") +
         ggplot2::theme_void() +
-        ggplot2::labs(title = stringr::str_glue("Excluded barcodes by QC filter type (input barcodes: {n_total})"))
+        ggplot2::labs(title = "QC exclusion overlaps", subtitle = "No barcodes failed the supplied exclusion rules.",
+          caption = paste("Input:", n_total, input_label))
     )
   }
   if (length(set_names) > 30) {
@@ -233,5 +235,8 @@ plot_upset_from_excluded_BCs_list <- function(QC_excluded_BCs_list, n_total) {
 
   patchwork::plot_spacer() + bar_plot + set_size_plot + matrix_plot +
     patchwork::plot_layout(ncol = 2, widths = c(0.35, 1), heights = c(0.65, 0.35)) +
-    patchwork::plot_annotation(title = stringr::str_glue("Excluded barcodes by QC filter type (input barcodes: {n_total})"))
+    patchwork::plot_annotation(
+      title = "QC exclusion overlaps",
+      subtitle = stringr::str_wrap("Read each dot column as an exact combination of failed filters. Large intersections reveal shared causes of exclusion; side bars overlap and must not be summed.", width = 110),
+      caption = stringr::str_wrap(paste0("Denominator: ", n_total, " ", input_label, ". Top bars count mutually exclusive combinations; side bars count all barcodes failing each rule. Empty exclusion sets are omitted; labels below 0.1% are suppressed. Retained barcodes are included in the denominator but not drawn."), width = 110))
 }

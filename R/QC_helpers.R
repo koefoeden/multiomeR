@@ -1116,17 +1116,17 @@ plot_similarity_matrix_from_GRanges_list <- function(GRanges_list_in) {
 
 #' Summarize associations between WNN ATAC weight and metadata
 #'
-#' Uses all retained cells, pooled and within GEX-derived cell types. Returns
+#' Uses all retained cells, pooled and within named WNN clusters. Returns
 #' compact association, binned-trend and categorical-distribution tibbles;
 #' missing/constant variables retain explicit status and support counts.
 #' @param metadata Retained WNN analysis metadata with ATAC.weight and
-#'   PCA_harmony_SNN_cluster_cell_type (GEX-derived labels).
+#'   WNN_harmony_SNN_cluster_named (named WNN clusters).
 #' @param continuous_vars,categorical_vars Additional configured metadata names.
 #' @param n_bins Maximum number of quantile bins for continuous detail plots.
 #' @return Named list of associations, continuous_bins and categorical_quantiles.
 get_WNN_weight_metadata_summary <- function(metadata, continuous_vars = character(),
                                             categorical_vars = character(), n_bins = 20L) {
-  stopifnot(all(c("ATAC.weight", "PCA_harmony_SNN_cluster_cell_type") %in% names(metadata)),
+  stopifnot(all(c("ATAC.weight", "WNN_harmony_SNN_cluster_named") %in% names(metadata)),
     is.numeric(metadata$ATAC.weight), n_bins >= 2L,
     all(metadata$ATAC.weight[is.finite(metadata$ATAC.weight)] >= 0 &
       metadata$ATAC.weight[is.finite(metadata$ATAC.weight)] <= 1))
@@ -1149,11 +1149,11 @@ get_WNN_weight_metadata_summary <- function(metadata, continuous_vars = characte
     type = c(rep("continuous", length(continuous_vars)), rep("categorical", length(categorical_vars)))) |>
     dplyr::mutate(label = dplyr::coalesce(unname(c(continuous_labels, categorical_labels)[variable]),
       stringr::str_replace_all(variable, "_", " ")))
-  cell_type <- as.character(metadata$PCA_harmony_SNN_cluster_cell_type)
-  cell_type[is.na(cell_type) | !nzchar(cell_type)] <- "Missing GEX label"
-  cell_type_indices <- split(seq_len(nrow(metadata)), cell_type)
-  if (length(cell_type_indices)) names(cell_type_indices) <- paste0("GEX: ", names(cell_type_indices))
-  strata <- c(list("All retained cells" = seq_len(nrow(metadata))), cell_type_indices)
+  cluster <- as.character(metadata$WNN_harmony_SNN_cluster_named)
+  cluster[is.na(cluster) | !nzchar(cluster)] <- "Missing WNN cluster"
+  cluster_indices <- split(seq_len(nrow(metadata)), cluster)
+  if (length(cluster_indices)) names(cluster_indices) <- paste0("WNN: ", names(cluster_indices))
+  strata <- c(list("All retained cells" = seq_len(nrow(metadata))), cluster_indices)
   records <- purrr::imap(strata, function(idx, stratum) {
     weight <- metadata$ATAC.weight[idx]
     purrr::pmap(factors, function(variable, type, label) {
@@ -1204,7 +1204,24 @@ get_WNN_weight_metadata_summary <- function(metadata, continuous_vars = characte
     categorical_quantiles = dplyr::filter(details, type == "categorical"))
 }
 
-#' Plot pooled and within-GEX-cell-type WNN weight associations
+#' Order association profiles by available-value Euclidean distances.
+#' Entirely missing profiles are placed last; pairs without shared observations
+#' receive the largest observed distance for ordering only.
+order_WNN_association_profiles <- function(profiles) {
+  usable <- rowSums(is.finite(profiles)) > 0
+  selected <- which(usable)
+  if (length(selected) > 1L) {
+    distance <- stats::dist(profiles[selected, , drop = FALSE])
+    finite <- is.finite(distance)
+    if (any(finite)) {
+      distance[!finite] <- max(distance[finite])
+      selected <- selected[stats::hclust(distance, method = "average")$order]
+    }
+  }
+  rownames(profiles)[c(selected, which(!usable))]
+}
+
+#' Plot pooled and within-WNN-cluster weight associations
 #' @param summary Output of get_WNN_weight_metadata_summary().
 #' @return Named list of continuous and categorical association plots.
 plot_WNN_weight_metadata_associations <- function(summary) {
@@ -1219,15 +1236,25 @@ plot_WNN_weight_metadata_associations <- function(summary) {
       dplyr::mutate(stratum = factor(stratum, levels = unique(summary$associations$stratum)))
     if (nrow(data) == 0) return(empty_embedding_metadata_association_plot(
       "WNN modality-weight associations", paste("No available", kind, "factors")))
+    profiles <- data |>
+      dplyr::select(variable, stratum, metric) |>
+      tidyr::pivot_wider(names_from = stratum, values_from = metric) |>
+      tibble::column_to_rownames("variable") |>
+      as.matrix()
+    variable_order <- order_WNN_association_profiles(profiles)
+    label_order <- data$label[match(variable_order, data$variable)]
+    data <- data |>
+      dplyr::mutate(stratum = factor(stratum, levels = order_WNN_association_profiles(t(profiles))),
+        label = factor(label, levels = rev(unique(label_order))))
     plot <- ggplot2::ggplot(data, ggplot2::aes(x = stratum, y = label, fill = metric)) +
       ggplot2::geom_tile(colour = "white") +
       ggplot2::geom_text(ggplot2::aes(label = ifelse(is.na(metric), "NA", sprintf("%.2f", metric))), size = 2.7) +
       ggplot2::labs(title = paste("WNN ATAC-weight associations with", kind, "factors"),
-        subtitle = "Compare pooled and within-cell-type associations to identify patterns driven by cell-type composition.\nAssociations are descriptive and do not establish which factors cause the weights.",
+        subtitle = "Compare pooled and within-WNN-cluster associations; nearby rows and columns have similar association profiles.\nClusters are derived from WNN itself, so these are descriptive checks, not independent evidence of causes.",
         caption = stringr::str_wrap(paste(
           if (kind == "continuous") "Values are signed Spearman correlations, using complete cell pairs for each factor and stratum." else
             "Values are between-group sums of squares divided by total ATAC-weight sums of squares; high-cardinality factors can explain more variation by construction.",
-          "All retained WNN cells are used. Strata use GEX-derived labels, including unassigned labels when present. NA means insufficient or unusable data, or a constant factor/weight; support and reasons are retained in the summary. No cell-level significance tests."), 110),
+          "All retained WNN cells are used, pooled and within named WNN clusters. Rows and columns are ordered separately in each panel by average-linkage Euclidean distance on available associations, without standardization. Missing comparisons use the largest observed distance for ordering only; entirely missing profiles are placed last. NA means insufficient or unusable data, or a constant factor/weight. No cell-level significance tests."), 110),
         x = NULL, y = NULL) +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
         plot.caption = ggplot2::element_text(hjust = 0))
@@ -1235,56 +1262,6 @@ plot_WNN_weight_metadata_associations <- function(summary) {
       low = "#2166AC", mid = "white", high = "#B2182B", limits = c(-1, 1), na.value = "grey85", name = "Spearman rho") else
       plot + ggplot2::scale_fill_gradient(low = "white", high = "#2166AC", limits = c(0, 1), na.value = "grey85", name = "Variance fraction")
   })
-}
-
-#' Plot metadata trends and distributions of WNN ATAC weights
-#' @param summary Output of get_WNN_weight_metadata_summary().
-#' @return Named plot list; continuous panels are paginated by stratum, and
-#'   categorical panels by factor, stratum and up to 40 levels per page.
-plot_WNN_weight_metadata_details <- function(summary) {
-  plots <- list()
-  for (variable in unique(summary$continuous_bins$variable)) {
-    data <- dplyr::filter(summary$continuous_bins, .data$variable == .env$variable)
-    pages <- split(unique(data$stratum), ceiling(seq_along(unique(data$stratum)) / 6))
-    for (page in seq_along(pages)) {
-      panel <- dplyr::filter(data, stratum %in% pages[[page]]) |>
-        dplyr::mutate(stratum = factor(stratum, levels = pages[[page]]))
-      plots[[paste0(variable, "_", page)]] <- ggplot2::ggplot(panel, ggplot2::aes(x = x, y = median_weight)) +
-        ggplot2::geom_linerange(ggplot2::aes(ymin = q25, ymax = q75)) +
-        ggplot2::geom_point(ggplot2::aes(size = n)) +
-        ggplot2::facet_wrap(~stratum, ncol = 2) +
-        ggplot2::scale_y_continuous(limits = c(0, 1)) +
-        ggplot2::labs(title = paste("WNN ATAC weight and", unique(data$label)),
-          subtitle = "Look for nonlinear trends and differences between pooled and within-cell-type patterns.",
-          caption = stringr::str_wrap("Points: median ATAC weight within quantile bins; bars: interquartile range, not confidence intervals. Bin boundaries are calculated within each stratum without splitting tied values. All complete retained cells are used.", 110),
-          x = unique(data$label), y = "ATAC weight", size = "Cells in bin")
-    }
-  }
-  data <- summary$categorical_quantiles
-  for (variable in unique(data$variable)) {
-    for (stratum in unique(data$stratum[data$variable == variable])) {
-      panel <- dplyr::filter(data, .data$variable == .env$variable, .data$stratum == .env$stratum) |>
-        dplyr::arrange(median_weight, group)
-      pages <- split(seq_len(nrow(panel)), ceiling(seq_len(nrow(panel)) / 40))
-      for (page in seq_along(pages)) {
-        page_data <- panel[pages[[page]], ] |>
-          dplyr::mutate(group = factor(group, levels = group))
-        key <- paste(variable, stratum, page, sep = "_")
-        plots[[key]] <- ggplot2::ggplot(page_data, ggplot2::aes(y = group, x = median_weight)) +
-          ggplot2::geom_linerange(ggplot2::aes(xmin = q25, xmax = q75)) +
-          ggplot2::geom_point(ggplot2::aes(size = n)) +
-          ggplot2::scale_x_continuous(limits = c(0, 1)) +
-          ggplot2::labs(title = paste("WNN ATAC weight by", unique(panel$label)),
-            subtitle = stringr::str_wrap(paste(stratum, "— compare group medians and spread; differences can reflect composition or technical effects."), 100),
-            caption = stringr::str_wrap("Points: group medians; bars: interquartile ranges, not confidence intervals. Size: complete cells. Groups are ordered by median weight and paginated at 40 levels; donor and GEM-well plots are kept separate. All complete retained cells are used.", 110),
-            x = "ATAC weight", y = unique(panel$label), size = "Cells")
-      }
-    }
-  }
-  if (length(plots) == 0) plots$unavailable <- empty_embedding_metadata_association_plot(
-    "WNN modality-weight details", "No complete metadata-weight observations")
-  names(plots) <- make.unique(gsub("[^[:alnum:]_.-]", "_", names(plots)))
-  plots
 }
 
 #' Add cluster sizes and RNA/ATAC doublet evidence beside a marker dot plot

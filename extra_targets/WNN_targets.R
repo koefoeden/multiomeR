@@ -351,7 +351,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = WNN_weight_metadata_summary.WNN,
-      description = "Summarize retained-cell ATAC-weight associations, support and distributions, pooled and within GEX cell types",
+      description = "Summarize retained-cell ATAC-weight associations, support and distributions, pooled and within named WNN clusters",
       command = get_WNN_weight_metadata_summary(
         metadata = metadata_w_cell_types_analysis_tibble.WNN,
         continuous_vars = aggregation_continuous_vars %||% character(),
@@ -361,15 +361,8 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = WNN_weight_metadata_associations_plot.8_multimodal_QC,
-      description = "Plot continuous and categorical WNN-weight associations pooled and within GEX cell types. [checkpoint:8_multimodal-QC]",
+      description = "Plot continuous and categorical WNN-weight associations pooled and within named WNN clusters. [checkpoint:8_multimodal-QC]",
       command = plot_WNN_weight_metadata_associations(WNN_weight_metadata_summary.WNN) |>
-        save_plots_structured(),
-      resources = get_tar_resources(RAM_GB_req = 16)
-    ),
-    tarchetypes::tar_file(
-      name = WNN_weight_metadata_details_plots.8_multimodal_QC,
-      description = "Plot binned WNN-weight trends and categorical distributions with cell support. [checkpoint:8_multimodal-QC]",
-      command = plot_WNN_weight_metadata_details(WNN_weight_metadata_summary.WNN) |>
         save_plots_structured(),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),

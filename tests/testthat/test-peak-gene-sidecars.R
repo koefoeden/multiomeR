@@ -32,20 +32,21 @@ make_top_links <- function() {
   tibble::tibble(
     scatter_plot_name = c("link_1", "link_other_chr"),
     is_analyzable_link = c(TRUE, TRUE),
-    cell_group = c("T cell", "T cell"),
+    cell_group = c("B cell", "B cell"),
     chr = c("chr1", "chr2"),
     gene_matrix_feature = c("ENSG1", "ENSG1"),
     peak = c("chr1:100-200", "chr2:100-200"),
     TargetGeneID = c("ENSG1", "ENSG1"),
     TargetGene = c("GENE1", "GENE1"),
-    correlation = c(0.8, 0.7),
-    FDR = c(0.01, 0.02),
+    hierarchical_pvalue = c(0.01, 0.02),
+    hierarchical_df = c(5, 6),
+    hierarchical_FDR = c(0.02, 0.04),
     rank_in_cell_group = c(1L, 2L),
     rank_for_gene = c(1L, 1L)
   )
 }
 
-testthat::test_that("top-link aggregate values match the legacy result", {
+testthat::test_that("top-link aggregate values retain focal-group hierarchical evidence", {
   normalized_branch <- make_normalized_branch()
   observed_values <- extract_peak_gene_correlation_top_link_aggregate_values(
     normalized_aggregate_matrices = normalized_branch,
@@ -55,23 +56,24 @@ testthat::test_that("top-link aggregate values match the legacy result", {
     tibble::tibble(
       scatter_plot_name = rep("link_1", 3),
       is_analyzable_link = rep(TRUE, 3),
-      primary_cell_group = rep("T cell", 3),
+      primary_cell_group = rep("B cell", 3),
       cell_group = rep("B cell", 3),
       chr = rep("chr1", 3),
       peak = rep("chr1:100-200", 3),
       TargetGeneID = rep("ENSG1", 3),
       TargetGene = rep("GENE1", 3),
-      correlation = rep(0.8, 3),
-      FDR = rep(0.01, 3),
-      rank_in_cell_group = rep(1L, 3),
-      rank_for_gene = rep(1L, 3)
+      hierarchical_pvalue = rep(0.01, 3),
+      hierarchical_df = rep(5, 3),
+      hierarchical_FDR = rep(0.02, 3),
+      rank_in_cell_group = rep(1L, 3)
     ),
     normalized_branch$aggregate_depth_tibble,
     tibble::tibble(
       gene_expression_logCPM = c(1, 2, 3),
       peak_accessibility_logCPM = c(7, 8, 9),
       gene_expression_residual = c(0, 0, 0),
-      peak_accessibility_residual = c(0, 0, 0)
+      peak_accessibility_residual = c(0, 0, 0),
+      correlation = rep(NA_real_, 3)
     )
   )
 
@@ -119,7 +121,7 @@ testthat::test_that("the histogram summary matches the legacy result", {
   testthat::expect_equal(histogram, expected)
 })
 
-testthat::test_that("support counts match the legacy result", {
+testthat::test_that("support counts retain zeros for linear plotting", {
   support <- summarize_peak_gene_correlation_support_counts(make_peak_gene_results())
   expected <- tibble::tibble(
     cell_group = rep(c("B cell", "T cell"), each = 3),
@@ -127,8 +129,7 @@ testthat::test_that("support counts match the legacy result", {
       c("tested_pairs", "FDR_significant_pairs", "candidate_enhancer_links"),
       2
     ),
-    n = c(3L, 2L, 0L, 3L, 2L, 1L),
-    n_for_plot = c(3, 2, 1, 3, 2, 1)
+    n = c(3L, 2L, 0L, 3L, 2L, 1L)
   )
 
   testthat::expect_equal(support, expected)
@@ -162,7 +163,12 @@ testthat::test_that("sidecar plot helpers return ggplots with the supplied data"
 
   for (index in seq_along(plots)) {
     testthat::expect_s3_class(plots[[index]], "ggplot")
-    testthat::expect_identical(plots[[index]]$data, plot_data[[index]])
+    if (index == 2L) {
+      testthat::expect_identical(plots[[index]]$data$n, plot_data[[index]]$n)
+      testthat::expect_equal(plots[[index]]$data$count_position, c(2.2, 2, 0, 2.2, 2, 1))
+    } else {
+      testthat::expect_identical(plots[[index]]$data, plot_data[[index]])
+    }
   }
 })
 

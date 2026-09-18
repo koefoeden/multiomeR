@@ -1,7 +1,7 @@
 # Peak–gene correlation
 
 The hierarchical branch scans all pairs passing the existing distance,
-detection and aggregate-eligibility filters, using WNN-derived cell types.
+detection, aggregate-eligibility and measurement-support filters, using WNN-derived cell types.
 There is no HC3 significance, correlation, promoter or top-N screen before
 fitting. The former hierarchical-candidate-limit parameter is removed.
 
@@ -33,3 +33,30 @@ as a distinct analysis. Contextual arcs show HC3-filtered links and HC3 FDR
 widths; the focal hierarchical link is included even when absent from that
 filter. Missing HC3 FDR uses minimum width. Plot captions distinguish the two
 analyses. Hierarchical fitting is cached separately from plot generation.
+
+## Measurement-support filtering
+
+`peak_gene_correlation_filter` is a module setting with allowed values `lenient`
+(default in `cfg_pipeline_parameters.tsv`), `moderate`, and `strict`. Override
+it for an aggregation in `module_peak_gene_correlation/cfg.yaml`.
+
+| Preset | RNA / ATAC counts at median library depth | Minimum supported aggregates per feature | Shared supported donors | Supported aggregates per feature/donor |
+|---|---:|---|---:|---:|
+| lenient | 5 / 3 | max(6, ceiling(10%)) | 2 | 2 |
+| moderate | 10 / 5 | max(6, ceiling(10%)) | 2 | 2 |
+| strict | 10 / 5 | max(10, ceiling(20%)) | 3 | 3 |
+
+Count thresholds scale with each aggregate's library depth relative to the
+cell-type median, with a two-count raw floor. Both features must qualify in
+the required shared donors, but their qualifying aggregates need not coincide.
+The filter removes hypotheses before both HC3 and hierarchical testing; all
+observations remain in retained regressions. Excluded hypotheses do not enter
+BH correction. Unreliable tests among retained hypotheses still count in the
+hierarchical family size. Filtering is based on measurement support, not on
+obtaining discoveries; null calibration remains a separate validation task.
+
+`peak_gene_correlation_filter_records.WNN` caches selected candidates and
+retention diagnostics for all three presets. `filter_retention_plot` compares
+retained fractions by cell type and identifies the active setting. Diagnostic
+exclusion counts for RNA, ATAC and donor support overlap and should not be added.
+Strict filtering necessarily excludes cell types with fewer than three donors.

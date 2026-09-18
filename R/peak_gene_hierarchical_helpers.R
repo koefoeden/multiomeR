@@ -70,7 +70,7 @@ load_peak_gene_REML_kernel <- function(native_source_file) {
 
 #' Scan every eligible pair in one cell-type/chromosome branch
 #'
-#' Detection and aggregate eligibility match the descriptive HC3 scan. No
+#' Measurement-support candidates, detection and aggregate eligibility match the HC3 scan. No
 #' correlation, HC3 p-value, promoter or top-N screen is applied before fitting.
 #' Dense matrices and nuisance design are reused across peak batches.
 score_peak_gene_hierarchical_associations <- function(

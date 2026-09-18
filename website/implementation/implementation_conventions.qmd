@@ -119,8 +119,7 @@ The core mapping flow is:
 2. `aggregation_tibble_all_from_yaml` is read from `cfg_aggregations.yaml`.
 3. `aggregation_tibble` keeps active aggregations, validates their GEM well references against the complete view, and adds upstream target-symbol columns.
 4. `GEM_well_tibble` keeps GEM wells whose `GEM_well_is_active` value is true.
-5. `dataset_tibble` derives internal cross-GEM-well QC groups from those active rows.
-6. `_targets.R` expands active GEM wells, derived QC summaries, and aggregations with `tar_map()`, then appends module target files.
+5. `_targets.R` expands active GEM wells and aggregations with `tar_map()`, then appends module target files. Cross-GEM-well QC summaries use the aggregation's selected wells.
 
 Within each aggregation, `GEM_well_metadata_tibble` reads the same canonical
 file, subsets it to `aggregation_GEM_well_IDs`, and preserves that order. Cheap
@@ -140,11 +139,10 @@ tarchetypes::tar_map(
 )
 ```
 
-With `GEM_well_ID = "healthy_PBMC_human"`, a target named `cellranger_summary_file` becomes `cellranger_summary_file.healthy_PBMC_human`. The same dot-delimited suffix convention is used for datasets, aggregations, module targets, and nested module maps.
+With `GEM_well_ID = "healthy_PBMC_human"`, a target named `cellranger_summary_file` becomes `cellranger_summary_file.healthy_PBMC_human`. The same dot-delimited suffix convention is used for aggregations, module targets, and nested module maps.
 
 ```text
 active cfg_GEM_wells.tsv row -> GEM_well_tibble row    -> per GEM well targets
-derived dataset group       -> dataset_tibble row     -> per-dataset targets
 cfg_aggregations.yaml key   -> aggregation_tibble row -> per-aggregation targets
 ```
 
@@ -194,13 +192,7 @@ combined_counts_matrix <- purrr::reduce(
 )
 ```
 
-Column names should describe the downstream scope, the upstream target, and the fact that the value is a symbol list. Existing symbol-list columns use the `*_syms` suffix, such as `aggregation_GEX_counts_BPCells_matrix_syms`, `dataset_unfiltered_cells_n_vecs_syms`, and `per_dataset_QC_violins_syms`.
-
-The shared pattern appears at three boundaries:
-
-- `aggregation_*_syms` columns splice per GEM well targets into aggregation-level targets.
-- `dataset_*_syms` columns splice per GEM well targets into dataset-level targets.
-- `per_dataset_*_syms` columns splice per-dataset targets into aggregation-level summary targets.
+Column names should describe the downstream scope, the upstream target, and the fact that the value is a symbol list. The `aggregation_*_syms` columns, such as `aggregation_GEX_counts_BPCells_matrix_syms`, splice per GEM well targets into aggregation-level targets.
 
 Module target files also need aggregation-specific references to main-pipeline targets. For this, `add_aggregation_target_syms()` creates one symbol per row, suffixed by the aggregation name. These columns are named like the target they replace rather than with `*_syms`, because each cell is a single symbol rather than a list.
 

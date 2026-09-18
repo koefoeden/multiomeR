@@ -11,7 +11,7 @@ Conventions used below:
 
 - Commands run in a repository-root R session, opened as in [Install and
   prepare the demo](demo_installation.qmd).
-- Replace `my_dataset` and `my_aggregation` with your identifiers.
+- Replace `my_GEM_well` and `my_aggregation` with your identifiers.
 - `<store>` is the results folder configured in `_targets.yaml`, `outputs/` in
   the demo.
 - File formats are documented in the [GEM well table](reference_GEM_wells.qmd),
@@ -45,15 +45,13 @@ is documented in [Reading the review outputs](review_outputs.qmd).
 
 ## 1. Process the GEM wells {#steps}
 
-Reads each GEM well's Cell Ranger output and compares QC distributions across
-the GEM wells of a dataset before any filter is applied.
+Reads each GEM well's Cell Ranger output and reviews per-well exclusions.
+Compare distributions across wells after defining an aggregation in step 2.
 
 **Configure** one row per GEM well in `cfg_GEM_wells.tsv`
 ([GEM well table](reference_GEM_wells.qmd)):
 
-- `GEM_well_ID`, and a shared `GEM_well_dataset` for wells whose QC
-  distributions should be compared side by side, typically the same tissue and
-  protocol;
+- a unique `GEM_well_ID` and an appropriate `GEM_well_dataset` label;
 - `GEM_well_cellranger_arc_count_dir`;
 - donors: `GEM_well_n_donors` and `GEM_well_donor_id` for a single-donor
   well, or `GEM_well_donors_VCF_file` to demultiplex several donors by
@@ -70,17 +68,16 @@ the GEM wells of a dataset before any filter is applied.
 
 ```{.r filename="R"}
 targets::tar_make(
-  names = tidyselect::contains("1_pre_aggregation_QC") & tidyselect::ends_with(".my_dataset")
+  names = tidyselect::contains("1_pre_aggregation_QC") & tidyselect::ends_with(".my_GEM_well")
 )
 ```
 
 **Review**
 
 ```{.text}
-<store>/plots/my_dataset/1_pre_aggregation_QC/
-├── per_dataset_QC_violins/
-├── per_dataset_excluded_upset.png
-└── per_dataset_excluded_cellranger_only_upset.png
+<store>/plots/my_GEM_well/1_pre_aggregation_QC/
+├── excluded_barcodes_by_type_upset.png
+└── excluded_cellranger_only_barcodes_by_type_upset.png
 ```
 
 ## 2. Aggregate the GEM wells

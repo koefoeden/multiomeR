@@ -128,6 +128,7 @@ rlang::list2(
     source("module_genetic_enrichment/setup_targets.R")$value,
     source("module_genetic_enrichment/gchromVAR_targets.R")$value,
     source("module_genetic_enrichment/GWAS_chromVAR_cell_type_targets.R")$value,
+    source("module_genetic_enrichment/GWAS_chromVAR_absolute_effect_targets.R")$value,
     source("module_genetic_enrichment/GWAS_chromVAR_contribution_targets.R")$value,
     tarchetypes::tar_map(
       values = tibble::tibble(

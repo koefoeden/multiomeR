@@ -114,13 +114,41 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
+    name = peak_gene_correlation_filter_records.WNN,
+    description = "Filter candidate hypotheses by counts and donor support and cache retention diagnostics [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = filter_peak_gene_candidate_pairs(
+      aggregate_matrices = peak_gene_correlation_aggregate_matrices.WNN,
+      normalized_aggregate_matrices = peak_gene_correlation_normalized_aggregate_matrices.WNN,
+      candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.WNN,
+      filter = peak_gene_correlation_filter
+    ),
+    pattern = map(peak_gene_correlation_aggregate_matrices.WNN,
+      peak_gene_correlation_normalized_aggregate_matrices.WNN),
+    iteration = "list",
+    resources = get_tar_resources(RAM_GB_req = 16)
+  ),
+  targets::tar_target(
+    name = peak_gene_correlation_filter_diagnostics_tibble.WNN,
+    description = "Combine retention and overlapping exclusion counts for all support presets [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = purrr::map_dfr(peak_gene_correlation_filter_records.WNN, "diagnostics"),
+    resources = get_tar_resources(RAM_GB_req = 16)
+  ),
+  tarchetypes::tar_file(
+    name = filter_retention_plot,
+    description = "Compare candidate retention across measurement-support filters by cell type [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = plot_peak_gene_filter_retention(
+      peak_gene_correlation_filter_diagnostics_tibble.WNN, peak_gene_correlation_filter
+    ) |> save_plots_structured(width = 13, height = 9)
+  ),
+  targets::tar_target(
     name = peak_gene_correlation_results_tibbles.WNN,
     description = "Score donor-adjusted peak-gene associations for one broad cell type and chromosome [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = score_peak_gene_correlations_for_cell_group(
       normalized_aggregate_matrices = peak_gene_correlation_normalized_aggregate_matrices.WNN,
-      candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.WNN
+      candidate_pairs_tibble = peak_gene_correlation_filter_records.WNN$candidate_pairs
     ),
-    pattern = map(peak_gene_correlation_normalized_aggregate_matrices.WNN),
+    pattern = map(peak_gene_correlation_normalized_aggregate_matrices.WNN,
+      peak_gene_correlation_filter_records.WNN),
     iteration = "list",
     resources = get_tar_resources(RAM_GB_req = 60)
   ),
@@ -129,9 +157,10 @@ rlang::list2(
     description = "Diagnose skipped or retained peak-gene correlation branches [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = diagnose_peak_gene_correlation_branch(
       normalized_aggregate_matrices = peak_gene_correlation_normalized_aggregate_matrices.WNN,
-      candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.WNN
+      candidate_pairs_tibble = peak_gene_correlation_filter_records.WNN$candidate_pairs
     ),
-    pattern = map(peak_gene_correlation_normalized_aggregate_matrices.WNN),
+    pattern = map(peak_gene_correlation_normalized_aggregate_matrices.WNN,
+      peak_gene_correlation_filter_records.WNN),
     iteration = "vector",
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
@@ -301,11 +330,12 @@ rlang::list2(
     description = "Scan all eligible pairs with donor-varying slopes and Kenward-Roger inference [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = score_peak_gene_hierarchical_associations(
       normalized_aggregate_matrices = peak_gene_correlation_normalized_aggregate_matrices.WNN,
-      candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.WNN,
+      candidate_pairs_tibble = peak_gene_correlation_filter_records.WNN$candidate_pairs,
       REML_source_file = peak_gene_REML_native_source_file,
       KR_source_file = peak_gene_KR_native_source_file
     ),
-    pattern = map(peak_gene_correlation_normalized_aggregate_matrices.WNN),
+    pattern = map(peak_gene_correlation_normalized_aggregate_matrices.WNN,
+      peak_gene_correlation_filter_records.WNN),
     iteration = "list",
     resources = get_tar_resources(RAM_GB_req = 16)
   ),

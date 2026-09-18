@@ -756,64 +756,6 @@ plot_modality_confusion_matrices <- function(metadata_tibble, source_label, targ
     ggplot2::theme(legend.position = "bottom")
 }
 
-#' Plot ATAC vs RNA weight boxplots
-#'
-#' Compare WNN ATAC weights and RNA/ATAC depth metrics across clusters.
-#'
-#' @param metadata Cell metadata containing WNN `ATAC.weight`, RNA/ATAC depth
-#'   columns, and the cluster label column.
-#' @param cluster_label_col Single column name used for cluster label col; the column must exist in the relevant metadata tibble.
-#' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
-#' @keywords internal
-
-plot_ATAC_vs_RNA_weight_boxplots <- function(
-  metadata,
-  cluster_label_col = "WNN_harmony_SNN_cluster"
-) {
-  clusters_sorted_by_median_ATAC_weights <- metadata %>%
-    tibble::as_tibble() %>%
-    dplyr::group_by(.data[[cluster_label_col]]) %>%
-    dplyr::summarise(median_ATAC_weight = stats::median(ATAC.weight)) %>%
-    dplyr::arrange(dplyr::desc(median_ATAC_weight)) %>%
-    dplyr::pull(1) %>%
-    as.vector()
-
-  boxplot <- metadata %>%
-    tibble::as_tibble() %>%
-    dplyr::select(dplyr::all_of(c(
-      cluster_label_col,
-      "ATAC.weight",
-      "log10_nCount_RNA",
-      "log10_nCount_ATAC"
-    ))) %>%
-    tidyr::pivot_longer(
-      cols = dplyr::all_of(c("ATAC.weight", "log10_nCount_RNA", "log10_nCount_ATAC"))
-    ) %>%
-    dplyr::mutate(
-      name = factor(
-        name,
-        levels = c("log10_nCount_RNA", "ATAC.weight", "log10_nCount_ATAC")
-      ),
-      sorted_cluster = factor(
-        .data[[cluster_label_col]],
-        levels = clusters_sorted_by_median_ATAC_weights
-      )
-    ) %>%
-    ggplot2::ggplot(ggplot2::aes(x = value, y = sorted_cluster)) +
-    ggplot2::geom_boxplot(ggplot2::aes(color = .data[[cluster_label_col]])) +
-    ggplot2::theme(legend.position = "none") +
-    ggplot2::facet_wrap(~name, scales = "free_x", labeller = ggplot2::as_labeller(c(
-      log10_nCount_RNA = "RNA depth (log10 counts)", ATAC.weight = "ATAC weight in WNN",
-      log10_nCount_ATAC = "ATAC depth (log10 counts)"))) +
-    ggplot2::labs(
-      title = "WNN modality weighting and sequencing depth by cluster",
-      subtitle = "Look for clusters where high ATAC weight accompanies differences in RNA or ATAC depth.\nDepth-associated weighting may reflect technical effects; weight alone is not a modality-quality score.",
-      caption = stringr::str_wrap("Each box summarizes cells in the WNN annotation metadata: median, interquartile range, and whiskers to 1.5 x IQR; remaining points are outliers.\nClusters are ordered by decreasing median ATAC weight. Depth panels use log10 counts; panels have separate x scales.", width = 110),
-      x = NULL, y = "WNN cluster")
-
-  return(boxplot)
-}
-
 get_marker_cell_type_order <- function(groups, marker_set_names, group_cell_types = NULL) {
   observed <- levels(droplevels(as.factor(groups)))
   if (is.null(group_cell_types)) group_cell_types <- stats::setNames(observed, observed)

@@ -1,6 +1,6 @@
 #' Append relevant configuration values to a plot caption
 #'
-#' @param plot A ggplot or patchwork composite.
+#' @param plot A ggplot, patchwork composite, or list of plots. Empty results are preserved.
 #' @param config_file Configuration filename displayed in the caption.
 #' @param ... Named resolved parameter values; names identify configuration keys.
 #' @param .max_value_chars Maximum characters per displayed value, including the
@@ -9,8 +9,14 @@
 #' @keywords internal
 add_plot_parameters <- function(plot, config_file, ..., .max_value_chars = 120L) {
   parameters <- list(...)
+  if (inherits(plot, "empty_plot_list")) return(plot)
+  if (is.list(plot) && !inherits(plot, c("ggplot", "patchwork"))) {
+    return(lapply(plot, \(item) do.call(add_plot_parameters,
+      c(list(plot = item, config_file = config_file, .max_value_chars = .max_value_chars), parameters))))
+  }
   values <- vapply(parameters, \(value) {
-    if (length(value) == 0L) "(none)" else paste(value, collapse = ", ")
+    if (length(value) == 0L) "(none)" else if (is.list(value))
+      paste(deparse(value), collapse = " ") else paste(value, collapse = ", ")
   }, character(1)) |>
     stringr::str_squish() |>
     stringr::str_trunc(width = .max_value_chars, ellipsis = "...")

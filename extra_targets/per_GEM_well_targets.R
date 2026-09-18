@@ -337,6 +337,10 @@ rlang::list2(
       QC_excluded_BCs_list = excluded_cellranger_only_barcodes_by_type_list,
       n_total = nrow(cellranger_kept_metadata_tibble)
     ) |>
+      add_plot_parameters(
+        "cfg_GEM_wells.tsv",
+        GEM_well_QC_exclude_list = GEM_well_QC_exclude_list
+      ) |>
       save_plots_structured(width = 10, height = 10)
   ),
   targets::tar_target(

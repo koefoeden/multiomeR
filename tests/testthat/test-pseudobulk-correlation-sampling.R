@@ -113,9 +113,10 @@ testthat::test_that("shared cohort validation rejects missing variables and non-
   testthat::expect_error(normalize_differential_models(stats::setNames(list(input$model, input$model), c("sex", "sex"))), "uniquely named")
 })
 
-testthat::test_that("feature cohort exports distinguish sample-depth and fitted-sample exclusions", {
+testthat::test_that("feature cohorts use WNN labels and distinguish sample exclusions", {
   input <- make_abundance_fixture()
-  names(input$metadata)[names(input$metadata) == "cell_type"] <- "PCA_harmony_SNN_cluster_cell_type"
+  names(input$metadata)[names(input$metadata) == "cell_type"] <- "WNN_harmony_SNN_cluster_cell_type"
+  input$metadata$PCA_harmony_SNN_cluster_cell_type <- "Other"
   matrix <- matrix(1, 1, 12, dimnames = list("gene", paste0("Cardiomyocyte_", input$donors$donor_id)))
   model <- list(formula = "~ sexMale", cell_type_subset = "Cardiomyocyte")
   fit <- list(samples = data.frame(row.names = colnames(matrix)[1:6]))
@@ -124,5 +125,6 @@ testthat::test_that("feature cohort exports distinguish sample-depth and fitted-
   testthat::expect_true(all(cohort$included[1:6]))
   testthat::expect_true(all(cohort$exclusion_reason[7:10] == "model_sample_filter"))
   testthat::expect_true(all(cohort$exclusion_reason[11:12] == "sample_depth_filter"))
+  testthat::expect_equal(cohort$n_nuclei[1:6], c(0L, 9L, 17L, 25L, 12L, 20L))
   testthat::expect_true(all(cohort$n_nuclei[7:12] == 0))
 })

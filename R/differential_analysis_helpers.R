@@ -207,7 +207,7 @@ get_feature_model_cohort <- function(matrix, filtered_matrix, fit, donor_metadat
   cohort$exclusion_reason[is.na(cohort$exclusion_reason) & cohort$n_fitted_samples == 0L] <- "model_sample_filter"
   cohort$included <- is.na(cohort$exclusion_reason)
   cells <- metadata |>
-    dplyr::filter(paste(gsub("_", "-", as.character(PCA_harmony_SNN_cluster_cell_type), fixed = TRUE),
+    dplyr::filter(paste(gsub("_", "-", as.character(WNN_harmony_SNN_cluster_cell_type), fixed = TRUE),
       gsub("_", "-", donor_id, fixed = TRUE), sep = "_") %in% fitted_ids) |>
     dplyr::group_by(donor_id) |>
     dplyr::summarise(n_nuclei = dplyr::n(), GEM_well_IDs = paste(sort(unique(GEM_well_ID)), collapse = ";"), .groups = "drop")

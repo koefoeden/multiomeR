@@ -435,7 +435,7 @@ rlang::list2(
       get_BPCells_pseudobulk_matrix(
         feature_matrix = aggregated_counts_BPCells_matrix.GEX,
         metadata_tibble = metadata_w_cell_types_tibble.WNN,
-        cluster_col = "PCA_harmony_SNN_cluster_cell_type",
+        cluster_col = "WNN_harmony_SNN_cluster_cell_type",
         threads = 6
       ) |>
         methods::as("dgCMatrix") |>
@@ -463,7 +463,7 @@ rlang::list2(
       get_BPCells_pseudobulk_matrix(
         feature_matrix = peak_QC_filtered_BPCells_matrix.ATAC,
         metadata_tibble = metadata_w_cell_types_tibble.WNN,
-        cluster_col = "PCA_harmony_SNN_cluster_cell_type",
+        cluster_col = "WNN_harmony_SNN_cluster_cell_type",
         threads = 6
       ) |>
         methods::as("dgCMatrix") |>

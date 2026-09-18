@@ -327,6 +327,7 @@ plot_per_dataset_QC_violins <- function(
 #' @param checkpoints Checkpoint names whose metrics should be plotted.
 #' @param group_col Metadata column defining the violin groups.
 #' @param fill_col Metadata column defining violin colors.
+#' @param group_order Optional group labels in left-to-right display order.
 #' @param QC_exclude_per_GEM_well_list Named list mapping GEM-well IDs to
 #'   character vectors of QC exclusion expressions.
 #' @return Named list containing one annotated ggplot per available QC metric.
@@ -338,7 +339,8 @@ plot_QC_metric_violins <- function(
   checkpoints,
   group_col,
   fill_col = group_col,
-  QC_exclude_per_GEM_well_list = NULL
+  QC_exclude_per_GEM_well_list = NULL,
+  group_order = NULL
 ) {
   metric_manifest <- QC_metric_manifest_tibble |>
     dplyr::filter(
@@ -365,6 +367,7 @@ plot_QC_metric_violins <- function(
     )
   }
   group_levels <- unique(as.character(metadata_tibble[[group_col]]))
+  if (!is.null(group_order)) group_levels <- intersect(group_order, group_levels)
 
   metric_manifest |>
     dplyr::select(
@@ -561,6 +564,7 @@ plot_cluster_marker_volcano <- function(marker_result) {
 #' @param metadata_cols Character vector of metadata columns to test or plot.
 #' @param optional_metadata_cols Metadata columns to include only when present, so shared plotting code can span datasets with different annotations.
 #' @param cluster_col Single metadata column name used as the cluster/grouping variable.
+#' @param group_order Optional group labels in top-to-bottom display order.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
@@ -568,7 +572,8 @@ plot_categorical_bars_plot <- function(
   metadata_tibble,
   metadata_cols,
   optional_metadata_cols = NULL,
-  cluster_col
+  cluster_col,
+  group_order = NULL
 ) {
   if (!cluster_col %in% colnames(metadata_tibble)) {
     stop("Cluster column not found in metadata: ", cluster_col)
@@ -589,6 +594,10 @@ plot_categorical_bars_plot <- function(
   metadata <- metadata_tibble %>%
     dplyr::mutate(dplyr::across(dplyr::all_of(plot_metadata_cols), as.character)) %>%
     dplyr::select(dplyr::all_of(c(plot_metadata_cols, cluster_col)))
+
+  if (!is.null(group_order)) {
+    metadata[[cluster_col]] <- factor(metadata[[cluster_col]], levels = rev(group_order))
+  }
 
   plot_metadata_cols %>%
     purrr::set_names() %>%

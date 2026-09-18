@@ -18,9 +18,9 @@ testthat::test_that("unlimited correlation fitting preserves edgeR including spa
   input <- make_correlation_sampling_fixture()
   input$counts[1:5, seq.int(1L, 24L, by = 3L)] <- 0L
   reference <- do.call(edgeR::voomLmFit, input)
-  unlimited <- do.call(fit_psbulk_voom, input)
-  all_features <- do.call(fit_psbulk_voom, c(input, list(correlation_max_features = 200L)))
-  sampled <- do.call(fit_psbulk_voom, c(input, list(correlation_max_features = 60L)))
+  unlimited <- do.call(fit_pseudobulk_voom, input)
+  all_features <- do.call(fit_pseudobulk_voom, c(input, list(correlation_max_features = 200L)))
+  sampled <- do.call(fit_pseudobulk_voom, c(input, list(correlation_max_features = 60L)))
 
   testthat::expect_equal(unlimited, reference, tolerance = 1e-12)
   testthat::expect_equal(all_features, reference, tolerance = 1e-12)
@@ -34,7 +34,7 @@ testthat::test_that("sampling changes only correlation estimation and restores R
   original_estimator <- get("duplicateCorrelation", envir = environment(original_function))
   withr::local_seed(53L)
   seed_before <- .Random.seed
-  fit <- do.call(fit_psbulk_voom, c(input, list(correlation_max_features = 60L)))
+  fit <- do.call(fit_pseudobulk_voom, c(input, list(correlation_max_features = 60L)))
   testthat::expect_identical(.Random.seed, seed_before)
   rows <- withr::with_seed(732L, sort(sample.int(nrow(input$counts), 60L)))
   correlation <- limma::duplicateCorrelation(
@@ -70,7 +70,7 @@ testthat::test_that("abundance subsets preserve denominators, zero donors and ex
   input$donors$sexMale[12] <- NA
   input$model$GEM_well_IDs <- paste0("w", c(1:8, 12))
   input$model$cell_types_to_test <- "Cardiomyocyte"
-  data <- prepare_DCTC_model_data(input$metadata, input$donors, input$model, "cell_type")
+  data <- prepare_cell_type_composition_model_data(input$metadata, input$donors, input$model, "cell_type")
   testthat::expect_equal(nrow(data$counts), 8L)
   testthat::expect_true(all(data$counts$n_total_nuclei == 100L))
   testthat::expect_equal(data$counts$n_nuclei[data$counts$donor_id == "d1"], 0L)
@@ -78,7 +78,7 @@ testthat::test_that("abundance subsets preserve denominators, zero donors and ex
   testthat::expect_equal(data$cohort$exclusion_reason[data$cohort$donor_id == "d12"], "missing_model_metadata")
   testthat::expect_equal(data$cohort$exclusion_reason[data$cohort$donor_id == "d9"], "no_selected_samples")
   input$model$cell_types_to_test <- NULL
-  all_types <- prepare_DCTC_model_data(input$metadata, input$donors, input$model, "cell_type")
+  all_types <- prepare_cell_type_composition_model_data(input$metadata, input$donors, input$model, "cell_type")
   testthat::expect_equal(nrow(all_types$counts), 16L)
   sums <- tapply(all_types$counts$prop, all_types$counts$donor_id, sum)
   testthat::expect_equal(as.numeric(sums), rep(1, 8))
@@ -86,8 +86,8 @@ testthat::test_that("abundance subsets preserve denominators, zero donors and ex
 
 testthat::test_that("abundance named contrasts agree with direct beta-binomial coefficients", {
   input <- make_abundance_fixture()
-  data <- prepare_DCTC_model_data(input$metadata, input$donors, input$model, "cell_type")
-  results <- fit_DCTC_model(data, input$model, "sex")
+  data <- prepare_cell_type_composition_model_data(input$metadata, input$donors, input$model, "cell_type")
+  results <- fit_cell_type_composition_model(data, input$model, "sex")
   reference <- glmmTMB::glmmTMB(cbind(n_nuclei, n_other_nuclei) ~ sexMale,
     data = subset(data$counts, cluster == "Cardiomyocyte"), family = glmmTMB::betabinomial())
   forward <- subset(results, cluster == "Cardiomyocyte" & contrast == "male_vs_female")
@@ -106,10 +106,10 @@ testthat::test_that("shared cohort validation rejects missing variables and non-
   testthat::expect_error(get_differential_model_cohort(input$donors['donor_id'], input$model,
     input$donors$donor_id), "Missing model metadata")
   input$model$donor_ids <- input$donors$donor_id[1:6]
-  data <- prepare_DCTC_model_data(input$metadata, input$donors, input$model, "cell_type")
-  testthat::expect_error(fit_DCTC_model(data, input$model, "sex"), "rank deficient")
+  data <- prepare_cell_type_composition_model_data(input$metadata, input$donors, input$model, "cell_type")
+  testthat::expect_error(fit_cell_type_composition_model(data, input$model, "sex"), "rank deficient")
   input$model$formula <- "cbind(n_nuclei, n_other_nuclei) ~ sexMale"
-  testthat::expect_error(fit_DCTC_model(data, input$model, "sex"), "one-sided formula")
+  testthat::expect_error(fit_cell_type_composition_model(data, input$model, "sex"), "one-sided formula")
   testthat::expect_error(normalize_differential_models(stats::setNames(list(input$model, input$model), c("sex", "sex"))), "uniquely named")
 })
 

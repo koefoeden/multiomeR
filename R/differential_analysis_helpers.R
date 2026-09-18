@@ -60,7 +60,7 @@ validate_differential_design <- function(design) {
   invisible(design)
 }
 
-prepare_DCTC_model_data <- function(metadata, donor_metadata, model, cluster_col) {
+prepare_cell_type_composition_model_data <- function(metadata, donor_metadata, model, cluster_col) {
   wells <- model$GEM_well_IDs
   if (!is.null(wells)) {
     missing <- setdiff(wells, unique(metadata$GEM_well_ID))
@@ -94,7 +94,7 @@ prepare_DCTC_model_data <- function(metadata, donor_metadata, model, cluster_col
   list(cohort = cohort, counts = counts)
 }
 
-fit_DCTC_model <- function(model_data, model, model_name) {
+fit_cell_type_composition_model <- function(model_data, model, model_name) {
   formula <- stats::as.formula(model$formula)
   if (length(formula) != 2L) {
     stop("Composition models require a one-sided formula, e.g. ~ sexMale; the response is supplied automatically.")
@@ -139,7 +139,7 @@ fit_DCTC_model <- function(model_data, model, model_name) {
   results
 }
 
-plot_DCTC_model <- function(model_data, model, model_name, results) {
+plot_cell_type_composition_model <- function(model_data, model, model_name, results) {
   caption <- paste0("Model: ", model_name, ". Formula: ", model$formula,
     ". Selected wells: ", paste(model$GEM_well_IDs %||% "all aggregation wells", collapse = ", "),
     ". Denominator: all retained nuclei in selected wells for each eligible donor, including unassigned labels. ",
@@ -189,17 +189,17 @@ save_differential_model_table <- function(table, model_name) {
 }
 
 get_feature_model_cohort <- function(matrix, filtered_matrix, fit, donor_metadata, model, metadata) {
-  samples <- get_psbulk_sample_tibble(matrix)
+  samples <- get_pseudobulk_sample_tibble(matrix)
   if (!is.null(model$cell_type_subset)) samples <- dplyr::filter(samples, cluster %in% model$cell_type_subset)
   cohort <- get_differential_model_cohort(donor_metadata, model, samples$donor_id)
-  retained <- get_psbulk_sample_tibble(filtered_matrix) |>
+  retained <- get_pseudobulk_sample_tibble(filtered_matrix) |>
     dplyr::count(donor_id, name = "n_samples")
   retained$donor_id <- cohort$donor_id[match(retained$donor_id, gsub("_", "-", cohort$donor_id, fixed = TRUE))]
   cohort <- dplyr::left_join(cohort, retained, by = "donor_id")
   cohort$n_samples <- tidyr::replace_na(cohort$n_samples, 0L)
   cohort$exclusion_reason[cohort$included & cohort$n_samples == 0L] <- "sample_depth_filter"
   fitted_ids <- rownames(fit$samples)
-  fitted <- get_psbulk_sample_tibble(matrix[, fitted_ids, drop = FALSE]) |>
+  fitted <- get_pseudobulk_sample_tibble(matrix[, fitted_ids, drop = FALSE]) |>
     dplyr::count(donor_id, name = "n_fitted_samples")
   fitted$donor_id <- cohort$donor_id[match(fitted$donor_id, gsub("_", "-", cohort$donor_id, fixed = TRUE))]
   cohort <- dplyr::left_join(cohort, fitted, by = "donor_id")

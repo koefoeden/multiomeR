@@ -73,7 +73,7 @@ scale_within_vector <- function(x) {
 #' Decompose cell-type chromVAR scores into peak contributions
 #'
 #' @param chromVAR_background_record Cell-type pseudobulk background record.
-#' @param psbulk_ATAC_data_matrix Peak-by-cell-type count matrix.
+#' @param pseudobulk_ATAC_data_matrix Peak-by-cell-type count matrix.
 #' @param chromVAR_obj Template chromVAR object with peak ranges.
 #' @param annotation_matrix Peak-by-GWAS trait weight matrix.
 #' @param GWAS_inputs_tibble GWAS metadata.
@@ -83,13 +83,13 @@ scale_within_vector <- function(x) {
 
 get_GWAS_chromVAR_peak_contribution_tibble <- function(
   chromVAR_background_record,
-  psbulk_ATAC_data_matrix,
+  pseudobulk_ATAC_data_matrix,
   chromVAR_obj,
   annotation_matrix,
   GWAS_inputs_tibble
 ) {
   peak_names <- chromVAR_background_record$peak_names
-  counts_matrix <- psbulk_ATAC_data_matrix[peak_names, , drop = FALSE]
+  counts_matrix <- pseudobulk_ATAC_data_matrix[peak_names, , drop = FALSE]
   if (inherits(counts_matrix, "IterableMatrix")) {
     counts_matrix <- methods::as(counts_matrix, "dgCMatrix")
   }

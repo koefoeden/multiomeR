@@ -107,7 +107,7 @@ rlang::list2(
       chromVAR_peak_contribution_tibble.cell_type_pseudobulk[0, ]
     } else get_GWAS_chromVAR_peak_contribution_tibble(
       chromVAR_background_record = chromVAR_background_record.cell_type_pseudobulk,
-      psbulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
+      pseudobulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
       chromVAR_obj = chromVAR_obj.ATAC,
       annotation_matrix = GWAS_absolute_effect_peak_weight_matrix,
       GWAS_inputs_tibble = GWAS_absolute_effect_inputs_tibble),

@@ -31,16 +31,24 @@ Choose the output that matches your question:
 
 | Question | Output family |
 |---|---|
-| Do cell-type proportions differ? | Differential cell-type composition (DCTC) |
-| Which genes change expression? | Differential gene expression (DGE) |
-| Which peaks change accessibility? | Differential chromatin accessibility (DCA) |
-| Which motif families change accessibility? | ATAC-derived differential TF activity (DTFA) |
-| Which regulators show altered expression-based activity? | CollecTRI-derived differential TF activity (DCTA) |
+| Do cell-type proportions differ? | `cell_type_composition` |
+| Which genes change expression? | `gene_expression` |
+| Which peaks change accessibility? | `chromatin_accessibility` |
+| Which motif families change accessibility? | `motif_family_accessibility` (JASPAR) |
+| Which regulators show altered expression-based activity? | `transcription_factor_activity` (CollecTRI) |
 
 The module also produces model diagnostics, comparisons across modalities,
-and gene-set tests for Hallmark and Reactome pathways. Activity scores are
-inferred from accessibility or expression; interpret them in the context of
-the measurement used.
+and gene-set tests for Hallmark and Reactome pathways. Motif-family accessibility
+summarizes ATAC evidence; transcription-factor activity is inferred from gene
+expression using CollecTRI. Interpret each in the context of its measurement.
+
+Plot directories use these descriptive family names below
+`plots/<aggregation>/differential_analyses/`. Gene-set plots appear under
+`gene_expression/gene_set_enrichment/Hallmark/enrichment_plots/<model>/`
+or the corresponding `Reactome` directory. Volcano outputs use
+`<family>/volcano_plots/<model>/`; saved plot targets omit redundant `_file`
+and `_files` suffixes. Renaming targets creates new cache entries and output
+paths on the next run; existing output directories are not migrated.
 
 See the [method details](implementation/implementation_differential_analyses.html#method-details)
 for activity inference, motif-family definitions, and gene-set testing.
@@ -59,14 +67,14 @@ Then create a matching row directly in
 
 ```{.yaml filename="module_differential_analyses/cfg.yaml"}
 your_aggregation:
-  differential_analyses_DCTC_models:
+  differential_analyses_cell_type_composition_models:
     condition_abundance:
       formula: ~ condition
       contrast_specs_vec:
         treated_vs_control: conditiontreated
       plot_phenotype_vars: condition
       color_by: condition
-  differential_analyses_psbulk_DX_models:
+  differential_analyses_pseudobulk_models:
     condition_model:
       cell_type_subset: NULL
       design_matrix_func_name: NULL
@@ -76,7 +84,7 @@ your_aggregation:
         treated_vs_control: conditiontreated
 ```
 
-Both branches use named models, donor eligibility checks and named contrasts. Abundance models use `differential_analyses_DCTC_models`; feature models use `differential_analyses_psbulk_DX_models`. Omitting abundance models disables that branch. The former aggregation-wide DCTC formula, phenotype and colour settings have been replaced by fields inside each named model.
+Both branches use named models, donor eligibility checks and named contrasts. Abundance models use `differential_analyses_cell_type_composition_models`; feature models use `differential_analyses_pseudobulk_models`. Omitting abundance models disables that branch. The former aggregation-wide cell-type composition formula, phenotype and colour settings have been replaced by fields inside each named model.
 
 For mixed tissues, set `GEM_well_IDs` inside an abundance model to define its population, for example the six left-ventricle wells. Optional `donor_ids` can further restrict donors in either branch. Donors with missing model metadata or no selected samples are excluded and recorded in model-specific cohort TSVs. Feature cohorts also report retained pseudobulk sample counts and depth-filter exclusions.
 
@@ -116,7 +124,7 @@ targets::tar_make(
 )
 ```
 
-Review pseudobulk depths and retained donor counts before interpreting coefficients. Check model-matrix terms, P-value distributions, effect directions, and agreement or disagreement across DGE, DCA, DTFA, and DCTA. The CollecTRI-DTFA concordance target summarizes family coverage, rank correlation, directional agreement, and joint FDR support for every configured contrast. These are complementary regulatory readouts: agreement strengthens a shared interpretation, while disagreement can reflect post-transcriptional regulation, motif-family ambiguity, or different evidence carried by expression and accessibility. Treat the [Differential analyses gallery](gallery_differential_analyses.qmd) as a visual reference, not as a statistical acceptance threshold.
+Review pseudobulk depths and retained donor counts before interpreting coefficients. Check model-matrix terms, P-value distributions, effect directions, and agreement or disagreement across gene expression, chromatin accessibility, motif-family accessibility, and transcription-factor activity. The CollecTRI-JASPAR concordance target summarizes family coverage, rank correlation, directional agreement, and joint FDR support for every configured contrast. These are complementary regulatory readouts: agreement strengthens a shared interpretation, while disagreement can reflect post-transcriptional regulation, motif-family ambiguity, or different evidence carried by expression and accessibility. Treat the [gallery](gallery_differential_analyses.qmd) as a visual reference, not as a statistical acceptance threshold.
 
 Runtime depends on donors, cell types, models, contrasts, and gene-set analyses. Use [Troubleshooting](troubleshooting.qmd) if a formula, contrast, or metadata join fails.
 

@@ -487,7 +487,7 @@ rlang::list2(
     name = pseudobulk_motif_family_accessibility_matrix.ATAC,
     description = "Compute pseudobulk JASPAR motif-family accessibility scores from ATAC counts [part_of_graph:differential_analyses]",
     command = get_pseudobulk_motif_family_accessibility_matrix(
-      psbulk_ATAC_data_matrix = pseudobulk_counts_matrix.ATAC,
+      pseudobulk_ATAC_data_matrix = pseudobulk_counts_matrix.ATAC,
       chromVAR_obj = chromVAR_obj.ATAC,
       chromVAR_motif_family_matrix = chromVAR_TF_motif_family_matrix.ATAC
     ),

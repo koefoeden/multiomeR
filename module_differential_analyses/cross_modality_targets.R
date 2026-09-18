@@ -1,12 +1,12 @@
 rlang::list2(
   targets::tar_target(
     name = significant_elements_modality_distribution_tibble,
-    description = "Compare each contrast's share of significant elements across pseudobulk DX modalities",
+    description = "Compare each contrast's share of significant elements across pseudobulk differential modalities",
     command = dplyr::bind_rows(
-      DGE = significant_elements_tibble.DGE,
-      DCA = significant_elements_tibble.DCA,
-      DTFA = significant_elements_tibble.DTFA,
-      DCTA = significant_elements_tibble.DCTA,
+      gene_expression = significant_elements_tibble.gene_expression,
+      chromatin_accessibility = significant_elements_tibble.chromatin_accessibility,
+      motif_family_accessibility = significant_elements_tibble.motif_family_accessibility,
+      transcription_factor_activity = significant_elements_tibble.transcription_factor_activity,
       .id = "modality"
     ) |>
       dplyr::summarise(n_significant = sum(n_significant), .by = c(modality, model, contrast)) |>
@@ -18,9 +18,9 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = significant_elements_modality_distribution_plots,
-    description = "Plot each contrast's share of significant elements across pseudobulk DX modalities per model. [checkpoint:differential_analyses]",
+    description = "Plot each contrast's share of significant elements across pseudobulk differential modalities per model. [checkpoint:differential_analyses]",
     command = significant_elements_modality_distribution_tibble |>
-      plot_psbulk_DX_significant_elements_modality_distribution() |>
+      plot_pseudobulk_differential_significant_elements_modality_distribution() |>
       save_plots_structured()
   ),
   targets::tar_target(
@@ -32,34 +32,34 @@ rlang::list2(
     )
   ),
   targets::tar_target(
-    name = TF_activity_source_comparison_tibble.CollecTRI_DTFA,
+    name = activity_accessibility_source_comparison_tibble.CollecTRI_JASPAR,
     description = "Compare CollecTRI activity, JASPAR motif-family accessibility, and TF expression results [part_of_graph:differential_analyses]",
-    command = get_CollecTRI_DTFA_comparison_tibble(
-      CollecTRI_results_tibble = results_tibble.DCTA,
-      DTFA_results_tibble = results_tibble.DTFA,
-      DGE_results_tibble = results_tibble.DGE,
+    command = get_CollecTRI_JASPAR_comparison_tibble(
+      CollecTRI_results_tibble = results_tibble.transcription_factor_activity,
+      motif_family_accessibility_results_tibble = results_tibble.motif_family_accessibility,
+      gene_expression_results_tibble = results_tibble.gene_expression,
       CollecTRI_JASPAR_family_map = CollecTRI_JASPAR_family_map
     )
   ),
   targets::tar_target(
-    name = TF_activity_family_comparison_tibble.CollecTRI_DTFA,
-    description = "Collapse CollecTRI-DTFA comparisons to motif families per model and contrast [part_of_graph:differential_analyses]",
-    command = get_CollecTRI_DTFA_family_comparison_tibble(
-      TF_activity_source_comparison_tibble.CollecTRI_DTFA
+    name = activity_accessibility_family_comparison_tibble.CollecTRI_JASPAR,
+    description = "Collapse CollecTRI-JASPAR comparisons to motif families per model and contrast [part_of_graph:differential_analyses]",
+    command = get_CollecTRI_JASPAR_family_comparison_tibble(
+      activity_accessibility_source_comparison_tibble.CollecTRI_JASPAR
     )
   ),
   targets::tar_target(
-    name = TF_activity_concordance_tibble.CollecTRI_DTFA,
-    description = "Summarize CollecTRI-DTFA correlation, direction concordance, and joint significance per contrast [part_of_graph:differential_analyses]",
-    command = get_CollecTRI_DTFA_concordance_tibble(
-      TF_activity_family_comparison_tibble.CollecTRI_DTFA
+    name = activity_accessibility_concordance_tibble.CollecTRI_JASPAR,
+    description = "Summarize CollecTRI-JASPAR correlation, direction concordance, and joint significance per contrast [part_of_graph:differential_analyses]",
+    command = get_CollecTRI_JASPAR_concordance_tibble(
+      activity_accessibility_family_comparison_tibble.CollecTRI_JASPAR
     )
   ),
   tarchetypes::tar_file(
-    name = TF_activity_concordance_plots.CollecTRI_DTFA,
+    name = activity_accessibility_concordance_plots.CollecTRI_JASPAR,
     description = "Plot expression- versus accessibility-derived TF activity concordance per contrast. [checkpoint:differential_analyses]",
-    command = TF_activity_concordance_tibble.CollecTRI_DTFA |>
-      plot_CollecTRI_DTFA_concordance() |>
+    command = activity_accessibility_concordance_tibble.CollecTRI_JASPAR |>
+      plot_CollecTRI_JASPAR_concordance() |>
       save_plots_structured()
   ),
 )

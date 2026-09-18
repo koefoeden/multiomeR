@@ -102,7 +102,7 @@
   subsection: Gene expression
   title: Volcano plot
   description: Highlights genes with the strongest expression differences for one comparison.
-  target: volcano_plots_files.DGE.differential_analyses.immune_human_2x
+  target: volcano_plots.gene_expression.differential_analyses.immune_human_2x
   asset: gallery_assets/differential_analyses/gene_expression/volcano_plot.png
   status: available
 
@@ -110,7 +110,7 @@
   subsection: Gene expression
   title: Significant-elements summary
   description: Summarizes the number and direction of significant expression changes across comparisons.
-  target: significant_elements_plot.DGE.differential_analyses.immune_human_2x
+  target: significant_elements_plot.gene_expression.differential_analyses.immune_human_2x
   asset: gallery_assets/differential_analyses/gene_expression/significant_elements.png
   status: available
 
@@ -118,7 +118,7 @@
   subsection: Chromatin accessibility
   title: Volcano plot
   description: Highlights regulatory regions with the strongest accessibility differences for one comparison.
-  target: volcano_plots_files.DCA.differential_analyses.immune_human_2x
+  target: volcano_plots.chromatin_accessibility.differential_analyses.immune_human_2x
   asset: gallery_assets/differential_analyses/chromatin_accessibility/volcano_plot.png
   status: available
 
@@ -126,7 +126,7 @@
   subsection: Chromatin accessibility
   title: Significant-elements summary
   description: Summarizes the number and direction of significant accessibility changes across comparisons.
-  target: significant_elements_plot.DCA.differential_analyses.immune_human_2x
+  target: significant_elements_plot.chromatin_accessibility.differential_analyses.immune_human_2x
   asset: gallery_assets/differential_analyses/chromatin_accessibility/significant_elements.png
   status: available
 
@@ -134,7 +134,7 @@
   subsection: Motif-family accessibility
   title: Volcano plot
   description: Highlights JASPAR motif families with the strongest accessibility differences for one comparison.
-  target: volcano_plots_files.DTFA.differential_analyses.immune_human_2x
+  target: volcano_plots.motif_family_accessibility.differential_analyses.immune_human_2x
   asset: gallery_assets/differential_analyses/transcription_factor_activity/volcano_plot.png
   status: available
 
@@ -142,7 +142,7 @@
   subsection: Motif-family accessibility
   title: Significant-elements summary
   description: Summarizes the number and direction of significant motif-family accessibility changes across comparisons.
-  target: significant_elements_plot.DTFA.differential_analyses.immune_human_2x
+  target: significant_elements_plot.motif_family_accessibility.differential_analyses.immune_human_2x
   asset: gallery_assets/differential_analyses/transcription_factor_activity/significant_elements.png
   status: available
 

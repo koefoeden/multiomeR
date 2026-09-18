@@ -39,7 +39,7 @@ rlang::list2(
     description = "Decompose each cell-type GWAS chromVAR heatmap value into exact peak contributions [part_of_graph:genetic_enrichment_cell_type_contributions]",
     command = get_GWAS_chromVAR_peak_contribution_tibble(
       chromVAR_background_record = chromVAR_background_record.cell_type_pseudobulk,
-      psbulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
+      pseudobulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
       chromVAR_obj = chromVAR_obj.ATAC,
       annotation_matrix = GWAS_peak_weight_matrix,
       GWAS_inputs_tibble = GWAS_inputs_tibble

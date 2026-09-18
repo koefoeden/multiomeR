@@ -805,6 +805,10 @@ plot_GWAS_locus_contribution_waterfalls <- function(locus_contribution_tibble, n
     interaction(locus_contribution_tibble$GWAS_ID, locus_contribution_tibble$cluster, drop = TRUE, lex.order = TRUE)
   )
 
+  plot_names <- if (dplyr::n_distinct(locus_contribution_tibble$GWAS_ID) == 1L) {
+    vapply(split_tibbles, \(x) as.character(x$cluster[[1]]), character(1))
+  } else names(split_tibbles)
+
   purrr::map(split_tibbles, \(locus_tibble) {
     plot_GWAS_locus_contribution_waterfall(
       waterfall_tibble = prepare_GWAS_locus_contribution_waterfall_tibble(
@@ -814,7 +818,7 @@ plot_GWAS_locus_contribution_waterfalls <- function(locus_contribution_tibble, n
       title = stringr::str_glue("{locus_tibble$GWAS_ID[[1]]} - {locus_tibble$cluster[[1]]}")
     )
   }) |>
-    rlang::set_names(stringr::str_replace_all(names(split_tibbles), "[^A-Za-z0-9_.-]+", "_"))
+    rlang::set_names(stringr::str_replace_all(plot_names, "[^A-Za-z0-9_.-]+", "_"))
 }
 
 make_GWAS_variant_contribution_track <- function(variant_tibble, region) {
@@ -1044,4 +1048,53 @@ plot_GWAS_variant_contribution_detail_record <- function(plot_record) {
 plot_GWAS_variant_contribution_details <- function(plot_records) {
   plot_records |>
     purrr::map(plot_GWAS_variant_contribution_detail_record)
+}
+
+#' Plot compact locus contributions across cell types for one GWAS
+#'
+#' @param locus_contribution_tibble Exact contributions for one GWAS.
+#' @param n_top_loci Number of individually labelled loci per cell type.
+#' @return A faceted ggplot with a shared contribution scale.
+plot_GWAS_locus_contribution_bars <- function(locus_contribution_tibble, n_top_loci = 5L) {
+  plot_data <- locus_contribution_tibble |>
+    dplyr::group_by(cluster) |>
+    dplyr::group_modify(\(data, key) {
+      steps <- prepare_GWAS_locus_contribution_waterfall_tibble(data, n_top_loci)
+      total <- steps$relative_deviation_contribution[steps$locus_label == "Total"]
+      bars <- steps |> dplyr::filter(locus_label != "Total")
+      if (nrow(bars) == 0L) bars <- tibble::tibble(
+        locus_label = "No nonzero contributions", relative_deviation_contribution = 0,
+        top_L2G_gene = NA_character_, is_other = TRUE, direction = "Positive")
+      bars |>
+        dplyr::arrange(is_other, dplyr::desc(abs(relative_deviation_contribution))) |>
+        dplyr::mutate(
+          panel = paste0(key$cluster, " | Total = ", signif(total, 3)),
+          label = dplyr::if_else(!is.na(top_L2G_gene) & nzchar(top_L2G_gene),
+            paste0(top_L2G_gene, " · ", locus_label), locus_label))
+    }) |>
+    dplyr::ungroup() |>
+    dplyr::mutate(row = factor(dplyr::row_number(), levels = rev(seq_len(dplyr::n()))),
+      panel = factor(panel, levels = unique(panel)))
+  ggplot2::ggplot(plot_data, ggplot2::aes(x = relative_deviation_contribution, y = row, fill = direction)) +
+    ggplot2::geom_blank() +
+    ggplot2::geom_vline(xintercept = 0, colour = "grey50", linewidth = 0.3) +
+    ggplot2::geom_col(data = \(data) dplyr::filter(data, !is_other), width = 0.7) +
+    ggplot2::geom_col(data = \(data) dplyr::filter(data, is_other),
+      ggplot2::aes(colour = direction), fill = NA, width = 0.7, linewidth = 0.65, show.legend = FALSE) +
+    ggplot2::scale_y_discrete(labels = stats::setNames(plot_data$label, plot_data$row)) +
+    ggplot2::scale_fill_manual(values = c(Positive = "#B40426", Negative = "#3B4CC0"), name = NULL) +
+    ggplot2::scale_colour_manual(values = c(Positive = "#B40426", Negative = "#3B4CC0"), guide = "none") +
+    ggplot2::facet_wrap(ggplot2::vars(panel), ncol = 3, scales = "free_y") +
+    ggplot2::labs(title = paste("Loci contributing to GWAS-linked accessibility:", unique(locus_contribution_tibble$GWAS_ID)),
+      subtitle = "Compare bar lengths on the shared scale: positive loci drive the total; negative loci offset it.\nEach cell type has its own leading loci; separate remainder bars preserve cancellation.",
+      x = "Relative-deviation contribution", y = NULL,
+      caption = stringr::str_wrap(paste("Up to", n_top_loci,
+        "loci per cell type are selected by absolute contribution; remaining loci are summed separately by sign and drawn as unfilled outlines. Bars sum to the total in each panel heading. Zero contributions are omitted except in all-zero panels. Gene labels are top Open Targets L2G assignments, not proven causal genes. Contributions describe pooled cell-type chromVAR relative deviations, not significance or cumulative sums."), 150)) +
+    ggplot2::theme_minimal(base_size = 10) +
+    ggplot2::theme(panel.grid.major.y = ggplot2::element_blank(), legend.position = "bottom",
+      panel.border = ggplot2::element_rect(colour = "grey55", fill = NA, linewidth = 0.5),
+      panel.spacing = grid::unit(1.2, "lines"),
+      strip.background = ggplot2::element_rect(fill = "grey90", colour = "grey55", linewidth = 0.5),
+      strip.text = ggplot2::element_text(face = "bold", size = 11,
+        margin = ggplot2::margin(7, 5, 7, 5)), plot.caption = ggplot2::element_text(hjust = 0))
 }

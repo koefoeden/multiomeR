@@ -81,7 +81,7 @@ rlang::list2(
     )
   ),
   tarchetypes::tar_file(
-    name = chromVAR_locus_contribution_heatmaps.cell_type_pseudobulk,
+    name = chromVAR_locus_contribution_per_GWAS_heatmaps.cell_type_pseudobulk,
     description = "Save one cell-type-by-locus contribution heatmap per enabled GWAS. [checkpoint:genetic_enrichment]",
     command = plot_GWAS_locus_contribution_heatmaps(
       locus_contribution_tibble = chromVAR_locus_contribution_tibble.cell_type_pseudobulk,
@@ -91,11 +91,15 @@ rlang::list2(
       save_plots_structured(width = 16, height = 8)
   ),
   tarchetypes::tar_file(
-    name = chromVAR_locus_contribution_waterfalls.cell_type_pseudobulk,
-    description = "Save locus-contribution waterfalls for every enabled GWAS and cell type. [checkpoint:genetic_enrichment]",
-    command = chromVAR_locus_contribution_tibble.cell_type_pseudobulk |>
-      plot_GWAS_locus_contribution_waterfalls(n_top_loci = 15L) |>
-      save_plots_structured(width = 15, height = 8)
+    name = chromVAR_locus_contribution_per_GWAS_faceted_bars_plots.cell_type_pseudobulk,
+    description = "Save compact signed locus-contribution bars faceted by cell type for each GWAS. [checkpoint:genetic_enrichment]",
+    command = chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk |>
+      plot_GWAS_locus_contribution_bars(n_top_loci = 5L) |>
+      save_plots_structured(width = 18, dyn_suffix_in_subdir = TRUE,
+        height = 2.5 + 2.3 * ceiling(dplyr::n_distinct(chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk$cluster) / 3),
+        override_suffix = chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk$GWAS_ID[[1]]),
+    pattern = map(chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk),
+    iteration = "list"
   ),
   targets::tar_target(
     name = chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk,

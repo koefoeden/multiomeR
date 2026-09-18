@@ -30,7 +30,7 @@ Use `differential_analyses_extended_donor_id_metadata_tsv` when the modelling ta
 Choose the output that matches your question:
 
 | Question | Output family |
-|---|---|
+|------------------------------------|------------------------------------|
 | Do cell-type proportions differ? | `cell_type_composition` |
 | Which genes change expression? | `gene_expression` |
 | Which peaks change accessibility? | `chromatin_accessibility` |
@@ -47,14 +47,14 @@ See the [method details](implementation/implementation_differential_analyses.htm
 
 Add `modules` to the existing aggregation entry, keeping its input and marker settings:
 
-```{.yaml filename="cfg_aggregations.yaml"}
+``` {.yaml filename="cfg_aggregations.yaml"}
 your_aggregation:
   modules: [differential_analyses]
 ```
 
 Then create a matching row directly in `configuration/cfg_module_differential_analyses.yaml`.
 
-```{.yaml filename="configuration/cfg_module_differential_analyses.yaml"}
+``` {.yaml filename="configuration/cfg_module_differential_analyses.yaml"}
 your_aggregation:
   differential_analyses_cell_type_composition_models:
     condition_abundance:
@@ -89,7 +89,7 @@ The model example assumes `condition` distinguishes treated and control donors. 
 
 Preview the selected module outputs before running them:
 
-```{.r filename="R"}
+``` {.r filename="R"}
 targets::tar_manifest(
   names = targets::tar_described_as(
     tidyselect::contains("checkpoint:differential_analyses")
@@ -100,7 +100,7 @@ targets::tar_manifest(
 
 Then run the same selection:
 
-```{.r filename="R"}
+``` {.r filename="R"}
 targets::tar_make(
   names = targets::tar_described_as(
     tidyselect::contains("checkpoint:differential_analyses")

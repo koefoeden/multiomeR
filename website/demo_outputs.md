@@ -14,15 +14,12 @@ gallery_items <- check_output_gallery_assets(
 )
 ```
 
-The pipeline produces 4 main kinds of outputs in the targets-store, defaulted to `outputs/` (can be configured via the `store` parameter in `_targets.yaml)`
+The pipeline saves four main kinds of output in its targets store, normally `outputs/`. The `store` setting in `_targets.yaml` selects this folder.
 
-- Serialized R objects (qs2-format) in a flat file hierarchy managed by targets itself inside `objects/`.
-
-- Various file types inside `files/` in a structured folder hierarchy
-
-- Plots in .png-format inside `plots/` in a structured folder hierarchy
-
-- Serialized ggplot2-objects inside `plots_objects/` in a structured folder hierarchy
+- Serialized R objects in `objects/`, managed by targets.
+- Data files in `files/`, grouped by target and analysis.
+- Plot images in `plots/`, normally in PNG format.
+- Editable plot objects in `plot_objects/`, saved as RDS files alongside the corresponding image hierarchy.
 
 ## Objects
 
@@ -51,7 +48,7 @@ targets::tar_read(aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x)
 targets::tar_read(consensus_peak_BPCells_matrix_dir.ATAC.immune_human_2x)
 ```
 
-As you can see from the output above, file-targets are always saved in a location derived directly from their target-name.
+As you can see from the output above, pipeline-generated files generally follow a folder hierarchy derived from their target names; `tar_read()` gives their actual paths.
 
 ## Plots
 
@@ -69,11 +66,29 @@ render_gallery_grid(gallery_items[gallery_items$id == "wnn-umap", ])
 
 ## Plot objects
 
-\<WIP\>\
-The [Main pipeline gallery](gallery_main.md) shows the other plot families the workflow produces. Those are saved snapshots and do not reflect the state of your analysis. To build one more of them, follow [Request an additional result](main_running.md#after-the-steps); to build all review plots for a stage, run its step in [Run your own analysis](main_running.md#steps).
+Each plot saved by the standard plotting helper also has an `.rds` copy under `plot_objects/`, unless plot-object saving was disabled. This lets you reopen a plot in R without repeating the analysis. For example:
+
+``` {.r filename="R"}
+plot_file <- file.path(
+  targets::tar_config_get("store"),
+  "plot_objects/immune_human_2x/8_multimodal_QC/UMAPs/categorical",
+  "WNN_harmony_SNN_cluster_cell_type.rds"
+)
+p <- readRDS(plot_file)
+p
+```
+
+For a ggplot object, edit it with the usual ggplot2 functions and save a separate copy:
+
+``` {.r filename="R"}
+p <- p + ggplot2::labs(title = "My integrated cell types")
+ggplot2::ggsave("my_cell_types.png", p, width = 10, height = 8)
+```
+
+Some outputs are composite plots rather than ordinary ggplot objects and need their own editing methods. Keep custom exports separate from pipeline outputs, which can be overwritten on a rerun.
 
 ## Possible next steps
 
-- To continue with the demo-aggregation, and explore other outputs, try to run all targets in the pipeline by leaving out the `names` parameter in the `tar_make()`-call on the previous page.
-- To adopt the workflow, continue with [Plan your analysis](main_overview.md) and the steps in [Run your own analysis](main_running.md#steps).
+- To continue with the demo-aggregation, and explore other outputs, run `targets::tar_make()` without `names`.
+- To get started with your own data, please continue at [Plan your analysis](main_overview.md).
 - To diagnose a failed or unexpectedly stale target, use [Troubleshooting](troubleshooting.md).

@@ -1,6 +1,8 @@
 # Run your own analysis
 
-This section assumes that you have followed the demo, such that things are correctly installed, and you are comfortable with where to locate outputs and how to run the pipeline. Here, we will replace the relevant configuration for the demo and run a small part of the pipeline one step at a time, through a repeated series of actions following the same pattern: **Configure** -\> **Run** **pipeline**-\> **Review** **plots** (and Repeat if needed).
+After completing the demo, replace its configuration and work through **Configure → Run pipeline → Review plots**, repeating each step as needed. The plots explain what to inspect and which settings to revise.
+
+Run commands from the repository-root R session. Replace `my_GEM_well` with your configured identifiers. `<store>` means the folder selected in `_targets.yaml`, which is normally `outputs` in the root of the repository.
 
 ## 1. Pre-process the cellranger-arc count dirs (GEM wells) {#steps}
 
@@ -8,13 +10,13 @@ This section assumes that you have followed the demo, such that things are corre
 
 - Add entries for each GEM-well (cellranger-arc count dir) you want to process inside `cfg_GEM_wells.tsv`. See [GEM well table](reference_GEM_wells.md) for more information
 
-- Add a bare-bones entry in `cfg_aggregations.yaml`. See [aggregation configuration](reference_aggregations.md) for more information.
+- Locate the `template_aggregation` inside `cfg_aggregations.yaml` and replace the GEM_well_ID-placeholders with the GEM-well IDs that you just added - these GEM-wells are now officially part of this aggregation. Finish by renaming the aggregation-entry using a short, descriptive name. Throughout the rest of this page, replace the \<my_aggregation\>-placeholders with your custom name.
 
 **Run pipeline:**
 
 ``` {.r filename="R"}
 targets::tar_make(
-  names = tidyselect::ends_with("1_pre_aggregation_QC.my_aggregation")
+  names = tidyselect::ends_with("1_pre_aggregation_QC.<my_aggregation>")
 )
 ```
 
@@ -26,7 +28,21 @@ targets::tar_make(
 ├── aggregation_excluded_cellranger_only_barcodes_by_type_upset.png
 ├── aggregation_excluded_barcodes_by_type_upset.png
 ├── nuclei_per_donor_id_bars.png
-└── cell_retention_flow_plot.png <to implement the reaction-level upsets here>
+└── cell_retention_flow_plot.png
+```
+
+For exclusion overlaps within an individual GEM well, you can also request its plots:
+
+``` {.r filename="R"}
+targets::tar_make(
+  names = tidyselect::ends_with("1_pre_aggregation_QC.<my_GEM_well_ID>")
+)
+```
+
+``` text
+<store>/plots/my_GEM_well/1_pre_aggregation_QC/
+├── excluded_barcodes_by_type_upset.png
+└── excluded_cellranger_only_barcodes_by_type_upset.png
 ```
 
 ## 2. Normalize, reduce dimensions, and batch-correct the gene-expression data
@@ -58,9 +74,7 @@ targets::tar_make(
 
 **Initial configuration:**
 
-- `aggregation_GEX_marker_genes,`categorical and continuous metadata variables for the review plots: \< format as link to parameter reference\>
-
-**Run pipeline:**
+Set `aggregation_GEX_marker_genes`, `aggregation_categorical_vars` & `aggregation_continuous_vars`
 
 ``` {.r filename="R"}
 targets::tar_make(
@@ -90,44 +104,33 @@ targets::tar_make(
 └── cell_retention_flow_plot.png
 ```
 
-## 4. Call peaks and inspect ATAC quality \<combine 4 and 5 into a single checkpoint\>
+## 4. Call peaks, inspect ATAC quality, and filter nuclei
 
 **Initial configuration:**
 
 - Start with default settings and revise as described in the plots if necessary.
 
-``` {.r filename="R"}
-targets::tar_make(
-  names = tidyselect::ends_with("4_peak_QC.my_aggregation")
-)
-```
-
-**Review plots**
-
-``` text
-<store>/plots/my_aggregation/4_peak_QC/
-├── peaks_QC_violins_plot/
-└── peaks_similarity_tiles_plot.png
-```
-
-## 5. Filter nuclei on ATAC quality
-
-Applies the expressions from step 5 and shows what they removed.
-
-**Initial configuration:**
-
 **Run pipeline:**
 
 ``` {.r filename="R"}
 targets::tar_make(
-  names = tidyselect::ends_with("5_pre_LSI_QC.my_aggregation")
+  names = tidyselect::ends_with(c(
+    "4_peak_QC.my_aggregation",
+    "5_pre_LSI_QC.my_aggregation"
+  ))
 )
 ```
 
 **Review plots:**
 
 ``` text
-<store>/plots/my_aggregation/5_pre_LSI_QC/
+<store>/plots/my_aggregation/
+├── 4_peak_QC/
+│   ├── peaks_QC_violins_plot/
+│   └── peaks_similarity_tiles_plot.png
+└── 5_pre_LSI_QC/
+    ├── QC_excluded_upset_plot.png
+    └── cell_retention_flow_plot.png
 ```
 
 ## 5. Normalize, reduce dimensions and batch-correct the ATAC-data
@@ -160,7 +163,7 @@ targets::tar_make(
 
 **Initial configuration:**
 
-- `aggregation_ATAC_marker_TFs`: marker transcription factors per cell type;
+- `Set aggregation_ATAC_marker_TFs`
 
 **Run pipeline:**
 
@@ -229,6 +232,6 @@ Continue to one of the three modules:
 
 - [Differential analyses](downstream_differential_analyses.md), if you have many donors and a condition of interest
 
--  [Genetic enrichment](downstream_genetic_enrichment.md), if you are interested in pinpointing cell-type-level genetic enrichment
+- [Genetic enrichment](downstream_genetic_enrichment.md), if you are interested in pinpointing cell-type-level genetic enrichment
 
-- Peak gene correlation, if you have many cells \<format as link\>
+- [Peak–gene correlation](downstream_peak_gene_correlation.md), to test associations between peak accessibility and gene expression.

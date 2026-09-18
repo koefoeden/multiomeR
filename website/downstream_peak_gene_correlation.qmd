@@ -13,9 +13,10 @@ my_aggregation:
   peak_gene_correlation_top_links_per_cell_group: 3
 ```
 
-This parameter controls the number of top-link scatterplots and locus tracks
-per cell group; the analysis and link-selection defaults are unchanged.
-Disabled aggregations contribute no module targets.
+The top-link count controls the number of detail figures per cell type.
+`peak_gene_correlation_filter` selects `lenient` (default), `moderate`, or
+`strict` measurement-support filtering. Disabled aggregations contribute no
+module targets.
 
 ```r
 targets::tar_make(
@@ -35,22 +36,21 @@ targets::tar_read(
 ```
 
 Peak–gene links are candidate regulatory relationships. Cells are aggregated
-within donor and ATAC-defined state, without reusing a cell across aggregates.
-The score adjusts for donor and RNA/ATAC library depth, while retaining
-variation between states. A single donor can contribute: eligibility depends
-on usable aggregates and feature variation, with at least 10 aggregates and
-5 residual degrees of freedom required. Non-promoter peaks within the target
-gene body remain eligible, including potential intronic enhancers.
+within donor and ATAC-defined state using WNN cell-type annotations, without
+reusing a cell across aggregates. Measurement-support filters select hypotheses
+before fitting; the default requires shared support from at least two donors,
+and the strict preset requires three. Review `filter_retention_plot` first.
 
-The reported p-values use an approximate heteroskedasticity-robust regression
-test (HC3), followed by BH correction across tested pairs within each cell
-group. These assess association among aggregates **conditional on the sampled
-donors**, assuming independent errors after adjustment; they do not establish
-replication across people or causal regulation. Candidate links require a
-positive adjusted correlation of at least 0.15 and conditional FDR below 0.05.
-Inspect `n_informative_donors`, `n_positive_donors`,
-`donor_direction_agreement`, and `max_donor_covariance_fraction` alongside the
-score. An informative donor has at least three aggregates and residual
-variation in both features; the covariance fraction shows how much one donor
-contributes to the total absolute cross-product. The scatterplot shows the
-same donor/depth-adjusted values used by the score, with donor-labelled points.
+The hierarchical analysis fits a mean peak effect with donor-specific slope
+variation, donor intercepts and RNA/ATAC depth adjustment. It reports
+Kenward–Roger p-values, BH FDR and numerical reliability diagnostics. Top-link
+figures rank positive, estimable nonpromoter slopes by p-value without a
+significance cutoff, so appearing in a figure is not evidence of significance.
+They combine focal-cell-type coverage, gene context, hierarchical evidence and
+adjusted aggregate scatterplots.
+
+The existing HC3 correlation summaries remain a separate conditional analysis.
+Neither analysis establishes causal regulation; numerical reference parity does
+not establish statistical calibration across datasets. See the
+[module methods and filtering reference](https://github.com/koefoeden/multiomeR/blob/main/module_peak_gene_correlation/README.md)
+for inference limits, support thresholds and output details.

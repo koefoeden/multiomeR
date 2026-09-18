@@ -1,17 +1,17 @@
 %%{init: {'flowchart': {'defaultRenderer': 'elk'}}}%%
 flowchart TB
-  cellranger_barcodes_tsv.healthy_PBMC_human(["cellranger_barcodes_tsv.&lt;GEM_well_ID&gt;"]):::none --> amulet_metrics_tibble.healthy_PBMC_human(["amulet_metrics_tibble.&lt;GEM_well_ID&gt;"]):::none
-  cellranger_barcodes_tsv.healthy_PBMC_human(["cellranger_barcodes_tsv.&lt;GEM_well_ID&gt;"]):::none --> cellsnp_dir.healthy_PBMC_human(["cellsnp_dir.&lt;GEM_well_ID&gt;"]):::none
-  full_metadata_tibble.healthy_PBMC_human(["full_metadata_tibble.&lt;GEM_well_ID&gt;"]):::none --> excluded_cellranger_only_barcodes_by_type_list.healthy_PBMC_human(["excluded_cellranger_only_barcodes_by_type_list.&lt;GEM_well_ID&gt;"]):::none
-  amulet_metrics_tibble.healthy_PBMC_human(["amulet_metrics_tibble.&lt;GEM_well_ID&gt;"]):::none --> full_metadata_tibble.healthy_PBMC_human(["full_metadata_tibble.&lt;GEM_well_ID&gt;"]):::none
-  vireo_donor_ids_tibble.healthy_PBMC_human(["vireo_donor_ids_tibble.&lt;GEM_well_ID&gt;"]):::none --> full_metadata_tibble.healthy_PBMC_human(["full_metadata_tibble.&lt;GEM_well_ID&gt;"]):::none
-  ATAC_qc_metrics_tibble.healthy_PBMC_human(["ATAC_qc_metrics_tibble.&lt;GEM_well_ID&gt;"]):::none --> full_metadata_tibble.healthy_PBMC_human(["full_metadata_tibble.&lt;GEM_well_ID&gt;"]):::none
-  cellbender_h5_file.healthy_PBMC_human(["cellbender_h5_file.&lt;GEM_well_ID&gt;"]):::none --> GEX_counts_BPcells_matrix_dir.healthy_PBMC_human(["GEX_counts_BPcells_matrix_dir.&lt;GEM_well_ID&gt;"]):::none
-  cellranger_barcodes_tsv.healthy_PBMC_human(["cellranger_barcodes_tsv.&lt;GEM_well_ID&gt;"]):::none --> vireo_donor_ids_tibble.healthy_PBMC_human(["vireo_donor_ids_tibble.&lt;GEM_well_ID&gt;"]):::none
-  cellsnp_dir.healthy_PBMC_human(["cellsnp_dir.&lt;GEM_well_ID&gt;"]):::none --> vireo_donor_ids_tibble.healthy_PBMC_human(["vireo_donor_ids_tibble.&lt;GEM_well_ID&gt;"]):::none
-  fragments_w_prefix_bpcells_dir.healthy_PBMC_human(["fragments_w_prefix_bpcells_dir.&lt;GEM_well_ID&gt;"]):::none --> amulet_metrics_tibble.healthy_PBMC_human(["amulet_metrics_tibble.&lt;GEM_well_ID&gt;"]):::none
-  fragments_w_prefix_bpcells_dir.healthy_PBMC_human(["fragments_w_prefix_bpcells_dir.&lt;GEM_well_ID&gt;"]):::none --> ATAC_qc_metrics_tibble.healthy_PBMC_human(["ATAC_qc_metrics_tibble.&lt;GEM_well_ID&gt;"]):::none
-  fragments_w_prefix_bpcells_dir.healthy_PBMC_human(["fragments_w_prefix_bpcells_dir.&lt;GEM_well_ID&gt;"]):::none --> combined_BPCells_fragment_obj.ATAC.immune_human_2x(["combined_BPCells_fragment_obj.ATAC.&lt;aggregation_name&gt;"]):::none
-  GEX_counts_BPcells_matrix_dir.healthy_PBMC_human(["GEX_counts_BPcells_matrix_dir.&lt;GEM_well_ID&gt;"]):::none --> full_metadata_tibble.healthy_PBMC_human(["full_metadata_tibble.&lt;GEM_well_ID&gt;"]):::none
-  GEX_counts_BPcells_matrix_dir.healthy_PBMC_human(["GEX_counts_BPcells_matrix_dir.&lt;GEM_well_ID&gt;"]):::none --> aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x(["aggregated_GEX_BPCells_matrix_dir.GEX.&lt;aggregation_name&gt;"]):::none
-  donor_id_metadata_tibble.immune_human_2x(["donor_id_metadata_tibble.&lt;aggregation_name&gt;"]):::none
+  cellranger_barcodes_tsv.ENCSR245BNT(["cellranger_barcodes_tsv.&lt;GEM_well_ID&gt;"]):::none --> amulet_metrics_tibble.ENCSR245BNT(["amulet_metrics_tibble.&lt;GEM_well_ID&gt;"]):::none
+  cellranger_barcodes_tsv.ENCSR245BNT(["cellranger_barcodes_tsv.&lt;GEM_well_ID&gt;"]):::none --> cellsnp_dir.ENCSR245BNT(["cellsnp_dir.&lt;GEM_well_ID&gt;"]):::none
+  full_metadata_tibble.ENCSR245BNT(["full_metadata_tibble.&lt;GEM_well_ID&gt;"]):::none --> excluded_cellranger_only_barcodes_by_type_list.ENCSR245BNT(["excluded_cellranger_only_barcodes_by_type_list.&lt;GEM_well_ID&gt;"]):::none
+  ATAC_qc_metrics_tibble.ENCSR245BNT(["ATAC_qc_metrics_tibble.&lt;GEM_well_ID&gt;"]):::none --> full_metadata_tibble.ENCSR245BNT(["full_metadata_tibble.&lt;GEM_well_ID&gt;"]):::none
+  amulet_metrics_tibble.ENCSR245BNT(["amulet_metrics_tibble.&lt;GEM_well_ID&gt;"]):::none --> full_metadata_tibble.ENCSR245BNT(["full_metadata_tibble.&lt;GEM_well_ID&gt;"]):::none
+  vireo_donor_ids_tibble.ENCSR245BNT(["vireo_donor_ids_tibble.&lt;GEM_well_ID&gt;"]):::none --> full_metadata_tibble.ENCSR245BNT(["full_metadata_tibble.&lt;GEM_well_ID&gt;"]):::none
+  cellbender_h5_file.ENCSR245BNT(["cellbender_h5_file.&lt;GEM_well_ID&gt;"]):::none --> GEX_counts_BPcells_matrix_dir.ENCSR245BNT(["GEX_counts_BPcells_matrix_dir.&lt;GEM_well_ID&gt;"]):::none
+  cellsnp_dir.ENCSR245BNT(["cellsnp_dir.&lt;GEM_well_ID&gt;"]):::none --> vireo_donor_ids_tibble.ENCSR245BNT(["vireo_donor_ids_tibble.&lt;GEM_well_ID&gt;"]):::none
+  cellranger_barcodes_tsv.ENCSR245BNT(["cellranger_barcodes_tsv.&lt;GEM_well_ID&gt;"]):::none --> vireo_donor_ids_tibble.ENCSR245BNT(["vireo_donor_ids_tibble.&lt;GEM_well_ID&gt;"]):::none
+  fragments_w_prefix_bpcells_dir.ENCSR245BNT(["fragments_w_prefix_bpcells_dir.&lt;GEM_well_ID&gt;"]):::none --> amulet_metrics_tibble.ENCSR245BNT(["amulet_metrics_tibble.&lt;GEM_well_ID&gt;"]):::none
+  fragments_w_prefix_bpcells_dir.ENCSR245BNT(["fragments_w_prefix_bpcells_dir.&lt;GEM_well_ID&gt;"]):::none --> ATAC_qc_metrics_tibble.ENCSR245BNT(["ATAC_qc_metrics_tibble.&lt;GEM_well_ID&gt;"]):::none
+  fragments_w_prefix_bpcells_dir.ENCSR245BNT(["fragments_w_prefix_bpcells_dir.&lt;GEM_well_ID&gt;"]):::none --> combined_BPCells_fragment_obj.ATAC.ENCODE_heart_LV_6x(["combined_BPCells_fragment_obj.ATAC.&lt;aggregation_name&gt;"]):::none
+  GEX_counts_BPcells_matrix_dir.ENCSR245BNT(["GEX_counts_BPcells_matrix_dir.&lt;GEM_well_ID&gt;"]):::none --> full_metadata_tibble.ENCSR245BNT(["full_metadata_tibble.&lt;GEM_well_ID&gt;"]):::none
+  GEX_counts_BPcells_matrix_dir.ENCSR245BNT(["GEX_counts_BPcells_matrix_dir.&lt;GEM_well_ID&gt;"]):::none --> aggregated_GEX_BPCells_matrix_dir.GEX.ENCODE_heart_LV_6x(["aggregated_GEX_BPCells_matrix_dir.GEX.&lt;aggregation_name&gt;"]):::none
+  donor_id_metadata_tibble.ENCODE_heart_LV_6x(["donor_id_metadata_tibble.&lt;aggregation_name&gt;"]):::none

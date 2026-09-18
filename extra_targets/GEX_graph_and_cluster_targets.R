@@ -202,36 +202,6 @@ rlang::list2(
       tibble::column_to_rownames("barcode_w_prefix"),
     resources = get_tar_resources(RAM_GB_req = 8)
   ),
-  tarchetypes::tar_file(
-    name = scDblFinder_score_violins_plot.3_GEX_QC,
-    description = "Violin plots of scDblFinder doublet scores per cluster and cell type. [checkpoint:3_GEX-QC]",
-    command = {
-      scDblFinder_metadata <- metadata_w_cell_types_unfiltered_tibble.GEX |>
-        dplyr::left_join(scDblFinder_results_df.GEX |> tibble::rownames_to_column("barcode_w_prefix"), by = "barcode_w_prefix")
-      plot <- scDblFinder_metadata |>
-        dplyr::select(PCA_harmony_SNN_cluster, PCA_harmony_SNN_cluster_cell_type, scDblFinder.score_GEX, scDblFinder.class_GEX, GEM_well_ID) |>
-        tidyr::pivot_longer(cols = dplyr::all_of(c("PCA_harmony_SNN_cluster", "PCA_harmony_SNN_cluster_cell_type")), names_to = "cluster_type", values_to = "cluster_id") %>%
-        ggplot2::ggplot(ggplot2::aes(x = cluster_id, y = scDblFinder.score_GEX)) +
-        ggplot2::geom_violin(scale = "width") +
-        ggplot2::geom_jitter(
-          data = \(d) dplyr::filter(d, scDblFinder.class_GEX == "doublet"),
-          ggplot2::aes(color = GEM_well_ID),
-          size = 0.3,
-          alpha = 0.5,
-          width = 0.2
-        ) +
-        ggplot2::facet_wrap(~cluster_type, scales = "free_x", labeller = ggplot2::labeller(cluster_type = label_plot_variable)) +
-        ggplot2::labs(title = "GEX doublet-like profiles by cluster and cell type",
-          subtitle = "Look for groups enriched in high scores or doublet calls; scores are not calibrated probabilities.",
-          caption = stringr::str_wrap("Before doublet filtering. Violins show score distributions with equal maximum width; points mark scDblFinder doublet calls. Classification is fitted separately per GEM well; numeric cutoffs need not match across wells.", width = 110),
-          x = NULL, y = "GEX scDblFinder score", colour = "GEM well") +
-        ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)) +
-        ggplot2::theme(legend.position = "bottom")
-
-      save_plots_structured(plot)
-    },
-    resources = get_tar_resources(RAM_GB_req = 16)
-  ),
   targets::tar_target(
     name = metadata_w_cell_types_tibble.GEX,
     description = "Annotate GEX metadata with scDblFinder QC and apply configured cell- and cluster-level doublet filters [part_of_graph:ATAC] [part_of_graph:GEX] [part_of_graph:seurat_export] [checkpoint:3_GEX-QC]",
@@ -428,22 +398,35 @@ rlang::list2(
     pattern = map(non_harmony_continuous_UMAP_spec.GEX),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
+  targets::tar_target(
+    name = metadata_w_cell_types_unfiltered_analysis_tibble.GEX,
+    description = "Join doublet scores and configured analysis variables onto GEX metadata before doublet filtering",
+    command = prepare_GEX_metadata_tibble(
+      metadata_tibble = metadata_w_cell_types_unfiltered_tibble.GEX |>
+        dplyr::left_join(
+          scDblFinder_results_df.GEX |> tibble::rownames_to_column("barcode_w_prefix"),
+          by = "barcode_w_prefix"),
+      barcode_vec = metadata_w_cell_types_unfiltered_tibble.GEX$barcode_w_prefix,
+      donor_id_metadata_tibble = donor_id_analysis_metadata_tibble,
+      GEM_well_metadata_tibble = GEM_well_analysis_metadata_tibble
+    )
+  ),
   tarchetypes::tar_file(
     name = continuous_by_cell_type_violin_plot.3_GEX_QC,
-    description = "Violin plots of continuous QC and cell-cycle features per cell type. [checkpoint:3_GEX-QC]",
+    description = "Violin plots of continuous QC and cell-cycle features per cell type before doublet filtering. [checkpoint:3_GEX-QC]",
     command = plot_QC_metric_violins(
-      metadata_tibble = metadata_w_cell_types_analysis_tibble.GEX,
+      metadata_tibble = metadata_w_cell_types_unfiltered_analysis_tibble.GEX,
       QC_metric_manifest_tibble = QC_metric_manifest_tibble,
       checkpoints = c("1_pre-aggregation-QC", "2_GEX-PCA-QC", "3_GEX-QC"),
       group_col = "PCA_harmony_SNN_cluster_cell_type"
     ) |>
-      save_plots_structured(width = max(10, 4 + 0.35 * dplyr::n_distinct(metadata_w_cell_types_analysis_tibble.GEX$PCA_harmony_SNN_cluster_cell_type)))
+      save_plots_structured(width = max(10, 4 + 0.35 * dplyr::n_distinct(metadata_w_cell_types_unfiltered_analysis_tibble.GEX$PCA_harmony_SNN_cluster_cell_type)))
   ),
   tarchetypes::tar_file(
     name = continuous_by_cluster_violin_plot.3_GEX_QC,
-    description = "Violin plots of continuous QC and cell-cycle features per SNN cluster. [checkpoint:3_GEX-QC]",
+    description = "Violin plots of continuous QC and cell-cycle features per SNN cluster before doublet filtering. [checkpoint:3_GEX-QC]",
     command = plot_QC_metric_violins(
-      metadata_tibble = metadata_w_cell_types_analysis_tibble.GEX,
+      metadata_tibble = metadata_w_cell_types_unfiltered_analysis_tibble.GEX,
       QC_metric_manifest_tibble = QC_metric_manifest_tibble,
       checkpoints = c("1_pre-aggregation-QC", "2_GEX-PCA-QC", "3_GEX-QC"),
       group_col = "PCA_harmony_SNN_cluster_named",
@@ -453,13 +436,13 @@ rlang::list2(
         get_marker_group_cell_types(metadata_w_cell_types_unfiltered_tibble.GEX,
           "PCA_harmony_SNN_cluster_named", "PCA_harmony_SNN_cluster_cell_type"))
     ) |>
-      save_plots_structured(width = max(10, 4 + 0.35 * dplyr::n_distinct(metadata_w_cell_types_analysis_tibble.GEX$PCA_harmony_SNN_cluster_named)))
+      save_plots_structured(width = max(10, 4 + 0.35 * dplyr::n_distinct(metadata_w_cell_types_unfiltered_analysis_tibble.GEX$PCA_harmony_SNN_cluster_named)))
   ),
   tarchetypes::tar_file(
     name = categorical_by_cell_type_bars_plots.3_GEX_QC,
-    description = "Bar plots of categorical metadata composition per cell type. [checkpoint:3_GEX-QC]",
+    description = "Bar plots of categorical metadata composition per cell type before doublet filtering. [checkpoint:3_GEX-QC]",
     command = plot_categorical_bars_plot(
-      metadata_tibble = metadata_w_cell_types_analysis_tibble.GEX,
+      metadata_tibble = metadata_w_cell_types_unfiltered_analysis_tibble.GEX,
       metadata_cols = aggregation_GEX_categorical_vars,
       cluster_col = "PCA_harmony_SNN_cluster_cell_type"
     ) |>
@@ -467,9 +450,9 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = categorical_by_cluster_bars_plots.3_GEX_QC,
-    description = "Bar plots of categorical metadata composition per SNN cluster. [checkpoint:3_GEX-QC]",
+    description = "Bar plots of categorical metadata composition per SNN cluster before doublet filtering. [checkpoint:3_GEX-QC]",
     command = plot_categorical_bars_plot(
-      metadata_tibble = metadata_w_cell_types_analysis_tibble.GEX,
+      metadata_tibble = metadata_w_cell_types_unfiltered_analysis_tibble.GEX,
       metadata_cols = aggregation_GEX_categorical_vars,
       cluster_col = "PCA_harmony_SNN_cluster_named",
       group_order = get_marker_cell_type_order(
@@ -478,7 +461,7 @@ rlang::list2(
         get_marker_group_cell_types(metadata_w_cell_types_unfiltered_tibble.GEX,
           "PCA_harmony_SNN_cluster_named", "PCA_harmony_SNN_cluster_cell_type"))
     ) |>
-      save_plots_structured(height = max(9, 4 + 0.25 * dplyr::n_distinct(metadata_w_cell_types_analysis_tibble.GEX$PCA_harmony_SNN_cluster_named)))
+      save_plots_structured(height = max(9, 4 + 0.25 * dplyr::n_distinct(metadata_w_cell_types_unfiltered_analysis_tibble.GEX$PCA_harmony_SNN_cluster_named)))
   ),
   tarchetypes::tar_file(
     name = cluster_marker_volcano_plots.3_GEX_QC,

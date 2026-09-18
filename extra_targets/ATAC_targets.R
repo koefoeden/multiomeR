@@ -645,41 +645,6 @@ rlang::list2(
         dplyr::select(-dplyr::any_of("GEM_well_ID")),
       resources = get_tar_resources(RAM_GB_req = 8)
     ),
-    tarchetypes::tar_file(
-      name = scDblFinder_score_violins_plot.7_ATAC_QC,
-      description = "Violin plots of scDblFinder doublet scores by cluster. [checkpoint:7_ATAC-QC]",
-      command = {
-        scDblFinder_metadata <- metadata_w_cell_types_unfiltered_tibble.ATAC |>
-          dplyr::left_join(scDblFinder_results_df.ATAC, by = "barcode_w_prefix")
-        plot_data <- scDblFinder_metadata |>
-          dplyr::select(LSI_harmony_SNN_cluster, LSI_harmony_SNN_cluster_cell_type, scDblFinder.score_ATAC, scDblFinder.class_ATAC, GEM_well_ID) |>
-          tidyr::pivot_longer(
-            cols = dplyr::all_of(c("LSI_harmony_SNN_cluster", "LSI_harmony_SNN_cluster_cell_type")),
-            names_to = "cluster_type",
-            values_to = "cluster_id"
-          )
-
-        plot <- plot_data |>
-          ggplot2::ggplot(ggplot2::aes(x = cluster_id, y = scDblFinder.score_ATAC)) +
-          ggplot2::geom_violin(scale = "width") +
-          ggplot2::geom_jitter(
-            data = \(d) dplyr::filter(d, scDblFinder.class_ATAC == "doublet"),
-            ggplot2::aes(color = GEM_well_ID),
-            size = 0.3,
-            alpha = 0.5,
-            width = 0.2
-          ) +
-          ggplot2::facet_wrap(~cluster_type, scales = "free_x", labeller = ggplot2::labeller(cluster_type = label_plot_variable)) +
-          ggplot2::labs(title = "ATAC doublet-like profiles by cluster and cell type",
-          subtitle = "Look for groups enriched in high scores or doublet calls; scores are not calibrated probabilities.",
-          caption = stringr::str_wrap("Before doublet filtering. Violins show score distributions with equal maximum width; points mark scDblFinder doublet calls. Classification is fitted separately per GEM well; numeric cutoffs need not match across wells.", width = 110),
-          x = NULL, y = "ATAC scDblFinder score", colour = "GEM well") +
-          ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)) +
-          ggplot2::theme(legend.position = "bottom")
-
-        save_plots_structured(plot)
-      }
-    ),
     targets::tar_target(
       name = metadata_w_cell_types_tibble.ATAC,
       description = "Annotate ATAC metadata with scDblFinder QC and apply configured cell- and cluster-level doublet filters [part_of_graph:ATAC] [part_of_graph:WNN] [part_of_graph:seurat_export] [checkpoint:7_ATAC-QC]",
@@ -690,6 +655,17 @@ rlang::list2(
         cluster_col = "LSI_harmony_SNN_cluster",
         remove_called_doublets = aggregation_scDblFinder_ATAC_remove_called_doublets,
         max_doublet_fraction_per_cluster = aggregation_scDblFinder_ATAC_max_doublet_fraction_per_cluster
+      )
+    ),
+    targets::tar_target(
+      name = metadata_w_cell_types_unfiltered_analysis_tibble.ATAC,
+      description = "Join doublet scores and configured analysis variables onto ATAC metadata before ATAC doublet filtering",
+      command = prepare_GEX_metadata_tibble(
+        metadata_tibble = metadata_w_cell_types_unfiltered_tibble.ATAC |>
+          dplyr::left_join(scDblFinder_results_df.ATAC, by = "barcode_w_prefix"),
+        barcode_vec = metadata_w_cell_types_unfiltered_tibble.ATAC$barcode_w_prefix,
+        donor_id_metadata_tibble = donor_id_analysis_metadata_tibble,
+        GEM_well_metadata_tibble = GEM_well_analysis_metadata_tibble
       )
     ),
     targets::tar_target(
@@ -739,16 +715,56 @@ rlang::list2(
         save_plots_structured(width = max(10, 4 + 0.35 * dplyr::n_distinct(metadata_w_QC_tibble.ATAC$GEM_well_ID)))
     ),
     tarchetypes::tar_file(
-      name = categorical_bars_plots.7_ATAC_QC,
-      description = "Bar plots of categorical metadata proportions by cell-type cluster. [checkpoint:7_ATAC-QC]",
-      command = {
-        plot <- plot_categorical_bars_plot(
-          metadata_w_cell_types_analysis_tibble.ATAC,
-          metadata_cols = aggregation_ATAC_categorical_vars,
-          cluster_col = "LSI_harmony_SNN_cluster_cell_type"
-        )
-        save_plots_structured(plot)
-      }
+      name = continuous_by_cell_type_violin_plot.7_ATAC_QC,
+      description = "Violin plots of continuous QC and cell-cycle features per cell type before ATAC doublet filtering. [checkpoint:7_ATAC-QC]",
+      command = plot_QC_metric_violins(
+        metadata_tibble = metadata_w_cell_types_unfiltered_analysis_tibble.ATAC,
+        QC_metric_manifest_tibble = QC_metric_manifest_tibble,
+        checkpoints = c("1_pre-aggregation-QC", "2_GEX-PCA-QC", "3_GEX-QC", "4_peak-QC", "5_pre-LSI-QC", "6_ATAC-LSI-QC", "7_ATAC-QC"),
+        group_col = "LSI_harmony_SNN_cluster_cell_type"
+      ) |>
+        save_plots_structured(width = max(10, 4 + 0.35 * dplyr::n_distinct(metadata_w_cell_types_unfiltered_analysis_tibble.ATAC$LSI_harmony_SNN_cluster_cell_type)))
+    ),
+    tarchetypes::tar_file(
+      name = continuous_by_cluster_violin_plot.7_ATAC_QC,
+      description = "Violin plots of continuous QC and cell-cycle features per SNN cluster before ATAC doublet filtering. [checkpoint:7_ATAC-QC]",
+      command = plot_QC_metric_violins(
+        metadata_tibble = metadata_w_cell_types_unfiltered_analysis_tibble.ATAC,
+        QC_metric_manifest_tibble = QC_metric_manifest_tibble,
+        checkpoints = c("1_pre-aggregation-QC", "2_GEX-PCA-QC", "3_GEX-QC", "4_peak-QC", "5_pre-LSI-QC", "6_ATAC-LSI-QC", "7_ATAC-QC"),
+        group_col = "LSI_harmony_SNN_cluster_named",
+        group_order = get_marker_cell_type_order(
+          metadata_w_cell_types_unfiltered_tibble.ATAC$LSI_harmony_SNN_cluster_named,
+          names(UCell_GEX_marker_genes_list),
+          get_marker_group_cell_types(metadata_w_cell_types_unfiltered_tibble.ATAC,
+            "LSI_harmony_SNN_cluster_named", "LSI_harmony_SNN_cluster_cell_type"))
+      ) |>
+        save_plots_structured(width = max(10, 4 + 0.35 * dplyr::n_distinct(metadata_w_cell_types_unfiltered_analysis_tibble.ATAC$LSI_harmony_SNN_cluster_named)))
+    ),
+    tarchetypes::tar_file(
+      name = categorical_by_cell_type_bars_plots.7_ATAC_QC,
+      description = "Bar plots of categorical metadata composition per cell type before ATAC doublet filtering. [checkpoint:7_ATAC-QC]",
+      command = plot_categorical_bars_plot(
+        metadata_tibble = metadata_w_cell_types_unfiltered_analysis_tibble.ATAC,
+        metadata_cols = aggregation_ATAC_categorical_vars,
+        cluster_col = "LSI_harmony_SNN_cluster_cell_type"
+      ) |>
+        save_plots_structured()
+    ),
+    tarchetypes::tar_file(
+      name = categorical_by_cluster_bars_plots.7_ATAC_QC,
+      description = "Bar plots of categorical metadata composition per SNN cluster before ATAC doublet filtering. [checkpoint:7_ATAC-QC]",
+      command = plot_categorical_bars_plot(
+        metadata_tibble = metadata_w_cell_types_unfiltered_analysis_tibble.ATAC,
+        metadata_cols = aggregation_ATAC_categorical_vars,
+        cluster_col = "LSI_harmony_SNN_cluster_named",
+        group_order = get_marker_cell_type_order(
+          metadata_w_cell_types_unfiltered_tibble.ATAC$LSI_harmony_SNN_cluster_named,
+          names(UCell_GEX_marker_genes_list),
+          get_marker_group_cell_types(metadata_w_cell_types_unfiltered_tibble.ATAC,
+            "LSI_harmony_SNN_cluster_named", "LSI_harmony_SNN_cluster_cell_type"))
+      ) |>
+        save_plots_structured(height = max(9, 4 + 0.25 * dplyr::n_distinct(metadata_w_cell_types_unfiltered_analysis_tibble.ATAC$LSI_harmony_SNN_cluster_named)))
     ),
     tarchetypes::tar_file(
       name = QC_excluded_upset_plot.5_pre_LSI_QC,

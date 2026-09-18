@@ -242,15 +242,56 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
-      name = categorical_bars_plots.8_multimodal_QC,
-      description = "Bar plots of categorical metadata composition per WNN cell type. [checkpoint:8_multimodal-QC]",
+      name = continuous_by_cell_type_violin_plot.8_multimodal_QC,
+      description = "Violin plots of continuous QC and cell-cycle features per cell type among all WNN nuclei. [checkpoint:8_multimodal-QC]",
+      command = plot_QC_metric_violins(
+        metadata_tibble = metadata_w_cell_types_analysis_tibble.WNN,
+        QC_metric_manifest_tibble = QC_metric_manifest_tibble,
+        checkpoints = c("1_pre-aggregation-QC", "2_GEX-PCA-QC", "3_GEX-QC", "4_peak-QC", "5_pre-LSI-QC", "6_ATAC-LSI-QC", "7_ATAC-QC", "8_multimodal-QC"),
+        group_col = "WNN_harmony_SNN_cluster_cell_type"
+      ) |>
+        save_plots_structured(width = max(10, 4 + 0.35 * dplyr::n_distinct(metadata_w_cell_types_analysis_tibble.WNN$WNN_harmony_SNN_cluster_cell_type)))
+    ),
+    tarchetypes::tar_file(
+      name = continuous_by_cluster_violin_plot.8_multimodal_QC,
+      description = "Violin plots of continuous QC and cell-cycle features per SNN cluster among all WNN nuclei. [checkpoint:8_multimodal-QC]",
+      command = plot_QC_metric_violins(
+        metadata_tibble = metadata_w_cell_types_analysis_tibble.WNN,
+        QC_metric_manifest_tibble = QC_metric_manifest_tibble,
+        checkpoints = c("1_pre-aggregation-QC", "2_GEX-PCA-QC", "3_GEX-QC", "4_peak-QC", "5_pre-LSI-QC", "6_ATAC-LSI-QC", "7_ATAC-QC", "8_multimodal-QC"),
+        group_col = "WNN_harmony_SNN_cluster_named",
+        group_order = get_marker_cell_type_order(
+          metadata_w_cell_types_tibble.WNN$WNN_harmony_SNN_cluster_named,
+          names(UCell_GEX_marker_genes_list),
+          get_marker_group_cell_types(metadata_w_cell_types_tibble.WNN,
+            "WNN_harmony_SNN_cluster_named", "WNN_harmony_SNN_cluster_cell_type"))
+      ) |>
+        save_plots_structured(width = max(10, 4 + 0.35 * dplyr::n_distinct(metadata_w_cell_types_analysis_tibble.WNN$WNN_harmony_SNN_cluster_named)))
+    ),
+    tarchetypes::tar_file(
+      name = categorical_by_cell_type_bars_plots.8_multimodal_QC,
+      description = "Bar plots of categorical metadata composition per cell type among all WNN nuclei. [checkpoint:8_multimodal-QC]",
       command = plot_categorical_bars_plot(
         metadata_tibble = metadata_w_cell_types_analysis_tibble.WNN,
         metadata_cols = aggregation_WNN_categorical_vars,
         cluster_col = "WNN_harmony_SNN_cluster_cell_type"
       ) |>
-        save_plots_structured(),
-      resources = get_tar_resources(RAM_GB_req = 16)
+        save_plots_structured()
+    ),
+    tarchetypes::tar_file(
+      name = categorical_by_cluster_bars_plots.8_multimodal_QC,
+      description = "Bar plots of categorical metadata composition per SNN cluster among all WNN nuclei. [checkpoint:8_multimodal-QC]",
+      command = plot_categorical_bars_plot(
+        metadata_tibble = metadata_w_cell_types_analysis_tibble.WNN,
+        metadata_cols = aggregation_WNN_categorical_vars,
+        cluster_col = "WNN_harmony_SNN_cluster_named",
+        group_order = get_marker_cell_type_order(
+          metadata_w_cell_types_tibble.WNN$WNN_harmony_SNN_cluster_named,
+          names(UCell_GEX_marker_genes_list),
+          get_marker_group_cell_types(metadata_w_cell_types_tibble.WNN,
+            "WNN_harmony_SNN_cluster_named", "WNN_harmony_SNN_cluster_cell_type"))
+      ) |>
+        save_plots_structured(height = max(9, 4 + 0.25 * dplyr::n_distinct(metadata_w_cell_types_analysis_tibble.WNN$WNN_harmony_SNN_cluster_named)))
     ),
     tarchetypes::tar_file(
       name = markers_violin_plot.8_multimodal_QC,

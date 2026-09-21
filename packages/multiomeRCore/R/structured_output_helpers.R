@@ -7,7 +7,7 @@
 #'   trailing `...` when truncated. Applied after collapsing vectors and whitespace.
 #' @return The plot with its existing caption followed by the parameter summary.
 #' @keywords internal
-add_plot_parameters <- function(plot, config_file, ..., .max_value_chars = 120L) {
+add_plot_parameters <- function(plot, config_file, ..., .max_value_chars = 40L) {
   parameters <- list(...)
   if (inherits(plot, "empty_plot_list")) return(plot)
   if (is.list(plot) && !inherits(plot, c("ggplot", "patchwork"))) {
@@ -27,7 +27,22 @@ add_plot_parameters <- function(plot, config_file, ..., .max_value_chars = 120L)
   is_composite <- inherits(plot, "patchwork")
   existing_caption <- if (is_composite) plot$patches$annotation$caption else plot$labels$caption
   caption <- paste(c(existing_caption, parameter_caption), collapse = "\n\n")
-  plot + if (is_composite) patchwork::plot_annotation(caption = caption) else ggplot2::labs(caption = caption)
+  plot <- plot + if (is_composite) patchwork::plot_annotation(caption = caption) else ggplot2::labs(caption = caption)
+  align_plot_captions(plot)
+}
+
+align_plot_captions <- function(plot) {
+  caption_theme <- function(theme) ggplot2::theme(
+    plot.caption = if (inherits(theme$plot.caption, "element_blank"))
+      ggplot2::element_blank() else ggplot2::element_text(hjust = 0, vjust = 1),
+    plot.caption.position = "plot"
+  )
+  if (inherits(plot, "patchwork")) {
+    for (i in seq_len(length(plot))) plot[[i]] <- align_plot_captions(plot[[i]])
+    return(plot + patchwork::plot_annotation(theme = caption_theme(plot$patches$annotation$theme)))
+  }
+  if (inherits(plot, "ggplot")) return(plot + caption_theme(plot$theme))
+  plot
 }
 
 tar_name_wo_suffixes <- function(target_name = targets::tar_name()) {
@@ -279,7 +294,11 @@ multiomeR_save_serialized_plot_objects <- TRUE
 #'   sidecars under `plot_objects`.
 #' @param ... Additional arguments forwarded to the graphics device or
 #'   `ggplot2::ggsave()`, depending on the plot object.
-#' @return A file path for a single plot, or an output directory path for a list of plots.
+#' @details Rendering and serialization complete in staging before published files change.
+#' A per-target inventory removes only previously owned images and sidecars,
+#' including when the new result is empty. On first use, existing ownership is
+#' recovered from file paths registered in the targets store when available.
+#' @return Image paths for the saved plots, or `character()` for an empty result.
 #' @keywords internal
 
 save_plots_structured <- function(
@@ -316,21 +335,18 @@ save_plots_structured <- function(
     stop("`dyn_suffix_in_subdir` must be TRUE or FALSE.")
   }
   is_plain_list <- is.list(plots) && identical(class(plots), "list")
-  is_empty_plot_list <- inherits(plots, "empty_plot_list")
-  if (is_empty_plot_list) {
-    return(character())
-  }
-  is_single_plot <- !is.null(plots) && !is_plain_list
+  is_empty_plot_list <- inherits(plots, "empty_plot_list") || (is_plain_list && length(plots) == 0L)
+  is_single_plot <- !is.null(plots) && !is_plain_list && !is_empty_plot_list
   is_plot_list <- is_plain_list && length(plots) > 0 && all(!purrr::map_lgl(plots, is.null))
-  if (!is_single_plot && !is_plot_list) {
-    stop("`plots` must be a plot object or a non-empty list of plot objects.")
+  if (!is_single_plot && !is_plot_list && !is_empty_plot_list) {
+    stop("`plots` must be a plot object or a list of plot objects (possibly empty).")
   }
-  n_plots <- if (is_plot_list) length(plots) else 1L
+  n_plots <- if (is_single_plot) 1L else length(plots)
   for (dimension_arg in c("width", "height")) {
     if (
       !is.null(save_args[[dimension_arg]]) &&
         length(save_args[[dimension_arg]]) != 1 &&
-        (!is_plot_list || length(save_args[[dimension_arg]]) != n_plots)
+        length(save_args[[dimension_arg]]) != n_plots
     ) {
       if (is_plot_list) {
         stop(stringr::str_glue("`{dimension_arg}` must be length 1 or length {n_plots} when saving a plot list."))
@@ -361,6 +377,7 @@ save_plots_structured <- function(
     )
   }
   save_one_plot <- function(plot, image_path, plot_object_path, plot_index = 1L) {
+    plot <- align_plot_captions(plot)
     plot_save_args <- save_args
     for (dimension_arg in c("width", "height")) {
       if (!is.null(plot_save_args[[dimension_arg]]) && length(plot_save_args[[dimension_arg]]) > 1) {
@@ -401,48 +418,71 @@ save_plots_structured <- function(
     }
     image_path
   }
+  # Build the complete destination inventory before touching published files.
   if (is_single_plot) {
-    out_path <- get_structured_output_path(
-      kind = "plots",
-      filetype = filetype,
-      override_suffix = override_suffix,
-      full_target_name = target_name,
-      suffix_in_subdir = dyn_suffix_in_subdir
+    image_paths <- get_structured_output_path(
+      kind = "plots", filetype = filetype, override_suffix = override_suffix,
+      full_target_name = target_name, suffix_in_subdir = dyn_suffix_in_subdir
     )
-    return(save_one_plot(plots, out_path, get_plot_object_path(out_path)))
+    plots <- list(plots)
+  } else {
+    out_dir <- get_structured_output_path(
+      kind = "plots", override_suffix = override_suffix,
+      full_target_name = target_name, suffix_in_subdir = dyn_suffix_in_subdir,
+      list_output = TRUE
+    )
+    plot_names <- names(plots)
+    if (is.null(plot_names)) plot_names <- rep("", length(plots))
+    file_indices <- sprintf(paste0("%0", max(2, nchar(length(plots))), "d"), seq_along(plots))
+    sanitized_names <- stringr::str_replace_all(plot_names, "[/\\\\]", "_")
+    file_stems <- ifelse(nzchar(sanitized_names), paste0(file_indices, "_", sanitized_names), file_indices)
+    image_paths <- if (length(plots)) file.path(out_dir, paste0(file_stems, ".", filetype)) else character()
+    plots <- purrr::map2(plots, plot_names, add_ggplot_title_if_missing)
   }
-  out_dir <- get_structured_output_path(
-    kind = "plots",
-    override_suffix = override_suffix,
-    full_target_name = target_name,
-    suffix_in_subdir = dyn_suffix_in_subdir,
-    list_output = TRUE
-  )
-  plot_names <- names(plots)
-  if (is.null(plot_names)) {
-    plot_names <- rep("", length(plots))
+  object_paths <- if (save_serialized_plot_objects && length(image_paths)) get_plot_object_path(image_paths) else character()
+  output_paths <- c(image_paths, object_paths)
+  store <- targets::tar_config_get("store")
+  inventory_dir <- file.path(store, "plot_inventory")
+  fs::dir_create(inventory_dir)
+  inventory_file <- file.path(inventory_dir, paste0(target_name, ".rds"))
+  if (file.exists(inventory_file)) {
+    previous_paths <- file.path(store, readRDS(inventory_file))
+  } else {
+    # Older saves had no inventory. Never infer ownership from directory contents.
+    registered <- tryCatch(
+      suppressMessages(suppressWarnings(targets::tar_read_raw(target_name, store = store))),
+      error = function(e) character()
+    )
+    previous_images <- if (is.character(registered)) registered else character()
+    relative_paths <- fs::path_rel(previous_images, start = file.path(store, "plots"))
+    previous_images <- previous_images[!grepl("^\\.\\.(/|$)", relative_paths) & grepl("\\.(png|svg)$", previous_images)]
+    previous_paths <- c(previous_images, if (length(previous_images)) get_plot_object_path(previous_images))
   }
-  index_width <- max(2, nchar(length(plots)))
-  file_indices <- sprintf(paste0("%0", index_width, "d"), seq_along(plots))
-  sanitized_names <- stringr::str_replace_all(plot_names, "[/\\\\]", "_")
-  file_stems <- ifelse(
-    nzchar(sanitized_names),
-    paste0(file_indices, "_", sanitized_names),
-    file_indices
-  )
-  purrr::pmap_chr(
-    list(plots, file_stems, plot_names, seq_along(plots)),
-    \(plot, file_stem, plot_name, plot_index) {
-      plot <- add_ggplot_title_if_missing(plot, plot_name)
-      image_path <- file.path(out_dir, paste0(file_stem, ".", filetype))
-      save_one_plot(
-        plot,
-        image_path,
-        get_plot_object_path(image_path),
-        plot_index
-      )
+
+  staging_dir <- tempfile(".staging-", tmpdir = inventory_dir)
+  fs::dir_create(staging_dir)
+  on.exit(unlink(staging_dir, recursive = TRUE), add = TRUE)
+  staged_images <- file.path(staging_dir, paste0(seq_along(plots), ".", filetype))
+  staged_objects <- file.path(staging_dir, paste0(seq_along(plots), ".rds"))
+  for (i in seq_along(plots)) {
+    save_one_plot(plots[[i]], staged_images[[i]], staged_objects[[i]], i)
+  }
+  # Nothing above this point replaces or deletes the last successful output.
+  staged_paths <- c(if (length(plots)) staged_images, if (length(object_paths)) staged_objects)
+  for (i in seq_along(output_paths)) {
+    fs::dir_create(dirname(output_paths[[i]]))
+    if (!file.rename(staged_paths[[i]], output_paths[[i]])) {
+      stop("Could not publish plot output: ", output_paths[[i]], call. = FALSE)
     }
-  )
+  }
+  obsolete <- setdiff(fs::path_abs(previous_paths), fs::path_abs(output_paths))
+  if (length(obsolete)) fs::file_delete(obsolete[file.exists(obsolete)])
+  staged_inventory <- file.path(staging_dir, "inventory.rds")
+  saveRDS(as.character(fs::path_rel(output_paths, start = store)), staged_inventory)
+  if (!file.rename(staged_inventory, inventory_file)) {
+    stop("Could not publish plot inventory: ", inventory_file, call. = FALSE)
+  }
+  image_paths
 }
 
 

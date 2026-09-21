@@ -21,6 +21,9 @@ complete adoption.
 
 Titles should usually be a short phrase; subtitles one or two short sentences.
 Captions can be longer, but should remain readable at the exported figure size.
+Keep captions left-aligned, including shared annotations on composite plots.
+Use `add_plot_parameters()` for compact configuration summaries; retain its
+short default value limit unless a longer value is needed to interpret the plot.
 These are writing targets, not fixed word limits. Avoid repeating the same
 information at all three levels or filling a level with boilerplate.
 

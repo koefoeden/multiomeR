@@ -656,7 +656,7 @@ Runtime depends on donors, cell types, models, contrasts, and gene-set analyses.
 
 The OLINK and bulk-RNA path fields are reserved optional integration inputs and are not consumed by the current public differential-analysis selection. Leave them `NULL` unless the corresponding integration is implemented in your downstream workflow.
 
-[Open the searchable parameter browser](parameters.html).
+[Open the searchable parameter browser](parameters.html#workflow=differential_analyses).
 
 The public demos leave this module disabled. Comparing one healthy PBMC donor with one lymphoma lymph-node donor cannot separate condition, donor, and tissue effects. Configure differential analyses for a design with biological replication.
 
@@ -751,7 +751,7 @@ Runtime and disk use grow with studies, cells, graph representations, permutatio
 
 ## Parameter reference
 
-[Open the searchable parameter browser](parameters.html).
+[Open the searchable parameter browser](parameters.html#workflow=genetic_enrichment).
 
 <details>
 <summary>Show the public <code>immune_human_2x</code> example</summary>
@@ -1197,7 +1197,7 @@ See [Differential analyses](downstream_differential_analyses.md) and [Genetic en
 
 ## Parameter reference {#parameter-reference}
 
-The [standalone parameter browser](parameters.html) is generated from `cfg_pipeline_parameters.tsv`, using a shared snapshot of the public runtime defaults and validation schema. Search by name or purpose, or choose a topic. Defaults are visible beside each parameter; open a row for its type and example. See the [committed example](https://github.com/koefoeden/multiomeR/blob/main/configuration/cfg_aggregations.yaml) for a complete configuration.
+The [standalone parameter browser](parameters.html) is generated from `cfg_pipeline_parameters.tsv`, using a shared snapshot of the public runtime defaults and validation schema. Choose the main workflow or an optional module, then search by name or purpose. Cards are grouped by whether a value is required, defaulted, or optional. Defaults are visible beside each parameter; open a row for its type and example. See the [committed example](https://github.com/koefoeden/multiomeR/blob/main/configuration/cfg_aggregations.yaml) for a complete configuration.
 
 <details>
 

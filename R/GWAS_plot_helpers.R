@@ -863,7 +863,7 @@ plot_GWAS_chromVAR_deviation_heatmap <- function(deviation_tibble,
         "Genetic effect direction is discarded. Weights preserve retained PIP mass before peak weights are capped at one."),
       if (standardize) "Colour: deviation centred and divided by its SD across cell types within each GWAS."
       else "Colour: weighted observed-minus-expected accessibility divided by the depth-adjusted expectation, without centring or SD scaling across cell types.",
-      "Stars: * z >= 2; ** z >= 3 against the betterChromVAR background for the corresponding weighting. Nuclei counts describe input support; this is a descriptive pooled comparison."
+      "Stars: * Z >= 1.645; ** Z >= 2.326 (unadjusted upper-tail normal P <= 0.05 and <= 0.01) against the betterChromVAR background for the corresponding weighting. Nuclei counts describe input support; this is a descriptive pooled comparison."
     ), width = 150)
   )
 }

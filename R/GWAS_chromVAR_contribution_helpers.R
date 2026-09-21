@@ -1,3 +1,12 @@
+# Unadjusted upper-tail normal thresholds for positive chromVAR enrichment.
+chromVAR_Z_support_labels <- function(z) {
+  dplyr::case_when(
+    z >= stats::qnorm(.99) ~ "**",
+    z >= stats::qnorm(.95) ~ "*",
+    .default = ""
+  )
+}
+
 #' Map credible-set variant weights to ATAC peaks
 #'
 #' Allocate each capped trait-level peak weight back to its overlapping
@@ -216,11 +225,7 @@ summarize_GWAS_chromVAR_peak_contributions <- function(
     dplyr::mutate(
       z_p = stats::pnorm(.data$z, lower.tail = FALSE),
       z_q = stats::p.adjust(.data$z_p, method = "BH"),
-      support_label = dplyr::case_when(
-        .data$z >= 3 ~ "**",
-        .data$z >= 2 ~ "*",
-        .default = ""
-      )
+      support_label = chromVAR_Z_support_labels(.data$z)
     )
 
   if (!is.null(cell_type_support_tibble)) {
@@ -657,7 +662,7 @@ plot_GWAS_locus_contribution_heatmaps <- function(
       patchwork::plot_annotation(title = paste("Locus contributions to GWAS-linked accessibility:", GWAS_ID),
         subtitle = stringr::str_wrap("Look for enrichment dominated by a few loci versus distributed support; the adjacent bar shows the total.", width = 100),
         caption = stringr::str_wrap(paste("Loci are ranked by their largest absolute relative-deviation contribution across cell types; up to", n_top_loci,
-          "are shown individually. Remaining contributions are summed as Other positive/negative. Contributions sum to the total deviation standardized across cell types. Total-bar stars mark background Z >= 2 (*) or >= 3 (**), not FDR. Open Targets gene labels are prioritizations, not causal assignments."), width = 110))
+          "are shown individually. Remaining contributions are summed as Other positive/negative. Contributions sum to the total deviation standardized across cell types. Total-bar stars mark unadjusted upper-tail normal P <= 0.05 (*) or <= 0.01 (**) from background Z-scores (Z >= 1.645 or >= 2.326). Open Targets gene labels are prioritizations, not causal assignments."), width = 110))
     combined_plot$labels$title <- ggplot2::waiver()
     combined_plot
   })

@@ -52,7 +52,7 @@ tar_name_wo_suffixes(target_name = targets::tar_name())
   \item{controller_resources}{Optional controller resource table.}
   \item{command_string}{Executable name or path.}
   \item{arguments_chr}{Character vector of command-line arguments.}
-  \item{plots}{A plot object or non-empty list of plot objects.}
+  \item{plots}{A plot object or list of plot objects, possibly empty.}
   \item{dyn_suffix_in_subdir}{Whether to place a dynamic branch suffix in a subdirectory.}
   \item{target_name}{Target name used to derive the output path.}
   \item{discrete_legend_n_distinct_max}{Maximum number of discrete legend entries to retain.}
@@ -62,4 +62,13 @@ tar_name_wo_suffixes(target_name = targets::tar_name())
 \value{
 The configured resource object, command output path, structured path, saved
 plot path, or target stem appropriate to the selected helper.
+}
+\details{
+Plot rendering and serialization finish in a temporary directory before saved
+outputs are replaced. A per-target inventory under the store's
+\code{plot_inventory} directory records owned images and RDS sidecars; subsequent
+saves remove obsolete owned files, including for empty results. Sibling outputs
+and unrelated files are preserved. For older outputs without an inventory, only
+paths registered to the target in the targets store can be recovered safely.
+Captions on saved ggplots and patchwork composites are left-aligned.
 }

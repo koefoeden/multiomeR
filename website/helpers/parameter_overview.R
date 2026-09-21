@@ -39,70 +39,24 @@ read_parameter_manifest <- function(manifest_file) {
   dplyr::mutate(manifest, dplyr::across(where(is.character), stringr::str_trim))
 }
 
-parameter_topic_order <- function(scope) {
-  switch(
-    scope,
-    aggregation = c(
-      "required",
-      "GEX processing",
-      "ATAC processing",
-      "Multimodal processing",
-      "plotting/UMAP",
-      "miscellaneous"
-    ),
-    NULL
-  )
-}
-
-parameter_overview_data <- function(manifest, scope = NULL, topic_order = NULL) {
+parameter_overview_data <- function(manifest, scope = NULL) {
   parameter_tibble <- manifest |>
-    dplyr::mutate(manifest_row = dplyr::row_number()) |>
-    dplyr::filter(is.null(.env$scope) | .data$scope %in% .env$scope)
+    dplyr::filter(is.null(.env$scope) | .data$scope %in% .env$scope) |>
+    dplyr::mutate(
+      status = dplyr::case_when(
+        .data$default_value != "NULL" ~ "Defaulted",
+        !.data$allow_missing_after_inheritance ~ "Required",
+        TRUE ~ "Optional"
+      )
+    ) |>
+    dplyr::select(
+      scope, param_name, short_name, data_type, cardinality, default_value,
+      allowed_values, examples, part_of, description, status
+    )
 
   if (nrow(parameter_tibble) == 0) {
     stop("No parameters found for manifest scope: ", scope, call. = FALSE)
   }
-
-  if (is.null(scope)) {
-    parameter_tibble <- parameter_tibble |>
-      dplyr::mutate(topic = paste(stringr::str_to_sentence(stringr::str_replace_all(.data$scope, "_", " ")), .data$topic, sep = " / "))
-  }
-
-  topic_order <- topic_order %||% (if (!is.null(scope)) parameter_topic_order(scope)) %||% unique(parameter_tibble$topic)
-
-  parameter_tibble <- parameter_tibble |>
-    dplyr::mutate(
-      default_is_null = .data$default_value == "NULL",
-      must_specify = !.data$allow_missing_after_inheritance & .data$default_is_null,
-      resolved_value_required = !.data$allow_missing_after_inheritance,
-      status = dplyr::case_when(
-        .data$must_specify ~ "Must specify",
-        .data$resolved_value_required ~ "Defaulted",
-        TRUE ~ "Optional"
-      ),
-      sort_status = dplyr::case_when(
-        .data$must_specify ~ 1L,
-        .data$resolved_value_required ~ 2L,
-        TRUE ~ 3L
-      ),
-      topic_sort = match(.data$topic, topic_order),
-      topic_sort = dplyr::coalesce(.data$topic_sort, length(topic_order) + 1L)
-    ) |>
-    dplyr::arrange(.data$topic_sort, .data$sort_status, .data$topic, .data$param_name) |>
-    dplyr::select(
-      param_name,
-      short_name,
-      data_type,
-      cardinality,
-      default_value,
-      allowed_values,
-      examples,
-      topic,
-      part_of,
-      description,
-      status
-    )
-
   list(parameters = parameter_tibble)
 }
 
@@ -120,25 +74,18 @@ render_parameter_overview_fragment <- function(
 
   glue::glue(
 '<div class="parameter-overview" data-parameter-overview>
+<div class="parameter-workflows" role="tablist" aria-label="Workflow"></div>
 <div class="parameter-overview-toolbar">
-<label class="parameter-search-control"><span>Find a parameter</span>
+<label class="parameter-search-control"><span>Search this workflow</span>
 <input class="parameter-overview-search" type="search" placeholder="{search_placeholder}"></label>
-<label class="parameter-topic-control"><span>Topic</span>
-<select><option value="">All topics</option></select></label>
+<button type="button" class="parameter-reset">Clear search</button>
 </div>
-<div class="parameter-filter-bar">
-<div class="parameter-filter-group" role="group" aria-label="Filter by requirement">
-<button type="button" class="parameter-filter is-active" data-status="all" aria-pressed="true">All <span></span></button>
-<button type="button" class="parameter-filter" data-status="Must specify" aria-pressed="false">Required <span></span></button>
-<button type="button" class="parameter-filter" data-status="Defaulted" aria-pressed="false">Defaulted <span></span></button>
-<button type="button" class="parameter-filter" data-status="Optional" aria-pressed="false">Optional <span></span></button>
-</div>
-<button type="button" class="parameter-reset">Reset filters</button>
-</div>
-<p class="parameter-overview-help">Required: supply a value directly or through inheritance. Defaulted: a value is provided. Optional: may remain NULL. Open a parameter for its type, allowed values and example.</p>
+<p class="parameter-overview-help">Required: supply a value directly or through inheritance. Defaulted: a non-null default is provided. Optional: may remain unset. Within each group, parameters are sorted by short name.</p>
 <p class="parameter-overview-summary" aria-live="polite" aria-atomic="true"></p>
-<div class="parameter-topic-list"></div>
-<p class="parameter-empty-state" hidden>No parameters match. Try another search or reset the filters.</p>
+<div class="parameter-panel" id="parameter-panel" role="tabpanel">
+<div class="parameter-section-list"></div>
+<p class="parameter-empty-state" hidden>No parameters match in this workflow. Clear the search or choose another tab.</p>
+</div>
 <noscript><p>Enable JavaScript to browse this reference, or read <a href="https://github.com/koefoeden/multiomeR/blob/main/cfg_pipeline_parameters.tsv">the parameter manifest</a>.</p></noscript>
 <script type="application/json" class="parameter-overview-data">{data_json}</script>
 </div>

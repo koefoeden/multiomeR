@@ -89,7 +89,7 @@ Runtime and disk use grow with studies, cells, graph representations, permutatio
 
 ## Parameter reference
 
-[Open the searchable parameter browser](parameters.html).
+[Open the searchable parameter browser](parameters.html#workflow=genetic_enrichment).
 
 <details>
 <summary>Show the public <code>immune_human_2x</code> example</summary>

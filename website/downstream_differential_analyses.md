@@ -118,6 +118,6 @@ Runtime depends on donors, cell types, models, contrasts, and gene-set analyses.
 
 The OLINK and bulk-RNA path fields are reserved optional integration inputs and are not consumed by the current public differential-analysis selection. Leave them `NULL` unless the corresponding integration is implemented in your downstream workflow.
 
-[Open the searchable parameter browser](parameters.html).
+[Open the searchable parameter browser](parameters.html#workflow=differential_analyses).
 
 The public demos leave this module disabled. Comparing one healthy PBMC donor with one lymphoma lymph-node donor cannot separate condition, donor, and tissue effects. Configure differential analyses for a design with biological replication.

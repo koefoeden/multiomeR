@@ -22,4 +22,4 @@ Gallery snapshots are checked-in artifacts. When a target or plot changes, refre
 pixi run --use-environment-activation-cache -e dev render-parameter-overview
 ```
 
-Link parameter names as `` [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes) `` from pages directly under `website/`. The browser opens the linked row even if filters were previously active. The website builder refreshes and publishes the browser automatically; ordinary prose edits do not require regeneration or a book render.
+Link parameter names as `` [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes) `` from pages directly under `website/`. The browser selects the matching workflow tab, clears its search, and opens the linked row. Workflow links use `parameters.html#workflow=aggregation` (or a module scope). The website builder refreshes and publishes the browser automatically; ordinary prose edits do not require regeneration or a book render.

@@ -3,7 +3,7 @@
 The hierarchical branch scans all pairs passing the existing distance,
 detection, aggregate-eligibility and measurement-support filters, using WNN-derived cell types.
 There is no HC3 significance, correlation, promoter or top-N screen before
-fitting. The former hierarchical-candidate-limit parameter is removed.
+fitting.
 
 The model includes donor fixed intercepts, log-depth covariates and a Gaussian
 random peak slope by donor. `src/peak_gene_REML.cpp` profiles residual variance
@@ -36,8 +36,7 @@ slope or promoter cutoff. Consensus peaks are shaded; the focal peak is red
 and the gene TSS is dashed. The genomic axis uses Mb.
 
 Compact gene-context data and focal coverage are cached separately from
-rendering. The former `top_link_ATAC_tracks_plots` and its arc-track targets
-are retired. Existing HC3 results and other summary figures remain a distinct
+rendering. Existing HC3 results and other summary figures remain a distinct
 analysis pending their separate migration; the new top-link figures and
 selection do not depend on HC3 tests.
 

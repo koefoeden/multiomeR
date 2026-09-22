@@ -62,10 +62,7 @@ genetic_enrichment_GWAS_config_tibble <- if (nrow(genetic_enrichment_tibble) == 
               TRUE ~ as.character(finemappingMethod)
             )
           }
-        ),
-        variant_weighting_mode = purrr::map2_chr(GWAS_config, GWAS_ID, \(config, GWAS_ID) {
-          normalize_GWAS_variant_weighting_mode(config$variant_weighting_mode, GWAS_ID = GWAS_ID)
-        })
+        )
       ) |>
       dplyr::select(
         aggregation,
@@ -74,8 +71,7 @@ genetic_enrichment_GWAS_config_tibble <- if (nrow(genetic_enrichment_tibble) == 
         GWAS_ID,
         sourceId,
         sourceType,
-        requested_finemappingMethod,
-        variant_weighting_mode
+        requested_finemappingMethod
       )
   })
 
@@ -95,8 +91,7 @@ genetic_enrichment_GWAS_config_tibble <- if (nrow(genetic_enrichment_tibble) == 
         GWAS_ID,
         sourceId,
         sourceType,
-        requested_finemappingMethod,
-        variant_weighting_mode
+        requested_finemappingMethod
       )
     ) |>
     dplyr::ungroup()

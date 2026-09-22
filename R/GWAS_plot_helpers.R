@@ -155,7 +155,7 @@ plot_SCAVENGE_summary_score_intervals <- function(summary_tibble) {
 
 add_GWAS_heatmap_categories <- function(heatmap_data, GWAS_tibble) {
   heatmap_data |>
-    dplyr::inner_join(GWAS_tibble |> dplyr::select(GWAS_ID, Category, dplyr::any_of("variant_weighting_mode")), by = "GWAS_ID")
+    dplyr::inner_join(GWAS_tibble |> dplyr::select(GWAS_ID, Category), by = "GWAS_ID")
 }
 
 #' Assign compartment

@@ -88,7 +88,7 @@ infer_GWAS_absolute_effect_weighting <- function(
 #' @param GWAS_input_records List of normalized GWAS input records.
 #' @param posterior_probability_cutoff Raw PIP threshold applied before effect
 #'   weighting.
-#' @return One row per raw-PIP GWAS input with eligibility and coverage.
+#' @return One row per GWAS input with eligibility and coverage.
 #' @keywords internal
 
 get_GWAS_absolute_effect_weighting_status_tibble <- function(
@@ -96,7 +96,6 @@ get_GWAS_absolute_effect_weighting_status_tibble <- function(
   posterior_probability_cutoff = NULL
 ) {
   GWAS_input_records |>
-    purrr::keep(\(record) identical(record$variant_weighting_mode, "raw_PIP")) |>
     purrr::map_dfr(
       infer_GWAS_absolute_effect_weighting,
       posterior_probability_cutoff = posterior_probability_cutoff

@@ -5,8 +5,7 @@ rlang::list2(
     command = get_GWAS_chromVAR_peak_variant_weight_tibble(
       GWAS_input_record = GWAS_input_records,
       peak_ranges = genetic_enrichment_peak_ranges,
-      posterior_probability_cutoff = genetic_enrichment_posterior_probability_cutoff,
-      posterior_probability_weighting_function = posterior_probability_weighting_function
+      posterior_probability_cutoff = genetic_enrichment_posterior_probability_cutoff
     ),
     pattern = map(GWAS_input_records),
     iteration = "list",

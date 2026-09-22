@@ -314,49 +314,6 @@ testthat::test_that("cluster UCell summaries preserve per-cell scores and group 
   testthat::expect_equal(unname(as.matrix(joined[, names(markers)])), unname(as.matrix(expected)), tolerance = 1e-14)
 })
 
-testthat::test_that("cluster evidence abstains on unsupported and competing signatures", {
-  load_scoring_test_runtime()
-  genes <- sprintf("gene%03d", seq_len(500L))
-  markers <- list(A = genes[1:3], B = genes[4:6])
-  reference <- data.frame(gene = genes, abundance = rep(0.002, 500L), detection = rep(0.2, 500L))
-  control <- build_UCell_controls(reference, markers)
-  control$max_rank <- 500L
-  means <- matrix(0.01, 500L, 3L, dimnames = list(genes, c("clear", "tie", "absent")))
-  means[markers$A, "clear"] <- 0.9
-  means[unlist(markers), "tie"] <- 0.9
-  detection <- matrix(0.5, 500L, 3L, dimnames = dimnames(means))
-  evidence <- score_UCell_group_evidence(means, control, detection)
-  result <- list(decisions = assign_UCell_cluster_evidence(evidence, min_advantage = 0.05))
-  testthat::expect_identical(result$decisions$status, c("Assigned", "Unassigned", "Unassigned"))
-  testthat::expect_identical(result$decisions$label, c("A", NA_character_, NA_character_))
-  metadata <- data.frame(barcode_w_prefix = c("x", "y", "z"), cluster = c("clear", "tie", "absent"))
-  annotated <- add_cluster_UCell_annotations(metadata, result, "cluster")
-  testthat::expect_identical(annotated$cluster_scDblFinder_group,
-    c("A", "Unassigned_cluster_tie", "Unassigned_cluster_absent"))
-  # Unavailable cell-stability diagnostics do not veto a sufficient advantage.
-  singleton_means <- cbind(means, means)
-  singleton_detection <- cbind(detection, detection)
-  colnames(singleton_means) <- colnames(singleton_detection) <- as.character(seq_len(6L))
-  singleton_groups <- data.frame(key = as.character(seq_len(6L)),
-    kind = rep(c("cluster", "block"), each = 3L),
-    cluster = rep(colnames(means), 2L), subgroup = rep(c("", "1"), each = 3L), cells = 1L)
-  singleton <- evaluate_cluster_UCell_evidence(score_cluster_UCell_summaries(list(rank_means = singleton_means,
-    detection = singleton_detection, groups = singleton_groups, n_blocks = 10L), control), min_advantage = 0.05)
-  testthat::expect_identical(singleton$decisions$status, c("Assigned", "Unassigned", "Unassigned"))
-  testthat::expect_true(all(is.na(singleton$decisions$cell_stability)))
-  permissive <- assign_UCell_cluster_evidence(evidence, min_advantage = 0)
-  strict <- assign_UCell_cluster_evidence(evidence, min_advantage = 0.95)
-  testthat::expect_identical(permissive$status, c("Assigned", "Unassigned", "Unassigned"))
-  testthat::expect_identical(strict$candidate, permissive$candidate)
-  testthat::expect_true(all(strict$status == "Unassigned"))
-  boundary <- result$decisions$advantage[1]
-  testthat::expect_identical(assign_UCell_cluster_evidence(evidence, boundary)$status[1], "Assigned")
-  testthat::expect_identical(assign_UCell_cluster_evidence(evidence, boundary + 1e-8)$status[1], "Unassigned")
-  testthat::expect_error(assign_UCell_cluster_evidence(evidence, -0.1))
-  testthat::expect_equal(normalize_marker_panel(list(A = "gene001-", B = "gene002+"), genes),
-    list(A = "gene001-", B = "gene002"))
-})
-
 testthat::test_that("signed cluster scores and controls match per-cell UCell before averaging", {
   load_scoring_test_runtime()
   counts <- make_counts_matrix()

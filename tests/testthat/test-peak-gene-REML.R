@@ -30,14 +30,3 @@ testthat::test_that("profiled donor-slope REML agrees with independently optimiz
   testthat::expect_match(invalid$diagnostic[[3]], "No residual response variation")
   testthat::expect_error(native$peak_gene_REML_batch_cpp(cbind(X, x), Z, Y), "rank deficient")
 })
-
-testthat::test_that("full-scan BH retains unreliable tests in each cell-type family", {
-  source_project_file("R/peak_gene_hierarchical_helpers.R")
-  input <- data.frame(cell_group = c("A", "A", "A", "B"),
-    hierarchical_pvalue = c(0.01, NA, 0.04, 0.02))
-  result <- finalize_peak_gene_hierarchical_results(list(input[1:2, ], input[3:4, ]))
-  testthat::expect_equal(result$hierarchical_FDR, c(0.03, NA, 0.06, 0.02))
-  empty <- finalize_peak_gene_hierarchical_results(list(input[0, ]))
-  testthat::expect_equal(nrow(empty), 0L)
-  testthat::expect_type(empty$hierarchical_FDR, "double")
-})

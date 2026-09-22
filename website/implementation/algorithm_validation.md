@@ -7,9 +7,8 @@ The evidence labels used below are intentionally narrow:
 - **Reference-parity tested** means the repository and named reference implementation run on the same deterministic fixture and their returned values are compared directly.
 - **Reference-similarity tested** means exact equality is not an appropriate contract, so predefined similarity thresholds are checked against the named reference implementation.
 - **Algorithmically derived** means the implementation is checked against an independent mathematical result, not against another software implementation.
-- **Internally checked** means a deterministic repository fixture exercises an internal contract without establishing reference parity.
 
-Passing these fixtures does not validate every dataset, parameter regime, approximate-neighbor realization, biological interpretation, or downstream target. The test suite distinguishes fast unit tests for isolated data contracts from slower parity and integration tests that load the project runtime or compare external reference implementations. The [CI workflow](https://github.com/koefoeden/multiomeR/blob/main/.github/workflows/algorithm-validation.yaml) runs the complete suite when tests, relevant helpers, or the Pixi environment change.
+Passing these fixtures does not validate every dataset, parameter regime, approximate-neighbor realization, biological interpretation, or downstream target. The test suite contains only such reference comparisons of the repository's reimplementations. The [CI workflow](https://github.com/koefoeden/multiomeR/blob/main/.github/workflows/algorithm-validation.yaml) runs the complete suite when tests, relevant helpers, or the Pixi environment change.
 
 Run the complete suite with `pixi run --use-environment-activation-cache test`. The narrower `pixi run --use-environment-activation-cache test-algorithm-validation` task runs only the slow UCell, AMULET, WNN, and SCAVENGE parity and acceptance tests.
 
@@ -123,7 +122,7 @@ with a maximum absolute tolerance of 1e-10; the current delta is 8.61e-13. Secon
 pixi run --use-environment-activation-cache test-algorithm-validation
 ```
 
-Run the complete maintained test suite, including the fast helper contracts, with:
+Run the complete parity suite with:
 
 ```bash
 pixi run --use-environment-activation-cache test

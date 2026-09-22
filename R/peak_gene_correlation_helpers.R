@@ -1305,7 +1305,7 @@ make_peak_gene_correlation_links <- function(results_tibble) {
 make_peak_gene_correlation_top_links <- function(
   links_tibble,
   candidate_pairs_tibble,
-  n_per_cell_group = 3L
+  n_per_cell_group
 ) {
   top_links <- links_tibble |>
     dplyr::filter(.data$hierarchical_status == "estimable", .data$hierarchical_coefficient > 0) |>

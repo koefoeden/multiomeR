@@ -629,8 +629,8 @@ filter_metadata_by_scDblFinder <- function(
   scDblFinder_results_df,
   class_col,
   cluster_col,
-  remove_called_doublets = TRUE,
-  max_doublet_fraction_per_cluster = 0.5
+  remove_called_doublets,
+  max_doublet_fraction_per_cluster
 ) {
   if (!"barcode_w_prefix" %in% names(scDblFinder_results_df)) {
     scDblFinder_results_df <- scDblFinder_results_df |>

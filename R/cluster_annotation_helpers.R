@@ -120,7 +120,7 @@ score_UCell_group_evidence <- function(rank_means, control, detection, signed_me
 
 #' Assign the highest adjusted score only if it leads background and competitors.
 #' Exact ties and scores at/below background remain unassigned even at delta zero.
-assign_UCell_cluster_evidence <- function(evidence, min_advantage = 0.05) {
+assign_UCell_cluster_evidence <- function(evidence, min_advantage) {
   stopifnot(length(min_advantage) == 1L, is.finite(min_advantage), min_advantage >= 0)
   dplyr::bind_rows(lapply(unique(evidence$cluster), function(cluster) {
     current <- evidence[evidence$cluster == cluster, ]
@@ -349,7 +349,7 @@ prepare_cluster_UCell_evidence <- function(counts_matrix, metadata_tibble, contr
 }
 
 #' Apply one threshold; perturbation and GEM-well agreement never veto assignments.
-evaluate_cluster_UCell_evidence <- function(scored, min_advantage = 0.05) {
+evaluate_cluster_UCell_evidence <- function(scored, min_advantage) {
   decisions <- assign_UCell_cluster_evidence(scored$evidence, min_advantage)
   decisions$cells <- scored$evidence$cells[match(decisions$cluster, scored$evidence$cluster)]
   decisions$marker_stability <- decisions$cell_stability <- NA_real_

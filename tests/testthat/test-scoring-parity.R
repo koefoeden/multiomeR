@@ -307,7 +307,7 @@ testthat::test_that("cluster UCell summaries preserve per-cell scores and group 
   parallel_summary <- summarize_cluster_UCell_counts(counts, metadata, control, "cluster",
     chunk_size = 7L, workers = 2L, include_cell_scores = TRUE)
   testthat::expect_equal(parallel_summary$rank_means, summaries$rank_means, tolerance = 1e-14)
-  annotation <- evaluate_cluster_UCell_evidence(score_cluster_UCell_summaries(summaries, control))
+  annotation <- evaluate_cluster_UCell_evidence(score_cluster_UCell_summaries(summaries, control), min_advantage = 0.05)
   joined <- add_cluster_UCell_annotations(metadata, annotation, "cluster")
   testthat::expect_identical(joined$barcode_w_prefix, metadata$barcode_w_prefix)
   testthat::expect_false(anyNA(joined$cluster_cell_type))
@@ -326,7 +326,7 @@ testthat::test_that("cluster evidence abstains on unsupported and competing sign
   means[unlist(markers), "tie"] <- 0.9
   detection <- matrix(0.5, 500L, 3L, dimnames = dimnames(means))
   evidence <- score_UCell_group_evidence(means, control, detection)
-  result <- list(decisions = assign_UCell_cluster_evidence(evidence))
+  result <- list(decisions = assign_UCell_cluster_evidence(evidence, min_advantage = 0.05))
   testthat::expect_identical(result$decisions$status, c("Assigned", "Unassigned", "Unassigned"))
   testthat::expect_identical(result$decisions$label, c("A", NA_character_, NA_character_))
   metadata <- data.frame(barcode_w_prefix = c("x", "y", "z"), cluster = c("clear", "tie", "absent"))
@@ -341,7 +341,7 @@ testthat::test_that("cluster evidence abstains on unsupported and competing sign
     kind = rep(c("cluster", "block"), each = 3L),
     cluster = rep(colnames(means), 2L), subgroup = rep(c("", "1"), each = 3L), cells = 1L)
   singleton <- evaluate_cluster_UCell_evidence(score_cluster_UCell_summaries(list(rank_means = singleton_means,
-    detection = singleton_detection, groups = singleton_groups, n_blocks = 10L), control))
+    detection = singleton_detection, groups = singleton_groups, n_blocks = 10L), control), min_advantage = 0.05)
   testthat::expect_identical(singleton$decisions$status, c("Assigned", "Unassigned", "Unassigned"))
   testthat::expect_true(all(is.na(singleton$decisions$cell_stability)))
   permissive <- assign_UCell_cluster_evidence(evidence, min_advantage = 0)

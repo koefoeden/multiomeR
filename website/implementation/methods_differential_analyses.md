@@ -130,7 +130,7 @@ The cross-modality fragment maps CollecTRI regulators to JASPAR families and com
 
 ## Diagnostics and resources
 
-Diagnostic outputs report pseudobulk depth with the ATAC threshold marked, cohort tables per model, contrast support (samples, donors, paired donors, smallest group), P-value distributions, signed significant-feature counts and volcano plots. Unused reserved inputs remain in the manifest: [`differential_analyses_OLINK_parquet_file_path`](../parameters.html#differential_analyses_OLINK_parquet_file_path) and [`differential_analyses_bulk_RNA_rds_file_path`](../parameters.html#differential_analyses_bulk_RNA_rds_file_path) are not read by any current target.
+Diagnostic outputs report pseudobulk depth with the ATAC threshold marked, cohort tables per model, contrast support (samples, donors, paired donors, smallest group), P-value distributions, signed significant-feature counts and volcano plots.
 
 | Step | Setting | Status | Value | Source |
 |---------------|---------------|---------------|---------------|---------------|

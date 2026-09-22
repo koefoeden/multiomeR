@@ -1848,7 +1848,6 @@ These manifest parameters select inputs, plot variables and execution behaviour 
 | Plots | Categorical and continuous metadata plotted | Configurable |  | [`aggregation_categorical_vars`](../parameters.html#aggregation_categorical_vars), [`aggregation_continuous_vars`](../parameters.html#aggregation_continuous_vars) |
 | Plots | Additional genes plotted | Configurable |  | [`aggregation_other_interesting_genes`](../parameters.html#aggregation_other_interesting_genes) |
 | Tracks | Roadmap epigenome tracks | Configurable |  | [`aggregation_roadmap_EDACC_names`](../parameters.html#aggregation_roadmap_EDACC_names) |
-| Execution | Targets skipped by `tar_make()` helpers | Configurable |  | [`aggregation_tar_make_skip_regex_patterns`](../parameters.html#aggregation_tar_make_skip_regex_patterns) |
 
 ## Per-GEM-well inputs and metrics
 
@@ -2336,7 +2335,7 @@ The cross-modality fragment maps CollecTRI regulators to JASPAR families and com
 
 ## Diagnostics and resources
 
-Diagnostic outputs report pseudobulk depth with the ATAC threshold marked, cohort tables per model, contrast support (samples, donors, paired donors, smallest group), P-value distributions, signed significant-feature counts and volcano plots. Unused reserved inputs remain in the manifest: [`differential_analyses_OLINK_parquet_file_path`](../parameters.html#differential_analyses_OLINK_parquet_file_path) and [`differential_analyses_bulk_RNA_rds_file_path`](../parameters.html#differential_analyses_bulk_RNA_rds_file_path) are not read by any current target.
+Diagnostic outputs report pseudobulk depth with the ATAC threshold marked, cohort tables per model, contrast support (samples, donors, paired donors, smallest group), P-value distributions, signed significant-feature counts and volcano plots.
 
 | Step | Setting | Status | Value | Source |
 |---------------|---------------|---------------|---------------|---------------|

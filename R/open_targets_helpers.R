@@ -48,7 +48,7 @@ download_open_targets_dataset <- function(dataset_url) {
 #'
 #' Join configured GWAS inputs with Open Targets study and credible-set summaries.
 #'
-#' @param GWAS_inputs_tibble GWAS configuration tibble with labels, Open Targets study IDs, finemapping methods, and weighting modes.
+#' @param GWAS_inputs_tibble GWAS configuration tibble with labels, Open Targets study IDs, and finemapping methods.
 #' @param open_targets_study_dataset_path Local directory or dataset path for the
 #'   Open Targets `study` Parquet dataset.
 #' @param open_targets_credible_set_dataset_path Local directory or dataset path

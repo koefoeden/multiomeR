@@ -18,7 +18,7 @@ infer_GWAS_absolute_effect_weighting <- function(
   variant_tibble <- S4Vectors::mcols(GWAS_input_record$credible_set_GRanges) |>
     as.data.frame() |>
     tibble::as_tibble()
-  required_columns <- c("studyLocusId", "posteriorProbability", "beta")
+  required_columns <- c("studyLocusId", "posteriorProbability_raw", "beta")
   missing_columns <- setdiff(required_columns, names(variant_tibble))
 
   if (length(missing_columns) > 0L) {
@@ -36,11 +36,7 @@ infer_GWAS_absolute_effect_weighting <- function(
     ))
   }
 
-  raw_PIP <- if ("posteriorProbability_raw" %in% names(variant_tibble)) {
-    variant_tibble$posteriorProbability_raw
-  } else {
-    variant_tibble$posteriorProbability
-  }
+  raw_PIP <- variant_tibble$posteriorProbability_raw
   finite_beta <- is.finite(variant_tibble$beta)
   retained <- is.finite(raw_PIP) & raw_PIP >= 0
   if (!is.null(posterior_probability_cutoff)) {
@@ -121,11 +117,7 @@ get_GWAS_absolute_effect_variant_GRanges <- function(
   variant_tibble <- S4Vectors::mcols(variant_GRanges) |>
     as.data.frame() |>
     tibble::as_tibble()
-  raw_PIP <- if ("posteriorProbability_raw" %in% names(variant_tibble)) {
-    variant_tibble$posteriorProbability_raw
-  } else {
-    variant_tibble$posteriorProbability
-  }
+  raw_PIP <- variant_tibble$posteriorProbability_raw
 
   effect_beta <- if (identical(effect_weighting_route, "variant_absolute_effect")) {
     variant_tibble$beta

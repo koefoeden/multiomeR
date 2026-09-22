@@ -116,7 +116,7 @@ get_summed_posterior_probabilities_per_peak <- function(
 #'
 #' Build one peak-weight record for GWAS chromVAR scoring.
 #'
-#' @param GWAS_input_record Single GWAS branch record containing the study, finemapping method, and weighting mode.
+#' @param GWAS_input_record Single GWAS branch record containing the study and finemapping method.
 #' @param peak_ranges GRanges of consensus peaks; names must match peak rows used in peak-weight or accessibility matrices.
 #' @param posterior_probability_cutoff Minimum posterior probability/PIP retained before assigning variants to peaks.
 #' @param weight_transform Optional function or scalar transform applied to variant weights before aggregation.

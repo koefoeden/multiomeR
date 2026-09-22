@@ -127,7 +127,7 @@ testthat::test_that("detail loci combine both rankings without duplicates for el
     deviation = 0.2, z = 1, relative_deviation = 2, relative_deviation_contribution = c(4, 3, 2, 1))
   weighted <- dplyr::mutate(ordinary, relative_deviation_contribution = c(1, 4, 2, 3))
   effects <- tibble::tibble(GWAS_ID = "trait", studyLocusId = letters[1:4],
-    locus_effect_magnitude = c(1, 2, 4, 3), effect_variantId = letters[1:4], locus_effect_source = "Lead SNP")
+    locus_effect_magnitude = c(1, 2, 4, 3), effect_variantId = letters[1:4], locus_effect_source = "Highest-PIP variant")
   selected <- select_GWAS_detail_loci(ordinary, weighted, effects, n_top_loci = 2L)
   testthat::expect_setequal(selected$studyLocusId, c("a", "b", "c"))
   testthat::expect_equal(selected$selection[selected$studyLocusId == "b"], "Ordinary + Balanced effect priority")
@@ -152,7 +152,7 @@ testthat::test_that("balanced locus priority uses the lower percentile and is sc
   data <- tibble::tibble(GWAS_ID = "trait", cluster = "cell", studyLocusId = letters[1:5],
     deviation = 1, z = 2, relative_deviation_contribution = c(100, 80, -70, 2, 1))
   effects <- tibble::tibble(GWAS_ID = "trait", studyLocusId = letters[1:5],
-    locus_effect_magnitude = c(1, 80, 70, 100, NA), effect_variantId = letters[1:5], locus_effect_source = "Lead SNP")
+    locus_effect_magnitude = c(1, 80, 70, 100, NA), effect_variantId = letters[1:5], locus_effect_source = "Highest-PIP variant")
   x <- select_GWAS_detail_loci(data, data[0, ], effects, n_top_loci = 1L)
   testthat::expect_setequal(x$studyLocusId, c("a", "b"))
   testthat::expect_equal(x$priority_score[x$studyLocusId == "b"], 2/3)

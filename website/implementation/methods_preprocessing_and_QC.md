@@ -15,7 +15,6 @@ These manifest parameters select inputs, plot variables and execution behaviour 
 | Plots | Categorical and continuous metadata plotted | Configurable |  | [`aggregation_categorical_vars`](../parameters.html#aggregation_categorical_vars), [`aggregation_continuous_vars`](../parameters.html#aggregation_continuous_vars) |
 | Plots | Additional genes plotted | Configurable |  | [`aggregation_other_interesting_genes`](../parameters.html#aggregation_other_interesting_genes) |
 | Tracks | Roadmap epigenome tracks | Configurable |  | [`aggregation_roadmap_EDACC_names`](../parameters.html#aggregation_roadmap_EDACC_names) |
-| Execution | Targets skipped by `tar_make()` helpers | Configurable |  | [`aggregation_tar_make_skip_regex_patterns`](../parameters.html#aggregation_tar_make_skip_regex_patterns) |
 
 ## Per-GEM-well inputs and metrics
 

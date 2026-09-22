@@ -15,6 +15,7 @@ make_correlation_sampling_fixture <- function() {
 }
 
 testthat::test_that("unlimited correlation fitting preserves edgeR including sparse-count DF", {
+  require_reference_version("edgeR", "4.8.2")
   input <- make_correlation_sampling_fixture()
   input$counts[1:5, seq.int(1L, 24L, by = 3L)] <- 0L
   reference <- do.call(edgeR::voomLmFit, input)
@@ -29,6 +30,7 @@ testthat::test_that("unlimited correlation fitting preserves edgeR including spa
 })
 
 testthat::test_that("sampling changes only correlation estimation and restores RNG and namespaces", {
+  require_reference_version("limma", "3.66.0")
   input <- make_correlation_sampling_fixture()
   original_function <- edgeR::voomLmFit
   original_estimator <- get("duplicateCorrelation", envir = environment(original_function))

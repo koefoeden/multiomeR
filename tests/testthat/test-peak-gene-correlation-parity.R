@@ -24,9 +24,10 @@ make_peak_gene_scoring_case <- function(n_donors = 1L) {
   )
 }
 
-testthat::test_that("one- and two-donor HC3 statistics match a full regression", {
+testthat::test_that("HC3 statistics match a full regression with one to six donors", {
+  require_reference_version("sandwich", "3.1.1")
   pairs <- tibble::tibble(chr = "chr1", gene_matrix_feature = "gene", peak = c("peak", "constant"))
-  for (n_donors in c(1L, 2L)) {
+  for (n_donors in c(1L, 2L, 6L)) {
     branch <- make_peak_gene_scoring_case(n_donors)
     observed <- score_peak_gene_correlations_for_cell_group(branch, pairs)
     design <- make_peak_gene_correlation_design_matrix(branch$aggregate_depth_tibble)

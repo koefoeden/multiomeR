@@ -1,27 +1,14 @@
 ---
 name: multiomer-git-commit-format
-description: Create git commits for multiomeR with the correct message format, including target-impact lines and Codex task provenance. Use when the user asks to commit changes, write a commit message, or stage and commit files in the multiomeR repository.
+description: Create git commits for multiomeR with the correct message format, including target-impact lines and agent task provenance. Use when the user asks to commit changes, write or amend a commit message, or classify target invalidation for commits, pull requests, or release notes.
 ---
 
 # multiomeR Git Commit Format
 
 ## Workflow
 
-Inspect the staged diff. Resolve the current Codex task ID before committing:
-
-```bash
-codex_task_id=${CODEX_THREAD_ID:-${CODEX_SESSION_ID:-}}
-test -n "$codex_task_id" || {
-  printf 'No Codex task ID is available; stop before committing.\n' >&2
-  exit 1
-}
-printf 'Codex task ID: %s\n' "$codex_task_id"
-```
-
-Prefer `CODEX_THREAD_ID`; use `CODEX_SESSION_ID` when the thread variable is
-unavailable. Do not guess an ID or copy one from another task. Write the
-resolved literal value into a `Codex-Task-ID` Git trailer, then write the
-message through stdin so line breaks are preserved exactly:
+Inspect the staged diff, then write the message through stdin so line breaks
+are preserved exactly:
 
 ```bash
 git commit -F - <<'EOF'
@@ -31,29 +18,45 @@ git commit -F - <<'EOF'
 
 <mandatory impact keyword line(s)>
 
-Codex-Task-ID: <resolved task ID>
+<Agent>-Task-ID: <resolved task ID>
 EOF
 ```
 
-Use `multiomer-impact-keyword-lines` to classify the commit. Every commit gets
-at least one impact line; use `non_target_breaking` for changes that invalidate
-no existing target.
+## Impact Keyword Lines
 
-Message shape:
+Every commit gets at least one impact line; summarize the applicable lines in
+pull requests and release notes.
 
-```
-<short imperative summary>
+| Impact keyword line | When to use | Example(s) |
+|---|---|---|
+| `non_target_breaking` | No existing targets will be invalidated by this change | Code comments, white-space changes, or changes to the `resources` argument of a target |
+| `contained_target_breaking: <target>` | The named target reruns, but its output hash is unchanged or it has no downstream consumers | Refactoring a target command, changing a terminal plot, or revising a standalone export |
+| `cascading_target_breaking: <target> [<dataset-scope>]` | The named target's output changes and downstream targets consume it; append a configured scope when only some datasets or aggregations are affected | Adding a column to a consumed tibble or changing accepted cells in a matrix |
 
-[optional body: more details on what changed and why]
+List multiple earliest affected targets when no single upstream target captures
+the invalidation boundary. Do not replace target names with vague families.
 
-[mandatory impact keyword line(s) — see `multiomer-impact-keyword-lines` skill ]
+For PR and release summaries, use commit impact lines as evidence and reconcile
+them with the final diff against the destination base or previous release.
+Drop effects from reverted or superseded changes, deduplicate surviving lines,
+and retain the cascading classification when it applies to the same target.
 
-Codex-Task-ID: <resolved task ID>
-```
+## Agent Task Provenance
 
-Include exactly one `Codex-Task-ID` trailer on a new commit. When amending a
-commit, preserve any distinct existing task-ID trailers and add the current ID
-only when the current task materially contributed to the amended commit.
+An agent that creates a commit records its own thread or session identifier in
+a trailer named after the agent. Resolve the literal value from the current
+environment; do not guess an ID or copy one from another task.
+
+| Agent | Trailer | Identifier |
+|---|---|---|
+| Codex | `Codex-Task-ID` | `CODEX_THREAD_ID`, else `CODEX_SESSION_ID` |
+| Claude Code | `Claude-Task-ID` | `CLAUDE_CODE_SESSION_ID` |
+
+Other agents use their own thread or session identifier in a matching
+`<Agent>-Task-ID` trailer. If none is available, ask the user before committing
+without one. Include exactly one trailer for the current agent on a new commit.
+When amending, preserve distinct existing task-ID trailers and add the current
+one only when the current task materially contributed to the amended commit.
 
 ## Examples
 
@@ -74,7 +77,7 @@ str_starts("score_") returns logical; replace with str_subset("^score_")
 
 contained_target_breaking: categorical.UMAPs.7_ATAC_QC
 
-Codex-Task-ID: <resolved task ID>
+Claude-Task-ID: <resolved task ID>
 ```
 
 **Refactor — changes an intermediate target whose output flows downstream:**

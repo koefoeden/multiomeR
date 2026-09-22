@@ -90,15 +90,10 @@ git commit ...
 
 ## Write Correct Commit Messages
 
-For every rebuilt commit:
-- Use the format in the `multiomer-git-commit-format` skill.
-- Add the mandatory impact keyword line described in `multiomer-impact-keyword-lines`.
-- Prefer one of:
-  - `non_target_breaking`
-  - `contained_target_breaking: <target>`
-  - `cascading_target_breaking: <target> [<dataset-scope>]`
-
-Do not guess lazily. If the commit changes pipeline behavior, inspect the relevant target names first.
+Write every rebuilt commit with `multiomer-git-commit-format`, including its
+impact keyword lines, plus any commit classification that the repository's
+AGENTS.md requires. Do not guess impact lines lazily: if the commit changes
+pipeline behavior, inspect the relevant target names first.
 
 Helpful checks:
 

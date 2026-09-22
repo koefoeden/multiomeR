@@ -5,7 +5,8 @@ Rules enforced (see website/implementation/implementation_conventions.md,
 "Methods and parameter tables"):
 
 1. Every ``parameters.html#<name>`` anchor in ``website/implementation/methods_*.md``
-   names a ``param_name`` present in ``cfg_pipeline_parameters.tsv``.
+   names a ``param_name`` present in the public-defaults manifest snapshot
+   ``website/data/public_defaults/cfg_pipeline_parameters.tsv``.
 2. In every table row whose Status column is ``Configurable``, the Value column is empty,
    so defaults are never repeated outside the manifest.
 3. In every table row whose Status column starts with ``Hardcoded``, the Value column is
@@ -53,7 +54,7 @@ def table_rows(text: str):
 
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
-    manifest = read_manifest(root / "cfg_pipeline_parameters.tsv")
+    manifest = read_manifest(root / "website" / "data" / "public_defaults" / "cfg_pipeline_parameters.tsv")
     chapters = sorted((root / "website" / "implementation").glob("methods_*.md"))
     if not chapters:
         print("No methods chapters found.", file=sys.stderr)

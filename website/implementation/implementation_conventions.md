@@ -47,7 +47,6 @@ Use tags only when they create a durable handle for readers, graph helpers, or c
 
 ``` text
 aggregation
-subgroups
 differential_analyses
 genetic_enrichment
 peak_gene_correlation

@@ -15,9 +15,7 @@ These manifest parameters select inputs, plot variables and execution behaviour 
 | Plots | Categorical and continuous metadata plotted | Configurable |  | [`aggregation_categorical_vars`](../parameters.html#aggregation_categorical_vars), [`aggregation_continuous_vars`](../parameters.html#aggregation_continuous_vars) |
 | Plots | Additional genes plotted | Configurable |  | [`aggregation_other_interesting_genes`](../parameters.html#aggregation_other_interesting_genes) |
 | Tracks | Roadmap epigenome tracks | Configurable |  | [`aggregation_roadmap_EDACC_names`](../parameters.html#aggregation_roadmap_EDACC_names) |
-| Tracks | Galaxy track upload | Configurable |  | [`aggregation_GALAXY_track_upload_API_KEY`](../parameters.html#aggregation_GALAXY_track_upload_API_KEY), [`aggregation_GALAXY_track_upload_HISTORY_ID`](../parameters.html#aggregation_GALAXY_track_upload_HISTORY_ID) |
 | Execution | Targets skipped by `tar_make()` helpers | Configurable |  | [`aggregation_tar_make_skip_regex_patterns`](../parameters.html#aggregation_tar_make_skip_regex_patterns) |
-| Subgroups module | Subgroup column, resolution, regression, Harmony covariates, minimum nuclei | Configurable |  | [`aggregation_subgroups_col`](../parameters.html#aggregation_subgroups_col), [`aggregation_subgroups_res`](../parameters.html#aggregation_subgroups_res), [`aggregation_subgroups_SCT_regress_vars`](../parameters.html#aggregation_subgroups_SCT_regress_vars), [`aggregation_subgroups_extra_harmony_covars`](../parameters.html#aggregation_subgroups_extra_harmony_covars), [`aggregation_subgroups_min_nuclei_filter`](../parameters.html#aggregation_subgroups_min_nuclei_filter) |
 
 ## Per-GEM-well inputs and metrics
 
@@ -103,4 +101,3 @@ WNN integration uses the nuclei retained by the ATAC branch that have rows in bo
 | Cell set | Nuclei entering WNN | Hardcoded: target literal | post-doublet-filter ATAC metadata ∩ rows of both embeddings | `extra_targets/WNN_targets.R`, `R/processing_multimodal_helpers.R` |
 | Cluster filter | Threshold and recomputation | Configurable |  | [`aggregation_cluster_min_barcodes`](../parameters.html#aggregation_cluster_min_barcodes) |
 | Cluster filter | Recompute rule | Hardcoded: target literal | graph and UMAP recomputed when any nucleus is dropped; labels kept | `extra_targets/WNN_targets.R` |
-| Subgroups | Contaminated-subcluster removal, subgroups module only | Configurable |  | [`aggregation_prop_threshold_contaminated_cluster_removal`](../parameters.html#aggregation_prop_threshold_contaminated_cluster_removal) |

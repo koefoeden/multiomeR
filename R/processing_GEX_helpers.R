@@ -65,7 +65,7 @@ run_GEX_PCA_BPCells <- function(
   barcode_vec = NULL,
   metadata_tibble = NULL,
   organism_chr = NULL,
-  GEX_PCA_backend = "Seurat_SCT",
+  GEX_PCA_backend,
   SCT_regress_vars = NULL,
   n_components,
   n_variable_features = 3000,
@@ -114,7 +114,7 @@ run_GEX_PCA_BPCells <- function(
     )
   }
 
-  GEX_PCA_backend <- match_GEX_PCA_backend(GEX_PCA_backend)
+  GEX_PCA_backend <- match.arg(GEX_PCA_backend, c("Seurat_SCT", "BPCells_native"))
   if (identical(GEX_PCA_backend, "BPCells_native")) {
     return(run_BPCells_native_GEX_PCA(
       counts_matrix = counts_matrix,
@@ -179,27 +179,6 @@ run_GEX_PCA_BPCells <- function(
     SCT_regress_vars = SCT_regress_vars,
     cell_cycle_score_cols = intersect(cell_cycle_score_cols(), colnames(cell_attr))
   )
-}
-
-match_GEX_PCA_backend <- function(GEX_PCA_backend) {
-  if (is.null(GEX_PCA_backend) || length(GEX_PCA_backend) == 0 || is.na(GEX_PCA_backend[[1]]) || !nzchar(GEX_PCA_backend[[1]])) {
-    return("Seurat_SCT")
-  }
-
-  backend_chr <- as.character(GEX_PCA_backend[[1]])
-  backend_key <- tolower(gsub("[^A-Za-z0-9]+", "_", backend_chr))
-  backend_lookup <- c(
-    seurat_sct = "Seurat_SCT",
-    sct = "Seurat_SCT",
-    bpcells_native = "BPCells_native",
-    bpcells = "BPCells_native",
-    native = "BPCells_native"
-  )
-  backend <- unname(backend_lookup[[backend_key]])
-  if (is.null(backend)) {
-    stop("Unsupported GEX_PCA_backend '", backend_chr, "'. Use 'Seurat_SCT' or 'BPCells_native'.")
-  }
-  backend
 }
 
 run_BPCells_native_GEX_PCA <- function(

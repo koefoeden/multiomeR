@@ -1,4 +1,5 @@
 # R-specific files
+.RData
 .Rhistory
 .Rapp.history
 .Rproj.user/
@@ -21,11 +22,7 @@ rsconnect/
 *.utf8.md
 *.knit.md
 
-# translation temp files
-po/*~
-
 docs
-vignettes/figures
 .quarto/
 
 # cellranger files
@@ -47,7 +44,6 @@ logs
 .vscode
 .nfs*
 .DS_Store
-/.quarto/
 **/*.quarto_ipynb
 .pixi/
 outputs

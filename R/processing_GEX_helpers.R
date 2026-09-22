@@ -755,57 +755,6 @@ aggregate_BPCells_rows_by_group <- function(feature_matrix, feature_groups, thre
     t()
 }
 
-#' Add GEX UCell scores to metadata
-#'
-#' Add marker signature scores from BPCells-backed GEX counts to metadata.
-#'
-#' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
-#' @param named_marker_genes_list Named list of marker gene vectors. A trailing
-#'   `-` marks negative signature genes and a trailing `+` marks positive genes,
-#'   matching UCell signature syntax.
-#' @param GEX_counts_matrix Gene-by-cell count matrix; row names are gene IDs/names and column names are cell barcodes.
-#' @param max_rank Maximum rank used by the UCell U statistic.
-#' @param chunk_size Number of cells materialized per ranking chunk.
-#' @param workers Number of parallel fork workers used to score chunks.
-#' @param w_neg Weight applied to negative marker signatures.
-#' @param ties_method Tie handling passed to `matrixStats::colRanks()`.
-#' @param missing_genes Whether missing genes are imputed at `max_rank` or skipped.
-#' @return Metadata tibble with one added numeric module-score column per marker
-#'   list name.
-#' @keywords internal
-
-add_GEX_UCell_scores_to_metadata <- function(metadata_tibble,
-                                             named_marker_genes_list,
-                                             GEX_counts_matrix,
-                                             max_rank = 1500,
-                                             chunk_size = 1000,
-                                             workers = 1,
-                                             w_neg = 1,
-                                             ties_method = "average",
-                                             missing_genes = c("impute", "skip")) {
-  counts_matrix <- GEX_counts_matrix
-  keep_barcodes <- intersect(metadata_tibble$barcode_w_prefix, colnames(counts_matrix))
-  if (length(keep_barcodes) == 0) {
-    stop("No metadata barcodes were found in the GEX count matrix.")
-  }
-  counts_matrix <- counts_matrix[, keep_barcodes, drop = FALSE]
-
-  score_tibble <- calculate_BPCells_UCell_scores_from_matrix(
-    counts_matrix = counts_matrix,
-    features = named_marker_genes_list,
-    max_rank = max_rank,
-    chunk_size = chunk_size,
-    workers = workers,
-    w_neg = w_neg,
-    ties_method = ties_method,
-    missing_genes = missing_genes
-  ) |>
-    tibble::as_tibble(rownames = "barcode_w_prefix")
-
-  metadata_tibble |>
-    dplyr::left_join(score_tibble, by = "barcode_w_prefix")
-}
-
 calculate_BPCells_UCell_scores_from_matrix <- function(counts_matrix,
                                                        features,
                                                        max_rank = 1500,

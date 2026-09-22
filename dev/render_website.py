@@ -38,7 +38,8 @@ def main():
         # Source links must point to the editable Markdown files on GitHub.
         for path in (stage / "docs").rglob("*.html"):
             path.write_text(path.read_text().replace(".qmd", ".md"))
-        shutil.copytree(stage / "docs", root / "docs", dirs_exist_ok=True)
+        shutil.rmtree(root / "docs", ignore_errors=True)
+        shutil.copytree(stage / "docs", root / "docs")
 
 
 if __name__ == "__main__":

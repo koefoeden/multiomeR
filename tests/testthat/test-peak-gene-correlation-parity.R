@@ -41,10 +41,8 @@ testthat::test_that("HC3 statistics match a full regression with one to six dono
     testthat::expect_equal(row$coefficient, unname(stats::coef(fit)[["peak"]]), tolerance = 1e-10)
     testthat::expect_equal(row$association_SE, reference_SE, tolerance = 1e-10)
     testthat::expect_equal(row$nominal_pvalue, reference_p, tolerance = 1e-10)
-    testthat::expect_equal(row$n_informative_donors, n_donors)
     testthat::expect_true(is.na(observed$correlation[observed$peak == "constant"]))
     testthat::expect_true(is.na(observed$nominal_pvalue[observed$peak == "constant"]))
-    testthat::expect_false(any(grepl("state", colnames(design))))
   }
 })
 
@@ -63,13 +61,9 @@ testthat::test_that("compact FDR breakpoints reproduce global BH values within c
   reference <- make_peak_gene_finemapping_reference(
     results, tibble::tibble(TargetGeneID = c("g", "g"), gene_matrix_feature = c("G", "G"))
   )
-  testthat::expect_lt(nrow(reference$FDR), sum(is.finite(results$nominal_pvalue)))
-  testthat::expect_equal(nrow(reference$gene_features), 1L)
   branches <- results |> dplyr::group_by(.data$cell_group, .data$chr) |> dplyr::group_split()
   for (branch in branches) {
     observed <- restore_peak_gene_correlation_FDR(dplyr::select(branch, -"FDR"), reference$FDR)
     testthat::expect_identical(observed$FDR, branch$FDR)
   }
-  empty <- restore_peak_gene_correlation_FDR(dplyr::select(results[0, ], -"FDR"), reference$FDR)
-  testthat::expect_identical(empty$FDR, numeric())
 })

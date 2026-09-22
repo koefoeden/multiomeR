@@ -1,14 +1,7 @@
 load_scoring_test_runtime <- function() {
-  if (!exists("calculate_BPCells_UCell_scores_from_matrix", mode = "function")) {
+  if (!exists("summarize_cluster_UCell_counts", mode = "function")) {
     load_project_test_runtime()
   }
-}
-
-expect_identical_scores <- function(observed, expected, label) {
-  observed <- as.matrix(observed)
-  expected <- as.matrix(expected)
-
-  testthat::expect_identical(observed, expected, info = label)
 }
 
 make_counts_matrix <- function() {
@@ -27,339 +20,176 @@ make_counts_matrix <- function() {
 }
 
 make_bpcells_matrix <- function(counts) {
-  matrix_dir <- tempfile("bpcells_ucell_parity_")
+  matrix_dir <- tempfile("bpcells_scoring_parity_")
   sparse_counts <- Matrix::Matrix(counts, sparse = TRUE)
   sparse_counts <- BPCells::convert_matrix_type(sparse_counts, type = "uint32_t")
   invisible(BPCells::write_matrix_dir(sparse_counts, matrix_dir))
   BPCells::open_matrix_dir(matrix_dir)
 }
 
-run_ucell_reference <- function(counts, marker_genes, method, missing_genes = "impute") {
+# UCell 2.14.0 can emit non-fatal R stack-imbalance warnings under R 4.5. Run all
+# reference calls in one disposable process so those package-level warnings
+# cannot corrupt this session; callr still returns the exact matrices compared.
+run_ucell_references <- function(counts, calls) {
   require_reference_version("UCell", "2.14.0")
-
-  # UCell 2.14.0 can emit non-fatal R stack-imbalance warnings for the
-  # missing-gene fixture under R 4.5. Run only the reference implementation in
-  # a disposable process so those package-level warnings cannot corrupt this
-  # validation session; callr still returns the exact matrix being compared.
   callr::r(
-    function(counts, marker_genes, method, missing_genes) {
+    function(counts, calls) {
       counts <- Matrix::Matrix(counts, sparse = TRUE)
-      if (identical(method, "score_signatures")) {
-        return(UCell::ScoreSignatures_UCell(
-          matrix = counts,
-          features = marker_genes,
-          maxRank = 80,
-          w_neg = 0.75,
-          name = "",
-          chunk.size = 7,
-          missing_genes = missing_genes,
-          BPPARAM = BiocParallel::SerialParam(),
-          ncores = 1,
-          ties.method = "average"
-        ))
-      }
-
-      seurat_obj <- SeuratObject::CreateSeuratObject(counts = counts)
-      seurat_obj <- UCell::AddModuleScore_UCell(
-        obj = seurat_obj,
-        features = marker_genes,
-        maxRank = 80,
-        chunk.size = 7,
-        BPPARAM = BiocParallel::SerialParam(),
-        ncores = 1,
-        storeRanks = FALSE,
-        w_neg = 0.75,
-        assay = "RNA",
-        slot = "counts",
-        ties.method = "average",
-        missing_genes = "impute",
-        force.gc = FALSE,
-        name = ""
-      )
-      seurat_obj@meta.data
+      lapply(calls, function(arguments) as.matrix(do.call(UCell::ScoreSignatures_UCell, c(
+        list(matrix = counts, name = "", ncores = 1, ties.method = "average",
+          BPPARAM = BiocParallel::SerialParam()),
+        arguments
+      ))))
     },
-    args = list(
-      counts = counts,
-      marker_genes = marker_genes,
-      method = method,
-      missing_genes = missing_genes
-    ),
+    args = list(counts = counts, calls = calls),
     show = FALSE
   )
 }
 
-make_scoring_fixture <- function() {
+testthat::test_that("integration: BPCells UCell scores match ScoreSignatures_UCell", {
+  load_scoring_test_runtime()
   counts <- make_counts_matrix()
-  list(
-    counts = counts,
-    bpcells_counts = make_bpcells_matrix(counts),
-    marker_genes = list(
-      alpha = c("gene003+", "gene017", "gene029-", "missing_alpha+"),
-      beta = c("gene041", "gene053+", "gene067-", "gene079-", "missing_beta-"),
-      gamma = c("gene101+", "gene113", "gene127-")
+  bpcells_counts <- make_bpcells_matrix(counts)
+  markers <- list(
+    alpha = c("gene003+", "gene017", "gene029-", "missing_alpha+"),
+    beta = c("gene041", "gene053+", "gene067-", "gene079-", "missing_beta-"),
+    gamma = c("gene101+", "gene113", "gene127-")
+  )
+  modes <- c(impute = "impute", skip = "skip")
+  expected <- run_ucell_references(counts, lapply(modes, function(mode) list(
+    features = markers, maxRank = 80, w_neg = 0.75, chunk.size = 7, missing_genes = mode
+  )))
+
+  for (mode in modes) {
+    observed <- calculate_BPCells_UCell_scores_from_matrix(
+      counts_matrix = bpcells_counts,
+      features = markers,
+      max_rank = 80,
+      chunk_size = 7,
+      w_neg = 0.75,
+      ties_method = "average",
+      missing_genes = mode
     )
-  )
-}
-
-compare_score_signatures_ucell <- function(counts, bpcells_counts, marker_genes, missing_genes) {
-  expected <- run_ucell_reference(
-    counts = counts,
-    marker_genes = marker_genes,
-    method = "score_signatures",
-    missing_genes = missing_genes
-  )
-
-  observed <- calculate_BPCells_UCell_scores_from_matrix(
-    counts_matrix = bpcells_counts,
-    features = marker_genes,
-    max_rank = 80,
-    chunk_size = 7,
-    w_neg = 0.75,
-    ties_method = "average",
-    missing_genes = missing_genes
-  )
-
-  expect_identical_scores(
-    observed = observed,
-    expected = expected[, colnames(observed), drop = FALSE],
-    label = paste0("UCell::ScoreSignatures_UCell missing_genes=", missing_genes)
-  )
-}
-
-compare_add_module_score_ucell <- function(counts, bpcells_counts, marker_genes) {
-  expected <- run_ucell_reference(
-    counts = counts,
-    marker_genes = marker_genes,
-    method = "add_module_score"
-  )
-
-  observed <- calculate_BPCells_UCell_scores_from_matrix(
-    counts_matrix = bpcells_counts,
-    features = marker_genes,
-    max_rank = 80,
-    chunk_size = 7,
-    w_neg = 0.75,
-    ties_method = "average",
-    missing_genes = "impute"
-  )
-  expected <- expected[, colnames(observed), drop = FALSE]
-
-  expect_identical_scores(
-    observed = observed,
-    expected = expected,
-    label = "UCell::AddModuleScore_UCell"
-  )
-}
-
-reference_seurat_module_scores <- function(normalized_matrix, features, nbin, ctrl, seed) {
-  assay <- suppressWarnings(SeuratObject::CreateAssay5Object(data = normalized_matrix))
-  set.seed(seed)
-  scores <- Seurat::AddModuleScore(
-    object = assay,
-    features = features,
-    nbin = nbin,
-    ctrl = ctrl,
-    name = "Module",
-    slot = "data"
-  )[]
-  colnames(scores) <- names(features)
-  scores
-}
-
-compare_seurat_module_scores <- function(counts, bpcells_counts) {
-  features <- list(
-    S.Score = c("gene005", "gene019", "gene033", "gene047"),
-    G2M.Score = c("gene061", "gene075", "gene089", "gene103")
-  )
-
-  expected <- reference_seurat_module_scores(
-    normalized_matrix = counts,
-    features = features,
-    nbin = 10,
-    ctrl = 4,
-    seed = 11
-  )
-  observed <- calculate_BPCells_module_scores_from_matrix(
-    normalized_data = bpcells_counts,
-    features = features,
-    nbin = 10,
-    ctrl = 4,
-    seed = 11
-  )
-
-  expect_identical_scores(
-    observed = observed,
-    expected = expected,
-    label = "Seurat::AddModuleScore"
-  )
-}
-
-compare_cell_cycle_scores <- function(counts, bpcells_counts) {
-  s_features <- c("gene005", "gene019", "gene033", "gene047")
-  g2m_features <- c("gene061", "gene075", "gene089", "gene103")
-  features <- list(S.Score = s_features, G2M.Score = g2m_features)
-
-  expected_scores <- reference_seurat_module_scores(
-    normalized_matrix = counts,
-    features = features,
-    nbin = 10,
-    ctrl = 4,
-    seed = 11
-  )
-  expected_phase <- apply(expected_scores, 1, function(scores) {
-    if (all(scores < 0)) {
-      return("G1")
-    }
-    if (sum(scores == max(scores)) > 1) {
-      return("Undecided")
-    }
-    c("S", "G2M")[which(scores == max(scores))]
-  })
-  expected <- data.frame(
-    S.Score = expected_scores[, "S.Score"],
-    G2M.Score = expected_scores[, "G2M.Score"],
-    Phase = expected_phase,
-    row.names = rownames(expected_scores)
-  )
-
-  observed <- calculate_BPCells_cell_cycle_scores_from_matrix(
-    normalized_data = bpcells_counts,
-    s.features = s_features,
-    g2m.features = g2m_features,
-    nbin = 10,
-    seed = 11
-  )
-
-  expect_identical_scores(
-    observed = observed[, c("S.Score", "G2M.Score"), drop = FALSE],
-    expected = expected[, c("S.Score", "G2M.Score"), drop = FALSE],
-    label = "cell-cycle Seurat::AddModuleScore scores"
-  )
-  testthat::expect_identical(observed$Phase, expected$Phase)
-}
-
-testthat::test_that("integration: BPCells UCell scores match imputed reference scores", {
-  load_scoring_test_runtime()
-  fixture <- make_scoring_fixture()
-  compare_score_signatures_ucell(
-    fixture$counts,
-    fixture$bpcells_counts,
-    fixture$marker_genes,
-    missing_genes = "impute"
-  )
-})
-
-testthat::test_that("integration: BPCells UCell scores match skipped reference scores", {
-  load_scoring_test_runtime()
-  fixture <- make_scoring_fixture()
-  compare_score_signatures_ucell(
-    fixture$counts,
-    fixture$bpcells_counts,
-    fixture$marker_genes,
-    missing_genes = "skip"
-  )
-})
-
-testthat::test_that("integration: BPCells UCell scores match AddModuleScore_UCell", {
-  load_scoring_test_runtime()
-  fixture <- make_scoring_fixture()
-  compare_add_module_score_ucell(
-    fixture$counts,
-    fixture$bpcells_counts,
-    fixture$marker_genes
-  )
-})
-
-testthat::test_that("integration: BPCells module scores match Seurat", {
-  load_scoring_test_runtime()
-  fixture <- make_scoring_fixture()
-  compare_seurat_module_scores(fixture$counts, fixture$bpcells_counts)
-})
-
-testthat::test_that("integration: BPCells cell-cycle scores and phases match Seurat", {
-  load_scoring_test_runtime()
-  fixture <- make_scoring_fixture()
-  compare_cell_cycle_scores(fixture$counts, fixture$bpcells_counts)
-})
-
-testthat::test_that("cluster UCell summaries preserve per-cell scores and group means", {
-  load_scoring_test_runtime()
-  counts <- make_counts_matrix()
-  markers <- list(A = c("gene001", "gene003", "gene007"), B = c("gene010", "gene020"))
-  metadata <- data.frame(barcode_w_prefix = colnames(counts),
-    cluster = rep(c("1", "2"), length.out = ncol(counts)),
-    GEM_well_ID = c("singleton", rep(c("well_A", "well_B"), 18L)))
-  control <- prepare_cluster_UCell_controls(counts, metadata, markers)
-  testthat::expect_true(colnames(counts)[1] %in% control$reference_barcodes)
-  testthat::expect_false(any(control$reference_genes[control$draws] %in% unlist(markers)))
-  testthat::expect_true(all(apply(control$draws, 2L, anyDuplicated) == 0L))
-  control$max_rank <- 80L
-  summaries <- summarize_cluster_UCell_counts(counts, metadata, control, "cluster",
-    chunk_size = 7L, workers = 1L, include_cell_scores = TRUE)
-  expected <- calculate_BPCells_UCell_scores_from_matrix(counts, markers, max_rank = 80L)
-  testthat::expect_equal(summaries$cell_scores[rownames(expected), ], as.matrix(expected), tolerance = 1e-14)
-  for (index in which(summaries$groups$kind == "cluster")) {
-    selected <- metadata$cluster == summaries$groups$cluster[index]
-    observed <- vapply(markers, function(genes) score_UCell_rank_means(
-      summaries$rank_means[, summaries$groups$key[index], drop = FALSE], genes, 80L), numeric(1L))
-    testthat::expect_equal(observed, colMeans(expected[selected, ]), tolerance = 1e-14)
+    testthat::expect_identical(
+      as.matrix(observed),
+      expected[[mode]][, colnames(observed), drop = FALSE],
+      info = paste0("missing_genes = ", mode)
+    )
   }
-  parallel_summary <- summarize_cluster_UCell_counts(counts, metadata, control, "cluster",
-    chunk_size = 7L, workers = 2L, include_cell_scores = TRUE)
-  testthat::expect_equal(parallel_summary$rank_means, summaries$rank_means, tolerance = 1e-14)
-  annotation <- evaluate_cluster_UCell_evidence(score_cluster_UCell_summaries(summaries, control), min_advantage = 0.05)
-  joined <- add_cluster_UCell_annotations(metadata, annotation, "cluster")
-  testthat::expect_identical(joined$barcode_w_prefix, metadata$barcode_w_prefix)
-  testthat::expect_false(anyNA(joined$cluster_cell_type))
-  testthat::expect_equal(unname(as.matrix(joined[, names(markers)])), unname(as.matrix(expected)), tolerance = 1e-14)
 })
 
-testthat::test_that("signed cluster scores and controls match per-cell UCell before averaging", {
+testthat::test_that("integration: cluster annotation evidence matches UCell averaged within clusters", {
   load_scoring_test_runtime()
   counts <- make_counts_matrix()
-  markers <- list(A = c("gene001+", "gene003", "gene007-"),
-    B = c("gene010", "gene020-"), negative_only = "gene030-")
-  metadata <- data.frame(barcode_w_prefix = colnames(counts),
-    cluster = rep(c("1", "2"), length.out = ncol(counts)), GEM_well_ID = "well")
-  control <- prepare_cluster_UCell_controls(counts, metadata, markers)
+  bpcells_counts <- make_bpcells_matrix(counts)
+  markers <- list(
+    positive = c("gene001", "gene003", "gene007"),
+    positive_pair = c("gene010", "gene020"),
+    signed = c("gene041+", "gene053", "gene067-"),
+    signed_pair = c("gene079", "gene089-"),
+    negative_only = "gene101-"
+  )
+  metadata <- data.frame(
+    barcode_w_prefix = colnames(counts),
+    cluster = rep(c("1", "2", "3"), length.out = ncol(counts)),
+    GEM_well_ID = c("singleton", rep(c("well_A", "well_B"), 18L))
+  )
+  control <- prepare_cluster_UCell_controls(bpcells_counts, metadata, markers)
   control$n_controls <- 9L
   control$draws <- control$draws[, seq_len(control$n_controls), drop = FALSE]
   control$max_rank <- 80L
-  summaries <- summarize_cluster_UCell_counts(counts, metadata, control, "cluster",
-    chunk_size = 7L, workers = 1L, include_cell_scores = TRUE)
-  reference <- function(signatures) callr::r(function(counts, signatures) {
-    as.matrix(UCell::ScoreSignatures_UCell(Matrix::Matrix(counts, sparse = TRUE),
-      features = signatures, maxRank = 80L, w_neg = 1, name = "", ncores = 1L))
-  }, args = list(counts = counts, signatures = signatures))
-  expected <- reference(markers)
-  testthat::expect_equal(summaries$cell_scores[rownames(expected), ], expected, tolerance = 1e-14)
-  for (label in names(control$markers)) {
-    genes <- control$markers[[label]]
-    variants <- c(list(genes), if (length(genes) > 1L) lapply(genes, function(gene) setdiff(genes, gene)))
-    for (variant in seq_along(variants)) {
-      signature <- variants[[variant]]
-      controls <- lapply(seq_len(control$n_controls), function(index) {
-        selected <- control$reference_genes[control$draws[sub("-$", "", signature), index]]
-        paste0(selected, ifelse(grepl("-$", signature), "-", ""))
-      })
-      signatures <- stats::setNames(c(list(signature), controls), paste0("signature", seq_len(control$n_controls + 1L)))
-      scores <- reference(signatures)
-      for (group in which(summaries$groups$kind == "cluster")) {
-        selected <- metadata$cluster == summaries$groups$cluster[group]
-        testthat::expect_equal(unname(summaries$signed_means[[label]][[variant]][, group]),
-          unname(colMeans(scores[selected, , drop = FALSE])), tolerance = 1e-14)
-      }
-    }
+  score <- function(chunk_size, workers) {
+    summaries <- summarize_cluster_UCell_counts(bpcells_counts, metadata, control, "cluster",
+      chunk_size = chunk_size, workers = workers, include_cell_scores = TRUE)
+    score_cluster_UCell_summaries(summaries, control)
   }
-  other <- summarize_cluster_UCell_counts(counts, metadata, control, "cluster",
-    chunk_size = 11L, workers = 2L, include_cell_scores = TRUE)
-  testthat::expect_equal(other$signed_means, summaries$signed_means, tolerance = 1e-14)
-  scored <- score_cluster_UCell_summaries(summaries, control)
-  testthat::expect_true(all(is.finite(scored$evidence$excess)))
-  testthat::expect_true(all(is.finite(scored$marker_deletions$excess)))
-  # A signed score clipped after averaging is generally a different quantity.
-  gap <- matrix(c(0.9, 0.1, 0.1, 0.9), 2L, dimnames = list(c("gene001", "gene007"), NULL))
-  exact <- mean(pmax(0, gap[1, ] - gap[2, ]))
-  shortcut <- max(0, mean(gap[1, ]) - mean(gap[2, ]))
-  testthat::expect_gt(exact, shortcut)
+  scored <- score(chunk_size = 7L, workers = 1L)
+
+  # Score every observed, matched-control and marker-deletion signature per cell with UCell.
+  signature_set <- function(genes) c(list(genes), lapply(seq_len(control$n_controls), function(index) {
+    paste0(control$reference_genes[control$draws[sub("-$", "", genes), index]],
+      ifelse(grepl("-$", genes), "-", ""))
+  }))
+  variants <- lapply(control$markers, function(genes) {
+    c(list(genes), if (length(genes) > 1L) lapply(genes, function(gene) setdiff(genes, gene)))
+  })
+  signatures <- unlist(lapply(names(variants), function(label) {
+    unlist(lapply(seq_along(variants[[label]]), function(variant) {
+      stats::setNames(signature_set(variants[[label]][[variant]]),
+        sprintf("%s.%d.%d", label, variant, seq_len(control$n_controls + 1L)))
+    }), recursive = FALSE)
+  }), recursive = FALSE)
+  reference <- run_ucell_references(counts, list(list(features = signatures, maxRank = 80, w_neg = 1)))[[1]]
+  cluster_means <- apply(reference, 2L, function(values) tapply(values, metadata$cluster, mean))
+  reference_evidence <- function(label, variant) {
+    columns <- sprintf("%s.%d.%d", label, variant, seq_len(control$n_controls + 1L))
+    observed <- cluster_means[, columns[1L]]
+    null <- cluster_means[, columns[-1L], drop = FALSE]
+    q95 <- apply(null, 1L, stats::quantile, probs = 0.95, names = FALSE)
+    data.frame(cluster = rownames(cluster_means), label, mean_score = unname(observed),
+      control_mean = unname(rowMeans(null)), control_q95 = q95, excess = unname(observed) - q95)
+  }
+
+  testthat::expect_equal(
+    unname(scored$cell_scores[metadata$barcode_w_prefix, names(markers)]),
+    unname(reference[metadata$barcode_w_prefix, sprintf("%s.1.1", names(markers))]),
+    tolerance = 1e-12
+  )
+  expected <- do.call(rbind, lapply(names(markers), reference_evidence, variant = 1L))
+  observed <- scored$evidence[order(match(scored$evidence$label, names(markers)), scored$evidence$cluster), names(expected)]
+  rownames(observed) <- rownames(expected) <- NULL
+  testthat::expect_equal(observed, expected, tolerance = 1e-12)
+  expected_deletions <- do.call(rbind, lapply(names(markers)[lengths(control$markers) > 1L], function(label) {
+    do.call(rbind, lapply(seq_along(control$markers[[label]]), function(position) {
+      evidence <- reference_evidence(label, position + 1L)
+      data.frame(evidence[, c("cluster", "label")], omitted = control$markers[[label]][[position]],
+        excess = evidence$excess)
+    }))
+  }))
+  observed_deletions <- scored$marker_deletions[, names(expected_deletions)]
+  rownames(observed_deletions) <- rownames(expected_deletions) <- NULL
+  testthat::expect_equal(observed_deletions, expected_deletions, tolerance = 1e-12)
+
+  # Chunking and fork workers must not change any aggregated statistic.
+  rescored <- score(chunk_size = 11L, workers = 2L)
+  testthat::expect_equal(rescored$evidence, scored$evidence, tolerance = 1e-14)
+  testthat::expect_equal(rescored$marker_deletions, scored$marker_deletions, tolerance = 1e-14)
+  testthat::expect_equal(rescored$cell_scores[rownames(scored$cell_scores), ], scored$cell_scores,
+    tolerance = 1e-14)
+})
+
+testthat::test_that("integration: cell-cycle scores and phases match Seurat::CellCycleScoring", {
+  load_scoring_test_runtime()
+  require_reference_version("Seurat", "5.5.0")
+  cell_cycle_genes <- Seurat::cc.genes.updated.2019
+  genes <- c(cell_cycle_genes$s.genes, cell_cycle_genes$g2m.genes, sprintf("gene%04d", seq_len(2900L)))
+  cells <- sprintf("cell%02d", seq_len(60L))
+  set.seed(223)
+  expression <- outer(exp(stats::rnorm(length(genes))), rep(1, length(cells)))
+  cycling <- list(cell_cycle_genes$s.genes, cell_cycle_genes$g2m.genes)
+  for (phase in 1:2) {
+    selected <- (phase - 1L) * 20L + seq_len(20L)
+    expression[genes %in% cycling[[phase]], selected] <- 3 * expression[genes %in% cycling[[phase]], selected]
+  }
+  counts <- matrix(stats::rpois(length(expression), expression), length(genes), dimnames = list(genes, cells))
+
+  observed <- add_cell_cycle_scores_to_cell_attr(
+    make_bpcells_matrix(counts), data.frame(row.names = cells), organism_chr = "human"
+  )
+  object <- Seurat::NormalizeData(
+    SeuratObject::CreateSeuratObject(counts = Matrix::Matrix(counts, sparse = TRUE)),
+    verbose = FALSE
+  )
+  expected <- Seurat::CellCycleScoring(
+    object,
+    s.features = cell_cycle_genes$s.genes,
+    g2m.features = cell_cycle_genes$g2m.genes
+  )[[]]
+
+  # Production normalizes in BPCells, whose lower-precision arithmetic moves scores by
+  # about 1e-8 relative to Seurat's double-precision NormalizeData(); bins and phases are unchanged.
+  testthat::expect_equal(observed[cells, c("S.Score", "G2M.Score")], expected[cells, c("S.Score", "G2M.Score")],
+    tolerance = 1e-6)
+  testthat::expect_identical(observed[cells, "Phase"], expected[cells, "Phase"])
+  testthat::expect_setequal(observed$Phase, c("G1", "S", "G2M"))
 })

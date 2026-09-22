@@ -82,13 +82,13 @@ run_seurat_wnn_reference <- function(embeddings, k, candidate_k) {
   )
 }
 
+# Uses the production HNSW settings (the helper's default ef) with parallel threads.
 get_wnn_similarity_metrics <- function(embeddings, k, candidate_k) {
   observed <- weighted_nearest_neighbors_BPCells(
     embeddings_list = embeddings,
     k = k,
     candidate_k = candidate_k,
-    threads = 1,
-    ef = 1000
+    threads = 2
   )
   reference <- run_seurat_wnn_reference(embeddings, k = k, candidate_k = candidate_k)
 
@@ -124,7 +124,6 @@ validate_wnn_fixture <- function(label, metrics, weight_threshold, mean_overlap_
     q25_overlap_threshold,
     paste0("WNN ", label, " first-quartile neighbor-set overlap")
   )
-
 }
 
 # The compact reference functions below reproduce SCAVENGE 1.0.2 at commit
@@ -133,19 +132,17 @@ validate_wnn_fixture <- function(label, metrics, weight_threshold, mean_overlap_
 # stack or fetching network resources.
 reference_SCAVENGE_random_walk <- function(graph, seed_cells, restart_prob = 0.05, stationary_cutoff = 1e-5) {
   graph <- methods::as(graph != 0, "dMatrix")
-  graph <- t(t(graph) / Matrix::colSums(graph))
+  # Sparse equivalent of SCAVENGE's t(t(graph) / colSums(graph)) idiom. randomWalk_sparse()
+  # transposes before calling its iterator, which transposes once more, so the update
+  # stays column-stochastic.
+  transition <- graph %*% Matrix::Diagonal(x = 1 / Matrix::colSums(graph))
   restart <- setNames(numeric(nrow(graph)), rownames(graph))
   restart[seed_cells] <- 1
   restart <- restart / sum(restart)
-  # randomWalk_sparse() transposes before calling its iterator, which
-  # transposes once more. Preserve both operations in this compact reference.
-  transition <- Matrix::t(Matrix::t(graph))
   score <- restart
   delta <- 1
   while (delta > stationary_cutoff) {
-    next_score <- as.numeric(
-      ((1 - restart_prob) * transition) %*% score
-    ) + restart_prob * restart
+    next_score <- as.numeric(((1 - restart_prob) * transition) %*% score) + restart_prob * restart
     delta <- sum(abs(next_score - score))
     score <- next_score
   }

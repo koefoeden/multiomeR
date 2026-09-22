@@ -43,26 +43,10 @@ dependencies: a description tag does not prevent a downstream dependency from
 crossing the intended review boundary. Keep `QC_checkpoint_manifest.tsv`, the
 review guide, and the checkpoint-boundary regression test consistent.
 
-Run targets only when the changed behavior needs runtime proof. For a known
-exact target, run it directly. Preview new or regex-based selections and fail on
-an empty match:
-
-```bash
-pixi run --use-environment-activation-cache Rscript - <<'EOF'
-selection <- targets::tar_manifest(
-  names = tidyselect::matches("<target-and-scope-pattern>"),
-  fields = c(name, description),
-  callr_function = NULL
-)
-stopifnot(nrow(selection) > 0L)
-print(selection)
-targets::tar_make(
-  names = tidyselect::matches("<target-and-scope-pattern>")
-)
-EOF
-```
-
-If the target is not dataset-suffixed, run the smallest target that exercises the changed code. Avoid setup/download targets unless the edit directly changed download/setup behavior.
+Run targets only when the changed behavior needs runtime proof, using the
+preview-and-run patterns in `multiomer-run-pipeline`. Run the smallest target
+that exercises the changed code, and avoid setup/download targets unless the
+edit directly changed download/setup behavior.
 
 ## Known Waste
 

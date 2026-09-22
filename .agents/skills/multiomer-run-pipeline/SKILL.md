@@ -101,9 +101,4 @@ or file freshness may have changed: the shortcut can incorrectly skip work
 because it assumes those dependencies are already up to date. Keep the default
 `shortcut = FALSE` for production validation and whenever freshness is uncertain.
 
-## Practical Notes
-
-- For resolved aggregation settings, filter `read_aggregation_config_tibble()`
-  by `aggregation`. `load_CFG("<dataset>")` loads dataset settings, not aggregation
-  settings, and is only for interactive probes outside target commands.
-- If targets error, switch to `multiomer-fix-errors`.
+If targets error, switch to `multiomer-fix-errors`.

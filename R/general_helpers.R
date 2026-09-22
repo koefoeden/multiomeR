@@ -115,14 +115,9 @@ read_aggregation_config_tibble <- function(
 }
 
 read_manifest_config_tibble <- function(config_file, manifest_file, scope, key_col, verbose = FALSE) {
-  if (requireNamespace("googlesheets4", quietly = TRUE)) {
-    googlesheets4::gs4_deauth()
-  }
-
   manifest_tibble <- read_config_parameter_manifest(manifest_file, scope = scope)
   raw_cfg <- suppressWarnings(yaml::read_yaml(config_file, eval.expr = TRUE))
-  config_keys <- names(raw_cfg) |>
-    purrr::discard(~ .x %in% c("default"))
+  config_keys <- names(raw_cfg)
 
   if (verbose) {
     cat("Reading configs for ", key_col, ":\n", paste("-", config_keys, collapse = "\n"), "\n\n", sep = "")
@@ -163,12 +158,7 @@ read_manifest_config_tibble <- function(config_file, manifest_file, scope, key_c
 
 validate_manifest_config_names <- function(raw_cfg, config_keys, manifest_tibble, config_file, key_col) {
   purrr::walk(config_keys, \(config_key) {
-    entry_params <- names(flatten_manifest_config_entry(
-      cfg_list = raw_cfg[[config_key]],
-      config_key = config_key,
-      config_file = config_file,
-      key_col = key_col
-    ))
+    entry_params <- setdiff(names(raw_cfg[[config_key]]), "inherits")
     unknown_params <- setdiff(entry_params, manifest_tibble$param_name)
     if (length(unknown_params) > 0) {
       stop(
@@ -194,7 +184,7 @@ resolve_manifest_config_values <- function(
   key_col,
   seen_configs = character()
 ) {
-  if (!config_key %in% names(raw_cfg) || config_key == "default") {
+  if (!config_key %in% names(raw_cfg)) {
     stop(stringr::str_glue("Config {key_col} '{config_key}' is not defined in {config_file}."), call. = FALSE)
   }
 
@@ -225,18 +215,8 @@ resolve_manifest_config_values <- function(
 
   merge_manifest_config_values(
     parent_values = values,
-    child_values = flatten_manifest_config_entry(
-      cfg_list = cfg_list,
-      config_key = config_key,
-      config_file = config_file,
-      key_col = key_col
-    )
+    child_values = cfg_list[setdiff(names(cfg_list), "inherits")]
   )
-}
-
-flatten_manifest_config_entry <- function(cfg_list, config_key, config_file, key_col) {
-  cfg_names <- names(cfg_list)
-  cfg_list[setdiff(cfg_names, "inherits")]
 }
 
 merge_manifest_config_values <- function(parent_values, child_values) {

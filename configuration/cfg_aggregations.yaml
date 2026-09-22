@@ -113,16 +113,9 @@ ENCODE_heart_LV_6x:
     Pericyte: [RBPJ, KLF4]
   aggregation_roadmap_EDACC_names: [Peripheral_Blood_Mononuclear_Primary_Cells, CD4_Memory_Primary_Cells, CD4_Naive_Primary_Cells, CD8_Memory_Primary_Cells, CD8_Naive_Primary_Cells, Monocytes-CD14+_RO01746, Brain_Hippocampus_Middle, Brain_Inferior_Temporal_Lobe, Brain_Mid_Frontal_Lobe, Colonic_Mucosa, Sigmoid_Colon, Fetal_Intestine_Large, Adult_Liver]
   aggregation_harmony_correction_metadata_col_names: GEM_well_ID
-  aggregation_extra_harmony_covars_ATAC: ~
-  aggregation_GEX_data_PCs: !expr 1:30
-  aggregation_ATAC_data_PCs: !expr 2:30
-  aggregation_UMAP_GEX_PCs: !expr 1:30
-  aggregation_UMAP_ATAC_PCs: !expr 2:30
   aggregation_GEX_cluster_res: 0.8
   aggregation_ATAC_cluster_res: 0.8
   aggregation_WNN_cluster_res: 0.4
   aggregation_cluster_min_barcodes: 50
-  aggregation_ATAC_peak_calling_method: macs3
-  aggregation_call_peaks_by_cluster_col: PCA_harmony_SNN_cluster
   aggregation_data_nNNs: 50
   aggregation_UMAP_nNNs: 50

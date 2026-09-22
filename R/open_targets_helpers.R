@@ -137,7 +137,6 @@ get_open_targets_GWAS_metadata_tibble <- function(GWAS_inputs_tibble, open_targe
       GWAS_ID,
       studyId,
       finemappingMethod,
-      variant_weighting_mode,
       confidence,
       open_targets_release,
       sample_size,

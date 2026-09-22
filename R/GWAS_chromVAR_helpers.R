@@ -1,22 +1,15 @@
 #' Filter credible set variants
 #'
-#' Filter and optionally reweight credible-set variants before peak overlap.
+#' Filter credible-set variants by posterior probability before peak overlap.
 #'
 #' @param credible_set_GRanges GRanges object containing credible set GRanges coordinates and metadata.
 #' @param posterior_probability_cutoff Minimum posterior probability/PIP retained before assigning variants to peaks.
-#' @param posterior_probability_weighting_function Function applied to credible-set variants before peak weights are summed; receives the variant tibble.
-#' @param ... Additional arguments forwarded to the variant weighting function.
-#' @return A GRanges object containing retained variants, with any weighting
-#'   function side effects applied to metadata columns.
+#' @return A GRanges object containing retained variants.
 #' @keywords internal
 
-filter_credible_set_variants <- function(credible_set_GRanges, posterior_probability_cutoff = NULL, posterior_probability_weighting_function = NULL, ...) {
+filter_credible_set_variants <- function(credible_set_GRanges, posterior_probability_cutoff = NULL) {
   if (!is.null(posterior_probability_cutoff)) {
     credible_set_GRanges <- S4Vectors::subset(credible_set_GRanges, posteriorProbability > posterior_probability_cutoff)
-  }
-
-  if (!is.null(posterior_probability_weighting_function)) {
-    credible_set_GRanges <- posterior_probability_weighting_function(credible_set_GRanges, ...)
   }
 
   credible_set_GRanges
@@ -73,10 +66,8 @@ sum_variant_weights_in_peaks <- function(variant_GRanges, peak_ranges, weight_co
 #' @param peak_ranges GRanges of consensus peaks; names must match peak rows used in peak-weight or accessibility matrices.
 #' @param GWAS_ID Configured GWAS label used in target names, plots, and Open Targets joins.
 #' @param posterior_probability_cutoff Minimum posterior probability/PIP retained before assigning variants to peaks.
-#' @param posterior_probability_weighting_function Function applied to credible-set variants before peak weights are summed; receives the variant tibble.
 #' @param weight_transform Weight post-processing mode. `cap_1` caps summed peak
 #'   weights at 1; `sum` leaves summed weights unchanged.
-#' @param ... Additional arguments forwarded to `filter_credible_set_variants()`.
 #' @return Named numeric vector of peak weights, with names matching peak ranges.
 #'   Errors if no credible-set variants overlap peaks for the GWAS.
 #' @keywords internal
@@ -86,15 +77,11 @@ get_summed_posterior_probabilities_per_peak <- function(
   peak_ranges,
   GWAS_ID,
   posterior_probability_cutoff = NULL,
-  posterior_probability_weighting_function = NULL,
-  weight_transform = "cap_1",
-  ...
+  weight_transform = "cap_1"
 ) {
   credible_set_GRanges <- credible_set_GRanges |>
     filter_credible_set_variants(
-      posterior_probability_cutoff = posterior_probability_cutoff,
-      posterior_probability_weighting_function = posterior_probability_weighting_function,
-      ...
+      posterior_probability_cutoff = posterior_probability_cutoff
     )
 
   posterior_probability_sums_per_peak <- sum_variant_weights_in_peaks(
@@ -132,9 +119,7 @@ get_summed_posterior_probabilities_per_peak <- function(
 #' @param GWAS_input_record Single GWAS branch record containing the study, finemapping method, and weighting mode.
 #' @param peak_ranges GRanges of consensus peaks; names must match peak rows used in peak-weight or accessibility matrices.
 #' @param posterior_probability_cutoff Minimum posterior probability/PIP retained before assigning variants to peaks.
-#' @param posterior_probability_weighting_function Function applied to credible-set variants before peak weights are summed; receives the variant tibble.
 #' @param weight_transform Optional function or scalar transform applied to variant weights before aggregation.
-#' @param ... Additional arguments forwarded to peak-weight construction helpers.
 #' @return A single branch record, usually a list or one-row tibble, carrying all inputs needed by a dynamic target branch.
 #' @keywords internal
 
@@ -142,9 +127,7 @@ get_GWAS_chromVAR_peak_weight_record <- function(
   GWAS_input_record,
   peak_ranges,
   posterior_probability_cutoff = NULL,
-  posterior_probability_weighting_function = NULL,
-  weight_transform = "cap_1",
-  ...
+  weight_transform = "cap_1"
 ) {
   GWAS_ID <- GWAS_input_record$GWAS_ID
   list(
@@ -154,9 +137,7 @@ get_GWAS_chromVAR_peak_weight_record <- function(
       peak_ranges = peak_ranges,
       GWAS_ID = GWAS_ID,
       posterior_probability_cutoff = posterior_probability_cutoff,
-      posterior_probability_weighting_function = posterior_probability_weighting_function,
-      weight_transform = weight_transform,
-      ...
+      weight_transform = weight_transform
     )
   )
 }

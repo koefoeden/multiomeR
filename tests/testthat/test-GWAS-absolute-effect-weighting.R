@@ -17,7 +17,6 @@ make_test_record <- function(GWAS_ID, beta) {
     GWAS_ID = GWAS_ID,
     studyId = GWAS_ID,
     finemappingMethod = "test",
-    variant_weighting_mode = "raw_PIP",
     credible_set_GRanges = variants
   )
 }
@@ -168,14 +167,13 @@ testthat::test_that("balanced locus priority uses the lower percentile and is sc
   testthat::expect_equal(single$priority_score,1)
 })
 
-testthat::test_that("locus effects prefer the lead and explicitly identify proxies", {
+testthat::test_that("locus effects use the highest-PIP variant with a finite effect", {
   record <- make_test_record("trait",c(2,5,NA,-3))
   record$credible_set_GRanges$variantId <- letters[1:4]
-  record$credible_set_GRanges$lead_variantId <- c("b","b","c","c")
   x <- get_GWAS_locus_prioritization_effects(list(record))
-  testthat::expect_equal(x$effect_variantId,c("b","d"))
-  testthat::expect_equal(x$locus_effect_magnitude,c(5,3))
-  testthat::expect_equal(x$locus_effect_source,c("Lead SNP","Highest-PIP proxy"))
+  testthat::expect_equal(x$effect_variantId,c("a","d"))
+  testthat::expect_equal(x$locus_effect_magnitude,c(2,3))
+  testthat::expect_equal(x$locus_effect_source,rep("Highest-PIP variant",2))
   record$credible_set_GRanges$beta <- rep(NA_real_,4)
   testthat::expect_equal(nrow(get_GWAS_locus_prioritization_effects(list(record))),0L)
 })

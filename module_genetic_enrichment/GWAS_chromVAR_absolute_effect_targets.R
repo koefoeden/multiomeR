@@ -1,7 +1,7 @@
 rlang::list2(
   targets::tar_target(
     name = GWAS_absolute_effect_weighting_status_tibble,
-    description = "Infer variant- or locus-level PIP x absolute-beta support for every raw-PIP GWAS",
+    description = "Infer variant- or locus-level PIP x absolute-beta support for every GWAS",
     command = get_GWAS_absolute_effect_weighting_status_tibble(
       GWAS_input_records = GWAS_input_records,
       posterior_probability_cutoff = genetic_enrichment_posterior_probability_cutoff
@@ -29,7 +29,6 @@ rlang::list2(
         by = "GWAS_ID",
         relationship = "one-to-one"
       ) |>
-      dplyr::mutate(variant_weighting_mode = effect_weighting_route) |>
       dplyr::arrange(config_order)
   ),
   targets::tar_target(
@@ -59,7 +58,7 @@ rlang::list2(
       dplyr::left_join(
         dplyr::select(GWAS_absolute_effect_inputs_tibble, GWAS_ID, effect_weighting_route),
         by = "GWAS_ID", relationship = "many-to-one") |>
-      dplyr::relocate(effect_weighting_route, .after = variant_weighting_mode),
+      dplyr::relocate(effect_weighting_route, .after = Category),
     resources = get_tar_resources(RAM_GB_req = 8)
   ),
   tarchetypes::tar_file(

@@ -1,16 +1,5 @@
 rlang::list2(
   targets::tar_target(
-    name = posterior_probability_weighting_function,
-    description = "Load or define the posteriorProbability weighting function for GWAS_chromVAR",
-    command = if (
-      is.null(genetic_enrichment_posterior_probability_weighting_function_name) | isFALSE(genetic_enrichment_posterior_probability_weighting_function_name)
-    ) {
-      NULL
-    } else {
-      eval(rlang::parse_expr(genetic_enrichment_posterior_probability_weighting_function_name))
-    }
-  ),
-  targets::tar_target(
     name = genetic_enrichment_peak_ranges,
     description = "Extract the ordered ATAC peak ranges used for GWAS_chromVAR weighting",
     command = SummarizedExperiment::rowRanges(chromVAR_obj.ATAC)
@@ -21,8 +10,7 @@ rlang::list2(
     command = get_GWAS_chromVAR_peak_weight_record(
       GWAS_input_record = GWAS_input_records,
       peak_ranges = genetic_enrichment_peak_ranges,
-      posterior_probability_cutoff = genetic_enrichment_posterior_probability_cutoff,
-      posterior_probability_weighting_function = posterior_probability_weighting_function
+      posterior_probability_cutoff = genetic_enrichment_posterior_probability_cutoff
     ),
     pattern = map(GWAS_input_records),
     resources = get_tar_resources(RAM_GB_req = 40)

@@ -82,15 +82,6 @@ get_num_facet_rows <- function(in_plot) {
   return(n_facet_rows)
 }
 
-get_num_facet_cols <- function(in_plot) {
-  if (!inherits(in_plot, "ggplot")) {
-    return(1)
-  } else {
-    n_facet_cols <- ggplot2::ggplot_build(in_plot)$layout$layout$COL %>% unique() %>% length()
-    return(n_facet_cols)
-  }
-}
-
 
 # Currently saves plot(s) to a single file.
 

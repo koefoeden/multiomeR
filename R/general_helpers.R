@@ -373,25 +373,6 @@ validate_manifest_allowed_values <- function(value, allowed_values, param_name, 
 }
 
 
-assert_cfg_is_set <- function(x, cfg_var_name = NULL) {
-  # This
-  cfg_var_name <- rlang::enexpr(x) %||% cfg_var_name
-  if (is.null(cfg_var_name)) {
-    info_string <- "Unexpected NULL value found in target {tar_name_wo_suffixes()} for some configured parameter. Please rectify this."
-  } else if (is.null(x)) {
-    info_string <- "Required parameter '{cfg_var_name}' for target {tar_name_wo_suffixes()} is not specified. Please rectify this."
-  } else {
-    return(x)
-  }
-  message <- stringr::str_glue(
-    info_string,
-    "If you do not wish to run this target, exclude it explicitly with tar_make(names = ...).",
-    .sep = "\n"
-  )
-  stop(message)
-}
-
-
 #' Suppress warnings matching
 #'
 #' Evaluate an expression while suppressing only warnings whose messages match the requested pattern.

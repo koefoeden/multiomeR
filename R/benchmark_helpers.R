@@ -1,33 +1,3 @@
-BENCHMARK_OPTIONAL_PREPROCESSING_REGEX <- c(
-  "^amulet_",
-  "^(cellsnp_dir|vireo_donor_ids_tibble)(\\.|$)"
-)
-
-# Target families outside the standard Seurat/Signac WNN vignette corridor.
-# Their runtimes are set to zero, while the DAG topology is retained, when the
-# sequential reference workflow is used as a comparator.
-BENCHMARK_SEURAT_SIGNAC_COMPARABLE_EXCLUSION_REGEX <- c(
-  BENCHMARK_OPTIONAL_PREPROCESSING_REGEX,
-  "^GEM_well_metadata_(tibble|tsv)(\\.|$)",
-  "^harmony_embeddings_matrix(\\.|$)",
-  "^PCA_clusters[.]GEX(\\.|$)",
-  "^LSI_clusters[.]ATAC(\\.|$)",
-  "^metadata_w_cell_types(_unfiltered)?_tibble(\\.|$)",
-  "^scDblFinder_",
-  "^BCs_per_peak_cluster_list[.]ATAC(\\.|$)",
-  "^peak_calling_cluster_(names|discovery_tibble)[.]ATAC(\\.|$)",
-  "^fragments_per_peak_calling_cluster_discovery[.]fragments[.]ATAC(\\.|$)",
-  "^peaks_per_cluster_narrowPeaks[.]peaks[.]ATAC(\\.|$)",
-  "^peak_GRanges_per_cluster[.]ATAC(\\.|$)",
-  "^within_clusters_collapsed_peaks_per_cluster_GRanges[.]ATAC(\\.|$)",
-  "^chromHMMs_list_proj[.]ATAC(\\.|$)",
-  "^consensus_peak_annotated_GRanges[.]ATAC(\\.|$)",
-  "^peak_TF_motif_matrix[.]ATAC(\\.|$)",
-  "^chromVAR_",
-  "^motif_chromVAR_",
-  "^TF_activity_"
-)
-
 benchmark_targets_match_regex <- function(target_names, regex) {
   regex <- regex[!is.na(regex) & nzchar(regex)]
   if (!length(regex)) {

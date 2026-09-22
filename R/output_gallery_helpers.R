@@ -5,14 +5,6 @@ is_absolute_gallery_path <- function(path) {
   !is.na(path) & grepl("^(/|[A-Za-z]:[/\\\\])", path)
 }
 
-#' Return the first existing path
-#'
-#' @keywords internal
-first_existing_gallery_path <- function(paths) {
-  paths <- paths[!is.na(paths) & file.exists(paths)]
-  if (length(paths) == 0) NA_character_ else paths[[1]]
-}
-
 #' Read the output gallery manifest
 #'
 #' @param manifest_file YAML manifest path.
@@ -150,44 +142,4 @@ render_gallery_section <- function(gallery_items, section, subsection_descriptio
   }
 
   invisible(NULL)
-}
-
-#' Resolve source paths for output gallery targets
-#'
-#' @param manifest Manifest tibble from `read_output_gallery_manifest()`.
-#' @param meta Targets metadata with at least `name`, `path`, and `error`.
-#' @return Manifest tibble with one resolved source path per item.
-#' @keywords internal
-resolve_output_gallery_source_paths <- function(
-  manifest = read_output_gallery_manifest(),
-  meta = targets::tar_meta(fields = c("name", "path", "error"))
-) {
-  path_records <- meta |>
-    dplyr::select("name", "path", "error") |>
-    tidyr::unnest_longer("path", values_to = "target_path", keep_empty = TRUE)
-
-  branch_path <- \(target) {
-    first_existing_gallery_path(path_records$target_path[startsWith(path_records$name, paste0(target, "_"))])
-  }
-
-  manifest |>
-    dplyr::mutate(.gallery_row = dplyr::row_number()) |>
-    dplyr::left_join(
-      path_records,
-      by = c("target" = "name"),
-      relationship = "many-to-many"
-    ) |>
-    dplyr::slice_head(n = 1, by = ".gallery_row") |>
-    dplyr::select(-".gallery_row") |>
-    dplyr::mutate(
-      source_path = dplyr::case_when(
-        !is.na(.data$source_file) & !is.na(.data$target_path) & dir.exists(.data$target_path) ~
-          file.path(.data$target_path, .data$source_file),
-        !is.na(.data$source_file) ~ .data$source_file,
-        !is.na(.data$target_path) ~ .data$target_path,
-        TRUE ~ purrr::map_chr(.data$target, branch_path)
-      ),
-      source_exists = !is.na(.data$source_path) & file.exists(.data$source_path),
-      target_error = !is.na(.data$error)
-    )
 }

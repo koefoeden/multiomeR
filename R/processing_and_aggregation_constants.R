@@ -1,22 +1,4 @@
 PROCESSING_QC_FEATURE_SETS <- list(
-  # per GEM well and per-dataset QC plots use the metadata available before
-  # aggregation-level GEX/ATAC processing has added modality-specific metrics.
-  per_GEM_well = c(
-    "nCount_RNA",
-    "log10_nCount_RNA",
-    "RNA_mito_percent",
-    "nFeature_RNA",
-    "novelty",
-    "TSS.enrichment",
-    "nucleosome_signal",
-    "vireo_max_prob_singlet",
-    "vireo_max_prob_doublet",
-    "amulet_q.value",
-    "ATAC_TSS_fragments_frac",
-    "ATAC_peak_region_frac",
-    "ATAC_peak_region_cutsites_frac",
-    "GEX_exonic_to_intronic_umis_frac"
-  ),
   continuous = list(
     non_peak_QC = c(
       "log10_nCount_RNA",
@@ -60,4 +42,3 @@ PROCESSING_QC_FEATURE_SETS <- list(
 )
 
 PROCESSING_CONTINUOUS_QC_FEATURES <- PROCESSING_QC_FEATURE_SETS$continuous
-PROCESSING_PER_GEM_well_QC_VARS <- PROCESSING_QC_FEATURE_SETS$per_GEM_well

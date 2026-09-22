@@ -45,7 +45,6 @@ logs
 
 # misc
 .vscode
-node_modules/
 .nfs*
 .DS_Store
 /.quarto/

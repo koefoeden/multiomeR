@@ -739,7 +739,7 @@ prepare_GWAS_variant_contribution_detail_records <- function(
   consensus_peak_GRanges,
   fragments,
   metadata_tibble,
-  min_z = 1,
+  min_z,
   n_top_loci = 3L,
   flank = 25000L,
   group_cells_by_col = "PCA_harmony_SNN_cluster_cell_type"

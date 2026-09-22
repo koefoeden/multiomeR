@@ -1,4 +1,4 @@
-get_SCAVENGE_seed_index <- function(z_score_vec, seed_percent = 0.05, p_value_cutoff = 0.05) {
+get_SCAVENGE_seed_index <- function(z_score_vec, seed_percent, p_value_cutoff = 0.05) {
   if (seed_percent <= 0 || seed_percent >= 1) {
     stop("seed_percent must be between 0 and 1.")
   }

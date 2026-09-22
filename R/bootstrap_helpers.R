@@ -143,14 +143,3 @@ load_project_runtime <- function(force = FALSE) {
   source_crew_controllers(force = force)
   invisible(TRUE)
 }
-
-load_interactive_helpers <- function(full = FALSE, force = FALSE) {
-  load_project_packages(force = force)
-  source_shared_helpers(force = force)
-
-  if (isTRUE(full)) {
-    load_project_runtime(force = force)
-  }
-
-  invisible(TRUE)
-}

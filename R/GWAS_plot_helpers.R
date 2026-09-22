@@ -234,23 +234,6 @@ make_named_heatmap_palette <- function(values, palette = "Set3") {
   rlang::set_names(colors, values)
 }
 
-get_heatmap_legend_ncol <- function(values, max_row_chars = 70) {
-  values <- sort(unique(stats::na.omit(as.character(values))))
-  if (length(values) == 0) {
-    return(1L)
-  }
-
-  label_widths <- nchar(values) + 6
-  for (ncol in seq.int(length(values), 1L)) {
-    nrow <- ceiling(length(values) / ncol)
-    row_widths <- vapply(seq_len(nrow), \(row_idx) sum(label_widths[seq(row_idx, length(values), by = nrow)]), numeric(1))
-    if (max(row_widths) <= max_row_chars) {
-      return(ncol)
-    }
-  }
-  1L
-}
-
 gwas_heatmap_metadata_theme <- function(show_y = FALSE, show_x = FALSE) {
   ggplot2::theme_minimal(base_size = 9) +
     ggplot2::theme(

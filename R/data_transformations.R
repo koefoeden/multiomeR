@@ -25,14 +25,6 @@ sort_list <- function(list_input) {
   return(list_input[gtools::mixedorder(names(list_input))])
 }
 
-is_binary_vec <- function(vec) {
-  all(vec %in% c(0, 1, NA))
-}
-
-is_non_binary_numeric_vec <- function(vec) {
-  is.numeric(vec) && !is_binary_vec(vec)
-}
-
 is_count_matrix <- function(matrix) {
   sample_rows <- sample(nrow(matrix), min(10, nrow(matrix)))
   sample_cols <- sample(ncol(matrix), min(10, ncol(matrix)))

@@ -494,31 +494,6 @@ get_SNN_matrix_from_knn <- function(knn, cell_names = rownames(knn$idx)) {
   Matrix::drop0(snn_matrix + Matrix::t(snn_matrix))
 }
 
-#' Get SNN matrix from embedding matrix
-#'
-#' Build a symmetric SNN adjacency matrix from selected embedding dimensions.
-#'
-#' @param embedding_matrix Numeric matrix with cells/barcodes in rows and embedding dimensions in columns; row names are carried into downstream coordinates.
-#' @param dims Integer dimension indices to use; combined with `dim_prefix` to select columns such as `PCA_1` or `LSI_2`.
-#' @param k Number of nearest neighbors to use for KNN/SNN construction.
-#' @param dim_prefix Prefix used to translate `dims` into embedding column names, for example `PCA_`, `LSI_`, or `WNN_`.
-#' @param threads Number of threads passed to BPCells, HNSW, or matrix-stat routines.
-#' @return Sparse cell-by-cell SNN matrix with row and column names from
-#'   `embedding_matrix`.
-#' @keywords internal
-
-get_SNN_matrix_from_embedding_matrix <- function(embedding_matrix, dims, k, dim_prefix = "LSI_", threads = 1) {
-  graph_input <- select_embedding_dimensions(
-    embedding_matrix = embedding_matrix,
-    dims = dims,
-    dim_prefix = dim_prefix
-  )
-  k <- min(as.integer(k), nrow(graph_input) - 1L)
-  graph_input |>
-    BPCells::knn_hnsw(k = k, metric = "cosine", threads = threads, ef = 500) |>
-    get_SNN_matrix_from_knn(cell_names = rownames(graph_input))
-}
-
 get_SNN_matrix_from_WNN_results <- function(WNN_results) {
   get_SNN_matrix_from_knn(
     knn = list(idx = WNN_results$nn_idx, dist = WNN_results$nn_dist),

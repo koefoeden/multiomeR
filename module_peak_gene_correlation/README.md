@@ -46,16 +46,11 @@ selection do not depend on HC3 tests.
 `peak_gene_correlation_filter` is a module setting with allowed values `lenient`
 (default in `cfg_pipeline_parameters.tsv`), `moderate`, and `strict`. Override
 it for an aggregation in `configuration/cfg_module_peak_gene_correlation.yaml`.
+The preset thresholds, the depth scaling of the count thresholds and every other
+fixed value of this module are listed in
+`website/implementation/methods_peak_gene_correlation.md`; keep that chapter
+and the helper defaults in sync.
 
-| Preset | RNA / ATAC counts at median library depth | Minimum supported aggregates per feature | Shared supported donors | Supported aggregates per feature/donor |
-|---|---:|---|---:|---:|
-| lenient | 5 / 3 | max(6, ceiling(10%)) | 2 | 2 |
-| moderate | 10 / 5 | max(6, ceiling(10%)) | 2 | 2 |
-| strict | 10 / 5 | max(10, ceiling(20%)) | 3 | 3 |
-
-Count thresholds scale with each aggregate's library depth relative to the
-cell-type median, with a two-count raw floor. Both features must qualify in
-the required shared donors, but their qualifying aggregates need not coincide.
 The filter removes hypotheses before both HC3 and hierarchical testing; all
 observations remain in retained regressions. Excluded hypotheses do not enter
 BH correction. Unreliable tests among retained hypotheses still count in the

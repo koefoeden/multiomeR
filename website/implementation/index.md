@@ -13,13 +13,16 @@ For a first implementation pass:
 3. Use [Implementation conventions](implementation_conventions.md) to understand the relevant manifest, mapping, symbol, tag, and runtime contracts.
 4. Read [Background and design philosophy](background_philosophy.md) when you need the rationale for the editable-workflow design.
 
-The [differential analyses](implementation_differential_analyses.md) and [genetic enrichment](implementation_genetic_enrichment.md) chapters cover the optional module graphs.
+The [differential analyses](implementation_differential_analyses.md), [genetic enrichment](implementation_genetic_enrichment.md) and [peak–gene correlation](implementation_peak_gene_correlation.md) chapters cover the optional module graphs.
+
+The **Methods and parameters** chapters, from [Preprocessing and nucleus QC](methods_preprocessing_and_QC.md) to [Genetic enrichment](methods_genetic_enrichment.md), describe each stage and list every fixed value and every configurable setting, using the table layout defined in [Implementation conventions](implementation_conventions.md#methods-and-parameter-tables). Read them when you need the exact behaviour behind a result, or when deciding whether a change is a configuration edit or a code edit.
 
 ## Common entry points
 
 | Change | Start with |
 |---|---|
 | Add or revise a YAML parameter | `cfg_pipeline_parameters.tsv`, then the owning config reader or target. |
+| Find whether a threshold is configurable or fixed | The stage's chapter under **Methods and parameters**. |
 | Change GEM well preprocessing | `_targets.R` mapping plus `extra_targets/per_GEM_well_targets.R`. |
 | Change aggregation GEX, ATAC, or WNN processing | The corresponding graph section and `extra_targets/*_targets.R` file. |
 | Inspect existing review selections | `[checkpoint:<name>]` description tags and the steps in [Run your own analysis](../main_running.html#steps). |

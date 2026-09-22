@@ -6,7 +6,7 @@ This chapter explains how configuration becomes target definitions: the paramete
 
 multiomeR stores lightweight target metadata in the `description` argument of `targets::tar_target()` and `tarchetypes::tar_file()` calls. The descriptions should remain readable prose, with bracketed tags appended when a target needs to be discoverable from the manifest.
 
-```r
+``` r
 targets::tar_target(
   name = harmony_embeddings_matrix.GEX,
   description = "Harmony-corrected SCTransform GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:WNN]",
@@ -16,7 +16,7 @@ targets::tar_target(
 
 The currently meaningful tag families are:
 
-```text
+``` text
 [checkpoint:<name>]             review or execution checkpoint
 [part_of_graph:<graph_id>]      curated membership in an implementation graph
 [resource_observation:<note>]   compact empirical resource note
@@ -28,7 +28,7 @@ Numbered checkpoint plot targets end in the checkpoint name with hyphens replace
 
 `[part_of_graph:<graph_id>]` marks targets that should stay visible in a named implementation graph after graph-pruning helpers remove less informative intermediate nodes. This is the strictest tag family: `graph_id` must contain only letters, numbers, and underscores, and helper code parses these tags directly from target descriptions. A target may belong to several graph views.
 
-```r
+``` r
 description = paste(
   "Build the lightweight BPCells-backed chromVAR RSE",
   "[part_of_graph:ATAC]",
@@ -45,10 +45,12 @@ Use tags only when they create a durable handle for readers, graph helpers, or c
 
 `cfg_pipeline_parameters.tsv` is the schema for YAML-backed pipeline configuration. Each row defines one parameter for one scope:
 
-```text
+``` text
 aggregation
+subgroups
 differential_analyses
 genetic_enrichment
+peak_gene_correlation
 ```
 
 For each parameter, the manifest records its name, type, cardinality, default value, missing-value rule, allowed values, example values, topic, graph/module ownership, and human description. The YAML files then only need to specify values that differ from the manifest defaults, plus values that are required because their resolved value may not be missing.
@@ -57,13 +59,13 @@ At read time, the pipeline loads the manifest for a scope and parses each `defau
 
 The resolution order is:
 
-1. Start with manifest defaults for the requested scope.
-2. Resolve each parent listed in `inherits`.
-3. Overlay parent values onto the defaults.
-4. Overlay the child row onto the inherited values.
-5. Validate the fully resolved row.
+1.  Start with manifest defaults for the requested scope.
+2.  Resolve each parent listed in `inherits`.
+3.  Overlay parent values onto the defaults.
+4.  Overlay the child row onto the inherited values.
+5.  Validate the fully resolved row.
 
-```yaml
+``` yaml
 immune_human_2x:
   aggregation_GEM_well_IDs: [healthy_PBMC_human, lymphoma_lymph_human]
   aggregation_GEX_marker_genes:
@@ -80,7 +82,7 @@ PBMC_human_6x:
 
 Validation is manifest-driven and happens before target construction. Unknown YAML parameters fail early. Resolved values are then checked for missingness, cardinality, type, and allowed values.
 
-```text
+``` text
 scalar      one non-list value
 vector      atomic vector
 list        list
@@ -101,15 +103,15 @@ The core mapping flow is:
 
 Configuration readers use `configuration_path()` to resolve a basename within `configuration/` or the directory named by the ignored `configuration.local`. Relative selections are anchored at the repository root. This selection does not change data-path interpretation or `_targets.yaml`. The selected GEM-well path is a graph global consumed by the file target, so changing directories also changes its dependency. Aggregation and enabled-module settings are resolved during graph construction. Disabled modules do not read their configuration.
 
-1. `GEM_well_tibble_all` reads only the pre-aggregation processing columns from every row in the canonical `cfg_GEM_wells.tsv`.
-2. `aggregation_tibble_all_from_yaml` is read from `cfg_aggregations.yaml`.
-3. `aggregation_tibble` keeps active aggregations, validates their GEM well references against the complete view, and adds upstream target-symbol columns.
-4. `GEM_well_tibble` keeps GEM wells whose `GEM_well_is_active` value is true.
-5. `_targets.R` expands active GEM wells and aggregations with `tar_map()`, then appends module target files. Cross-GEM-well QC summaries use the aggregation's selected wells.
+1.  `GEM_well_tibble_all` reads only the pre-aggregation processing columns from every row in the canonical `cfg_GEM_wells.tsv`.
+2.  `aggregation_tibble_all_from_yaml` is read from `cfg_aggregations.yaml`.
+3.  `aggregation_tibble` keeps active aggregations, validates their GEM well references against the complete view, and adds upstream target-symbol columns.
+4.  `GEM_well_tibble` keeps GEM wells whose `GEM_well_is_active` value is true.
+5.  `_targets.R` expands active GEM wells and aggregations with `tar_map()`, then appends module target files. Cross-GEM-well QC summaries use the aggregation's selected wells.
 
 Within each aggregation, `GEM_well_metadata_tibble` reads the same canonical file, subsets it to `aggregation_GEM_well_IDs`, and preserves that order. Cheap keyed projection targets then expose only the columns requested for SCT, Harmony or configured analyses. Complete non-processing annotations are joined only for explicit export objects. These projection targets are cache boundaries: a newly added or edited online column can update the canonical table without changing expensive consumers whose selected view is identical.
 
-```r
+``` r
 tarchetypes::tar_map(
   values = GEM_well_tibble,
   names = GEM_well_ID,
@@ -120,7 +122,7 @@ tarchetypes::tar_map(
 
 With `GEM_well_ID = "healthy_PBMC_human"`, a target named `cellranger_summary_file` becomes `cellranger_summary_file.healthy_PBMC_human`. The same dot-delimited suffix convention is used for aggregations, module targets, and nested module maps.
 
-```text
+``` text
 active cfg_GEM_wells.tsv row -> GEM_well_tibble row    -> per GEM well targets
 cfg_aggregations.yaml key   -> aggregation_tibble row -> per-aggregation targets
 ```
@@ -129,7 +131,7 @@ Aggregation rows may opt into optional modules through `modules`. `_targets.R` v
 
 The naming convention is therefore compositional:
 
-```text
+``` text
 <target>.<GEM_well_ID>
 <target>.<dataset_name>
 <target>.<aggregation_name>
@@ -145,7 +147,7 @@ Mapped target tables sometimes need to carry references to other mapped targets.
 
 The compact constructor is `target_sym_col()`. It records a base target name, the source column containing suffixes, the separator, and an optional transform. `add_target_sym_cols()` then turns those specifications into list-columns of `rlang::syms()`.
 
-```r
+``` r
 aggregation_tibble |>
   add_target_sym_cols(
     aggregation_GEX_counts_BPCells_matrix_syms =
@@ -155,7 +157,7 @@ aggregation_tibble |>
 
 For an aggregation whose `aggregation_GEM_well_IDs` are `c("rx1", "rx2")`, this creates a row value equivalent to:
 
-```r
+``` r
 rlang::syms(c(
   "GEX_counts_BPCells_matrix.rx1",
   "GEX_counts_BPCells_matrix.rx2"
@@ -164,7 +166,7 @@ rlang::syms(c(
 
 The aggregation target can then consume the row-local symbol list directly:
 
-```r
+``` r
 combined_counts_matrix <- purrr::reduce(
   aggregation_GEX_counts_BPCells_matrix_syms,
   cbind
@@ -175,7 +177,7 @@ Column names should describe the downstream scope, the upstream target, and the 
 
 Module target files also need aggregation-specific references to main-pipeline targets. For this, `add_aggregation_target_syms()` creates one symbol per row, suffixed by the aggregation name. These columns are named like the target they replace rather than with `*_syms`, because each cell is a single symbol rather than a list.
 
-```r
+``` r
 differential_analyses_tibble |>
   add_aggregation_target_syms(c(
     "metadata_w_cell_types_tibble.WNN",
@@ -192,17 +194,17 @@ multiomeR assumes that the repository runtime is bootstrapped before the target 
 
 `load_project_runtime()` is the single entry point for:
 
-1. loading core workflow packages and conflict preferences,
-2. sourcing generally reusable helpers from `packages/multiomeRCore/R`,
-3. sourcing pipeline-specific helpers from the root `R/` directory,
-4. applying global plotting and `{targets}` options,
-5. sourcing `crew_controllers.R` and installing controller resources.
+1.  loading core workflow packages and conflict preferences,
+2.  sourcing generally reusable helpers from `packages/multiomeRCore/R`,
+3.  sourcing pipeline-specific helpers from the root `R/` directory,
+4.  applying global plotting and `{targets}` options,
+5.  sourcing `crew_controllers.R` and installing controller resources.
 
 The nested `multiomeRCore` directory is both ordinary editable pipeline source and an installable package boundary for standalone repositories. multiomeR does not install or attach that package itself: `targets::tar_source()` loads the same implementation files before the root helpers. Keep domain-specific code under `R/`, but do not duplicate the generally reusable implementations there.
 
 For commands that intentionally bypass startup side effects, source the bootstrap helper directly and then load the runtime:
 
-```r
+``` r
 source("R/bootstrap_helpers.R")
 load_project_runtime(force = TRUE)
 targets::tar_manifest(callr_function = NULL)
@@ -214,7 +216,7 @@ Project-root detection walks upward from the current working directory until it 
 
 Controller loading is part of the runtime contract, not a later execution detail. `crew_controllers.R` must return a named list with `controller_resources_tibble` and `controller_list`. The bootstrap validates that shape, installs a grouped `crew` controller into `{targets}`, and stores the resource table for `get_tar_resources()`.
 
-```r
+``` r
 targets::tar_target(
   example_target,
   example_function(),
@@ -224,12 +226,34 @@ targets::tar_target(
 
 If `get_tar_resources()` is called before controller resources are loaded, it fails deliberately with an instruction to call `load_project_runtime()` first. Scheduler-specific examples belong in the main manual's [Choose where the analysis runs](../performance_distributed_computing.html) page; the implementation contract is that target code can request resources declaratively once the runtime has been loaded.
 
+## Methods and parameter tables {#methods-and-parameter-tables}
+
+The chapters in the **Methods and parameters** part describe each analysis stage and list every setting that determines its result. They are the single place where exact values are recorded; the manuscript supplement describes the same algorithms without values. Each chapter uses one table layout:
+
+| Column | Content |
+|---|---|
+| Step | The analysis step, in the order the targets run. |
+| Setting | The quantity or method choice. |
+| Status | `Configurable` or `Hardcoded`, as defined below. |
+| Value | Shown only for hardcoded settings. |
+| Source | Where the setting lives. |
+
+A setting is **configurable** when a row in `cfg_pipeline_parameters.tsv` controls it, directly or as a field inside a nested manifest parameter such as a model specification, or when a column of `cfg_GEM_wells.tsv` controls it. Configurable rows link to the [parameter browser](../parameters.html), which renders the current default from the public manifest snapshot. They never repeat the default in prose, so a default change needs no edit outside the manifest.
+
+A setting is **hardcoded** when no manifest row or GEM-well column controls it. Hardcoded rows show the value and the source, which is one of:
+
+``` text
+helper default   default argument of an R helper that the calling target does not override
+target literal   a literal passed explicitly in a target command
+inline literal   a constant inside a function body
+```
+
+Helper defaults are the easiest to expose as parameters later; inline literals require a code change. Changing any hardcoded value invalidates the affected targets on the next run, like any other code change.
+
+The demonstration settings in the manuscript supplement are resolved values for one aggregation and are not repeated here.
+
 ## How to read the rest of the implementation book
 
 These conventions are the connective tissue behind the graph chapters. The parameter manifest explains why config rows can be compact. Mapping tibbles explain why target names have stable suffixes. Target-symbol columns explain how mapped targets pass sets of upstream targets across graph levels. Target metadata tags explain why some nodes remain visible in curated graph views. The bootstrap contract explains why helper functions, controller resources, and target options are available before `_targets.R` is evaluated.
 
 When modifying the implementation, preserve these contracts unless the change is explicitly meant to replace one of them.
-
-### Peak–gene correlation module
-
-`module_peak_gene_correlation/targets.R` maps only opted-in aggregations and binds their existing WNN metadata, GEX/ATAC matrices, ATAC embeddings, fragments and reference annotations. `correlation_targets.R` owns the analysis, SuSiE prioritization, exports and plots. Parameters use the `peak_gene_correlation` manifest scope and matching module YAML rows. Targets end in `.peak_gene_correlation.<aggregation>` (with `.WNN` before that suffix for intermediate results). Plot checkpoint tags use `peak_gene_correlation`, keeping this analysis outside numbered QC selections. Renamed targets rebuild on the first module run; existing core target names and numerical analysis defaults are unchanged.

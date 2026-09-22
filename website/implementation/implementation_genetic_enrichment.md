@@ -1,1 +1,38 @@
-{{< include ../implementation_genetic_enrichment.md >}}
+# Genetic enrichment
+
+```{r setup, include = FALSE}
+pipeline_name <- "genetic_enrichment"
+source("helpers/_setup.R")
+```
+
+`module_genetic_enrichment/targets.R` filters enabled human aggregations, resolves one configured Open Targets study set per aggregation, and attaches symbols for WNN metadata, graphs, embeddings, consensus peaks, chromVAR state, and ATAC fragments.
+
+The main target fragments live in `setup_targets.R`, `gchromVAR_targets.R`, `SCAVENGE_graph_targets.R`, `SCAVENGE_group_targets.R`, `GWAS_chromVAR_cell_type_targets.R`, and `GWAS_chromVAR_contribution_targets.R`. The user-facing release, method-selection, and interpretation contracts are documented in [Genetic enrichment](../downstream_genetic_enrichment.html).
+
+## Single-nucleus and graph-based enrichment
+
+This view covers the configured GWAS inputs, single-nucleus enrichment state, graph propagation, and downstream trait summaries. Additional cell-type contribution and locus-attribution branches may be pruned from this compact orientation view; use the manifest for the complete graph.
+
+The sparse SCAVENGE reimplementation, deliberate graph and permutation differences, and validation evidence are recorded in [Algorithmic implementations, deviations and validation](algorithm_validation.md#sparse-scavenge-propagation-and-significance).
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/human_curated/genetic_enrichment_single_nucleus_v2.mmd")
+```
+
+The fixed thresholds and the configurable settings of this module are listed in [Genetic enrichment methods](methods_genetic_enrichment.md).
+
+## Cell-type pseudobulk enrichment
+
+This view covers the annotation-class pseudobulk deviations that are calculated separately from the nucleus-level results.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/human_curated/genetic_enrichment_cell_type_absolute_effect_v2.mmd")
+```
+
+## Cell-type contributions and locus attribution
+
+This view covers the per-cell-type contribution and locus-attribution branches that are pruned from the single-nucleus view above.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/human_curated/genetic_enrichment_cell_type_contributions_v2.mmd")
+```

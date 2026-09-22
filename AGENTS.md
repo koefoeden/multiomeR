@@ -13,6 +13,10 @@ tracked here. A missing home-level file is normal.
   books in authored order and retains source-file provenance comments.
 - The canonical documentation sources are the Markdown files under `website/`
   and `website/implementation/`; the LLM-oriented Markdown file is generated.
+- Exact fixed values and configurable settings per stage live only in the
+  `website/implementation/methods_*.md` chapters; the manuscript supplement
+  describes algorithms without values. Run `python3 dev/check_methods_parameters.py`
+  after editing those chapters or the parameter manifest.
 - Use `.github/CONTRIBUTING.md` for contribution scope and validation guidance.
 
 After changing either documentation book, render both books and refresh the

@@ -2436,4 +2436,3 @@ Tracked Markdown files not reached from the Quarto book graph or include graph.
 
 - `website/data/README.md`
 - `website/figures/human_curated/README.md`
-- `website/helpers/_targets_graph_snippet.md`

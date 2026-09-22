@@ -25,7 +25,4 @@ testthat::test_that("association summaries align cells and preserve variable rol
   testthat::expect_equal(categorical$metric[categorical$dim == 2], c(1, 1))
   testthat::expect_true(all(is.na(summaries$continuous_biological$metric)))
   testthat::expect_equal(nrow(summaries$categorical_biological), 0L)
-  plots <- do.call(plot_embedding_metadata_association_barplots, args)
-  testthat::expect_identical(plots$continuous_technical$data$metric, continuous$metric)
-  testthat::expect_equal(plots$continuous_technical$scales$get_scales("x")$breaks, 1:2)
 })

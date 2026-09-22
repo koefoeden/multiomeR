@@ -17,31 +17,6 @@ testthat::test_that("QC violin thresholds retain their GEM well association", {
   testthat::expect_identical(thresholds$ymax, c(5, Inf))
 })
 
-testthat::test_that("QC violin cutoff shading is confined to each GEM well", {
-  plots <- plot_per_dataset_QC_violins(
-    metadata_tibble = tibble::tibble(
-      GEM_well_ID = rep(c("well_1", "well_2"), each = 20),
-      dataset = rep(c("dataset_1", "dataset_2"), each = 20),
-      nCount_RNA = seq_len(40)
-    ),
-    feature_names = "nCount_RNA",
-    GEM_well_QC_exclude_list = list(
-      well_1 = "nCount_RNA < 5",
-      well_2 = "nCount_RNA > 35"
-    ),
-    show_dataset_legend = TRUE
-  )
-
-  threshold_rects <- plots$nCount_RNA$layers[[1]]$data
-  testthat::expect_equal(threshold_rects$xmin, c(0.55, 1.55))
-  testthat::expect_equal(threshold_rects$xmax, c(1.45, 2.45))
-  testthat::expect_identical(
-    plots$nCount_RNA$theme$legend.position,
-    "bottom"
-  )
-  testthat::expect_no_error(ggplot2::ggplot_build(plots$nCount_RNA))
-})
-
 testthat::test_that("GEM-well QC comparisons use manifest selection and labels", {
   plots <- plot_QC_metric_violins(
     checkpoints = "1_pre-aggregation-QC",

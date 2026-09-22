@@ -1232,7 +1232,15 @@ plot_embedding_metadata_association_tibble <- function(plot_tibble, dims, title)
 #' named tibbles: continuous/categorical technical and biological associations.
 #' Each has `variable`, `dim`, `metric`, and `embedding_type` columns when
 #' usable columns exist. Empty or nonnumeric continuous selections return no rows.
-#' @inheritParams plot_embedding_metadata_association_barplots
+#' @param embedding_matrix Numeric matrix with barcode row names and named dimensions.
+#' @param harmony_embedding_matrix Optional corrected embedding matrix.
+#' @param metadata_tibble Metadata containing `barcode_w_prefix` and requested variables.
+#' @param dims Integer dimension indices; unavailable dimensions are omitted.
+#' @param dim_prefix Embedding column prefix, such as `PCA_` or `LSI_`.
+#' @param continuous_technical_cols Numeric technical metadata column names.
+#' @param categorical_technical_cols Categorical technical metadata column names.
+#' @param continuous_biological_cols Numeric biological metadata column names.
+#' @param categorical_biological_cols Categorical biological metadata column names.
 #' @keywords internal
 get_embedding_metadata_association_tibbles <- function(
   embedding_matrix,
@@ -1270,52 +1278,5 @@ get_embedding_metadata_association_tibbles <- function(
       ) |>
         dplyr::mutate(embedding_type = embedding_type)
     })
-  })
-}
-
-#' Plot embedding metadata association barplots
-#'
-#' Assemble four panels from per-variable association summaries.
-#' @param embedding_matrix Numeric matrix with barcode row names and named dimensions.
-#' @param harmony_embedding_matrix Optional corrected embedding matrix.
-#' @param metadata_tibble Metadata containing `barcode_w_prefix` and requested variables.
-#' @param dims Integer dimension indices; unavailable dimensions are omitted.
-#' @param dim_prefix Embedding column prefix, such as `PCA_` or `LSI_`.
-#' @param continuous_technical_cols Numeric technical metadata column names.
-#' @param categorical_technical_cols Categorical technical metadata column names.
-#' @param continuous_biological_cols Numeric biological metadata column names.
-#' @param categorical_biological_cols Categorical biological metadata column names.
-#' @return Named list of four ggplots; unusable groups get an explanatory empty panel.
-#' @keywords internal
-plot_embedding_metadata_association_barplots <- function(
-  embedding_matrix,
-  harmony_embedding_matrix = NULL,
-  metadata_tibble,
-  dims,
-  dim_prefix,
-  continuous_technical_cols = character(),
-  categorical_technical_cols = character(),
-  continuous_biological_cols = character(),
-  categorical_biological_cols = character()
-) {
-  association_tibbles <- get_embedding_metadata_association_tibbles(
-    embedding_matrix = embedding_matrix,
-    harmony_embedding_matrix = harmony_embedding_matrix,
-    metadata_tibble = metadata_tibble,
-    dims = dims,
-    dim_prefix = dim_prefix,
-    continuous_technical_cols = continuous_technical_cols,
-    categorical_technical_cols = categorical_technical_cols,
-    continuous_biological_cols = continuous_biological_cols,
-    categorical_biological_cols = categorical_biological_cols
-  )
-  titles <- c("Continuous technical variables", "Categorical technical variables",
-    "Continuous biological variables", "Categorical biological variables")
-  purrr::map2(association_tibbles, titles, \(plot_tibble, title) {
-    plot_embedding_metadata_association_tibble(
-      plot_tibble = plot_tibble,
-      dims = dims[paste0(dim_prefix, dims) %in% colnames(embedding_matrix)],
-      title = title
-    )
   })
 }

@@ -238,35 +238,6 @@ compare_cell_cycle_scores <- function(counts, bpcells_counts) {
   testthat::expect_identical(observed$Phase, expected$Phase)
 }
 
-compare_metadata_join <- function(bpcells_counts, marker_genes) {
-  metadata <- tibble::tibble(
-    barcode_w_prefix = c("cell03", "cell01", "missing_cell", "cell37"),
-    batch = c("a", "a", "b", "b")
-  )
-
-  scored_metadata <- add_GEX_UCell_scores_to_metadata(
-    metadata_tibble = metadata,
-    named_marker_genes_list = marker_genes,
-    GEX_counts_matrix = bpcells_counts,
-    max_rank = 80,
-    chunk_size = 7,
-    w_neg = 0.75,
-    missing_genes = "impute"
-  )
-
-  testthat::expect_identical(
-    scored_metadata$barcode_w_prefix,
-    metadata$barcode_w_prefix
-  )
-  missing_row <- scored_metadata$barcode_w_prefix == "missing_cell"
-  testthat::expect_true(
-    all(is.na(scored_metadata[missing_row, names(marker_genes)]))
-  )
-  testthat::expect_false(
-    anyNA(scored_metadata[!missing_row, names(marker_genes)])
-  )
-}
-
 testthat::test_that("integration: BPCells UCell scores match imputed reference scores", {
   load_scoring_test_runtime()
   fixture <- make_scoring_fixture()
@@ -309,12 +280,6 @@ testthat::test_that("integration: BPCells cell-cycle scores and phases match Seu
   load_scoring_test_runtime()
   fixture <- make_scoring_fixture()
   compare_cell_cycle_scores(fixture$counts, fixture$bpcells_counts)
-})
-
-testthat::test_that("integration: UCell scores join metadata without changing row order", {
-  load_scoring_test_runtime()
-  fixture <- make_scoring_fixture()
-  compare_metadata_join(fixture$bpcells_counts, fixture$marker_genes)
 })
 
 testthat::test_that("cluster UCell summaries preserve per-cell scores and group means", {

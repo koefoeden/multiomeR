@@ -1,23 +1,14 @@
-get_SCAVENGE_seed_index <- function(z_score_vec, seed_percent, p_value_cutoff = 0.05) {
+get_SCAVENGE_seed_index <- function(z_score_vec, seed_percent) {
   if (seed_percent <= 0 || seed_percent >= 1) {
     stop("seed_percent must be between 0 and 1.")
   }
 
-  seed_idx <- stats::pnorm(z_score_vec, lower.tail = FALSE) <= p_value_cutoff
+  seed_idx <- stats::pnorm(z_score_vec, lower.tail = FALSE) <= 0.05
   max_seed_count <- max(1L, floor(seed_percent * length(z_score_vec)))
   if (sum(seed_idx) > max_seed_count) {
     seed_idx <- rank(-z_score_vec) <= max_seed_count
   }
   seed_idx
-}
-
-get_SCAVENGE_scale_factor <- function(z_score_vec, scale_percent = 0.01) {
-  if (scale_percent <= 0 || scale_percent >= 1) {
-    stop("scale_percent must be between 0 and 1.")
-  }
-
-  top_count <- max(1L, floor(scale_percent * length(z_score_vec)))
-  mean(sort(z_score_vec, decreasing = TRUE)[seq_len(top_count)])
 }
 
 cap_values_by_quantile <- function(x, q_ceiling = 0.95) {
@@ -146,7 +137,6 @@ drop_SCAVENGE_degree_zero_cells <- function(NN_graph) {
 #'   the z-score vector before scoring.
 #' @param restart_prob Restart probability for random-walk propagation.
 #' @param seed_percent Fraction of highest z-score cells used as seed cells.
-#' @param max_z_score Upper z-score cap for finite-cell filtering before seed selection.
 #' @return List with `GWAS_ID`, the filtered `z_score_vec` used for seed
 #'   selection, and for the retained cells a binary adjacency `graph`, named
 #'   logical `seed_idx`, and named `propagation_score_vec`. Scores are zero when
@@ -157,15 +147,14 @@ get_SCAVENGE_propagation_record <- function(
   chromVAR_z_score_record,
   NN_graph,
   restart_prob,
-  seed_percent,
-  max_z_score = 1000
+  seed_percent
 ) {
   z_score_vec <- chromVAR_z_score_record$z_score_vec
   shared_cells <- intersect(names(z_score_vec), rownames(NN_graph))
   z_score_vec <- z_score_vec[shared_cells]
   graph <- get_SCAVENGE_adjacency_matrix(NN_graph[shared_cells, shared_cells])
 
-  finite_z_score_cell_idx <- which(is.finite(z_score_vec) & z_score_vec <= max_z_score)
+  finite_z_score_cell_idx <- which(is.finite(z_score_vec) & z_score_vec <= 1000)
   graph <- drop_SCAVENGE_degree_zero_cells(graph[finite_z_score_cell_idx, finite_z_score_cell_idx])
   z_score_vec <- z_score_vec[rownames(graph)]
   seed_idx <- if (length(z_score_vec) == 0) logical() else get_SCAVENGE_seed_index(z_score_vec, seed_percent = seed_percent)
@@ -206,11 +195,9 @@ get_empty_TRS_tibble <- function() {
 #' Get SCAVENGE trait-relevance scores from a chromVAR z-score record
 #'
 #' Cap the propagation scores at their 0.95 quantile, min-max scale them, and
-#' multiply by the mean z score of the top-scoring cells.
+#' multiply by the mean z score of the top 1% of cells (at least one).
 #'
 #' @inheritParams get_SCAVENGE_propagation_record
-#' @param scale_percent Upper quantile used to derive the TRS scale factor from
-#'   filtered z scores.
 #' @return Cell-level tibble with `barcode_w_prefix`, `score`, `GWAS_ID`, and
 #'   `seed_idx`.
 #' @keywords internal
@@ -219,8 +206,7 @@ get_SCAVENGE_TRS_tibble <- function(
   chromVAR_z_score_record,
   NN_graph,
   restart_prob,
-  seed_percent,
-  scale_percent = 0.01
+  seed_percent
 ) {
   propagation_record <- get_SCAVENGE_propagation_record(
     chromVAR_z_score_record = chromVAR_z_score_record,
@@ -233,7 +219,8 @@ get_SCAVENGE_TRS_tibble <- function(
     return(get_empty_TRS_tibble())
   }
 
-  scale_factor <- get_SCAVENGE_scale_factor(propagation_record$z_score_vec, scale_percent = scale_percent)
+  z_score_vec <- sort(propagation_record$z_score_vec, decreasing = TRUE)
+  scale_factor <- mean(z_score_vec[seq_len(max(1L, floor(0.01 * length(z_score_vec))))])
   tibble::tibble(
     barcode_w_prefix = names(propagation_score_vec),
     score = unname(min_max_scale_vec(cap_values_by_quantile(propagation_score_vec, q_ceiling = 0.95)) * scale_factor),

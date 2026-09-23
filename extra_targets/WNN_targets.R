@@ -17,6 +17,18 @@ rlang::list2(
     description = "Plot cumulative nuclei retention through final WNN QC. [checkpoint:8_multimodal-QC]",
     command = save_QC_cell_retention_plot(cell_retention_tibble.WNN)
   ),
+  tarchetypes::tar_file(
+    name = nuclei_per_donor_id_bars.8_multimodal_QC,
+    description = "Plot the nuclei per donor that pass all QC into the final WNN object. [checkpoint:8_multimodal-QC]",
+    command = metadata_w_cell_types_tibble.WNN |>
+      dplyr::count(donor_id, name = "n_nuclei") |>
+      plot_nuclei_per_donor_id(
+        title = "Nuclei per donor after QC",
+        caption = "Nuclei retained in the final WNN object after all per-well and aggregation-level QC."
+      ) |>
+      save_plots_structured(width = 10,
+        height = max(6, 3 + 0.22 * dplyr::n_distinct(metadata_w_cell_types_tibble.WNN$donor_id)))
+  ),
   WNN_processing_targets = rlang::list2(
     targets::tar_target(
       name = embedding_matrices.WNN,

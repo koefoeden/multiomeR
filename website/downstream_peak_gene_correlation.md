@@ -1,40 +1,97 @@
 # Peak–gene correlation
 
-Run this optional module after accepting the final WNN cell set. It relates ATAC accessibility to RNA expression within broad GEX-derived cell types, using the retained WNN nuclei; it is no longer part of checkpoint 8.
+## When to use
+
+Use this module to nominate candidate regulatory links between accessible regions and nearby genes within each WNN cell type. It pairs consensus peaks with nearby gene transcription start sites and tests whether accessibility and expression vary together across **donor–state pseudobulks**: nuclei of one cell type summed by donor and ATAC-defined state, with each nucleus in at most one pseudobulk.
+
+A hierarchical model adjusts for donor and sequencing depth and lets the peak–gene slope vary between donors. A separate conditional correlation analysis (HC3) provides the correlation summary plots and a SuSiE prioritization of peaks per gene. Links are hypotheses: neither analysis establishes causal regulation, and the hierarchical tests are approximate and have not been broadly calibrated.
+
+## Prerequisites
+
+Before enabling the module, confirm that:
+
+- you have reviewed the aggregation through [checkpoint 8](main_running.md#checkpoint-8) and accept its final WNN cell set and cell-type annotations; and
+- the cell types you want to study contain nuclei from several donors.
+
+Cell types and donors with too few nuclei are skipped. A cell type from a single donor yields diagnostics but no tests, and the `strict` support filter requires more shared donors than the other presets.
+
+## Outputs
+
+| Question | Output |
+|---|---|
+| How many candidate pairs does each support filter retain? | Filter-retention plot |
+| Which cell types or chromosome branches were skipped, and why? | Diagnostics plot and table |
+| Which peaks are associated with a gene's expression? | Hierarchical results table and top-link figures |
+| How do conditional correlations vary by cell type and distance? | HC3 summary plots and link table |
+| Which peaks best explain a linked gene? | SuSiE prioritization table |
 
 ## Configure
 
-Add `peak_gene_correlation` to the aggregation's existing [`modules`](parameters.html#modules) list in `cfg_aggregations.yaml`, and add a matching row in `cfg_module_peak_gene_correlation.yaml` in the selected configuration directory:
+Add `peak_gene_correlation` to the aggregation's [`modules`](parameters.html#modules) list, keeping its other settings:
 
-```yaml
+```{.yaml filename="cfg_aggregations.yaml"}
 my_aggregation:
-  peak_gene_correlation_top_links_per_cell_group: 3
+  modules: [peak_gene_correlation]
 ```
 
-The top-link count controls the number of detail figures per cell type. [`peak_gene_correlation_filter`](parameters.html#peak_gene_correlation_filter) selects `lenient` (default), `moderate`, or `strict` measurement-support filtering. Disabled aggregations contribute no module targets.
+Then add an entry for `my_aggregation` to `cfg_module_peak_gene_correlation.yaml` in the [selected configuration directory](main_overview.md#configuration-directory):
+
+```{.yaml filename="cfg_module_peak_gene_correlation.yaml"}
+my_aggregation:
+  peak_gene_correlation_top_links_per_cell_group: 3
+  peak_gene_correlation_filter: lenient
+```
+
+[`peak_gene_correlation_top_links_per_cell_group`](parameters.html#peak_gene_correlation_top_links_per_cell_group) sets the number of top-link figures per cell type; it does not change which pairs are tested. [`peak_gene_correlation_filter`](parameters.html#peak_gene_correlation_filter) selects the `lenient` (default), `moderate` or `strict` measurement-support filter, which removes pairs without enough expression, accessibility and shared donor support before testing. An empty entry, `my_aggregation: {}`, keeps both defaults.
 
 ## Run
 
-```r
+Preview the targets tagged for this module:
+
+```{.r filename="R"}
+targets::tar_manifest(
+  names = targets::tar_described_as(
+    tidyselect::contains("checkpoint:peak_gene_correlation")
+  ) & tidyselect::ends_with(".my_aggregation"),
+  callr_function = NULL
+)[, c("name", "description")]
+```
+
+Then run the same selection:
+
+```{.r filename="R"}
 targets::tar_make(
-  names = tidyselect::ends_with(".peak_gene_correlation.my_aggregation")
+  names = targets::tar_described_as(
+    tidyselect::contains("checkpoint:peak_gene_correlation")
+  ) & tidyselect::ends_with(".my_aggregation")
 )
 ```
 
 ## Review
 
-The [output gallery](gallery.md#peak-gene-correlation) shows one example per plot. All module targets have description tag `[checkpoint:peak_gene_correlation]`. Their paths are `<store>/plots/my_aggregation/peak_gene_correlation/`; file exports use the corresponding `files` directory, with any modality suffixes as deeper subdirectories. For example, read selected links with:
+``` text
+<store>/plots/my_aggregation/peak_gene_correlation/
+├── filter_retention_plot.png
+├── diagnostics_plot.png
+├── top_link_aggregate_scatter_plots/
+├── support_counts_plot.png
+├── correlation_histogram_plot.png
+├── distance_correlation_plot.png
+└── significant_pairs_vs_technical_features_plot.png
+```
 
-```r
+Start with `filter_retention_plot.png`, which compares the three support filters by cell type and marks the active one. Top-link figures rank positive, estimable slopes outside self-promoter peaks by hierarchical p-value, without a significance cutoff, so appearing in a figure is not evidence of significance. `diagnostics_plot.png` shows skipped branches, and the other plots summarize the HC3 analysis. Interpretation guidance is in each plot's subtitle and caption; representative plots are in the [output gallery](gallery.md#peak-gene-correlation).
+
+Read the tables in R, for example the hierarchical results with BH FDR within each cell type:
+
+```{.r filename="R"}
 targets::tar_read(
-  peak_gene_correlation_links_tibble.WNN.peak_gene_correlation.my_aggregation
+  peak_gene_correlation_hierarchical_results_tibble.WNN.peak_gene_correlation.my_aggregation
 )
 ```
 
-## Model and scope
+The HC3 links and SuSiE prioritization are in `peak_gene_correlation_links_tibble.WNN` and `peak_gene_correlation_finemapped_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix.
 
-Peak–gene links are candidate regulatory relationships. Cells are aggregated within donor and ATAC-defined state using WNN cell-type annotations, without reusing a cell across aggregates. Measurement-support filters select hypotheses before fitting; the default requires shared support from at least two donors, and the strict preset requires three. Review `filter_retention_plot` first.
+## Parameter reference
 
-The hierarchical analysis fits a mean peak effect with donor-specific slope variation, donor intercepts and RNA/ATAC depth adjustment. It reports Kenward–Roger p-values, BH FDR and numerical reliability diagnostics. Top-link figures rank positive, estimable nonpromoter slopes by p-value without a significance cutoff, so appearing in a figure is not evidence of significance. They combine focal-cell-type coverage, gene context, hierarchical evidence and adjusted aggregate scatterplots.
-
-The existing HC3 correlation summaries remain a separate conditional analysis. Neither analysis establishes causal regulation; numerical reference parity does not establish statistical calibration across datasets. See the [peak–gene correlation methods](implementation/methods_peak_gene_correlation.html) for inference limits, support thresholds and the fixed and configurable settings, and the [implementation graph](implementation/implementation_peak_gene_correlation.html) for target structure.
+[Open the searchable parameter browser](parameters.html#workflow=peak_gene_correlation). The [peak–gene correlation methods](implementation/methods_peak_gene_correlation.html) list every fixed and configurable setting, including the support-filter thresholds, and the [implementation graph](implementation/implementation_peak_gene_correlation.html) shows the target structure.

@@ -1,0 +1,17 @@
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+name: documentation-checks.yaml
+
+permissions:
+  contents: read
+
+jobs:
+  methods-parameters:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 dev/check_methods_parameters.py

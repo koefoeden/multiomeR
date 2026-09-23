@@ -47,6 +47,8 @@ book:
         - href: methods_genetic_enrichment.md
           text: Genetic enrichment
 
+bibliography: references.bib
+
 format:
   html:
     theme: cosmo

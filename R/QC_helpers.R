@@ -131,8 +131,7 @@ plot_QC_cell_retention <- function(retention_tibble) {
       panel.grid.major.x = ggplot2::element_blank(), legend.position = "top")
 }
 
-save_QC_cell_retention_plot <- function(retention_tibble) {
-  plot <- plot_QC_cell_retention(retention_tibble)
+save_QC_cell_retention_plot <- function(retention_tibble, plot = plot_QC_cell_retention(retention_tibble)) {
   branches_per_stage <- plot$data |>
     dplyr::filter(.data$excluded_cells > 0) |>
     dplyr::count(.data$stage)

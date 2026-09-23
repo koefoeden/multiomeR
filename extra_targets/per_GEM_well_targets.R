@@ -100,30 +100,15 @@ rlang::list2(
           BPCells::open_matrix_10x_hdf5(cellranger_h5_file, feature_type = "Gene Expression")
         }
 
-      source_label <- if (length(cellbender_h5_file) > 0L) "CellBender GEX matrix" else "CellRanger GEX matrix"
-      if (nrow(gene_expression_matrix) != nrow(gene_features_df)) {
-        stop(
-          source_label,
-          " row count (",
-          nrow(gene_expression_matrix),
-          ") does not match gene feature row count (",
-          nrow(gene_features_df),
-          ")."
-        )
-      }
-
-      existing_feature_names <- rownames(gene_expression_matrix)
-      has_feature_names <- !is.null(existing_feature_names) &&
-        length(existing_feature_names) == nrow(gene_expression_matrix) &&
-        !all(is.na(existing_feature_names) | existing_feature_names == "")
-
-      if (
-        has_feature_names &&
-          !identical(existing_feature_names, gene_features_df$gene_name_unique) &&
-          !identical(existing_feature_names, gene_features_df$name) &&
-          !identical(existing_feature_names, gene_features_df$id)
-      ) {
-        stop(source_label, " feature names do not match CellRanger gene feature order.")
+      # CellBender rows are unique gene names; Cell Ranger rows are feature IDs.
+      matching_features <- vapply(
+        gene_features_df[c("gene_name_unique", "id")],
+        identical,
+        logical(1),
+        rownames(gene_expression_matrix)
+      )
+      if (!any(matching_features)) {
+        stop("GEX matrix features do not match the Cell Ranger gene feature order for GEM well: ", GEM_well_ID)
       }
 
       rownames(gene_expression_matrix) <- gene_features_df$gene_name_unique
@@ -171,10 +156,6 @@ rlang::list2(
         ) |>
         tibble::as_tibble()
 
-      if (!all(startsWith(ATAC_qc_metrics_tibble$cellName, barcode_prefix))) {
-        stop("All BPCells ATAC QC cell names must start with GEM well prefix: ", barcode_prefix)
-      }
-
       ATAC_qc_metrics_tibble |>
         dplyr::transmute(
           barcode = substring(cellName, nchar(barcode_prefix) + 1),
@@ -188,10 +169,6 @@ rlang::list2(
     description = "Compute basic per-cell RNA QC metadata from the BPCells GEX matrix",
     command = {
       barcode_prefix <- paste0(GEM_well_ID, "_")
-
-      if (!all(startsWith(colnames(GEX_counts_BPCells_matrix), barcode_prefix))) {
-        stop("All GEX BPCells matrix column names must start with GEM well prefix: ", barcode_prefix)
-      }
 
       col_stats <- BPCells::matrix_stats(GEX_counts_BPCells_matrix, col_stats = "mean")$col_stats
       nCount_RNA <- col_stats["mean", ] * nrow(GEX_counts_BPCells_matrix)

@@ -87,13 +87,6 @@ get_SCAVENGE_TRS_UMAP_plots <- function(TRS_tibble, metadata_tibble, umap_cols, 
         "Colours show SCAVENGE TRS on the supplied graph embedding. Cell-type labels, when present, come from GEX-derived annotations."), width = 110))
 
   if (!is.null(label_col)) {
-    if (!is.character(label_col) || length(label_col) != 1 || is.na(label_col) || !nzchar(label_col)) {
-      stop("`label_col` must be NULL or a non-empty length-1 character vector.", call. = FALSE)
-    }
-    if (!label_col %in% colnames(SCAVENGE_metadata_tibble)) {
-      stop("Required label column not found: ", label_col, call. = FALSE)
-    }
-
     label_tibble <- SCAVENGE_metadata_tibble |>
       dplyr::filter(
         !is.na(.data[[label_col]]),
@@ -158,67 +151,6 @@ add_GWAS_heatmap_categories <- function(heatmap_data, GWAS_tibble) {
     dplyr::inner_join(GWAS_tibble |> dplyr::select(GWAS_ID, Category), by = "GWAS_ID")
 }
 
-#' Assign compartment
-#'
-#' Assign categorical compartments from regex patterns applied to type labels.
-#'
-#' @param in_tibble Input tibble containing `type_col`.
-#' @param patterns Named character vector of regex patterns; names become
-#'   compartment labels.
-#' @param type_col Column whose values are matched after replacing `-` with `_`.
-#' @param new_col Name of the output compartment column.
-#' @return `in_tibble` with `new_col` added; unmatched rows receive `NA`.
-#' @keywords internal
-
-assign_compartment <- function(in_tibble, patterns, type_col, new_col = "compartment") {
-  match_col <- paste0(type_col, "__compartment_match")
-  patterns <- stringr::str_replace_all(patterns, "-", "_")
-  conds <- purrr::map2(
-    patterns,
-    names(patterns),
-    ~ rlang::expr(stringr::str_detect(.data[[match_col]], !!.x) ~ !!.y)
-  )
-
-  in_tibble |>
-    dplyr::mutate(!!match_col := stringr::str_replace_all(as.character(.data[[type_col]]), "-", "_")) |>
-    dplyr::mutate(
-      !!new_col := dplyr::case_when(
-        !!!conds,
-        TRUE ~ NA_character_
-      )
-    ) |>
-    dplyr::select(-dplyr::all_of(match_col))
-}
-
-#' Get compartment metadata
-#'
-#' Build one-row-per-value metadata with ordered compartment labels.
-#'
-#' @param values Character/factor values to de-duplicate into metadata rows.
-#' @param compartments_patterns Optional named regex vector used by
-#'   `assign_compartment()`.
-#' @param type_col Name of the value column in the returned metadata.
-#' @param default_compartment Compartment label used when no pattern mapping is
-#'   supplied.
-#' @return Metadata tibble with `type_col` and factor `compartment`.
-#' @keywords internal
-
-get_compartment_metadata <- function(values, compartments_patterns, type_col, default_compartment) {
-  metadata <- tibble::tibble(!!type_col := as.character(values)) |>
-    dplyr::distinct()
-
-  if (is.null(compartments_patterns)) {
-    return(metadata |> dplyr::mutate(compartment = default_compartment))
-  }
-
-  metadata |>
-    assign_compartment(compartments_patterns, type_col = type_col) |>
-    dplyr::mutate(
-      compartment = dplyr::coalesce(compartment, "Other"),
-      compartment = factor(compartment, levels = c(names(compartments_patterns), "Other"))
-    )
-}
-
 make_named_heatmap_palette <- function(values, palette = "Set3") {
   values <- sort(unique(stats::na.omit(values)))
   if (length(values) == 0) {
@@ -256,66 +188,48 @@ gwas_heatmap_metadata_theme <- function(show_y = FALSE, show_x = FALSE) {
     )
 }
 
-#' Order GWAS score plot ids
+#' Order GWAS rows and clusters for score heatmaps
 #'
-#' Order GWAS rows and feature columns for clustered score heatmaps.
-#'
-#' @param score_data GWAS-by-feature score tibble with GWAS ID, cluster/feature,
-#'   and score columns.
-#' @param row_metadata GWAS metadata tibble used to annotate and order GWAS rows.
-#' @param cluster_col Single metadata column name used as the cluster/grouping variable.
-#' @param score_col Numeric score column used for clustering/order calculation.
-#' @param compartments_patterns Optional named regex patterns used to group
-#'   feature columns into compartments before plotting.
-#' @return List with ordered GWAS IDs, ordered feature IDs, and feature metadata.
+#' Rows follow GWAS category and ID. Clusters are grouped into the first
+#' matching compartment pattern (hyphens and underscores match each other;
+#' unmatched clusters form `Other`) and hierarchically ordered by their scores
+#' within each compartment.
 #' @keywords internal
-
-order_GWAS_score_plot_ids <- function(score_data, row_metadata, cluster_col = "cluster", score_col = "median_score", compartments_patterns = NULL) {
-  score_mat <- score_data |>
-    dplyr::select(GWAS_ID, dplyr::all_of(c(cluster_col, score_col))) |>
-    tidyr::pivot_wider(names_from = dplyr::all_of(cluster_col), values_from = dplyr::all_of(score_col), values_fill = 0) |>
-    tibble::column_to_rownames("GWAS_ID") |>
-    as.matrix()
-
-  cluster_metadata <- get_compartment_metadata(
-    colnames(score_mat),
-    compartments_patterns,
-    type_col = cluster_col,
-    default_compartment = "Cluster"
-  )
-
-  cluster_order <- cluster_metadata |>
-    dplyr::arrange(compartment, .data[[cluster_col]]) |>
-    dplyr::group_split(compartment, .keep = FALSE) |>
-    purrr::map(\(group_df) {
-      clusters <- group_df[[cluster_col]]
-      if (length(clusters) > 2) {
-        clusters[stats::hclust(stats::dist(t(score_mat[, clusters, drop = FALSE])))$order]
-      } else {
-        clusters
-      }
-    }) |>
-    unlist(use.names = FALSE)
-
-  row_order <- row_metadata |>
-    dplyr::arrange(Category, GWAS_ID) |>
-    dplyr::pull(GWAS_ID)
-
-  list(row_order = row_order, cluster_order = cluster_order, cluster_metadata = cluster_metadata)
-}
-
 get_ordered_GWAS_score_plot_data <- function(data_per_GWAS_and_cluster_df, compartments_patterns, score_col = "median_score") {
   row_metadata <- data_per_GWAS_and_cluster_df |>
     dplyr::distinct(Category, GWAS_ID) |>
     dplyr::distinct(GWAS_ID, .keep_all = TRUE)
-  axes <- order_GWAS_score_plot_ids(
-    data_per_GWAS_and_cluster_df,
-    row_metadata,
-    score_col = score_col,
-    compartments_patterns = compartments_patterns
-  )
-  row_levels <- rev(axes$row_order)
-  cluster_levels <- axes$cluster_order
+  score_mat <- data_per_GWAS_and_cluster_df |>
+    dplyr::select(GWAS_ID, cluster, dplyr::all_of(score_col)) |>
+    tidyr::pivot_wider(names_from = cluster, values_from = dplyr::all_of(score_col), values_fill = 0) |>
+    tibble::column_to_rownames("GWAS_ID") |>
+    as.matrix()
+
+  clusters <- colnames(score_mat)
+  compartment <- if (is.null(compartments_patterns)) {
+    "Cluster"
+  } else {
+    patterns <- stringr::str_replace_all(unlist(compartments_patterns), "-", "_")
+    matched <- vapply(stringr::str_replace_all(clusters, "-", "_"), \(cluster) {
+      hit <- which(stringr::str_detect(cluster, patterns))
+      if (length(hit)) names(compartments_patterns)[[hit[[1]]]] else "Other"
+    }, character(1))
+    factor(unname(matched), levels = c(names(compartments_patterns), "Other"))
+  }
+  cluster_metadata <- tibble::tibble(cluster = clusters, compartment = compartment)
+  cluster_levels <- cluster_metadata |>
+    dplyr::arrange(compartment, cluster) |>
+    dplyr::group_split(compartment, .keep = FALSE) |>
+    purrr::map(\(group_df) {
+      group_clusters <- group_df$cluster
+      if (length(group_clusters) > 2) {
+        group_clusters[stats::hclust(stats::dist(t(score_mat[, group_clusters, drop = FALSE])))$order]
+      } else {
+        group_clusters
+      }
+    }) |>
+    unlist(use.names = FALSE)
+  row_levels <- rev(dplyr::arrange(row_metadata, Category, GWAS_ID)$GWAS_ID)
   cluster_support <- data_per_GWAS_and_cluster_df |>
     dplyr::select(cluster, dplyr::any_of(c("n_cells", "n_counts", "n_features", "counts_per_feature"))) |>
     dplyr::summarise(
@@ -326,7 +240,7 @@ get_ordered_GWAS_score_plot_data <- function(data_per_GWAS_and_cluster_df, compa
   list(
     metadata = row_metadata |> dplyr::mutate(GWAS_ID = factor(GWAS_ID, levels = row_levels)) |> dplyr::arrange(GWAS_ID),
     scores = data_per_GWAS_and_cluster_df |> dplyr::mutate(GWAS_ID = factor(GWAS_ID, levels = row_levels), cluster = factor(cluster, levels = cluster_levels)),
-    clusters = axes$cluster_metadata |>
+    clusters = cluster_metadata |>
       dplyr::left_join(cluster_support, by = "cluster") |>
       dplyr::mutate(cluster = factor(cluster, levels = cluster_levels)),
     row_levels = row_levels,
@@ -351,16 +265,12 @@ get_plot_group_breaks <- function(ordered_values) {
 #' @param feature_metadata Metadata for plotted features, including compartment
 #'   ordering used for vertical separators.
 #' @param feature_col Feature/cluster column plotted on the x axis.
-#' @param fill_col Numeric column mapped to tile fill or point color.
+#' @param fill_col Numeric column mapped to tile fill.
 #' @param fill_label Legend label for the score color scale.
-#' @param fill_midpoint Midpoint for the diverging fill scale.
 #' @param fill_scale Color-scale type. Use `sequential` for nonnegative scores
 #'   and `diverging` for signed deviations.
 #' @param fill_limits Optional numeric fill-scale limits.
-#' @param title Optional plot title.
 #' @param support_label_col Optional text column drawn on top of heatmap tiles.
-#' @param point_size_col Optional factor column mapped to point size. When set,
-#'   draw a red sequential dotplot instead of heatmap tiles.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
@@ -370,12 +280,9 @@ plot_GWAS_feature_heatmap <- function(
   feature_col,
   fill_col,
   fill_label,
-  fill_midpoint = 0,
   fill_scale = c("diverging", "sequential"),
   fill_limits = NULL,
-  title = NULL,
-  support_label_col = NULL,
-  point_size_col = NULL
+  support_label_col = NULL
 ) {
   fill_scale <- match.arg(fill_scale)
   row_categories <- score_plot_data |>
@@ -392,35 +299,16 @@ plot_GWAS_feature_heatmap <- function(
     ggplot2::scale_x_discrete(drop = FALSE, expand = c(0, 0)) +
     ggplot2::scale_y_discrete(drop = FALSE, expand = c(0, 0))
 
-  if (is.null(point_size_col)) {
-    feature_plot <- feature_plot +
-      ggplot2::geom_tile(
-        ggplot2::aes(fill = .data[[fill_col]]),
-        color = "white",
-        linewidth = 0.3
-      )
-  } else {
-    feature_plot <- feature_plot +
-      ggplot2::geom_point(
-        data = score_plot_data |> dplyr::filter(!is.na(.data[[point_size_col]])),
-        ggplot2::aes(color = .data[[fill_col]], size = .data[[point_size_col]]),
-        alpha = 0.95,
-        na.rm = TRUE
-      ) +
-      ggplot2::scale_size_manual(
-        values = c("P <= 0.05" = 2.4, "P < 0.01" = 4.8),
-        limits = c("P <= 0.05", "P < 0.01"),
-        drop = FALSE,
-        name = "BH-adjusted P-value",
-        guide = ggplot2::guide_legend(title.position = "top")
-      )
-  }
-
   feature_plot <- feature_plot +
+    ggplot2::geom_tile(
+      ggplot2::aes(fill = .data[[fill_col]]),
+      color = "white",
+      linewidth = 0.3
+    ) +
     ggplot2::geom_hline(yintercept = row_breaks, color = "grey30", linewidth = 0.35) +
     ggplot2::geom_vline(xintercept = feature_breaks, color = "grey30", linewidth = 0.35)
 
-  if (is.null(point_size_col) && !is.null(support_label_col) && support_label_col %in% colnames(score_plot_data)) {
+  if (!is.null(support_label_col) && support_label_col %in% colnames(score_plot_data)) {
     feature_plot <- feature_plot +
       ggplot2::geom_text(
         ggplot2::aes(label = .data[[support_label_col]]),
@@ -443,16 +331,7 @@ plot_GWAS_feature_heatmap <- function(
     barwidth = grid::unit(32, "mm"),
     barheight = grid::unit(3, "mm")
   )
-  if (!is.null(point_size_col)) {
-    feature_plot <- feature_plot +
-      ggplot2::scale_color_gradient(
-        low = "#FEE5D9",
-        high = "#A50F15",
-        limits = fill_limits,
-        name = fill_label,
-        guide = score_guide
-      )
-  } else if (fill_scale == "sequential") {
+  if (fill_scale == "sequential") {
     feature_plot <- feature_plot +
       ggplot2::scale_fill_gradient(
         low = "#F7FBFF",
@@ -467,7 +346,7 @@ plot_GWAS_feature_heatmap <- function(
         low = "#3B4CC0",
         mid = "white",
         high = "#B40426",
-        midpoint = fill_midpoint,
+        midpoint = 0,
         limits = fill_limits,
         name = fill_label,
         guide = score_guide
@@ -476,7 +355,7 @@ plot_GWAS_feature_heatmap <- function(
 
   compact_x_axis <- dplyr::n_distinct(score_plot_data[[feature_col]]) <= 8
   feature_plot +
-    ggplot2::labs(x = NULL, y = NULL, title = title) +
+    ggplot2::labs(x = NULL, y = NULL) +
     ggplot2::coord_cartesian(
       xlim = c(0.5, nlevels(score_plot_data[[feature_col]]) + 0.5),
       ylim = c(0.5, nlevels(score_plot_data$GWAS_ID) + 0.5),
@@ -515,10 +394,6 @@ format_GWAS_bar_number <- function(values) {
 }
 
 plot_GWAS_feature_support_tracks <- function(feature_metadata, feature_col = "cluster") {
-  if (!"n_cells" %in% colnames(feature_metadata) || all(is.na(feature_metadata$n_cells))) {
-    return(patchwork::plot_spacer())
-  }
-
   support_plot_data <- feature_metadata |>
     dplyr::arrange(.data[[feature_col]]) |>
     dplyr::mutate(
@@ -577,7 +452,7 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
     method_colors,
     make_named_heatmap_palette(unknown_methods, palette = "Dark2")
   )
-  row_levels <- if (is.factor(ordered_metadata$GWAS_ID)) levels(ordered_metadata$GWAS_ID) else unique(as.character(ordered_metadata$GWAS_ID))
+  row_levels <- levels(ordered_metadata$GWAS_ID)
   row_categories <- ordered_metadata |>
     dplyr::distinct(GWAS_ID, Category) |>
     dplyr::mutate(GWAS_ID = as.character(GWAS_ID))
@@ -586,15 +461,8 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
     dplyr::transmute(GWAS_ID, Loci = n_credible_set_loci, Samples = sample_size) |>
     tidyr::pivot_longer(-GWAS_ID, names_to = "track", values_to = "value") |>
     dplyr::mutate(label = format_GWAS_bar_number(value))
-  ancestry_columns <- grep(
-    "^ancestry_(EUR|EAS|AFR|AMR|SAS|OTH)$",
-    colnames(ordered_metadata),
-    value = TRUE
-  )
-  if (length(ancestry_columns) == 0L) {
-    ordered_metadata$ancestry_OTH <- NA_real_
-    ancestry_columns <- "ancestry_OTH"
-  }
+  # Open Targets and local metadata both carry all six ancestry fractions.
+  ancestry_columns <- grep("^ancestry_(EUR|EAS|AFR|AMR|SAS|OTH)$", colnames(ordered_metadata), value = TRUE)
   ancestry_reported <- rowSums(!is.na(ordered_metadata[ancestry_columns])) > 0
   ancestry_plot_data <- ordered_metadata[ancestry_reported, , drop = FALSE] |>
     dplyr::select(GWAS_ID, dplyr::all_of(ancestry_columns)) |>
@@ -698,16 +566,11 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
 #'   `plot_GWAS_metadata_tracks()`, aligned to the same GWAS ordering.
 #' @param compartments_patterns Optional named regex patterns used to group
 #'   clusters into compartments.
-#' @param scaled Logical; when `TRUE`, use 0.5 as the diverging color midpoint
-#'   for min-max scaled scores.
 #' @param fill_col Numeric column mapped to heatmap fill.
 #' @param fill_label Legend label for the heatmap fill.
 #' @param fill_scale Color-scale type passed to `plot_GWAS_feature_heatmap()`.
 #' @param fill_limits Optional numeric fill-scale limits.
 #' @param support_label_col Optional text column drawn on top of heatmap tiles.
-#' @param point_size_col Optional factor column mapped to dot size.
-#' @param show_feature_support Logical; when `TRUE`, draw a nuclei-count support
-#'   annotation if `n_cells` is available.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
@@ -715,14 +578,11 @@ plot_GWAS_by_cluster_heatmap <- function(
   data_per_GWAS_and_cluster_df,
   GWAS_metadata_tracks_plot,
   compartments_patterns = NULL,
-  scaled = FALSE,
   fill_col = "median_score",
   fill_label = "Score",
   fill_scale = c("diverging", "sequential"),
   fill_limits = NULL,
-  support_label_col = NULL,
-  point_size_col = NULL,
-  show_feature_support = TRUE
+  support_label_col = NULL
 ) {
   if (nrow(data_per_GWAS_and_cluster_df) == 0) {
     return(structure(list(), class = c("empty_plot_list", "list")))
@@ -741,11 +601,9 @@ plot_GWAS_by_cluster_heatmap <- function(
     feature_col = "cluster",
     fill_col = fill_col,
     fill_label = fill_label,
-    fill_midpoint = if (scaled) 0.5 else 0,
     fill_scale = fill_scale,
     fill_limits = fill_limits,
-    support_label_col = support_label_col,
-    point_size_col = point_size_col
+    support_label_col = support_label_col
   )
 
   # Keep all body panels at the same layout level so axes and legends cannot
@@ -754,7 +612,7 @@ plot_GWAS_by_cluster_heatmap <- function(
   plots[[5]] <- score_plot
   design <- "ABCDE"
   heights <- grid::unit(1, "null")
-  if (isTRUE(show_feature_support) && "n_cells" %in% colnames(ordered_data$clusters) && any(!is.na(ordered_data$clusters$n_cells))) {
+  if ("n_cells" %in% colnames(ordered_data$clusters) && any(!is.na(ordered_data$clusters$n_cells))) {
     plots[[6]] <- plot_GWAS_feature_support_tracks(ordered_data$clusters)
     design <- "####F\nABCDE"
     heights <- grid::unit(c(28, 1), c("mm", "null"))
@@ -770,6 +628,12 @@ plot_GWAS_by_cluster_heatmap <- function(
     legend.box.just = "top",
     legend.margin = ggplot2::margin(4, 8, 4, 0)
   )
+}
+
+#' Save a GWAS-by-group heatmap with a height that grows with the GWAS count
+#' @keywords internal
+save_GWAS_heatmap <- function(plot, GWAS_IDs) {
+  save_plots_structured(plot, filetype = "png", width = 17, height = max(5.5, 0.3 * dplyr::n_distinct(GWAS_IDs) + 3.5))
 }
 
 #' Plot one WNN SCAVENGE median-TRS heatmap

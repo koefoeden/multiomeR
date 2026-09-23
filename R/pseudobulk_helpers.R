@@ -1730,7 +1730,7 @@ convert_between_ENSEMBL_and_symbol <- function(gene_ID_vec, gene_features_df, st
       tibble::deframe()
   }
 
-  missing_IDs_idx <- which(gene_ID_vec %!in% names(named_output_vec))
+  missing_IDs_idx <- which(!gene_ID_vec %in% names(named_output_vec))
   if (length(missing_IDs_idx) > 0 && strict) {
     stop(stringr::str_glue("No ENSEMBL IDs found for {gene_ID_vec[missing_IDs_idx]}"))
   }

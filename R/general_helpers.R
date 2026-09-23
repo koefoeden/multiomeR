@@ -63,7 +63,6 @@ suppress_warnings_matching <- function(expr, pattern, fixed = FALSE, ignore_case
   )
 }
 
-'%!in%' <- function(x, y) !('%in%'(x, y))
 
 
 label_plot_variable <- function(variable) {

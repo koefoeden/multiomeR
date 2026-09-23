@@ -417,7 +417,12 @@ rlang::list2(
     name = nuclei_per_donor_id_bars.1_pre_aggregation_QC,
     description = "Plot pre-QC assigned singlet nuclei per donor, excluding doublets and unassigned barcodes. [checkpoint:1_pre-aggregation-QC]",
     command = demultiplexing_counts_tibble |>
-      plot_nuclei_per_donor_id() |>
+      dplyr::filter(assignment_class == "singlet") |>
+      dplyr::summarise(n_nuclei = sum(n_nuclei), .by = donor_id) |>
+      plot_nuclei_per_donor_id(
+        title = "Assigned singlet nuclei per donor before QC",
+        caption = "Cell Ranger-called nuclei; doublets and unassigned nuclei are excluded. Single-donor wells use their configured donor; they are not genotype-demultiplexed."
+      ) |>
       add_plot_parameters("cfg_aggregations.yaml", aggregation_GEM_well_IDs = aggregation_GEM_well_IDs) |>
       save_plots_structured(width = 10,
         height = max(6, 3 + 0.22 * dplyr::n_distinct(stats::na.omit(demultiplexing_counts_tibble$donor_id))))

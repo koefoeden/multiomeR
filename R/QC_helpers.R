@@ -141,16 +141,15 @@ save_QC_cell_retention_plot <- function(retention_tibble, plot = plot_QC_cell_re
   )
 }
 
-plot_nuclei_per_donor_id <- function(demultiplexing_counts_tibble) {
-  demultiplexing_counts_tibble |>
-    dplyr::filter(.data$assignment_class == "singlet") |>
-    dplyr::summarise(n_nuclei = sum(.data$n_nuclei), .by = donor_id) |>
+plot_nuclei_per_donor_id <- function(n_nuclei_tibble, title, caption) {
+  n_nuclei_tibble |>
     ggplot2::ggplot(ggplot2::aes(x = n_nuclei, y = donor_id)) +
     ggplot2::geom_col(fill = "#009E73") +
-    ggplot2::labs(title = "Assigned singlet nuclei per donor before QC",
-      subtitle = stringr::str_wrap("Look for underrepresented donors before pooling; nuclei counts describe yield, not independent sample size.", width = 100),
-      x = "Cell Ranger-called nuclei", y = "Donor ID",
-      caption = "Doublets and unassigned nuclei are excluded. Single-donor wells use their configured donor; they are not genotype-demultiplexed.")
+    ggplot2::geom_text(ggplot2::aes(label = scales::comma(n_nuclei)), hjust = -0.1, size = 3) +
+    ggplot2::scale_x_continuous(labels = scales::comma, expand = ggplot2::expansion(mult = c(0, 0.12))) +
+    ggplot2::labs(title = title,
+      subtitle = stringr::str_wrap("Look for underrepresented donors; nuclei counts describe yield, not independent sample size.", width = 100),
+      x = "Nuclei", y = "Donor ID", caption = caption)
 }
 
 #' Compare manifest QC metrics across wells, clusters or cell types

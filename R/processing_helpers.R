@@ -123,7 +123,8 @@ plot_upset_from_excluded_BCs_list <- function(QC_excluded_BCs_list, n_total, inp
       ggplot2::ggplot() +
         ggplot2::annotate("text", x = 0, y = 0, label = "No excluded barcodes") +
         ggplot2::theme_void() +
-        ggplot2::labs(title = "QC exclusion overlaps", subtitle = "No barcodes failed the supplied exclusion rules.",
+        ggplot2::labs(title = paste("QC exclusion overlaps: all", scales::comma(n_total), "retained"),
+          subtitle = "No barcodes failed the supplied exclusion rules.",
           caption = paste("Input:", n_total, input_label))
     )
   }
@@ -143,6 +144,7 @@ plot_upset_from_excluded_BCs_list <- function(QC_excluded_BCs_list, n_total, inp
   )
 
   barcode_masks <- membership_dt[, .(mask = sum(bit)), by = "barcode"]
+  n_retained <- n_total - nrow(barcode_masks)
   intersection_counts <- barcode_masks[, .(n = .N), by = "mask"][order(-n, mask)]
   intersection_counts[, intersection_idx := .I]
   rm(membership_dt, barcode_masks)
@@ -225,7 +227,10 @@ plot_upset_from_excluded_BCs_list <- function(QC_excluded_BCs_list, n_total, inp
   patchwork::plot_spacer() + bar_plot + set_size_plot + matrix_plot +
     patchwork::plot_layout(ncol = 2, widths = c(0.35, 1), heights = c(0.65, 0.35)) +
     patchwork::plot_annotation(
-      title = "QC exclusion overlaps",
+      title = paste0(
+        "QC exclusion overlaps: ", scales::comma(n_retained), " of ", scales::comma(n_total),
+        " retained (", format_QC_percent(100 * n_retained / n_total), ")"
+      ),
       subtitle = stringr::str_wrap("Read each dot column as an exact combination of failed filters. Large intersections reveal shared causes of exclusion; side bars overlap and must not be summed.", width = 110),
       caption = stringr::str_wrap(paste0("Denominator: ", n_total, " ", input_label, ". Top bars count mutually exclusive combinations; side bars count all barcodes failing each rule. Empty exclusion sets are omitted; labels below 0.1% are suppressed. Retained barcodes are included in the denominator but not drawn."), width = 110))
 }

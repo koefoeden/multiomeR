@@ -50,6 +50,12 @@ edit directly changed download/setup behavior.
 
 ## Invalidation Impact
 
+`targets` hashes parsed code, so comment and formatting edits never invalidate,
+and a refactor that reproduces its outputs stops the cascade at the targets that
+call the changed code. For graph-construction refactors, save
+`tar_manifest(fields = c(name, command, pattern))` before and after and compare
+them by name; identical rows prove that no target reruns from that edit.
+
 To confirm an impact line against an existing store, save `tar_outdated()`
 before editing code (it loads the current code), apply the change, build only
 the earliest changed targets, and compare a second `tar_outdated()` with the

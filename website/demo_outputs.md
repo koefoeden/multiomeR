@@ -6,12 +6,6 @@ knitr::opts_chunk$set(
   comment = "#>",
   eval = FALSE
 )
-source("../packages/multiomeRCore/R/null_default.R")
-source("../R/output_gallery_helpers.R")
-gallery_items <- check_output_gallery_assets(
-  manifest_file = "output_gallery.yaml",
-  gallery_root = "."
-)
 ```
 
 The pipeline saves four main kinds of output in its targets store, normally `outputs/`. The `store` setting in `_targets.yaml` selects this folder.
@@ -60,9 +54,7 @@ targets::tar_read(categorical.UMAPs.8_multimodal_QC.immune_human_2x)
 
 Open `WNN_harmony_SNN_cluster_cell_type.png` there to see the integrated clusters and cell-type labels from your own run. It should resemble this documentation snapshot:
 
-```{r, echo = FALSE, eval = TRUE, results = "asis"}
-render_gallery_grid(gallery_items[gallery_items$id == "wnn-umap", ])
-```
+![WNN UMAP of the two demo GEM wells, colored by cluster and cell type](figures/demo_WNN_cell_type_UMAP.png){width="70%"}
 
 ## Plot objects
 

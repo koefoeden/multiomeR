@@ -35,46 +35,43 @@
 
 .output-gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
   gap: 1rem;
   margin: 1rem 0 2rem;
 }
 
 .output-gallery-card {
+  margin: 0;
   border: 1px solid #d9d9d9;
   border-radius: 6px;
-  padding: 1rem;
+  padding: 0.6rem;
   background: #fff;
+  scroll-margin-top: 5rem;
 }
 
-.output-gallery-card img,
-.output-gallery-placeholder {
+.output-gallery-card img {
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: contain;
-  border: 1px solid #e5e5e5;
-  border-radius: 4px;
   background: #f7f7f7;
+  border-radius: 4px;
 }
 
-.output-gallery-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #666;
-  font-size: 0.95rem;
-}
-
-.output-gallery-title {
-  margin-top: 0.8rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-.output-gallery-target {
+.output-gallery-card figcaption {
+  margin-top: 0.5rem;
   font-size: 0.85rem;
-  word-break: break-word;
+  line-height: 1.35;
 }
+
+.output-gallery-card figcaption code {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.output-gallery-card:target { border-color: #2761e3; box-shadow: 0 0 0 3px rgba(39,97,227,.18); }
 
 /* Manifest-driven parameter reference, shared by the three analysis guides. */
 .parameter-overview {
@@ -138,9 +135,6 @@
   .parameter-overview-toolbar, .parameter-workflows { display: none; }
   .parameter-details { display: grid !important; }
 }
-
-.output-gallery-card { scroll-margin-top: 5rem; }
-.output-gallery-card:target { border-color: #2761e3; box-shadow: 0 0 0 3px rgba(39,97,227,.18); }
 
 .gem-well-overview,
 .demo-donor-table {

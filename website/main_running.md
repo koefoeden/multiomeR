@@ -20,7 +20,7 @@ targets::tar_make(
 )
 ```
 
-**Review plots:**
+**Review plots** (examples: [checkpoint 1](gallery.md#1-pre-aggregation-qc)):
 
 ``` text
 <store>/plots/my_aggregation/1_pre_aggregation_QC/
@@ -59,7 +59,7 @@ targets::tar_make(
 )
 ```
 
-**Review plots:**
+**Review plots** (examples: [checkpoint 2](gallery.md#2-gex-pca-qc)):
 
 ``` text
 <store>/plots/my_aggregation/2_GEX_PCA_QC/
@@ -82,7 +82,7 @@ targets::tar_make(
 )
 ```
 
-**Review plots:**
+**Review plots** (examples: [checkpoint 3](gallery.md#3-gex-qc)):
 
 ``` text
 <store>/plots/my_aggregation/3_GEX_QC/
@@ -121,7 +121,7 @@ targets::tar_make(
 )
 ```
 
-**Review plots:**
+**Review plots** (examples: [checkpoint 4](gallery.md#4-peak-qc) and [checkpoint 5](gallery.md#5-pre-lsi-qc)):
 
 ``` text
 <store>/plots/my_aggregation/
@@ -149,7 +149,7 @@ targets::tar_make(
 )
 ```
 
-**Review plots:**
+**Review plots** (examples: [checkpoint 6](gallery.md#6-atac-lsi-qc)):
 
 ``` text
 <store>/plots/my_aggregation/6_ATAC_LSI_QC/
@@ -173,7 +173,7 @@ targets::tar_make(
 )
 ```
 
-**Review plots:**
+**Review plots** (examples: [checkpoint 7](gallery.md#7-atac-qc)):
 
 ``` text
 <store>/plots/my_aggregation/7_ATAC_QC/
@@ -205,7 +205,7 @@ targets::tar_make(
 )
 ```
 
-**Review plots:**
+**Review plots** (examples: [checkpoint 8](gallery.md#8-multimodal-qc)):
 
 ``` text
 <store>/plots/my_aggregation/8_multimodal_QC/

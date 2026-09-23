@@ -26,7 +26,7 @@ A **target** is a named result, such as a metadata table, matrix directory, or p
 
 ## Workflow at a glance
 
-The **main pipeline** processes each GEM well, aggregates selected GEM wells, and builds multimodal RNA/ATAC outputs for clustering, cell typing, and WNN integration. Two optional modules extend completed aggregations with differential analyses or genetic enrichment.
+The **main pipeline** processes each GEM well, aggregates selected GEM wells, and builds multimodal RNA/ATAC outputs for clustering, cell typing, and WNN integration. Three optional modules extend completed aggregations with differential analyses, genetic enrichment or peak–gene correlation. The [output gallery](gallery.md) previews every plot they and the main pipeline save.
 
 ![multiomeR workflow from Cell Ranger ARC GEM well outputs through per GEM well processing, aggregation-level GEX and ATAC analysis, WNN integration, and optional downstream modules](figures/multiomeR_overview_simplified.drawio.svg)
 

@@ -10,7 +10,7 @@ knitr::opts_chunk$set(
 
 In the R session opened during installation, run the command below to process the `immune_human_2x` aggregation. It combines the two demo GEM wells, produces a Seurat/Signac object containing the multimodal results, and draws the integrated WNN UMAPs colored by cluster, cell type, and the other categorical metadata.
 
-`names` selects these two targets by their exact names using `all_of()`. `tar_make()` also builds the dependencies needed for them, but does not build every plot in the gallery.
+`names` selects these two targets by their exact names using `all_of()`. `tar_make()` also builds the dependencies needed for them, but does not build every plot in the [output gallery](gallery.md).
 
 ``` {.r filename="R"}
 demo_targets <- c(

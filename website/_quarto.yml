@@ -17,11 +17,6 @@ book:
     - part: "Start here"
       chapters:
         - index.md
-    - part: "Output gallery"
-      chapters:
-        - gallery_main.md
-        - gallery_differential_analyses.md
-        - gallery_genetic_enrichment.md
     - part: "Try the public demo"
       chapters:
         - demo_installation.md
@@ -43,6 +38,7 @@ book:
         - troubleshooting.md
     - part: "Reference"
       chapters:
+        - gallery.md
         - review_outputs.md
         - reference_GEM_wells.md
         - reference_donor_metadata.md

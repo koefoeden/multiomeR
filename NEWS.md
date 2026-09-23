@@ -1,3 +1,111 @@
+# multiomeR 1.0.0 (unreleased)
+
+The first stable release. The manuscript describing multiomeR is under peer
+review (link to come). From this release on, incompatible changes to
+configuration, target names or output schemas require a new major version; see
+[RELEASES.md](RELEASES.md).
+
+This release changes cell-type labels, peak–gene inference, genetic-enrichment
+inputs and several target and parameter names. Expect a full rebuild of existing
+aggregations and review the migration notes first.
+
+## Configuration
+
+- Keep each project's settings in its own configuration directory, selected by
+  a single path in the ignored `configuration.local`; `configuration/` holds the
+  public defaults and examples. Module settings use flat
+  `cfg_module_<module>.yaml` files, and disabled modules need no file.
+- Pass scalar component counts to GEX PCA and ATAC LSI, so changing only the
+  selected dimensions, for example dropping the first LSI component, no longer
+  recomputes either reduction.
+- Stop at startup, with the install command, when the Bioconda BSgenome data
+  packages are missing because Pixi skipped their post-link scripts.
+- Add the output gallery's `mixed_human_31x` aggregation of public 10x Genomics
+  and ENCODE data as an inactive example with its module settings.
+
+## QC and cell-type annotation
+
+- Title the QC-exclusion UpSet plots with the number of retained barcodes and
+  plot the nuclei per donor that reach the final WNN object.
+- Unify pre-filter QC plots across modalities, show doublet evidence beside GEX
+  cluster markers, and report the selected wells, QC rules and configuration
+  values in checkpoint captions.
+- Diagnose WNN modality weights by their association with metadata within
+  clusters, and show WNN markers and UCell evidence as cluster dot plots.
+
+## Differential analyses
+
+- Use WNN-derived cell-type labels throughout, with named abundance and feature
+  models, predictor-only abundance formulas and descriptive target names.
+- Test gene sets on the existing contrast results.
+
+## Genetic enrichment
+
+- Report SCAVENGE trait-relevance scores without permutation P-values, summarized
+  by WNN cluster and cell type in four heatmaps.
+- Decompose cell-type chromVAR deviations additively into peak, variant and
+  locus contributions, with ordinary and automatic absolute-effect weighting,
+  and screen locus detail plots with a configurable z-score threshold.
+- Compare the credible sets of all configured GWAS by their shared normalized
+  posterior-probability mass, to show which traits give non-independent
+  enrichment results.
+- Build each GWAS's peak weights once and derive the chromVAR annotation from
+  the peak-to-variant allocation. This also fixes the ordinary posterior-
+  probability path, whose normalized inputs had lost their `posteriorProbability`
+  column, and reports PIPs rather than effect weights as absolute-effect locus
+  leads.
+- Sort the Open Targets credible-set records deterministically and allocate
+  peak contributions to variants without per-variant summaries.
+
+## Peak–gene correlation
+
+- Make peak–gene correlation an optional module on WNN cell types.
+- Replace the HC3 scan with a hierarchical donor-slope model fitted by native
+  REML with Kenward–Roger inference over all eligible pairs; links require a
+  positive, reliable hierarchical estimate at FDR < 0.05.
+- Filter hypotheses by RNA, ATAC and shared-donor measurement support, and show
+  genomic context, coverage and donor-adjusted scatterplots in top-link figures.
+
+## Runtime and dependencies
+
+- Save plots through one staged path that removes only obsolete outputs recorded
+  in each target's inventory, and build each ggplot once.
+- Make the project bootstrap stateless and share one checksum-keyed loader for
+  the standalone native sources.
+- Update the locked environment within R 4.5 and Bioconductor 3.22 (among them
+  Seurat 5.5.1, scDblFinder 1.24.10, arrow 25 and Python 3.13), move BPCells,
+  Signac and betterChromVAR to current revisions, and drop 31 unused
+  dependencies. multiomeRCore 0.2.0 narrows `get_tar_resources()`.
+- Keep only reference-parity tests of the reimplemented algorithms, which pass
+  with the updated reference packages.
+
+## Documentation
+
+- Restructure the manual around Configure, Run and Review steps, with one page
+  per checkpoint and module, a standalone parameter browser, an output gallery
+  generated from saved plots and an implementation book with one methods page
+  per stage.
+- Share the method descriptions with the manuscript supplement and describe the
+  validation contract of each reimplemented algorithm.
+
+## Migration
+
+- Move existing settings into a configuration directory and select it in
+  `configuration.local`.
+- Remove these parameters, which configuration validation now rejects:
+  `aggregation_GALAXY_track_upload_API_KEY`,
+  `aggregation_GALAXY_track_upload_HISTORY_ID`,
+  `aggregation_tar_make_skip_regex_patterns`,
+  `differential_analyses_bulk_RNA_rds_file_path`,
+  `differential_analyses_OLINK_parquet_file_path`,
+  `genetic_enrichment_posterior_probability_weighting_function_name` and
+  `genetic_enrichment_SCAVENGE_permutation_times`, and the per-study
+  `variant_weighting_mode` GWAS field.
+- Reinstall the environment with `pixi install --locked --run-post-link-scripts`
+  and the pinned GitHub packages with `pixi run install-r-github-packages`.
+- Update scripts that read HC3 peak–gene results, SCAVENGE P-values or renamed
+  differential-analysis targets.
+
 # multiomeR 0.5.0 (2026-09-11)
 
 Released through [PR #5](https://github.com/koefoeden/multiomeR/pull/5).

@@ -1,6 +1,6 @@
 # Algorithmic implementations, deviations and validation
 
-multiomeR reimplements a small number of reference algorithms so they can operate on the workflow's native matrices and graph state. The algorithms themselves are described in the **Methods and parameters** chapters. This page records why each was reimplemented, where it deliberately differs from its reference, and what the executable validation establishes.
+multiomeR reimplements a small number of reference algorithms so they can operate on the workflow's native matrices and graph state. The algorithms themselves are described on the primary-module and optional-module pages. This page records why each was reimplemented, where it deliberately differs from its reference, and what the executable validation establishes.
 
 The evidence labels are intentionally narrow:
 
@@ -31,7 +31,7 @@ The peak–gene rows belong to the analyses in [Peak–gene correlation](methods
 
 **Deliberate deviations and consequences.** Only one cell chunk is materialized at a time, and optional fork workers operate across chunks; this changes memory and execution behaviour but not the tested values. The helper returns a data frame instead of mutating a Seurat object. The target-level marker validator rejects configured genes missing from the reference, whereas the lower-level helper still exposes UCell's impute and skip modes. The production annotation reuses the chunked ranking helper and scores signed signatures per cell before aggregation, which costs more computation than a positive-only rank-summary shortcut.
 
-**Implementation.** `calculate_BPCells_UCell_scores_from_matrix()` and `rank_UCell_count_chunk()` in `R/processing_GEX_helpers.R`; the cluster annotation built on them is in `R/cluster_annotation_helpers.R` and described in [Cell-type annotation and motif accessibility](methods_annotation_and_motifs.md#matched-control-cluster-annotation).
+**Implementation.** `calculate_BPCells_UCell_scores_from_matrix()` and `rank_UCell_count_chunk()` in `R/processing_GEX_helpers.R`; the cluster annotation built on them is in `R/cluster_annotation_helpers.R` and described in [Cell-type annotation and motif accessibility](methods_annotation_and_motifs.md#cell-type-annotation).
 
 **Validation.** `tests/testthat/test-scoring-parity.R` compares signed signatures, with imputed and skipped missing genes, on a deterministic BPCells fixture and requires `identical()` values, dimensions, and dimnames. It also runs the production annotation path on unsigned, signed and negative-only signatures and compares per-cell scores, cluster means, matched-control summaries and marker-deletion effects with reference scores averaged within clusters, within 1e-12, and checks that chunking and fork workers leave them unchanged. The production cell-cycle scorer is compared with `Seurat::CellCycleScoring()`: phases are identical and scores agree within 1e-6, because BPCells normalizes counts at lower floating-point precision.
 
@@ -65,7 +65,7 @@ pixi run --use-environment-activation-cache test-amulet-parity
 
 **Implementation.** `get_feature_groups_from_LSI_loadings()` and `aggregate_BPCells_rows_by_group()` in `R/processing_GEX_helpers.R`, called from `extra_targets/ATAC_targets.R`.
 
-**Validation scope.** The reference-parity fixtures do not establish equivalence for this path. Its fixed settings are listed in [Preprocessing and nucleus QC](methods_preprocessing_and_QC.md#atac-qc-and-doublets).
+**Validation scope.** The reference-parity fixtures do not establish equivalence for this path. Its settings are described in [Preprocessing and nucleus QC](methods_preprocessing_and_QC.md).
 
 ## Native weighted nearest neighbors
 

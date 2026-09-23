@@ -13,17 +13,17 @@ multiomeR keeps the analysis steps in an editable repository. Configuration cove
 ## Where to start
 
 1. Read [Reading the graph views](graph_methodology.md) and follow its configuration-to-target trace.
-2. Open the [primary module](implementation_main.md) graph for the modality or checkpoint you plan to change. The [differential analyses](implementation_differential_analyses.md), [genetic enrichment](implementation_genetic_enrichment.md) and [peak–gene correlation](implementation_peak_gene_correlation.md) chapters cover the optional modules.
-3. Use [Implementation conventions](implementation_conventions.md) for the manifest, mapping, symbol, tag, and runtime contracts.
+2. Use [Implementation conventions](implementation_conventions.md) for the manifest, mapping, symbol, tag, and runtime contracts.
+3. Open the page for the stage you plan to change.
 
-The **Methods and parameters** chapters, from [Preprocessing and nucleus QC](methods_preprocessing_and_QC.md) to [Genetic enrichment](methods_genetic_enrichment.md), describe each stage and tabulate the settings that determine its results. Read them when you need the behaviour behind a result, or when deciding whether a change is a configuration edit or a code edit. [Algorithmic implementations, deviations and validation](algorithm_validation.md) records how the reimplemented reference algorithms differ from their references and how they are tested.
+The **Primary module** and **Optional modules** pages each describe what a stage does, state the key fixed values that are not exposed as parameters, link to the source files, and show the target graph. Configurable settings and their defaults are listed in the [parameter browser](../parameters.html). [Algorithmic implementations, deviations and validation](algorithm_validation.md) records how the reimplemented reference algorithms differ from their references and how they are tested.
 
 ## Common entry points
 
 | Change | Start with |
 |---|---|
 | Add or revise a YAML parameter | `cfg_pipeline_parameters.tsv`, then the owning config reader or target. |
-| Find whether a threshold is configurable or fixed | The stage's chapter under **Methods and parameters**. |
+| Find whether a threshold is configurable or fixed | The [parameter browser](../parameters.html), then the stage's page and its source links. |
 | Change GEM well preprocessing | `_targets.R` mapping plus `extra_targets/per_GEM_well_targets.R`. |
 | Change aggregation GEX, ATAC, or WNN processing | The corresponding graph section and `extra_targets/*_targets.R` file. |
 | Inspect existing review selections | `[checkpoint:<name>]` description tags and the steps in [Run your own analysis](../main_running.html#steps). |

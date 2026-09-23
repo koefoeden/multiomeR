@@ -124,7 +124,7 @@ targets::tar_read(
 
 ## Parameter reference
 
-[Open the searchable parameter browser](parameters.html#workflow=genetic_enrichment). The [genetic enrichment methods](implementation/methods_genetic_enrichment.html) list every fixed and configurable setting, and the [implementation graph](implementation/implementation_genetic_enrichment.html) shows the target structure.
+[Open the searchable parameter browser](parameters.html#workflow=genetic_enrichment). The [genetic enrichment implementation page](implementation/methods_genetic_enrichment.html) describes the methods and their key fixed values, links to the source files and shows the target structure.
 
 <details>
 <summary>Show the public <code>immune_human_2x</code> example</summary>

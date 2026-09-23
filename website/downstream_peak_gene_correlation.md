@@ -96,4 +96,4 @@ The HC3 links and SuSiE prioritization are in `peak_gene_correlation_links_tibbl
 
 ## Parameter reference
 
-[Open the searchable parameter browser](parameters.html#workflow=peak_gene_correlation). The [peak–gene correlation methods](implementation/methods_peak_gene_correlation.html) list every fixed and configurable setting, including the support-filter thresholds, and the [implementation graph](implementation/implementation_peak_gene_correlation.html) shows the target structure.
+[Open the searchable parameter browser](parameters.html#workflow=peak_gene_correlation). The [peak–gene correlation implementation page](implementation/methods_peak_gene_correlation.html) describes the methods and their key fixed values, including the support-filter presets, links to the source files and shows the target structure.

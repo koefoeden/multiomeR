@@ -617,7 +617,7 @@ Optional fields narrow a model:
 - `GEM_well_IDs` restricts the GEM wells that define an abundance model's population; and
 - `cell_types_to_test` restricts the cell types an abundance model tests, while every retained nucleus still counts towards its donor's total.
 
-Donors missing a model variable are excluded. The branches use different models, so their effect sizes are not directly comparable. The methods describe [abundance models](implementation/methods_differential_analyses.html#cell-type-composition) and the [feature-model routes](implementation/methods_differential_analyses.html#model-routes), including random effects, custom design and contrast functions and paired cell-type designs.
+Donors missing a model variable are excluded. The branches use different models, so their effect sizes are not directly comparable. The methods describe [abundance models](implementation/methods_differential_analyses.html#cell-type-composition) and the [feature-model routes](implementation/methods_differential_analyses.html#molecular-pseudobulk-analyses), including random effects, custom design and contrast functions and paired cell-type designs.
 
 ## Run
 
@@ -678,7 +678,7 @@ Use [Troubleshooting](troubleshooting.md) if a formula, contrast or metadata joi
 
 ## Parameter reference
 
-[Open the searchable parameter browser](parameters.html#workflow=differential_analyses). The [differential analyses methods](implementation/methods_differential_analyses.html) list every fixed and configurable setting, and the [implementation graph](implementation/implementation_differential_analyses.html) shows the target structure.
+[Open the searchable parameter browser](parameters.html#workflow=differential_analyses). The [differential analyses implementation page](implementation/methods_differential_analyses.html) describes the methods and their key fixed values, links to the source files and shows the target structure.
 
 
 <!-- source: website/downstream_genetic_enrichment.md -->
@@ -806,7 +806,7 @@ targets::tar_read(
 
 ## Parameter reference
 
-[Open the searchable parameter browser](parameters.html#workflow=genetic_enrichment). The [genetic enrichment methods](implementation/methods_genetic_enrichment.html) list every fixed and configurable setting, and the [implementation graph](implementation/implementation_genetic_enrichment.html) shows the target structure.
+[Open the searchable parameter browser](parameters.html#workflow=genetic_enrichment). The [genetic enrichment implementation page](implementation/methods_genetic_enrichment.html) describes the methods and their key fixed values, links to the source files and shows the target structure.
 
 <details>
 <summary>Show the public <code>immune_human_2x</code> example</summary>
@@ -916,7 +916,7 @@ The HC3 links and SuSiE prioritization are in `peak_gene_correlation_links_tibbl
 
 ## Parameter reference
 
-[Open the searchable parameter browser](parameters.html#workflow=peak_gene_correlation). The [peak–gene correlation methods](implementation/methods_peak_gene_correlation.html) list every fixed and configurable setting, including the support-filter thresholds, and the [implementation graph](implementation/implementation_peak_gene_correlation.html) shows the target structure.
+[Open the searchable parameter browser](parameters.html#workflow=peak_gene_correlation). The [peak–gene correlation implementation page](implementation/methods_peak_gene_correlation.html) describes the methods and their key fixed values, including the support-filter presets, links to the source files and shows the target structure.
 
 
 ## Part: Operation and scaling
@@ -1374,17 +1374,17 @@ multiomeR keeps the analysis steps in an editable repository. Configuration cove
 ## Where to start
 
 1. Read [Reading the graph views](graph_methodology.md) and follow its configuration-to-target trace.
-2. Open the [primary module](implementation_main.md) graph for the modality or checkpoint you plan to change. The [differential analyses](implementation_differential_analyses.md), [genetic enrichment](implementation_genetic_enrichment.md) and [peak–gene correlation](implementation_peak_gene_correlation.md) chapters cover the optional modules.
-3. Use [Implementation conventions](implementation_conventions.md) for the manifest, mapping, symbol, tag, and runtime contracts.
+2. Use [Implementation conventions](implementation_conventions.md) for the manifest, mapping, symbol, tag, and runtime contracts.
+3. Open the page for the stage you plan to change.
 
-The **Methods and parameters** chapters, from [Preprocessing and nucleus QC](methods_preprocessing_and_QC.md) to [Genetic enrichment](methods_genetic_enrichment.md), describe each stage and tabulate the settings that determine its results. Read them when you need the behaviour behind a result, or when deciding whether a change is a configuration edit or a code edit. [Algorithmic implementations, deviations and validation](algorithm_validation.md) records how the reimplemented reference algorithms differ from their references and how they are tested.
+The **Primary module** and **Optional modules** pages each describe what a stage does, state the key fixed values that are not exposed as parameters, link to the source files, and show the target graph. Configurable settings and their defaults are listed in the [parameter browser](../parameters.html). [Algorithmic implementations, deviations and validation](algorithm_validation.md) records how the reimplemented reference algorithms differ from their references and how they are tested.
 
 ## Common entry points
 
 | Change | Start with |
 |---|---|
 | Add or revise a YAML parameter | `cfg_pipeline_parameters.tsv`, then the owning config reader or target. |
-| Find whether a threshold is configurable or fixed | The stage's chapter under **Methods and parameters**. |
+| Find whether a threshold is configurable or fixed | The [parameter browser](../parameters.html), then the stage's page and its source links. |
 | Change GEM well preprocessing | `_targets.R` mapping plus `extra_targets/per_GEM_well_targets.R`. |
 | Change aggregation GEX, ATAC, or WNN processing | The corresponding graph section and `extra_targets/*_targets.R` file. |
 | Inspect existing review selections | `[checkpoint:<name>]` description tags and the steps in [Run your own analysis](../main_running.html#steps). |
@@ -1401,11 +1401,9 @@ The **Methods and parameters** chapters, from [Preprocessing and nucleus QC](met
 
 
 
-The graph chapters collect simplified views of the real `{targets}` dependency graph. They are meant to make the workflow easier to reason about before reading the target code directly.
+The stage pages show simplified views of the real `{targets}` dependency graph. They are meant to make the workflow easier to reason about before reading the target code directly.
 
 The diagrams are generated from tagged target metadata and the real dependency graph, then simplified by pruning or bypassing lower-level nodes that would make each view harder to read. They keep real target names and preserve the dependency structure where practical, while staying compact enough to build intuition about the main control points.
-
-The following chapters cover the primary module and the differential analyses, genetic enrichment and peak–gene correlation modules.
 
 ## Trace one configured aggregation
 
@@ -1443,7 +1441,7 @@ The curated graph views are orientation aids, not alternate target definitions. 
 
 # Implementation conventions
 
-This chapter explains how configuration becomes target definitions: the parameter manifest supplies defaults and validation rules, mapping tables define repeated analyses, and target symbols connect their dependencies. Description tags support result selection and graph views. The last two sections cover project startup and the layout of the methods chapters. Preserve these contracts unless a change is meant to replace one of them.
+This chapter explains how configuration becomes target definitions: the parameter manifest supplies defaults and validation rules, mapping tables define repeated analyses, and target symbols connect their dependencies. Description tags support result selection and graph views. The last two sections cover project startup and the layout of the stage pages. Preserve these contracts unless a change is meant to replace one of them.
 
 ## Target metadata tags
 
@@ -1659,34 +1657,284 @@ targets::tar_target(
 
 If `get_tar_resources()` is called before controller resources are loaded, it fails deliberately with an instruction to call `load_project_runtime()` first. Scheduler-specific examples belong in the main manual's [Choose where the analysis runs](../performance_distributed_computing.html) page; the implementation contract is that target code can request resources declaratively once the runtime has been loaded.
 
-## Methods and parameter tables {#methods-and-parameter-tables}
+## Stage pages
 
-The chapters in the **Methods and parameters** part pair a description of each analysis stage with a table of the settings that determine its results.
+Each page under **Primary module** and **Optional modules** describes what its stage does, states the key fixed values that are not exposed as parameters, links to the source files, and shows the target graph. Configurable settings are documented only in the [parameter browser](../parameters.html), which is generated from the manifest.
 
-The descriptions state what each step does and why, without numerical values or links. They are kept in heading-less fragments under `_shared_methods/` and included both by these chapters and by the Supplementary Methods of the multiomeR manuscript, so the two texts cannot diverge while the manuscript is prepared. The submitted supplement cites an archived software release, which freezes the matching version of this book; afterwards the book continues to follow the code.
+The descriptions are heading-less fragments under `_shared_methods/`, included both by these pages and by the Supplementary Methods of the multiomeR manuscript, so the two texts cannot diverge while the manuscript is prepared. Keep the fragments free of links, and keep source links, graphs and configuration pointers on the pages. The submitted supplement cites an archived software release, which freezes the matching version of this book; afterwards the book continues to follow the code.
 
-The tables record the values. Each uses one layout:
+`pixi run --use-environment-activation-cache -e dev check-source-links` checks that every GitHub source link in the documentation names an existing repository path and that the fragments contain no links.
 
-| Column | Content |
-|---|---|
-| Step | The analysis step, in the order the targets run. |
-| Setting | The quantity or method choice. |
-| Status | `Configurable` or `Fixed`. |
-| Value | Shown only for fixed settings. |
-| Source | Where the setting is controlled. |
 
-A setting is **configurable** when a row of `cfg_pipeline_parameters.tsv` controls it, directly or as a field of a nested parameter such as a model specification, or when a column of `cfg_GEM_wells.tsv` controls it. Configurable rows link to the [parameter browser](../parameters.html), which renders the current default from the public manifest snapshot, and never repeat the default.
+## Part: Primary module
 
-A setting is **fixed** when changing it requires a code edit. The Source cell names the symbol that fixes the value: the project function `f()` that contains it, the target whose command passes it, a vendored file, or `pkg::f()` when the value is a default of that package function. Package versions are locked by `pixi.lock`.
 
-The tables list settings a methods section would report or a user might want to change. Parallelism, plotting style and input validation are left to the code. `pixi run --use-environment-activation-cache -e dev check-methods-parameters` checks that every manifest link resolves, every manifest parameter is linked and every cited symbol exists; it does not compare values with the code.
+<!-- source: website/implementation/methods_preprocessing_and_QC.md -->
+
+# Preprocessing and nucleus QC
+
+
+
+The root `_targets.R` maps per-GEM-well targets over the active rows of `cfg_GEM_wells.tsv` and aggregation targets over the active aggregations; [Reading the graph views](graph_methodology.md) traces one aggregation through that mapping. This page covers per-GEM-well preprocessing and the successive nucleus filters up to the final WNN cell set. GEM-well settings are described in [GEM well table](../reference_GEM_wells.html). Configurable settings and their defaults are listed in the [parameter browser](../parameters.html). The AMULET and ATAC scDblFinder adaptations are compared with their references in [Algorithmic implementations](algorithm_validation.md).
+
+
+<!-- begin include: website/implementation/_shared_methods/quality_control.md -->
+
+Each GEM well supplies a Cell Ranger ARC count directory. Gene-expression counts are imported into BPCells from the filtered feature-barcode matrix, or from a CellBender output when configured, and ATAC fragments from the Cell Ranger fragment file [@parks2025_bpcells; @fleming2023_cellbender]. Both carry a GEM-well-prefixed barcode, so nuclei remain distinct across wells. Per-well quality-control metrics are calculated for the barcodes that Cell Ranger called as cells: ATAC metrics such as TSS enrichment and nucleosome signal with BPCells, and gene-expression metrics such as the fraction of counts from mitochondrial genes (names beginning with `MT-`) from the imported matrix. Optional genotype demultiplexing runs cellsnp-lite on the ATAC alignments, with a minimum minor-allele frequency of 0.1 and 20 reads per SNP, and Vireo with the supplied donor genotypes [@huang2021_cellsnp_lite; @huang2019_vireo]; the assigned donor replaces the GEM-well donor identifier, and doublet and unassigned calls are recorded as metadata. A BPCells-native implementation of AMULET streams the stored fragments of up to 1,000 bp outside chrM, chrX and chrY while reproducing the overlap metrics and q-values of `scDblFinder::amulet()` [@thibodeau2021_amulet; @germain2022_scdblfinder]; it supports unique fragments only and applies no automatic filter.
+
+Configured GEM-well exclusions are filter expressions evaluated on the called cells of each well, so demultiplexing and AMULET results can serve as exclusion criteria before aggregation-level analysis. The remaining nuclei of the selected wells are combined without further filtering, and only barcodes represented in the aligned count data continue into dimensional reduction.
+
+After GEX graph construction and Leiden clustering, clusters below the configured minimum size are removed; the same rule is later applied to the ATAC and WNN clusters. `scDblFinder` is then applied per GEM well, with `dbr.sd = 1`, to the raw counts of the retained nuclei [@germain2022_scdblfinder], using annotation-derived cluster labels: the cell-type label of an assigned cluster, otherwise its annotation status and identifier, optionally collapsed by a configured map. Doublet removal is configurable at the nucleus level and at the cluster level, where a Leiden cluster is removed when its doublet fraction exceeds a threshold.
+
+The ATAC branch starts from the GEX-retained nuclei: peak-calling groups, the consensus peak matrix and peak-level quality-control metrics are built on that cell set, and the metrics are evaluated against configured aggregation-level exclusions. After ATAC clusters below the minimum size are removed, a separate ATAC-based `scDblFinder` analysis follows. Instead of scDblFinder's internal per-well feature aggregation, peaks are grouped once into 50 feature groups by *k*-means clustering of their aggregation-wide loadings on LSI dimensions 2–20 and summed with BPCells before the unchanged classifier is called. This adaptation bounds memory use; its scores are not expected to equal those obtained with the internal aggregation. ATAC doublets are removed at the nucleus and cluster level as for GEX.
+
+WNN analysis uses the nuclei retained by the ATAC branch that are present in both embeddings and applies the minimum-cluster-size filter to the joint clusters; when nuclei are removed, the joint graph and embedding are recomputed on the retained nuclei while the cluster labels are kept. The GEX, ATAC and WNN metadata therefore represent successive cell universes rather than interchangeable versions of the original Cell Ranger calls.
+
+<!-- end include: website/implementation/_shared_methods/quality_control.md -->
+
+
+**Source:** [`extra_targets/per_GEM_well_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/per_GEM_well_targets.R), [`extra_targets/general_aggregation_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/general_aggregation_targets.R), [`R/parallel_GEM_well_preprocessing_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/parallel_GEM_well_preprocessing_helpers.R), [`R/amulet_BPCells_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/amulet_BPCells_helpers.R), [`R/processing_GEX_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_GEX_helpers.R), [`R/processing_ATAC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_ATAC_helpers.R).
+
+## Parallel preprocessing graph
+
+This view covers per-GEM-well processing and QC, including optional ambient RNA correction, donor demultiplexing, doublet detection, barcode filtering, and handoffs into aggregation-level GEX and ATAC objects.
+
+[Mermaid graph omitted; source: `website/figures/human_curated/parallel_v2.mmd`]
+
+
+<!-- source: website/implementation/methods_GEX_ATAC_and_WNN.md -->
+
+# GEX, ATAC, batch correction and WNN
+
+
+
+This page covers normalization and dimensional reduction of both modalities, peak definition, batch correction, graph construction and clustering, and weighted nearest-neighbour (WNN) integration, with the target graph of each stage. Configurable settings and their defaults are listed in the [parameter browser](../parameters.html). The WNN implementation is compared with Seurat in [Algorithmic implementations](algorithm_validation.md#native-weighted-nearest-neighbors).
+
+## GEX normalization and PCA
+
+
+<!-- begin include: website/implementation/_shared_methods/GEX_normalization.md -->
+
+For each aggregation, the quality-controlled gene-expression matrices are combined with their GEM-well-prefixed barcodes, and genes with 50 or fewer total counts are excluded before dimensional reduction. Normalization and dimensional reduction use either the disk-backed BPCells Pearson-residual workflow or Seurat `SCTransform` [@parks2025_bpcells; @hafemeister2019_sctransform]. In the BPCells branch, Pearson residuals are computed with a per-gene method-of-moments overdispersion estimate and clipped to [−10, 10], configured cell-level covariates can be regressed out, the 3,000 genes with the highest residual variance are retained and a truncated singular-value decomposition yields the principal components. The Seurat branch applies SCTransform with its v2 regularization to the same cells and genes, retains the same number of variable features and computes the principal components from the residual matrix. Regression of a cell-cycle difference score is the default; the S and G2M scores are computed from log-normalized counts with the 2019 Seurat cell-cycle gene sets.
+
+<!-- end include: website/implementation/_shared_methods/GEX_normalization.md -->
+
+
+**Source:** [`extra_targets/GEX_merge_and_dim_reduc_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/GEX_merge_and_dim_reduc_targets.R), [`R/processing_GEX_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_GEX_helpers.R).
+
+The GEX graph also covers clustering, marker detection, cell-type annotation and GEX review outputs.
+
+[Mermaid graph omitted; source: `website/figures/human_curated/GEX_v2.mmd`]
+
+## ATAC peak definition and dimensional reduction
+
+
+<!-- begin include: website/implementation/_shared_methods/ATAC_peaks_and_LSI.md -->
+
+Fragments on the standard chromosomes are used for peak calling. Peak-calling groups are defined by a configurable metadata column of the GEX-retained nuclei, and groups larger than 50,000 nuclei are randomly downsampled for peak discovery. Peaks are called per group either with MACS3, on exported group fragments with a −75-bp shift, a 150-bp extension and summit calling, or with the BPCells tile-based caller on the stored fragments, using 500-bp tiles and an FDR of 0.01 [@zhang2008_macs; @parks2025_bpcells]. Consensus peaks follow the ArchR strategy of iterative fixed-width peak construction [@granja2021_archr]: summits are extended by 250 bp to 500-bp peaks, peaks overlapping any blacklisted region of the reference genome are removed, and the group-level peak sets are combined into one non-overlapping consensus set, ranking overlapping peaks by summit significance within a group and by fold enrichment across groups. BPCells counts fragment insertions or overlaps, as configured, within these peaks for the GEX-retained nuclei.
+
+ATAC dimensional reduction applies Signac's TF-IDF method 1, with a scale factor of 10,000, to the consensus peak matrix, followed by a BPCells singular-value decomposition to obtain latent semantic indexing (LSI) embeddings [@stuart2021_signac; @parks2025_bpcells]. No component is removed by the code; the default dimension settings omit the first component.
+
+<!-- end include: website/implementation/_shared_methods/ATAC_peaks_and_LSI.md -->
+
+
+**Source:** [`extra_targets/ATAC_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/ATAC_targets.R), [`R/processing_ATAC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_ATAC_helpers.R).
+
+The ATAC graph also covers ATAC QC, chromVAR scoring and coverage tracks.
+
+[Mermaid graph omitted; source: `website/figures/human_curated/ATAC_v2.mmd`]
+
+## Batch correction, clustering and weighted nearest neighbours
+
+
+<!-- begin include: website/implementation/_shared_methods/batch_correction_clustering_WNN.md -->
+
+Harmony correction, with at most 25 iterations and `lambda = 1`, can be applied separately to the selected GEX principal components and ATAC LSI dimensions [@patikas2026_harmony2]. Several configured metadata columns are combined into one interaction batch factor, nuclei with missing covariate values are removed with a warning, and the embeddings pass through unchanged when no columns are configured.
+
+For each modality, approximate nearest neighbours are found on the selected dimensions with BPCells HNSW search using cosine distance, converted to a shared-nearest-neighbour (SNN) graph with Jaccard weights, pruning weights below 1/15, and clustered with the modularity objective of the Leiden algorithm [@parks2025_bpcells; @traag2019_leiden]. The neighbour count includes the query cell itself, and clusters are renumbered by size. UMAP embeddings are computed with uwot on the same dimensions using cosine distance [@melville2026_uwot], and quality-control sweeps additionally render UMAPs over grids of dimensions and neighbour counts.
+
+RNA and ATAC representations are combined with a BPCells-native implementation of the Seurat weighted-nearest-neighbour (WNN) strategy [@hao2021_multimodal; @parks2025_bpcells]. The GEX and ATAC embeddings, after optional Harmony correction, are aligned by barcode and L2-normalized, and 200 candidate neighbours are found separately for each modality with HNSW search. A native routine applies Seurat's small-SNN bandwidth strategy to set a per-cell kernel width from the configured neighbour count, per-cell modality weights are derived from within- versus cross-modality prediction kernels, and the union of candidates is ranked by the weighted kernel score to select the final neighbours. BPCells builds the joint SNN graph, which is clustered with Leiden and embedded with UMAP using the precomputed neighbours. The implementation does not call `Seurat::FindMultiModalNeighbors()`; because HNSW replaces Seurat's Annoy search, exact equality is not expected, and its validation is a similarity contract on modality weights and neighbour overlap.
+
+<!-- end include: website/implementation/_shared_methods/batch_correction_clustering_WNN.md -->
+
+
+**Source:** [`extra_targets/GEX_graph_and_cluster_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/GEX_graph_and_cluster_targets.R), [`extra_targets/WNN_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/WNN_targets.R), [`R/processing_ATAC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_ATAC_helpers.R), [`R/processing_multimodal_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_multimodal_helpers.R), [`src/wnn_snn_bandwidth.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/wnn_snn_bandwidth.cpp).
+
+The WNN graph also covers modality weights, cluster comparison, integrated metadata and the Seurat/Signac compatibility export.
+
+[Mermaid graph omitted; source: `website/figures/human_curated/WNN_v2.mmd`]
+
+
+<!-- source: website/implementation/methods_annotation_and_motifs.md -->
+
+# Cell-type annotation and motif accessibility
+
+This page covers marker-signature cluster annotation and motif-family accessibility; their targets appear in the GEX, ATAC and WNN graphs of [GEX, ATAC, batch correction and WNN](methods_GEX_ATAC_and_WNN.md). Configurable settings and their defaults are listed in the [parameter browser](../parameters.html). The BPCells-native UCell scorer is compared with UCell in [Algorithmic implementations](algorithm_validation.md#bpcells-native-ucell-scoring).
+
+## Cell-type annotation
+
+
+<!-- begin include: website/implementation/_shared_methods/cell_type_annotation.md -->
+
+Cell-type annotation is driven by user-supplied GEX marker signatures. Signatures accept unsigned genes, positive markers and genes expected to be absent; genes missing from the count matrix fail validation before scoring. Scores are computed with a BPCells-native implementation of UCell scoring [@andreatta2021_ucell; @parks2025_bpcells], which reproduces per-cell descending ranks, rank truncation at 1,500 genes, positive and negative signatures and lower-bound clipping on bounded chunks of the raw GEX counts; the production workflow does not call the UCell package, and its validation requires values identical to the UCell reference. Signed signatures are clipped at zero per cell before averaging. The same scoring, with the same GEX control reference, annotates the GEX, ATAC and WNN cluster partitions.
+
+Each label's cluster-level mean score is compared with 999 random control signatures matched on gene abundance and detection. The control reference samples up to 50 nuclei per GEM well from the GEX metadata before doublet filtering. For each control replicate, markers are visited in random order and each is replaced by a gene drawn from its 50 nearest eligible candidates not yet used in that replicate; candidates exclude all marker genes and undetected genes. A label's adjusted score in a cluster is its observed mean minus the 95th percentile of its matched controls. The label with the highest adjusted score is the candidate, and its advantage is the smaller of its lead over zero and its lead over the runner-up. The candidate is assigned when its advantage is positive, untied and at least the configured minimum; otherwise the cluster remains unassigned, with the candidate and reason retained, so raising the minimum can only withdraw assignments. Because annotation depends on the supplied signatures and their level of detail, labels can represent either cell types or broader source classes.
+
+Three diagnostics accompany each decision without vetoing it. Marker stability is the fraction of leave-one-marker-out variants, each removing one candidate marker and its matched control, in which the candidate keeps a positive advantage of at least the configured minimum. Cell stability is the fraction of leave-one-block-out replicates, with nuclei split into ten blocks stratified by cluster and GEM well, that assign the same candidate. GEM-well agreement is the fraction of per-well subgroups with at least 25 nuclei that assign it. Detection counts additionally report the positive markers detected in at least 10% of a cluster's nuclei.
+
+<!-- end include: website/implementation/_shared_methods/cell_type_annotation.md -->
+
+
+**Source:** [`R/cluster_annotation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/cluster_annotation_helpers.R), [`R/processing_GEX_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_GEX_helpers.R), [`extra_targets/GEX_graph_and_cluster_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/GEX_graph_and_cluster_targets.R).
+
+## Motif families and motif accessibility
+
+
+<!-- begin include: website/implementation/_shared_methods/motif_accessibility.md -->
+
+Transcription-factor motifs are represented by the 233 sequence-similarity families of the JASPAR 2026 CORE vertebrate collection [@ovekbaydar2026_jaspar]. The pipeline vendors the familial root motifs and the family membership table and matches the root motifs to the consensus peaks with `motifmatchr` at its default threshold of P < 5 × 10^−5^ [@schep2025_motifmatchr]. Configured transcription factors are resolved to families by name, or by name and motif identifier when a symbol belongs to more than one family. betterChromVAR applies the chromVAR workflow with GC-bias correction to obtain analytic motif-family deviations and z-scores for individual nuclei [@schep2017_chromvar; @germain2026_betterchromvar]. All families are summarized per ATAC annotation class with a Wilcoxon marker test and Benjamini–Hochberg correction and as cell-weighted means per cluster and cell type; the configured transcription factors select only the families shown on embeddings. These values measure accessibility associated with a motif family and are not direct measurements of transcription-factor activity.
+
+<!-- end include: website/implementation/_shared_methods/motif_accessibility.md -->
+
+
+**Source:** [`R/celltype_labeling_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/celltype_labeling_helpers.R), [`extra_targets/ATAC_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/ATAC_targets.R), [`resources/`](https://github.com/koefoeden/multiomeR/tree/main/resources).
+
+
+## Part: Optional modules
+
+
+<!-- source: website/implementation/methods_peak_gene_correlation.md -->
+
+# Peak–gene correlation
+
+
+
+`module_peak_gene_correlation/targets.R` maps only opted-in aggregations and binds the primary-module inputs they consume. Parameters use the `peak_gene_correlation` manifest scope, targets end in `.peak_gene_correlation.<aggregation>`, and plot checkpoint tags use `peak_gene_correlation`, outside the numbered QC selections. The prerequisites and module selector are described in [Peak–gene correlation](../downstream_peak_gene_correlation.html). Configurable settings and their defaults are listed in the [parameter browser](../parameters.html). The compiled kernels are compared with their references in [Algorithmic implementations](algorithm_validation.md).
+
+
+<!-- begin include: website/implementation/_shared_methods/peak_gene_correlation.md -->
+
+The optional peak–gene correlation module runs on the accepted WNN cell set with its own configuration, review checkpoint and output directory. It operates separately within WNN annotation classes of at least 200 nuclei and requires donor identifiers and per-nucleus GEX and ATAC depth metadata; classes lacking them are skipped with a diagnostic. Consensus ATAC peaks are paired with gene transcription start sites (TSSs) on the same chromosome within 250 kb of the peak centre, and each pair is classified as self-promoter (−1,500 to +500 bp around the TSS), gene-body, proximal (within 10 kb) or distal. Within each class, nuclei from eligible donors are partitioned into mutually exclusive ATAC-state bins by *k*-means clustering of scaled ATAC LSI or Harmony dimensions, with the number of bins adapting to the median number of nuclei per donor. Counts are summed within each donor–state combination to create non-overlapping pseudobulks; pseudobulks of fewer than 20 nuclei are dropped, and donors and states are pruned iteratively until every donor contributes a minimum number of states.
+
+GEX and ATAC pseudobulk counts are separately scaled to counts per million, using the metadata-derived pseudobulk depth, and log1p-transformed. Genes and peaks must be detected in at least 5% of pseudobulks, and a chromosome branch requires minimum numbers of pseudobulks and residual degrees of freedom. A configurable measurement-support filter then removes hypotheses whose gene and peak are not both supported in enough shared donors, with count thresholds scaled by each pseudobulk's depth relative to the class median. The lenient, moderate and strict presets require RNA and ATAC counts of at least 5 and 3, 10 and 5, and 10 and 5 in a supporting pseudobulk, at least 6 supporting pseudobulks or 10% of them (10 or 20% for strict), and two shared donors (three for strict). Excluded hypotheses are never tested and do not enter the multiple-testing family.
+
+GEX and ATAC values are residualized against donor and scaled log RNA and ATAC depth, retaining variation between ATAC states; the Pearson correlation of the residuals and a heteroskedasticity-robust (HC3) regression test give conditional association summaries. The hierarchical analysis fits donor fixed intercepts, depth covariates and a donor-varying slope for the within-donor-centred peak value, using project-owned compiled kernels for profiled restricted maximum likelihood and Kenward–Roger inference for the average slope; `lme4` and `pbkrtest` serve only as test references. It requires within-donor peak variation in at least two donors, and because every support preset requires at least two shared donors, single-donor classes yield diagnostics but no tests. Fits failing numerical diagnostics retain their estimates but no inferential P-value. Hierarchical P-values are Benjamini–Hochberg-corrected within each annotation class over the complete eligible pair family, counting unreliable tests; conditional P-values are corrected within each class over the non-missing values. A conditional link requires a residual correlation of at least 0.15 and an FDR below 0.05, excluding self-promoter peaks. SuSiE fine-mapping, with up to ten single effects and 95% credible sets, prioritizes peaks for genes with at least one conditional link, using the donor- and depth-residualized values [@wang2020_susie]. These model-based associations do not establish causal enhancer–gene regulation.
+
+Top-link plots rank estimable positive hierarchical associations by nominal P-value, without a significance cutoff, excluding self-promoter peaks; gene-body peaks remain eligible. Each plot shows the gene context, the focal class's insertion coverage and the donor-residual scatter, and donor-level direction and covariance diagnostics help identify associations dominated by one donor.
+
+<!-- end include: website/implementation/_shared_methods/peak_gene_correlation.md -->
+
+
+**Source:** [`module_peak_gene_correlation/`](https://github.com/koefoeden/multiomeR/tree/main/module_peak_gene_correlation), [`R/peak_gene_correlation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_correlation_helpers.R), [`R/peak_gene_filter_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_filter_helpers.R), [`R/peak_gene_hierarchical_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_hierarchical_helpers.R), [`R/peak_gene_KR_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_KR_helpers.R), [`R/peak_gene_finemapping_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_finemapping_helpers.R), [`src/peak_gene_REML.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/peak_gene_REML.cpp), [`src/peak_gene_KR.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/peak_gene_KR.cpp).
+
+## Target graph
+
+This view covers the TSS table, candidate peak–gene pairs, the WNN cell groups, donor–state pseudobulk construction, measurement-support filtering, the per-chromosome analysis branches and the diagnostic and top-link outputs.
+
+[Mermaid graph omitted; source: `website/figures/human_curated/peak_gene_correlation_v2.mmd`]
+
+
+<!-- source: website/implementation/methods_differential_analyses.md -->
+
+# Differential analyses
+
+
+
+`module_differential_analyses/targets.R` filters the aggregations that enabled the module, joins their module configuration, attaches symbols for the accepted WNN metadata and pseudobulk inputs, and maps the target files in its directory. One generic pseudobulk model family is instantiated for each tested feature matrix. The prerequisites and module selector are described in [Differential analyses](../downstream_differential_analyses.html). Configurable settings and their defaults are listed in the [parameter browser](../parameters.html).
+
+## Cell-type composition
+
+
+<!-- begin include: website/implementation/_shared_methods/cell_type_composition.md -->
+
+The differential-analysis module treats donors, rather than nuclei, as the biological replicates and takes annotation classes from the WNN cell-type label of the final WNN metadata. For cell-type composition, nuclei are counted by donor and annotation class, completing absent combinations with zero counts, so no class is dropped for being observed in few donors; every observed class is tested unless the model restricts the response classes. Each class is modelled separately, with the numbers of nuclei in that class and in all other classes as a two-column response, in a fixed-effects beta-binomial model with logit link fitted by `glmmTMB` using the configured formula [@brooks2017_glmmtmb]; random effects and custom design functions are not supported in this branch. Named linear contrasts of the fixed effects are tested with Wald statistics, and fits that fail, do not converge or lack a positive-definite Hessian are reported as non-estimable. The pipeline does not impose a universal replication threshold, so the configured covariates must be supported by the donor count and study design. Benjamini–Hochberg correction is applied across the tested annotation classes within each model and contrast; there is no adjustment across contrasts or models.
+
+<!-- end include: website/implementation/_shared_methods/cell_type_composition.md -->
+
+
+**Source:** [`module_differential_analyses/setup_and_cell_type_composition_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/module_differential_analyses/setup_and_cell_type_composition_targets.R), [`R/differential_analysis_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/differential_analysis_helpers.R).
+
+## Molecular pseudobulk analyses
+
+
+<!-- begin include: website/implementation/_shared_methods/pseudobulk_differential_analyses.md -->
+
+For molecular analyses, GEX and ATAC counts are summed within each donor–annotation-class combination to form pseudobulk samples, the same pseudobulks used for the Seurat/Signac export. Four feature matrices are tested:
+
+- **Gene expression (DGE):** gene pseudobulk counts.
+- **Chromatin accessibility (DCA):** consensus-peak pseudobulk counts after peak-level quality control.
+- **Motif-family accessibility (DTFA):** betterChromVAR deviations of the 233 JASPAR motif families calculated from the pseudobulk ATAC counts, column-centred and quantile-normalized across samples, so this matrix is continuous [@germain2026_betterchromvar].
+- **Transcription-factor activity (DCTA):** signed CollecTRI regulator activities inferred with the `decoupleR` univariate linear model from filtered, library-size-normalized log-CPM GEX pseudobulks, requiring at least five measured targets per regulator [@muller_dott2023_collectri; @badia2022_decoupler]. The CollecTRI network is accepted only when it matches a pinned checksum, and complexes such as AP1 and NF-κB remain intact as regulons.
+
+For each model, donors missing a model variable or outside an optional donor list and samples outside an optional annotation-class subset are removed; the DTFA branch additionally removes samples below a configured minimum ATAC depth. For count matrices, zero-depth samples are removed, features are filtered with the design-aware `edgeR::filterByExpr()`, and library sizes are normalized with `edgeR::normLibSizes()` [@robinson2009_edger].
+
+Model matrices are generated from a configured formula or custom design function, and contrasts from named linear expressions or custom contrast functions. A configured random effect selects voom for counts followed by `limma::duplicateCorrelation()` with the random effect as block [@ritchie2015_limma]. Otherwise, count designs with more than one coefficient use edgeR quasi-likelihood dispersion estimation with robust fitting and testing, and continuous matrices and single-coefficient designs use limma; a single-coefficient count design is fitted on the raw counts without the filtering and normalization above. An optional paired-cell-type route fits each annotation class separately, permits at most one pseudobulk per pairing unit and class, estimates residual correlations between classes from shared donors, and incorporates those correlations when testing cross-class contrasts.
+
+For each model and contrast, Benjamini–Hochberg FDR is calculated across the tested features, and features with an FDR below 0.05 are significant. DGE statistics are also tested against the MSigDB Hallmark and Reactome collections using competitive `cameraPR` tests with an inter-gene correlation of 0.01 and at least ten tested genes per set [@dolgalev2026_msigdbr]. The test statistic is the moderated *t*-statistic where the route provides one and otherwise a signed normal quantile of the nominal P-value; FDR is calculated within each contrast and collection. A cross-modality comparison maps CollecTRI regulators to JASPAR families and compares the model *t*-statistics of transcription-factor activity, motif-family accessibility and TF expression rather than their raw scales; family-level summaries use the median regulator *t*-statistic.
+
+Diagnostic outputs report pseudobulk depth, retained sample and donor counts, paired-donor support, P-value distributions, effect directions and significant-feature counts. When a trait identifier is configured, the top DGE features are annotated with Open Targets evidence. A branch fails rather than returning a model when no samples or testable features remain, residual degrees of freedom are below one, a correlation block or contrast is invalid, or too few shared donors remain for a requested paired-cell-type comparison.
+
+<!-- end include: website/implementation/_shared_methods/pseudobulk_differential_analyses.md -->
+
+
+**Source:** [`module_differential_analyses/`](https://github.com/koefoeden/multiomeR/tree/main/module_differential_analyses), [`R/pseudobulk_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/pseudobulk_helpers.R), [`R/TF_activity_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/TF_activity_helpers.R), [`R/differential_analysis_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/differential_analysis_helpers.R).
+
+## Target graph
+
+[Mermaid graph omitted; source: `website/figures/human_curated/differential_analyses_v2.mmd`]
+
+
+<!-- source: website/implementation/methods_genetic_enrichment.md -->
+
+# Genetic enrichment
+
+
+
+`module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in its directory. It does not check the species; the GRCh38 GWAS inputs assume a human aggregation. The release, method-selection, and interpretation contracts are described in [Genetic enrichment](../downstream_genetic_enrichment.html). Configurable settings and their defaults are listed in the [parameter browser](../parameters.html). The sparse SCAVENGE implementation is compared with its reference in [Algorithmic implementations](algorithm_validation.md#sparse-scavenge-propagation-and-significance).
+
+
+<!-- begin include: website/implementation/_shared_methods/genetic_enrichment.md -->
+
+The implementation pins Open Targets Platform release 26.03 and downloads its study, credible-set, credible-set evidence and target datasets [@buniello2025_open_targets_platform]; local fine-mapping results can be supplied as Parquet files satisfying a fixed schema. For each configured GWAS, multiomeR retrieves the requested study and fine-mapping result, taking the first available of SuSiE, SuSiE-inf and PICS fine-mapping when selection is automatic. Variants of all credible sets, without a 95% credible-set restriction, are filtered by posterior probability and mapped to consensus ATAC peaks. Variant weights that map to the same peak are summed and capped at one. These peak weights form the trait annotation from which analytic nucleus-level chromVAR z-scores are calculated, reusing the GC-bias background of the motif analysis [@schep2017_chromvar; @ulirsch2019_gchromvar; @germain2026_betterchromvar].
+
+Annotation-class pseudobulk deviations are calculated separately rather than by averaging the nucleus-level results. ATAC counts are summed by the GEX-derived annotation carried into the final WNN metadata, and a betterChromVAR background model is fitted to the resulting peak-by-class matrix. The raw deviation is the observed-minus-background accessibility of the weighted peaks relative to their expected accessibility, and a relative deviation additionally standardizes the raw deviations across annotation classes within each trait. The analytic z-score uses the background variance of the weighted peaks; one-sided P-values and Benjamini–Hochberg-adjusted values are retained, and plot labels mark unadjusted z-scores of at least 1.645 and 2.326. Thus, the heatmap fill, within-trait standardization and support statistic are separate quantities. When effect sizes are available, an absolute-effect branch weights variants by posterior probability times effect size. Locus-level attribution decomposes each class deviation into contributing loci and variants, reconciled against the class totals and labelled with the highest-scoring Open Targets locus-to-gene genes. Detail plots are drawn for classes with a positive deviation and a z-score at or above a configurable screen, showing the top loci by absolute contribution and by combined contribution and effect-size rank.
+
+SCAVENGE-style trait-relevance scores are calculated from the nucleus-level z-scores on the WNN graph with a local sparse-matrix implementation of the SCAVENGE propagation strategy rather than the reference package [@yu2022_scavenge]. Nuclei whose one-sided normal-tail probability is at most 0.05 are seeds, subject to the configured maximum seed fraction; when no nucleus qualifies, all scores are zero. The nonzero support of the WNN graph is converted to binary adjacency, degree-zero nuclei are excluded, and seed signal is propagated by a random walk with the configured restart probability until convergence. Degree-matched seed permutations are sampled sequentially as in the reference implementation, while parallel native random walks stream per-cell exceedance counts without materializing the cell-by-permutation score matrix. Cell-level empirical P-values are the exceedance fraction, and cells with P ≤ 0.05 are significant. Scores are capped at their 95th percentile, min–max scaled and multiplied by the mean z-score of the top 1% of nuclei. As pipeline extensions, cluster-level permutation medians receive add-one P-values with Benjamini–Hochberg adjustment within each metadata grouping, and each summarized grouping reports the number of nuclei, the number and proportion of significant nuclei, and the median, mean, interquartile range and range of the scores.
+
+<!-- end include: website/implementation/_shared_methods/genetic_enrichment.md -->
+
+
+**Source:** [`module_genetic_enrichment/`](https://github.com/koefoeden/multiomeR/tree/main/module_genetic_enrichment), [`R/open_targets_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/open_targets_helpers.R), [`R/GWAS_chromVAR_input_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_input_helpers.R), [`R/GWAS_chromVAR_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_helpers.R), [`R/GWAS_chromVAR_absolute_effect_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_absolute_effect_helpers.R), [`R/GWAS_chromVAR_contribution_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_contribution_helpers.R), [`R/SCAVENGE_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SCAVENGE_helpers.R), [`src/scavenge_random_walk.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/scavenge_random_walk.cpp).
+
+## Target graphs
+
+### Single-nucleus and graph-based enrichment
+
+This view covers the configured GWAS inputs, single-nucleus enrichment state, graph propagation, and downstream trait summaries.
+
+[Mermaid graph omitted; source: `website/figures/human_curated/genetic_enrichment_single_nucleus_v2.mmd`]
+
+### Cell-type pseudobulk enrichment
+
+This view covers the annotation-class pseudobulk deviations that are calculated separately from the nucleus-level results.
+
+[Mermaid graph omitted; source: `website/figures/human_curated/genetic_enrichment_cell_type_absolute_effect_v2.mmd`]
+
+### Cell-type contributions and locus attribution
+
+This view covers the per-class contribution and locus-attribution branches that are pruned from the single-nucleus view.
+
+[Mermaid graph omitted; source: `website/figures/human_curated/genetic_enrichment_cell_type_contributions_v2.mmd`]
+
+
+## Part: Validation
 
 
 <!-- source: website/implementation/algorithm_validation.md -->
 
 # Algorithmic implementations, deviations and validation
 
-multiomeR reimplements a small number of reference algorithms so they can operate on the workflow's native matrices and graph state. The algorithms themselves are described in the **Methods and parameters** chapters. This page records why each was reimplemented, where it deliberately differs from its reference, and what the executable validation establishes.
+multiomeR reimplements a small number of reference algorithms so they can operate on the workflow's native matrices and graph state. The algorithms themselves are described on the primary-module and optional-module pages. This page records why each was reimplemented, where it deliberately differs from its reference, and what the executable validation establishes.
 
 The evidence labels are intentionally narrow:
 
@@ -1717,7 +1965,7 @@ The peak–gene rows belong to the analyses in [Peak–gene correlation](methods
 
 **Deliberate deviations and consequences.** Only one cell chunk is materialized at a time, and optional fork workers operate across chunks; this changes memory and execution behaviour but not the tested values. The helper returns a data frame instead of mutating a Seurat object. The target-level marker validator rejects configured genes missing from the reference, whereas the lower-level helper still exposes UCell's impute and skip modes. The production annotation reuses the chunked ranking helper and scores signed signatures per cell before aggregation, which costs more computation than a positive-only rank-summary shortcut.
 
-**Implementation.** `calculate_BPCells_UCell_scores_from_matrix()` and `rank_UCell_count_chunk()` in `R/processing_GEX_helpers.R`; the cluster annotation built on them is in `R/cluster_annotation_helpers.R` and described in [Cell-type annotation and motif accessibility](methods_annotation_and_motifs.md#matched-control-cluster-annotation).
+**Implementation.** `calculate_BPCells_UCell_scores_from_matrix()` and `rank_UCell_count_chunk()` in `R/processing_GEX_helpers.R`; the cluster annotation built on them is in `R/cluster_annotation_helpers.R` and described in [Cell-type annotation and motif accessibility](methods_annotation_and_motifs.md#cell-type-annotation).
 
 **Validation.** `tests/testthat/test-scoring-parity.R` compares signed signatures, with imputed and skipped missing genes, on a deterministic BPCells fixture and requires `identical()` values, dimensions, and dimnames. It also runs the production annotation path on unsigned, signed and negative-only signatures and compares per-cell scores, cluster means, matched-control summaries and marker-deletion effects with reference scores averaged within clusters, within 1e-12, and checks that chunking and fork workers leave them unchanged. The production cell-cycle scorer is compared with `Seurat::CellCycleScoring()`: phases are identical and scores agree within 1e-6, because BPCells normalizes counts at lower floating-point precision.
 
@@ -1751,7 +1999,7 @@ pixi run --use-environment-activation-cache test-amulet-parity
 
 **Implementation.** `get_feature_groups_from_LSI_loadings()` and `aggregate_BPCells_rows_by_group()` in `R/processing_GEX_helpers.R`, called from `extra_targets/ATAC_targets.R`.
 
-**Validation scope.** The reference-parity fixtures do not establish equivalence for this path. Its fixed settings are listed in [Preprocessing and nucleus QC](methods_preprocessing_and_QC.md#atac-qc-and-doublets).
+**Validation scope.** The reference-parity fixtures do not establish equivalence for this path. Its settings are described in [Preprocessing and nucleus QC](methods_preprocessing_and_QC.md).
 
 ## Native weighted nearest neighbors
 
@@ -1788,649 +2036,6 @@ within 1e-10. Compact local reference functions reproduce the relevant SCAVENGE 
 ```bash
 pixi run --use-environment-activation-cache test-algorithm-validation
 ```
-
-
-## Part: Target graph views
-
-
-<!-- source: website/implementation/implementation_main.md -->
-
-# Primary module
-
-
-
-The root `_targets.R` creates GEM-well and aggregation mapping rows, then maps target fragments from `extra_targets/`. Use the diagrams to find the relevant stage, then inspect the corresponding source file for the complete command and resource declaration.
-
-| Stage | Primary source |
-|------------------------------------|------------------------------------|
-| GEM well preprocessing | `extra_targets/per_GEM_well_targets.R` |
-| Aggregation setup and shared QC | `extra_targets/general_aggregation_targets.R` |
-| GEX | `extra_targets/GEX_merge_and_dim_reduc_targets.R`, `extra_targets/GEX_graph_and_cluster_targets.R` |
-| ATAC | `extra_targets/ATAC_targets.R` |
-| WNN | `extra_targets/WNN_targets.R` |
-| Compatibility export | `extra_targets/Seurat_Signac_export_targets.R` |
-
-## Parallel pre-processing
-
-This view covers per GEM well processing and QC, including optional ambient RNA correction, donor demultiplexing, doublet detection, barcode filtering, and handoffs into aggregation-level GEX and ATAC objects.
-
-[Mermaid graph omitted; source: `website/figures/human_curated/parallel_v2.mmd`]
-
-## GEX processing
-
-This view covers merged RNA processing, clustering, marker detection, cell type annotation, and GEX review outputs.
-
-[Mermaid graph omitted; source: `website/figures/human_curated/GEX_v2.mmd`]
-
-## ATAC processing
-
-This view covers ATAC QC, peak calling, consensus peak construction, chromatin accessibility processing, chromVAR scoring, and coverage tracks. Peak–gene correlation is a separate optional module.
-
-[Mermaid graph omitted; source: `website/figures/human_curated/ATAC_v2.mmd`]
-
-## WNN integration
-
-This view covers GEX and ATAC embedding handoffs, WNN integration, modality weights, cluster comparison, and integrated metadata outputs.
-
-The native implementation, its differences from Seurat, and the maintained similarity thresholds are recorded in [Algorithmic implementations, deviations and validation](algorithm_validation.md#native-weighted-nearest-neighbors).
-
-[Mermaid graph omitted; source: `website/figures/human_curated/WNN_v2.mmd`]
-
-
-<!-- source: website/implementation/implementation_differential_analyses.md -->
-
-# Differential analyses
-
-
-
-`module_differential_analyses/targets.R` filters the aggregations that enabled the module, joins their module configuration, attaches symbols for the accepted WNN metadata and pseudobulk inputs, and maps the target files in `module_differential_analyses/`. One generic pseudobulk model family is instantiated for each tested feature matrix.
-
-The graph below is an orientation view; the target files hold the complete model and plotting commands. The methods, model routes and settings are in [Differential analyses methods](methods_differential_analyses.md), and the prerequisites and module selector in [Differential analyses](../downstream_differential_analyses.html).
-
-[Mermaid graph omitted; source: `website/figures/human_curated/differential_analyses_v2.mmd`]
-
-
-<!-- source: website/implementation/implementation_genetic_enrichment.md -->
-
-# Genetic enrichment
-
-
-
-`module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in `module_genetic_enrichment/`. It does not check the species; the GRCh38 GWAS inputs assume a human aggregation.
-
-The methods and settings are in [Genetic enrichment methods](methods_genetic_enrichment.md), and the release, method-selection, and interpretation contracts in [Genetic enrichment](../downstream_genetic_enrichment.html).
-
-## Single-nucleus and graph-based enrichment
-
-This view covers the configured GWAS inputs, single-nucleus enrichment state, graph propagation, and downstream trait summaries. Additional cell-type contribution and locus-attribution branches may be pruned from this compact orientation view; use the manifest for the complete graph.
-
-The sparse SCAVENGE reimplementation, deliberate graph and permutation differences, and validation evidence are recorded in [Algorithmic implementations, deviations and validation](algorithm_validation.md#sparse-scavenge-propagation-and-significance).
-
-[Mermaid graph omitted; source: `website/figures/human_curated/genetic_enrichment_single_nucleus_v2.mmd`]
-
-## Cell-type pseudobulk enrichment
-
-This view covers the annotation-class pseudobulk deviations that are calculated separately from the nucleus-level results.
-
-[Mermaid graph omitted; source: `website/figures/human_curated/genetic_enrichment_cell_type_absolute_effect_v2.mmd`]
-
-## Cell-type contributions and locus attribution
-
-This view covers the per-cell-type contribution and locus-attribution branches that are pruned from the single-nucleus view above.
-
-[Mermaid graph omitted; source: `website/figures/human_curated/genetic_enrichment_cell_type_contributions_v2.mmd`]
-
-
-<!-- source: website/implementation/implementation_peak_gene_correlation.md -->
-
-# Peak–gene correlation
-
-
-
-`module_peak_gene_correlation/targets.R` maps only opted-in aggregations, binds the primary-module inputs they consume, and maps the target files in `module_peak_gene_correlation/`. Parameters use the `peak_gene_correlation` manifest scope, targets end in `.peak_gene_correlation.<aggregation>`, and plot checkpoint tags use `peak_gene_correlation`, outside the numbered QC selections.
-
-The methods and settings are in [Peak–gene correlation methods](methods_peak_gene_correlation.md), and the prerequisites and module selector in [Peak–gene correlation](../downstream_peak_gene_correlation.html).
-
-## Candidate pairs, pseudobulks and tests
-
-This view covers the TSS table, candidate peak–gene pairs, the broad WNN cell groups, donor–state pseudobulk construction, measurement-support filtering, the per-chromosome analysis branches and the diagnostic and top-link outputs.
-
-[Mermaid graph omitted; source: `website/figures/human_curated/peak_gene_correlation_v2.mmd`]
-
-
-## Part: Methods and parameters
-
-
-<!-- source: website/implementation/methods_preprocessing_and_QC.md -->
-
-# Preprocessing and nucleus QC
-
-This chapter covers per-GEM-well preprocessing and the successive nucleus filters up to the final WNN cell set. The target structure is shown in the [primary-module graph](implementation_main.md), and GEM-well settings are columns of `cfg_GEM_wells.tsv`, described in [GEM well table](../reference_GEM_wells.html). The AMULET and ATAC scDblFinder adaptations are compared with their references in [Algorithmic implementations](algorithm_validation.md). The tables follow the layout in [Methods and parameter tables](implementation_conventions.md#methods-and-parameter-tables).
-
-
-<!-- begin include: website/implementation/_shared_methods/quality_control.md -->
-
-Each GEM well supplies a Cell Ranger ARC count directory. Gene-expression counts are imported into BPCells from the filtered feature-barcode matrix, or from a CellBender output when configured, and ATAC fragments from the Cell Ranger fragment file [@parks2025_bpcells; @fleming2023_cellbender]. Both carry a GEM-well-prefixed barcode, so nuclei remain distinct across wells. Per-well quality-control metrics are calculated for the barcodes that Cell Ranger called as cells: ATAC metrics such as TSS enrichment and nucleosome signal with BPCells, and gene-expression metrics such as the mitochondrial fraction from the imported matrix. Optional genotype demultiplexing with cellsnp-lite and Vireo replaces the GEM-well donor identifier with the assigned donor and records doublet and unassigned calls as metadata [@huang2021_cellsnp_lite; @huang2019_vireo]. A BPCells-native implementation of AMULET streams the stored fragments while reproducing the overlap metrics and q-values of `scDblFinder::amulet()` [@thibodeau2021_amulet; @germain2022_scdblfinder]; it supports unique fragments only and applies no automatic filter.
-
-Configured GEM-well exclusions are filter expressions evaluated on the called cells of each well, so demultiplexing and AMULET results can serve as exclusion criteria before aggregation-level analysis. The remaining nuclei of the selected wells are combined without further filtering, and only barcodes represented in the aligned count data continue into dimensional reduction.
-
-After GEX graph construction and Leiden clustering, clusters below the configured minimum size are removed; the same rule is later applied to the ATAC and WNN clusters. `scDblFinder` is then applied per GEM well to the raw counts of the retained nuclei [@germain2022_scdblfinder], using annotation-derived cluster labels: the cell-type label of an assigned cluster, otherwise its annotation status and identifier, optionally collapsed by a configured map. Doublet removal is configurable at the nucleus level and at the cluster level, where a Leiden cluster is removed when its doublet fraction exceeds a threshold.
-
-The ATAC branch starts from the GEX-retained nuclei: peak-calling groups, the consensus peak matrix and peak-level quality-control metrics are built on that cell set, and the metrics are evaluated against configured aggregation-level exclusions. After ATAC clusters below the minimum size are removed, a separate ATAC-based `scDblFinder` analysis follows. Instead of scDblFinder's internal per-well feature aggregation, peaks are grouped once by *k*-means clustering of the aggregation-wide LSI loadings and summed with BPCells before the unchanged classifier is called. This adaptation bounds memory use; its scores are not expected to equal those obtained with the internal aggregation. ATAC doublets are removed at the nucleus and cluster level as for GEX.
-
-WNN analysis uses the nuclei retained by the ATAC branch that are present in both embeddings and applies the minimum-cluster-size filter to the joint clusters; when nuclei are removed, the joint graph and embedding are recomputed on the retained nuclei while the cluster labels are kept. The GEX, ATAC and WNN metadata therefore represent successive cell universes rather than interchangeable versions of the original Cell Ranger calls.
-
-<!-- end include: website/implementation/_shared_methods/quality_control.md -->
-
-
-## Aggregation inputs and operational settings
-
-These manifest parameters select inputs, plot variables and execution behaviour rather than algorithm settings.
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Inputs | GEM wells combined | Configurable |  | [`aggregation_GEM_well_IDs`](../parameters.html#aggregation_GEM_well_IDs) |
-| Inputs | Donor metadata table | Configurable |  | [`aggregation_donor_id_metadata_tsv`](../parameters.html#aggregation_donor_id_metadata_tsv) |
-| Inputs | Aggregation active | Configurable |  | [`is_active`](../parameters.html#is_active) |
-| Inputs | Optional modules enabled | Configurable |  | [`modules`](../parameters.html#modules) |
-| Plots | Categorical and continuous metadata plotted | Configurable |  | [`aggregation_categorical_vars`](../parameters.html#aggregation_categorical_vars), [`aggregation_continuous_vars`](../parameters.html#aggregation_continuous_vars) |
-| Plots | Additional genes plotted | Configurable |  | [`aggregation_other_interesting_genes`](../parameters.html#aggregation_other_interesting_genes) |
-| Tracks | Roadmap epigenome tracks | Configurable |  | [`aggregation_roadmap_EDACC_names`](../parameters.html#aggregation_roadmap_EDACC_names) |
-
-## Per-GEM-well inputs and metrics
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| GEX input | CellBender versus Cell Ranger matrix | Configurable |  | `GEM_well_add_cellbender`, `GEM_well_cellbender_h5_file` |
-| GEX input | Feature type kept | Fixed | `Gene Expression` | `GEX_counts_BPcells_matrix_dir` |
-| Barcodes | Called-cell universe | Fixed | barcodes with `is_cell == 1` in the Cell Ranger `per_barcode_metrics.csv` | `per_barcode_metrics_tibble` |
-| ATAC metrics | TSS enrichment | Fixed | `BPCells::qc_scATAC()` on Ensembl gene TSSs with an empty blacklist; package default: 101 bp centre window, 100 bp flanks 1.9–2 kb up- and downstream, flank signal floored at 0.1 | `ATAC_qc_metrics_tibble`, `BPCells::qc_scATAC()` |
-| ATAC metrics | Nucleosome signal | Fixed | mono-nucleosomal / sub-nucleosomal fragment counts | `ATAC_qc_metrics_tibble` |
-| GEX metrics | Mitochondrial genes | Fixed | gene names matching `(?i)^MT-` | `GEX_basic_metadata_tibble` |
-| Demultiplexing | VCF, donor count and donor label | Configurable |  | `GEM_well_donors_VCF_file`, `GEM_well_n_donors`, `GEM_well_donor_id` |
-| Demultiplexing | cellsnp-lite | Fixed | ATAC BAM, Cell Ranger-called barcodes, `--minMAF 0.1`, `--minCOUNT 20`, `--UMItag None` | `cellsnp_dir`, `get_cellsnp_dir()` |
-| Demultiplexing | Vireo | Fixed | donor genotypes from the VCF (`-t GT`); no genotype learning | `get_vireo_donor_ids_tibble()` |
-| AMULET | Nuclei scored | Fixed | Cell Ranger-called barcodes; no fragment minimum | `amulet_metrics_tibble` |
-| AMULET | Fragment filters | Fixed | fragments ≤ 1,000 bp; chrM, chrX, chrY and their aliases excluded; Cell Ranger end coordinate shifted by −1 | `calculate_amulet_metrics_BPCells()`, `get_amulet_fragment_overlaps_BPCells()` |
-| AMULET | High-overlap-site removal | Fixed | on; loci with Poisson P \< 0.01 across nuclei removed | `calculate_amulet_metrics_BPCells()`, `remove_high_overlap_amulet_loci()` |
-| AMULET | Per-nucleus test | Fixed | upper-tail Poisson on the number of loci covered by more than two fragments; BH q-values | `calculate_amulet_metrics_BPCells()` |
-
-## GEM-well exclusions and the GEX cell universe
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Exclusions | Per-well exclusion expressions | Configurable |  | `GEM_well_QC_exclude_list` |
-| Cell set | Nuclei entering GEX PCA | Fixed | Cell Ranger-called nuclei passing the per-well exclusions, intersected with the combined matrix barcodes | `GEX_cellranger_kept_metadata_tibble`, `run_GEX_PCA_BPCells()` |
-
-## Cluster-size filter and GEX doublets
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Cluster filter | Minimum cluster size, applied to GEX, ATAC, WNN and subgroups | Configurable |  | [`aggregation_cluster_min_barcodes`](../parameters.html#aggregation_cluster_min_barcodes) |
-| Cluster filter | Comparison and disabling rule | Fixed | keep clusters with size ≥ threshold; disabled when NULL, NA or ≤ 1 | `filter_clusters_by_min_barcodes()` |
-| GEX scDblFinder | Nuclei and counts | Fixed | GEX nuclei after the cluster-size filter and before doublet removal; raw counts; one run per GEM well | `scDblFinder_GEM_well_tibble.GEX`, `scDblFinder_results_by_GEM_well_tibble.GEX` |
-| GEX scDblFinder | Label collapse map, reused for ATAC | Configurable |  | [`aggregation_scDblFinder_GEX_cell_type_collapse_list`](../parameters.html#aggregation_scDblFinder_GEX_cell_type_collapse_list) |
-| GEX scDblFinder | Classifier arguments | Fixed | `dbr.sd = 1.0`; package defaults otherwise | `scDblFinder_results_by_GEM_well_tibble.GEX`, `scDblFinder::scDblFinder()` |
-| GEX doublets | Nucleus-level removal | Configurable |  | [`aggregation_scDblFinder_GEX_remove_called_doublets`](../parameters.html#aggregation_scDblFinder_GEX_remove_called_doublets) |
-| GEX doublets | Cluster-level removal | Configurable |  | [`aggregation_scDblFinder_GEX_max_doublet_fraction_per_cluster`](../parameters.html#aggregation_scDblFinder_GEX_max_doublet_fraction_per_cluster) |
-| GEX doublets | Cluster fraction rule, also used for ATAC | Fixed | called-doublet fraction of each Leiden cluster, computed before nucleus-level removal; cluster removed when the fraction is strictly greater than the threshold | `filter_metadata_by_scDblFinder()` |
-
-## ATAC QC and doublets
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Cell set | Nuclei entering the ATAC branch | Fixed | GEX nuclei after doublet removal | `BCs_per_peak_cluster_list.ATAC`, `consensus_peak_BPCells_matrix_dir.ATAC`, `metadata_w_QC_tibble.ATAC` |
-| Peak QC | Metrics | Fixed | `nCount_ATAC` (counts in consensus peaks); blacklist counts / `nCount_ATAC`; `nCount_ATAC` / Cell Ranger ATAC fragments; that fraction divided by the genome fraction covered by peaks | `get_ATAC_QC_metadata_from_BPCells()` |
-| Peak QC | Exclusion expressions | Configurable |  | [`aggregation_QC_exclude_list_combined_object`](../parameters.html#aggregation_QC_exclude_list_combined_object) |
-| ATAC scDblFinder | Nuclei scored | Fixed | ATAC nuclei after the cluster-size filter that pass peak QC | `scDblFinder_GEM_well_tibble.ATAC` |
-| ATAC scDblFinder | Feature groups | Fixed | 50 groups from `stats::kmeans(iter.max = 50, nstart = 1)`, seed 1, on the peak loadings of LSI dimensions `intersect(2:20, aggregation_ATAC_data_PCs)` | `scDblFinder_feature_groups.ATAC`, `get_feature_groups_from_LSI_loadings()` |
-| ATAC scDblFinder | Classifier arguments | Fixed | `dbr.sd = 1.0`, `aggregateFeatures = FALSE`, `nfeatures = 50`, `processing = "normFeatures"`; package defaults otherwise | `scDblFinder_results_by_GEM_well_tibble.ATAC`, `scDblFinder::scDblFinder()` |
-| ATAC scDblFinder | Cluster labels | Fixed | ATAC annotation-derived scDblFinder groups, collapsed with the GEX map | `scDblFinder_GEM_well_tibble.ATAC` |
-| ATAC doublets | Nucleus-level removal | Configurable |  | [`aggregation_scDblFinder_ATAC_remove_called_doublets`](../parameters.html#aggregation_scDblFinder_ATAC_remove_called_doublets) |
-| ATAC doublets | Cluster-level removal | Configurable |  | [`aggregation_scDblFinder_ATAC_max_doublet_fraction_per_cluster`](../parameters.html#aggregation_scDblFinder_ATAC_max_doublet_fraction_per_cluster) |
-
-## WNN cell set
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Cell set | Nuclei entering WNN | Fixed | ATAC nuclei after doublet removal that have rows in both corrected embeddings | `embedding_matrices.WNN`, `get_WNN_embedding_matrices()` |
-| Cluster filter | Threshold | Configurable |  | [`aggregation_cluster_min_barcodes`](../parameters.html#aggregation_cluster_min_barcodes) |
-
-
-<!-- source: website/implementation/methods_GEX_ATAC_and_WNN.md -->
-
-# GEX, ATAC, batch correction and WNN
-
-This chapter covers normalization and dimensional reduction of both modalities, peak definition, batch correction, graph construction and clustering, and weighted nearest-neighbour (WNN) integration. The target structure is shown in the [primary-module graph](implementation_main.md), and the WNN implementation is compared with Seurat in [Algorithmic implementations](algorithm_validation.md#native-weighted-nearest-neighbors). The tables follow the layout in [Methods and parameter tables](implementation_conventions.md#methods-and-parameter-tables).
-
-## GEX normalization and PCA
-
-
-<!-- begin include: website/implementation/_shared_methods/GEX_normalization.md -->
-
-For each aggregation, the quality-controlled gene-expression matrices are combined with their GEM-well-prefixed barcodes, and genes with low total counts are excluded before dimensional reduction. Normalization and dimensional reduction use either the disk-backed BPCells Pearson-residual workflow or Seurat `SCTransform` [@parks2025_bpcells; @hafemeister2019_sctransform]. In the BPCells branch, Pearson residuals are computed with a per-gene method-of-moments overdispersion estimate and clipped to a fixed range, configured cell-level covariates can be regressed out, the genes with the highest residual variance are retained and a truncated singular-value decomposition yields the principal components. The Seurat branch applies SCTransform to the same cells and genes, retains the same number of variable features and computes the principal components from the residual matrix. Regression of a cell-cycle difference score is the default; the S and G2M scores are computed from log-normalized counts with the Seurat cell-cycle gene sets.
-
-<!-- end include: website/implementation/_shared_methods/GEX_normalization.md -->
-
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Gene filter | Minimum total count per gene, both backends | Fixed | more than 50 counts over the PCA nuclei (`min_feature_count = 50`) | `run_GEX_PCA_BPCells()` |
-| Backend | Normalization and PCA backend | Configurable |  | [`aggregation_GEX_PCA_backend`](../parameters.html#aggregation_GEX_PCA_backend) |
-| Regression | Cell-level covariates regressed | Configurable |  | [`aggregation_SCT_regress_vars`](../parameters.html#aggregation_SCT_regress_vars) |
-| Components | Number of PCs computed (last element of the list) | Configurable |  | [`aggregation_GEX_data_PCs`](../parameters.html#aggregation_GEX_data_PCs) |
-| Variable genes | Genes retained by residual variance, both backends | Fixed | 3,000 (`n_variable_features = 3000`) | `run_GEX_PCA_BPCells()` |
-| BPCells branch | Pearson residuals | Fixed | method-of-moments theta clamped to \[1e-6, 1e6\]; `clip_range = c(-10, 10)`; `min_var = 0` | `run_BPCells_native_GEX_PCA()` |
-| BPCells branch | Regression and SVD | Fixed | `BPCells::regress_out(prediction_axis = "row")` on the residuals; `BPCells::svds()` without centring, embeddings = right singular vectors × singular values | `run_BPCells_native_GEX_PCA()` |
-| Seurat branch | SCTransform | Fixed | `conserve.memory = TRUE`, `do.correct.umi = FALSE`; package defaults otherwise, including `vst.flavor = "v2"` and `ncells = 5000` | `run_Seurat_SCT_for_PCA()`, `Seurat::SCTransform()` |
-| Seurat branch | PCA | Fixed | exact eigendecomposition of the gene × gene residual Gram matrix | `run_dense_feature_gram_PCA()` |
-| Cell cycle | Gene sets and scoring | Fixed | `Seurat::cc.genes.updated.2019` for both organisms; log-normalization with scale factor 10,000; binned control-gene scores with seed 1; `CC.Difference = S − G2M` | `cell_cycle_gene_sets()`, `add_cell_cycle_scores_to_cell_attr()`, `calculate_BPCells_cell_cycle_scores_from_matrix()` |
-
-## ATAC peak definition and dimensional reduction
-
-
-<!-- begin include: website/implementation/_shared_methods/ATAC_peaks_and_LSI.md -->
-
-Fragments on the standard chromosomes are used for peak calling. Peak-calling groups are defined by a configurable metadata column of the GEX-retained nuclei, and large groups are downsampled for peak discovery. Peaks are called per group either with MACS3, on exported group fragments with ATAC-style shift and extension and summit calling, or with the BPCells tile-based caller on the stored fragments [@zhang2008_macs; @parks2025_bpcells]. Consensus peaks follow the ArchR strategy of iterative fixed-width peak construction [@granja2021_archr]: summits are extended to fixed-width peaks, peaks overlapping the reference-genome blacklist are removed, and the group-level peak sets are combined into one non-overlapping consensus set, ranking overlapping peaks by summit significance within a group and by fold enrichment across groups. BPCells counts fragment insertions or overlaps, as configured, within these peaks for the GEX-retained nuclei.
-
-ATAC dimensional reduction applies Signac's TF-IDF method 1 to the consensus peak matrix, followed by a BPCells singular-value decomposition to obtain latent semantic indexing (LSI) embeddings [@stuart2021_signac; @parks2025_bpcells]. No component is removed by the code; the default dimension settings omit the first component.
-
-<!-- end include: website/implementation/_shared_methods/ATAC_peaks_and_LSI.md -->
-
-
-### ATAC peak calling and consensus peaks
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Fragments | Chromosomes retained | Fixed | autosomes, X and Y | `combined_BPCells_fragment_obj.ATAC` |
-| Groups | Peak-calling grouping column | Configurable |  | [`aggregation_call_peaks_by_cluster_col`](../parameters.html#aggregation_call_peaks_by_cluster_col) |
-| Groups | Discovery cap per group | Fixed | 50,000 nuclei; larger groups randomly downsampled with seed 1 + group index | `build_peak_calling_cluster_discovery_tibble()` |
-| Caller | Peak-calling method | Configurable |  | [`aggregation_ATAC_peak_calling_method`](../parameters.html#aggregation_ATAC_peak_calling_method) |
-| MACS3 | Arguments | Fixed | `-f BED --nomodel --shift -75 --extsize 150 --call-summits --keep-dup all`; MACS3 default q-value cutoff 0.05 | `call_peaks_w_MACS3()` |
-| Genome | Effective genome size, used by both callers and the peak-count enrichment | Fixed | GRCh38 2.913e9; mm10 and GRCm39 2.65e9 | `get_effective_genome_size()` |
-| Tile caller | BPCells settings | Fixed | `peak_width = 500`, `peak_tiling = 3`, `fdr_cutoff = 0.01`, `merge_peaks = "none"` | `call_peaks_w_BPCells_tile()` |
-| Peak shape | Summit extension | Fixed | 250 bp either side of the summit, giving 500 bp peaks | `get_peak_GRanges_w_fixed_width()` |
-| Blacklist | Source and rule | Fixed | GRCh38 `hg38.Kundaje.GRCh38_unified_Excludable` and mm10 `mm10.Boyle.mm10-Excludable.v2` from AnnotationHub excluderanges; GRCm39 `resources/mm39.excluderanges.bed`; any overlap removes a peak | `get_blacklist_GRanges()`, `get_peak_GRanges_w_fixed_width()` |
-| Consensus | Overlap ranking | Fixed | within groups `neg_log10pvalue_summit`, across groups `fold_change`, both decreasing | `within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC`, `consensus_peak_GRanges.ATAC` |
-| Peak matrix | Counting mode, also used for blacklist QC counts | Configurable |  | [`aggregation_ATAC_peak_matrix_mode`](../parameters.html#aggregation_ATAC_peak_matrix_mode) |
-| Peak matrix | Nuclei | Fixed | GEX nuclei after doublet removal | `consensus_peak_BPCells_matrix_dir.ATAC` |
-
-### ATAC TF-IDF and LSI
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| TF-IDF | Transform | Fixed | `log1p(10000 × TF × IDF)`, with TF = count / nucleus total and IDF = number of nuclei / peak total | `run_ATAC_LSI_BPCells()` |
-| SVD | Components computed (last element of the list) | Configurable |  | [`aggregation_ATAC_data_PCs`](../parameters.html#aggregation_ATAC_data_PCs) |
-| SVD | Decomposition | Fixed | `BPCells::svds()` without centring; embeddings = right singular vectors × singular values | `run_ATAC_LSI_BPCells()` |
-| Dimensions | Components used downstream | Configurable |  | [`aggregation_ATAC_data_PCs`](../parameters.html#aggregation_ATAC_data_PCs), [`aggregation_UMAP_ATAC_PCs`](../parameters.html#aggregation_UMAP_ATAC_PCs) |
-
-## Batch correction, clustering and weighted nearest neighbours
-
-
-<!-- begin include: website/implementation/_shared_methods/batch_correction_clustering_WNN.md -->
-
-Harmony correction can be applied separately to the selected GEX principal components and ATAC LSI dimensions [@patikas2026_harmony2]. Several configured metadata columns are combined into one interaction batch factor, nuclei with missing covariate values are removed with a warning, and the embeddings pass through unchanged when no columns are configured.
-
-For each modality, approximate nearest neighbours are found on the selected dimensions with BPCells HNSW search, converted to a shared-nearest-neighbour (SNN) graph with Jaccard weights and clustered with the Leiden algorithm [@parks2025_bpcells; @traag2019_leiden]. The neighbour count includes the query cell itself, and clusters are renumbered by size. UMAP embeddings are computed with uwot on the same dimensions [@melville2026_uwot], and quality-control sweeps additionally render UMAPs over grids of dimensions and neighbour counts.
-
-RNA and ATAC representations are combined with a BPCells-native implementation of the Seurat weighted-nearest-neighbour (WNN) strategy [@hao2021_multimodal; @parks2025_bpcells]. The GEX and ATAC embeddings, after optional Harmony correction, are aligned by barcode and L2-normalized, and candidate neighbours are found separately for each modality with HNSW search. A native routine applies Seurat's small-SNN bandwidth strategy to set a per-cell kernel width from the configured neighbour count, per-cell modality weights are derived from within- versus cross-modality prediction kernels, and the union of candidates is ranked by the weighted kernel score to select the final neighbours. BPCells builds the joint SNN graph, which is clustered with Leiden and embedded with UMAP using the precomputed neighbours. The implementation does not call `Seurat::FindMultiModalNeighbors()`; because HNSW replaces Seurat's Annoy search, exact equality is not expected, and its validation is a similarity contract on modality weights and neighbour overlap.
-
-<!-- end include: website/implementation/_shared_methods/batch_correction_clustering_WNN.md -->
-
-
-### Harmony batch correction
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Covariates | Shared correction columns | Configurable |  | [`aggregation_harmony_correction_metadata_col_names`](../parameters.html#aggregation_harmony_correction_metadata_col_names) |
-| Covariates | Additional ATAC covariates | Configurable |  | [`aggregation_extra_harmony_covars_ATAC`](../parameters.html#aggregation_extra_harmony_covars_ATAC) |
-| Dimensions | Corrected dimensions | Configurable |  | [`aggregation_GEX_data_PCs`](../parameters.html#aggregation_GEX_data_PCs), [`aggregation_ATAC_data_PCs`](../parameters.html#aggregation_ATAC_data_PCs) |
-| Harmony | Arguments | Fixed | `max_iter = 25`, `lambda = 1`; package defaults otherwise | `run_harmony_on_embedding_matrix()`, `harmony::RunHarmony()` |
-
-### Graph construction, Leiden clustering and UMAP
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| kNN | Neighbour count | Configurable |  | [`aggregation_data_nNNs`](../parameters.html#aggregation_data_nNNs) |
-| kNN | Search | Fixed | `BPCells::knn_hnsw()` with cosine metric and `ef = 500` | `cluster_embedding_matrix_BPCells()` |
-| SNN | Construction and pruning | Fixed | package default: Jaccard weights, `min_val = 1/15`, no self loops | `cluster_knn_snn_leiden()`, `BPCells::knn_to_snn_graph()` |
-| Leiden | Resolution | Configurable |  | [`aggregation_GEX_cluster_res`](../parameters.html#aggregation_GEX_cluster_res), [`aggregation_ATAC_cluster_res`](../parameters.html#aggregation_ATAC_cluster_res), [`aggregation_WNN_cluster_res`](../parameters.html#aggregation_WNN_cluster_res) |
-| Leiden | Objective, iterations and seed | Fixed | modularity with SNN edge weights, seed 1; package defaults: 2 iterations, `beta = 0.01` | `cluster_knn_snn_leiden()`, `igraph::cluster_leiden()` |
-| UMAP | Dimensions | Configurable |  | [`aggregation_UMAP_GEX_PCs`](../parameters.html#aggregation_UMAP_GEX_PCs), [`aggregation_UMAP_ATAC_PCs`](../parameters.html#aggregation_UMAP_ATAC_PCs) |
-| UMAP | Neighbours and minimum distance | Configurable |  | [`aggregation_UMAP_nNNs`](../parameters.html#aggregation_UMAP_nNNs), [`aggregation_UMAP_min_dist`](../parameters.html#aggregation_UMAP_min_dist) |
-| UMAP | Fixed arguments | Fixed | cosine metric, 2 components, seed 1; package defaults otherwise, including spectral initialisation | `run_UMAP_from_embedding_matrix()`, `uwot::umap()` |
-| UMAP sweeps | Grids | Fixed | 3 dimension counts from 5 to the number of data dimensions; 3 neighbour counts from 10 to the configured UMAP neighbour count | `UMAP_n_dims_seq.GEX`, `UMAP_n_dims_seq.ATAC`, `UMAP_neighbors_seq` |
-
-### Weighted nearest neighbours
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Inputs | Embeddings after optional Harmony, and their dimensions | Configurable |  | [`aggregation_GEX_data_PCs`](../parameters.html#aggregation_GEX_data_PCs), [`aggregation_ATAC_data_PCs`](../parameters.html#aggregation_ATAC_data_PCs) |
-| Candidates | Candidates per modality | Fixed | `candidate_k = 200`, from `BPCells::knn_hnsw()` on the L2-normalized embeddings with Euclidean metric, `k = candidate_k + 1` and `ef = 500` | `WNN_results_raw`, `WNN_results`, `weighted_nearest_neighbors_BPCells()` |
-| Final neighbours | Neighbour count, also the bandwidth and imputation neighbourhood | Configurable |  | [`aggregation_data_nNNs`](../parameters.html#aggregation_data_nNNs) |
-| Bandwidth | Small-SNN kernel width | Fixed | mean distance, minus the nearest non-self distance, to the k cells with the fewest shared neighbours among those sharing at least one; `sd_scale = 1`; floored at machine epsilon | `weighted_nearest_neighbors_BPCells()`, `calculate_small_SNN_bandwidth()` |
-| Weights | Modality weight kernel | Fixed | `exp(−d/σ)`; ratio `within / (cross + 1e-4)` clipped to \[0, 200\]; softmax across modalities | `weighted_nearest_neighbors_BPCells()` |
-| Selection | Weighted score and distance | Fixed | `Σ w_m · exp(−d_m/σ_m)` (`kernel_power = 1`); `nn_dist = sqrt((1 − score)/2)` | `weighted_nearest_neighbors_BPCells()` |
-| SNN and Leiden | Graph and clustering | Fixed | as for GEX and ATAC: package-default SNN, Leiden modularity, seed 1 | `cluster_WNN_graph()`, `cluster_knn_snn_leiden()` |
-| UMAP | Neighbours (capped at the final neighbour count) and minimum distance | Configurable |  | [`aggregation_UMAP_nNNs`](../parameters.html#aggregation_UMAP_nNNs), [`aggregation_UMAP_min_dist`](../parameters.html#aggregation_UMAP_min_dist) |
-| UMAP | Fixed arguments | Fixed | precomputed WNN neighbours, 2 components, seed 1; package defaults otherwise | `run_WNN_UMAP()`, `uwot::umap()` |
-
-
-<!-- source: website/implementation/methods_annotation_and_motifs.md -->
-
-# Cell-type annotation and motif accessibility
-
-This chapter covers marker-signature cluster annotation and motif-family accessibility. The BPCells-native UCell scorer is compared with UCell in [Algorithmic implementations](algorithm_validation.md#bpcells-native-ucell-scoring). The tables follow the layout in [Methods and parameter tables](implementation_conventions.md#methods-and-parameter-tables).
-
-## Cell-type annotation
-
-
-<!-- begin include: website/implementation/_shared_methods/cell_type_annotation.md -->
-
-Cell-type annotation is driven by user-supplied GEX marker signatures. Signatures accept unsigned genes, positive markers and genes expected to be absent; genes missing from the count matrix fail validation before scoring. Scores are computed with a BPCells-native implementation of UCell scoring [@andreatta2021_ucell; @parks2025_bpcells], which reproduces per-cell descending ranks, rank truncation, positive and negative signatures and lower-bound clipping on bounded chunks of the raw GEX counts; the production workflow does not call the UCell package, and its validation requires values identical to the UCell reference. Signed signatures are clipped at zero per cell before averaging. The same scoring, with the same GEX control reference, annotates the GEX, ATAC and WNN cluster partitions.
-
-Each label's cluster-level mean score is compared with random control signatures matched on gene abundance and detection. The control reference samples cells per GEM well from the GEX metadata before doublet filtering. For each control replicate, markers are visited in random order and each is replaced by a gene drawn from its nearest eligible candidates not yet used in that replicate; candidates exclude all marker genes and undetected genes. A label's adjusted score in a cluster is its observed mean minus an upper quantile of its matched controls. The label with the highest adjusted score is the candidate, and its advantage is the smaller of its lead over zero and its lead over the runner-up. The candidate is assigned when its advantage is positive, untied and at least the configured minimum; otherwise the cluster remains unassigned, with the candidate and reason retained, so raising the minimum can only withdraw assignments. Because annotation depends on the supplied signatures and their level of detail, labels can represent either cell types or broader source classes.
-
-Three diagnostics accompany each decision without vetoing it. Marker stability is the fraction of leave-one-marker-out variants, each removing one candidate marker and its matched control, in which the candidate keeps a positive advantage of at least the configured minimum. Cell stability is the fraction of leave-one-block-out replicates, with nuclei split into blocks stratified by cluster and GEM well, that assign the same candidate. GEM-well agreement is the fraction of sufficiently large per-well subgroups that assign it. Detection counts additionally report the positive markers detected in a minimum fraction of nuclei.
-
-<!-- end include: website/implementation/_shared_methods/cell_type_annotation.md -->
-
-
-### Signature scoring
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Signatures | Marker genes per label | Configurable |  | [`aggregation_GEX_marker_genes`](../parameters.html#aggregation_GEX_marker_genes) |
-| Ranks | Rank cap | Fixed | `min(1500, number of genes)` | `prepare_cluster_UCell_controls()` |
-| Ranks | Direction and ties | Fixed | descending raw counts per nucleus; ties averaged | `rank_UCell_count_chunk()` |
-| Scores | Signed signatures | Fixed | positive-gene score minus negative-gene score, clipped with `pmax(0, score)` per nucleus before averaging | `score_signed_UCell_cells()` |
-| Scores | Partitions annotated | Fixed | GEX `PCA_harmony_SNN_cluster` before doublet removal; ATAC `LSI_harmony_SNN_cluster` before ATAC doublet removal; WNN `WNN_harmony_SNN_cluster` | `cluster_UCell_evidence.GEX`, `cluster_UCell_evidence.ATAC`, `cluster_UCell_evidence.WNN` |
-
-### Matched-control cluster annotation
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Reference | Nuclei and counts | Fixed | up to 50 nuclei per GEM well, sampled from the pre-doublet-filter GEX nuclei; full aggregated GEX counts | `cluster_UCell_controls.GEX`, `prepare_cluster_UCell_controls()` |
-| Controls | Random mappings | Fixed | 999 | `build_UCell_controls()` |
-| Controls | Matching coordinates | Fixed | `log1p(abundance × 1e4)` and `asin(sqrt(detection))`, each standardized; Euclidean distance | `build_UCell_controls()` |
-| Controls | Candidate pool and draw | Fixed | `neighbours = 50`; pool of the max(4 × neighbours, 2 × marker genes) nearest eligible genes, which is 200 for panels of up to 100 marker genes; each marker drawn uniformly from its `neighbours` nearest candidates not yet used in the replicate | `build_UCell_controls()` |
-| Controls | Random seed | Fixed | 20260910 | `prepare_cluster_UCell_controls()`, `build_UCell_controls()` |
-| Adjusted score | Background | Fixed | 0.95 quantile of the label's matched-control scores | `score_UCell_group_evidence()` |
-| Assignment | Advantage rule | Fixed | `min(best, best − second)`; requires best \> 0 and no exact tie | `assign_UCell_cluster_evidence()` |
-| Assignment | Minimum advantage | Configurable |  | [`aggregation_cluster_annotation_min_advantage`](../parameters.html#aggregation_cluster_annotation_min_advantage) |
-| Diagnostics | Marker deletion | Fixed | each marker of the leading label, with its matched control, omitted in turn (labels with at least 2 markers); stability = fraction of deletions keeping a positive advantage at least the minimum | `score_cluster_UCell_summaries()`, `evaluate_cluster_UCell_evidence()` |
-| Diagnostics | Cell-deletion blocks | Fixed | 10 blocks stratified by cluster and GEM well, each left out once; stability reported when at least 2 blocks are assessable | `make_annotation_blocks()`, `summarize_cluster_UCell_counts()`, `evaluate_cluster_UCell_evidence()` |
-| Diagnostics | Marker detection | Fixed | positive markers detected in at least 10% of a cluster's nuclei | `score_UCell_group_evidence()` |
-| Diagnostics | GEM-well agreement | Fixed | GEM wells with at least 25 nuclei in the cluster; agreement reported when at least 2 wells are assessed | `score_cluster_UCell_summaries()`, `evaluate_cluster_UCell_evidence()` |
-| Plots | Marker-set order | Fixed | `hclust(method = "ward.D2")` on Euclidean distances between adjusted-score profiles | `plot_UCell_annotation_dot()` |
-
-## Motif families and motif accessibility
-
-
-<!-- begin include: website/implementation/_shared_methods/motif_accessibility.md -->
-
-Transcription-factor motifs are represented by the sequence-similarity families of the JASPAR 2026 CORE vertebrate collection [@ovekbaydar2026_jaspar]. The pipeline vendors the familial root motifs and the family membership table and matches the root motifs to the consensus peaks with `motifmatchr` [@schep2025_motifmatchr]. Configured transcription factors are resolved to families by name, or by name and motif identifier when a symbol belongs to more than one family. betterChromVAR applies the chromVAR workflow with GC-bias correction to obtain analytic motif-family deviations and z-scores for individual nuclei [@schep2017_chromvar; @germain2026_betterchromvar]. All families are summarized per ATAC annotation class with a Wilcoxon marker test and as cell-weighted means per cluster and cell type; the configured transcription factors select only the families shown on embeddings. These values measure accessibility associated with a motif family and are not direct measurements of transcription-factor activity.
-
-<!-- end include: website/implementation/_shared_methods/motif_accessibility.md -->
-
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Families | JASPAR 2026 CORE vertebrate files | Fixed | 233 familial root motifs; family membership of 1,019 motifs | `resources/JASPAR2026_vertebrate_familial_root_motifs.tf`, `resources/JASPAR2026_vertebrate_motif_families.tsv` |
-| Families | Configured transcription factors | Configurable |  | [`aggregation_ATAC_marker_TFs`](../parameters.html#aggregation_ATAC_marker_TFs) |
-| Families | Symbol resolution | Fixed | case-insensitive TF name, or `TF__motifID` for symbols in several families | `resolve_marker_motif_families()` |
-| Scanning | Motif matrices | Fixed | PFMs with a uniform 0.25 background on the `+` strand; all-zero columns dropped | `read_JASPAR_familial_root_PFMatrixList()` |
-| Scanning | Match thresholds | Fixed | package defaults: `p.cutoff = 5e-5`, `bg = "subject"`, `w = 7` | `get_motif_matrix_from_peak_ranges()`, `motifmatchr::matchMotifs()` |
-| Scanning | Genome | Fixed | BSgenome UCSC hg38, mm10 or mm39, matching the reference | `get_chromVAR_genome_obj()` |
-| chromVAR | Nuclei | Fixed | ATAC nuclei after doublet removal | `chromVAR_obj.ATAC` |
-| chromVAR | Peaks, bias and expectation | Fixed | zero-count peaks removed; `betterChromVAR::addGCBias()` with missing values set to 0; expectation = mean count per peak over nuclei | `get_chromVAR_obj_from_peak_matrix()`, `get_chromVAR_peak_expectation()` |
-| chromVAR | Background | Fixed | package defaults: default background bins, no shrinkage (`shrinkage = "none"`) | `betterChromVAR::getBackgroundBins()`, `betterChromVAR::computeBackgrounds()` |
-| chromVAR | Deviations | Fixed | analytic deviations and z-scores; package default `denominator = "global"` | `compute_chromVAR_annotation_chunk_result()`, `betterChromVAR::computeDeviationsAnalytic()` |
-| Summaries | Per-cell-type test | Fixed | `BPCells::marker_features(method = "wilcoxon")` on z-scores by ATAC cell type; BH across all family-by-group tests; effect = difference in mean z-score | `get_marker_motif_family_accessibility_from_chromVAR_BPCells_z_scores()` |
-
-
-<!-- source: website/implementation/methods_peak_gene_correlation.md -->
-
-# Peak–gene correlation
-
-This chapter covers the optional `peak_gene_correlation` module. The target structure is shown in the [peak–gene correlation graph](implementation_peak_gene_correlation.md), and the configuration in [Peak–gene correlation](../downstream_peak_gene_correlation.html). The compiled kernels are compared with their references in [Algorithmic implementations](algorithm_validation.md). The tables follow the layout in [Methods and parameter tables](implementation_conventions.md#methods-and-parameter-tables).
-
-
-<!-- begin include: website/implementation/_shared_methods/peak_gene_correlation.md -->
-
-The optional peak–gene correlation module runs on the accepted WNN cell set with its own configuration, review checkpoint and output directory. It operates separately within sufficiently large WNN annotation classes and requires donor identifiers and per-nucleus GEX and ATAC depth metadata; classes lacking them are skipped with a diagnostic. Consensus ATAC peaks are paired with gene transcription start sites (TSSs) on the same chromosome within a fixed window measured from the peak centre, and each pair is classified as self-promoter, gene-body, proximal or distal. Within each class, nuclei from eligible donors are partitioned into mutually exclusive ATAC-state bins by *k*-means clustering of scaled ATAC LSI or Harmony dimensions, with the number of bins adapting to the median number of nuclei per donor. Counts are summed within each donor–state combination to create non-overlapping pseudobulks; pseudobulks below a minimum size are dropped, and donors and states are pruned iteratively until every donor contributes a minimum number of states.
-
-GEX and ATAC pseudobulk counts are separately scaled to counts per million, using the metadata-derived pseudobulk depth, and log1p-transformed. Genes and peaks must be detected in a minimum fraction of pseudobulks, and a chromosome branch requires minimum numbers of pseudobulks and residual degrees of freedom. A configurable measurement-support filter then removes hypotheses whose gene and peak are not both supported in enough shared donors, with count thresholds scaled by each pseudobulk's depth relative to the class median. Excluded hypotheses are never tested and do not enter the multiple-testing family.
-
-GEX and ATAC values are residualized against donor and scaled log RNA and ATAC depth, retaining variation between ATAC states; the Pearson correlation of the residuals and a heteroskedasticity-robust (HC3) regression test give conditional association summaries. The hierarchical analysis fits donor fixed intercepts, depth covariates and a donor-varying slope for the within-donor-centred peak value, using project-owned compiled kernels for profiled restricted maximum likelihood and Kenward–Roger inference for the average slope; `lme4` and `pbkrtest` serve only as test references. It requires within-donor peak variation in at least two donors, and because every support preset requires at least two shared donors, single-donor classes yield diagnostics but no tests. Fits failing numerical diagnostics retain their estimates but no inferential P-value. Hierarchical P-values are Benjamini–Hochberg-corrected within each annotation class over the complete eligible pair family, counting unreliable tests; conditional P-values are corrected within each class over the non-missing values. SuSiE fine-mapping prioritizes peaks for genes with at least one conditional link, using the donor- and depth-residualized values [@wang2020_susie]. These model-based associations do not establish causal enhancer–gene regulation.
-
-Top-link plots rank estimable positive hierarchical associations by nominal P-value, without a significance cutoff, excluding self-promoter peaks; gene-body peaks remain eligible. Each plot shows the gene context, the focal class's insertion coverage and the donor-residual scatter, and donor-level direction and covariance diagnostics help identify associations dominated by one donor.
-
-<!-- end include: website/implementation/_shared_methods/peak_gene_correlation.md -->
-
-
-## Cell groups, candidate pairs and donor–state pseudobulks
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Cell groups | Annotation column and minimum class size | Fixed | `WNN_harmony_SNN_cluster_cell_type`; at least 200 nuclei | `make_peak_gene_correlation_cell_groups()` |
-| Pairs | TSS and search window | Fixed | TSS at the gene start, or the gene end on the minus strand; peak centre within 250 kb of the TSS | `make_peak_gene_correlation_gene_TSS_tibble()`, `make_peak_gene_correlation_candidate_pairs()` |
-| Pairs | Self-promoter window and link classes | Fixed | strand-aware −1,500 to +500 bp around the TSS; self-promoter, gene body, proximal (≤ 10 kb), distal, in that precedence | `make_peak_gene_correlation_candidate_pairs()` |
-| Donors | Donor and depth columns | Fixed | `donor_id`; first available of `nCount_RNA`, `gex_umis_count` and of `nCount_ATAC`, `atac_fragments` | `make_peak_gene_correlation_donor_state_record()` |
-| States | Embedding | Configurable |  | [`aggregation_ATAC_data_PCs`](../parameters.html#aggregation_ATAC_data_PCs), [`aggregation_harmony_correction_metadata_col_names`](../parameters.html#aggregation_harmony_correction_metadata_col_names), [`aggregation_extra_harmony_covars_ATAC`](../parameters.html#aggregation_extra_harmony_covars_ATAC) |
-| States | Dimensions and scaling | Fixed | LSI dimensions 2–20 present in the embedding; zero-variance dimensions dropped and the rest standardized within the class | `make_peak_gene_correlation_donor_state_record()` |
-| States | Number of bins | Fixed | `min(20, floor(median nuclei per eligible donor / 20))`; classes with fewer than 2 bins are skipped | `make_peak_gene_correlation_donor_state_record()` |
-| States | k-means | Fixed | Lloyd algorithm, `iter.max = 1000`, `nstart = 1`, seed 1 | `make_peak_gene_correlation_donor_state_record()` |
-| Pseudobulks | Minimum sizes | Fixed | donors need at least 40 nuclei before binning; at least 20 nuclei per donor–state, 2 states per donor, and 1 donor per class and per state | `make_peak_gene_correlation_donor_state_record()` |
-
-## Normalization, eligibility and measurement-support filtering
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Normalization | Scaling | Fixed | counts per million (`scale_factor = 1e6`) of the metadata-derived pseudobulk depth, then `log1p` | `normalize_peak_gene_correlation_aggregate_matrices()` |
-| Eligibility | Detection | Fixed | genes detected and peaks accessible in at least 5 % of pseudobulks | `prepare_peak_gene_correlation_branch()` |
-| Eligibility | Branch size | Fixed | at least 10 pseudobulks; pseudobulks − design rank − 1 ≥ 5 | `prepare_peak_gene_correlation_branch()` |
-| Nuisance design | Covariates | Fixed | donor fixed effects; standardized `log1p` GEX and ATAC depth when non-constant; QR-pruned to full rank | `make_peak_gene_correlation_design_matrix()` |
-| Support filter | Preset | Configurable |  | [`peak_gene_correlation_filter`](../parameters.html#peak_gene_correlation_filter) |
-| Support filter | Preset thresholds | Fixed | RNA count, ATAC count, supporting aggregates, shared donors, supporting aggregates per donor. Lenient: 5, 3, `max(6, 10%)`, 2, 2; moderate: 10, 5, `max(6, 10%)`, 2, 2; strict: 10, 5, `max(10, 20%)`, 3, 3 | `peak_gene_filter_settings()` |
-| Support filter | Depth scaling of count thresholds | Fixed | `max(2, count × aggregate depth / median depth)` | `filter_peak_gene_candidate_pairs()` |
-
-## Conditional and hierarchical tests
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| HC3 | Test distribution | Fixed | two-sided t with pseudobulks − design rank − 1 degrees of freedom | `score_peak_gene_correlations_for_cell_group()` |
-| Multiplicity | BH family | Fixed | within each class; HC3 over the non-missing P-values; hierarchical over all eligible pairs, including unreliable fits | `finalize_peak_gene_correlation_results()`, `finalize_peak_gene_hierarchical_results()` |
-| Links | Conditional link | Fixed | correlation ≥ 0.15, FDR \< 0.05, not self-promoter | `make_peak_gene_correlation_links()` |
-| Hierarchical | Donor requirement | Fixed | at least 2 donors with within-donor peak variation | `score_peak_gene_hierarchical_associations()` |
-| Hierarchical | Unreliable fits | Fixed | kernel diagnostic raised or Kenward–Roger df \< 1: estimate kept, P-value missing | `score_peak_gene_hierarchical_associations()` |
-
-## Prioritization, top links and plots
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| SuSiE | Genes and candidate peaks | Fixed | genes with a conditional link; up to 50 genes per branch by best FDR and 500 peaks per gene by absolute correlation; at least 2 variable peaks | `finemap_peak_gene_correlations_for_branch()` |
-| SuSiE | Model settings | Fixed | `L = min(10, n_peaks)`, `intercept = FALSE`, `standardize = TRUE`, `estimate_residual_variance = TRUE`, `max_iter = 100`; credible-set coverage 0.95 | `finemap_peak_gene_correlations_for_branch()` |
-| SuSiE | Records retained | Fixed | PIP ≥ 0.01 or credible-set member, otherwise the top peak | `finemap_peak_gene_correlations_for_branch()` |
-| Top links | Links per cell group | Configurable |  | [`peak_gene_correlation_top_links_per_cell_group`](../parameters.html#peak_gene_correlation_top_links_per_cell_group) |
-
-
-<!-- source: website/implementation/methods_differential_analyses.md -->
-
-# Differential analyses
-
-This chapter covers the optional `differential_analyses` module. The target structure is shown in the [differential analyses graph](implementation_differential_analyses.md), and the prerequisites and configuration in [Differential analyses](../downstream_differential_analyses.html). The tables follow the layout in [Methods and parameter tables](implementation_conventions.md#methods-and-parameter-tables).
-
-## Cell-type composition
-
-
-<!-- begin include: website/implementation/_shared_methods/cell_type_composition.md -->
-
-The differential-analysis module treats donors, rather than nuclei, as the biological replicates and takes annotation classes from the WNN cell-type label of the final WNN metadata. For cell-type composition, nuclei are counted by donor and annotation class, completing absent combinations with zero counts, so no class is dropped for being observed in few donors; every observed class is tested unless the model restricts the response classes. Each class is modelled separately, with the numbers of nuclei in that class and in all other classes as a two-column response, in a fixed-effects beta-binomial model with logit link fitted by `glmmTMB` using the configured formula [@brooks2017_glmmtmb]; random effects and custom design functions are not supported in this branch. Named linear contrasts of the fixed effects are tested with Wald statistics, and fits that fail, do not converge or lack a positive-definite Hessian are reported as non-estimable. The pipeline does not impose a universal replication threshold, so the configured covariates must be supported by the donor count and study design. Benjamini–Hochberg correction is applied across the tested annotation classes within each model and contrast; there is no adjustment across contrasts or models.
-
-<!-- end include: website/implementation/_shared_methods/cell_type_composition.md -->
-
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Input | Annotation column counted per donor | Fixed | `WNN_harmony_SNN_cluster_cell_type` | `model_data.cell_type_composition` |
-| Population | GEM wells defining the population | Configurable |  | `GEM_well_IDs` inside [`differential_analyses_cell_type_composition_models`](../parameters.html#differential_analyses_cell_type_composition_models) |
-| Population | Donor restriction | Configurable |  | `donor_ids` inside [`differential_analyses_cell_type_composition_models`](../parameters.html#differential_analyses_cell_type_composition_models) |
-| Response | Classes tested; denominators always use all retained nuclei | Configurable |  | `cell_types_to_test` inside [`differential_analyses_cell_type_composition_models`](../parameters.html#differential_analyses_cell_type_composition_models) |
-| Model | Fixed-effects formula | Configurable |  | `formula` inside [`differential_analyses_cell_type_composition_models`](../parameters.html#differential_analyses_cell_type_composition_models) |
-| Model | Family, link and response | Fixed | beta-binomial with logit link on `cbind(n_nuclei, n_other_nuclei)`; no dispersion or zero-inflation formula, so package defaults apply | `fit_cell_type_composition_model()`, `glmmTMB::glmmTMB()` |
-| Contrasts | Named linear contrasts | Configurable |  | `contrast_specs_vec` inside [`differential_analyses_cell_type_composition_models`](../parameters.html#differential_analyses_cell_type_composition_models) |
-| Plot | Phenotype panels and colour variable | Configurable |  | `plot_phenotype_vars`, `color_by` inside [`differential_analyses_cell_type_composition_models`](../parameters.html#differential_analyses_cell_type_composition_models) |
-
-## Molecular pseudobulk analyses
-
-
-<!-- begin include: website/implementation/_shared_methods/pseudobulk_differential_analyses.md -->
-
-For molecular analyses, GEX and ATAC counts are summed within each donor–annotation-class combination to form pseudobulk samples, the same pseudobulks used for the Seurat/Signac export. Four feature matrices are tested:
-
-- **Gene expression (DGE):** gene pseudobulk counts.
-- **Chromatin accessibility (DCA):** consensus-peak pseudobulk counts after peak-level quality control.
-- **Motif-family accessibility (DTFA):** betterChromVAR deviations of the JASPAR motif families calculated from the pseudobulk ATAC counts, column-centred and quantile-normalized across samples, so this matrix is continuous [@germain2026_betterchromvar].
-- **Transcription-factor activity (DCTA):** signed CollecTRI regulator activities inferred with the `decoupleR` univariate linear model from filtered, library-size-normalized log-CPM GEX pseudobulks, requiring a minimum number of measured targets per regulator [@muller_dott2023_collectri; @badia2022_decoupler]. The CollecTRI network is accepted only when it matches a pinned checksum, and complexes such as AP1 and NF-κB remain intact as regulons.
-
-For each model, donors missing a model variable or outside an optional donor list and samples outside an optional annotation-class subset are removed; the DTFA branch additionally removes samples below a configured minimum ATAC depth. For count matrices, zero-depth samples are removed, features are filtered with the design-aware `edgeR::filterByExpr()`, and library sizes are normalized with `edgeR::normLibSizes()` [@robinson2009_edger].
-
-Model matrices are generated from a configured formula or custom design function, and contrasts from named linear expressions or custom contrast functions. A configured random effect selects voom for counts followed by `limma::duplicateCorrelation()` with the random effect as block [@ritchie2015_limma]. Otherwise, count designs with more than one coefficient use edgeR quasi-likelihood dispersion estimation with robust fitting and testing, and continuous matrices and single-coefficient designs use limma; a single-coefficient count design is fitted on the raw counts without the filtering and normalization above. An optional paired-cell-type route fits each annotation class separately, permits at most one pseudobulk per pairing unit and class, estimates residual correlations between classes from shared donors, and incorporates those correlations when testing cross-class contrasts.
-
-For each model and contrast, Benjamini–Hochberg FDR is calculated across the tested features, and a fixed FDR threshold defines significant results. DGE statistics are also tested against the MSigDB Hallmark and Reactome collections using competitive `cameraPR` tests with a fixed inter-gene correlation and a minimum number of tested genes per set [@dolgalev2026_msigdbr]. The test statistic is the moderated *t*-statistic where the route provides one and otherwise a signed normal quantile of the nominal P-value; FDR is calculated within each contrast and collection. A cross-modality comparison maps CollecTRI regulators to JASPAR families and compares the model *t*-statistics of transcription-factor activity, motif-family accessibility and TF expression rather than their raw scales; family-level summaries use the median regulator *t*-statistic.
-
-Diagnostic outputs report pseudobulk depth, retained sample and donor counts, paired-donor support, P-value distributions, effect directions and significant-feature counts. When a trait identifier is configured, the top DGE features are annotated with Open Targets evidence. A branch fails rather than returning a model when no samples or testable features remain, residual degrees of freedom are below one, a correlation block or contrast is invalid, or too few shared donors remain for a requested paired-cell-type comparison.
-
-<!-- end include: website/implementation/_shared_methods/pseudobulk_differential_analyses.md -->
-
-
-### Pseudobulk construction
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Summation | Grouping and inputs | Fixed | counts summed (`method = "sum"`) per `WNN_harmony_SNN_cluster_cell_type` and donor; the ATAC input is the peak-QC-filtered consensus-peak matrix | `get_BPCells_pseudobulk_matrix()`, `pseudobulk_counts_BPCells_matrix_dir.GEX`, `pseudobulk_counts_BPCells_matrix_dir.ATAC` |
-| DTFA | Motif families | Fixed | 233 JASPAR 2026 CORE vertebrate familial root motifs; membership map of 1,019 motifs | `resources/JASPAR2026_vertebrate_familial_root_motifs.tf`, `resources/JASPAR2026_vertebrate_motif_families.tsv` |
-| DTFA | Scores | Fixed | betterChromVAR analytic deviations with `compute = c("deviations", "z")` on peaks with non-zero pseudobulk counts; z-scores column-centred and quantile-normalised with `limma::normalizeBetweenArrays(method = "quantile")`, switched on by the project helper argument `normalize = TRUE` | `get_pseudobulk_chromVAR_background_record()`, `compute_pseudobulk_chromVAR_deviation_SE()`, `get_pseudobulk_chromVAR_accessibility_matrix()`, `get_pseudobulk_motif_family_accessibility_matrix()` |
-| DCTA | Regulon network | Fixed | CollecTRI from `https://rescued.omnipathdb.org/CollecTRI.csv`, SHA-256 `86c90b30f2cc75c189da1f0a8c353d1547287cd656a9fac1c678634285bcb4e0`; 43,536 signed interactions from 1,189 regulators | `CollecTRI_human_network_csv`, `read_CollecTRI_human_network()` |
-| DCTA | Expression preprocessing | Fixed | `edgeR::filterByExpr(group = cluster)`; TMM normalisation with `normLibSizes()`; `cpm(log = TRUE, prior.count = 2)` | `get_pseudobulk_CollecTRI_TF_activity_matrix()` |
-| DCTA | Inference | Fixed | `decoupleR::run_ulm()` with at least 5 measured targets per regulator (`min_targets = 5`) | `get_pseudobulk_CollecTRI_TF_activity_matrix()` |
-
-### Sample and feature filtering
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Donors | Variables that must be non-missing | Configurable |  | `formula` inside [`differential_analyses_pseudobulk_models`](../parameters.html#differential_analyses_pseudobulk_models) |
-| Donors | Donor restriction | Configurable |  | `donor_ids` inside [`differential_analyses_pseudobulk_models`](../parameters.html#differential_analyses_pseudobulk_models) |
-| Donors | Extended donor metadata table | Configurable |  | [`differential_analyses_extended_donor_id_metadata_tsv`](../parameters.html#differential_analyses_extended_donor_id_metadata_tsv) |
-| Samples | Annotation-class subset | Configurable |  | `cell_type_subset` inside [`differential_analyses_pseudobulk_models`](../parameters.html#differential_analyses_pseudobulk_models) |
-| Samples | Minimum ATAC depth, DTFA only | Configurable |  | [`differential_analyses_motif_family_accessibility_min_ATAC_counts`](../parameters.html#differential_analyses_motif_family_accessibility_min_ATAC_counts) |
-| Count routes | Sample and feature filtering | Fixed | samples with zero counts removed; `filterByExpr(design = design_matrix)` and TMM `normLibSizes()`, otherwise package defaults | `fit_pseudobulk_feature_matrix_model()`, `fit_pseudobulk_cell_type_matrix()`, `edgeR::filterByExpr()`, `edgeR::normLibSizes()` |
-
-### Model routes
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Design | Formula or custom design function | Configurable |  | `formula`, `design_matrix_func_name` inside [`differential_analyses_pseudobulk_models`](../parameters.html#differential_analyses_pseudobulk_models) |
-| Design | Contrasts | Configurable |  | `contrast_specs_vec` and custom contrast functions inside [`differential_analyses_pseudobulk_models`](../parameters.html#differential_analyses_pseudobulk_models) |
-| Route | Count detection | Fixed | integer check on up to 10 × 10 randomly sampled entries | `is_count_matrix()` |
-| Route | Correlation route trigger | Configurable |  | `random_effect` inside [`differential_analyses_pseudobulk_models`](../parameters.html#differential_analyses_pseudobulk_models) |
-| edgeR route | Dispersion and test | Fixed | `estimateDisp()` with package defaults; `glmQLFit(robust = TRUE)`; `glmQLFTest()` | `fit_pseudobulk_feature_matrix_model()`, `get_pseudobulk_feature_model_results()`, `edgeR::estimateDisp.DGEList()` |
-| limma routes | Moderation | Fixed | `eBayes()` with package defaults, without `robust` or `trend` | `get_pseudobulk_feature_model_results()`, `get_pseudobulk_cell_type_contrast_statistics()`, `limma::eBayes()` |
-| Paired route | Trigger and pairing | Configurable |  | `cell_type_formula`, `pairing_variable`, `correlation_block` inside [`differential_analyses_pseudobulk_models`](../parameters.html#differential_analyses_pseudobulk_models) |
-| Paired route | Per-class count fit | Fixed | `edgeR::voomLmFit()` with `normalize.method = "none"` after the filtering and TMM normalisation above | `fit_pseudobulk_cell_type_matrix()` |
-| Paired route | Residual correlation between classes | Fixed | shared donors, more than coefficients + 2 required; up to 2,000 evenly spaced common features; Fisher-z mean trimmed at 0.15 | `estimate_pseudobulk_cell_type_residual_correlations()` |
-| Paired route | Cross-class test | Fixed | t from the two class estimates and their covariance; df is the smaller per-class total df | `get_pseudobulk_paired_cell_type_contrast_statistics()` |
-
-### Multiplicity, significance and gene sets
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Significance | FDR and significant features | Fixed | BH across the tested features of each model and contrast; significant when FDR \< 0.05 and `logFC != 0` | `get_pseudobulk_feature_model_results()`, `get_pseudobulk_cell_type_model_results()`, `get_pseudobulk_differential_significant_elements_tibble()` |
-| Top features | Features labelled and queried per contrast | Fixed | 40 with the smallest nominal P | `top_features_tibble` |
-| Gene sets | Collections | Fixed | MSigDB Hallmark (`H`) and Reactome (`C2`, `CP:REACTOME`); human gene sets for `Homo_sapiens`, mouse for `Mus_musculus` | `gene_sets`, `get_msigdb_gene_sets()` |
-| Gene sets | Test | Fixed | `limma::cameraPR(inter.gene.cor = 0.01)`; at least 10 tested genes per set; BH within contrast and collection | `get_gene_set_enrichment_results()` |
-| Open Targets | Trait identifier; empty skips the query | Configurable |  | [`differential_analyses_pseudobulk_OT_GWAS_efo_id`](../parameters.html#differential_analyses_pseudobulk_OT_GWAS_efo_id) |
-| Open Targets | Query | Fixed | Open Targets Platform GraphQL API (`https://api.platform.opentargets.org/api/v4/graphql`), queried at run time for the top gene-expression features only | `top_feature_open_targets_evidence_tibble`, `get_OT_GWAS_gene_evidence_tibble()` |
-
-### Cross-modality comparison
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Crosswalk | Complex members | Fixed | AP1: FOS, FOSB, FOSL1, FOSL2, JUN, JUNB, JUND; NFKB: NFKB1, NFKB2, REL, RELA, RELB | `get_CollecTRI_JASPAR_family_map()` |
-| Summary | Family statistics and concordance | Fixed | median CollecTRI and TF-expression t per family; Spearman correlation with the motif-family t when at least 3 families are mapped in a contrast | `get_CollecTRI_JASPAR_family_comparison_tibble()`, `get_CollecTRI_JASPAR_concordance_tibble()` |
-
-
-<!-- source: website/implementation/methods_genetic_enrichment.md -->
-
-# Genetic enrichment
-
-This chapter covers the optional `genetic_enrichment` module. The target structure is shown in the [genetic enrichment graph](implementation_genetic_enrichment.md), and the configuration in [Genetic enrichment](../downstream_genetic_enrichment.html). The sparse SCAVENGE implementation is compared with its reference in [Algorithmic implementations](algorithm_validation.md#sparse-scavenge-propagation-and-significance). The tables follow the layout in [Methods and parameter tables](implementation_conventions.md#methods-and-parameter-tables).
-
-
-<!-- begin include: website/implementation/_shared_methods/genetic_enrichment.md -->
-
-The implementation pins one Open Targets Platform release and downloads its study, credible-set, credible-set evidence and target datasets [@buniello2025_open_targets_platform]; local fine-mapping results can be supplied as Parquet files satisfying a fixed schema. For each configured GWAS, multiomeR retrieves the requested study and fine-mapping result, taking the first available fine-mapping method in a fixed priority order when selection is automatic. Variants of all credible sets, without a 95% credible-set restriction, are filtered by posterior probability and mapped to consensus ATAC peaks. Variant weights that map to the same peak are summed and capped at one. These peak weights form the trait annotation from which analytic nucleus-level chromVAR z-scores are calculated, reusing the GC-bias background of the motif analysis [@schep2017_chromvar; @ulirsch2019_gchromvar; @germain2026_betterchromvar].
-
-Annotation-class pseudobulk deviations are calculated separately rather than by averaging the nucleus-level results. ATAC counts are summed by the GEX-derived annotation carried into the final WNN metadata, and a betterChromVAR background model is fitted to the resulting peak-by-class matrix. The raw deviation is the observed-minus-background accessibility of the weighted peaks relative to their expected accessibility, and a relative deviation additionally standardizes the raw deviations across annotation classes within each trait. The analytic z-score uses the background variance of the weighted peaks; one-sided P-values and Benjamini–Hochberg-adjusted values are retained, and plot labels mark fixed unadjusted z-score thresholds. Thus, the heatmap fill, within-trait standardization and support statistic are separate quantities. When effect sizes are available, an absolute-effect branch weights variants by posterior probability times effect size. Locus-level attribution decomposes each class deviation into contributing loci and variants, reconciled against the class totals and labelled with the highest-scoring Open Targets locus-to-gene genes. Detail plots are drawn for classes with a positive deviation and a z-score at or above a configurable screen, showing the top loci by absolute contribution and by combined contribution and effect-size rank.
-
-SCAVENGE-style trait-relevance scores are calculated from the nucleus-level z-scores on the WNN graph with a local sparse-matrix implementation of the SCAVENGE propagation strategy rather than the reference package [@yu2022_scavenge]. Nuclei whose one-sided normal-tail probability is at or below a fixed cutoff are seeds, subject to the configured maximum seed fraction; when no nucleus qualifies, all scores are zero. The nonzero support of the WNN graph is converted to binary adjacency, degree-zero nuclei are excluded, and seed signal is propagated by a random walk with the configured restart probability until convergence. Degree-matched seed permutations are sampled sequentially as in the reference implementation, while parallel native random walks stream per-cell exceedance counts without materializing the cell-by-permutation score matrix. Cell-level empirical P-values are the exceedance fraction, with a fixed cutoff defining significant cells. Scores are capped at an upper quantile, min–max scaled and multiplied by the mean z-score of the top-scoring nuclei. As pipeline extensions, cluster-level permutation medians receive add-one P-values with Benjamini–Hochberg adjustment within each metadata grouping, and each summarized grouping reports the number of nuclei, the number and proportion of significant nuclei, and the median, mean, interquartile range and range of the scores.
-
-<!-- end include: website/implementation/_shared_methods/genetic_enrichment.md -->
-
-
-## GWAS inputs and peak weights
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Studies | Study label, category, source identifier, fine-mapping method | Configurable |  | fields inside [`genetic_enrichment_GWAS_studies`](../parameters.html#genetic_enrichment_GWAS_studies) |
-| Open Targets | Platform release and datasets | Fixed | release `26.03`: `credible_set`, `study`, `evidence_gwas_credible_sets`, `target` | `open_targets_credible_set_dataset_path`, `open_targets_study_dataset_path`, `open_targets_gwas_credible_sets_evidence_dataset_path`, `open_targets_target_dataset_path` |
-| Open Targets | Study selection | Fixed | identifiers matching `^GCST[0-9]+$`, anything else is a local file; `studyType == "gwas"` | `classify_GWAS_source()`, `resolve_open_targets_GWAS_input_tibble()` |
-| Fine-mapping | Automatic priority | Fixed | SuSie, SuSiE-inf, PICS | `resolve_open_targets_GWAS_input_tibble()` |
-| Credible sets | Open Targets variants | Fixed | every variant in each credible-set `locus`, without an `is95CredibleSet` filter, on autosomes, X, Y or MT | `get_open_targets_credible_set_variants_tibble()` |
-| Variants | Posterior probability cutoff | Configurable |  | [`genetic_enrichment_posterior_probability_cutoff`](../parameters.html#genetic_enrichment_posterior_probability_cutoff) |
-| Variants | Cutoff comparison | Fixed | posterior probability strictly greater than the cutoff | `filter_credible_set_variants()` |
-| Peak weights | Peaks and combination | Fixed | peaks of the ATAC chromVAR object; weights of variants in the same peak summed and capped at 1 (`weight_transform = "cap_1"`) | `genetic_enrichment_peak_ranges`, `get_GWAS_chromVAR_peak_weight_record()` |
-
-## Nucleus-level deviations
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Deviations | Nucleus-level statistic | Fixed | analytic z-scores only (`compute = "z"`) | `get_GWAS_chromVAR_z_score_chunk_record()` |
-
-## Annotation-class pseudobulk deviations
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Pseudobulks | Grouping | Fixed | ATAC counts summed (`method = "sum"`) per `PCA_harmony_SNN_cluster_cell_type` from the WNN metadata | `cell_type_pseudobulk_counts_BPCells_matrix_dir.ATAC`, `get_BPCells_group_pseudobulk_matrix()` |
-| Pseudobulks | Peak filter | Fixed | peaks with zero pseudobulk counts removed before the background | `get_pseudobulk_chromVAR_background_record()` |
-| Plots | Support labels | Fixed | `**` for z ≥ 2.326, `*` for z ≥ 1.645, unadjusted | `chromVAR_Z_support_labels()` |
-| Plots | Compartment grouping | Configurable |  | [`genetic_enrichment_compartment_patterns`](../parameters.html#genetic_enrichment_compartment_patterns) |
-| Absolute effect | Eligibility | Fixed | variant-level effects when every variant has one, otherwise locus-level effects when every locus has one; otherwise skipped | `infer_GWAS_absolute_effect_weighting()` |
-
-## Locus attribution and detail plots
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| L2G | Gene labels | Fixed | L2G score ≥ 0.05; top 3 genes per locus | `get_open_targets_GWAS_locus_to_gene_tibble()`, `get_GWAS_chromVAR_locus_contribution_tibble()` |
-| Detail plots | Minimum z | Configurable |  | [`genetic_enrichment_variant_detail_min_z`](../parameters.html#genetic_enrichment_variant_detail_min_z) |
-| Detail plots | Loci | Fixed | classes with a positive deviation passing the z screen; per class the top 3 loci by absolute contribution plus the top 3 by combined contribution and effect-size percentile; 25 kb flank | `prepare_GWAS_variant_contribution_detail_records()`, `select_GWAS_detail_loci()` |
-| Attribution plots | Loci shown individually | Fixed | 15 in heatmaps; 5 in bar plots | `chromVAR_locus_contribution_per_GWAS_heatmaps.cell_type_pseudobulk`, `chromVAR_locus_contribution_per_GWAS_faceted_bars_plots.cell_type_pseudobulk` |
-
-## SCAVENGE trait-relevance propagation
-
-| Step | Setting | Status | Value | Source |
-|---|---|---|---|---|
-| Graph | Representation | Fixed | WNN SNN graph (`WNN_harmony_SNN`) only | `graph_matrix` |
-| Seeds | Selection | Fixed | one-sided normal P ≤ 0.05; nuclei with non-finite z or z \> 1000 excluded first | `get_SCAVENGE_seed_index()`, `get_SCAVENGE_result_from_chromVAR_z_score_record()` |
-| Seeds | Maximum seed fraction | Configurable |  | [`genetic_enrichment_SCAVENGE_seed_percent`](../parameters.html#genetic_enrichment_SCAVENGE_seed_percent) |
-| Walk | Restart probability | Configurable |  | [`genetic_enrichment_SCAVENGE_restart_prob`](../parameters.html#genetic_enrichment_SCAVENGE_restart_prob) |
-| Walk | Convergence | Fixed | L1 change ≤ 1e-5; at most 10,000 iterations | `run_sparse_random_walk_with_restart()`, `run_SCAVENGE_permutation_statistics()` |
-| Permutations | Count | Configurable |  | [`genetic_enrichment_SCAVENGE_permutation_times`](../parameters.html#genetic_enrichment_SCAVENGE_permutation_times) |
-| Significance | Cell and cluster P-values | Fixed | cell: strictly greater permuted scores / permutations, significant at P ≤ 0.05; cluster: median score, (exceedances + 1) / (permutations + 1) counting ties, BH within each grouping | `get_SCAVENGE_result_from_chromVAR_z_score_record()`, `summarize_SCAVENGE_cluster_permutations()` |
-| Score | Cap and scale | Fixed | capped at the 0.95 quantile, min–max scaled, multiplied by the mean z of the top 1 % of nuclei | `get_SCAVENGE_result_from_chromVAR_z_score_record()`, `get_SCAVENGE_scale_factor()` |
-| Summaries | Groupings | Fixed | `WNN_harmony_SNN_cluster_named`, `WNN_harmony_SNN_cluster_cell_type` | `summarize_SCAVENGE_TRS_by_groups()`, `get_SCAVENGE_cluster_index_record()` |
-| Plots | Heatmap stars | Fixed | on BH-adjusted cluster P: `***` ≤ 0.001, `**` ≤ 0.01, `*` ≤ 0.05 | `add_SCAVENGE_heatmap_significance()` |
 
 
 # Orphaned Markdown Pages

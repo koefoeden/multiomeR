@@ -5,11 +5,9 @@ pipeline_name <- "processing_and_aggregation"
 source("helpers/_setup.R")
 ```
 
-The graph chapters collect simplified views of the real `{targets}` dependency graph. They are meant to make the workflow easier to reason about before reading the target code directly.
+The stage pages show simplified views of the real `{targets}` dependency graph. They are meant to make the workflow easier to reason about before reading the target code directly.
 
 The diagrams are generated from tagged target metadata and the real dependency graph, then simplified by pruning or bypassing lower-level nodes that would make each view harder to read. They keep real target names and preserve the dependency structure where practical, while staying compact enough to build intuition about the main control points.
-
-The following chapters cover the primary module and the differential analyses, genetic enrichment and peak–gene correlation modules.
 
 ## Trace one configured aggregation
 

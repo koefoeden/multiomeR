@@ -420,6 +420,10 @@ build_aggregation_tibble <- function(aggregation_tibble_all_from_yaml, GEM_well_
 
   aggregation_tibble |>
     dplyr::mutate(
+      # Scalar component counts keep PCA and LSI commands unchanged when only
+      # the downstream dimension selection changes.
+      aggregation_GEX_PCA_n_components = purrr::map_dbl(aggregation_GEX_data_PCs, max),
+      aggregation_ATAC_LSI_n_components = purrr::map_dbl(aggregation_ATAC_data_PCs, max),
       aggregation_GEM_well_QC_exclude_list = purrr::map(
         aggregation_GEM_well_IDs,
         \(ids) {

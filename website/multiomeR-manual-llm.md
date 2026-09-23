@@ -824,7 +824,7 @@ targets::tar_read(
 
 Use this module to nominate candidate regulatory links between accessible regions and nearby genes within each WNN cell type. It pairs consensus peaks with nearby gene transcription start sites and tests whether accessibility and expression vary together across **donor–state pseudobulks**: nuclei of one cell type summed by donor and ATAC-defined state, with each nucleus in at most one pseudobulk.
 
-A hierarchical model adjusts for donor and sequencing depth and lets the peak–gene slope vary between donors. A separate conditional correlation analysis (HC3) provides the correlation summary plots and a SuSiE prioritization of peaks per gene. Links are hypotheses: neither analysis establishes causal regulation, and the hierarchical tests are approximate and have not been broadly calibrated.
+A hierarchical model adjusts for donor and sequencing depth and lets the peak–gene slope vary between donors. Its significant positive slopes nominate candidate links, and SuSiE prioritizes peaks for each linked gene. Links are hypotheses: they do not establish causal regulation, and the hierarchical tests are approximate and have not been broadly calibrated.
 
 ## Prerequisites
 
@@ -842,7 +842,7 @@ Cell types and donors with too few nuclei are skipped. A cell type from a single
 | How many candidate pairs does each support filter retain? | Filter-retention plot |
 | Which cell types or chromosome branches were skipped, and why? | Diagnostics plot and table |
 | Which peaks are associated with a gene's expression? | Hierarchical results table and top-link figures |
-| How do conditional correlations vary by cell type and distance? | HC3 summary plots and link table |
+| How do adjusted correlations and links vary by cell type and distance? | Summary plots and link table |
 | Which peaks best explain a linked gene? | SuSiE prioritization table |
 
 ## Configure
@@ -902,7 +902,7 @@ Review the plots ([examples](gallery.md#peak-gene-correlation)); each plot's sub
 └── significant_pairs_vs_technical_features_plot.png
 ```
 
-Start with `filter_retention_plot.png`, which compares the three support filters by cell type and marks the active one. Top-link figures rank positive, estimable slopes outside self-promoter peaks by hierarchical p-value, without a significance cutoff, so appearing in a figure is not evidence of significance. `diagnostics_plot.png` shows skipped branches, and the other plots summarize the HC3 analysis.
+Start with `filter_retention_plot.png`, which compares the three support filters by cell type and marks the active one. Top-link figures rank positive, estimable slopes outside self-promoter peaks by hierarchical p-value, without a significance cutoff, so appearing in a figure is not evidence of significance. `diagnostics_plot.png` shows skipped branches, and the other plots summarize adjusted correlations and hierarchical links.
 
 Read the tables in R, for example the hierarchical results with BH FDR within each cell type:
 
@@ -912,7 +912,7 @@ targets::tar_read(
 )
 ```
 
-The HC3 links and SuSiE prioritization are in `peak_gene_correlation_links_tibble.WNN` and `peak_gene_correlation_finemapped_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix.
+The candidate links and SuSiE prioritization are in `peak_gene_correlation_links_tibble.WNN` and `peak_gene_correlation_finemapped_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix.
 
 ## Parameter reference
 
@@ -966,7 +966,7 @@ The `RAM_GB` values in `controller_resources_tibble` route each target to a cont
 After editing the file, restart R or reload the runtime, which also checks the file:
 
 ```{.r filename="R"}
-load_project_runtime(force = TRUE)
+load_project_runtime()
 ```
 
 ## Scheduler execution
@@ -1012,7 +1012,7 @@ Run the commands below in the repository-root R session. For general techniques,
 Reload the runtime and build the manifest:
 
 ```{.r filename="R"}
-load_project_runtime(force = TRUE)
+load_project_runtime()
 targets::tar_manifest(callr_function = NULL)
 ```
 
@@ -1074,7 +1074,7 @@ Metadata files are checked when the targets that read them run. Compare the erro
 
 If workers do not start, are killed, or no controller can run a target:
 
-1. Check `crew_controllers.R` against the [controller rules](performance_distributed_computing.md#controller-rules), then reload it with `load_project_runtime(force = TRUE)`.
+1. Check `crew_controllers.R` against the [controller rules](performance_distributed_computing.md#controller-rules), then reload it with `load_project_runtime()`.
 2. An error starting with `No controller found` means that no tier offers the requested cores, RAM, or GPUs; add or enlarge a tier.
 3. For scheduler controllers, read the scheduler's output and error logs, and check the queue, account, wall time, memory, CPU, module, and file-system settings.
 4. If local workers are killed for lack of memory, lower their `workers` values as described in [Local execution](performance_distributed_computing.md#local-execution).
@@ -1170,13 +1170,12 @@ The `cluster_UCell_diagnostics` targets write these files to `<store>/files/my_a
 
 | File | Contents |
 |---|---|
-| `clusters.tsv` | One row per cluster: status, label, leading candidate, runner-up, the reason for an `Unassigned` status, and stability and GEM well agreement diagnostics. |
+| `clusters.tsv` | One row per cluster: status, label, leading candidate, runner-up and the reason for an `Unassigned` status. |
 | `marker_evidence.tsv` | Each label's score, control background and adjusted score in each cluster. |
 | `control_gene_matching.tsv` | Expression level and detection rate of each marker gene and its controls. |
-| `GEM_well_agreement.tsv` | The same decision made separately within each GEM well of a cluster; written only when GEM wells contribute enough nuclei. |
 | `settings.rds`, `method.txt` | The settings used and a short description of the rule. |
 
-Stability and GEM well agreement are diagnostics; they never change an assignment. `<store>/files/my_aggregation/3_GEX_QC/marker_set_UCell_summary/marker_sets.tsv` summarizes each marker set across the GEX clusters before doublet filtering: how many clusters it leads or is assigned, and its closest competing set.
+`<store>/files/my_aggregation/3_GEX_QC/marker_set_UCell_summary/marker_sets.tsv` summarizes each marker set across the GEX clusters before doublet filtering: how many clusters it leads or is assigned, and its closest competing set.
 
 ## Further methods
 
@@ -1576,14 +1575,11 @@ Because these suffixes become target names and cache identity, config keys shoul
 
 Mapped target tables sometimes need to carry references to other mapped targets. multiomeR represents those references as columns of `rlang` symbols. Each row stores the upstream target symbols that should be spliced into downstream target commands generated for that row.
 
-The compact constructor is `target_sym_col()`. It records a base target name, the source column containing suffixes, the separator, and an optional transform. `add_target_sym_cols()` then turns those specifications into list-columns of `rlang::syms()`.
+`add_GEM_well_target_syms()` adds one such list-column per base target name, named `aggregation_<target>_syms`, from each aggregation's `aggregation_GEM_well_IDs`:
 
 ``` r
 aggregation_tibble |>
-  add_target_sym_cols(
-    aggregation_GEX_counts_BPCells_matrix_syms =
-      target_sym_col("GEX_counts_BPCells_matrix", "aggregation_GEM_well_IDs")
-  )
+  add_GEM_well_target_syms("GEX_counts_BPCells_matrix")
 ```
 
 For an aggregation whose `aggregation_GEM_well_IDs` are `c("rx1", "rx2")`, this creates a row value equivalent to:
@@ -1637,11 +1633,11 @@ For commands that intentionally bypass startup side effects, source the bootstra
 
 ``` r
 source("R/bootstrap_helpers.R")
-load_project_runtime(force = TRUE)
+load_project_runtime()
 targets::tar_manifest(callr_function = NULL)
 ```
 
-Bootstrap state is cached in `bootstrap_state_env`. This avoids reloading packages, re-sourcing helpers, reapplying target options, reassigning patches, and reloading controllers on every call. Use `force = TRUE` when the current R session may be stale, such as after changing helper files, switching checkout roots, editing `crew_controllers.R`, or reusing a long-lived interactive session.
+`load_project_runtime()` keeps no state: each call reloads the packages, helpers, options, and controllers. Call it again when the current R session may be stale, such as after changing helper files, switching checkout roots, editing `crew_controllers.R`, or reusing a long-lived interactive session.
 
 Project-root detection walks upward from the current working directory until it finds `pixi.toml`. Bootstrap commands should therefore be run from inside the multiomeR checkout.
 
@@ -1780,7 +1776,7 @@ Cell-type annotation is driven by user-supplied GEX marker signatures. Signature
 
 Each label's cluster-level mean score is compared with 999 random control signatures matched on gene abundance and detection. The control reference samples up to 50 nuclei per GEM well from the GEX metadata before doublet filtering. For each control replicate, markers are visited in random order and each is replaced by a gene drawn from its 50 nearest eligible candidates not yet used in that replicate; candidates exclude all marker genes and undetected genes. A label's adjusted score in a cluster is its observed mean minus the 95th percentile of its matched controls. The label with the highest adjusted score is the candidate, and its advantage is the smaller of its lead over zero and its lead over the runner-up. The candidate is assigned when its advantage is positive, untied and at least the configured minimum; otherwise the cluster remains unassigned, with the candidate and reason retained, so raising the minimum can only withdraw assignments. Because annotation depends on the supplied signatures and their level of detail, labels can represent either cell types or broader source classes.
 
-Three diagnostics accompany each decision without vetoing it. Marker stability is the fraction of leave-one-marker-out variants, each removing one candidate marker and its matched control, in which the candidate keeps a positive advantage of at least the configured minimum. Cell stability is the fraction of leave-one-block-out replicates, with nuclei split into ten blocks stratified by cluster and GEM well, that assign the same candidate. GEM-well agreement is the fraction of per-well subgroups with at least 25 nuclei that assign it. Detection counts additionally report the positive markers detected in at least 10% of a cluster's nuclei.
+Detection counts report the positive markers detected in at least 10% of a cluster's nuclei.
 
 <!-- end include: website/implementation/_shared_methods/cell_type_annotation.md -->
 
@@ -1818,14 +1814,14 @@ The optional peak–gene correlation module runs on the accepted WNN cell set wi
 
 GEX and ATAC pseudobulk counts are separately scaled to counts per million, using the metadata-derived pseudobulk depth, and log1p-transformed. Genes and peaks must be detected in at least 5% of pseudobulks, and a chromosome branch requires minimum numbers of pseudobulks and residual degrees of freedom. A configurable measurement-support filter then removes hypotheses whose gene and peak are not both supported in enough shared donors, with count thresholds scaled by each pseudobulk's depth relative to the class median. The lenient, moderate and strict presets require RNA and ATAC counts of at least 5 and 3, 10 and 5, and 10 and 5 in a supporting pseudobulk, at least 6 supporting pseudobulks or 10% of them (10 or 20% for strict), and two shared donors (three for strict). Excluded hypotheses are never tested and do not enter the multiple-testing family.
 
-GEX and ATAC values are residualized against donor and scaled log RNA and ATAC depth, retaining variation between ATAC states; the Pearson correlation of the residuals and a heteroskedasticity-robust (HC3) regression test give conditional association summaries. The hierarchical analysis fits donor fixed intercepts, depth covariates and a donor-varying slope for the within-donor-centred peak value, using project-owned compiled kernels for profiled restricted maximum likelihood and Kenward–Roger inference for the average slope; `lme4` and `pbkrtest` serve only as test references. It requires within-donor peak variation in at least two donors, and because every support preset requires at least two shared donors, single-donor classes yield diagnostics but no tests. Fits failing numerical diagnostics retain their estimates but no inferential P-value. Hierarchical P-values are Benjamini–Hochberg-corrected within each annotation class over the complete eligible pair family, counting unreliable tests; conditional P-values are corrected within each class over the non-missing values. A conditional link requires a residual correlation of at least 0.15 and an FDR below 0.05, excluding self-promoter peaks. SuSiE fine-mapping, with up to ten single effects and 95% credible sets, prioritizes peaks for genes with at least one conditional link, using the donor- and depth-residualized values [@wang2020_susie]. These model-based associations do not establish causal enhancer–gene regulation.
+GEX and ATAC values are residualized against donor and scaled log RNA and ATAC depth, retaining variation between ATAC states; the Pearson correlation of the residuals is reported as a descriptive summary. The hierarchical analysis fits donor fixed intercepts, depth covariates and a donor-varying slope for the within-donor-centred peak value, using project-owned compiled kernels for profiled restricted maximum likelihood and Kenward–Roger inference for the average slope; `lme4` and `pbkrtest` serve only as test references. It requires within-donor peak variation in at least two donors, and because every support preset requires at least two shared donors, single-donor classes yield diagnostics but no tests. Fits failing numerical diagnostics retain their estimates but no inferential P-value. Hierarchical P-values are Benjamini–Hochberg-corrected within each annotation class over the complete eligible pair family, counting unreliable tests. A candidate link requires an estimable positive average slope and an FDR below 0.05, excluding self-promoter peaks. SuSiE fine-mapping, with up to ten single effects and 95% credible sets, prioritizes peaks for genes with at least one candidate link, using the donor- and depth-residualized values [@wang2020_susie]. These model-based associations do not establish causal enhancer–gene regulation.
 
-Top-link plots rank estimable positive hierarchical associations by nominal P-value, without a significance cutoff, excluding self-promoter peaks; gene-body peaks remain eligible. Each plot shows the gene context, the focal class's insertion coverage and the donor-residual scatter, and donor-level direction and covariance diagnostics help identify associations dominated by one donor.
+Top-link plots rank estimable positive hierarchical associations by nominal P-value, without a significance cutoff, excluding self-promoter peaks; gene-body peaks remain eligible. Each plot shows the gene context, the focal class's insertion coverage and the donor-residual scatter.
 
 <!-- end include: website/implementation/_shared_methods/peak_gene_correlation.md -->
 
 
-**Source:** [`module_peak_gene_correlation/`](https://github.com/koefoeden/multiomeR/tree/main/module_peak_gene_correlation), [`R/peak_gene_correlation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_correlation_helpers.R), [`R/peak_gene_filter_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_filter_helpers.R), [`R/peak_gene_hierarchical_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_hierarchical_helpers.R), [`R/peak_gene_KR_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_KR_helpers.R), [`R/peak_gene_finemapping_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_finemapping_helpers.R), [`src/peak_gene_REML.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/peak_gene_REML.cpp), [`src/peak_gene_KR.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/peak_gene_KR.cpp).
+**Source:** [`module_peak_gene_correlation/`](https://github.com/koefoeden/multiomeR/tree/main/module_peak_gene_correlation), [`R/peak_gene_correlation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_correlation_helpers.R), [`R/peak_gene_filter_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_filter_helpers.R), [`R/peak_gene_hierarchical_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_hierarchical_helpers.R), [`R/peak_gene_finemapping_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_finemapping_helpers.R), [`src/peak_gene_REML.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/peak_gene_REML.cpp), [`src/peak_gene_KR.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/peak_gene_KR.cpp).
 
 ## Target graph
 
@@ -1897,7 +1893,7 @@ Diagnostic outputs report pseudobulk depth, retained sample and donor counts, pa
 
 The implementation pins Open Targets Platform release 26.03 and downloads its study, credible-set, credible-set evidence and target datasets [@buniello2025_open_targets_platform]; local fine-mapping results can be supplied as Parquet files satisfying a fixed schema. For each configured GWAS, multiomeR retrieves the requested study and fine-mapping result, taking the first available of SuSiE, SuSiE-inf and PICS fine-mapping when selection is automatic. Variants of all credible sets, without a 95% credible-set restriction, are filtered by posterior probability and mapped to consensus ATAC peaks. Variant weights that map to the same peak are summed and capped at one. These peak weights form the trait annotation from which analytic nucleus-level chromVAR z-scores are calculated, reusing the GC-bias background of the motif analysis [@schep2017_chromvar; @ulirsch2019_gchromvar; @germain2026_betterchromvar].
 
-Annotation-class pseudobulk deviations are calculated separately rather than by averaging the nucleus-level results. ATAC counts are summed by the GEX-derived annotation carried into the final WNN metadata, and a betterChromVAR background model is fitted to the resulting peak-by-class matrix. The raw deviation is the observed-minus-background accessibility of the weighted peaks relative to their expected accessibility, and a relative deviation additionally standardizes the raw deviations across annotation classes within each trait. The analytic z-score uses the background variance of the weighted peaks; one-sided P-values and Benjamini–Hochberg-adjusted values are retained, and plot labels mark unadjusted z-scores of at least 1.645 and 2.326. Thus, the heatmap fill, within-trait standardization and support statistic are separate quantities. When effect sizes are available, an absolute-effect branch weights variants by posterior probability times effect size. Locus-level attribution decomposes each class deviation into contributing loci and variants, reconciled against the class totals and labelled with the highest-scoring Open Targets locus-to-gene genes. Detail plots are drawn for classes with a positive deviation and a z-score at or above a configurable screen, showing the top loci by absolute contribution and by combined contribution and effect-size rank.
+Annotation-class pseudobulk deviations are calculated separately rather than by averaging the nucleus-level results. ATAC counts are summed by the GEX-derived annotation carried into the final WNN metadata, and a betterChromVAR background model is fitted to the resulting peak-by-class matrix. The raw deviation is the observed-minus-background accessibility of the weighted peaks relative to their expected accessibility, and a relative deviation additionally standardizes the raw deviations across annotation classes within each trait. The analytic z-score uses the background variance of the weighted peaks; one-sided P-values and Benjamini–Hochberg-adjusted values are retained, and plot labels mark unadjusted z-scores of at least 1.645 and 2.326. Thus, the heatmap fill, within-trait standardization and support statistic are separate quantities. When effect sizes are available, an absolute-effect branch weights variants by posterior probability times effect size. Locus-level attribution decomposes each class deviation additively into contributing loci and variants, whose contributions sum to the class totals, and labels them with the highest-scoring Open Targets locus-to-gene genes. Detail plots are drawn for classes with a positive deviation and a z-score at or above a configurable screen, showing the top loci by absolute contribution and by combined contribution and effect-size rank.
 
 SCAVENGE-style trait-relevance scores are calculated from the nucleus-level z-scores on the WNN graph with a local sparse-matrix implementation of the SCAVENGE propagation strategy rather than the reference package [@yu2022_scavenge]. Nuclei whose one-sided normal-tail probability is at most 0.05 are seeds, subject to the configured maximum seed fraction; when no nucleus qualifies, all scores are zero. The nonzero support of the WNN graph is converted to binary adjacency, degree-zero nuclei are excluded, and seed signal is propagated by a random walk with the configured restart probability until convergence. Degree-matched seed permutations are sampled sequentially as in the reference implementation, while parallel native random walks stream per-cell exceedance counts without materializing the cell-by-permutation score matrix. Cell-level empirical P-values are the exceedance fraction, and cells with P ≤ 0.05 are significant. Scores are capped at their 95th percentile, min–max scaled and multiplied by the mean z-score of the top 1% of nuclei. As pipeline extensions, cluster-level permutation medians receive add-one P-values with Benjamini–Hochberg adjustment within each metadata grouping, and each summarized grouping reports the number of nuclei, the number and proportion of significant nuclei, and the median, mean, interquartile range and range of the scores.
 
@@ -1953,7 +1949,7 @@ Run the complete suite with `pixi run --use-environment-activation-cache test`. 
 | Native WNN | Reference-similarity tested | Seurat | Modality-weight Spearman and neighbour-overlap thresholds per fixture |
 | Sparse SCAVENGE propagation | Algorithmically derived and reference-parity tested | SCAVENGE source at `8ee8b173d965` | Closed-form propagation; identical seed samples, exceedance counts and significant-cell calls |
 | Peak–gene donor-slope REML and Kenward–Roger kernels | Reference-parity tested | lme4 and pbkrtest | Coefficients, df and P-values within 1e-6; identical fit statuses |
-| Peak–gene HC3 statistics and compact BH breakpoints | Reference-parity tested | sandwich; `stats::p.adjust()` | HC3 coefficients, errors and P-values within 1e-10; identical FDR per chromosome slice |
+| Peak–gene compact BH breakpoints | Reference-parity tested | `stats::p.adjust()` | Identical FDR per chromosome slice |
 
 The peak–gene rows belong to the analyses in [Peak–gene correlation](methods_peak_gene_correlation.md); their tests are `test-peak-gene-hierarchical-parity.R` and `test-peak-gene-correlation-parity.R`.
 
@@ -1967,7 +1963,7 @@ The peak–gene rows belong to the analyses in [Peak–gene correlation](methods
 
 **Implementation.** `calculate_BPCells_UCell_scores_from_matrix()` and `rank_UCell_count_chunk()` in `R/processing_GEX_helpers.R`; the cluster annotation built on them is in `R/cluster_annotation_helpers.R` and described in [Cell-type annotation and motif accessibility](methods_annotation_and_motifs.md#cell-type-annotation).
 
-**Validation.** `tests/testthat/test-scoring-parity.R` compares signed signatures, with imputed and skipped missing genes, on a deterministic BPCells fixture and requires `identical()` values, dimensions, and dimnames. It also runs the production annotation path on unsigned, signed and negative-only signatures and compares per-cell scores, cluster means, matched-control summaries and marker-deletion effects with reference scores averaged within clusters, within 1e-12, and checks that chunking and fork workers leave them unchanged. The production cell-cycle scorer is compared with `Seurat::CellCycleScoring()`: phases are identical and scores agree within 1e-6, because BPCells normalizes counts at lower floating-point precision.
+**Validation.** `tests/testthat/test-scoring-parity.R` compares signed signatures, with imputed and skipped missing genes, on a deterministic BPCells fixture and requires `identical()` values, dimensions, and dimnames. It also runs the production annotation path on unsigned, signed and negative-only signatures and compares per-cell scores, cluster means and matched-control summaries with reference scores averaged within clusters, within 1e-12, and checks that chunking and fork workers leave them unchanged. The production cell-cycle scorer is compared with `Seurat::CellCycleScoring()`: phases are identical and scores agree within 1e-6, because BPCells normalizes counts at lower floating-point precision.
 
 ```bash
 pixi run --use-environment-activation-cache test-scoring-parity

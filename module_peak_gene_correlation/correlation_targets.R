@@ -65,19 +65,13 @@ rlang::list2(
   targets::tar_target(
     name = peak_gene_correlation_donor_state_aggregates_tibble.WNN,
     description = "Combine retained donor by ATAC-state pseudobulk memberships [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
-    command = combine_peak_gene_correlation_donor_state_records(
-      records = peak_gene_correlation_donor_state_records.WNN,
-      component = "aggregates"
-    ),
+    command = purrr::map_dfr(peak_gene_correlation_donor_state_records.WNN, "aggregates"),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = peak_gene_correlation_donor_state_diagnostics_tibble.WNN,
     description = "Combine donor-state pseudobulk eligibility diagnostics [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
-    command = combine_peak_gene_correlation_donor_state_records(
-      records = peak_gene_correlation_donor_state_records.WNN,
-      component = "diagnostics"
-    ),
+    command = purrr::map_dfr(peak_gene_correlation_donor_state_records.WNN, "diagnostics"),
     resources = get_tar_resources(RAM_GB_req = 8)
   ),
   targets::tar_target(

@@ -548,11 +548,6 @@ make_peak_gene_correlation_donor_state_record <- function(
   )
 }
 
-combine_peak_gene_correlation_donor_state_records <- function(records, component) {
-  stopifnot(component %in% c("aggregates", "diagnostics"))
-  purrr::map_dfr(records, component)
-}
-
 make_peak_gene_correlation_group_chromosome_tibble <- function(
   donor_state_aggregates_tibble,
   chromosome_tibble,
@@ -961,34 +956,13 @@ prepare_peak_gene_correlation_branch <- function(
 #'
 #' Summarize why a peak-gene correlation branch was scored or skipped.
 #'
-#' @param normalized_aggregate_matrices List returned by
-#'   `normalize_peak_gene_correlation_aggregate_matrices()`.
-#' @param candidate_pairs_tibble Candidate peak-gene pairs used to count retained
-#'   branch pairs after detection filters.
-#' @param min_gene_detection Minimum fraction of aggregates in which a gene must
-#'   be detected.
-#' @param min_peak_accessibility Minimum fraction of aggregates in which a peak
-#'   must be accessible.
-#' @param min_aggregates Minimum number of accepted aggregates required before a
-#'   branch is considered scoreable.
+#' @inheritParams prepare_peak_gene_correlation_branch
 #' @return One-row diagnostics tibble with branch size, retained feature counts,
 #'   candidate-pair count, and optional skipped reason.
 #' @keywords internal
 
-diagnose_peak_gene_correlation_branch <- function(
-  normalized_aggregate_matrices,
-  candidate_pairs_tibble,
-  min_gene_detection = 0.05,
-  min_peak_accessibility = 0.05,
-  min_aggregates = 10L
-) {
-  branch <- prepare_peak_gene_correlation_branch(
-    normalized_aggregate_matrices = normalized_aggregate_matrices,
-    candidate_pairs_tibble = candidate_pairs_tibble,
-    min_gene_detection = min_gene_detection,
-    min_peak_accessibility = min_peak_accessibility,
-    min_aggregates = min_aggregates
-  )
+diagnose_peak_gene_correlation_branch <- function(normalized_aggregate_matrices, candidate_pairs_tibble) {
+  branch <- prepare_peak_gene_correlation_branch(normalized_aggregate_matrices, candidate_pairs_tibble)
 
   tibble::tibble(
     cell_group = branch$cell_group,

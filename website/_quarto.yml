@@ -14,9 +14,7 @@ book:
   sidebar:
     collapse-level: 2
   chapters:
-    - part: "Start here"
-      chapters:
-        - index.md
+    - index.md
     - part: "Try the public demo"
       chapters:
         - demo_installation.md
@@ -33,7 +31,6 @@ book:
         - downstream_peak_gene_correlation.md
     - part: "Operation and scaling"
       chapters:
-        - performance_overview.md
         - performance_distributed_computing.md
         - troubleshooting.md
     - part: "Reference"

@@ -65,7 +65,8 @@ get_GWAS_chromVAR_peak_contribution_tibble <- function(
     peak_weight_vec <- peak_weight_vec[weighted_peak_idx]
     weighted_peak_bin_idx <- peak_background_bin_idx[weighted_peak_idx]
     observed_count_matrix <- as.matrix(counts_matrix[weighted_peak_idx, , drop = FALSE])
-    expected_count_matrix <- background_expectation_matrix[weighted_peak_bin_idx, , drop = FALSE]
+    # betterChromVAR stores background expectations sparsely.
+    expected_count_matrix <- as.matrix(background_expectation_matrix[weighted_peak_bin_idx, , drop = FALSE])
     deviation_numerator_matrix <- sweep(
       observed_count_matrix - expected_count_matrix,
       MARGIN = 1,

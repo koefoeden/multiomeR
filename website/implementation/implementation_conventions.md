@@ -135,14 +135,11 @@ Because these suffixes become target names and cache identity, config keys shoul
 
 Mapped target tables sometimes need to carry references to other mapped targets. multiomeR represents those references as columns of `rlang` symbols. Each row stores the upstream target symbols that should be spliced into downstream target commands generated for that row.
 
-The compact constructor is `target_sym_col()`. It records a base target name, the source column containing suffixes, the separator, and an optional transform. `add_target_sym_cols()` then turns those specifications into list-columns of `rlang::syms()`.
+`add_GEM_well_target_syms()` adds one such list-column per base target name, named `aggregation_<target>_syms`, from each aggregation's `aggregation_GEM_well_IDs`:
 
 ``` r
 aggregation_tibble |>
-  add_target_sym_cols(
-    aggregation_GEX_counts_BPCells_matrix_syms =
-      target_sym_col("GEX_counts_BPCells_matrix", "aggregation_GEM_well_IDs")
-  )
+  add_GEM_well_target_syms("GEX_counts_BPCells_matrix")
 ```
 
 For an aggregation whose `aggregation_GEM_well_IDs` are `c("rx1", "rx2")`, this creates a row value equivalent to:

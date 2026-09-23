@@ -97,35 +97,6 @@ rlang::list2(
     )
   ),
   ATAC_peak_calling_per_cluster_w_iterative_collapsing_targets = rlang::list2(
-    tarchetypes::tar_file(
-      name = peaks_per_cluster_narrowPeaks.peaks.ATAC,
-      description = "Call full-genome ATAC peaks per cluster using capped discovery cells [part_of_graph:ATAC] [part_of_graph:seurat_export]",
-      command = {
-        peak_calling_cluster_name <- peak_calling_cluster_discovery_tibble.ATAC$peak_calling_cluster_name[[1]]
-        if (identical(aggregation_ATAC_peak_calling_method, "macs3")) {
-          call_peaks_w_MACS3(
-            ATAC_fragments_per_cluster = aggregation_ATAC_peak_calling_input_sym,
-            ATAC_peak_calling_cluster_names = peak_calling_cluster_name,
-            genome = aggregated_cellranger_ref_list$genomes[[1]],
-            output_suffix = peak_calling_cluster_name,
-            allow_no_peaks = TRUE
-          )
-        } else if (identical(aggregation_ATAC_peak_calling_method, "bpcells_tile")) {
-          call_peaks_w_BPCells_tile(
-            ATAC_combined_BPCells_fragment_obj = combined_BPCells_fragment_obj.ATAC,
-            ATAC_BCs_per_peak_cluster = peak_calling_cluster_discovery_tibble.ATAC$BCs_for_peak_discovery[[1]],
-            ATAC_peak_calling_cluster_names = peak_calling_cluster_name,
-            genome = aggregated_cellranger_ref_list$genomes[[1]],
-            output_suffix = peak_calling_cluster_name,
-            allow_no_peaks = TRUE
-          )
-        } else {
-          stop("aggregation_ATAC_peak_calling_method must be either 'macs3' or 'bpcells_tile'.")
-        }
-      },
-      pattern = aggregation_ATAC_peak_calling_pattern,
-      resources = get_tar_resources(RAM_GB_req = 60)
-    ),
     targets::tar_target(
       name = peak_GRanges_per_cluster.ATAC,
       description = "Parse full-genome per-cluster ATAC peak calls as fixed-width blacklist-filtered GRanges",

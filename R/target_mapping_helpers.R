@@ -1,22 +1,16 @@
 #' Validate processing and aggregation config
 #'
-#' Check that aggregation YAML rows reference valid, non-empty GEM well sets.
+#' Check that aggregation YAML rows reference defined, active GEM wells.
 #'
 #' @param GEM_well_tibble GEM well config tibble containing the valid `GEM_well_ID`
 #'   values.
 #' @param aggregation_tibble_from_yaml Aggregation config tibble with
 #'   `aggregation` labels and list-column `aggregation_GEM_well_IDs`.
-#' @param GEM_well_config_file Path to the GEM well TSV config.
-#' @param aggregation_config_file Path to the aggregation YAML config.
 #' @return Invisibly returns after the validation or setup side effect succeeds.
 #' @keywords internal
 
-validate_processing_and_aggregation_config <- function(
-  GEM_well_tibble,
-  aggregation_tibble_from_yaml,
-  GEM_well_config_file = configuration_path("cfg_GEM_wells.tsv"),
-  aggregation_config_file = configuration_path("cfg_aggregations.yaml")
-) {
+validate_processing_and_aggregation_config <- function(GEM_well_tibble, aggregation_tibble_from_yaml) {
+  aggregation_config_file <- configuration_path("cfg_aggregations.yaml")
   configured_aggregation_GEM_well_IDs <- unique(unlist(
     aggregation_tibble_from_yaml$aggregation_GEM_well_IDs
   ))
@@ -29,21 +23,9 @@ validate_processing_and_aggregation_config <- function(
     stop(
       aggregation_config_file,
       " references GEM_well_ID value(s) not defined in ",
-      GEM_well_config_file,
+      configuration_path("cfg_GEM_wells.tsv"),
       ": ",
       paste(unknown_aggregation_GEM_wells_vec, collapse = ", "),
-      call. = FALSE
-    )
-  }
-
-  empty_aggregation_vec <- aggregation_tibble_from_yaml$aggregation[
-    lengths(aggregation_tibble_from_yaml$aggregation_GEM_well_IDs) == 0
-  ]
-  if (length(empty_aggregation_vec) > 0) {
-    stop(
-      aggregation_config_file,
-      " contains aggregation(s) without GEM_well_ID values: ",
-      paste(empty_aggregation_vec, collapse = ", "),
       call. = FALSE
     )
   }
@@ -358,35 +340,28 @@ build_active_GEM_well_tibble <- function(GEM_well_tibble) {
 #'   from `cfg_aggregations.yaml`.
 #' @param GEM_well_tibble GEM well mapping tibble created by
 #'   `build_GEM_well_tibble()`.
-#' @param aggregation_config_file Path to the aggregation YAML config.
-#' @param GEM_well_config_file Path to the GEM well TSV config.
 #' @return A tibble with one row per active aggregation, QC feature columns, and
 #'   target symbol list-columns.
 #' @keywords internal
 
-build_aggregation_tibble <- function(
-  aggregation_tibble_all_from_yaml,
-  GEM_well_tibble,
-  aggregation_config_file = configuration_path("cfg_aggregations.yaml"),
-  GEM_well_config_file = configuration_path("cfg_GEM_wells.tsv")
-) {
+build_aggregation_tibble <- function(aggregation_tibble_all_from_yaml, GEM_well_tibble) {
   aggregation_tibble_from_yaml <- aggregation_tibble_all_from_yaml |>
     dplyr::filter(purrr::map_lgl(is_active, isTRUE))
 
   aggregation_tibble <- aggregation_tibble_from_yaml |>
-    add_target_sym_cols(
-      aggregation_GEX_counts_BPCells_matrix_syms = target_sym_col("GEX_counts_BPCells_matrix", "aggregation_GEM_well_IDs"),
-      aggregation_vireo_donor_ids_tibble_syms = target_sym_col("vireo_donor_ids_tibble", "aggregation_GEM_well_IDs"),
-      aggregation_cellranger_barcodes_tsv_syms = target_sym_col("cellranger_barcodes_tsv", "aggregation_GEM_well_IDs"),
-      aggregation_fragments_w_prefix_bpcells_syms = target_sym_col("fragments_w_prefix_bpcells", "aggregation_GEM_well_IDs"),
-      aggregation_cellranger_summary_file_syms = target_sym_col("cellranger_summary_file", "aggregation_GEM_well_IDs"),
-      aggregation_cellranger_kept_metadata_tibble_syms = target_sym_col("cellranger_kept_metadata_tibble", "aggregation_GEM_well_IDs"),
-      aggregation_unfiltered_cells_n_vecs_syms = target_sym_col("unfiltered_cells_n_vecs", "aggregation_GEM_well_IDs"),
-      aggregation_excluded_barcodes_by_type_list_syms = target_sym_col("excluded_barcodes_by_type_list", "aggregation_GEM_well_IDs"),
-      aggregation_excluded_cellranger_only_barcodes_by_type_list_syms = target_sym_col("excluded_cellranger_only_barcodes_by_type_list", "aggregation_GEM_well_IDs"),
-      aggregation_cellranger_ref_list_syms = target_sym_col("cellranger_ref_list", "aggregation_GEM_well_IDs"),
-      aggregation_gene_features_df_syms = target_sym_col("gene_features_df", "aggregation_GEM_well_IDs")
-    )
+    add_GEM_well_target_syms(c(
+      "GEX_counts_BPCells_matrix",
+      "vireo_donor_ids_tibble",
+      "cellranger_barcodes_tsv",
+      "fragments_w_prefix_bpcells",
+      "cellranger_summary_file",
+      "cellranger_kept_metadata_tibble",
+      "unfiltered_cells_n_vecs",
+      "excluded_barcodes_by_type_list",
+      "excluded_cellranger_only_barcodes_by_type_list",
+      "cellranger_ref_list",
+      "gene_features_df"
+    ))
 
   project_categorical_vars <- purrr::map(
     aggregation_tibble$aggregation_categorical_vars,
@@ -440,9 +415,7 @@ build_aggregation_tibble <- function(
 
   validate_processing_and_aggregation_config(
     GEM_well_tibble = GEM_well_tibble,
-    aggregation_tibble_from_yaml = aggregation_tibble_from_yaml,
-    GEM_well_config_file = GEM_well_config_file,
-    aggregation_config_file = aggregation_config_file
+    aggregation_tibble_from_yaml = aggregation_tibble_from_yaml
   )
 
   aggregation_tibble |>
@@ -503,185 +476,79 @@ get_roadmap_EDACC_names <- function(aggregation_tibble) {
     purrr::set_names()
 }
 
-#' Normalize module names
+#' Build module mapping values
 #'
-#' Convert a possibly nested or missing module config value into a clean
-#' character vector.
+#' Keep the active aggregations that opt into a module and join the settings
+#' from the module's configuration file, which must cover exactly those
+#' aggregations that are defined in the aggregation config.
 #'
-#' @param modules Module names from an aggregation config row.
-#' @return A character vector of non-missing, non-empty module names.
+#' @param module_name Module identifier, as listed under `modules`.
+#' @param aggregation_tibble Active aggregation mapping tibble.
+#' @param aggregation_tibble_all_from_yaml All configured aggregations.
+#' @return The module's aggregation rows with the module settings joined.
 #' @keywords internal
 
-normalize_modules <- function(modules) {
-  if (is.null(modules)) {
-    return(character())
-  }
-
-  modules <- unlist(modules, use.names = FALSE)
-  modules <- as.character(modules)
-  modules[!is.na(modules) & modules != ""]
-}
-
-#' Test module membership for aggregations
-#'
-#' Identify which aggregation config rows opted into a module.
-#'
-#' @param modules A list-column or vector of configured module names.
-#' @param module_name Module name to test for.
-#' @return A logical vector with one value per `modules` element.
-#' @keywords internal
-
-aggregation_has_module <- function(modules, module_name) {
-  purrr::map_lgl(as.list(modules), \(x) module_name %in% normalize_modules(x))
-}
-
-#' Validate aggregation module names
-#'
-#' Check that module names configured in `cfg_aggregations.yaml` are known to
-#' the root target graph.
-#'
-#' @param aggregation_tibble Aggregation mapping tibble with a `modules` column.
-#' @param known_modules Character vector of supported module names.
-#' @param aggregation_config_file Path to the aggregation YAML config.
-#' @return Invisibly returns `NULL`; errors on unknown configured modules.
-#' @keywords internal
-
-validate_aggregation_module_names <- function(
-  aggregation_tibble,
-  known_modules,
-  aggregation_config_file = configuration_path("cfg_aggregations.yaml")
-) {
-  configured_modules <- aggregation_tibble$modules |>
-    as.list() |>
-    purrr::map(normalize_modules) |>
-    unlist(use.names = FALSE) |>
-    unique()
-
-  unknown_modules <- setdiff(configured_modules, known_modules)
-
-  if (length(unknown_modules) > 0) {
-    stop(
-      aggregation_config_file,
-      " references unknown module(s): ",
-      paste(unknown_modules, collapse = ", "),
-      ". Valid modules: ",
-      paste(known_modules, collapse = ", "),
-      call. = FALSE
-    )
-  }
-}
-
-#' Read module config tibble
-#'
-#' Read a module YAML config and keep empty module configs compatible with the
-#' downstream validation path.
-#'
-#' @param config_file Path to a module YAML config file.
-#' @param module_name Module identifier used in error messages.
-#' @param module_aggregation_tibble Aggregations that opted into the module,
-#'   filtered from the main aggregation config.
-#' @param aggregation_tibble Main aggregation config tibble defining all valid
-#'   aggregation names.
-#' @param aggregation_config_file Path to the aggregation YAML config.
-#' @param manifest_file Path to the pipeline parameter manifest TSV.
-#' @return A tibble with at least an `aggregation` column.
-#' @keywords internal
-
-read_module_config_tibble <- function(
-  config_file,
-  module_name,
-  module_aggregation_tibble,
-  aggregation_tibble,
-  aggregation_config_file = configuration_path("cfg_aggregations.yaml"),
-  manifest_file = "cfg_pipeline_parameters.tsv"
-) {
+build_module_tibble <- function(module_name, aggregation_tibble, aggregation_tibble_all_from_yaml) {
+  module_aggregation_tibble <- aggregation_tibble |>
+    dplyr::filter(purrr::map_lgl(modules, \(modules) module_name %in% modules))
   if (nrow(module_aggregation_tibble) == 0L) {
-    return(tibble::tibble(aggregation = character()))
+    return(module_aggregation_tibble)
   }
+
+  config_file <- configuration_path(paste0("cfg_module_", module_name, ".yaml"), must_exist = FALSE)
   if (!file.exists(config_file)) {
     stop("Missing configuration for enabled module '", module_name, "': ", config_file, call. = FALSE)
   }
   module_config_tibble <- read_manifest_config_tibble(
     config_file = config_file,
-    manifest_file = manifest_file,
+    manifest_file = "cfg_pipeline_parameters.tsv",
     scope = module_name,
     key_col = "aggregation"
   )
-
-  if (!"aggregation" %in% names(module_config_tibble)) {
-    module_config_tibble <- tibble::tibble(aggregation = character())
-  }
-
-  missing_module_rows <- setdiff(module_aggregation_tibble$aggregation, module_config_tibble$aggregation)
+  missing_module_rows <- setdiff(module_aggregation_tibble$aggregation, module_config_tibble[["aggregation"]])
   if (length(missing_module_rows) > 0) {
     stop(
-      aggregation_config_file,
-      " opts aggregation(s) into module '",
-      module_name,
-      "' that are missing from ",
-      config_file,
-      ": ",
-      paste(missing_module_rows, collapse = ", "),
+      "cfg_aggregations.yaml opts aggregation(s) into module '", module_name, "' that are missing from ",
+      config_file, ": ", paste(missing_module_rows, collapse = ", "),
       call. = FALSE
     )
   }
-
-  unknown_module_rows <- setdiff(module_config_tibble$aggregation, aggregation_tibble$aggregation)
+  unknown_module_rows <- setdiff(module_config_tibble$aggregation, aggregation_tibble_all_from_yaml$aggregation)
   if (length(unknown_module_rows) > 0) {
     stop(
-      config_file,
-      " contains aggregation(s) not defined in ",
-      aggregation_config_file,
-      ": ",
+      config_file, " contains aggregation(s) not defined in cfg_aggregations.yaml: ",
       paste(unknown_module_rows, collapse = ", "),
       call. = FALSE
     )
   }
 
-  module_config_tibble
+  dplyr::left_join(module_aggregation_tibble, module_config_tibble, by = "aggregation")
 }
 
-#' Define a target symbol column
+#' Add GEM well target symbols
 #'
-#' Create a compact specification for adding one list-column of target symbols
-#' from a source column of target suffixes.
+#' Add one list-column per base target name, named
+#' `aggregation_<target>_syms`, holding that target's symbols for each of the
+#' aggregation's GEM wells.
 #'
-#' @param target Base target name without the mapped suffix.
-#' @param from Name of the source column containing target suffix values.
-#' @param sep Separator used between `target` and each suffix.
-#' @param transform Function applied to each source value before target names
-#'   are constructed.
-#' @return A list consumed by `add_target_sym_cols()`.
+#' @param aggregation_tibble Aggregation mapping tibble with the list-column
+#'   `aggregation_GEM_well_IDs`.
+#' @param target_names Character vector of base target names to suffix by
+#'   GEM well ID.
+#' @return `aggregation_tibble` with one symbol list-column per target name.
 #' @keywords internal
 
-target_sym_col <- function(target, from, sep = ".", transform = identity) {
-  list(target = target, from = from, sep = sep, transform = transform)
-}
-
-#' Add target symbol columns
-#'
-#' Add one or more list-columns of `rlang::syms()` values from compact target
-#' symbol specifications.
-#'
-#' @param .data Mapping tibble to mutate.
-#' @param ... Named target symbol specifications created by `target_sym_col()`.
-#' @return `.data` with the requested target symbol list-columns added.
-#' @keywords internal
-
-add_target_sym_cols <- function(.data, ...) {
-  target_sym_specs <- rlang::list2(...)
-  target_sym_cols <- purrr::imap(target_sym_specs, \(spec, col_name) {
-    purrr::map(
-      .data[[spec$from]],
-      \(x) {
-        target_suffixes <- spec$transform(x)
-        rlang::syms(stringr::str_c(spec$target, target_suffixes, sep = spec$sep))
-      }
-    )
-  })
-
-  .data |>
-    dplyr::mutate(!!!target_sym_cols)
+add_GEM_well_target_syms <- function(aggregation_tibble, target_names) {
+  target_sym_cols <- purrr::map(
+    purrr::set_names(target_names, paste0("aggregation_", target_names, "_syms")),
+    \(target_name) {
+      purrr::map(
+        aggregation_tibble$aggregation_GEM_well_IDs,
+        \(GEM_well_IDs) rlang::syms(stringr::str_c(target_name, GEM_well_IDs, sep = "."))
+      )
+    }
+  )
+  dplyr::mutate(aggregation_tibble, !!!target_sym_cols)
 }
 
 #' Add aggregation target symbols

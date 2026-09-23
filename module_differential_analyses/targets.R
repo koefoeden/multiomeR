@@ -1,15 +1,4 @@
-differential_analyses_aggregation_tibble <- aggregation_tibble |>
-  dplyr::filter(aggregation_has_module(modules, "differential_analyses"))
-
-differential_analyses_config_tibble <- read_module_config_tibble(
-  config_file = configuration_path("cfg_module_differential_analyses.yaml", must_exist = FALSE),
-  module_name = "differential_analyses",
-  module_aggregation_tibble = differential_analyses_aggregation_tibble,
-  aggregation_tibble = aggregation_tibble_all_from_yaml
-)
-
-differential_analyses_tibble <- differential_analyses_aggregation_tibble |>
-  dplyr::left_join(differential_analyses_config_tibble, by = "aggregation") |>
+differential_analyses_tibble <- build_module_tibble("differential_analyses", aggregation_tibble, aggregation_tibble_all_from_yaml) |>
   dplyr::mutate(differential_analyses_target_suffix = stringr::str_c("differential_analyses", aggregation, sep = ".")) |>
   add_aggregation_target_syms(c(
     "metadata_w_cell_types_tibble.WNN",
@@ -24,7 +13,7 @@ differential_analyses_tibble <- differential_analyses_aggregation_tibble |>
   ))
 
 rlang::list2(
-  if (nrow(differential_analyses_aggregation_tibble) > 0L) source("module_differential_analyses/shared_targets.R")$value,
+  if (nrow(differential_analyses_tibble) > 0L) source("module_differential_analyses/shared_targets.R")$value,
   tarchetypes::tar_map(
     values = differential_analyses_tibble,
     names = differential_analyses_target_suffix,

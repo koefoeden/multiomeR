@@ -1,15 +1,4 @@
-peak_gene_correlation_aggregation_tibble <- aggregation_tibble |>
-  dplyr::filter(aggregation_has_module(modules, "peak_gene_correlation"))
-
-peak_gene_correlation_config_tibble <- read_module_config_tibble(
-  config_file = configuration_path("cfg_module_peak_gene_correlation.yaml", must_exist = FALSE),
-  module_name = "peak_gene_correlation",
-  module_aggregation_tibble = peak_gene_correlation_aggregation_tibble,
-  aggregation_tibble = aggregation_tibble_all_from_yaml
-)
-
-peak_gene_correlation_tibble <- peak_gene_correlation_aggregation_tibble |>
-  dplyr::left_join(peak_gene_correlation_config_tibble, by = "aggregation") |>
+peak_gene_correlation_tibble <- build_module_tibble("peak_gene_correlation", aggregation_tibble, aggregation_tibble_all_from_yaml) |>
   dplyr::mutate(peak_gene_correlation_target_suffix =
     paste("peak_gene_correlation", aggregation, sep = ".")) |>
   add_aggregation_target_syms(c(

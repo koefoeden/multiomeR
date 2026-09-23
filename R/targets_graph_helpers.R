@@ -37,11 +37,13 @@ targets_graph_part_of_graph_ids <- function(manifest = targets::tar_manifest(cal
 
 # Uses the mapping values defined by _targets.R in the calling session.
 targets_graph_default_label_suffixes <- function() {
+  manifest <- read_config_parameter_manifest("cfg_pipeline_parameters.tsv", scope = "aggregation")
+  modules <- manifest$allowed_values[[match("modules", manifest$param_name)]]
   data.frame(
-    suffix = c(GEM_well_tibble$GEM_well_ID, aggregation_tibble$aggregation, known_aggregation_modules),
+    suffix = c(GEM_well_tibble$GEM_well_ID, aggregation_tibble$aggregation, modules),
     placeholder = rep(
       c("<GEM_well_ID>", "<aggregation_name>", "<module_name>"),
-      c(nrow(GEM_well_tibble), nrow(aggregation_tibble), length(known_aggregation_modules))
+      c(nrow(GEM_well_tibble), nrow(aggregation_tibble), length(modules))
     )
   )
 }

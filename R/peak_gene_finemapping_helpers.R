@@ -1,48 +1,37 @@
-#' Build a compact reference for chromosome-level peak gene fine-mapping
+#' Build compact FDR breakpoints for chromosome-level peak gene fine-mapping
 #'
-#' BH-adjusted p-values are monotone in the nominal p-value. Retaining the largest
-#' nominal p-value for each distinct FDR reconstructs the original tested values
-#' without sending the complete finalized result table to every worker.
+#' BH-adjusted p-values are monotone in the p-value. Retaining the largest
+#' p-value for each distinct FDR reconstructs the tested values without sending
+#' the complete finalized result table to every worker.
 #'
-#' @param finalized_results_tibble Combined association results.
-#' @param candidate_pairs_tibble Genomic pairs containing gene-feature mappings.
-#' @return List of FDR breakpoints and distinct gene-feature mappings.
+#' @param finalized_results_tibble Combined hierarchical association results.
+#' @return Tibble of FDR breakpoints per cell group.
 #' @keywords internal
 
-make_peak_gene_finemapping_reference <- function(
-  finalized_results_tibble,
-  candidate_pairs_tibble
-) {
-  list(
-    FDR = finalized_results_tibble |>
-      dplyr::select("cell_group", "nominal_pvalue", "FDR") |>
-      dplyr::filter(is.finite(.data$nominal_pvalue), is.finite(.data$FDR)) |>
-      dplyr::summarise(nominal_pvalue = max(.data$nominal_pvalue), .by = c("cell_group", "FDR")) |>
-      dplyr::arrange(.data$cell_group, .data$nominal_pvalue),
-    gene_features = candidate_pairs_tibble |>
-      dplyr::distinct(.data$TargetGeneID, .data$gene_matrix_feature)
-  )
+make_peak_gene_finemapping_reference <- function(finalized_results_tibble) {
+  finalized_results_tibble |>
+    dplyr::select("cell_group", "hierarchical_pvalue", "hierarchical_FDR") |>
+    dplyr::filter(is.finite(.data$hierarchical_pvalue), is.finite(.data$hierarchical_FDR)) |>
+    dplyr::summarise(hierarchical_pvalue = max(.data$hierarchical_pvalue), .by = c("cell_group", "hierarchical_FDR")) |>
+    dplyr::arrange(.data$cell_group, .data$hierarchical_pvalue)
 }
 
-#' Restore globally corrected FDR values on one raw chromosome result
+#' Restore within-cell-group FDR values on one chromosome result
 #'
-#' @param results_tibble Raw result from one cell-group/chromosome branch.
+#' @param results_tibble Hierarchical result from one cell-group/chromosome branch.
 #' @param FDR_reference_tibble Breakpoints from `make_peak_gene_finemapping_reference()`.
-#' @return Input result with its original within-cell-group FDR values restored.
+#' @return Input result with its within-cell-group `hierarchical_FDR` restored.
 #' @keywords internal
 
 restore_peak_gene_correlation_FDR <- function(results_tibble, FDR_reference_tibble) {
   FDR <- rep(NA_real_, nrow(results_tibble))
   if (nrow(results_tibble) > 0L) {
-    cell_group <- results_tibble$cell_group[[1]]
-    reference <- FDR_reference_tibble |>
-      dplyr::filter(.data$cell_group == !!cell_group)
-    valid <- is.finite(results_tibble$nominal_pvalue)
-    index <- findInterval(results_tibble$nominal_pvalue[valid], reference$nominal_pvalue, left.open = TRUE) + 1L
-    FDR[valid] <- reference$FDR[index]
-    stopifnot(!anyNA(FDR[valid]))
+    reference <- FDR_reference_tibble[FDR_reference_tibble$cell_group == results_tibble$cell_group[[1]], ]
+    valid <- is.finite(results_tibble$hierarchical_pvalue)
+    index <- findInterval(results_tibble$hierarchical_pvalue[valid], reference$hierarchical_pvalue, left.open = TRUE) + 1L
+    FDR[valid] <- reference$hierarchical_FDR[index]
   }
-  dplyr::mutate(results_tibble, FDR = FDR)
+  dplyr::mutate(results_tibble, hierarchical_FDR = FDR)
 }
 
 #' Empty peak gene fine-mapping result
@@ -72,13 +61,13 @@ empty_peak_gene_correlation_finemapping_tibble <- function() {
 
 #' Prioritize conditionally supported peak-gene links with SuSiE
 #'
-#' Fine-map detected cis peaks for genes that contain at least one significant
-#' donor-adjusted candidate enhancer link. This is multipeak prioritization, not
-#' causal proof: the SuSiE likelihood does not itself model donor clustering.
+#' Fine-map detected cis peaks for genes that contain at least one candidate
+#' enhancer link. This is multipeak prioritization, not causal proof: the SuSiE
+#' likelihood does not itself model donor clustering.
 #'
 #' @param normalized_aggregate_matrices Donor-state pseudobulk matrices.
-#' @param candidate_pairs_tibble All genomic candidate pairs.
-#' @param finalized_results_tibble Combined donor-adjusted association results.
+#' @param branch_results Hierarchical results of the same branch with
+#'   `hierarchical_FDR` restored.
 #' @param max_genes Maximum screened genes fine-mapped in one branch.
 #' @param max_candidate_peaks Maximum peaks retained per gene, prioritized by
 #'   absolute donor-adjusted correlation when necessary.
@@ -88,33 +77,17 @@ empty_peak_gene_correlation_finemapping_tibble <- function() {
 
 finemap_peak_gene_correlations_for_branch <- function(
   normalized_aggregate_matrices,
-  candidate_pairs_tibble,
-  finalized_results_tibble,
+  branch_results,
   max_genes = 50L,
   max_candidate_peaks = 500L,
   L = 10L
 ) {
-  cell_group <- normalized_aggregate_matrices$cell_group
-  chr <- normalized_aggregate_matrices$chr
-  branch_results <- finalized_results_tibble |>
-    dplyr::filter(.data$cell_group == !!cell_group, .data$chr == !!chr)
-  screened_links <- branch_results |>
-    dplyr::filter(
-      .data$correlation >= 0.15,
-      .data$FDR < 0.05,
-      !.data$isSelfPromoter
-    )
-  if (nrow(screened_links) == 0L) {
-    return(empty_peak_gene_correlation_finemapping_tibble())
-  }
-
-  screened_genes <- screened_links |>
+  screened_genes <- branch_results[which(is_peak_gene_link(branch_results)), ] |>
     dplyr::summarise(
-      best_FDR = min(.data$FDR),
+      best_FDR = min(.data$hierarchical_FDR),
       .by = c("TargetGeneID", "TargetGene")
     ) |>
     dplyr::slice_min(.data$best_FDR, n = max_genes, with_ties = FALSE)
-
   if (nrow(screened_genes) == 0L) {
     return(empty_peak_gene_correlation_finemapping_tibble())
   }
@@ -133,24 +106,10 @@ finemap_peak_gene_correlations_for_branch <- function(
   purrr::map_dfr(seq_len(nrow(screened_genes)), \(gene_index) {
     gene_id <- screened_genes$TargetGeneID[[gene_index]]
     gene_results <- branch_results |>
-      dplyr::filter(
-        .data$TargetGeneID == !!gene_id,
-        .data$gene_detected_frac >= 0.05,
-        .data$peak_accessible_frac >= 0.05,
-        .data$peak %in% rownames(ATAC_norm)
-      ) |>
+      dplyr::filter(.data$TargetGeneID == !!gene_id) |>
       dplyr::arrange(dplyr::desc(abs(.data$correlation))) |>
       dplyr::slice_head(n = max_candidate_peaks)
-    gene_features <- candidate_pairs_tibble |>
-      dplyr::filter(.data$TargetGeneID == !!gene_id) |>
-      dplyr::pull(.data$gene_matrix_feature) |>
-      unique()
-
-    if (
-      nrow(gene_results) < 2L ||
-        length(gene_features) != 1L ||
-        !(gene_features[[1]] %in% rownames(GEX_norm))
-    ) {
+    if (nrow(gene_results) < 2L) {
       return(empty_peak_gene_correlation_finemapping_tibble())
     }
 
@@ -160,7 +119,7 @@ finemap_peak_gene_correlations_for_branch <- function(
     )
     gene_residual <- as.numeric(qr.resid(
       design_qr,
-      as.numeric(GEX_norm[gene_features[[1]], ])
+      as.numeric(GEX_norm[gene_results$gene_matrix_feature[[1]], ])
     ))
     variable_peaks <- rowSums(peak_residual^2) > .Machine$double.eps
     peak_residual <- peak_residual[variable_peaks, , drop = FALSE]
@@ -197,7 +156,7 @@ finemap_peak_gene_correlations_for_branch <- function(
         TargetGene = .data$TargetGene,
         peak = .data$peak,
         correlation = as.numeric(.data$correlation),
-        FDR = .data$FDR,
+        FDR = .data$hierarchical_FDR,
         susie_PIP = as.numeric(fit$pip),
         credible_set = credible_set,
         in_credible_set = !is.na(.data$credible_set),

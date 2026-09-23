@@ -22,7 +22,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = cohort_tsv,
-    description = "Export model-specific donor eligibility, sample counts, contributing wells and exclusions",
+    description = "Export model-specific donor eligibility, sample counts, contributing wells and exclusions. [checkpoint:differential_analyses]",
     command = get_feature_model_cohort(map_pseudobulk_data_matrix, filtered_mat_per_model, feature_matrix_fit,
       donor_id_metadata_tibble.analysis, dynamic_tibble$model[[1]], metadata_w_cell_types_tibble.WNN) |>
       save_differential_model_table(dynamic_tibble$model_name),

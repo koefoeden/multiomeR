@@ -60,19 +60,19 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = cohort_tsv.cell_type_composition,
-    description = "Export donor eligibility, exclusions, selected wells and denominators by abundance model",
+    description = "Export donor eligibility, exclusions, selected wells and denominators by abundance model. [checkpoint:differential_analyses]",
     command = save_differential_model_table(model_data.cell_type_composition$cohort, dynamic_tibble.cell_type_composition$model_name),
     pattern = map(model_data.cell_type_composition, dynamic_tibble.cell_type_composition)
   ),
   tarchetypes::tar_file(
     name = counts_tsv.cell_type_composition,
-    description = "Export the exact donor-cell-type counts used in abundance fits and plots",
+    description = "Export the exact donor-cell-type counts used in abundance fits and plots. [checkpoint:differential_analyses]",
     command = save_differential_model_table(model_data.cell_type_composition$counts, dynamic_tibble.cell_type_composition$model_name),
     pattern = map(model_data.cell_type_composition, dynamic_tibble.cell_type_composition)
   ),
   tarchetypes::tar_file(
     name = results_tsv.cell_type_composition,
-    description = "Export named abundance contrasts, BH FDR and fit diagnostics",
+    description = "Export named abundance contrasts, BH FDR and fit diagnostics. [checkpoint:differential_analyses]",
     command = save_differential_model_table(model_results.cell_type_composition, dynamic_tibble.cell_type_composition$model_name),
     pattern = map(model_results.cell_type_composition, dynamic_tibble.cell_type_composition)
   ),

@@ -37,7 +37,6 @@ rlang::list2(
       metadata_tibble = GEX_cellranger_kept_metadata_tibble |>
         dplyr::left_join(donor_id_SCT_metadata_tibble, by = "donor_id") |>
         dplyr::left_join(GEM_well_SCT_metadata_tibble, by = "GEM_well_ID"),
-      organism_chr = organism_chr,
       GEX_PCA_backend = aggregation_GEX_PCA_backend,
       SCT_regress_vars = aggregation_SCT_regress_vars,
       n_components = utils::tail(aggregation_GEX_data_PCs, 1),

@@ -20,9 +20,8 @@ Run the complete suite with `pixi run --use-environment-activation-cache test`. 
 | Sparse SCAVENGE propagation | Algorithmically derived and reference-parity tested | SCAVENGE source at `8ee8b173d965` | Closed-form propagation; identical seed samples, exceedance counts and significant-cell calls |
 | Peak–gene donor-slope REML and Kenward–Roger kernels | Reference-parity tested | lme4 and pbkrtest | Coefficients, df and P-values within 1e-6; identical fit statuses |
 | Peak–gene HC3 statistics and compact BH breakpoints | Reference-parity tested | sandwich; `stats::p.adjust()` | HC3 coefficients, errors and P-values within 1e-10; identical FDR per chromosome slice |
-| Sampled voom correlation | Reference-parity tested | edgeR and limma | Unsampled fits equal `voomLmFit()` within 1e-12; the sampled consensus correlation equals `duplicateCorrelation()` on the same features |
 
-The peak–gene rows belong to the analyses in [Peak–gene correlation](methods_peak_gene_correlation.md); their tests are `test-peak-gene-hierarchical-parity.R` and `test-peak-gene-correlation-parity.R`. `fit_pseudobulk_voom()` can estimate the voom block correlation from a reproducible feature sample for downstream sensitivity analyses; the pipeline's own models use all features. Its test is `test-pseudobulk-correlation-sampling.R`.
+The peak–gene rows belong to the analyses in [Peak–gene correlation](methods_peak_gene_correlation.md); their tests are `test-peak-gene-hierarchical-parity.R` and `test-peak-gene-correlation-parity.R`.
 
 ## BPCells-native UCell scoring
 

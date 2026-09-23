@@ -1,0 +1,20 @@
+donor_id	condition	sex	sexMale	age	health_status	source_url
+ENCDO411EVD	healthy	female	0	46	DM: no; HTN: no; CAD: no	https://www.encodeproject.org/human-donors/ENCDO411EVD/
+ENCDO520EJG	healthy	male	1	60	DM: no; HTN: yes; CAD: no; lungs with severe emphysema	https://www.encodeproject.org/human-donors/ENCDO520EJG/
+ENCDO528BHB	healthy	female	0	47	DM: yes; HTN: yes; CAD: no	https://www.encodeproject.org/human-donors/ENCDO528BHB/
+ENCDO529CYH	healthy	male	1	66	ischemic	https://www.encodeproject.org/human-donors/ENCDO529CYH/
+ENCDO575WHY	healthy	female	0	41	DM: no; HTN: no; CAD: no	https://www.encodeproject.org/human-donors/ENCDO575WHY/
+ENCDO856ZOJ	healthy	female	0	59	DM: yes; HTN: yes; CAD: no	https://www.encodeproject.org/human-donors/ENCDO856ZOJ/
+pbmc1	healthy	NA	NA	NA	NA	NA
+pbmc2	healthy	NA	NA	NA	NA	NA
+pbmc3	healthy	NA	NA	NA	NA	NA
+pbmc4	healthy	NA	NA	NA	NA	NA
+pbmc5	healthy	NA	NA	NA	NA	NA
+pbmc6	healthy	NA	NA	NA	NA	NA
+brain1	healthy	NA	NA	NA	NA	NA
+ENCDO186XRB	healthy	NA	NA	NA	NA	NA
+ENCDO221IPH	healthy	NA	NA	NA	NA	NA
+ENCDO392CRK	healthy	NA	NA	NA	NA	NA
+ENCDO575EGL	healthy	NA	NA	NA	NA	NA
+ENCDO757VPQ	healthy	NA	NA	NA	NA	NA
+ENCDO912EIY	healthy	NA	NA	NA	NA	NA

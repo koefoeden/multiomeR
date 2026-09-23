@@ -1,7 +1,7 @@
 Package: multiomeRCore
 Type: Package
 Title: Reusable Runtime Helpers for multiomeR Pipelines
-Version: 0.1.1
+Version: 0.2.0
 Authors@R: person("Thomas", "Gade Koefoed", role = c("aut", "cre"), email = "thomas.gade.koefoed@sund.ku.dk")
 Description: A small collection of general process, resource, and structured
     output helpers used by multiomeR and related targets pipelines. The

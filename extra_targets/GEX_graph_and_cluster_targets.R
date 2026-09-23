@@ -91,7 +91,7 @@ rlang::list2(
       annotation = cluster_UCell_annotation.3_GEX_QC,
       cluster_column = "PCA_harmony_SNN_cluster"
     ),
-    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 8, RAM_GB_per_extra_core = 3)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 23)
   ),
   tarchetypes::tar_file(
     name = markers_by_cell_type_dot_plot.3_GEX_QC,

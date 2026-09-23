@@ -51,7 +51,7 @@ targets::tar_make(
 └── excluded_cellranger_only_barcodes_by_type_upset.png
 ```
 
-**Revise:** choose cutoffs from the `per_aggregation_GEM_well_QC_comparisons/` distributions and enter them in `GEM_well_QC_exclude_list` for each GEM well; see [Set QC filters after the first run](reference_GEM_wells.md#set-qc-filters-after-the-first-run). After the rerun, these plots mark numeric cutoffs, and the UpSet and retention plots show the nuclei each filter removes. Remove a GEM well that fails QC from `aggregation_GEM_well_IDs`.
+**Revise:** choose cutoffs from the `per_aggregation_GEM_well_QC_comparisons/` distributions and enter them in `GEM_well_QC_exclude_list` for each GEM well; see [Set QC filters after the first run](reference_GEM_wells.md#qc-filters). After the rerun, these plots mark numeric cutoffs, and the UpSet and retention plots show the nuclei each filter removes. Remove a GEM well that fails QC from `aggregation_GEM_well_IDs`.
 
 ## Checkpoint 2: GEX dimension reduction {#checkpoint-2}
 

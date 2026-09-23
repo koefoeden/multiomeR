@@ -8,59 +8,69 @@ knitr::opts_chunk$set(
 )
 ```
 
-The pipeline saves four main kinds of output in its targets store, normally `outputs/`. The `store` setting in `_targets.yaml` selects this folder.
+The demo saved its results in the targets store, the `outputs/` folder of the clone (set by `store` in `_targets.yaml`; later pages write `<store>`). The store holds four kinds of output:
 
-- Serialized R objects in `objects/`, managed by targets.
-- Data files in `files/`, grouped by target and analysis.
-- Plot images in `plots/`, normally in PNG format.
-- Editable plot objects in `plot_objects/`, saved as RDS files alongside the corresponding image hierarchy.
+- `objects/`: R objects, such as tables and the Seurat/Signac object.
+- `files/`: data files, such as matrix folders and TSV tables.
+- `plots/`: PNG plot images.
+- `plot_objects/`: an editable R copy of each plot.
+
+This page opens one example of each kind in the R session. The [output reference](review_outputs.md#output-folders) describes the folders in detail.
 
 ## Objects
 
-Most intermediate and final result objects are saved automatically by `targets` and can be loaded into any repository-root R-session using `targets::tar_read()`:
+Read a stored object by its target name with `targets::tar_read()`, here the cell metadata and the multimodal Seurat/Signac object:
 
-``` {.r filename="R"}
+```{.r filename="R"}
 cell_metadata <- targets::tar_read(
   metadata_w_cell_types_tibble.WNN.immune_human_2x
 )
 dim(cell_metadata)
 head(cell_metadata)
 
-demo_object <- targets::tar_read(multimodal_Seurat_object.8_multimodal_QC.immune_human_2x)
+demo_object <- targets::tar_read(
+  multimodal_Seurat_object.8_multimodal_QC.immune_human_2x
+)
 demo_object
 ```
 
-The metadata table describes the retained nuclei and their annotations. WNN means *weighted nearest neighbors*: the integrated representation uses information from both RNA and ATAC. The Seurat/Signac object is a convenient export for further exploration; the pipeline also retains its matrices in BPCells format on disk.
+The metadata table has one row per retained nucleus, with its QC metrics, GEX, ATAC and WNN clusters, cell-type labels and UMAP coordinates. The Seurat/Signac object is a convenience export for exploring the results with Seurat and Signac. It reads its count matrices and ATAC fragments from files in the store and `example_data/`, so keep those folders in place.
 
 ## Files
 
-File targets also load with `targets::tar_read()`, but their value is a path rather than an in-memory result, so you will have to load them yourself using the appropriate tool.
+For a file target, `tar_read()` returns the path of the saved file or folder. Open it with a suitable reader:
 
-``` {.r filename="R"}
+```{.r filename="R"}
 targets::tar_read(cellranger_barcodes_tsv.healthy_PBMC_human)
-targets::tar_read(aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x)
-targets::tar_read(consensus_peak_BPCells_matrix_dir.ATAC.immune_human_2x)
+#> [1] "outputs/files/healthy_PBMC_human/cellranger_barcodes_tsv.tsv"
+
+GEX_counts <- BPCells::open_matrix_dir(
+  targets::tar_read(aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x)
+)
+GEX_counts
 ```
 
-As you can see from the output above, pipeline-generated files generally follow a folder hierarchy derived from their target names; `tar_read()` gives their actual paths.
+The first file belongs to one GEM well, the second to the aggregation. Paths follow the target name from right to left: `aggregated_GEX_BPCells_matrix_dir.GEX.immune_human_2x` is saved in `outputs/files/immune_human_2x/GEX/aggregated_GEX_BPCells_matrix_dir/`. `consensus_peak_BPCells_matrix_dir.ATAC.immune_human_2x` holds the ATAC peak counts.
 
 ## Plots
 
-The demo command also built `categorical.UMAPs.8_multimodal_QC.immune_human_2x`. Plots use the same scope-based layout as files, but under `outputs/plots/` instead. Note that a target might produce multiple files, as seen in the example below:
+Plot targets return image paths in the same way, under `outputs/plots/`. The demo built one categorical UMAP per variable:
 
-``` {.r filename="R"}
+```{.r filename="R"}
 targets::tar_read(categorical.UMAPs.8_multimodal_QC.immune_human_2x)
 ```
 
-Open `WNN_harmony_SNN_cluster_cell_type.png` there to see the integrated clusters and cell-type labels from your own run. It should resemble this documentation snapshot:
+Open `WNN_harmony_SNN_cluster_cell_type.png` from that list to see the WNN clusters labeled by cell type. It should resemble this snapshot:
 
 ![WNN UMAP of the two demo GEM wells, colored by cluster and cell type](figures/demo_WNN_cell_type_UMAP.png){width="70%"}
 
+Plot subtitles and captions explain how to read each plot.
+
 ## Plot objects
 
-Each plot saved by the standard plotting helper also has an `.rds` copy under `plot_objects/`, unless plot-object saving was disabled. This lets you reopen a plot in R without repeating the analysis. For example:
+Each image has an R copy under `plot_objects/`, at the same relative path with `.rds` instead of `.png`. Reopen a plot without rerunning the analysis:
 
-``` {.r filename="R"}
+```{.r filename="R"}
 plot_file <- file.path(
   targets::tar_config_get("store"),
   "plot_objects/immune_human_2x/8_multimodal_QC/UMAPs/categorical",
@@ -70,17 +80,17 @@ p <- readRDS(plot_file)
 p
 ```
 
-For a ggplot object, edit it with the usual ggplot2 functions and save a separate copy:
+Edit a ggplot object with the usual ggplot2 functions and save your copy outside the store, where a rerun cannot overwrite it:
 
-``` {.r filename="R"}
+```{.r filename="R"}
 p <- p + ggplot2::labs(title = "My integrated cell types")
 ggplot2::ggsave("my_cell_types.png", p, width = 10, height = 8)
 ```
 
-Some outputs are composite plots rather than ordinary ggplot objects and need their own editing methods. Keep custom exports separate from pipeline outputs, which can be overwritten on a rerun.
+Some plots are composites rather than single ggplot objects and need their own editing methods.
 
 ## Possible next steps
 
-- To continue with the demo-aggregation, and explore other outputs, run `targets::tar_make()` without `names`.
-- To get started with your own data, please continue at [Plan your analysis](main_overview.md).
-- To diagnose a failed or unexpectedly stale target, use [Troubleshooting](troubleshooting.md).
+- Build the rest of the demo aggregation, including every checkpoint plot, with `targets::tar_make()`. The demo configuration has no other active aggregation and no optional modules.
+- Browse the [output gallery](gallery.md) for an example of every plot the pipeline and its optional modules save.
+- Start your own analysis with [Plan your analysis](main_overview.md).

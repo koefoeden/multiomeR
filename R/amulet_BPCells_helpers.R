@@ -1,8 +1,3 @@
-if (!exists("amulet_BPCells_native_state_env", inherits = FALSE)) {
-  amulet_BPCells_native_state_env <- new.env(parent = emptyenv())
-  amulet_BPCells_native_state_env$dll_name <- NULL
-}
-
 amulet_BPCells_supported_ref <- "28759cdd512578b6cbe549e226e1cd52a2d2308c"
 
 validate_amulet_BPCells_native_abi <- function() {
@@ -28,41 +23,8 @@ validate_amulet_BPCells_native_abi <- function() {
 }
 
 load_amulet_BPCells_native_library <- function(native_source_file) {
-  if (!is.null(amulet_BPCells_native_state_env$dll_name)) {
-    return(amulet_BPCells_native_state_env$dll_name)
-  }
-
   validate_amulet_BPCells_native_abi()
-
-  build_dir <- tempfile("multiomeR_amulet_bpcells_")
-  dir.create(build_dir)
-  build_source_file <- file.path(build_dir, basename(native_source_file))
-  if (!file.copy(native_source_file, build_source_file)) {
-    stop("Could not copy the BPCells-native AMULET source into the temporary build directory.", call. = FALSE)
-  }
-
-  shared_library_file <- file.path(
-    build_dir,
-    paste0("multiomeR_amulet_bpcells", .Platform$dynlib.ext)
-  )
-  build_result <- processx::run(
-    command = file.path(R.home("bin"), "R"),
-    args = c("CMD", "SHLIB", "-o", shared_library_file, build_source_file),
-    wd = build_dir,
-    echo = FALSE,
-    error_on_status = FALSE
-  )
-  if (build_result$status != 0L) {
-    stop(
-      "Could not compile the BPCells-native AMULET helper:\n",
-      paste(c(build_result$stdout, build_result$stderr), collapse = "\n"),
-      call. = FALSE
-    )
-  }
-
-  loaded_library <- dyn.load(shared_library_file)
-  amulet_BPCells_native_state_env$dll_name <- loaded_library[["name"]]
-  amulet_BPCells_native_state_env$dll_name
+  load_native_library(native_source_file, "multiomeR_amulet_bpcells")
 }
 
 iterate_BPCells_fragments <- function(fragments) {

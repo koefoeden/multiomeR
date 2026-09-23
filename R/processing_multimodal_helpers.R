@@ -152,50 +152,6 @@ get_WNN_embedding_matrices <- function(
   )
 }
 
-if (!exists("WNN_native_state_env", inherits = FALSE)) {
-  WNN_native_state_env <- new.env(parent = emptyenv())
-  WNN_native_state_env$dll_name <- NULL
-}
-
-load_WNN_native_library <- function(native_source_file) {
-  if (!is.null(WNN_native_state_env$dll_name)) {
-    return(WNN_native_state_env$dll_name)
-  }
-
-  build_dir <- tempfile("multiomeR_wnn_")
-  dir.create(build_dir)
-  build_source_file <- file.path(build_dir, basename(native_source_file))
-  if (!file.copy(native_source_file, build_source_file)) {
-    stop(
-      "Could not copy the WNN native source into its temporary build directory.",
-      call. = FALSE
-    )
-  }
-
-  shared_library_file <- file.path(
-    build_dir,
-    paste0("multiomeR_wnn", .Platform$dynlib.ext)
-  )
-  build_result <- processx::run(
-    command = file.path(R.home("bin"), "R"),
-    args = c("CMD", "SHLIB", "-o", shared_library_file, build_source_file),
-    wd = build_dir,
-    echo = FALSE,
-    error_on_status = FALSE
-  )
-  if (build_result$status != 0L) {
-    stop(
-      "Could not compile the WNN native bandwidth helper:\n",
-      paste(c(build_result$stdout, build_result$stderr), collapse = "\n"),
-      call. = FALSE
-    )
-  }
-
-  loaded_library <- dyn.load(shared_library_file)
-  WNN_native_state_env$dll_name <- loaded_library[["name"]]
-  WNN_native_state_env$dll_name
-}
-
 #' Calculate a small-SNN WNN kernel bandwidth
 #'
 #' Estimate each cell's kernel width from the farthest of its `k` lowest
@@ -234,7 +190,7 @@ calculate_small_SNN_bandwidth <- function(
     knn_idx,
     as.integer(k),
     as.numeric(nearest_dist),
-    PACKAGE = load_WNN_native_library(native_source_file)
+    PACKAGE = load_native_library(native_source_file, "multiomeR_wnn")
   )
 }
 

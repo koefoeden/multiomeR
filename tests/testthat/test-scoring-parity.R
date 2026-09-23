@@ -105,14 +105,12 @@ testthat::test_that("integration: cluster annotation evidence matches UCell aver
   }
   scored <- score(chunk_size = 7L, workers = 1L)
 
-  # Score every observed, matched-control and marker-deletion signature per cell with UCell.
+  # Score every observed and matched-control signature per cell with UCell.
   signature_set <- function(genes) c(list(genes), lapply(seq_len(control$n_controls), function(index) {
     paste0(control$reference_genes[control$draws[sub("-$", "", genes), index]],
       ifelse(grepl("-$", genes), "-", ""))
   }))
-  variants <- lapply(control$markers, function(genes) {
-    c(list(genes), if (length(genes) > 1L) lapply(genes, function(gene) setdiff(genes, gene)))
-  })
+  variants <- lapply(control$markers, list)
   signatures <- unlist(lapply(names(variants), function(label) {
     unlist(lapply(seq_along(variants[[label]]), function(variant) {
       stats::setNames(signature_set(variants[[label]][[variant]]),
@@ -139,21 +137,9 @@ testthat::test_that("integration: cluster annotation evidence matches UCell aver
   observed <- scored$evidence[order(match(scored$evidence$label, names(markers)), scored$evidence$cluster), names(expected)]
   rownames(observed) <- rownames(expected) <- NULL
   testthat::expect_equal(observed, expected, tolerance = 1e-12)
-  expected_deletions <- do.call(rbind, lapply(names(markers)[lengths(control$markers) > 1L], function(label) {
-    do.call(rbind, lapply(seq_along(control$markers[[label]]), function(position) {
-      evidence <- reference_evidence(label, position + 1L)
-      data.frame(evidence[, c("cluster", "label")], omitted = control$markers[[label]][[position]],
-        excess = evidence$excess)
-    }))
-  }))
-  observed_deletions <- scored$marker_deletions[, names(expected_deletions)]
-  rownames(observed_deletions) <- rownames(expected_deletions) <- NULL
-  testthat::expect_equal(observed_deletions, expected_deletions, tolerance = 1e-12)
-
   # Chunking and fork workers must not change any aggregated statistic.
   rescored <- score(chunk_size = 11L, workers = 2L)
   testthat::expect_equal(rescored$evidence, scored$evidence, tolerance = 1e-14)
-  testthat::expect_equal(rescored$marker_deletions, scored$marker_deletions, tolerance = 1e-14)
   testthat::expect_equal(rescored$cell_scores[rownames(scored$cell_scores), ], scored$cell_scores,
     tolerance = 1e-14)
 })

@@ -45,13 +45,12 @@ The `cluster_UCell_diagnostics` targets write these files to `<store>/files/my_a
 
 | File | Contents |
 |---|---|
-| `clusters.tsv` | One row per cluster: status, label, leading candidate, runner-up, the reason for an `Unassigned` status, and stability and GEM well agreement diagnostics. |
+| `clusters.tsv` | One row per cluster: status, label, leading candidate, runner-up and the reason for an `Unassigned` status. |
 | `marker_evidence.tsv` | Each label's score, control background and adjusted score in each cluster. |
 | `control_gene_matching.tsv` | Expression level and detection rate of each marker gene and its controls. |
-| `GEM_well_agreement.tsv` | The same decision made separately within each GEM well of a cluster; written only when GEM wells contribute enough nuclei. |
 | `settings.rds`, `method.txt` | The settings used and a short description of the rule. |
 
-Stability and GEM well agreement are diagnostics; they never change an assignment. `<store>/files/my_aggregation/3_GEX_QC/marker_set_UCell_summary/marker_sets.tsv` summarizes each marker set across the GEX clusters before doublet filtering: how many clusters it leads or is assigned, and its closest competing set.
+`<store>/files/my_aggregation/3_GEX_QC/marker_set_UCell_summary/marker_sets.tsv` summarizes each marker set across the GEX clusters before doublet filtering: how many clusters it leads or is assigned, and its closest competing set.
 
 ## Further methods
 

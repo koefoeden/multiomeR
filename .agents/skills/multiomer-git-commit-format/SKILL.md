@@ -36,6 +36,14 @@ pull requests and release notes.
 List multiple earliest affected targets when no single upstream target captures
 the invalidation boundary. Do not replace target names with vague families.
 
+Trace the boundary rather than assuming a cascade. A target reruns when its
+command, a function or global object it calls, or an upstream data hash
+changes. Code that only constructs the graph, such as `tar_map()` values, affects
+only commands that reference it; descriptions and checkpoint tags invalidate
+nothing. A rerun that reproduces its hash stops the cascade: when consumers of
+a changed output all reproduce theirs, report them as contained.
+`tar_outdated()` cannot see this; confirm with `multiomer-validation-workflow`.
+
 For PR and release summaries, use commit impact lines as evidence and reconcile
 them with the final diff against the destination base or previous release.
 Drop effects from reverted or superseded changes, deduplicate surviving lines,

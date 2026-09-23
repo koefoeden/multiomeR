@@ -51,6 +51,8 @@ tar_target(
 ```
 
 - Use `tarchetypes::tar_file()` for paths written to disk.
+- Tag every user-facing output of a checkpoint or module, file exports as well
+  as plots, with its `[checkpoint:<name>]` so documented selections build it.
 - Use `tarchetypes::tar_map()` for per-dataset or per-parameter expansion.
 - Always set `deployment = "main"` on `tarchetypes::tar_files()` so file
   discovery stays in the pipeline driver environment rather than a Crew worker.

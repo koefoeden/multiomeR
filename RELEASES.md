@@ -7,11 +7,12 @@ version file is needed. The nested `multiomeRCore` package has its own version.
 ## Versions and tags
 
 Use semantic versions and immutable annotated tags `vMAJOR.MINOR.PATCH` on
-validated public `main` commits. While the workflow is below 1.0, increment the
-minor version for changes to configuration, target names, output schemas or
-scientific methods; increment the patch version for compatible fixes. After
-1.0, incompatible changes require a major version. Target invalidation is
-reported separately: even a compatible fix can require recomputation.
+validated public `main` commits. Increment the major version for incompatible
+changes to configuration, target names or output schemas, the minor version for
+compatible additions and scientific-method changes, and the patch version for
+compatible fixes. Before 1.0, the minor version marked incompatible changes.
+Target invalidation is reported separately: even a compatible fix can require
+recomputation.
 
 Use `MAJOR.MINOR.PATCH (unreleased)` at the top of `NEWS.md` while preparing a
 release. Replace `unreleased` with the release date only when publishing. Do not

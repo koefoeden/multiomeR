@@ -2,7 +2,7 @@
   <img src="website/figures/multiomeR-logo.svg" alt="multiomeR logo" width="900">
 </p>
 
-[![status](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![status](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Docs](https://github.com/koefoeden/multiomeR/actions/workflows/docs.yaml/badge.svg)](https://koefoeden.github.io/multiomeR/)
 [![R](https://img.shields.io/badge/R-%3E%3D%204.5-276DC3?logo=r&logoColor=white)](https://www.r-project.org/)
 [![Pixi](https://img.shields.io/badge/env-pixi-f3c638)](https://pixi.sh/)
@@ -15,9 +15,9 @@ multiomeR is a targets-based workflow for processing and analyzing single-nucleu
 
 The active workflow is a single root `targets` project driven by `_targets.R`, the settings in [`configuration/`](configuration/README.md). To select a separate settings directory for your project, use the ignored root `configuration.local` file.
 
-## Development status
+## Status
 
-multiomeR is in beta. The workflow is actively changing, and public interfaces may still change.
+multiomeR 1.0 is the first stable release. The manuscript describing it is under peer review (link to come).
 
 See [release notes and migration steps](NEWS.md) and the [release convention](RELEASES.md).
 

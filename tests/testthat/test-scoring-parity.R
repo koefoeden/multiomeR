@@ -174,7 +174,7 @@ testthat::test_that("integration: cell-cycle scores and phases match Seurat::Cel
   counts <- matrix(stats::rpois(length(expression), expression), length(genes), dimnames = list(genes, cells))
 
   observed <- add_cell_cycle_scores_to_cell_attr(
-    make_bpcells_matrix(counts), data.frame(row.names = cells), organism_chr = "human"
+    make_bpcells_matrix(counts), data.frame(row.names = cells)
   )
   object <- Seurat::NormalizeData(
     SeuratObject::CreateSeuratObject(counts = Matrix::Matrix(counts, sparse = TRUE)),

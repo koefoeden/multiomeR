@@ -42,52 +42,40 @@ read_cellbender_h5_matrix <- function(cellbender_h5_file, feature_type = "Gene E
 }
 
 
-#' Normalize GEX counts with Seurat SCT and run PCA
+#' Compute GEX residual PCA
 #'
-#' Compute SCTransform residual PCA for a BPCells-backed GEX count matrix.
+#' Compute Pearson-residual PCA for the metadata cells of a BPCells-backed GEX
+#' count matrix, with residuals from Seurat SCTransform or BPCells.
 #'
 #' @param GEX_counts_matrix Gene-by-cell count matrix; row names are gene IDs/names and column names are cell barcodes.
-#' @param barcode_vec Optional barcode subset; cells not present in the matrix are ignored, and an empty intersection is an error.
-#' @param metadata_tibble Optional cell metadata. If supplied, it must contain `barcode_w_prefix` and is aligned to the count matrix cells.
-#' @param organism_chr Organism identifier used for built-in cell-cycle gene sets (`Homo_sapiens` or `Mus_musculus`).
+#' @param metadata_tibble Cell metadata with `barcode_w_prefix`; its cells present in the matrix are analyzed.
 #' @param GEX_PCA_backend Backend used to construct the PCA input matrix (`Seurat_SCT` or `BPCells_native`).
-#' @param SCT_regress_vars Optional metadata columns passed to `Seurat::SCTransform(vars.to.regress = ...)`.
+#' @param SCT_regress_vars Optional metadata columns, or cell-cycle score columns, regressed from the residuals.
 #' @param n_components Number of output dimensions/components to compute.
 #' @param n_variable_features Number of high-residual-variance genes kept before PCA.
 #' @param min_feature_count Minimum total counts required for a gene to be considered in GEX PCA.
-#' @param threads Number of BLAS threads used for the dense residual PCA step.
+#' @param threads Number of threads used for the PCA step.
 #' @return A list with cell embeddings, gene loadings, singular values, and
 #'   variable-feature diagnostics from the residual PCA workflow.
 #' @keywords internal
 
 run_GEX_PCA_BPCells <- function(
   GEX_counts_matrix,
-  barcode_vec = NULL,
-  metadata_tibble = NULL,
-  organism_chr = NULL,
-  GEX_PCA_backend,
+  metadata_tibble,
+  GEX_PCA_backend = c("Seurat_SCT", "BPCells_native"),
   SCT_regress_vars = NULL,
   n_components,
   n_variable_features = 3000,
   min_feature_count = 50,
   threads = 1
 ) {
-  counts_matrix <- GEX_counts_matrix
-  if (is.null(barcode_vec) && !is.null(metadata_tibble)) {
-    if (!"barcode_w_prefix" %in% colnames(metadata_tibble)) {
-      stop("metadata_tibble must contain a 'barcode_w_prefix' column.")
-    }
-    barcode_vec <- metadata_tibble$barcode_w_prefix
+  GEX_PCA_backend <- match.arg(GEX_PCA_backend)
+  metadata_tibble <- dplyr::distinct(metadata_tibble, .data$barcode_w_prefix, .keep_all = TRUE)
+  barcodes <- intersect(metadata_tibble$barcode_w_prefix, colnames(GEX_counts_matrix))
+  if (length(barcodes) == 0) {
+    stop("No requested barcodes were found in the GEX count matrix.")
   }
-
-  if (!is.null(barcode_vec)) {
-    barcode_vec <- intersect(barcode_vec, colnames(counts_matrix))
-    if (length(barcode_vec) == 0) {
-      stop("No requested barcodes were found in the GEX count matrix.")
-    }
-    counts_matrix <- counts_matrix[, barcode_vec, drop = FALSE]
-  }
-
+  counts_matrix <- GEX_counts_matrix[, barcodes, drop = FALSE]
   feature_counts <- BPCells::rowSums(counts_matrix)
   keep_features <- names(feature_counts)[feature_counts > min_feature_count]
   if (length(keep_features) < 2) {
@@ -95,17 +83,12 @@ run_GEX_PCA_BPCells <- function(
   }
   counts_matrix <- counts_matrix[keep_features, , drop = FALSE]
 
-  SCT_regress_vars <- normalize_SCT_regress_vars(SCT_regress_vars)
-  cell_attr <- prepare_SCT_cell_attr(metadata_tibble, colnames(counts_matrix))
-  requested_cell_cycle_cols <- intersect(SCT_regress_vars, cell_cycle_score_cols())
-  if (length(requested_cell_cycle_cols) > 0) {
-    cell_attr <- add_cell_cycle_scores_to_cell_attr(
-      counts_matrix = counts_matrix,
-      cell_attr = cell_attr,
-      organism_chr = organism_chr
-    )
+  SCT_regress_vars <- setdiff(as.character(unlist(SCT_regress_vars)), c(NA, "", "NULL"))
+  cell_attr <- as.data.frame(metadata_tibble[match(barcodes, metadata_tibble$barcode_w_prefix), ])
+  rownames(cell_attr) <- barcodes
+  if (any(SCT_regress_vars %in% c("S.Score", "G2M.Score", "Phase", "CC.Difference"))) {
+    cell_attr <- add_cell_cycle_scores_to_cell_attr(counts_matrix, cell_attr)
   }
-
   missing_regress_vars <- setdiff(SCT_regress_vars, colnames(cell_attr))
   if (length(missing_regress_vars) > 0) {
     stop(
@@ -114,84 +97,62 @@ run_GEX_PCA_BPCells <- function(
     )
   }
 
-  GEX_PCA_backend <- match.arg(GEX_PCA_backend, c("Seurat_SCT", "BPCells_native"))
-  if (identical(GEX_PCA_backend, "BPCells_native")) {
-    return(run_BPCells_native_GEX_PCA(
-      counts_matrix = counts_matrix,
-      cell_attr = cell_attr,
-      SCT_regress_vars = SCT_regress_vars,
-      n_components = n_components,
-      n_variable_features = n_variable_features,
-      threads = threads
-    ))
+  residuals <- if (identical(GEX_PCA_backend, "BPCells_native")) {
+    get_BPCells_native_GEX_residuals(counts_matrix, cell_attr, SCT_regress_vars, n_variable_features, threads)
+  } else {
+    get_Seurat_SCT_GEX_residuals(counts_matrix, cell_attr, SCT_regress_vars, n_variable_features)
   }
-
-  final_sct <- run_Seurat_SCT_for_PCA(
-    counts_matrix = counts_matrix,
-    cell_attr = cell_attr,
-    SCT_regress_vars = SCT_regress_vars,
-    n_variable_features = n_variable_features
-  )
-  gc()
-
-  pearson_residuals <- final_sct$y
-  if (is.null(pearson_residuals) || nrow(pearson_residuals) < 2 || ncol(pearson_residuals) < 2) {
-    stop("SCTransform returned too few residuals for GEX PCA.")
-  }
-  variable_features <- final_sct$variable_features
-  if (is.null(variable_features)) {
-    variable_features <- rownames(pearson_residuals)
-  }
-  variable_features <- intersect(variable_features, rownames(pearson_residuals))
-  pearson_residuals <- pearson_residuals[variable_features, , drop = FALSE]
-
+  pearson_residuals <- residuals$pearson_residuals
   n_components <- min(as.integer(n_components), nrow(pearson_residuals) - 1L, ncol(pearson_residuals) - 1L)
   if (n_components < 1) {
     stop("Too few cells or features remain for PCA.")
   }
 
-  pca_out <- run_dense_feature_gram_PCA(
-    feature_by_cell_matrix = pearson_residuals,
-    n_components = n_components,
-    threads = threads
-  )
-  cell_embeddings <- pca_out$cell_embeddings
-  rownames(cell_embeddings) <- colnames(pearson_residuals)
-  colnames(cell_embeddings) <- paste0("PCA_", seq_len(ncol(cell_embeddings)))
+  if (identical(GEX_PCA_backend, "BPCells_native")) {
+    svd <- BPCells::svds(pearson_residuals, k = n_components, threads = threads)
+    singular_values <- svd$d
+    feature_loadings <- svd$u
+    cell_embeddings <- sweep(svd$v, 2, svd$d, FUN = "*")
+  } else {
+    # The dense residuals have few features, so an eigendecomposition of their
+    # feature Gram matrix is exact and fast with threaded BLAS.
+    previous_threads <- RhpcBLASctl::blas_get_num_procs()
+    RhpcBLASctl::blas_set_num_threads(threads)
+    on.exit(RhpcBLASctl::blas_set_num_threads(previous_threads), add = TRUE)
+    eigen_out <- eigen(tcrossprod(pearson_residuals), symmetric = TRUE)
+    keep_components <- seq_len(min(n_components, length(eigen_out$values)))
+    singular_values <- sqrt(pmax(eigen_out$values[keep_components], 0))
+    feature_loadings <- eigen_out$vectors[, keep_components, drop = FALSE]
+    cell_embeddings <- crossprod(pearson_residuals, feature_loadings)
+  }
 
-  feature_loadings <- pca_out$feature_loadings
-  rownames(feature_loadings) <- rownames(pearson_residuals)
-  colnames(feature_loadings) <- paste0("PCA_", seq_len(ncol(feature_loadings)))
-  variable_feature_variance <- get_SCT_variable_feature_variance(final_sct, pearson_residuals)
-  variable_feature_stats <- tibble::tibble(
-    gene = variable_features,
-    residual_variance = unname(variable_feature_variance[variable_features]),
-    PCA_weighted_loading_strength = sqrt(rowSums(sweep(feature_loadings, 2, pca_out$singular_values, "*")^2))
-  )
-
+  component_names <- paste0("PCA_", seq_along(singular_values))
+  dimnames(cell_embeddings) <- list(colnames(pearson_residuals), component_names)
+  dimnames(feature_loadings) <- list(rownames(pearson_residuals), component_names)
+  variable_features <- rownames(pearson_residuals)
   list(
     cell_embeddings = cell_embeddings,
     feature_loadings = feature_loadings,
-    singular_values = pca_out$singular_values,
+    singular_values = singular_values,
     variable_features = variable_features,
-    variable_feature_stats = variable_feature_stats,
-    GEX_PCA_backend = GEX_PCA_backend,
-    SCT_regress_vars = SCT_regress_vars,
-    cell_cycle_score_cols = intersect(cell_cycle_score_cols(), colnames(cell_attr))
+    variable_feature_stats = tibble::tibble(
+      gene = variable_features,
+      residual_variance = unname(residuals$residual_variance[variable_features]),
+      PCA_weighted_loading_strength = sqrt(rowSums(sweep(feature_loadings, 2, singular_values, "*")^2))
+    )
   )
 }
 
-run_BPCells_native_GEX_PCA <- function(
+get_BPCells_native_GEX_residuals <- function(
   counts_matrix,
   cell_attr,
-  SCT_regress_vars = NULL,
-  n_components,
-  n_variable_features = 3000,
+  SCT_regress_vars,
+  n_variable_features,
+  threads,
   min_var = 0,
   clip_range = c(-10, 10),
   min_theta = 1e-6,
-  max_theta = 1e6,
-  threads = 1
+  max_theta = 1e6
 ) {
   cell_read_counts <- BPCells::colSums(counts_matrix)
   row_stats <- BPCells::matrix_stats(counts_matrix, row_stats = "variance", threads = threads)$row_stats
@@ -214,7 +175,6 @@ run_BPCells_native_GEX_PCA <- function(
     min_var = min_var,
     clip_range = clip_range
   )
-
   if (length(SCT_regress_vars) > 0) {
     pearson_residuals <- BPCells::regress_out(
       mat = pearson_residuals,
@@ -224,107 +184,18 @@ run_BPCells_native_GEX_PCA <- function(
   }
 
   residual_stats <- BPCells::matrix_stats(pearson_residuals, row_stats = "variance", threads = threads)$row_stats
-  variable_feature_variance <- residual_stats["variance", ]
-  variable_features <- variable_feature_variance |>
+  residual_variance <- residual_stats["variance", ]
+  variable_features <- residual_variance |>
     sort(decreasing = TRUE) |>
-    utils::head(n = min(n_variable_features, length(variable_feature_variance))) |>
+    utils::head(n = min(n_variable_features, length(residual_variance))) |>
     names()
-  pearson_residuals <- pearson_residuals[variable_features, , drop = FALSE]
-
-  n_components <- min(as.integer(n_components), nrow(pearson_residuals) - 1L, ncol(pearson_residuals) - 1L)
-  if (n_components < 1) {
-    stop("Too few cells or features remain for PCA.")
-  }
-
-  svd <- BPCells::svds(pearson_residuals, k = n_components, threads = threads)
-  cell_embeddings <- sweep(svd$v, 2, svd$d, FUN = "*")
-  rownames(cell_embeddings) <- colnames(pearson_residuals)
-  colnames(cell_embeddings) <- paste0("PCA_", seq_len(ncol(cell_embeddings)))
-
-  feature_loadings <- svd$u
-  rownames(feature_loadings) <- rownames(pearson_residuals)
-  colnames(feature_loadings) <- paste0("PCA_", seq_len(ncol(feature_loadings)))
-  variable_feature_stats <- tibble::tibble(
-    gene = variable_features,
-    residual_variance = unname(variable_feature_variance[variable_features]),
-    PCA_weighted_loading_strength = sqrt(rowSums(sweep(feature_loadings, 2, svd$d, "*")^2))
-  )
-
   list(
-    cell_embeddings = cell_embeddings,
-    feature_loadings = feature_loadings,
-    singular_values = svd$d,
-    variable_features = variable_features,
-    variable_feature_stats = variable_feature_stats,
-    GEX_PCA_backend = "BPCells_native",
-    SCT_regress_vars = SCT_regress_vars,
-    cell_cycle_score_cols = intersect(cell_cycle_score_cols(), colnames(cell_attr))
+    pearson_residuals = pearson_residuals[variable_features, , drop = FALSE],
+    residual_variance = residual_variance
   )
 }
 
-run_dense_feature_gram_PCA <- function(feature_by_cell_matrix, n_components, threads = 1) {
-  with_blas_threads(threads, {
-    gram_matrix <- tcrossprod(feature_by_cell_matrix)
-    eigen_out <- eigen(gram_matrix, symmetric = TRUE)
-    keep_components <- seq_len(min(n_components, length(eigen_out$values)))
-    singular_values <- sqrt(pmax(eigen_out$values[keep_components], 0))
-    feature_loadings <- eigen_out$vectors[, keep_components, drop = FALSE]
-    cell_embeddings <- crossprod(feature_by_cell_matrix, feature_loadings)
-  })
-
-  list(
-    cell_embeddings = cell_embeddings,
-    feature_loadings = feature_loadings,
-    singular_values = singular_values
-  )
-}
-
-with_blas_threads <- function(threads, code) {
-  threads <- as.integer(threads)
-  if (!requireNamespace("RhpcBLASctl", quietly = TRUE) || is.na(threads) || threads < 1) {
-    return(force(code))
-  }
-
-  old_threads <- RhpcBLASctl::blas_get_num_procs()
-  RhpcBLASctl::blas_set_num_threads(threads)
-  on.exit(RhpcBLASctl::blas_set_num_threads(old_threads), add = TRUE)
-  force(code)
-}
-
-normalize_SCT_regress_vars <- function(SCT_regress_vars) {
-  if (is.null(SCT_regress_vars)) {
-    return(character())
-  }
-  SCT_regress_vars <- unlist(SCT_regress_vars, use.names = FALSE)
-  SCT_regress_vars <- as.character(SCT_regress_vars)
-  SCT_regress_vars <- SCT_regress_vars[!is.na(SCT_regress_vars) & nzchar(SCT_regress_vars) & SCT_regress_vars != "NULL"]
-  unique(SCT_regress_vars)
-}
-
-prepare_SCT_cell_attr <- function(metadata_tibble, barcode_vec) {
-  if (is.null(metadata_tibble)) {
-    return(data.frame(row.names = barcode_vec))
-  }
-  if (!"barcode_w_prefix" %in% colnames(metadata_tibble)) {
-    stop("metadata_tibble must contain a 'barcode_w_prefix' column.")
-  }
-
-  metadata_out <- metadata_tibble |>
-    dplyr::distinct(.data$barcode_w_prefix, .keep_all = TRUE) |>
-    dplyr::filter(.data$barcode_w_prefix %in% barcode_vec) |>
-    dplyr::arrange(match(.data$barcode_w_prefix, barcode_vec))
-
-  if (!identical(metadata_out$barcode_w_prefix, barcode_vec)) {
-    missing_barcodes <- setdiff(barcode_vec, metadata_out$barcode_w_prefix)
-    stop("metadata_tibble is missing ", length(missing_barcodes), " requested barcode(s).")
-  }
-
-  metadata_out <- as.data.frame(metadata_out, stringsAsFactors = FALSE, check.names = FALSE)
-  rownames(metadata_out) <- metadata_out$barcode_w_prefix
-  metadata_out
-}
-
-run_Seurat_SCT_for_PCA <- function(counts_matrix, cell_attr, SCT_regress_vars = NULL, n_variable_features = 3000) {
+get_Seurat_SCT_GEX_residuals <- function(counts_matrix, cell_attr, SCT_regress_vars, n_variable_features) {
   previous_options <- options(future.globals.maxSize = 40 * 1024^3)
   on.exit(options(previous_options), add = TRUE)
 
@@ -340,37 +211,34 @@ run_Seurat_SCT_for_PCA <- function(counts_matrix, cell_attr, SCT_regress_vars = 
     sct_args$latent.data <- cell_attr[, SCT_regress_vars, drop = FALSE]
   }
   sct_assay <- do.call(Seurat::SCTransform, sct_args)
+  scale_data <- SeuratObject::GetAssayData(sct_assay, layer = "scale.data")
+  variable_features <- intersect(SeuratObject::VariableFeatures(sct_assay), rownames(scale_data))
+  rm(sct_assay)
+  gc()
 
-  list(
-    y = SeuratObject::GetAssayData(sct_assay, layer = "scale.data"),
-    variable_features = SeuratObject::VariableFeatures(sct_assay)
+  pearson_residuals <- scale_data[variable_features, , drop = FALSE]
+  residual_variance <- matrixStats::rowVars(as.matrix(pearson_residuals))
+  names(residual_variance) <- rownames(pearson_residuals)
+  list(pearson_residuals = pearson_residuals, residual_variance = residual_variance)
+}
+
+#' Add Seurat-compatible cell-cycle scores
+#'
+#' Score the Seurat 2019 S and G2M gene sets as `Seurat::CellCycleScoring()`
+#' does, on BPCells log-normalized counts, and add `S.Score`, `G2M.Score`,
+#' `Phase`, and `CC.Difference` to `cell_attr`. Gene symbols are matched case
+#' insensitively, as for mouse.
+#' @keywords internal
+add_cell_cycle_scores_to_cell_attr <- function(counts_matrix, cell_attr, min_cell_cycle_features = 5) {
+  features <- list(
+    S.Score = Seurat::CaseMatch(Seurat::cc.genes.updated.2019$s.genes, rownames(counts_matrix)),
+    G2M.Score = Seurat::CaseMatch(Seurat::cc.genes.updated.2019$g2m.genes, rownames(counts_matrix))
   )
-}
-
-cell_cycle_score_cols <- function() {
-  c("S.Score", "G2M.Score", "Phase", "CC.Difference")
-}
-
-cell_cycle_gene_sets <- function(organism_chr) {
-  s_genes <- Seurat::cc.genes.updated.2019$s.genes
-  g2m_genes <- Seurat::cc.genes.updated.2019$g2m.genes
-
-  if (is.null(organism_chr) || organism_chr %in% c("Homo_sapiens", "hsapiens", "human", "Mus_musculus", "mmusculus", "mouse")) {
-    return(list(s_genes = s_genes, g2m_genes = g2m_genes))
-  }
-
-  stop("Cell-cycle scoring was requested, but organism '", organism_chr, "' is not supported.")
-}
-
-add_cell_cycle_scores_to_cell_attr <- function(counts_matrix, cell_attr, organism_chr, min_cell_cycle_features = 5) {
-  gene_sets <- cell_cycle_gene_sets(organism_chr)
-  s_features <- Seurat::CaseMatch(gene_sets$s_genes, rownames(counts_matrix))
-  g2m_features <- Seurat::CaseMatch(gene_sets$g2m_genes, rownames(counts_matrix))
-  if (length(s_features) < min_cell_cycle_features || length(g2m_features) < min_cell_cycle_features) {
+  if (any(lengths(features) < min_cell_cycle_features)) {
     stop(
       "Cell-cycle regression was requested, but too few cell-cycle genes were found in the GEX matrix: ",
-      "S-phase ", length(s_features), " < ", min_cell_cycle_features, "; ",
-      "G2M-phase ", length(g2m_features), " < ", min_cell_cycle_features, "."
+      "S-phase ", length(features$S.Score), " < ", min_cell_cycle_features, "; ",
+      "G2M-phase ", length(features$G2M.Score), " < ", min_cell_cycle_features, "."
     )
   }
 
@@ -378,106 +246,53 @@ add_cell_cycle_scores_to_cell_attr <- function(counts_matrix, cell_attr, organis
   normalized_data <- counts_matrix |>
     BPCells::multiply_cols(ifelse(cell_counts > 0, 10000 / cell_counts, 0)) |>
     log1p()
-  n_unique_vals <- min(
-    length(unique(BPCells::rowMeans(normalized_data[s_features, , drop = FALSE]))),
-    length(unique(BPCells::rowMeans(normalized_data[g2m_features, , drop = FALSE])))
-  )
+  n_unique_vals <- min(vapply(
+    features,
+    \(feature_set) length(unique(BPCells::rowMeans(normalized_data[feature_set, , drop = FALSE]))),
+    integer(1)
+  ))
   if (n_unique_vals < 3) {
     stop("Cell-cycle scoring was requested, but the normalized GEX data has too few unique cell-cycle feature means.")
   }
 
-  cc_scores <- calculate_BPCells_cell_cycle_scores_from_matrix(
-    normalized_data = normalized_data,
-    s.features = s_features,
-    g2m.features = g2m_features,
-    nbin = min(n_unique_vals - 2, 24)
+  # Seurat::AddModuleScore(): control genes are drawn from the expression bin of each module gene.
+  gene_means <- sort(BPCells::rowMeans(normalized_data))
+  set.seed(1)
+  gene_bins <- ggplot2::cut_number(
+    gene_means + stats::rnorm(length(gene_means)) / 1e30,
+    n = min(n_unique_vals - 2, 24),
+    labels = FALSE,
+    right = FALSE
   )
-
-  score_cols <- c("S.Score", "G2M.Score", "Phase")
-  cell_attr[rownames(cc_scores), score_cols] <- cc_scores[, score_cols, drop = FALSE]
-  cell_attr$CC.Difference <- cell_attr$S.Score - cell_attr$G2M.Score
-  cell_attr
-}
-
-calculate_BPCells_cell_cycle_scores_from_matrix <- function(normalized_data, s.features, g2m.features, nbin, seed = 1) {
-  features <- list(S.Score = s.features, G2M.Score = g2m.features)
-
-  feature_scores <- calculate_BPCells_module_scores_from_matrix(
-    normalized_data = normalized_data,
-    features = features,
-    ctrl = min(lengths(features)),
-    nbin = nbin,
-    seed = seed
-  )
-
-  phase <- apply(feature_scores, 1, function(scores) {
-    if (all(scores < 0)) {
-      return("G1")
-    }
-    if (sum(scores == max(scores)) > 1) {
-      return("Undecided")
-    }
-    c("S", "G2M")[which(scores == max(scores))]
-  })
-
-  data.frame(
-    S.Score = feature_scores[, "S.Score"],
-    G2M.Score = feature_scores[, "G2M.Score"],
-    Phase = phase,
-    row.names = rownames(feature_scores)
-  )
-}
-
-calculate_BPCells_module_scores_from_matrix <- function(normalized_data, features, nbin = 24, ctrl = 100, seed = 1) {
-  features <- lapply(features, intersect, y = rownames(normalized_data))
-  if (!all(lengths(features) > 0)) {
-    stop("All module feature sets must have at least one feature present in the normalized matrix.")
-  }
-
-  gene_means <- BPCells::rowMeans(normalized_data)
-  gene_means <- gene_means[order(gene_means)]
-  set.seed(seed)
-  gene_bins <- ggplot2::cut_number(gene_means + stats::rnorm(length(gene_means)) / 1e30, n = nbin, labels = FALSE, right = FALSE)
   names(gene_bins) <- names(gene_means)
-
+  n_controls <- min(lengths(features))
   control_features <- lapply(features, function(feature_set) {
     unique(unlist(lapply(feature_set, function(feature) {
       bin_features <- names(gene_bins)[gene_bins == gene_bins[[feature]]]
-      sample(bin_features, size = min(ctrl, length(bin_features)), replace = FALSE)
+      sample(bin_features, size = min(n_controls, length(bin_features)), replace = FALSE)
     }), use.names = FALSE))
   })
+  scores <- vapply(
+    names(features),
+    \(score) BPCells::colMeans(normalized_data[features[[score]], , drop = FALSE]) -
+      BPCells::colMeans(normalized_data[control_features[[score]], , drop = FALSE]),
+    numeric(ncol(normalized_data))
+  )
 
-  scores <- matrix(0, nrow = length(features), ncol = ncol(normalized_data))
-  for (idx in seq_along(features)) {
-    module_score <- BPCells::colMeans(normalized_data[features[[idx]], , drop = FALSE])
-    control_score <- BPCells::colMeans(normalized_data[control_features[[idx]], , drop = FALSE])
-    scores[idx, ] <- module_score - control_score
-  }
-
-  scores <- as.data.frame(t(scores))
-  colnames(scores) <- names(features)
-  rownames(scores) <- colnames(normalized_data)
-  scores
-}
-
-get_SCT_variable_feature_variance <- function(SCT_out, pearson_residuals) {
-  if (!is.null(SCT_out$gene_attr) && "residual_variance" %in% colnames(SCT_out$gene_attr)) {
-    residual_variance <- SCT_out$gene_attr$residual_variance
-    names(residual_variance) <- rownames(SCT_out$gene_attr)
-    return(residual_variance)
-  }
-  if (inherits(SCT_out, "SCTAssay")) {
-    feature_attributes <- Seurat::SCTResults(SCT_out, slot = "feature.attributes")
-    if (!is.null(feature_attributes) && "residual_variance" %in% colnames(feature_attributes)) {
-      residual_variance <- feature_attributes$residual_variance
-      names(residual_variance) <- rownames(feature_attributes)
-      return(residual_variance)
+  phase <- apply(scores, 1, function(cell_scores) {
+    if (all(cell_scores < 0)) {
+      return("G1")
     }
-  }
-
-  residual_variance <- matrixStats::rowVars(as.matrix(pearson_residuals))
-  names(residual_variance) <- rownames(pearson_residuals)
-  residual_variance
+    if (sum(cell_scores == max(cell_scores)) > 1) {
+      return("Undecided")
+    }
+    c("S", "G2M")[which(cell_scores == max(cell_scores))]
+  })
+  cell_attr[colnames(normalized_data), "S.Score"] <- scores[, "S.Score"]
+  cell_attr[colnames(normalized_data), "G2M.Score"] <- scores[, "G2M.Score"]
+  cell_attr[colnames(normalized_data), "Phase"] <- phase
+  cell_attr$CC.Difference <- cell_attr$S.Score - cell_attr$G2M.Score
+  cell_attr
 }
 
 #' Prepare GEX metadata tibble

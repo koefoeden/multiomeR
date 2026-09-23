@@ -21,6 +21,6 @@ require_reference_version <- function(package, expected) {
 load_project_test_runtime <- function() {
   if (!exists("load_project_runtime", mode = "function", inherits = TRUE)) {
     source_project_file("R/bootstrap_helpers.R", envir = globalenv())
+    load_project_runtime()
   }
-  load_project_runtime()
 }

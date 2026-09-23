@@ -196,11 +196,11 @@ For commands that intentionally bypass startup side effects, source the bootstra
 
 ``` r
 source("R/bootstrap_helpers.R")
-load_project_runtime(force = TRUE)
+load_project_runtime()
 targets::tar_manifest(callr_function = NULL)
 ```
 
-Bootstrap state is cached in `bootstrap_state_env`. This avoids reloading packages, re-sourcing helpers, reapplying target options, reassigning patches, and reloading controllers on every call. Use `force = TRUE` when the current R session may be stale, such as after changing helper files, switching checkout roots, editing `crew_controllers.R`, or reusing a long-lived interactive session.
+`load_project_runtime()` keeps no state: each call reloads the packages, helpers, options, and controllers. Call it again when the current R session may be stale, such as after changing helper files, switching checkout roots, editing `crew_controllers.R`, or reusing a long-lived interactive session.
 
 Project-root detection walks upward from the current working directory until it finds `pixi.toml`. Bootstrap commands should therefore be run from inside the multiomeR checkout.
 

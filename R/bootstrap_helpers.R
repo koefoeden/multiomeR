@@ -1,56 +1,16 @@
-if (!exists("bootstrap_state_env", inherits = FALSE)) {
-  bootstrap_state_env <- new.env(parent = emptyenv())
+get_project_root <- function() {
+  rprojroot::find_root(rprojroot::has_file("pixi.toml"))
 }
 
-if (!exists("helper_packages_loaded", envir = bootstrap_state_env, inherits = FALSE)) {
-  bootstrap_state_env$helper_packages_loaded <- FALSE
-}
-
-if (!exists("shared_helpers_loaded", envir = bootstrap_state_env, inherits = FALSE)) {
-  bootstrap_state_env$shared_helpers_loaded <- FALSE
-}
-
-if (!exists("runtime_options_applied", envir = bootstrap_state_env, inherits = FALSE)) {
-  bootstrap_state_env$runtime_options_applied <- FALSE
-}
-
-if (!exists("controllers_loaded", envir = bootstrap_state_env, inherits = FALSE)) {
-  bootstrap_state_env$controllers_loaded <- FALSE
-}
-
-if (!exists("controller_resources_tibble", envir = bootstrap_state_env, inherits = FALSE)) {
-  bootstrap_state_env$controller_resources_tibble <- NULL
-}
-
-if (!exists("project_root", envir = bootstrap_state_env, inherits = FALSE)) {
-  bootstrap_state_env$project_root <- NA_character_
-}
-
-get_project_root <- function(force = FALSE) {
-  if (!force && !is.na(bootstrap_state_env$project_root)) {
-    return(bootstrap_state_env$project_root)
-  }
-
-  bootstrap_state_env$project_root <- rprojroot::find_root(
-    criterion = rprojroot::has_file("pixi.toml"),
-    path = base::getwd()
-  )
-  bootstrap_state_env$project_root
-}
-
-#' Load project packages
+#' Load the project runtime
 #'
-#' Load core packages and install conflict preferences for the targets workflow.
+#' Attach the core packages and conflict preferences, source the project
+#' helpers, and install the targets options and crew controllers. `.Rprofile` calls this at startup; call it again to
+#' reload edited helpers or controllers in a running session.
 #'
-#' @param force Logical; TRUE reruns the setup step even when bootstrap state says it has already completed.
-#' @return Invisibly returns after the validation or setup side effect succeeds.
+#' @return Invisibly returns `TRUE`.
 #' @keywords internal
-
-load_project_packages <- function(force = FALSE) {
-  if (isTRUE(bootstrap_state_env$helper_packages_loaded) && !force) {
-    return(invisible(FALSE))
-  }
-
+load_project_runtime <- function() {
   suppressPackageStartupMessages({
     library(Matrix)
     library(purrr)
@@ -86,31 +46,11 @@ load_project_packages <- function(force = FALSE) {
     .quiet = TRUE
   )
 
-  bootstrap_state_env$helper_packages_loaded <- TRUE
-  invisible(TRUE)
-}
-
-source_shared_helpers <- function(force = FALSE) {
-  if (isTRUE(bootstrap_state_env$shared_helpers_loaded) && !force) {
-    return(invisible(FALSE))
-  }
-
-  load_project_packages()
-  targets::tar_source("packages/multiomeRCore/R")
-  targets::tar_source("R")
-  bootstrap_state_env$shared_helpers_loaded <- TRUE
-  invisible(TRUE)
-}
-
-apply_runtime_options <- function(force = FALSE) {
-  if (isTRUE(bootstrap_state_env$runtime_options_applied) && !force) {
-    return(invisible(FALSE))
-  }
+  targets::tar_source(c("packages/multiomeRCore/R", "R"))
 
   ggplot2::theme_set(ggplot2::theme_bw())
   ggplot2::theme_update(legend.position = "bottom")
   Sys.setenv("R_MSG_PKG_START_MSG" = "FALSE")
-
   targets::tar_option_set(
     error = "trim",
     iteration = "list",
@@ -118,28 +58,8 @@ apply_runtime_options <- function(force = FALSE) {
     garbage_collection = 1L
   )
 
-  bootstrap_state_env$runtime_options_applied <- TRUE
-  invisible(TRUE)
-}
-
-source_crew_controllers <- function(force = FALSE, envir = .GlobalEnv) {
-  if (isTRUE(bootstrap_state_env$controllers_loaded) && !force && identical(envir, .GlobalEnv)) {
-    return(invisible(FALSE))
-  }
-
-  controller_setup <- source(file.path(get_project_root(force = force), "crew_controllers.R"), local = envir, chdir = TRUE)$value
-  apply_crew_controller_options(controller_setup)
-
-  if (identical(envir, .GlobalEnv)) {
-    bootstrap_state_env$controllers_loaded <- TRUE
-  }
-  invisible(TRUE)
-}
-
-load_project_runtime <- function(force = FALSE) {
-  load_project_packages(force = force)
-  source_shared_helpers(force = force)
-  apply_runtime_options(force = force)
-  source_crew_controllers(force = force)
+  apply_crew_controller_options(
+    source(file.path(get_project_root(), "crew_controllers.R"), chdir = TRUE)$value
+  )
   invisible(TRUE)
 }

@@ -18,7 +18,7 @@ Run the commands below in the repository-root R session. For general techniques,
 Reload the runtime and build the manifest:
 
 ```{.r filename="R"}
-load_project_runtime(force = TRUE)
+load_project_runtime()
 targets::tar_manifest(callr_function = NULL)
 ```
 
@@ -80,7 +80,7 @@ Metadata files are checked when the targets that read them run. Compare the erro
 
 If workers do not start, are killed, or no controller can run a target:
 
-1. Check `crew_controllers.R` against the [controller rules](performance_distributed_computing.md#controller-rules), then reload it with `load_project_runtime(force = TRUE)`.
+1. Check `crew_controllers.R` against the [controller rules](performance_distributed_computing.md#controller-rules), then reload it with `load_project_runtime()`.
 2. An error starting with `No controller found` means that no tier offers the requested cores, RAM, or GPUs; add or enlarge a tier.
 3. For scheduler controllers, read the scheduler's output and error logs, and check the queue, account, wall time, memory, CPU, module, and file-system settings.
 4. If local workers are killed for lack of memory, lower their `workers` values as described in [Local execution](performance_distributed_computing.md#local-execution).

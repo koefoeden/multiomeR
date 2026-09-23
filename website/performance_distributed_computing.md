@@ -40,7 +40,7 @@ The `RAM_GB` values in `controller_resources_tibble` route each target to a cont
 After editing the file, restart R or reload the runtime, which also checks the file:
 
 ```{.r filename="R"}
-load_project_runtime(force = TRUE)
+load_project_runtime()
 ```
 
 ## Scheduler execution

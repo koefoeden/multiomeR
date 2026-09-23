@@ -96,7 +96,9 @@ targets::tar_make(
 
 ## Review
 
-``` text
+Review the plots ([examples](gallery.md#differential-analyses)); each plot's subtitle and caption say what to look for.
+
+```text
 <store>/plots/my_aggregation/differential_analyses/
 ├── pseudobulk_depth_distribution_plot.png
 ├── cell_type_composition/model_plots_condition_abundance/
@@ -112,7 +114,7 @@ targets::tar_make(
 └── CollecTRI_JASPAR/activity_accessibility_concordance_plots/
 ```
 
-The other feature families follow the `gene_expression/` layout without gene sets. Interpretation guidance is in each plot's subtitle and caption; representative plots are in the [output gallery](gallery.md#differential-analyses).
+The other feature families follow the `gene_expression/` layout without gene sets.
 
 Read feature-model results in R, for example for gene expression:
 

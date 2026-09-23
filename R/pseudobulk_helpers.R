@@ -413,38 +413,12 @@ get_pseudobulk_cell_type_design <- function(sample_tibble, formula_chr) {
   design_matrix
 }
 
-fit_pseudobulk_voom <- function(..., correlation_max_features = Inf) {
-  stopifnot(length(correlation_max_features) == 1L, correlation_max_features > 0)
-  fit_function <- edgeR::voomLmFit
-  if (is.finite(correlation_max_features)) {
-    sampled_correlation <- function(object, design = NULL, block = NULL, weights = NULL, ...) {
-      rows <- if (nrow(object) > correlation_max_features) {
-        withr::with_seed(732L, sort(sample.int(nrow(object), correlation_max_features)))
-      } else {
-        seq_len(nrow(object))
-      }
-      limma::duplicateCorrelation(
-        object[rows, , drop = FALSE], design = design, block = block,
-        weights = if (is.null(weights)) NULL else weights[rows, , drop = FALSE], ...
-      )
-    }
-    # voomLmFit has no correlation-sampling argument. Override its imported
-    # estimator in a local function copy, retaining edgeR's two voom passes
-    # and sparse-count DF correction without changing either package namespace.
-    environment(fit_function) <- list2env(
-      list(duplicateCorrelation = sampled_correlation),
-      parent = environment(fit_function)
-    )
-  }
-  fit_function(...)
-}
-
 fit_pseudobulk_cell_type_matrix <- function(
   pseudobulk_feature_matrix,
   sample_tibble,
   formula_chr,
   correlation_block = NULL,
-  correlation_max_features = Inf
+  voom_fit = edgeR::voomLmFit
 ) {
   design_matrix <- get_pseudobulk_cell_type_design(sample_tibble, formula_chr)
   is_count_data <- is_count_matrix(pseudobulk_feature_matrix)
@@ -473,13 +447,12 @@ fit_pseudobulk_cell_type_matrix <- function(
       glue_info = "No valid cell-type-specific count model remains after filtering."
     )
 
-    fit <- fit_pseudobulk_voom(
+    fit <- voom_fit(
       gene_expression_list,
       design = design_matrix,
       block = if (has_correlation_block) factor(gene_expression_list$samples[[correlation_block]]) else NULL,
       normalize.method = "none",
-      keep.EList = TRUE,
-      correlation_max_features = correlation_max_features
+      keep.EList = TRUE
     )
     retained_samples <- gene_expression_list$samples
   } else {

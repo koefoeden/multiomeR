@@ -171,28 +171,6 @@ reference_SCAVENGE_scores <- function(propagation_score, z_score, scale_percent 
   scaled * mean(z_score[scale_idx])
 }
 
-reference_SCAVENGE_sample_seed_indices <- function(
-  graph,
-  seed_idx,
-  permutation_times
-) {
-  cell_table <- data.frame(cell = seq_len(nrow(graph)), degree = Matrix::colSums(graph))
-  seed_table <- data.frame(
-    seed = which(seed_idx),
-    degree = Matrix::colSums(graph[, seed_idx, drop = FALSE])
-  ) |>
-    with(data.frame(table(degree)))
-  cells_by_degree <- tapply(cell_table$cell, cell_table$degree, list)
-  cells_by_degree <- cells_by_degree[names(cells_by_degree) %in% seed_table$degree]
-
-  lapply(seq_len(permutation_times), function(permutation) {
-    cells_by_degree |>
-      mapply(FUN = sample, seed_table$Freq) |>
-      unlist(use.names = FALSE) |>
-      sort()
-  })
-}
-
 make_SCAVENGE_fixture <- function() {
   n_cells <- 60L
   cells <- sprintf("cell%02d", seq_len(n_cells))
@@ -226,81 +204,24 @@ make_SCAVENGE_fixture <- function() {
   z_score[cells[1:3]] <- c(5, 4.5, 4)
   list(
     graph = Matrix::Matrix(adjacency, sparse = TRUE),
-    z_score = z_score,
-    block = rep(sprintf("block_%d", 1:6), each = 10L)
+    z_score = z_score
   )
 }
 
-make_SCAVENGE_test_context <- function(permutation_times = 199L) {
+make_SCAVENGE_test_context <- function() {
   fixture <- make_SCAVENGE_fixture()
   weighted_graph <- fixture$graph
   graph <- get_SCAVENGE_adjacency_matrix(weighted_graph)
   z_score <- fixture$z_score
-  seed_cells <- names(z_score)[seq_len(3L)]
-  restart_prob <- 0.05
-  transition <- get_SCAVENGE_transition_matrix(graph)
-  observed_score <- run_sparse_random_walk_with_restart(
-    graph,
-    seed_cells,
-    restart_prob
-  )
-  seed_idx <- reference_SCAVENGE_seed_index(z_score, seed_percent = 0.05)
-
-  set.seed(431)
-  reference_samples <- reference_SCAVENGE_sample_seed_indices(
-    graph,
-    seed_idx,
-    permutation_times
-  )
-  set.seed(431)
-  native_samples <- sample_SCAVENGE_degree_matched_seed_indices(
-    graph,
-    seed_idx,
-    permutation_times
-  )
-
-  metadata_tibble <- tibble::tibble(
-    barcode_w_prefix = rownames(graph),
-    PCA_harmony_SNN_cluster_named = fixture$block,
-    PCA_harmony_SNN_cluster_cell_type = fixture$block
-  )
-  cluster_index_record <- get_SCAVENGE_cluster_index_record(
-    metadata_tibble,
-    rownames(graph),
-    "PCA_harmony_SNN"
-  )
-
   list(
-    fixture = fixture,
     weighted_graph = weighted_graph,
     graph = graph,
     z_score = z_score,
-    seed_cells = seed_cells,
-    seed_idx = seed_idx,
-    restart_prob = restart_prob,
-    transition = transition,
-    observed_score = observed_score,
-    reference_samples = reference_samples,
-    native_samples = native_samples,
-    metadata_tibble = metadata_tibble,
-    cluster_index_record = cluster_index_record,
-    permutation_times = permutation_times
+    seed_cells = names(z_score)[seq_len(3L)],
+    seed_idx = reference_SCAVENGE_seed_index(z_score, seed_percent = 0.05),
+    restart_prob = 0.05,
+    transition = get_SCAVENGE_transition_matrix(graph)
   )
-}
-
-get_SCAVENGE_reference_exceedance_counts <- function(context) {
-  reference_permutation_scores <- vapply(
-    context$reference_samples,
-    function(sampled_indices) {
-      reference_SCAVENGE_random_walk(
-        context$graph,
-        rownames(context$graph)[sampled_indices],
-        context$restart_prob
-      )
-    },
-    numeric(nrow(context$graph))
-  )
-  rowSums(reference_permutation_scores > context$observed_score)
 }
 
 get_SCAVENGE_reference_scores <- function(context) {

@@ -1,10 +1,5 @@
 rlang::list2(
   tarchetypes::tar_file(
-    name = SCAVENGE_native_source_file,
-    description = "Track the shared-memory SCAVENGE permutation random-walk kernel",
-    command = "src/scavenge_random_walk.cpp"
-  ),
-  tarchetypes::tar_file(
     name = open_targets_credible_set_dataset_path,
     description = "Download the Open Targets 26.03 credible_set Parquet dataset for shared GWAS consumers [part_of_graph:genetic_enrichment_single_nucleus]",
     command = download_open_targets_dataset(open_targets_dataset_urls()[["credible_set"]])

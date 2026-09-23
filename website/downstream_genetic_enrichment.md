@@ -85,7 +85,7 @@ targets::tar_make(
 
 Open the study-selection summaries, chromVAR summaries, SCAVENGE heatmaps and locus-contribution plots produced for your configured studies. See the [genetic enrichment gallery](gallery_genetic_enrichment.md) for available previews; interpretation belongs to each plot.
 
-Runtime and disk use grow with studies, cells, graph representations, permutations, and attributed loci. The [Genetic enrichment gallery](gallery_genetic_enrichment.md) uses a larger aggregation with six GEM wells and is not produced by the minimal quickstart.
+Runtime and disk use grow with studies, cells, graph representations, and attributed loci. The [Genetic enrichment gallery](gallery_genetic_enrichment.md) uses a larger aggregation with six GEM wells and is not produced by the minimal quickstart.
 
 ## Parameter reference
 

@@ -42,27 +42,12 @@ plot_GWAS_chromVAR_peak_weights_summary <- function(peak_weight_records, overlap
     )
 }
 
-#' Add significance labels from cached BH-adjusted SCAVENGE permutation P-values
-#' @param heatmap_data Group summaries containing permutation_p_adj_BH.
-#' @return Input rows with support_label: stars, blank for non-significance,
-#'   or NA text for an unavailable significance result. Scores are never filtered.
-add_SCAVENGE_heatmap_significance <- function(heatmap_data) {
-  heatmap_data |>
-    dplyr::mutate(support_label = dplyr::case_when(
-      is.na(permutation_p_adj_BH) ~ "NA",
-      permutation_p_adj_BH <= 0.001 ~ "***",
-      permutation_p_adj_BH <= 0.01 ~ "**",
-      permutation_p_adj_BH <= 0.05 ~ "*",
-      .default = ""
-    ))
-}
-
 #' Get SCAVENGE TRS UMAP plots
 #'
 #' Build UMAP overlay plots from cell-level SCAVENGE TRS scores.
 #'
 #' @param TRS_tibble Cell-level TRS tibble with `barcode_w_prefix`, `GWAS_ID`,
-#'   `score`, and significance columns.
+#'   and `score` columns.
 #' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
 #' @param umap_cols Two metadata columns used as UMAP x/y coordinates.
 #' @param label_col Optional metadata column used to label group centroids on
@@ -140,31 +125,6 @@ get_SCAVENGE_TRS_UMAP_plots <- function(TRS_tibble, metadata_tibble, umap_cols, 
   }
 
   plot
-}
-
-plot_SCAVENGE_summary_sig_proportion <- function(summary_tibble) {
-  if (nrow(summary_tibble) == 0) {
-    return(structure(list(), class = c("empty_plot_list", "list")))
-  }
-
-  plot_tibble <- summary_tibble |>
-    dplyr::mutate(
-      facet_id = stringr::str_c(grouping_col, GWAS_ID, sep = "___"),
-      group_reorder = tidytext::reorder_within(cluster, prop_sig, facet_id)
-    )
-
-  split(plot_tibble, plot_tibble$grouping_col) |>
-    purrr::map(\(group_tibble) {
-      ggplot2::ggplot(group_tibble, ggplot2::aes(x = group_reorder, y = prop_sig, fill = cluster)) +
-        ggplot2::facet_wrap(~GWAS_ID, scales = "free") +
-        tidytext::scale_x_reordered(labels = function(x) gsub("___.*$", "", x)) +
-        ggplot2::geom_bar(stat = "identity") +
-        ggplot2::labs(title = "SCAVENGE enriched-cell fraction by group",
-          subtitle = stringr::str_wrap("Compare the fraction of cells called enriched within each group; this differs from a test of the group median.", width = 100),
-          caption = stringr::str_wrap("Numerator: cells flagged significant by the cell-level SCAVENGE procedure. Denominator: all scored cells in the group. Groups are ordered within each trait; these fractions do not use the group-median BH permutation test shown in the dotplots.", width = 110),
-          x = NULL, y = "Proportion of enriched cells", fill = "Group") +
-        ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "top")
-    })
 }
 
 plot_SCAVENGE_summary_score_intervals <- function(summary_tibble) {
@@ -830,7 +790,8 @@ plot_GWAS_by_cluster_heatmap <- function(
 }
 
 #' Plot one WNN SCAVENGE median-TRS heatmap
-#' @param heatmap_data Cached WNN group scores and significance labels.
+#' @param heatmap_data Cached WNN group scores, optionally with `support_label`
+#'   tile labels and the `support_note` that explains them.
 #' @param GWAS_metadata_tracks_plot Shared GWAS metadata tracks.
 #' @param compartments_patterns Optional cell-type compartment patterns.
 #' @param grouping WNN cell types or named clusters.
@@ -855,17 +816,14 @@ plot_WNN_TRS_heatmap <- function(heatmap_data, GWAS_metadata_tracks_plot,
   ) + patchwork::plot_annotation(
     title = paste(if (scaled) "Relative" else "Median", "SCAVENGE trait scores by WNN",
       if (grouping == "cell_types") "cell type" else "cluster"),
-    subtitle = paste(
-      if (scaled) "Compare groups within each trait; colours do not measure absolute differences between traits."
-      else "Look for groups with high median trait scores and permutation support.",
-      "Stars mark BH-adjusted permutation significance; unstarred tiles retain their scores.", sep = "\n"),
-    caption = stringr::str_wrap(paste(
+    subtitle = if (scaled) "Compare groups within each trait; colours do not measure absolute differences between traits."
+      else "Look for groups with high median trait scores.",
+    caption = stringr::str_wrap(paste(c(
       if (scaled) "Colour: median cell-level TRS min-max scaled to 0-1 across the displayed WNN groups within each GWAS."
       else "Colour: median cell-level TRS within each WNN group, without display scaling.",
-      "All available scores are shown. Stars: * adjusted p <= 0.05; ** <= 0.01; *** <= 0.001.",
-      "Empirical permutation p-values test the group median and are BH-adjusted across groups within each GWAS and grouping. Scaling does not change significance.",
-      "No star means adjusted p > 0.05; NA means unavailable significance. These are group-level permutation results, not donor-level inference."
-    ), 150)
+      "All available scores are shown.",
+      unique(data[["support_note"]])
+    ), collapse = " "), 150)
   )
 }
 

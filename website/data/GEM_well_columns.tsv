@@ -4,8 +4,8 @@ GEM_well_dataset	Dataset	Identity and ownership	Groups related GEM wells for pre
 GEM_well_donor_id	Donor ID	Identity and ownership	Links a non-multiplexed GEM well to donor metadata.	Use NA when donor identities will instead be resolved from a configured VCF.	TRUE
 GEM_well_n_donors	Expected donors	Identity and ownership	States how many donors are expected in the GEM well.	Use 1 for an unmultiplexed well containing one donor.	TRUE
 GEM_well_cellranger_arc_count_dir	Cell Ranger ARC count directory	Input files	Locates the Cell Ranger ARC count output for this GEM well.	Point to the directory containing outs, not to outs itself.	TRUE
-GEM_well_add_cellbender	Use CellBender	Input files	Chooses whether corrected GEX counts replace the Cell Ranger counts.	When TRUE, the configured or standard-layout CellBender H5 file must exist.	TRUE
-GEM_well_cellbender_h5_file	CellBender H5 file	Input files	Optionally gives the corrected GEX count file.	Leave as NA when CellBender is disabled or its standard-layout path is used.	TRUE
+GEM_well_add_cellbender	Use CellBender	Input files	Chooses whether corrected GEX counts replace the Cell Ranger counts.	When TRUE, GEM_well_cellbender_h5_file must give the CellBender H5 file.	TRUE
+GEM_well_cellbender_h5_file	CellBender H5 file	Input files	Gives the corrected GEX count file.	Required when GEM_well_add_cellbender is TRUE; otherwise NA.	TRUE
 GEM_well_donors_VCF_file	Donor VCF file	Input files	Optionally enables genotype-based donor demultiplexing.	Without a VCF, every called nucleus receives GEM_well_donor_id.	TRUE
 GEM_well_QC_exclude_list	Pre-aggregation QC filters	Processing and scope	Defines per-barcode filters applied before aggregation.	Write complete R expressions separated by ;;. An empty value applies no filters.	TRUE
 GEM_well_is_active	Active	Processing and scope	Controls whether processing targets are constructed for this GEM well.	Every GEM well selected by an active aggregation must also be active.	TRUE

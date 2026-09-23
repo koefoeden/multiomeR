@@ -8,7 +8,7 @@ multiomeR keeps the analysis steps in an editable repository. Configuration cove
 
 ## Keep large matrices on disk
 
-BPCells provides disk-backed matrices and streaming operations that can reduce the need to hold full matrices in memory. Some analysis steps still need substantial RAM, and performance depends on the data, storage, and available workers. See the [BPCells documentation](https://bnprks.github.io/BPCells/) for its matrix operations and [Performance and scaling](../performance_overview.html) for multiomeR examples.
+BPCells provides disk-backed matrices and streaming operations that can reduce the need to hold full matrices in memory. Some analysis steps still need substantial RAM, and performance depends on the data, storage, and available workers. See the [BPCells documentation](https://bnprks.github.io/BPCells/) for its matrix operations and [Choose where the analysis runs](../performance_distributed_computing.html#what-to-expect) for multiomeR examples.
 
 ## Keep the analysis inspectable
 

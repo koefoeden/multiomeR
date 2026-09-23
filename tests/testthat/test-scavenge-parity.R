@@ -64,8 +64,7 @@ testthat::test_that("integration: SCAVENGE trait-relevance scores match the pinn
     ),
     NN_graph = context$weighted_graph,
     restart_prob = context$restart_prob,
-    seed_percent = 0.05,
-    scale_percent = 0.1
+    seed_percent = 0.05
   )
   expect_at_most(
     max(abs(observed$score - reference_scores[observed$barcode_w_prefix])),

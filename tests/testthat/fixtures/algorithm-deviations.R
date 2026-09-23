@@ -231,6 +231,7 @@ get_SCAVENGE_reference_scores <- function(context) {
   reference_SCAVENGE_scores(
     propagation_score = reference_propagation[reference_cells],
     z_score = context$z_score,
-    scale_percent = 0.1
+    # The pipeline's top 1% keeps at least one cell; 2% of 60 cells is that cell.
+    scale_percent = 0.02
   )
 }

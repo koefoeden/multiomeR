@@ -48,7 +48,7 @@ testthat::test_that("integration: AMULET loci and metrics match scDblFinder", {
   )
   expected <- run_reference_amulet(list(
     bundled = list(fun = "amulet", x = fragment_file, arguments = list()),
-    production = list(fun = "amulet", x = fragment_file, arguments = list(barcodes = barcodes, minFrags = 1000L)),
+    production = list(fun = "amulet", x = fragment_file, arguments = list(barcodes = barcodes)),
     loci = list(fun = "getFragmentOverlaps", x = synthetic_GRanges, arguments = list(
       regionsToExclude = NULL, minFrags = 0L, removeHighOverlapSites = FALSE, ret = "loci")),
     synthetic = list(fun = "amulet", x = synthetic_GRanges, arguments = list(
@@ -60,13 +60,11 @@ testthat::test_that("integration: AMULET loci and metrics match scDblFinder", {
     expected$bundled,
     info = "Cell Ranger fragment-file metrics"
   )
-  # Production supplies prefixed Cell Ranger barcodes, so both implementations ignore
-  # the 1,000-fragment minimum it also passes.
+  # Production scores the prefixed Cell Ranger-called barcodes without a fragment minimum.
   prefix <- "GEM_well_1_"
   production <- calculate_amulet_metrics_BPCells(
     fragments = BPCells::prefix_cell_names(fragments, prefix),
     barcodes = paste0(prefix, barcodes),
-    min_fragments = 1000L,
     verbose = FALSE
   )
   rownames(production) <- base::substring(rownames(production), base::nchar(prefix) + 1L)

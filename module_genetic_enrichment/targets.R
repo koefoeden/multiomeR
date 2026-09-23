@@ -1,15 +1,4 @@
-genetic_enrichment_aggregation_tibble <- aggregation_tibble |>
-  dplyr::filter(aggregation_has_module(modules, "genetic_enrichment"))
-
-genetic_enrichment_config_tibble <- read_module_config_tibble(
-  config_file = configuration_path("cfg_module_genetic_enrichment.yaml", must_exist = FALSE),
-  module_name = "genetic_enrichment",
-  module_aggregation_tibble = genetic_enrichment_aggregation_tibble,
-  aggregation_tibble = aggregation_tibble_all_from_yaml
-)
-
-genetic_enrichment_tibble <- genetic_enrichment_aggregation_tibble |>
-  dplyr::left_join(genetic_enrichment_config_tibble, by = "aggregation") |>
+genetic_enrichment_tibble <- build_module_tibble("genetic_enrichment", aggregation_tibble, aggregation_tibble_all_from_yaml) |>
   dplyr::mutate(genetic_enrichment_target_suffix = stringr::str_c("genetic_enrichment", aggregation, sep = "."))
 
 genetic_enrichment_GWAS_config_tibble <- if (nrow(genetic_enrichment_tibble) == 0) {
@@ -17,12 +6,7 @@ genetic_enrichment_GWAS_config_tibble <- if (nrow(genetic_enrichment_tibble) == 
 } else {
   GWAS_config_tibble <- purrr::map_dfr(seq_len(nrow(genetic_enrichment_tibble)), \(i) {
     row <- genetic_enrichment_tibble[i, , drop = FALSE]
-    GWAS_studies <- row$genetic_enrichment_GWAS_studies[[1]]
-    if (is.null(GWAS_studies)) {
-      stop("genetic_enrichment_GWAS_studies must be configured for aggregation: ", row$aggregation)
-    }
-
-    tibble::enframe(GWAS_studies, name = "GWAS_ID", value = "GWAS_config") |>
+    tibble::enframe(row$genetic_enrichment_GWAS_studies[[1]], name = "GWAS_ID", value = "GWAS_config") |>
       dplyr::mutate(
         aggregation = row$aggregation,
         config_order = dplyr::row_number(),
@@ -42,8 +26,7 @@ genetic_enrichment_GWAS_config_tibble <- if (nrow(genetic_enrichment_tibble) == 
         requested_finemappingMethod = purrr::pmap_chr(
           dplyr::pick(GWAS_config, sourceType, GWAS_ID),
           \(GWAS_config, sourceType, GWAS_ID) {
-            config <- GWAS_config
-            finemappingMethod <- config$finemappingMethod
+            finemappingMethod <- GWAS_config$finemappingMethod
             if (identical(sourceType, "local_file")) {
               if (!is.null(finemappingMethod)) {
                 stop("finemappingMethod must come from the local file for GWAS_ID: ", GWAS_ID)
@@ -74,13 +57,6 @@ genetic_enrichment_GWAS_config_tibble <- if (nrow(genetic_enrichment_tibble) == 
         requested_finemappingMethod
       )
   })
-
-  duplicated_GWAS <- GWAS_config_tibble |>
-    dplyr::count(aggregation, GWAS_ID) |>
-    dplyr::filter(n > 1)
-  if (nrow(duplicated_GWAS) > 0) {
-    stop("Each configured trait must map to one GWAS per aggregation. Duplicated GWAS_ID(s): ", paste(duplicated_GWAS$GWAS_ID, collapse = ", "))
-  }
 
   GWAS_config_tibble |>
     dplyr::group_by(aggregation) |>
@@ -115,7 +91,7 @@ genetic_enrichment_tibble <- genetic_enrichment_tibble |>
   ))
 
 rlang::list2(
-  if (nrow(genetic_enrichment_aggregation_tibble) > 0L) source("module_genetic_enrichment/shared_targets.R")$value,
+  if (nrow(genetic_enrichment_tibble) > 0L) source("module_genetic_enrichment/shared_targets.R")$value,
   tarchetypes::tar_map(
     values = genetic_enrichment_tibble,
     names = genetic_enrichment_target_suffix,

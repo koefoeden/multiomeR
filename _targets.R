@@ -9,58 +9,15 @@ if (length(validation_aggregations())) {
 aggregation_tibble <- build_aggregation_tibble(
   aggregation_tibble_all_from_yaml = aggregation_tibble_all_from_yaml,
   GEM_well_tibble = GEM_well_tibble_all
-) |>
-  dplyr::mutate(
-    aggregation_ATAC_peak_calling_input_sym = purrr::map2(
-      aggregation,
-      aggregation_ATAC_peak_calling_method,
-      \(aggregation_name, peak_calling_method) {
-        input_target <- if (identical(peak_calling_method, "macs3")) {
-          "fragments_per_peak_calling_cluster_discovery.fragments.ATAC"
-        } else {
-          "peak_calling_cluster_discovery_tibble.ATAC"
-        }
-        rlang::sym(stringr::str_c(input_target, aggregation_name, sep = "."))
-      }
-    ),
-    aggregation_ATAC_peak_calling_pattern = purrr::pmap(
-      list(
-        aggregation,
-        aggregation_ATAC_peak_calling_method,
-        aggregation_ATAC_peak_calling_input_sym
-      ),
-      \(aggregation_name, peak_calling_method, peak_calling_input_sym) {
-        discovery_tibble_sym <- rlang::sym(stringr::str_c(
-          "peak_calling_cluster_discovery_tibble.ATAC",
-          aggregation_name,
-          sep = "."
-        ))
-        if (identical(peak_calling_method, "macs3")) {
-          rlang::call2("map", peak_calling_input_sym, discovery_tibble_sym)
-        } else {
-          rlang::call2("map", discovery_tibble_sym)
-        }
-      }
-    )
-  )
-aggregation_MACS3_tibble <- aggregation_tibble |>
-  dplyr::filter(aggregation_ATAC_peak_calling_method == "macs3") |>
+)
+peak_calling_aggregation_tibble <- aggregation_tibble |>
   add_aggregation_target_syms(c(
     "combined_BPCells_fragment_obj.ATAC",
-    "peak_calling_cluster_discovery_tibble.ATAC"
+    "peak_calling_cluster_discovery_tibble.ATAC",
+    "aggregated_cellranger_ref_list"
   ))
 GEM_well_tibble <- build_active_GEM_well_tibble(GEM_well_tibble_all)
 roadmap_EDACC_names <- get_roadmap_EDACC_names(aggregation_tibble = aggregation_tibble)
-
-known_aggregation_modules <- c(
-  "differential_analyses",
-  "genetic_enrichment",
-  "peak_gene_correlation"
-)
-validate_aggregation_module_names(
-  aggregation_tibble = aggregation_tibble,
-  known_modules = known_aggregation_modules
-)
 
 pipeline <- rlang::list2(
   source("extra_targets/setup_targets.R")$value,
@@ -72,7 +29,7 @@ pipeline <- rlang::list2(
     source("extra_targets/per_GEM_well_targets.R")$value
   ),
   tarchetypes::tar_map(
-    values = aggregation_tibble,
+    values = add_aggregation_target_syms(aggregation_tibble, "peaks_per_cluster_narrowPeaks.peaks.ATAC"),
     names = aggregation,
     descriptions = NULL,
     delimiter = ".",
@@ -84,11 +41,18 @@ pipeline <- rlang::list2(
     source("extra_targets/Seurat_Signac_export_targets.R")$value
   ),
   tarchetypes::tar_map(
-    values = aggregation_MACS3_tibble,
+    values = dplyr::filter(peak_calling_aggregation_tibble, aggregation_ATAC_peak_calling_method == "macs3"),
     names = aggregation,
     descriptions = NULL,
     delimiter = ".",
     source("extra_targets/ATAC_MACS3_targets.R")$value
+  ),
+  tarchetypes::tar_map(
+    values = dplyr::filter(peak_calling_aggregation_tibble, aggregation_ATAC_peak_calling_method == "bpcells_tile"),
+    names = aggregation,
+    descriptions = NULL,
+    delimiter = ".",
+    source("extra_targets/ATAC_tile_targets.R")$value
   ),
   source("module_differential_analyses/targets.R")$value,
   source("module_genetic_enrichment/targets.R")$value,

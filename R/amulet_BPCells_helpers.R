@@ -1,36 +1,3 @@
-amulet_BPCells_supported_ref <- "28759cdd512578b6cbe549e226e1cd52a2d2308c"
-
-validate_amulet_BPCells_native_abi <- function() {
-  BPCells_description <- utils::packageDescription("BPCells")
-  installed_ref <- BPCells_description[["RemoteSha"]]
-  if (is.null(installed_ref)) {
-    installed_ref <- BPCells_description[["GithubSHA1"]]
-  }
-
-  if (!identical(installed_ref, amulet_BPCells_supported_ref)) {
-    installed_ref_label <- if (is.null(installed_ref)) "unknown" else installed_ref
-    stop(
-      "The BPCells-native AMULET helper uses a private fragment iterator ABI and only supports BPCells commit ",
-      amulet_BPCells_supported_ref,
-      ". The installed BPCells commit is ",
-      installed_ref_label,
-      ". Run `pixi run install-r-github-packages` or revalidate the native interface before updating the pin.",
-      call. = FALSE
-    )
-  }
-
-  invisible(TRUE)
-}
-
-load_amulet_BPCells_native_library <- function(native_source_file) {
-  validate_amulet_BPCells_native_abi()
-  load_native_library(native_source_file, "multiomeR_amulet_bpcells")
-}
-
-iterate_BPCells_fragments <- function(fragments) {
-  get("iterate_fragments", envir = asNamespace("BPCells"))(fragments)
-}
-
 convert_amulet_loci_to_GRanges <- function(loci, cell_names, chromosome_names, selected_cell_names) {
   if (length(loci$start) == 0L) {
     return(GenomicRanges::GRanges(
@@ -84,8 +51,6 @@ remove_high_overlap_amulet_loci <- function(loci_GRanges, p_value_threshold = 0.
 #' @param max_fragment_size Maximum fragment size to retain.
 #' @param remove_high_overlap_sites Whether to remove loci unexpectedly covered
 #'   in many cells, matching scDblFinder's AMULET implementation.
-#' @param unique_fragments Must be `TRUE`. BPCells fragment objects do not retain
-#'   the Cell Ranger PCR-duplicate count needed to expand non-unique fragments.
 #' @param cellranger_end_inclusive Whether `fragments` was opened with
 #'   `BPCells::open_fragments_10x()`'s Cell Ranger default. `TRUE` removes the
 #'   extra end-coordinate base before comparison with scDblFinder's BED import.
@@ -107,27 +72,13 @@ get_amulet_fragment_overlaps_BPCells <- function(
   ),
   max_fragment_size = 1000L,
   remove_high_overlap_sites = TRUE,
-  unique_fragments = TRUE,
   cellranger_end_inclusive = TRUE,
   return_type = c("stats", "loci"),
   verbose = TRUE,
   native_source_file = file.path(get_project_root(), "src", "amulet_bpcells.cpp")
 ) {
   return_type <- match.arg(return_type)
-  if (!isTRUE(unique_fragments)) {
-    stop(
-      "`unique_fragments = FALSE` is unsupported because BPCells does not retain Cell Ranger PCR-duplicate counts.",
-      call. = FALSE
-    )
-  }
-  if (!methods::is(fragments, "IterableFragments")) {
-    stop("`fragments` must be a BPCells IterableFragments object.", call. = FALSE)
-  }
-  if (!is.null(barcodes) && !is.character(barcodes)) {
-    stop("`barcodes` must be NULL or a character vector.", call. = FALSE)
-  }
-
-  dll_name <- load_amulet_BPCells_native_library(native_source_file)
+  dll_name <- load_native_library(native_source_file, "multiomeR_amulet_bpcells")
   if (isTRUE(cellranger_end_inclusive)) {
     fragments <- BPCells::shift_fragments(fragments, shift_end = -1L)
   }
@@ -145,17 +96,11 @@ get_amulet_fragment_overlaps_BPCells <- function(
 
   cell_names <- BPCells::cellNames(fragments)
   chromosome_names <- BPCells::chrNames(fragments)
-  if (is.null(cell_names) || is.null(chromosome_names)) {
-    stop("BPCells fragments must have known cell and chromosome names.", call. = FALSE)
-  }
-  if (anyNA(cell_names) || anyNA(chromosome_names)) {
-    stop("BPCells fragments cannot contain missing cell or chromosome names.", call. = FALSE)
-  }
 
   if (isTRUE(verbose)) {
     message(format(Sys.time(), "%X"), " - Computing BPCells-native AMULET overlaps")
   }
-  fragment_iterator <- iterate_BPCells_fragments(fragments)
+  fragment_iterator <- get("iterate_fragments", envir = asNamespace("BPCells"))(fragments)
   fragment_counts <- .Call(
     "multiomeR_bpcells_fragment_counts",
     fragment_iterator,
@@ -245,39 +190,14 @@ get_amulet_fragment_overlaps_BPCells <- function(
 #' Calculate BPCells-native AMULET metrics
 #'
 #' @inheritParams get_amulet_fragment_overlaps_BPCells
+#' @param ... Further arguments passed to `get_amulet_fragment_overlaps_BPCells()`.
 #'
 #' @return A data frame with fragment counts, loci covered by more than two
 #'   fragments, and AMULET p- and q-values for each retained cell.
 #' @keywords internal
 
-calculate_amulet_metrics_BPCells <- function(
-  fragments,
-  barcodes = NULL,
-  min_fragments = 500L,
-  regions_to_exclude = GenomicRanges::GRanges(
-    c("M", "chrM", "MT", "X", "Y", "chrX", "chrY"),
-    IRanges::IRanges(1L, width = 10^8)
-  ),
-  max_fragment_size = 1000L,
-  remove_high_overlap_sites = TRUE,
-  unique_fragments = TRUE,
-  cellranger_end_inclusive = TRUE,
-  verbose = TRUE,
-  native_source_file = file.path(get_project_root(), "src", "amulet_bpcells.cpp")
-) {
-  metrics_df <- get_amulet_fragment_overlaps_BPCells(
-    fragments = fragments,
-    barcodes = barcodes,
-    min_fragments = min_fragments,
-    regions_to_exclude = regions_to_exclude,
-    max_fragment_size = max_fragment_size,
-    remove_high_overlap_sites = remove_high_overlap_sites,
-    unique_fragments = unique_fragments,
-    cellranger_end_inclusive = cellranger_end_inclusive,
-    return_type = "stats",
-    verbose = verbose,
-    native_source_file = native_source_file
-  )
+calculate_amulet_metrics_BPCells <- function(fragments, ...) {
+  metrics_df <- get_amulet_fragment_overlaps_BPCells(fragments, ..., return_type = "stats")
   metrics_df$p.value <- stats::ppois(
     metrics_df$nAbove2,
     mean(metrics_df$nAbove2),

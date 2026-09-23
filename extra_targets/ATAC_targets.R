@@ -57,17 +57,10 @@ rlang::list2(
     targets::tar_target(
       name = combined_BPCells_fragment_obj.ATAC,
       description = "Merge per GEM well BPCells fragment objects and filter to standard chromosomes [part_of_graph:ATAC] [part_of_graph:parallel] [part_of_graph:seurat_export]",
-      command = {
-        standard_chroms <- switch(
-          organism_chr,
-          "Homo_sapiens" = paste0("chr", c(1:22, "X", "Y")),
-          "Mus_musculus" = paste0("chr", c(1:19, "X", "Y")),
-          stop("Invalid organism.")
-        )
-
-        combined_fragments <- purrr::reduce(aggregation_fragments_w_prefix_bpcells_syms, c)
-        BPCells::select_chromosomes(combined_fragments, standard_chroms)
-      },
+      command = BPCells::select_chromosomes(
+        purrr::reduce(aggregation_fragments_w_prefix_bpcells_syms, c),
+        get_standard_chroms(aggregated_cellranger_ref_list$genomes[[1]])
+      ),
       packages = w_def("BPCells")
     ),
     targets::tar_target(

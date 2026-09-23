@@ -364,15 +364,6 @@ call_peaks_w_MACS3 <- function(ATAC_fragments_per_cluster,
   out_dir <- get_structured_file_path(override_suffix = output_suffix)
   prefix_path <- file.path(out_dir, output_suffix)
   out_file <- stringr::str_glue("{prefix_path}_peaks.narrowPeak")
-
-  if (allow_no_peaks && length(readr::read_lines(ATAC_fragments_per_cluster, n_max = 1)) == 0) {
-    if (fs::file_exists(out_file)) {
-      fs::file_delete(out_file)
-    }
-    fs::file_create(out_file)
-    return(out_file)
-  }
-
   genome_size <- as.character(get_effective_genome_size(genome))
   run_w_error_check(
     command_string = "macs3",
@@ -404,7 +395,7 @@ call_peaks_w_MACS3 <- function(ATAC_fragments_per_cluster,
 
 #' Call peaks w BPCells tile
 #'
-#' Call peaks with BPCells tile enrichment for one cluster and optional chromosome.
+#' Call peaks with BPCells tile enrichment for one cluster.
 #'
 #' @param ATAC_combined_BPCells_fragment_obj Combined BPCells fragment object for one aggregation, with prefixed cell names.
 #' @param ATAC_BCs_per_peak_cluster Character vector of barcode names selecting
@@ -412,7 +403,6 @@ call_peaks_w_MACS3 <- function(ATAC_fragments_per_cluster,
 #' @param ATAC_peak_calling_cluster_names Cluster label written into peak names
 #'   and used in error messages.
 #' @param genome Genome build key used to choose chromosome sizes, blacklist resources, and external-tool parameters.
-#' @param chromosome Chromosome name processed by this branch, matching the naming style used by the input fragments/ranges.
 #' @param output_suffix Suffix used for the structured narrowPeak output path.
 #' @param allow_no_peaks Logical; when `TRUE`, no called peaks yields an empty
 #'   narrowPeak file instead of an error.
@@ -427,7 +417,6 @@ call_peaks_w_BPCells_tile <- function(
   ATAC_BCs_per_peak_cluster,
   ATAC_peak_calling_cluster_names,
   genome,
-  chromosome = NULL,
   output_suffix = ATAC_peak_calling_cluster_names,
   allow_no_peaks = FALSE,
   peak_width = 500,
@@ -435,14 +424,8 @@ call_peaks_w_BPCells_tile <- function(
   fdr_cutoff = 0.01
 ) {
   fragment_obj <- BPCells::select_cells(ATAC_combined_BPCells_fragment_obj, ATAC_BCs_per_peak_cluster)
-  if (!is.null(chromosome)) {
-    fragment_obj <- BPCells::select_chromosomes(fragment_obj, chromosome)
-  }
   cell_groups <- rep.int(ATAC_peak_calling_cluster_names, length(BPCells::cellNames(fragment_obj)))
   chromosome_sizes <- get_chrom_sizes_for_BPCells_tile_calling(genome)
-  if (!is.null(chromosome)) {
-    chromosome_sizes <- dplyr::filter(chromosome_sizes, chr == chromosome)
-  }
 
   BPCells_tile_peaks <- BPCells::call_peaks_tile(
     fragments = fragment_obj,
@@ -455,25 +438,17 @@ call_peaks_w_BPCells_tile <- function(
     merge_peaks = "none"
   )
 
+  out_file <- get_structured_file_path(filetype = "narrowPeak", override_suffix = output_suffix)
   if (nrow(BPCells_tile_peaks) == 0) {
     if (!allow_no_peaks) {
       stop("No BPCells tile peaks produced for cluster ", ATAC_peak_calling_cluster_names)
     }
-    out_file <- get_structured_file_path(
-      filetype = "narrowPeak",
-      override_suffix = output_suffix
-    )
     if (fs::file_exists(out_file)) {
       fs::file_delete(out_file)
     }
     fs::file_create(out_file)
     return(out_file)
   }
-
-  out_file <- get_structured_file_path(
-    filetype = "narrowPeak",
-    override_suffix = output_suffix
-  )
 
   BPCells_tile_peaks |>
     dplyr::mutate(
@@ -520,10 +495,6 @@ call_peaks_w_BPCells_tile <- function(
 get_peak_GRanges_w_fixed_width <- function(narrow_peak_path, extend_summits = 250, genome = "GRCh38", blacklist_GRanges) {
   # Set genome-specific parameters
   valid_chroms <- get_standard_chroms(genome)
-
-  if (!fs::file_exists(narrow_peak_path)) {
-    stop("Peak file does not exist: ", narrow_peak_path)
-  }
   if (fs::file_size(narrow_peak_path) == 0) {
     return(empty_peak_GRanges())
   }
@@ -588,23 +559,15 @@ combine_collapse_GRanges_ArchR <- function(GRanges_list, by, decreasing = TRUE) 
     return(gr)
   }
 
-  gr <- purrr::reduce(.x = GRanges_list, .f = c)
-  i <- 0
-  grConverge <- gr
-  while (length(grConverge) > 0) {
-    i <- i + 1
-    grSelect <- .clusterGRanges(grConverge, by, decreasing)
-    grConverge <- IRanges::subsetByOverlaps(grConverge, grSelect, invert = TRUE, ignore.strand = TRUE) # blacklist selected gr
-
-    if (i == 1) {
-      grAll <- grSelect # if i=1 then set gr_all to clustered
-    } else {
-      grAll <- c(grAll, grSelect)
-    }
+  # Keep the best peak of each overlap cluster, drop everything it overlaps, and repeat.
+  remaining <- purrr::reduce(.x = GRanges_list, .f = c)
+  selected <- list()
+  while (length(remaining) > 0) {
+    best <- .clusterGRanges(remaining, by, decreasing)
+    remaining <- IRanges::subsetByOverlaps(remaining, best, invert = TRUE, ignore.strand = TRUE)
+    selected <- c(selected, list(best))
   }
-  grAll <- sort(GenomeInfoDb::sortSeqlevels(grAll))
-
-  return(grAll)
+  sort(GenomeInfoDb::sortSeqlevels(do.call(c, selected)))
 }
 
 #' Format peak GRanges
@@ -614,31 +577,16 @@ combine_collapse_GRanges_ArchR <- function(GRanges_list, by, decreasing = TRUE) 
 #' `relative_summit_position` columns with `cluster` and `summit_position`.
 #'
 #' @param GRanges GRanges object containing GRanges coordinates and metadata.
-#' @param cluster_name Optional cluster label. Otherwise use existing `cluster`
-#'   metadata or extract the first substring enclosed by dots in `name`.
+#' @param cluster_name Cluster label stored in the `cluster` metadata column.
 #' @return Named `GRanges` with `cluster`, `summit_position`, and `region_vec`
 #'   metadata. `summit_position` is `start + relative_summit_position`.
 #' @keywords internal
 
-format_peak_GRanges <- function(GRanges, cluster_name = NULL) {
-  peak_df <- GRanges %>%
-    GenomicRanges::as.data.frame()
-
-  if (is.null(cluster_name)) {
-    cluster <- if ("cluster" %in% names(peak_df)) {
-      as.character(peak_df$cluster)
-    } else if ("name" %in% names(peak_df)) {
-      stringr::str_match(peak_df$name, "\\.([^\\.]+)\\.")[, 2]
-    } else {
-      NA_character_
-    }
-  } else {
-    cluster <- as.character(cluster_name)
-  }
-
-  peak_df %>%
+format_peak_GRanges <- function(GRanges, cluster_name) {
+  GRanges %>%
+    GenomicRanges::as.data.frame() %>%
     dplyr::mutate(
-      cluster = .env$cluster,
+      cluster = as.character(cluster_name),
       summit_position = start + relative_summit_position,
       region_vec = paste(seqnames, start, end, sep = "-")
     ) %>%
@@ -676,11 +624,6 @@ get_ATAC_QC_metadata_from_BPCells <- function(
   peak_matrix_mode
 ) {
   metadata_tibble <- tibble::as_tibble(metadata_df)
-  if (!"barcode_w_prefix" %in% colnames(metadata_tibble)) {
-    metadata_tibble <- tibble::rownames_to_column(as.data.frame(metadata_df), var = "barcode_w_prefix") |>
-      tibble::as_tibble()
-  }
-
   peak_counts <- BPCells::colSums(ATAC_peak_BPCells_matrix)
 
   blacklist_matrix <- BPCells::peak_matrix(
@@ -694,8 +637,7 @@ get_ATAC_QC_metadata_from_BPCells <- function(
     barcode_w_prefix = colnames(ATAC_peak_BPCells_matrix),
     nCount_ATAC = as.numeric(peak_counts),
     atac_peak_counts_blacklist = as.numeric(blacklist_counts[colnames(ATAC_peak_BPCells_matrix)])
-  ) |>
-    dplyr::mutate(dplyr::across(c(nCount_ATAC, atac_peak_counts_blacklist), ~ tidyr::replace_na(.x, 0)))
+  )
 
   genome_peak_cov <- ATAC_peak_GRanges |>
     GenomicRanges::width() |>

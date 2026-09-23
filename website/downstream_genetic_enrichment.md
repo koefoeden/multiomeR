@@ -92,7 +92,7 @@ targets::tar_make(
 )
 ```
 
-Runtime and disk use grow with the number of studies, nuclei, SCAVENGE permutations and attributed loci.
+Runtime and disk use grow with the number of studies, nuclei and attributed loci.
 
 ## Review
 
@@ -110,8 +110,7 @@ Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtit
 └── single_nucleus/SCAVENGE/WNN_harmony_SNN/
     ├── TRS_heatmap/
     ├── TRS_UMAPs/
-    ├── TRS_cluster_summary_plot/
-    └── sig_prop_bars/
+    └── TRS_cluster_summary_plot/
 ```
 
 Read the tables behind the plots in R, for example the cell-type enrichment scores:

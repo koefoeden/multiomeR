@@ -17,7 +17,7 @@ Run the complete suite with `pixi run --use-environment-activation-cache test`. 
 | BPCells-native UCell | Reference-parity tested | UCell | Identical values, dimensions, and dimnames |
 | BPCells-native AMULET | Reference-parity tested | scDblFinder | Identical metrics and loci, including order |
 | Native WNN | Reference-similarity tested | Seurat | Modality-weight Spearman and neighbour-overlap thresholds per fixture |
-| Sparse SCAVENGE propagation | Algorithmically derived and reference-parity tested | SCAVENGE source at `8ee8b173d965` | Closed-form propagation; identical seed samples, exceedance counts and significant-cell calls |
+| Sparse SCAVENGE propagation | Algorithmically derived and reference-parity tested | SCAVENGE source at `8ee8b173d965` | Closed-form propagation; identical seeds; propagation and trait relevance scores within 1e-12 |
 | Peak–gene donor-slope REML and Kenward–Roger kernels | Reference-parity tested | lme4 and pbkrtest | Coefficients, df and P-values within 1e-6; identical fit statuses |
 | Peak–gene compact BH breakpoints | Reference-parity tested | `stats::p.adjust()` | Identical FDR per chromosome slice |
 
@@ -83,21 +83,21 @@ pixi run --use-environment-activation-cache test-amulet-parity
 pixi run --use-environment-activation-cache test-algorithm-validation
 ```
 
-## Sparse SCAVENGE propagation and significance
+## Sparse SCAVENGE propagation
 
 **Reference algorithm.** [SCAVENGE at commit `8ee8b173d965`](https://github.com/sankaranlab/SCAVENGE/tree/8ee8b173d965009a696b2a590d5b17b28b7cf851) selects high chromVAR z-score seed cells, constructs a binary mutual-nearest-neighbour graph, performs a column-normalized random walk with restart, caps and rescales the propagation score into a trait relevance score (TRS), and uses degree-matched seed permutations to identify significant cells.
 
-**Reason for reimplementation.** The reference package's dependency stack predates the pipeline's R/Bioconductor environment. multiomeR needs sparse propagation over its native SNN graphs and must avoid materializing a cell-by-permutation score matrix for large cell sets.
+**Reason for reimplementation.** The reference package's dependency stack predates the pipeline's R/Bioconductor environment. multiomeR needs sparse propagation over its native SNN graphs.
 
-**Deliberate deviations and consequences.** The reference builds a mutual-kNN graph, whereas multiomeR uses the binary support of its BPCells-derived SNN graph; edge weights are discarded, but topology can differ. Only per-cell exceedance counts and the cluster medians needed downstream are retained from the permutations, and random walks rather than random-number generation are parallelized, so the sampled null does not depend on the core count. Seed and scale-factor helpers guarantee at least one selected cell for small inputs, the degree sampler handles one-cell strata explicitly, and the random walk has a maximum-iteration guard. Cluster-level permutation medians, add-one P-values, and Benjamini–Hochberg adjustment within each grouping column are pipeline extensions.
+**Deliberate deviations and consequences.** The reference builds a mutual-kNN graph, whereas multiomeR uses the binary support of its BPCells-derived SNN graph; edge weights are discarded, but topology can differ. Seed and scale-factor helpers guarantee at least one selected cell for small inputs, and the random walk has a maximum-iteration guard. The degree-matched seed permutations and significant-cell calls are omitted: multiomeR reports trait relevance scores and their group summaries without P-values.
 
-**Implementation.** `R/SCAVENGE_helpers.R` and `src/scavenge_random_walk.cpp`; `module_genetic_enrichment/SCAVENGE_graph_targets.R` builds the graph and result records, and `SCAVENGE_group_targets.R` combines summaries and plots.
+**Implementation.** `R/SCAVENGE_helpers.R` and `src/scavenge_random_walk.cpp`; `module_genetic_enrichment/SCAVENGE_graph_targets.R` builds the graph and cell-level trait relevance scores, and `SCAVENGE_group_targets.R` summarizes and plots them by cluster.
 
 **Validation.** `tests/testthat/test-scavenge-parity.R` uses a deterministic fixture with heterogeneous-degree graph blocks and nonuniform edge weights, so it also tests conversion to binary adjacency. The iterative random walk must match the closed-form solution
 
 \[ s = r\left(I - (1-r)P\right)^{-1}p_0 \]
 
-within 1e-10. Compact local reference functions reproduce the relevant SCAVENGE code at the pinned commit without installing its dependency stack; propagation and transformed scores must agree within 1e-12, and the degree-matched seed samples, streamed exceedance counts, empirical P-values, significant-cell calls and one- versus two-core results must be identical. This does not establish parity of graph construction, chromVAR inputs, or biological interpretation.
+within 1e-10. Compact local reference functions reproduce the relevant SCAVENGE code at the pinned commit without installing its dependency stack; seed selection must be identical, and propagation and transformed scores must agree within 1e-12. This does not establish parity of graph construction, chromVAR inputs, or biological interpretation.
 
 ```bash
 pixi run --use-environment-activation-cache test-algorithm-validation

@@ -621,36 +621,29 @@ items:
 - checkpoint: genetic_enrichment
   group: Genetic enrichment
   section: null
-  target: sig_prop_bars.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment
-  description: Plot proportion of cells with significant SCAVENGE TRS per group and GWAS and save to file.
-  source_file: genetic_enrichment/single_nucleus/SCAVENGE/WNN_harmony_SNN/sig_prop_bars/01_WNN_harmony_SNN_cluster_cell_type.png
-  asset: gallery_assets/genetic_enrichment/sig_prop_bars.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.webp
-- checkpoint: genetic_enrichment
-  group: Genetic enrichment
-  section: null
   target: median_by_cell_types_unscaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment
-  description: Save unscaled median SCAVENGE TRS by WNN cell types with BH-adjusted permutation stars.
+  description: Save unscaled median SCAVENGE TRS by WNN cell types.
   source_file: genetic_enrichment/single_nucleus/SCAVENGE/WNN_harmony_SNN/TRS_heatmap/median_by_cell_types_unscaled.png
   asset: gallery_assets/genetic_enrichment/median_by_cell_types_unscaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.webp
 - checkpoint: genetic_enrichment
   group: Genetic enrichment
   section: null
   target: median_by_clusters_unscaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment
-  description: Save unscaled median SCAVENGE TRS by WNN clusters with BH-adjusted permutation stars.
+  description: Save unscaled median SCAVENGE TRS by WNN clusters.
   source_file: genetic_enrichment/single_nucleus/SCAVENGE/WNN_harmony_SNN/TRS_heatmap/median_by_clusters_unscaled.png
   asset: gallery_assets/genetic_enrichment/median_by_clusters_unscaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.webp
 - checkpoint: genetic_enrichment
   group: Genetic enrichment
   section: null
   target: median_by_cell_types_scaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment
-  description: Save scaled median SCAVENGE TRS by WNN cell types with BH-adjusted permutation stars.
+  description: Save scaled median SCAVENGE TRS by WNN cell types.
   source_file: genetic_enrichment/single_nucleus/SCAVENGE/WNN_harmony_SNN/TRS_heatmap/median_by_cell_types_scaled.png
   asset: gallery_assets/genetic_enrichment/median_by_cell_types_scaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.webp
 - checkpoint: genetic_enrichment
   group: Genetic enrichment
   section: null
   target: median_by_clusters_scaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment
-  description: Save scaled median SCAVENGE TRS by WNN clusters with BH-adjusted permutation stars.
+  description: Save scaled median SCAVENGE TRS by WNN clusters.
   source_file: genetic_enrichment/single_nucleus/SCAVENGE/WNN_harmony_SNN/TRS_heatmap/median_by_clusters_scaled.png
   asset: gallery_assets/genetic_enrichment/median_by_clusters_scaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.webp
 - checkpoint: genetic_enrichment

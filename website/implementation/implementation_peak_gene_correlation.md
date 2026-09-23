@@ -5,11 +5,9 @@ pipeline_name <- "processing_and_aggregation"
 source("helpers/_setup.R")
 ```
 
-`module_peak_gene_correlation/targets.R` maps only opted-in aggregations and binds their existing WNN metadata, GEX and ATAC matrices, ATAC embeddings, fragments and reference annotations. `correlation_targets.R` owns the candidate-pair construction, donor–state pseudobulking, filtering, the conditional and hierarchical analyses, SuSiE prioritization, exports and plots.
+`module_peak_gene_correlation/targets.R` maps only opted-in aggregations, binds the primary-module inputs they consume, and maps the target files in `module_peak_gene_correlation/`. Parameters use the `peak_gene_correlation` manifest scope, targets end in `.peak_gene_correlation.<aggregation>`, and plot checkpoint tags use `peak_gene_correlation`, outside the numbered QC selections.
 
-Parameters use the `peak_gene_correlation` manifest scope and matching module YAML rows. Targets end in `.peak_gene_correlation.<aggregation>`, with `.WNN` before that suffix for intermediate results. Plot checkpoint tags use `peak_gene_correlation`, keeping this analysis outside the numbered QC selections.
-
-The fixed thresholds and the configurable settings of this module are listed in [Peak–gene correlation methods](methods_peak_gene_correlation.md). The user-facing prerequisites and module selector are documented in [Peak–gene correlation](../downstream_peak_gene_correlation.html).
+The methods and settings are in [Peak–gene correlation methods](methods_peak_gene_correlation.md), and the prerequisites and module selector in [Peak–gene correlation](../downstream_peak_gene_correlation.html).
 
 ## Candidate pairs, pseudobulks and tests
 

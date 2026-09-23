@@ -22,10 +22,6 @@ book:
           text: Implementation conventions
         - href: algorithm_validation.md
           text: Algorithmic implementations, deviations and validation
-    - part: "Background"
-      chapters:
-        - href: background_philosophy.md
-          text: Why an editable workflow?
     - part: "Target graph views"
       chapters:
         - href: implementation_main.md

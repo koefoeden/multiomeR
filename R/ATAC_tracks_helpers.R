@@ -4,33 +4,15 @@
 #'
 #' @param formatted_peak_tibble Peak tibble with chromosome, start, end, and
 #'   display fields already normalized for track plotting.
-#' @param gene_GRanges Gene annotation GRanges with gene-name metadata used to resolve gene-centered regions.
 #' @param marker_genes Character vector of validated marker-gene names.
 #' @param n_top Number of top significant peak regions to include.
 #' @param n_bottom Number of bottom significant peak regions to include.
 #' @return A tibble with `name` and `region` columns for downstream dynamic branching.
 #' @keywords internal
 
-get_coverage_regions_tibble_BPCells <- function(formatted_peak_tibble, gene_GRanges, marker_genes, n_top = 3, n_bottom = 3) {
+# Marker genes are validated against the gene annotation upstream.
+get_coverage_regions_tibble_BPCells <- function(formatted_peak_tibble, marker_genes, n_top = 3, n_bottom = 3) {
   sorted_peak_tibble <- dplyr::arrange(formatted_peak_tibble, dplyr::desc(neg_log10qvalue_summit))
-
-  marker_genes_requested <- marker_genes
-  gene_names <- if ("gene_name" %in% colnames(S4Vectors::mcols(gene_GRanges))) {
-    as.character(gene_GRanges$gene_name)
-  } else {
-    as.character(names(gene_GRanges))
-  }
-  missing_marker_genes <- setdiff(marker_genes_requested, gene_names)
-  if (length(marker_genes_requested) == 0) {
-    stop("No coverage marker genes were configured.", call. = FALSE)
-  }
-  if (length(missing_marker_genes) > 0) {
-    stop(
-      "Coverage marker gene(s) were not found in the gene annotation names: ",
-      paste(missing_marker_genes, collapse = ", "),
-      call. = FALSE
-    )
-  }
 
   dplyr::bind_rows(
     sorted_peak_tibble |>
@@ -39,7 +21,7 @@ get_coverage_regions_tibble_BPCells <- function(formatted_peak_tibble, gene_GRan
     sorted_peak_tibble |>
       dplyr::slice_tail(n = n_bottom) |>
       dplyr::transmute(name = paste0("bottom_", dplyr::row_number(), "_", .data$region_vec), region = .data$region_vec),
-    tibble::tibble(name = paste0("marker_", marker_genes_requested), region = marker_genes_requested)
+    tibble::tibble(name = paste0("marker_", marker_genes), region = marker_genes)
   ) |>
     dplyr::distinct(.data$name, .keep_all = TRUE)
 }
@@ -55,23 +37,14 @@ get_coverage_regions_tibble_BPCells <- function(formatted_peak_tibble, gene_GRan
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
-get_region_GRanges_for_BPCells_track <- function(region_id, gene_GRanges = NULL, extend_upstream = 5e4, extend_downstream = 5e4) {
-  if (!is.null(gene_GRanges)) {
-    gene_names <- if ("gene_name" %in% colnames(S4Vectors::mcols(gene_GRanges))) {
-      as.character(gene_GRanges$gene_name)
-    } else {
-      as.character(names(gene_GRanges))
-    }
-    gene_idx <- which(gene_names == region_id)
-  }
-  if (!is.null(gene_GRanges) && length(gene_idx) == 1) {
+# Gene names are unique in the annotation; other region IDs are coordinates.
+get_region_GRanges_for_BPCells_track <- function(region_id, gene_GRanges, extend_upstream = 5e4, extend_downstream = 5e4) {
+  gene_idx <- which(gene_GRanges$gene_name == region_id)
+  if (length(gene_idx) == 1) {
     region <- gene_GRanges[gene_idx]
     GenomicRanges::start(region) <- pmax(1L, GenomicRanges::start(region) - extend_upstream)
     GenomicRanges::end(region) <- GenomicRanges::end(region) + extend_downstream
     return(region)
-  }
-  if (!is.null(gene_GRanges) && length(gene_idx) > 1) {
-    stop("Coverage region gene identifier matches multiple genes: ", region_id, call. = FALSE)
   }
 
   region_parts <- stringr::str_match(region_id, "^([^:-]+)[:-]([0-9,]+)-([0-9,]+)$")
@@ -124,27 +97,20 @@ plot_coverage_at_region_BPCells <- function(
     grDevices::hcl.colors(length(group_order), palette = "Dark 3"),
     group_order
   )
-  cell_read_counts <- if ("atac_fragments" %in% colnames(metadata)) metadata$atac_fragments else metadata$nCount_ATAC
-
   collapsed_peaks <- collapsed_peak_tibble |>
     dplyr::transmute(
       chr = as.character(seqnames),
       start = start,
-      end = end
+      end = end,
+      cluster = as.character(cluster)
     )
-  peak_color_col <- NULL
-  if ("cluster" %in% colnames(collapsed_peak_tibble)) {
-    collapsed_peaks <- collapsed_peaks |>
-      dplyr::mutate(cluster = as.character(collapsed_peak_tibble$cluster))
-    peak_color_col <- "cluster"
-  }
 
   region <- get_region_GRanges_for_BPCells_track(region_id, gene_GRanges = gene_GRanges)
   coverage_tibble <- BPCells::trackplot_coverage(
     fragments = fragments,
     region = region,
     groups = groups,
-    cell_read_counts = cell_read_counts,
+    cell_read_counts = metadata$atac_fragments,
     group_order = group_order,
     colors = coverage_colors,
     bins = 500,
@@ -164,7 +130,7 @@ plot_coverage_at_region_BPCells <- function(
   peak_track <- BPCells::trackplot_genome_annotation(
     loci = collapsed_peaks,
     region = region,
-    color_by = peak_color_col,
+    color_by = "cluster",
     track_label = "Collapsed peaks"
   )
 
@@ -174,7 +140,7 @@ plot_coverage_at_region_BPCells <- function(
   ) + patchwork::plot_annotation(
     subtitle = stringr::str_wrap("Compare local accessibility across groups; overlapping peaks do not prove regulation of a nearby gene.", width = 100),
     caption = stringr::str_wrap(paste("Coverage uses 500 bins, normalized by bin width and summed group depth; extremes are clipped at the 99.9th percentile.",
-      "Depth denominator:", if ("atac_fragments" %in% colnames(metadata)) "total ATAC fragments." else "ATAC peak counts.",
+      "Depth denominator: total ATAC fragments.",
       "Groups:", label_plot_variable(group_cells_by_col), ". Tracks share the displayed coverage scale. Collapsed peaks are shown below; gene-centred windows extend 50 kb on each side."), width = 110))
 }
 

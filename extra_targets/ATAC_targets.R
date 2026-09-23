@@ -250,7 +250,6 @@ rlang::list2(
       description = "Build genomic regions to display in ATAC coverage tracks",
       command = get_coverage_regions_tibble_BPCells(
         formatted_peak_tibble = consensus_peak_tibble.ATAC,
-        gene_GRanges = marker_validated_Ensembl_annotations_GRanges_list$genes,
         marker_genes = ATAC_coverage_marker_genes
       ),
       iteration = "vector"

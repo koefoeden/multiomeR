@@ -57,19 +57,7 @@ resolve_aggregation_gene_features <- function(gene_features, GEM_well_IDs, aggre
 }
 
 read_cellranger_reference_json <- function(reference_json_file) {
-  required_fields <- c(
-    "fasta_hash",
-    "genomes",
-    "gtf_hash.gz",
-    "input_fasta_files",
-    "input_gtf_files",
-    "mkref_version",
-    "non_nuclear_contigs",
-    "organism",
-    "primary_contigs",
-    "version"
-  )
-
+  required_fields <- c("genomes", "input_gtf_files", "organism")
   cellranger_reference <- jsonlite::read_json(reference_json_file)
   missing_fields <- setdiff(required_fields, names(cellranger_reference))
   if (length(missing_fields) > 0L) {
@@ -82,13 +70,9 @@ read_cellranger_reference_json <- function(reference_json_file) {
     )
   }
 
-  if (
-    length(cellranger_reference$genomes) != 1L ||
-      length(cellranger_reference$input_fasta_files) != 1L ||
-      length(cellranger_reference$input_gtf_files) != 1L
-  ) {
+  if (length(cellranger_reference$genomes) != 1L || length(cellranger_reference$input_gtf_files) != 1L) {
     stop(
-      "Cell Ranger reference JSON must define exactly one genome, input FASTA, and input GTF. File: ",
+      "Cell Ranger reference JSON must define exactly one genome and input GTF. File: ",
       reference_json_file,
       call. = FALSE
     )
@@ -139,67 +123,22 @@ assert_cellranger_reference_matches_features <- function(
   cellranger_reference
 }
 
-cellranger_reference_identity <- function(cellranger_reference) {
-  identity_fields <- c(
-    "fasta_hash",
-    "genomes",
-    "gtf_hash.gz",
-    "input_fasta_files",
-    "input_gtf_files",
-    "mkref_version",
-    "non_nuclear_contigs",
-    "organism",
-    "primary_contigs",
-    "version"
-  )
-  cellranger_reference[identity_fields]
-}
-
-cellranger_reference_label <- function(cellranger_reference) {
-  paste0(
-    cellranger_reference$genomes[[1]],
-    " ",
-    cellranger_reference$version,
-    " / ",
-    cellranger_reference$gencode_version,
-    " (",
-    cellranger_reference$reference_json_file,
-    ")"
-  )
-}
-
+# Each GEM well's reference JSON is the unique match of its FASTA/GTF hashes,
+# so wells share a reference exactly when they resolve to the same JSON file.
 resolve_aggregation_cellranger_reference <- function(
   cellranger_references,
   GEM_well_IDs,
   aggregation
 ) {
-  reference_identities <- purrr::map(
-    cellranger_references,
-    cellranger_reference_identity
-  )
-  shared_reference <- reference_identities[[1]]
-  matching_reference <- purrr::map_lgl(
-    reference_identities,
-    identical,
-    y = shared_reference
-  )
-
-  if (!all(matching_reference)) {
-    reference_assignments <- paste0(
-      "- ",
-      GEM_well_IDs,
-      ": ",
-      purrr::map_chr(cellranger_references, cellranger_reference_label),
-      collapse = "\n"
-    )
+  reference_json_files <- purrr::map_chr(cellranger_references, "reference_json_file")
+  if (dplyr::n_distinct(reference_json_files) > 1L) {
     stop(
       "Aggregation '",
       aggregation,
       "' combines GEM wells assigned to different Cell Ranger references:\n",
-      reference_assignments,
+      paste0("- ", GEM_well_IDs, ": ", reference_json_files, collapse = "\n"),
       call. = FALSE
     )
   }
-
   cellranger_references[[1]]
 }

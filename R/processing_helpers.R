@@ -55,7 +55,7 @@ get_QC_exclude_threshold_tibble <- function(QC_exclude_vector, feature_names) {
     feature <- rlang::as_name(expression_args[[1]])
     threshold <- as.numeric(expression_args[[2]])
 
-    if (!feature %in% feature_names || length(threshold) != 1 || !is.finite(threshold)) {
+    if (!feature %in% feature_names) {
       return(empty_thresholds)
     }
 
@@ -84,17 +84,6 @@ get_GEM_well_QC_exclude_threshold_tibble <- function(
   GEM_well_QC_exclude_list,
   feature_names
 ) {
-  if (
-    !is.list(GEM_well_QC_exclude_list) ||
-      is.null(names(GEM_well_QC_exclude_list)) ||
-      any(!nzchar(names(GEM_well_QC_exclude_list)))
-  ) {
-    stop(
-      "GEM_well_QC_exclude_list must be a named list with one element per GEM well.",
-      call. = FALSE
-    )
-  }
-
   purrr::imap_dfr(
     GEM_well_QC_exclude_list,
     \(QC_exclude_vector, GEM_well_ID) {

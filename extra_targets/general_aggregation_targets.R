@@ -33,17 +33,12 @@ rlang::list2(
   tarchetypes::tar_file(
     name = cell_retention_flow_plot.1_pre_aggregation_QC,
     description = "Plot cumulative nuclei retention through per-well QC. [checkpoint:1_pre-aggregation-QC]",
-    command = {
-      plot <- plot_QC_cell_retention(cell_retention_tibble.GEX_input) |>
+    command = save_QC_cell_retention_plot(
+      cell_retention_tibble.GEX_input,
+      plot = plot_QC_cell_retention(cell_retention_tibble.GEX_input) |>
         add_plot_parameters("cfg_aggregations.yaml", aggregation_GEM_well_IDs = aggregation_GEM_well_IDs) |>
         add_plot_parameters("cfg_GEM_wells.tsv", GEM_well_QC_exclude_list = aggregation_GEM_well_QC_exclude_list)
-      branches_per_stage <- plot$data |>
-        dplyr::filter(.data$excluded_cells > 0) |>
-        dplyr::count(.data$stage)
-      save_plots_structured(plot,
-        width = max(8, 4 * dplyr::n_distinct(cell_retention_tibble.GEX_input$stage) + 2),
-        height = max(6, 3 + max(c(0, branches_per_stage$n))))
-    }
+    )
   ),
   targets::tar_target(
     name = aggregated_cellranger_ref_list,

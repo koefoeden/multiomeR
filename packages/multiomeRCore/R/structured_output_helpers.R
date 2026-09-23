@@ -119,71 +119,6 @@ get_plot_device <- function(filetype) {
   )
 }
 
-#' Open a graphics device for non-ggplot plot saving.
-#'
-#' @keywords internal
-open_plot_graphics_device <- function(path, filetype, plot_save_args) {
-  device_args <- plot_save_args
-  width <- device_args$width
-  height <- device_args$height
-  dpi <- dplyr::coalesce(device_args$dpi, device_args$res, 300)
-  units <- dplyr::coalesce(device_args$units, "in")
-  device_args$width <- NULL
-  device_args$height <- NULL
-  device_args$dpi <- NULL
-  device_args$res <- NULL
-  device_args$units <- NULL
-
-  fs::dir_create(dirname(path))
-
-  device_fn <- get_plot_device(filetype)
-
-  switch(
-    filetype,
-    "svg" = do.call(
-      device_fn,
-      c(
-        list(
-          filename = path,
-          width = width,
-          height = height
-        ),
-        device_args
-      )
-    ),
-    "png" = do.call(
-      device_fn,
-      c(
-        list(
-          filename = path,
-          width = width,
-          height = height,
-          units = units,
-          res = dpi
-        ),
-        device_args
-      )
-    )
-  )
-}
-
-#' Draw a plot-like object on the active graphics device.
-#'
-#' @keywords internal
-draw_plot_object <- function(plot) {
-  if (inherits(plot, c("grob", "gTree", "gtable"))) {
-    grid::grid.newpage()
-    grid::grid.draw(plot)
-    return(invisible(NULL))
-  }
-  if (inherits(plot, "recordedplot")) {
-    grDevices::replayPlot(plot)
-    return(invisible(NULL))
-  }
-  print(plot)
-  invisible(NULL)
-}
-
 get_discrete_axis_break_count <- function(panel_params, axis) {
   axis_params <- panel_params[[axis]]
   if (is.null(axis_params) || !isTRUE(axis_params$scale_is_discrete)) {
@@ -201,8 +136,7 @@ get_discrete_axis_break_count <- function(panel_params, axis) {
   length(unique(as.character(breaks[!is.na(breaks)])))
 }
 
-get_ggplot_auto_save_dimensions <- function(plot) {
-  plot_build <- ggplot2::ggplot_build(plot)
+get_ggplot_auto_save_dimensions <- function(plot_build) {
   plot_layout <- plot_build$layout$layout
   n_facet_cols <- length(unique(plot_layout$COL))
   n_facet_rows <- length(unique(plot_layout$ROW))
@@ -239,16 +173,17 @@ add_ggplot_title_if_missing <- function(plot, title) {
 #' @param n_distinct_max Maximum number of discrete scale breaks to keep; scales
 #'   with more breaks are hidden to avoid unreadable legends in high-cardinality
 #'   metadata plots.
+#' @param plot_build Result of `ggplot2::ggplot_build(plot)`.
 #' @return The input ggplot with selected discrete guides removed when they exceed the break limit.
 #' @keywords internal
 
-cull_dense_discrete_legends <- function(plot, n_distinct_max) {
-  if (!inherits(plot, "ggplot") || is.infinite(n_distinct_max)) {
+cull_dense_discrete_legends <- function(plot, n_distinct_max, plot_build) {
+  if (is.infinite(n_distinct_max)) {
     return(plot)
   }
 
   legend_aesthetics <- c("colour", "color", "fill", "shape", "linetype", "size", "alpha")
-  scales <- ggplot2::ggplot_build(plot)$plot$scales$scales |>
+  scales <- plot_build$plot$scales$scales |>
     as.list()
   aesthetics_to_cull <- scales |>
     purrr::keep(\(scale) {
@@ -292,8 +227,9 @@ multiomeR_save_serialized_plot_objects <- TRUE
 #' @param discrete_legend_n_distinct_max Maximum number of discrete legend entries to keep before replacing dense legends with `guide = 'none'`.
 #' @param save_serialized_plot_objects Logical; when TRUE, save mirrored `.rds`
 #'   sidecars under `plot_objects`.
-#' @param ... Additional arguments forwarded to the graphics device or
-#'   `ggplot2::ggsave()`, depending on the plot object.
+#' @param ... Additional arguments forwarded to `ggplot2::ggsave()` and the
+#'   graphics device. ggplot objects without explicit dimensions are sized from
+#'   their facets and discrete breaks; other grid objects default to 10 x 10 in.
 #' @details Rendering and serialization complete in staging before published files change.
 #' A per-target inventory removes only previously owned images and sidecars,
 #' including when the new result is empty. On first use, existing ownership is
@@ -313,27 +249,6 @@ save_plots_structured <- function(
 ) {
   save_args <- list(...)
   filetype <- match.arg(filetype, c("svg", "png"))
-  if (
-    !is.numeric(discrete_legend_n_distinct_max) ||
-      length(discrete_legend_n_distinct_max) != 1 ||
-      is.na(discrete_legend_n_distinct_max) ||
-      discrete_legend_n_distinct_max < 0
-  ) {
-    stop("`discrete_legend_n_distinct_max` must be a non-negative number or Inf.")
-  }
-  if (
-    !is.null(override_suffix) &&
-      (!is.character(override_suffix) || length(override_suffix) != 1)
-  ) {
-    stop("`override_suffix` must be NULL or a length-1 character vector.")
-  }
-  if (
-    !is.logical(dyn_suffix_in_subdir) ||
-      length(dyn_suffix_in_subdir) != 1 ||
-      is.na(dyn_suffix_in_subdir)
-  ) {
-    stop("`dyn_suffix_in_subdir` must be TRUE or FALSE.")
-  }
   is_plain_list <- is.list(plots) && identical(class(plots), "list")
   is_empty_plot_list <- inherits(plots, "empty_plot_list") || (is_plain_list && length(plots) == 0L)
   is_single_plot <- !is.null(plots) && !is_plain_list && !is_empty_plot_list
@@ -358,13 +273,6 @@ save_plots_structured <- function(
   if (dyn_suffix_in_subdir && is.na(dyn_suffix)) {
     stop("`dyn_suffix_in_subdir = TRUE` requires a dynamically suffixed target name.")
   }
-  if (
-    !is.logical(save_serialized_plot_objects) ||
-      length(save_serialized_plot_objects) != 1 ||
-      is.na(save_serialized_plot_objects)
-  ) {
-    stop("`save_serialized_plot_objects` must be TRUE or FALSE.")
-  }
   get_plot_object_path <- function(image_path) {
     relative_image_path <- fs::path_rel(
       image_path,
@@ -384,34 +292,30 @@ save_plots_structured <- function(
         plot_save_args[[dimension_arg]] <- plot_save_args[[dimension_arg]][[plot_index]]
       }
     }
+    auto_dimensions <- list(width = 10, height = 10)
     if (inherits(plot, "ggplot")) {
-      plot <- cull_dense_discrete_legends(plot, discrete_legend_n_distinct_max)
-      auto_dimensions <- get_ggplot_auto_save_dimensions(plot)
-      plot_save_args$width <- dplyr::coalesce(plot_save_args$width, auto_dimensions$width)
-      plot_save_args$height <- dplyr::coalesce(plot_save_args$height, auto_dimensions$height)
-      if (identical(filetype, "png")) {
-        plot_save_args$res <- dplyr::coalesce(plot_save_args$res, plot_save_args$dpi, 300)
-      }
-      do.call(
-        ggplot2::ggsave,
-        c(
-          list(
-            filename = image_path,
-            plot = plot,
-            device = get_plot_device(filetype)
-          ),
-          limitsize = FALSE,
-          create.dir = TRUE,
-          plot_save_args
-        )
-      )
-    } else {
-      plot_save_args$width <- dplyr::coalesce(plot_save_args$width, 10)
-      plot_save_args$height <- dplyr::coalesce(plot_save_args$height, 10)
-      open_plot_graphics_device(image_path, filetype, plot_save_args)
-      on.exit(grDevices::dev.off(), add = TRUE)
-      draw_plot_object(plot)
+      plot_build <- ggplot2::ggplot_build(plot)
+      plot <- cull_dense_discrete_legends(plot, discrete_legend_n_distinct_max, plot_build)
+      auto_dimensions <- get_ggplot_auto_save_dimensions(plot_build)
     }
+    plot_save_args$width <- dplyr::coalesce(plot_save_args$width, auto_dimensions$width)
+    plot_save_args$height <- dplyr::coalesce(plot_save_args$height, auto_dimensions$height)
+    if (identical(filetype, "png")) {
+      plot_save_args$res <- dplyr::coalesce(plot_save_args$res, plot_save_args$dpi, 300)
+    }
+    do.call(
+      ggplot2::ggsave,
+      c(
+        list(
+          filename = image_path,
+          plot = plot,
+          device = get_plot_device(filetype)
+        ),
+        limitsize = FALSE,
+        create.dir = TRUE,
+        plot_save_args
+      )
+    )
     if (save_serialized_plot_objects) {
       fs::dir_create(dirname(plot_object_path))
       saveRDS(plot, plot_object_path)

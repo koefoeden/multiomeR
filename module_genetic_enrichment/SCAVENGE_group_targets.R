@@ -25,8 +25,7 @@ rlang::list2(
       compartments_patterns = genetic_enrichment_compartment_patterns,
       grouping = "cell_types", scaled = TRUE
     ) |>
-      save_plots_structured(filetype = "png", width = 17,
-        height = max(5.5, 0.3 * dplyr::n_distinct(TRS_heatmap_data$GWAS_ID) + 3.5)),
+      save_GWAS_heatmap(TRS_heatmap_data$GWAS_ID),
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   tarchetypes::tar_file(
@@ -38,8 +37,7 @@ rlang::list2(
       compartments_patterns = genetic_enrichment_compartment_patterns,
       grouping = "cell_types", scaled = FALSE
     ) |>
-      save_plots_structured(filetype = "png", width = 17,
-        height = max(5.5, 0.3 * dplyr::n_distinct(TRS_heatmap_data$GWAS_ID) + 3.5)),
+      save_GWAS_heatmap(TRS_heatmap_data$GWAS_ID),
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   tarchetypes::tar_file(
@@ -51,8 +49,7 @@ rlang::list2(
       compartments_patterns = genetic_enrichment_compartment_patterns,
       grouping = "clusters", scaled = TRUE
     ) |>
-      save_plots_structured(filetype = "png", width = 17,
-        height = max(5.5, 0.3 * dplyr::n_distinct(TRS_heatmap_data$GWAS_ID) + 3.5)),
+      save_GWAS_heatmap(TRS_heatmap_data$GWAS_ID),
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   tarchetypes::tar_file(
@@ -64,8 +61,7 @@ rlang::list2(
       compartments_patterns = genetic_enrichment_compartment_patterns,
       grouping = "clusters", scaled = FALSE
     ) |>
-      save_plots_structured(filetype = "png", width = 17,
-        height = max(5.5, 0.3 * dplyr::n_distinct(TRS_heatmap_data$GWAS_ID) + 3.5)),
+      save_GWAS_heatmap(TRS_heatmap_data$GWAS_ID),
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   tarchetypes::tar_file(

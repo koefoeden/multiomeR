@@ -70,10 +70,7 @@ rlang::list2(
       standardize = FALSE,
       beta_weighted = TRUE
     ) |>
-      save_plots_structured(
-        filetype = "png", width = 17,
-        height = max(5.5, 0.3 * dplyr::n_distinct(chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk$GWAS_ID) + 3.5)
-      )
+      save_GWAS_heatmap(chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk$GWAS_ID)
   ),
   tarchetypes::tar_file(
     name = beta_weighted_scaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk,
@@ -85,10 +82,7 @@ rlang::list2(
       standardize = TRUE,
       beta_weighted = TRUE
     ) |>
-      save_plots_structured(
-        filetype = "png", width = 17,
-        height = max(5.5, 0.3 * dplyr::n_distinct(chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk$GWAS_ID) + 3.5)
-      )
+      save_GWAS_heatmap(chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk$GWAS_ID)
   ),
   targets::tar_target(
     name = GWAS_absolute_effect_peak_variant_weight_tibble,

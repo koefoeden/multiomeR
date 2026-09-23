@@ -5,12 +5,22 @@ get_project_root <- function() {
 #' Load the project runtime
 #'
 #' Attach the core packages and conflict preferences, source the project
-#' helpers, and install the targets options and crew controllers. `.Rprofile` calls this at startup; call it again to
-#' reload edited helpers or controllers in a running session.
+#' helpers, and install the targets options and crew controllers. `.Rprofile`
+#' calls this at startup; call it again to reload edited helpers or controllers
+#' in a running session.
 #'
 #' @return Invisibly returns `TRUE`.
 #' @keywords internal
 load_project_runtime <- function() {
+  # Pixi installs these Bioconda data packages only when post-link scripts run.
+  genome_packages <- c("BSgenome.Hsapiens.UCSC.hg38", "BSgenome.Mmusculus.UCSC.mm10", "BSgenome.Mmusculus.UCSC.mm39")
+  missing_genome_packages <- Filter(\(package) !nzchar(system.file(package = package)), genome_packages)
+  if (length(missing_genome_packages)) {
+    stop(
+      paste(missing_genome_packages, collapse = ", "),
+      " is not installed. Run `pixi install --locked --run-post-link-scripts` from the repository root."
+    )
+  }
   suppressPackageStartupMessages({
     library(Matrix)
     library(purrr)

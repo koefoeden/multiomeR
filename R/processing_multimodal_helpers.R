@@ -41,44 +41,6 @@ embedding_matrix_to_tibble <- function(embedding_matrix, cols = colnames(embeddi
     tibble::as_tibble(rownames = "barcode_w_prefix")
 }
 
-#' Add feature matrix to metadata
-#'
-#' Join selected feature-by-cell matrix rows onto metadata as cell-level columns.
-#'
-#' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
-#' @param feature_matrix Feature-by-cell matrix-like object with row names as feature IDs and column names as cell barcodes.
-#' @param features Character vector of feature names to extract from the matrix row names; missing features are handled by the called helper.
-#' @param barcode_col Metadata column containing cell barcodes matching
-#'   `feature_matrix` column names.
-#' @return `metadata_tibble` with one added column per requested feature. Existing
-#'   non-barcode metadata columns with the same names are rejected.
-#' @keywords internal
-
-add_feature_matrix_to_metadata <- function(metadata_tibble, feature_matrix, features = NULL, barcode_col = "barcode_w_prefix") {
-  if (is.null(features)) {
-    features <- rownames(feature_matrix)
-  }
-  feature_metadata_conflicts <- intersect(setdiff(features, barcode_col), colnames(metadata_tibble))
-  if (length(feature_metadata_conflicts) > 0) {
-    stop(
-      "Feature matrix column name(s) already exist in metadata: ",
-      paste(feature_metadata_conflicts, collapse = ", "),
-      ". Rename the metadata/module column(s) or request non-conflicting features.",
-      call. = FALSE
-    )
-  }
-
-  feature_tibble <- feature_matrix[features, metadata_tibble[[barcode_col]], drop = FALSE] |>
-    as.matrix() |>
-    t() |>
-    as.data.frame() |>
-    tibble::rownames_to_column(barcode_col) |>
-    tibble::as_tibble()
-
-  metadata_tibble |>
-    dplyr::left_join(feature_tibble, by = barcode_col)
-}
-
 #' Get WNN embedding matrices
 #'
 #' Align and subset RNA and ATAC embeddings for weighted-nearest-neighbor analysis.

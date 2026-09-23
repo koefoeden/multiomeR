@@ -1,5 +1,5 @@
 source_project_file("R/cellranger_reference_helpers.R")
-source_project_file("R/cellranger_arc_subset_helpers.R")
+source_project_file("scripts/cellranger_arc_subset_helpers.R")
 
 testthat::test_that("reference resolution uses both hashes and requires a unique match", {
   directory <- tempfile()

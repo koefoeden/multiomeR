@@ -39,7 +39,7 @@ rlang::list2(
         dplyr::left_join(GEM_well_SCT_metadata_tibble, by = "GEM_well_ID"),
       GEX_PCA_backend = aggregation_GEX_PCA_backend,
       SCT_regress_vars = aggregation_SCT_regress_vars,
-      n_components = utils::tail(aggregation_GEX_data_PCs, 1),
+      n_components = aggregation_GEX_PCA_n_components,
       threads = 6
     ),
     resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60) # temporary increase for large datasets using SCT_backend until we optimize this.

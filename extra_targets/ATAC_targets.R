@@ -340,7 +340,7 @@ rlang::list2(
       description = "Run BPCells-native TF-IDF and SVD on the QC-filtered ATAC peak matrix [part_of_graph:ATAC] [part_of_graph:seurat_export]",
       command = run_ATAC_LSI_BPCells(
         ATAC_peak_BPCells_matrix = peak_QC_filtered_BPCells_matrix.ATAC,
-        n_components = utils::tail(aggregation_ATAC_data_PCs, 1),
+        n_components = aggregation_ATAC_LSI_n_components,
         threads = 6
       ),
       resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)

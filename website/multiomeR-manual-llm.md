@@ -774,7 +774,7 @@ targets::tar_make(
 )
 ```
 
-Runtime and disk use grow with the number of studies, nuclei, SCAVENGE permutations and attributed loci.
+Runtime and disk use grow with the number of studies, nuclei and attributed loci.
 
 ## Review
 
@@ -792,8 +792,7 @@ Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtit
 └── single_nucleus/SCAVENGE/WNN_harmony_SNN/
     ├── TRS_heatmap/
     ├── TRS_UMAPs/
-    ├── TRS_cluster_summary_plot/
-    └── sig_prop_bars/
+    └── TRS_cluster_summary_plot/
 ```
 
 Read the tables behind the plots in R, for example the cell-type enrichment scores:
@@ -1895,7 +1894,7 @@ The implementation pins Open Targets Platform release 26.03 and downloads its st
 
 Annotation-class pseudobulk deviations are calculated separately rather than by averaging the nucleus-level results. ATAC counts are summed by the GEX-derived annotation carried into the final WNN metadata, and a betterChromVAR background model is fitted to the resulting peak-by-class matrix. The raw deviation is the observed-minus-background accessibility of the weighted peaks relative to their expected accessibility, and a relative deviation additionally standardizes the raw deviations across annotation classes within each trait. The analytic z-score uses the background variance of the weighted peaks; one-sided P-values and Benjamini–Hochberg-adjusted values are retained, and plot labels mark unadjusted z-scores of at least 1.645 and 2.326. Thus, the heatmap fill, within-trait standardization and support statistic are separate quantities. When effect sizes are available, an absolute-effect branch weights variants by posterior probability times effect size. Locus-level attribution decomposes each class deviation additively into contributing loci and variants, whose contributions sum to the class totals, and labels them with the highest-scoring Open Targets locus-to-gene genes. Detail plots are drawn for classes with a positive deviation and a z-score at or above a configurable screen, showing the top loci by absolute contribution and by combined contribution and effect-size rank.
 
-SCAVENGE-style trait-relevance scores are calculated from the nucleus-level z-scores on the WNN graph with a local sparse-matrix implementation of the SCAVENGE propagation strategy rather than the reference package [@yu2022_scavenge]. Nuclei whose one-sided normal-tail probability is at most 0.05 are seeds, subject to the configured maximum seed fraction; when no nucleus qualifies, all scores are zero. The nonzero support of the WNN graph is converted to binary adjacency, degree-zero nuclei are excluded, and seed signal is propagated by a random walk with the configured restart probability until convergence. Degree-matched seed permutations are sampled sequentially as in the reference implementation, while parallel native random walks stream per-cell exceedance counts without materializing the cell-by-permutation score matrix. Cell-level empirical P-values are the exceedance fraction, and cells with P ≤ 0.05 are significant. Scores are capped at their 95th percentile, min–max scaled and multiplied by the mean z-score of the top 1% of nuclei. As pipeline extensions, cluster-level permutation medians receive add-one P-values with Benjamini–Hochberg adjustment within each metadata grouping, and each summarized grouping reports the number of nuclei, the number and proportion of significant nuclei, and the median, mean, interquartile range and range of the scores.
+SCAVENGE-style trait-relevance scores are calculated from the nucleus-level z-scores on the WNN graph with a local sparse-matrix implementation of the SCAVENGE propagation strategy rather than the reference package [@yu2022_scavenge]. Nuclei whose one-sided normal-tail probability is at most 0.05 are seeds, subject to the configured maximum seed fraction; when no nucleus qualifies, all scores are zero. The nonzero support of the WNN graph is converted to binary adjacency, degree-zero nuclei are excluded, and seed signal is propagated by a random walk with the configured restart probability until convergence. Scores are capped at their 95th percentile, min–max scaled and multiplied by the mean z-score of the top 1% of nuclei. Unlike the reference, no permutation P-values are computed; each summarized metadata grouping reports the number of nuclei and the median, mean, interquartile range and range of the scores.
 
 <!-- end include: website/implementation/_shared_methods/genetic_enrichment.md -->
 
@@ -1947,7 +1946,7 @@ Run the complete suite with `pixi run --use-environment-activation-cache test`. 
 | BPCells-native UCell | Reference-parity tested | UCell | Identical values, dimensions, and dimnames |
 | BPCells-native AMULET | Reference-parity tested | scDblFinder | Identical metrics and loci, including order |
 | Native WNN | Reference-similarity tested | Seurat | Modality-weight Spearman and neighbour-overlap thresholds per fixture |
-| Sparse SCAVENGE propagation | Algorithmically derived and reference-parity tested | SCAVENGE source at `8ee8b173d965` | Closed-form propagation; identical seed samples, exceedance counts and significant-cell calls |
+| Sparse SCAVENGE propagation | Algorithmically derived and reference-parity tested | SCAVENGE source at `8ee8b173d965` | Closed-form propagation; identical seeds; propagation and trait relevance scores within 1e-12 |
 | Peak–gene donor-slope REML and Kenward–Roger kernels | Reference-parity tested | lme4 and pbkrtest | Coefficients, df and P-values within 1e-6; identical fit statuses |
 | Peak–gene compact BH breakpoints | Reference-parity tested | `stats::p.adjust()` | Identical FDR per chromosome slice |
 
@@ -2013,21 +2012,21 @@ pixi run --use-environment-activation-cache test-amulet-parity
 pixi run --use-environment-activation-cache test-algorithm-validation
 ```
 
-## Sparse SCAVENGE propagation and significance
+## Sparse SCAVENGE propagation
 
 **Reference algorithm.** [SCAVENGE at commit `8ee8b173d965`](https://github.com/sankaranlab/SCAVENGE/tree/8ee8b173d965009a696b2a590d5b17b28b7cf851) selects high chromVAR z-score seed cells, constructs a binary mutual-nearest-neighbour graph, performs a column-normalized random walk with restart, caps and rescales the propagation score into a trait relevance score (TRS), and uses degree-matched seed permutations to identify significant cells.
 
-**Reason for reimplementation.** The reference package's dependency stack predates the pipeline's R/Bioconductor environment. multiomeR needs sparse propagation over its native SNN graphs and must avoid materializing a cell-by-permutation score matrix for large cell sets.
+**Reason for reimplementation.** The reference package's dependency stack predates the pipeline's R/Bioconductor environment. multiomeR needs sparse propagation over its native SNN graphs.
 
-**Deliberate deviations and consequences.** The reference builds a mutual-kNN graph, whereas multiomeR uses the binary support of its BPCells-derived SNN graph; edge weights are discarded, but topology can differ. Only per-cell exceedance counts and the cluster medians needed downstream are retained from the permutations, and random walks rather than random-number generation are parallelized, so the sampled null does not depend on the core count. Seed and scale-factor helpers guarantee at least one selected cell for small inputs, the degree sampler handles one-cell strata explicitly, and the random walk has a maximum-iteration guard. Cluster-level permutation medians, add-one P-values, and Benjamini–Hochberg adjustment within each grouping column are pipeline extensions.
+**Deliberate deviations and consequences.** The reference builds a mutual-kNN graph, whereas multiomeR uses the binary support of its BPCells-derived SNN graph; edge weights are discarded, but topology can differ. Seed and scale-factor helpers guarantee at least one selected cell for small inputs, and the random walk has a maximum-iteration guard. The degree-matched seed permutations and significant-cell calls are omitted: multiomeR reports trait relevance scores and their group summaries without P-values.
 
-**Implementation.** `R/SCAVENGE_helpers.R` and `src/scavenge_random_walk.cpp`; `module_genetic_enrichment/SCAVENGE_graph_targets.R` builds the graph and result records, and `SCAVENGE_group_targets.R` combines summaries and plots.
+**Implementation.** `R/SCAVENGE_helpers.R` and `src/scavenge_random_walk.cpp`; `module_genetic_enrichment/SCAVENGE_graph_targets.R` builds the graph and cell-level trait relevance scores, and `SCAVENGE_group_targets.R` summarizes and plots them by cluster.
 
 **Validation.** `tests/testthat/test-scavenge-parity.R` uses a deterministic fixture with heterogeneous-degree graph blocks and nonuniform edge weights, so it also tests conversion to binary adjacency. The iterative random walk must match the closed-form solution
 
 \[ s = r\left(I - (1-r)P\right)^{-1}p_0 \]
 
-within 1e-10. Compact local reference functions reproduce the relevant SCAVENGE code at the pinned commit without installing its dependency stack; propagation and transformed scores must agree within 1e-12, and the degree-matched seed samples, streamed exceedance counts, empirical P-values, significant-cell calls and one- versus two-core results must be identical. This does not establish parity of graph construction, chromVAR inputs, or biological interpretation.
+within 1e-10. Compact local reference functions reproduce the relevant SCAVENGE code at the pinned commit without installing its dependency stack; seed selection must be identical, and propagation and transformed scores must agree within 1e-12. This does not establish parity of graph construction, chromVAR inputs, or biological interpretation.
 
 ```bash
 pixi run --use-environment-activation-cache test-algorithm-validation

@@ -66,15 +66,6 @@ suppress_warnings_matching <- function(expr, pattern, fixed = FALSE, ignore_case
 '%!in%' <- function(x, y) !('%in%'(x, y))
 
 
-get_embedding_matrix_from_metadata <- function(metadata_tibble, umap_cols) {
-  embedding_matrix <- metadata_tibble |>
-    dplyr::select(dplyr::all_of(umap_cols)) |>
-    as.matrix()
-  rownames(embedding_matrix) <- NULL
-  colnames(embedding_matrix) <- umap_cols
-  embedding_matrix
-}
-
 label_plot_variable <- function(variable) {
   labels <- c(nCount_RNA = "RNA UMI count", nFeature_RNA = "Detected RNA genes",
     RNA_mito_percent = "Mitochondrial RNA (%)", GEM_well_ID = "GEM well", donor_id = "Donor",
@@ -99,17 +90,9 @@ label_plot_variable <- function(variable) {
 #'   or from `feature_matrix`.
 #' @param feature_matrix Feature-by-cell matrix-like object with row names as feature IDs and column names as cell barcodes.
 #' @param umap_cols Two metadata columns used as embedding x/y coordinates.
-#' @param labels_discrete Logical passed to `BPCells::plot_embedding()`; when
-#'   `TRUE`, discrete labels are drawn on the embedding.
 #' @param legend_continuous Continuous legend mode passed to `BPCells::plot_embedding()`,
 #'   for example `quantile`.
-#' @param rasterize Logical; when `TRUE`, rasterize point layers for large cell
-#'   embeddings.
-#' @param raster_pixels Pixel width/height used for rasterized embedding layers.
-#' @param randomize_order Logical; when `TRUE`, randomize plotting order to avoid
-#'   systematic overplotting by cell order.
-#' @param quantile_range Numeric colour-clipping quantiles, or NULL for the full range.
-#' @param ... Additional arguments passed to `BPCells::plot_embedding()`.
+#' @param quantile_range Numeric colour-clipping quantiles.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
@@ -119,59 +102,19 @@ plot_UMAP_from_metadata <- function(
   value_source = c("metadata", "feature"),
   feature_matrix = NULL,
   umap_cols = c("LSI_UMAP_1", "LSI_UMAP_2"),
-  labels_discrete = FALSE,
   legend_continuous = "quantile",
-  rasterize = TRUE,
-  raster_pixels = 1024,
-  randomize_order = TRUE,
-  quantile_range = c(0.01, 0.99),
-  ...
+  quantile_range = c(0.01, 0.99)
 ) {
   value_source <- match.arg(value_source)
-  if (!is.character(variable) || length(variable) != 1 || is.na(variable) || !nzchar(variable)) {
-    stop("`variable` must be a non-empty length-1 character vector.", call. = FALSE)
+  values <- if (value_source == "metadata") {
+    metadata_tibble[[variable]]
+  } else {
+    as.numeric(as.matrix(feature_matrix[variable, metadata_tibble$barcode_w_prefix, drop = FALSE]))
   }
-
-  missing_umap_cols <- setdiff(umap_cols, colnames(metadata_tibble))
-  if (length(missing_umap_cols) > 0) {
-    stop("Required UMAP column(s) not found: ", paste(missing_umap_cols, collapse = ", "))
-  }
-
-  plot_col_data <- switch(
-    value_source,
-    metadata = {
-      if (!variable %in% colnames(metadata_tibble)) {
-        stop("Required metadata column not found: ", variable, call. = FALSE)
-      }
-      metadata_tibble |>
-        dplyr::select(dplyr::all_of(variable)) |>
-        as.data.frame()
-    },
-    feature = {
-      if (is.null(feature_matrix)) {
-        stop("`feature_matrix` is required when `value_source = 'feature'`.", call. = FALSE)
-      }
-      if (!variable %in% rownames(feature_matrix)) {
-        stop("Required feature row not found: ", variable, call. = FALSE)
-      }
-      metadata_tibble |>
-        dplyr::select(barcode_w_prefix) |>
-        add_feature_matrix_to_metadata(
-          feature_matrix = feature_matrix,
-          features = variable
-        ) |>
-        dplyr::select(dplyr::all_of(variable)) |>
-        as.data.frame()
-    }
-  )
-  rownames(plot_col_data) <- NULL
-
-  alpha_size_list <- get_BPCells_plot_embedding_aesthetics(metadata_tibble, rasterize = rasterize)
-  embedding_matrix <- get_embedding_matrix_from_metadata(metadata_tibble, umap_cols)
-  plot_embedding_matrix <- embedding_matrix
-
-  if (is.numeric(plot_col_data[[1]])) {
-    keep_rows <- is.finite(plot_col_data[[1]])
+  plot_col_data <- stats::setNames(data.frame(values), variable)
+  plot_embedding_matrix <- as.matrix(metadata_tibble[umap_cols])
+  if (is.numeric(values)) {
+    keep_rows <- is.finite(values)
     if (!any(keep_rows)) {
       return(structure(list(), class = c("empty_plot_list", "list")))
     }
@@ -179,33 +122,37 @@ plot_UMAP_from_metadata <- function(
     plot_embedding_matrix <- plot_embedding_matrix[keep_rows, , drop = FALSE]
   }
 
-  BPCells::plot_embedding(
+  # Point size and alpha shrink log-linearly from 5,000 to 500,000 cells.
+  log_n_fraction <- (min(max(log10(nrow(metadata_tibble)), log10(5000)), log10(5e5)) - log10(5000)) /
+    (log10(5e5) - log10(5000))
+  plot <- BPCells::plot_embedding(
     source = plot_col_data,
     embedding = plot_embedding_matrix,
     features = variable,
-    size = alpha_size_list$size,
-    rasterize = rasterize,
-    raster_pixels = raster_pixels,
-    randomize_order = randomize_order,
-    quantile_range = quantile_range %||% c(0, 1),
-    labels_discrete = labels_discrete,
-    legend_continuous = if (is.null(quantile_range) && legend_continuous == "quantile") "value" else legend_continuous,
+    size = 2 - (2 - 1) * log_n_fraction,
+    rasterize = TRUE,
+    raster_pixels = 1024,
+    randomize_order = TRUE,
+    quantile_range = quantile_range,
+    labels_discrete = FALSE,
+    legend_continuous = legend_continuous,
     return_plot_list = TRUE,
-    apply_styling = TRUE,
-    ...
-  ) |>
-    apply_alpha_to_plot_embedding(alpha_size_list$alpha) |>
-    (\(plot) plot + ggplot2::labs(
-      title = paste(if (value_source == "feature") variable else label_plot_variable(variable),
-        "on", gsub("LSI", "ATAC", gsub("_", " ", sub("_UMAP.*", "", umap_cols[[1]]))), "UMAP"),
-      subtitle = stringr::str_wrap("Look for coherent local patterns or sample-specific separation; distances between islands do not measure biological difference.", width = 100),
-      caption = stringr::str_wrap(paste(
-        "Each point is a cell from the supplied metadata; only finite values are shown for numeric features.",
-        if (is.numeric(plot_col_data[[1]])) paste0(
-          if (is.null(quantile_range)) "Colour spans the full value range." else paste0("Colour limits use quantiles ", paste(quantile_range, collapse = "-"), "; values outside are clipped for display."),
-          if (legend_continuous == "quantile" && !is.null(quantile_range)) " Legend endpoints identify quantiles, not absolute values.") else
-          "Colours identify categories; categorical labels do not establish independent biological validation.",
-        if (value_source == "feature") "Feature values come directly from the supplied matrix without normalization in this plotting helper."), width = 110)))()
+    apply_styling = TRUE
+  )
+  if (inherits(plot, "ggplot") && length(plot$layers) > 0) {
+    plot$layers[[1]]$aes_params$alpha <- 1 - (1 - 0.5) * log_n_fraction
+  }
+  plot + ggplot2::labs(
+    title = paste(if (value_source == "feature") variable else label_plot_variable(variable),
+      "on", gsub("LSI", "ATAC", gsub("_", " ", sub("_UMAP.*", "", umap_cols[[1]]))), "UMAP"),
+    subtitle = stringr::str_wrap("Look for coherent local patterns or sample-specific separation; distances between islands do not measure biological difference.", width = 100),
+    caption = stringr::str_wrap(paste(
+      "Each point is a cell from the supplied metadata; only finite values are shown for numeric features.",
+      if (is.numeric(values)) paste0(
+        "Colour limits use quantiles ", paste(quantile_range, collapse = "-"), "; values outside are clipped for display.",
+        if (legend_continuous == "quantile") " Legend endpoints identify quantiles, not absolute values.") else
+        "Colours identify categories; categorical labels do not establish independent biological validation.",
+      if (value_source == "feature") "Feature values come directly from the supplied matrix without normalization in this plotting helper."), width = 110))
 }
 
 #' Plot 3 by 3 clusters and reduction UMAPs from metadata
@@ -240,14 +187,13 @@ plot_3_by_3_clusters_and_reduction_UMAPs_from_metadata <- function(metadata_tibb
           x = .data[[umap_cols[[1]]]], y = .data[[umap_cols[[2]]]]) |>
         dplyr::filter(!is.na(label), is.finite(x), is.finite(y)) |>
         dplyr::summarise(x = median(x), y = median(y), .by = label)
-      plot_UMAP_from_metadata(metadata_tibble, variable = cluster_col,
-        umap_cols = umap_cols, labels_discrete = FALSE) +
+      plot_UMAP_from_metadata(metadata_tibble, variable = cluster_col, umap_cols = umap_cols) +
         ggrepel::geom_text_repel(data = centers, ggplot2::aes(x, y, label = label),
           inherit.aes = FALSE, size = 2, colour = "grey20", seed = 1,
           box.padding = 0.15, point.padding = 0.05, segment.size = 0.2,
           segment.alpha = 0.5, max.overlaps = Inf) +
-        CONST_UMAP_ggplot2_theme +
-        ggplot2::theme(legend.position = "none", axis.line = ggplot2::element_blank(),
+        ggplot2::theme(axis.ticks = ggplot2::element_blank(), axis.text = ggplot2::element_blank(),
+          panel.grid = ggplot2::element_blank(), legend.position = "none", axis.line = ggplot2::element_blank(),
           axis.line.x = ggplot2::element_blank(), axis.line.y = ggplot2::element_blank(),
           panel.border = ggplot2::element_rect(colour = "grey85", fill = NA),
           plot.title = ggplot2::element_text(size = 11, hjust = 0.5)) +

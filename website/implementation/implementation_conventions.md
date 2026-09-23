@@ -22,7 +22,7 @@ The currently meaningful tag families are:
 [resource_observation:<note>]   compact empirical resource note
 ```
 
-`[checkpoint:<name>]` marks targets selectable with `targets::tar_described_as()`. The eight numbered main-pipeline groups are listed in `QC_checkpoint_manifest.tsv`; optional module groups remain unnumbered. UMAP parameter sweeps belong to their modality's numbered checkpoint, and compatibility objects belong to GEX checkpoint 3 or multimodal checkpoint 8. Selection matches description substrings; include the closing `]` to match a complete checkpoint tag. Dependencies still come from the target commands. [Run your own analysis](../main_running.html#steps) explains each boundary; acceptance criteria depend on the study.
+`[checkpoint:<name>]` marks targets selectable with `targets::tar_described_as()`. The eight numbered primary-module groups are listed in `QC_checkpoint_manifest.tsv`; optional module groups remain unnumbered. UMAP parameter sweeps belong to their modality's numbered checkpoint, and compatibility objects belong to GEX checkpoint 3 or multimodal checkpoint 8. Selection matches description substrings; include the closing `]` to match a complete checkpoint tag. Dependencies still come from the target commands. [Run your own analysis](../main_running.html#steps) explains each boundary; acceptance criteria depend on the study.
 
 Numbered checkpoint plot targets end in the checkpoint name with hyphens replaced by underscores, before the mapped dataset or aggregation suffix. For example, `VizDimLoadings_plots.2_GEX_PCA_QC.my_aggregation` writes beneath `<store>/plots/my_aggregation/2_GEX_PCA_QC/`. Only plot targets use this naming convention; computational and metadata targets retain their modality suffixes.
 
@@ -174,7 +174,7 @@ combined_counts_matrix <- purrr::reduce(
 
 Column names should describe the downstream scope, the upstream target, and the fact that the value is a symbol list. The `aggregation_*_syms` columns, such as `aggregation_GEX_counts_BPCells_matrix_syms`, splice per GEM well targets into aggregation-level targets.
 
-Module target files also need aggregation-specific references to main-pipeline targets. For this, `add_aggregation_target_syms()` creates one symbol per row, suffixed by the aggregation name. These columns are named like the target they replace rather than with `*_syms`, because each cell is a single symbol rather than a list.
+Module target files also need aggregation-specific references to primary-module targets. For this, `add_aggregation_target_syms()` creates one symbol per row, suffixed by the aggregation name. These columns are named like the target they replace rather than with `*_syms`, because each cell is a single symbol rather than a list.
 
 ``` r
 differential_analyses_tibble |>

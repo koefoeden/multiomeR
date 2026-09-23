@@ -1,6 +1,6 @@
 # GEX, ATAC, batch correction and WNN
 
-This chapter describes normalization and dimensional reduction of both modalities, peak definition, batch correction, weighted nearest-neighbour (WNN) integration, and the shared graph, clustering and UMAP steps. It lists every setting that determines them, using the layout defined in [Methods and parameter tables](implementation_conventions.md#methods-and-parameter-tables). The target structure is shown in the [main pipeline graph](implementation_main.md). Library versions are pinned by the Pixi environment: BPCells 0.3.1, igraph 2.3.0, harmony 2.0.2, uwot 0.2.4 and Seurat 5.5.0 at the time of writing.
+This chapter describes normalization and dimensional reduction of both modalities, peak definition, batch correction, weighted nearest-neighbour (WNN) integration, and the shared graph, clustering and UMAP steps. It lists every setting that determines them, using the layout defined in [Methods and parameter tables](implementation_conventions.md#methods-and-parameter-tables). The target structure is shown in the [primary-module graph](implementation_main.md). Library versions are pinned by the Pixi environment: BPCells 0.3.1, igraph 2.3.0, harmony 2.0.2, uwot 0.2.4 and Seurat 5.5.0 at the time of writing.
 
 ## GEX normalization and PCA
 

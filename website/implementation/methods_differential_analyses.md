@@ -28,7 +28,7 @@ Nuclei are counted by donor and annotation class. Every observed class is tested
 
 ## Pseudobulk construction
 
-GEX and ATAC counts are summed within each donor and annotation class in the main pipeline, so the module reuses the same pseudobulk targets as the compatibility export. Sample identifiers combine the class and the donor. Four feature matrices are tested:
+GEX and ATAC counts are summed within each donor and annotation class in the primary module, so this module reuses the same pseudobulk targets as the compatibility export. Sample identifiers combine the class and the donor. Four feature matrices are tested:
 
 - **Gene expression (DGE)**: the GEX pseudobulk count matrix.
 - **Chromatin accessibility (DCA)**: the consensus-peak pseudobulk count matrix after peak-level QC.

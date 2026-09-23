@@ -12,14 +12,14 @@ multiomeR is in beta and may introduce breaking changes between releases. The [r
 
 ## Workflow at a glance
 
-The **main pipeline** processes each GEM well, combines selected GEM wells into an aggregation, clusters and labels cell types in its gene-expression (GEX) and ATAC data, and integrates both modalities with weighted nearest neighbors (WNN). Three optional modules extend a completed aggregation with differential analyses, genetic enrichment for human traits, or peak–gene correlation.
+The **primary module** processes each GEM well, combines selected GEM wells into an aggregation, clusters and labels cell types in its gene-expression (GEX) and ATAC data, and integrates both modalities with weighted nearest neighbors (WNN). Three optional modules extend a completed aggregation with differential analyses, genetic enrichment for human traits, or peak–gene correlation.
 
 ![](figures/multiomeR_overview_simplified.drawio.svg){fig-alt="multiomeR workflow from cellranger-arc count outputs through per-GEM-well processing, aggregation-level GEX and ATAC analysis, and WNN integration to three optional modules: differential analyses, genetic enrichment and peak–gene correlation"}
 
 ## How this manual is organized
 
 - **Try the public demo:** [install multiomeR](demo_installation.md), then run and inspect a small example analysis.
-- **Analyze your own data:** [check your inputs](main_overview.md), then configure, run, and review the main pipeline one checkpoint at a time.
+- **Analyze your own data:** [check your inputs](main_overview.md), then configure, run, and review the primary module one checkpoint at a time.
 - **Add an optional analysis:** run [differential analyses](downstream_differential_analyses.md), [genetic enrichment](downstream_genetic_enrichment.md), or [peak–gene correlation](downstream_peak_gene_correlation.md) on a completed aggregation.
 - **Operation and scaling:** [run locally or on a scheduler](performance_distributed_computing.md), and [troubleshoot](troubleshooting.md) failed or outdated targets.
 - **Reference:** browse the [output gallery](gallery.md) for an example of each plot, and look up output files, configuration tables, and methods.
@@ -34,7 +34,7 @@ You need basic R skills, a Linux terminal, and a machine with sufficient [memory
 
 - A **GEM well** is one 10x Chromium chip channel and its `cellranger-arc count` output directory. It may contain nuclei from several **donors**, the individuals identified by `donor_id`.
 - An **aggregation** is a joint analysis of one or more GEM wells.
-- A **checkpoint** is one of the eight stages of the main pipeline, each ending with plots to review before you continue. Its name, such as `8_multimodal_QC`, appears in target names and plot folders.
+- A **checkpoint** is one of the eight stages of the primary module, each ending with plots to review before you continue. Its name, such as `8_multimodal_QC`, appears in target names and plot folders.
 - A **target** is a named result, such as a metadata table, matrix directory, or plot. You request the targets you want; `targets` builds the earlier results they depend on, in order, and reuses those that are up to date. Most target names end with their GEM well or aggregation, as in `multimodal_Seurat_object.8_multimodal_QC.immune_human_2x`.
 - The **store** is the folder where `targets` keeps results and the records needed for reruns. Paths in this manual write it as `<store>`.
 

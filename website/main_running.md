@@ -1,6 +1,6 @@
 # Run your own analysis
 
-Configure your data once, then work through the eight checkpoints of the main pipeline in order. At each checkpoint, run its targets, review its plots and revise its settings until you accept the result. Start with the defaults and revise as the plots suggest: each plot's subtitle and caption say what to look for, and the [output gallery](gallery.md) shows an example of every plot.
+Configure your data once, then work through the eight checkpoints of the primary module in order. At each checkpoint, run its targets, review its plots and revise its settings until you accept the result. Start with the defaults and revise as the plots suggest: each plot's subtitle and caption say what to look for, and the [output gallery](gallery.md) shows an example of every plot.
 
 Run the R commands from the repository root, as in the demo. Replace `my_aggregation` and `my_GEM_well` with your own names. `<store>` is the targets store set in `_targets.yaml`, normally `outputs/` in the repository root. Edit the files in the [selected configuration directory](main_overview.md#configuration-directory); linked parameters belong in your aggregation's entry in `cfg_aggregations.yaml`.
 

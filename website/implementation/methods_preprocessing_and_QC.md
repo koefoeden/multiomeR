@@ -1,6 +1,6 @@
 # Preprocessing and nucleus QC
 
-This chapter describes per-GEM-well preprocessing and the successive nucleus filters up to the final WNN cell set, and lists every setting that determines them, using the layout defined in [Methods and parameter tables](implementation_conventions.md#methods-and-parameter-tables). The target structure is shown in the [main pipeline graph](implementation_main.md). GEM-well-level settings are columns of `cfg_GEM_wells.tsv`, described in [GEM well table](../reference_GEM_wells.html); aggregation-level settings are manifest parameters.
+This chapter describes per-GEM-well preprocessing and the successive nucleus filters up to the final WNN cell set, and lists every setting that determines them, using the layout defined in [Methods and parameter tables](implementation_conventions.md#methods-and-parameter-tables). The target structure is shown in the [primary-module graph](implementation_main.md). GEM-well-level settings are columns of `cfg_GEM_wells.tsv`, described in [GEM well table](../reference_GEM_wells.html); aggregation-level settings are manifest parameters.
 
 ## Aggregation inputs and operational settings
 

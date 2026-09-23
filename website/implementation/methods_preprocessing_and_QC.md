@@ -41,7 +41,7 @@ Each GEM well supplies a Cell Ranger ARC count directory. The GEX matrix is impo
 | AMULET | Cell Ranger end-inclusive shift | Hardcoded: target literal | end − 1 | `extra_targets/per_GEM_well_targets.R` |
 | AMULET | High-overlap-site removal | Hardcoded: helper default | on; Poisson P \< 0.01 | `remove_high_overlap_amulet_loci()` in `R/amulet_BPCells_helpers.R` |
 | AMULET | Per-cell test | Hardcoded: inline literal | upper-tail Poisson on loci covered by more than two fragments; BH q-values | `R/amulet_BPCells_helpers.R` |
-| AMULET | Minimum fragments argument | Hardcoded: target literal | 1,000, inert because barcodes are supplied | `extra_targets/per_GEM_well_targets.R` |
+| AMULET | Nuclei scored | Hardcoded: target literal | Cell Ranger-called barcodes; no fragment minimum | `extra_targets/per_GEM_well_targets.R` |
 | AMULET | Automatic filter | Hardcoded: inline literal | none; q-values usable in the GEM-well exclusion list | `R/processing_and_aggregation_constants.R` |
 
 ## GEM-well exclusions and the GEX cell universe

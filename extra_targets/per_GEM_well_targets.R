@@ -235,7 +235,6 @@ rlang::list2(
       calculate_amulet_metrics_BPCells(
         fragments = fragments_w_prefix_bpcells,
         barcodes = prefixed_barcodes,
-        min_fragments = 1000L,
         cellranger_end_inclusive = TRUE,
         native_source_file = amulet_BPCells_native_source_file
       ) |>

@@ -26,9 +26,7 @@ rlang::list2(
         ATAC_embedding_matrix = harmony_embeddings_matrix.ATAC,
         barcode_vec = metadata_w_cell_types_tibble.ATAC$barcode_w_prefix,
         GEX_dims = aggregation_GEX_data_PCs,
-        ATAC_dims = aggregation_ATAC_data_PCs,
-        GEX_dim_prefix = "PCA_",
-        ATAC_dim_prefix = "LSI_"
+        ATAC_dims = aggregation_ATAC_data_PCs
       ),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),

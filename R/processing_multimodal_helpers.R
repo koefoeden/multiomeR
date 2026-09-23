@@ -21,34 +21,6 @@ row_euclidean_distance <- function(x, y) {
   sqrt(rowSums((x - y)^2))
 }
 
-#' List row euclidean distances
-#'
-#' Compute per-query Euclidean distances to selected neighbor rows.
-#'
-#' @param query_embedding Single-row or multi-row embedding matrix whose rows are compared against `reference_embedding`.
-#' @param reference_embedding Embedding matrix providing the reference rows used for nearest-neighbor distance calculations.
-#' @param neighbor_indices Integer matrix/list of neighbor row indices into `reference_embedding` for each query row.
-#' @param nearest_dist Optional precomputed nearest-neighbor distance matrix; when supplied it is reused instead of recomputing distances.
-#' @return A list with one numeric distance vector per query row, in the same
-#'   order as `neighbor_indices`. When `nearest_dist` is provided, returned
-#'   values are distance residuals floored at zero.
-#' @keywords internal
-
-list_row_euclidean_distances <- function(query_embedding, reference_embedding, neighbor_indices, nearest_dist = NULL) {
-  distances <- lapply(seq_len(nrow(query_embedding)), \(idx) {
-    row_euclidean_distance(
-      matrix(query_embedding[idx, ], nrow = length(neighbor_indices[[idx]]), ncol = ncol(query_embedding), byrow = TRUE),
-      reference_embedding[neighbor_indices[[idx]], , drop = FALSE]
-    )
-  })
-
-  if (!is.null(nearest_dist)) {
-    distances <- purrr::map2(distances, nearest_dist, \(dist, nearest) pmax(dist - nearest, 0))
-  }
-
-  distances
-}
-
 select_embedding_dimensions <- function(embedding_matrix, dims, dim_prefix = NULL) {
   if (!is.null(dim_prefix)) {
     dim_cols <- paste0(dim_prefix, dims)
@@ -118,8 +90,6 @@ add_feature_matrix_to_metadata <- function(metadata_tibble, feature_matrix, feat
 #' @param barcode_vec Optional barcode subset; cells not present in the matrix are ignored, and an empty intersection is an error.
 #' @param GEX_dims GEX embedding dimensions used when reconstructing reductions and neighbors in the export object.
 #' @param ATAC_dims ATAC embedding dimensions used when reconstructing reductions and neighbors in the export object.
-#' @param GEX_dim_prefix Prefix used to select GEX embedding columns from paired embedding inputs.
-#' @param ATAC_dim_prefix Prefix used to select ATAC embedding columns from paired embedding inputs.
 #' @return A named list with aligned `RNA` and `ATAC` embedding matrices,
 #'   subset to shared barcodes and requested dimensions.
 #' @keywords internal
@@ -129,9 +99,7 @@ get_WNN_embedding_matrices <- function(
   ATAC_embedding_matrix,
   barcode_vec,
   GEX_dims,
-  ATAC_dims,
-  GEX_dim_prefix = "PCAharmony_",
-  ATAC_dim_prefix = "LSI_"
+  ATAC_dims
 ) {
   shared_barcodes <- barcode_vec |>
     intersect(rownames(GEX_embedding_matrix)) |>
@@ -146,9 +114,9 @@ get_WNN_embedding_matrices <- function(
 
   list(
     RNA = GEX_embedding_matrix[shared_barcodes, , drop = FALSE] |>
-      select_embedding_dimensions(dims = GEX_dims, dim_prefix = GEX_dim_prefix),
+      select_embedding_dimensions(dims = GEX_dims, dim_prefix = "PCA_"),
     ATAC = ATAC_embedding_matrix[shared_barcodes, , drop = FALSE] |>
-      select_embedding_dimensions(dims = ATAC_dims, dim_prefix = ATAC_dim_prefix)
+      select_embedding_dimensions(dims = ATAC_dims, dim_prefix = "LSI_")
   )
 }
 
@@ -196,77 +164,43 @@ calculate_small_SNN_bandwidth <- function(
 
 #' Weighted nearest neighbors BPCells
 #'
-#' Compute Seurat-style weighted nearest neighbors from aligned modality embeddings.
+#' Compute Seurat-style weighted nearest neighbors from aligned, L2-normalized
+#' modality embeddings with Euclidean distances.
 #'
-#' @param embeddings_list Named list of modality embedding matrices. All matrices
-#'   must have identical cell row names in the same order.
+#' @param embeddings_list Named list of modality embedding matrices with
+#'   identical cell row names in the same order.
 #' @param k Number of nearest neighbors to use for KNN/SNN construction.
 #' @param candidate_k Number of candidate neighbors collected across modality
 #'   KNN graphs before choosing the final weighted `k`.
-#' @param metric Distance metric passed to nearest-neighbor search, commonly `cosine` for normalized embeddings.
-#' @param l2_norm Logical; when TRUE, L2-normalize embedding rows before nearest-neighbor search.
-#' @param sd_scale Multiplier for the adaptive bandwidth derived from each
-#'   cell's neighbor distances.
-#' @param kernel_power Exponent applied to normalized candidate distances before
-#'   kernel weighting.
 #' @param threads Number of threads passed to BPCells, HNSW, or matrix-stat routines.
 #' @param ef HNSW search breadth parameter; larger values improve recall at higher runtime/memory cost.
-#' @param seed Random seed passed to stochastic clustering, sampling, or embedding code for reproducibility.
 #' @param native_source_file Path to the tracked C++ implementation of the
 #'   small-SNN kernel bandwidth.
-#' @return A list containing modality weights per barcode, weighted neighbor
-#'   index/distance matrices, per-modality KNN results, nearest distances, and
-#'   adaptive bandwidths.
+#' @return A list containing modality weights per barcode and the weighted
+#'   neighbor index and distance matrices.
 #' @keywords internal
 
 weighted_nearest_neighbors_BPCells <- function(
   embeddings_list,
   k = 20,
   candidate_k = 200,
-  metric = "euclidean",
-  l2_norm = TRUE,
-  sd_scale = 1,
-  kernel_power = 1,
   threads = 1,
   ef = 500,
-  seed = 1,
-  native_source_file = file.path(
-    get_project_root(),
-    "src",
-    "wnn_snn_bandwidth.cpp"
-  )
+  native_source_file = file.path(get_project_root(), "src", "wnn_snn_bandwidth.cpp")
 ) {
-  if (length(embeddings_list) < 2) {
-    stop("weighted_nearest_neighbors_BPCells() requires at least two embedding matrices.")
-  }
-  if (is.null(names(embeddings_list)) || any(names(embeddings_list) == "")) {
-    names(embeddings_list) <- paste0("modality_", seq_along(embeddings_list))
-  }
-
   cell_names <- rownames(embeddings_list[[1]])
-  if (is.null(cell_names)) {
-    stop("All embedding matrices must have rownames with aligned cell names.")
-  }
-  if (!all(purrr::map_lgl(embeddings_list, \(embedding) identical(rownames(embedding), cell_names)))) {
-    stop("Embedding matrices must have identical rownames in the same order.")
-  }
-
   n_cells <- length(cell_names)
   k <- min(as.integer(k), n_cells - 1L)
   candidate_k <- min(max(as.integer(candidate_k), k), n_cells - 1L)
   knn_k <- min(max(k + 1L, candidate_k + 1L), n_cells)
 
-  embeddings_norm <- if (isTRUE(l2_norm)) {
-    purrr::map(embeddings_list, normalize_embedding_rows)
-  } else {
-    embeddings_list
-  }
+  embeddings_norm <- purrr::map(embeddings_list, normalize_embedding_rows)
 
   modality_knn <- purrr::map(embeddings_norm, \(embedding) {
     BPCells::knn_hnsw(
       data = embedding,
       k = knn_k,
-      metric = metric,
+      metric = "euclidean",
       verbose = FALSE,
       threads = threads,
       ef = ef
@@ -285,7 +219,7 @@ weighted_nearest_neighbors_BPCells <- function(
         nearest_dist = nn$dist[, 2],
         native_source_file = native_source_file
       )
-      pmax(bandwidth * sd_scale, .Machine$double.eps)
+      pmax(bandwidth, .Machine$double.eps)
     }
   )
 
@@ -318,22 +252,19 @@ weighted_nearest_neighbors_BPCells <- function(
     )
   })
 
-  candidate_distances <- purrr::map(names(embeddings_norm), \(modality) {
-    embedding <- embeddings_norm[[modality]]
-    list_row_euclidean_distances(
-      query_embedding = embedding,
-      reference_embedding = embedding,
-      neighbor_indices = candidate_indices,
-      nearest_dist = nearest_dist[[modality]]
-    )
-  }) |>
-    purrr::set_names(names(embeddings_norm))
+  candidate_distances <- purrr::imap(embeddings_norm, \(embedding, modality) {
+    lapply(seq_len(n_cells), \(cell_idx) {
+      neighbors <- candidate_indices[[cell_idx]]
+      query <- matrix(embedding[cell_idx, ], nrow = length(neighbors), ncol = ncol(embedding), byrow = TRUE)
+      pmax(row_euclidean_distance(query, embedding[neighbors, , drop = FALSE]) - nearest_dist[[modality]][[cell_idx]], 0)
+    })
+  })
 
   weighted_scores <- lapply(seq_len(n_cells), \(cell_idx) {
     Reduce(
       `+`,
       purrr::map(names(embeddings_norm), \(modality) {
-        exp(-1 * (candidate_distances[[modality]][[cell_idx]] / sigma_list[[modality]][[cell_idx]])^kernel_power) *
+        exp(-1 * (candidate_distances[[modality]][[cell_idx]] / sigma_list[[modality]][[cell_idx]])) *
           modality_weights[[modality]][[cell_idx]]
       })
     )
@@ -366,10 +297,7 @@ weighted_nearest_neighbors_BPCells <- function(
   list(
     modality_weights = modality_weights_tibble,
     nn_idx = nn_idx,
-    nn_dist = nn_dist,
-    modality_knn = modality_knn,
-    nearest_dist = nearest_dist,
-    sigma = sigma_list
+    nn_dist = nn_dist
   )
 }
 

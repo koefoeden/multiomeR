@@ -1,3 +1,11 @@
+template_aggregation:
+  is_active: false
+  aggregation_GEM_well_IDs: [my_GEM_well_ID_1, my_GEM_well_ID_2]
+  aggregation_donor_id_metadata_tsv: /path/to/donor_metadata.tsv
+  aggregation_GEX_marker_genes:
+    Cell_type_A: [GENE1, GENE2]
+    Cell_type_B: [GENE3, GENE4]
+
 immune_human_2x:
   is_active: true
   aggregation_donor_id_metadata_tsv: example_data/immune_human_dataset_donor_id_metadata.tsv
@@ -105,16 +113,97 @@ ENCODE_heart_LV_6x:
     Pericyte: [RBPJ, KLF4]
   aggregation_roadmap_EDACC_names: [Peripheral_Blood_Mononuclear_Primary_Cells, CD4_Memory_Primary_Cells, CD4_Naive_Primary_Cells, CD8_Memory_Primary_Cells, CD8_Naive_Primary_Cells, Monocytes-CD14+_RO01746, Brain_Hippocampus_Middle, Brain_Inferior_Temporal_Lobe, Brain_Mid_Frontal_Lobe, Colonic_Mucosa, Sigmoid_Colon, Fetal_Intestine_Large, Adult_Liver]
   aggregation_harmony_correction_metadata_col_names: GEM_well_ID
-  aggregation_extra_harmony_covars_ATAC: ~
-  aggregation_GEX_data_PCs: !expr 1:30
-  aggregation_ATAC_data_PCs: !expr 2:30
-  aggregation_UMAP_GEX_PCs: !expr 1:30
-  aggregation_UMAP_ATAC_PCs: !expr 2:30
   aggregation_GEX_cluster_res: 0.8
   aggregation_ATAC_cluster_res: 0.8
   aggregation_WNN_cluster_res: 0.4
   aggregation_cluster_min_barcodes: 50
-  aggregation_ATAC_peak_calling_method: macs3
-  aggregation_call_peaks_by_cluster_col: PCA_harmony_SNN_cluster
   aggregation_data_nNNs: 50
   aggregation_UMAP_nNNs: 50
+
+# 31 public GEM wells: six 10x Genomics PBMC datasets, the 10x human brain dataset and
+# 24 ENCODE multiome experiments (https://www.encodeproject.org/experiments/<GEM_well_ID>/).
+# The output gallery is generated from this aggregation. Its Cell Ranger ARC inputs were
+# reprocessed from the raw data with the GRCh38 2024-A reference and are not supplied, so it
+# is inactive by default. That build also used CellBender and stricter QC filters for the
+# seven 10x wells, whose rows describe the 10x-provided outputs used by the demo instead.
+mixed_human_31x:
+  modules: [genetic_enrichment, differential_analyses, peak_gene_correlation]
+  is_active: false
+  aggregation_donor_id_metadata_tsv: example_data/mixed_human_31x_donor_id_metadata.tsv
+  aggregation_GEM_well_IDs: [healthy_PBMC_human, pbmc_10k_chromium_controller, pbmc_10k_chromium_x,
+      pbmc_granulocyte_sorted_10k, pbmc_unsorted_10k, pbmc_unsorted_3k, healthy_brain_human, ENCSR033MDU, ENCSR158DQA,
+      ENCSR233SQG, ENCSR316WAS, ENCSR618WVK, ENCSR788DZO, ENCSR079UEO, ENCSR201BHG, ENCSR245BNT, ENCSR320RLS,
+      ENCSR351CSQ, ENCSR508WRP, ENCSR511RDV, ENCSR534YJW, ENCSR568QKW, ENCSR613LBN, ENCSR793DNM, ENCSR923FKN,
+      ENCSR956ZER, ENCSR987VTJ, ENCSR636WIB, ENCSR925IHI, ENCSR128ZLB, ENCSR264JIX]
+  aggregation_GEX_marker_genes:
+    B: [MS4A1, CD79A]
+    T: [TRAC, CD3D]
+    Mono: [LYZ, S100A9]
+    NK: [KLRD1, GNLY]
+    pDC: [LILRA4, CLEC4C]
+    Plasma: [TNFRSF17, SDC1, DERL3]
+    Inhibitory_neuron: [GAD1, GAD2, SLC6A1, SNAP25]
+    Oligodendrocyte: [MBP, PLP1, MOG, MAG]
+    Microglia: [P2RY12, TMEM119, SALL1]
+    Macrophage: [CD163, MRC1, FOLR2, MSR1]
+    Pancreatic_beta: [INS, IAPP, PCSK1]
+    Pancreatic_acinar: [PRSS1, REG1A, CELA3A]
+    Ductal_epithelial: [CFTR, SCTR, PKHD1, KRT7]
+    Hepatocyte: [ALB, APOA1, CYP3A4]
+    Cardiomyocyte: [TNNT2, MYH6, MYH7, ACTC1, MYBPC3, TNNI3, TTN, RYR2, PLN]
+    Colonocyte: [CA1, KRT20, SLC26A3]
+    Goblet: [MUC2, SPINK4, CLCA1]
+    Alveolar_type_1: [AGER, CAV1, EMP2]
+    Alveolar_type_2: [SFTPC, SFTPA1, ABCA3]
+    Airway_secretory: [SCGB1A1, SCGB3A1, SCGB3A2, CYP2F1]
+    Endothelial: [PECAM1, VWF, EMCN]
+    Fibroblast: [COL1A1, DCN, COL3A1]
+    Smooth_muscle: [ACTA2, TAGLN, MYH11]
+    Pericyte: [RGS5, PDGFRB, CSPG4]
+  aggregation_ATAC_marker_TFs:
+    B: [EBF1]
+    T: [TCF7, LEF1]
+    Mono: [SPI1, CEBPB]
+    NK: [EOMES, TBX21]
+    pDC: [TCF4]
+    Plasma: [XBP1, PRDM1]
+    Granule_neuron: [NEUROD1, MEF2C, RORA]
+    Inhibitory_neuron: [DLX2, MEF2C]
+    Astrocyte: [SOX9, NFIA]
+    Oligodendrocyte: [SOX10, OLIG2__MA1997.2]
+    OPC: [OLIG2__MA1997.2, SOX10, ASCL1]
+    Microglia: [SPI1, IRF8, CEBPB]
+    Pancreatic_beta: [PDX1, NKX6-1, MAFA]
+    Pancreatic_alpha: [ARX, MAFB]
+    Pancreatic_acinar: [PTF1A]
+    Pancreatic_ductal: [SOX9, HNF1B]
+    Hepatocyte: [HNF4A__MA1494.2, CEBPA, FOXA1]
+    Cholangiocyte: [SOX9, HNF1B, GATA6]
+    Cardiomyocyte: [GATA4, MEF2C, TBX5]
+    Colonocyte: [HNF4G, CDX2]
+    Goblet: [SPDEF, KLF4]
+    Alveolar_type_1: [TEAD1, GATA6]
+    Alveolar_type_2: [NKX2-1, CEBPA]
+    Airway_ciliated: [RFX3]
+    Airway_secretory: [SPDEF, KLF5]
+    Airway_basal: [TP63, KLF5]
+    Endothelial: [ERG, KLF2, GATA2]
+    Fibroblast: [TEAD1, TWIST1]
+    Smooth_muscle: [SRF, TEAD1]
+    Pericyte: [RBPJ, KLF4]
+  aggregation_categorical_vars: [GEM_well_dataset, GEM_well_tissue, GEM_well_cell_sorting, GEM_well_instrument,
+      GEM_well_target_recovery]
+  aggregation_GEX_cluster_res: 0.8
+  aggregation_ATAC_cluster_res: 0.8
+  aggregation_WNN_cluster_res: 0.4
+  aggregation_cluster_min_barcodes: 50
+  aggregation_data_nNNs: 50
+  aggregation_UMAP_nNNs: 50
+  aggregation_roadmap_EDACC_names: [Peripheral_Blood_Mononuclear_Primary_Cells, CD4_Memory_Primary_Cells,
+      CD4_Naive_Primary_Cells, CD8_Memory_Primary_Cells, CD8_Naive_Primary_Cells, Monocytes-CD14+_RO01746,
+      Brain_Hippocampus_Middle, Brain_Inferior_Temporal_Lobe, Brain_Mid_Frontal_Lobe, Colonic_Mucosa, Sigmoid_Colon,
+      Fetal_Intestine_Large, Adult_Liver
+
+]
+  aggregation_QC_exclude_list_combined_object: [nCount_ATAC < 1000, atac_peak_counts_frac < 0.1,
+      atac_peak_counts_blacklist_frac > 0.01]

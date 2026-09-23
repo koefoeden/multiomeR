@@ -3,20 +3,180 @@ immune_human_2x:
     LymphocyteCount_Vuckovic2020:
       Category: positive_control
       sourceId: GCST90002388
-      finemappingMethod: auto
     MonocyteCount_Vuckovic2020:
       Category: positive_control
       sourceId: GCST90002393
-      finemappingMethod: auto
     BCellNeoplasm_Guler2025:
       Category: B_cell_neoplasm
       sourceId: GCST90624736
-      finemappingMethod: auto
     BMI_Verma2024:
       Category: negative_control
       sourceId: GCST90475159
-      finemappingMethod: auto
     EducationalAttainment_Okbay2022:
       Category: brain_cognition
       sourceId: GCST90105038
-      finemappingMethod: auto
+mixed_human_31x:
+  # Exploratory trait panel for the observed cell types across GEX, ATAC and WNN. See the adjacent
+  # mixed_human_31x_GWAS_selection.tsv for rationale, power and credible-set coverage.
+  # Cell-type links are hypotheses, not guaranteed enrichment or exclusive origins.
+  # Selection metadata is from Open Targets 26.03, checked 2026-09-08. Counts are
+  # available credible-set records before pipeline variant/peak filtering, not
+  # independent loci. Study-index sample/case counts can omit cohorts; zero cases
+  # can mean unreported/not applicable. Correlated traits are not independent tests.
+  genetic_enrichment_GWAS_studies:
+    # B;T;NK: Broad lymphocyte abundance proxy; does not distinguish NK from B or T cells.
+    LymphocyteCount_Vuckovic2020:
+      Category: blood_cell_counts
+      sourceId: GCST90002388
+    # Mono: Direct monocyte abundance phenotype.
+    MonocyteCount_Vuckovic2020:
+      Category: blood_cell_counts
+      sourceId: GCST90002393
+    # Colonocyte;T;B;Mono;Goblet: Epithelial barrier and immune disease; shared cellular mechanisms.
+    UlcerativeColitis_Liu2023:
+      Category: immune_gut
+      sourceId: GCST90446794
+    # Microglia;T;B;Oligodendrocyte;OPC: Susceptibility implicates peripheral immune cells and microglia; oligodendrocytes are disease targets rather than established origin of inherited risk.
+    MultipleSclerosis_IMSGC2019:
+      Category: immune_brain
+      sourceId: GCST009597
+    # Inhibitory_neuron: Broad energy-balance phenotype; not a negative control in a brain-containing atlas.
+    BMI_Verma2024:
+      Category: neuronal_metabolic
+      sourceId: GCST90475159
+    # Inhibitory_neuron: Broad neuronal comparator with social and indirect genetic effects; not cell-type specific or a negative control.
+    EducationalAttainment_Okbay2022:
+      Category: neuronal_complex
+      sourceId: GCST90105038
+    # Airway_secretory;T: Airway epithelial and immune mechanisms; selected for extensive SuSiE-inf coverage.
+    Asthma_Zhou2022_EUR:
+      Category: lung_immune
+      sourceId: GCST90399686
+    # Alveolar_type_2;Airway_secretory;Fibroblast: Alveolar epithelial injury and fibrotic remodelling; shared rather than exclusive cell-type origin.
+    IPF_Zhou2022_EUR:
+      Category: lung_fibrosis
+      sourceId: GCST90399720
+    # Alveolar_type_2;Airway_secretory: Lung epithelial cancer susceptibility; histology does not establish a unique normal cell of origin.
+    LungAdenocarcinoma_McKay2017:
+      Category: lung_cancer
+      sourceId: GCST004744
+    # Airway_secretory;Alveolar_type_2;Smooth_muscle: Broad pulmonary physiology; lung-function GWAS implicates epithelial and smooth-muscle biology.
+    FEV1_Shrine2023:
+      Category: lung_function
+      sourceId: GCST90244092
+    # Airway_secretory;Smooth_muscle: Airflow obstruction physiology; complementary to FEV1.
+    FEV1FVC_Shrine2023:
+      Category: lung_function
+      sourceId: GCST90244094
+    # Microglia: Strong microglial and innate-immune susceptibility evidence; also involves other brain cells.
+    Alzheimer_Bellenguez2022:
+      Category: neurodegeneration
+      sourceId: GCST90027158
+    # Inhibitory_neuron;Granule_neuron: GWAS enrichment in excitatory and inhibitory neurons; granule neurons are a broader excitatory-lineage comparator.
+    Schizophrenia_Trubetskoy2022:
+      Category: neuronal_disease
+      sourceId: GCST90128471
+    # Inhibitory_neuron: Neuronal excitability disease; not specific to inhibitory neurons.
+    GeneralizedEpilepsy_ILAE2023:
+      Category: neuronal_disease
+      sourceId: GCST90271609
+    # Astrocyte;Oligodendrocyte;OPC: Exploratory glial-lineage cancer comparator; tumour class does not prove mature astrocyte or oligodendrocyte origin.
+    Glioma_Melin2017:
+      Category: glial_cancer
+      sourceId: GCST004347
+    # Oligodendrocyte;Astrocyte;Pericyte;Endothelial: White-matter injury and small-vessel disease proxy; mixed glial and vascular biology.
+    WhiteMatterHyperintensity_Sargurupremraj2020:
+      Category: brain_vascular_glial
+      sourceId: GCST011946
+    # Astrocyte;Pericyte;Endothelial: Exploratory glymphatic/perivascular MRI proxy; not direct pericyte abundance or PVS morphology; only three available credible sets.
+    DTIALPS_Total_Ran2025:
+      Category: brain_perivascular
+      sourceId: GCST90455546
+    # B: B-cell malignancy; more cases and available loci than several population-biobank alternatives.
+    CLL_Guler2025:
+      Category: B_cell_disease
+      sourceId: GCST90624738
+    # B;T;Mono;pDC;Plasma: Autoimmune susceptibility involving B/plasma-cell antibodies and pDC/type-I-interferon biology, alongside broader immune mechanisms.
+    Lupus_Bentham2015:
+      Category: immune_disease
+      sourceId: GCST003155
+    # T;B;Mono;Fibroblast: Immune susceptibility and synovial fibroblast disease biology; not fibroblast-specific inherited risk.
+    RheumatoidArthritis_Ishigaki2022:
+      Category: immune_disease
+      sourceId: GCST90132222
+    # T: T-cell-mediated inflammatory disease with additional epithelial mechanisms.
+    Psoriasis_Tsoi2017:
+      Category: immune_disease
+      sourceId: GCST004346
+    # NK;T: Exploratory NK and T-cell autoimmune comparator; melanocyte biology also contributes and NK specificity is not established.
+    Vitiligo_Jin2016:
+      Category: immune_disease
+      sourceId: GCST004785
+    # Cardiomyocyte: Cardiac electrophysiology; interpretation depends on atrial versus ventricular identity.
+    AtrialFibrillation_Roselli2025:
+      Category: cardiac
+      sourceId: GCST90559230
+    # Cardiomyocyte: Myocardial contractile disease; direct GWAS rather than MTAG.
+    DilatedCardiomyopathy_Jurgens2024:
+      Category: cardiac
+      sourceId: GCST90624428
+    # Colonocyte: Colorectal epithelial neoplasia; mature colonocytes are a lineage proxy, not a proven exclusive initiating cell.
+    ColorectalCancer_Law2019:
+      Category: colon_epithelial
+      sourceId: GCST007992
+    # Endothelial;Smooth_muscle;Mono: Atherosclerosis implicates vascular and immune cells; extensive SuSiE-inf coverage.
+    CAD_Aragam2022_EUR:
+      Category: vascular
+      sourceId: GCST90132314
+    # Smooth_muscle;Endothelial;Pericyte: Vascular tone and pressure; pericytes are a broader mural-cell proxy and renal mechanisms also contribute.
+    SystolicBP_Keaton2024:
+      Category: vascular
+      sourceId: GCST90310294
+    # Smooth_muscle;Endothelial;Pericyte: Complementary blood-pressure phenotype; not independent of systolic BP.
+    DiastolicBP_Keaton2024:
+      Category: vascular
+      sourceId: GCST90310295
+    # Fibroblast: Fibroproliferative disease with myofibroblast biology; tissue-specific comparator.
+    Dupuytren_Riesmeijer2024:
+      Category: fibroblast
+      sourceId: GCST90301252
+    # Hepatocyte: Hepatic lipoprotein metabolism; additional tissues contribute.
+    LDL_Graham2021:
+      Category: hepatic_lipids
+      sourceId: GCST90239655
+    # Hepatocyte: Complementary lipid transport phenotype; correlated with other lipid traits.
+    HDL_Graham2021:
+      Category: hepatic_lipids
+      sourceId: GCST90239649
+    # Hepatocyte: Hepatic triglyceride and lipoprotein metabolism; additional tissues contribute.
+    Triglycerides_Graham2021:
+      Category: hepatic_lipids
+      sourceId: GCST90239661
+    # Hepatocyte: Liver enzyme phenotype related to hepatocyte function and injury.
+    ALT_Ghouse2024:
+      Category: liver
+      sourceId: GCST90428729
+    # Pancreatic_acinar;Pancreatic_ductal: Exocrine pancreatic injury and digestive-enzyme biology; only five SuSiE-inf credible sets.
+    AcutePancreatitis_Bourgault2023:
+      Category: pancreatic_exocrine
+      sourceId: GCST90255375
+    # Pancreatic_acinar;Pancreatic_ductal: Complementary chronic exocrine pancreatic disease; phenotype-code ascertainment.
+    ChronicPancreatitis_Verma2024:
+      Category: pancreatic_exocrine
+      sourceId: GCST90480358
+    # Pancreatic_ductal;Pancreatic_acinar: Ductal adenocarcinoma susceptibility; both ductal and acinar-to-ductal routes are plausible, not uniquely ductal origin.
+    PancreaticCancer_Klein2018:
+      Category: pancreatic_exocrine
+      sourceId: GCST005434
+    # Pancreatic_beta;Pancreatic_alpha: Strong beta-cell evidence with alpha-cell regulatory involvement; not alpha-specific and includes systemic insulin resistance.
+    T2D_Suzuki2024:
+      Category: pancreatic_endocrine
+      sourceId: GCST90492734
+    # Pancreatic_beta;Pancreatic_alpha;Hepatocyte: Glycaemic physiology comparator; alpha cells are a broader endocrine proxy, not a direct glucagon GWAS.
+    FastingGlucose_Chen2023:
+      Category: pancreatic_endocrine
+      sourceId: GCST90278658
+    # Pancreatic_beta;Pancreatic_alpha;Hepatocyte: Larger complementary glycaemic study; overlaps conceptually with Chen and is not independent replication.
+    FastingGlucose_Jee2025:
+      Category: pancreatic_endocrine
+      sourceId: GCST90662896

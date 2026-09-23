@@ -6,8 +6,8 @@
 
 multiomeR is a [targets](https://books.ropensci.org/targets/)-based workflow for single-nucleus 10x Genomics Multiome ATAC + Gene Expression data. It starts from `cellranger-arc count` outputs and is meant to be adapted to your own data, compute setup, and biological questions.
 
-::: {.callout-warning title="Beta software"}
-multiomeR is in beta and may introduce breaking changes between releases. The [running guide](main_running.md#steps) shows what to inspect at each checkpoint, but acceptance criteria still depend on the tissue, study design, and intended use. Report problems or questions through [GitHub issues](https://github.com/koefoeden/multiomeR/issues).
+::: {.callout-note title="Under peer review"}
+The manuscript describing multiomeR is under peer review (link to come). The [running guide](main_running.md#steps) shows what to inspect at each checkpoint, but acceptance criteria still depend on the tissue, study design, and intended use. Report problems or questions through [GitHub issues](https://github.com/koefoeden/multiomeR/issues).
 :::
 
 ## Workflow at a glance

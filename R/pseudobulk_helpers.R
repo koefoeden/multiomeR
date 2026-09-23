@@ -335,12 +335,20 @@ get_pseudobulk_chromVAR_background_record <- function(
   )
 }
 
-compute_pseudobulk_chromVAR_deviation_SE <- function(
+#' Pseudobulk motif-family accessibility
+#'
+#' Compute analytic chromVAR z-scores of motif families on pseudobulk ATAC
+#' counts, centre each sample, and quantile-normalize across samples.
+#' @keywords internal
+get_pseudobulk_motif_family_accessibility_matrix <- function(
   pseudobulk_ATAC_data_matrix,
   chromVAR_obj,
-  annotation_matrix,
-  background_record
+  chromVAR_motif_family_matrix
 ) {
+  background_record <- get_pseudobulk_chromVAR_background_record(
+    pseudobulk_ATAC_data_matrix = pseudobulk_ATAC_data_matrix,
+    chromVAR_obj = chromVAR_obj
+  )
   peak_names <- background_record$peak_names
   counts_matrix <- pseudobulk_ATAC_data_matrix[peak_names, , drop = FALSE]
   if (inherits(counts_matrix, "IterableMatrix")) {
@@ -353,55 +361,19 @@ compute_pseudobulk_chromVAR_deviation_SE <- function(
     rowRanges = rowranges[peak_range_idx]
   )
   SummarizedExperiment::rowData(pseudobulk_chromVAR_obj) <- SummarizedExperiment::rowData(chromVAR_obj)[peak_range_idx, , drop = FALSE]
-
-  betterChromVAR::computeDeviationsAnalytic(
+  chromVAR_z_scores <- betterChromVAR::computeDeviationsAnalytic(
     object = pseudobulk_chromVAR_obj,
     background = background_record$background,
-    annotations = annotation_matrix[peak_names, , drop = FALSE],
+    annotations = chromVAR_motif_family_matrix[peak_names, , drop = FALSE],
     verbose = FALSE,
     retSE = TRUE,
     compute = c("deviations", "z")
-  )
-}
-
-get_pseudobulk_chromVAR_accessibility_matrix <- function(
-  pseudobulk_ATAC_data_matrix,
-  chromVAR_obj,
-  annotation_matrix,
-  normalize = TRUE
-) {
-  background_record <- get_pseudobulk_chromVAR_background_record(
-    pseudobulk_ATAC_data_matrix = pseudobulk_ATAC_data_matrix,
-    chromVAR_obj = chromVAR_obj
-  )
-  chromVAR_dev <- compute_pseudobulk_chromVAR_deviation_SE(
-    pseudobulk_ATAC_data_matrix = pseudobulk_ATAC_data_matrix,
-    chromVAR_obj = chromVAR_obj,
-    annotation_matrix = annotation_matrix,
-    background_record = background_record
-  )
-  chromVAR_z_scores <- SummarizedExperiment::assay(chromVAR_dev, "z")
-
-  if (isFALSE(normalize)) {
-    return(chromVAR_z_scores)
-  }
+  ) |>
+    SummarizedExperiment::assay("z")
 
   chromVAR_z_scores |>
     sweep(2, colMeans(chromVAR_z_scores), FUN = "-") |>
     limma::normalizeBetweenArrays(method = "quantile")
-}
-
-get_pseudobulk_motif_family_accessibility_matrix <- function(
-  pseudobulk_ATAC_data_matrix,
-  chromVAR_obj,
-  chromVAR_motif_family_matrix
-) {
-  get_pseudobulk_chromVAR_accessibility_matrix(
-    pseudobulk_ATAC_data_matrix = pseudobulk_ATAC_data_matrix,
-    chromVAR_obj = chromVAR_obj,
-    annotation_matrix = chromVAR_motif_family_matrix,
-    normalize = TRUE
-  )
 }
 
 get_pseudobulk_cell_type_design <- function(sample_tibble, formula_chr) {
@@ -1306,23 +1278,14 @@ get_cameraPR_statistic <- function(contrast_statistics) {
 #'
 #' Run competitive limma cameraPR gene-set tests for pseudobulk contrasts.
 #'
-#' @param pseudobulk_feature_matrix_fit Fitted pseudobulk model object.
+#' @param results_tibble Contrast results from `get_pseudobulk_feature_model_results()`.
 #' @param gene_sets Named list of detected gene identifiers per gene set.
-#' @param pseudobulk_feature_dynamic_tibble Dynamic-branch metadata row describing the model, contrast, and feature matrix being processed.
 #' @param min_genes_per_set Minimum number of contrast-tested genes required per gene set.
 #' @return Competitive cameraPR result tibble for each contrast and gene set.
 #' @keywords internal
 
-get_gene_set_enrichment_results <- function(
-  pseudobulk_feature_matrix_fit,
-  gene_sets,
-  pseudobulk_feature_dynamic_tibble,
-  min_genes_per_set = 10L
-) {
-  contrast_statistics <- get_pseudobulk_feature_model_results(
-    pseudobulk_feature_matrix_fit = pseudobulk_feature_matrix_fit,
-    pseudobulk_feature_dynamic_tibble = pseudobulk_feature_dynamic_tibble
-  ) |>
+get_gene_set_enrichment_results <- function(results_tibble, gene_sets, min_genes_per_set = 10L) {
+  contrast_statistics <- results_tibble |>
     dplyr::mutate(cameraPR_statistic = get_cameraPR_statistic(dplyr::pick(dplyr::everything()))) |>
     dplyr::filter(is.finite(cameraPR_statistic))
 
@@ -1352,8 +1315,8 @@ get_gene_set_enrichment_results <- function(
           method = "cameraPR",
           `-log10(PValue)` = -log10(PValue),
           `-log10(FDR)` = -log10(FDR),
-          cell_type_subset = pseudobulk_feature_dynamic_tibble$cell_type_subset,
-          model = pseudobulk_feature_dynamic_tibble$model_name,
+          cell_type_subset = statistics$cell_type_subset[[1]],
+          model = statistics$model[[1]],
           color_category = dplyr::case_when(
             FDR < 0.05 & Direction == "Up" ~ "SigUP",
             FDR < 0.05 & Direction == "Down" ~ "SigDown",

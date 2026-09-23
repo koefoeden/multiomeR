@@ -12,12 +12,8 @@ rlang::list2(
   targets::tar_target(
     name = results,
     description = "Run competitive cameraPR enrichment on pseudobulk contrasts for each gene-set subcollection [part_of_graph:differential_analyses]",
-    command = get_gene_set_enrichment_results(
-      pseudobulk_feature_matrix_fit = feature_matrix_fit.gene_expression,
-      gene_sets = gene_sets,
-      pseudobulk_feature_dynamic_tibble = dynamic_tibble.gene_expression
-    ),
-    pattern = map(dynamic_tibble.gene_expression, feature_matrix_fit.gene_expression)
+    command = get_gene_set_enrichment_results(results_tibble.gene_expression, gene_sets),
+    pattern = map(results_tibble.gene_expression)
   ),
   tarchetypes::tar_file(
     name = enrichment_plots,

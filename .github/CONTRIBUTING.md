@@ -62,6 +62,7 @@ proof is needed. Avoid broad dataset runs as a routine PR check.
 
 ```bash
 git diff --check
+pixi run --use-environment-activation-cache -e dev check-website-links  # after rendering
 ```
 
 For BPCells-native scoring-helper changes, run the synthetic parity check:

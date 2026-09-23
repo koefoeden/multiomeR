@@ -126,7 +126,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = cluster_UCell_evidence.WNN,
-      description = "Cache adjusted GEX marker scores and diagnostic perturbations for WNN clusters independently of stringency",
+      description = "Cache adjusted GEX marker scores for WNN clusters independently of stringency",
       command = prepare_cluster_UCell_evidence(
         counts_matrix = aggregated_counts_BPCells_matrix.GEX,
         metadata_tibble = metadata_w_clusters_tibble.WNN,
@@ -138,7 +138,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = cluster_UCell_annotation.8_multimodal_QC,
-      description = "WNN assignments from minimum adjusted GEX score advantage with diagnostic stability. [checkpoint:8_multimodal-QC]",
+      description = "WNN assignments from minimum adjusted GEX score advantage. [checkpoint:8_multimodal-QC]",
       command = evaluate_cluster_UCell_evidence(cluster_UCell_evidence.WNN,
         min_advantage = aggregation_cluster_annotation_min_advantage),
       resources = get_tar_resources(RAM_GB_req = 8)

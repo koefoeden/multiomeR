@@ -59,7 +59,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = cluster_UCell_evidence.GEX,
-    description = "Cache GEX adjusted marker scores and diagnostic perturbations independently of the assignment threshold",
+    description = "Cache GEX adjusted marker scores independently of the assignment threshold",
     command = prepare_cluster_UCell_evidence(
       counts_matrix = aggregated_counts_BPCells_matrix.GEX,
       metadata_tibble = metadata_w_clusters_tibble.GEX,
@@ -72,7 +72,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = cluster_UCell_annotation.3_GEX_QC,
-    description = "GEX assignments from minimum adjusted-score advantage; stability and GEM-well agreement are diagnostic only. [checkpoint:3_GEX-QC]",
+    description = "GEX assignments from minimum adjusted-score advantage. [checkpoint:3_GEX-QC]",
     command = evaluate_cluster_UCell_evidence(cluster_UCell_evidence.GEX,
       min_advantage = aggregation_cluster_annotation_min_advantage),
     resources = get_tar_resources(RAM_GB_req = 8)

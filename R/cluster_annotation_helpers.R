@@ -2,25 +2,6 @@
 # Adjusted-score advantages and control tails are not identity probabilities.
 # Controls are frozen per aggregation; cell types are never standardized against
 # other clusters. Unassigned is an abstention, not a biological identity.
-annotation_group_seed <- function(key, seed = 20260910L) {
-  value <- as.double(seed)
-  for (code in utf8ToInt(enc2utf8(key))) value <- (131 * value + code) %% 2147483647
-  as.integer(value)
-}
-
-make_annotation_blocks <- function(clusters, samples, n_blocks = 10L, seed = 20260910L) {
-  withr::local_seed(seed)
-  blocks <- integer(length(clusters))
-  groups <- split(seq_along(clusters), paste(clusters, samples, sep = "/"))
-  for (key in names(groups)) {
-    rows <- groups[[key]]
-    set.seed(annotation_group_seed(key, seed))
-    assignments <- rep(sample(seq_len(n_blocks)), length.out = length(rows))
-    blocks[rows] <- assignments[sample.int(length(rows))]
-  }
-  blocks
-}
-
 normalize_marker_panel <- function(markers, available_genes) {
   stopifnot(is.list(markers), length(markers) >= 2L, !is.null(names(markers)),
     !anyNA(names(markers)), all(nzchar(names(markers))), !anyDuplicated(names(markers)))
@@ -34,7 +15,6 @@ normalize_marker_panel <- function(markers, available_genes) {
 build_UCell_controls <- function(reference, markers, n_controls = 999L,
                                  neighbours = 50L, seed = 20260910L, exclude = character()) {
   withr::local_seed(seed)
-  markers <- normalize_marker_panel(markers, reference$gene)
   genes <- unique(sub("-$", "", unlist(markers, use.names = FALSE)))
   coordinates <- cbind(log1p(reference$abundance * 1e4), asin(sqrt(reference$detection)))
   spread <- apply(coordinates, 2L, stats::sd)
@@ -50,7 +30,6 @@ build_UCell_controls <- function(reference, markers, n_controls = 999L,
   })
   names(candidates) <- genes
   draws <- matrix(NA_integer_, length(genes), n_controls, dimnames = list(genes, NULL))
-  set.seed(seed)
   for (replicate in seq_len(n_controls)) {
     used <- integer()
     for (gene in sample(genes)) {
@@ -93,16 +72,11 @@ score_UCell_controls <- function(rank_means, control, genes, max_rank = 1500L) {
 
 #' Score labels against their own matched background, without assignment gates.
 score_UCell_group_evidence <- function(rank_means, control, detection, signed_means = list()) {
-  stopifnot(identical(dimnames(rank_means), dimnames(detection)),
-    all(is.finite(rank_means)), all(rank_means >= 0), all(rank_means <= 1))
-  markers <- normalize_marker_panel(control$markers, rownames(rank_means))
-  if (control$max_rank <= 1L || any(lengths(markers) > control$max_rank)) {
-    stop("Marker signatures are too long for the UCell rank cutoff.")
-  }
+  markers <- control$markers
   dplyr::bind_rows(lapply(names(markers), function(label) {
     genes <- markers[[label]]
     if (any(grepl("-$", genes))) {
-      scores <- signed_means[[label]][[1L]]
+      scores <- signed_means[[label]]
       observed <- scores[1L, ]
       null <- scores[-1L, , drop = FALSE]
     } else {
@@ -171,6 +145,9 @@ prepare_cluster_UCell_controls <- function(counts_matrix, metadata_tibble, marke
   control$reference <- reference
   control$reference_barcodes <- barcodes[rows]
   control$max_rank <- min(1500L, nrow(counts_matrix))
+  if (control$max_rank <= 1L || any(lengths(markers) > control$max_rank)) {
+    stop("Marker signatures are too long for the UCell rank cutoff.")
+  }
   control
 }
 
@@ -189,75 +166,48 @@ score_signed_UCell_cells <- function(gap, control, genes) {
   scores
 }
 
-#' Aggregate UCell statistics in bounded count chunks, clipping signed scores per cell.
-#' Cluster, stratified deletion-block, and GEM-well summaries share one rank pass.
+#' Aggregate cluster UCell statistics in bounded count chunks, clipping signed scores per cell.
 #' Only marker/control genes are retained after ranking all genes in each cell.
 summarize_cluster_UCell_counts <- function(counts_matrix, metadata_tibble, control,
                                            cluster_column, chunk_size = 250L,
-                                           workers = 2L, include_cell_scores = FALSE,
-                                           n_blocks = 10L) {
+                                           workers = 2L, include_cell_scores = FALSE) {
   barcodes <- metadata_tibble$barcode_w_prefix
   clusters <- as.character(metadata_tibble[[cluster_column]])
-  wells <- as.character(metadata_tibble$GEM_well_ID)
-  stopifnot(length(clusters) == length(barcodes), length(barcodes) > 0L,
-    workers >= 1L, chunk_size >= 1L, n_blocks >= 2L,
-    !anyNA(clusters), !anyNA(wells), !anyDuplicated(barcodes),
+  stopifnot(length(barcodes) > 0L, !anyNA(clusters), !anyDuplicated(barcodes),
     all(barcodes %in% colnames(counts_matrix)),
     identical(rownames(counts_matrix), control$reference_genes))
-  blocks <- make_annotation_blocks(clusters, wells, n_blocks, control$seed)
-  group_rows <- rbind(
-    data.frame(kind = "cluster", cluster = clusters, subgroup = ""),
-    data.frame(kind = "block", cluster = clusters, subgroup = as.character(blocks)),
-    data.frame(kind = "well", cluster = clusters, subgroup = wells)
-  )
-  groups <- unique(group_rows)
-  groups$key <- as.character(seq_len(nrow(groups)))
-  group_ids <- dplyr::left_join(group_rows, groups, by = c("kind", "cluster", "subgroup"))$key
-  group_indices <- split(as.integer(group_ids), rep(seq_len(3L), each = length(barcodes)))
-  groups$cells <- tabulate(as.integer(group_ids), nbins = nrow(groups))
+  cluster_names <- unique(clusters)
   genes <- unique(c(sub("-$", "", unlist(control$markers, use.names = FALSE)),
     control$reference_genes[control$draws]))
   chunks <- split(seq_along(barcodes), ceiling(seq_along(barcodes) / chunk_size))
   signed_markers <- Filter(function(genes) any(grepl("-$", genes)), control$markers)
-  signed_variants <- lapply(signed_markers, function(genes) {
-    c(list(genes), if (length(genes) > 1L) lapply(genes, function(gene) setdiff(genes, gene)))
-  })
+  add_cluster_sums <- function(total, values, rows) {
+    sums <- rowsum(t(values), clusters[rows], reorder = FALSE)
+    total[, rownames(sums)] <- total[, rownames(sums), drop = FALSE] + t(sums)
+    total
+  }
   aggregate_chunks <- function(chunk_ids) {
-    signed_sum <- lapply(signed_variants, function(variants) lapply(variants, function(genes) {
-      matrix(0, control$n_controls + 1L, nrow(groups), dimnames = list(NULL, groups$key))
-    }))
-    rank_sum <- detected_sum <- matrix(0, length(genes), nrow(groups),
-      dimnames = list(genes, groups$key))
+    signed_sum <- lapply(signed_markers, function(genes) {
+      matrix(0, control$n_controls + 1L, length(cluster_names), dimnames = list(NULL, cluster_names))
+    })
+    rank_sum <- detected_sum <- matrix(0, length(genes), length(cluster_names),
+      dimnames = list(genes, cluster_names))
     cell_scores <- list()
     for (chunk_id in chunk_ids) {
       rows <- chunks[[chunk_id]]
       values <- as.matrix(counts_matrix[, barcodes[rows], drop = FALSE])
       ranks <- rank_UCell_count_chunk(values)
       gap <- (control$max_rank - pmin(ranks[genes, , drop = FALSE], control$max_rank)) / control$max_rank
-      detected <- values[genes, , drop = FALSE] > 0
-      for (indices in group_indices) {
-        sums <- rowsum(t(gap), indices[rows], reorder = FALSE)
-        columns <- rownames(sums)
-        rank_sum[, columns] <- rank_sum[, columns, drop = FALSE] + t(sums)
-        detected_sum[, columns] <- detected_sum[, columns, drop = FALSE] +
-          t(rowsum(t(detected * 1), indices[rows], reorder = FALSE))
-      }
-      for (label in names(signed_variants)) {
-        for (variant in seq_along(signed_variants[[label]])) {
-          scores <- score_signed_UCell_cells(gap, control, signed_variants[[label]][[variant]])
-          for (indices in group_indices) {
-            sums <- rowsum(t(scores), indices[rows], reorder = FALSE)
-            columns <- rownames(sums)
-            signed_sum[[label]][[variant]][, columns] <-
-              signed_sum[[label]][[variant]][, columns, drop = FALSE] + t(sums)
-          }
-        }
+      rank_sum <- add_cluster_sums(rank_sum, gap, rows)
+      detected_sum <- add_cluster_sums(detected_sum, (values[genes, , drop = FALSE] > 0) * 1, rows)
+      signed_scores <- lapply(signed_markers, score_signed_UCell_cells, gap = gap, control = control)
+      for (label in names(signed_markers)) {
+        signed_sum[[label]] <- add_cluster_sums(signed_sum[[label]], signed_scores[[label]], rows)
       }
       if (include_cell_scores) {
-        scores <- vapply(control$markers, function(marker_genes) {
-          if (any(grepl("-$", marker_genes))) {
-            score_signed_UCell_cells(gap, control, marker_genes)[1L, ]
-          } else score_UCell_rank_means(gap, marker_genes, control$max_rank)
+        scores <- vapply(names(control$markers), function(label) {
+          if (label %in% names(signed_scores)) signed_scores[[label]][1L, ]
+          else score_UCell_rank_means(gap, control$markers[[label]], control$max_rank)
         }, numeric(length(rows)))
         dim(scores) <- c(length(rows), length(control$markers))
         dimnames(scores) <- list(barcodes[rows], names(control$markers))
@@ -271,74 +221,23 @@ summarize_cluster_UCell_counts <- function(counts_matrix, metadata_tibble, contr
     parallel::mclapply(worker_chunks, aggregate_chunks, mc.cores = workers)
   }
   if (any(vapply(parts, inherits, logical(1L), "try-error"))) stop("UCell summary worker failed.")
-  list(rank_means = sweep(Reduce(`+`, lapply(parts, `[[`, "rank_sum")), 2L, groups$cells, `/`),
-    detection = sweep(Reduce(`+`, lapply(parts, `[[`, "detected_sum")), 2L, groups$cells, `/`),
-    signed_means = stats::setNames(lapply(names(signed_variants), function(label) {
-      lapply(seq_along(signed_variants[[label]]), function(variant) {
-        sweep(Reduce(`+`, lapply(parts, function(part) part$signed_sum[[label]][[variant]])),
-          2L, groups$cells, `/`)
-      })
-    }), names(signed_variants)),
-    groups = groups, n_blocks = n_blocks,
+  cells <- stats::setNames(tabulate(match(clusters, cluster_names)), cluster_names)
+  cluster_means <- function(part_sums) sweep(Reduce(`+`, part_sums), 2L, cells, `/`)
+  list(rank_means = cluster_means(lapply(parts, `[[`, "rank_sum")),
+    detection = cluster_means(lapply(parts, `[[`, "detected_sum")),
+    signed_means = lapply(stats::setNames(nm = names(signed_markers)), function(label) {
+      cluster_means(lapply(parts, function(part) part$signed_sum[[label]]))
+    }),
+    cells = cells,
     cell_scores = do.call(rbind, lapply(parts, `[[`, "cell_scores")))
 }
 
-#' Cache compact score evidence and perturbations independently of stringency.
+#' Cache cluster score evidence independently of the assignment threshold.
 score_cluster_UCell_summaries <- function(summaries, control) {
-  groups <- summaries$groups
-  main <- groups[groups$kind == "cluster", ]
-  score_groups <- function(keys) score_UCell_group_evidence(
-    summaries$rank_means[, keys, drop = FALSE], control, summaries$detection[, keys, drop = FALSE],
-    lapply(summaries$signed_means, function(variants) lapply(variants, function(values) values[, keys, drop = FALSE])))
-  evidence <- score_groups(main$key)
-  evidence$cluster <- main$cluster[match(evidence$cluster, main$key)]
-  evidence$cells <- main$cells[match(evidence$cluster, main$cluster)]
-  marker_deletions <- dplyr::bind_rows(lapply(names(control$markers), function(label) {
-    genes <- control$markers[[label]]
-    if (length(genes) == 1L) return(NULL)
-    dplyr::bind_rows(lapply(genes, function(omitted) {
-      remaining <- setdiff(genes, omitted)
-      if (any(grepl("-$", genes))) {
-        scores <- summaries$signed_means[[label]][[match(omitted, genes) + 1L]][, main$key, drop = FALSE]
-        observed <- scores[1L, ]
-        null <- scores[-1L, , drop = FALSE]
-      } else {
-        observed <- score_UCell_rank_means(summaries$rank_means[, main$key, drop = FALSE], remaining, control$max_rank)
-        null <- score_UCell_controls(summaries$rank_means[, main$key, drop = FALSE], control, remaining, control$max_rank)
-      }
-      data.frame(cluster = main$cluster, label, omitted,
-        excess = unname(observed) - apply(null, 2L, stats::quantile, probs = 0.95, names = FALSE))
-    }))
-  }))
-  cell_deletions <- dplyr::bind_rows(lapply(seq_len(summaries$n_blocks), function(block) {
-    omitted_groups <- groups[groups$kind == "block" & groups$subgroup == as.character(block), ]
-    omitted <- match(main$cluster, omitted_groups$cluster)
-    sizes <- omitted_groups$cells[omitted]
-    sizes[is.na(sizes)] <- 0L
-    remaining <- main$cells - sizes
-    assessed <- which(sizes > 0L & remaining > 0L)
-    if (!length(assessed)) return(NULL)
-    leave_out <- function(values) {
-      means <- sweep(values[, main$key[assessed], drop = FALSE], 2L, main$cells[assessed], `*`) -
-        sweep(values[, omitted_groups$key[omitted[assessed]], drop = FALSE], 2L, sizes[assessed], `*`)
-      means <- sweep(means, 2L, remaining[assessed], `/`)
-      means[] <- pmax(0, pmin(1, means))
-      means
-    }
-    result <- score_UCell_group_evidence(leave_out(summaries$rank_means), control, leave_out(summaries$detection),
-      lapply(summaries$signed_means, function(variants) lapply(variants, leave_out)))
-    result$cluster <- main$cluster[match(result$cluster, main$key)]
-    result$block <- block
-    result
-  }))
-  if (!nrow(marker_deletions)) marker_deletions <- data.frame(cluster = character(), label = character(), excess = numeric())
-  if (!nrow(cell_deletions)) cell_deletions <- data.frame(cluster = character(), block = integer())
-  wells <- groups[groups$kind == "well" & groups$cells >= 25L, ]
-  well_evidence <- if (nrow(wells)) score_groups(wells$key) else data.frame()
-  list(evidence = evidence, marker_deletions = marker_deletions, cell_deletions = cell_deletions,
-    well_evidence = well_evidence, wells = wells, cell_scores = summaries$cell_scores,
-    settings = list(max_rank = control$max_rank, background_quantile = 0.95,
-      diagnostic_marker_detection = 0.1, n_blocks = summaries$n_blocks, diagnostic_min_well_cells = 25L))
+  evidence <- score_UCell_group_evidence(summaries$rank_means, control, summaries$detection, summaries$signed_means)
+  evidence$cells <- unname(summaries$cells[evidence$cluster])
+  list(evidence = evidence, cell_scores = summaries$cell_scores,
+    settings = list(max_rank = control$max_rank, background_quantile = 0.95, diagnostic_marker_detection = 0.1))
 }
 
 prepare_cluster_UCell_evidence <- function(counts_matrix, metadata_tibble, control,
@@ -348,48 +247,11 @@ prepare_cluster_UCell_evidence <- function(counts_matrix, metadata_tibble, contr
   score_cluster_UCell_summaries(summaries, control)
 }
 
-#' Apply one threshold; perturbation and GEM-well agreement never veto assignments.
+#' Apply the assignment threshold to cached cluster evidence.
 evaluate_cluster_UCell_evidence <- function(scored, min_advantage) {
   decisions <- assign_UCell_cluster_evidence(scored$evidence, min_advantage)
   decisions$cells <- scored$evidence$cells[match(decisions$cluster, scored$evidence$cluster)]
-  decisions$marker_stability <- decisions$cell_stability <- NA_real_
-  decisions$cell_stability_replicates <- 0L
-  decisions$sample_agreement <- NA_real_
-  decisions$sample_groups_assessed <- 0L
-  resampled <- dplyr::bind_rows(lapply(unique(scored$cell_deletions$block), function(block) {
-    result <- assign_UCell_cluster_evidence(scored$cell_deletions[scored$cell_deletions$block == block, ], min_advantage)
-    result$block <- block
-    result
-  }))
-  if (!nrow(resampled)) resampled <- data.frame(cluster = character())
-  sample_decisions <- data.frame()
-  if (nrow(scored$well_evidence)) {
-    sample_decisions <- assign_UCell_cluster_evidence(scored$well_evidence, min_advantage)
-    index <- match(sample_decisions$cluster, scored$wells$key)
-    sample_decisions$cluster <- scored$wells$cluster[index]
-    sample_decisions$GEM_well_ID <- scored$wells$subgroup[index]
-    sample_decisions$cells <- scored$wells$cells[index]
-  }
-  for (index in seq_len(nrow(decisions))) {
-    cluster <- decisions$cluster[index]
-    candidate <- decisions$candidate[index]
-    omitted <- scored$marker_deletions[scored$marker_deletions$cluster == cluster &
-      scored$marker_deletions$label == candidate, ]
-    other <- scored$evidence$excess[scored$evidence$cluster == cluster & scored$evidence$label != candidate]
-    if (nrow(omitted)) {
-      advantage <- omitted$excess - max(0, other)
-      decisions$marker_stability[index] <- mean(advantage >= min_advantage & advantage > 0)
-    }
-    cells <- resampled[resampled$cluster == cluster, , drop = FALSE]
-    decisions$cell_stability_replicates[index] <- nrow(cells)
-    if (nrow(cells) >= 2L) decisions$cell_stability[index] <- mean(
-      cells$status == "Assigned" & cells$candidate == candidate)
-    wells <- sample_decisions[sample_decisions$cluster == cluster, ]
-    decisions$sample_groups_assessed[index] <- nrow(wells)
-    if (nrow(wells) >= 2L) decisions$sample_agreement[index] <- mean(
-      wells$status == "Assigned" & wells$candidate == candidate)
-  }
-  list(decisions = decisions, evidence = scored$evidence, sample_decisions = sample_decisions,
+  list(decisions = decisions, evidence = scored$evidence,
     settings = c(scored$settings, list(min_advantage = min_advantage)), cell_scores = scored$cell_scores)
 }
 
@@ -445,13 +307,10 @@ save_cluster_UCell_diagnostics <- function(annotation, control,
                                             output_dir = get_structured_output_path(list_output = TRUE)) {
   fs::dir_create(output_dir)
   previous_files <- file.path(output_dir, c("clusters.tsv", "marker_evidence.tsv",
-    "GEM_well_agreement.tsv", "control_gene_matching.tsv", "settings.rds", "method.txt"))
+    "control_gene_matching.tsv", "settings.rds", "method.txt"))
   unlink(previous_files[file.exists(previous_files)])
   readr::write_tsv(annotation$decisions, file.path(output_dir, "clusters.tsv"))
   readr::write_tsv(annotation$evidence, file.path(output_dir, "marker_evidence.tsv"))
-  if (nrow(annotation$sample_decisions)) {
-    readr::write_tsv(annotation$sample_decisions, file.path(output_dir, "GEM_well_agreement.tsv"))
-  }
   readr::write_tsv(control$match_diagnostics, file.path(output_dir, "control_gene_matching.tsv"))
   saveRDS(list(settings = annotation$settings, markers = control$markers,
     seed = control$seed, n_controls = control$n_controls, neighbours = control$neighbours,
@@ -459,7 +318,7 @@ save_cluster_UCell_diagnostics <- function(annotation, control,
   writeLines(c("Assignment uses the best adjusted UCell score's advantage over background and all other labels.",
     paste("Minimum advantage:", annotation$settings$min_advantage),
     "Adjusted score = observed mean UCell minus the label-specific control 95th percentile.",
-    "Marker detection, marker deletion, cell stability, control tails and GEM-well agreement are diagnostic only.",
+    "Marker detection and control tails are diagnostic only.",
     "Scores are not calibrated identity probabilities. No mixture detection."), file.path(output_dir, "method.txt"))
   output_dir
 }

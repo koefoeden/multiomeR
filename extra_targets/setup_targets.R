@@ -34,46 +34,21 @@ rlang::list2(
         ),
         show_col_types = FALSE
       )
-      expected_columns <- c(
-        "metric_id",
-        "display_name",
-        "description",
-        "available_from_checkpoint",
-        "plot_min_q",
-        "plot_max_q",
-        "do_plot"
-      )
-      required_values <- manifest |>
-        dplyr::select(
-          metric_id,
-          display_name,
-          description,
-          available_from_checkpoint,
-          do_plot
-        )
-      plotting_quantiles <- c(manifest$plot_min_q, manifest$plot_max_q)
       checkpoint_names <- readr::read_tsv(
         QC_checkpoint_manifest_tsv,
         col_types = readr::cols(.default = readr::col_character())
       )$checkpoint_name
-      invalid_quantiles <- any(
-        !is.na(plotting_quantiles) &
-          (!is.finite(plotting_quantiles) |
-            plotting_quantiles < 0 |
-            plotting_quantiles > 1)
-      )
-      invalid_quantile_intervals <- any(
-        !is.na(manifest$plot_min_q) &
-          !is.na(manifest$plot_max_q) &
-          manifest$plot_min_q >= manifest$plot_max_q
-      )
+      plotting_quantiles <- c(manifest$plot_min_q, manifest$plot_max_q)
       if (
-        !identical(colnames(manifest), expected_columns) ||
+        !identical(colnames(manifest), c(
+          "metric_id", "display_name", "description", "available_from_checkpoint",
+          "plot_min_q", "plot_max_q", "do_plot"
+        )) ||
           anyDuplicated(manifest$metric_id) ||
-          any(!stats::complete.cases(required_values)) ||
-          any(!manifest$available_from_checkpoint %in% checkpoint_names) ||
-          invalid_quantiles ||
-          invalid_quantile_intervals
+          anyNA(manifest[c("metric_id", "display_name", "description", "available_from_checkpoint", "do_plot")]) ||
+          !all(manifest$available_from_checkpoint %in% checkpoint_names) ||
+          any(plotting_quantiles < 0 | plotting_quantiles > 1, na.rm = TRUE) ||
+          any(manifest$plot_min_q >= manifest$plot_max_q, na.rm = TRUE)
       ) {
         stop(
           "QC_metric_manifest.tsv must contain the expected columns, complete ",

@@ -101,8 +101,7 @@ plot_coverage_at_region_BPCells <- function(
     dplyr::transmute(
       chr = as.character(seqnames),
       start = start,
-      end = end,
-      cluster = as.character(cluster)
+      end = end
     )
 
   region <- get_region_GRanges_for_BPCells_track(region_id, gene_GRanges = gene_GRanges)
@@ -130,7 +129,6 @@ plot_coverage_at_region_BPCells <- function(
   peak_track <- BPCells::trackplot_genome_annotation(
     loci = collapsed_peaks,
     region = region,
-    color_by = "cluster",
     track_label = "Collapsed peaks"
   )
 

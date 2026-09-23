@@ -40,53 +40,11 @@ A **target** is a named result, such as a metadata table, matrix directory, or p
 
 ## Workflow at a glance
 
-The **main pipeline** processes each GEM well, aggregates selected GEM wells, and builds multimodal RNA/ATAC outputs for clustering, cell typing, and WNN integration. Two optional modules extend completed aggregations with differential analyses or genetic enrichment.
+The **main pipeline** processes each GEM well, aggregates selected GEM wells, and builds multimodal RNA/ATAC outputs for clustering, cell typing, and WNN integration. Three optional modules extend completed aggregations with differential analyses, genetic enrichment or peak–gene correlation. The [output gallery](gallery.md) previews every plot they and the main pipeline save.
 
 [Image omitted; source: `figures/multiomeR_overview_simplified.drawio.svg`; alt: multiomeR workflow from Cell Ranger ARC GEM well outputs through per GEM well processing, aggregation-level GEX and A...]
 
 Continue to [Install and prepare the demo](demo_installation.md).
-
-
-## Part: Output gallery
-
-
-<!-- source: website/gallery_main.md -->
-
-# Main pipeline gallery
-
-
-
-These documentation snapshots show representative outputs from the public `immune_human_2x` configuration with its two active GEM wells. The cards follow the steps in [Run your own analysis](main_running.md#steps), where each step also shows its own cards. Each card names the target that generated the displayed demo result; click an image to open it at full resolution.
-
-To reproduce these plot families, follow [Install and prepare the demo](demo_installation.md) and [Run the demo](demo_running.md), then run the steps in [Run your own analysis](main_running.md#steps). The demo command builds the final object and the WNN UMAPs only; [Inspect the demo results](demo_outputs.md) explains the distinction.
-
-[Generated Quarto chunk omitted: `render_gallery_section( gallery_items, "Main pipeline", subsection_descriptions = c( "Pre-aggregation QC" = "Unfilter...`]
-
-
-<!-- source: website/gallery_differential_analyses.md -->
-
-# Differential analyses gallery
-
-
-
-These cards are a curated subset from the public `immune_human_2x` configuration. They illustrate diagnostics, not acceptable effect sizes or significance patterns for another study. See [Differential analyses](downstream_differential_analyses.md) for prerequisites, models, and the module run command.
-
-The full module additionally produces expression-derived CollecTRI activity results and a CollecTRI-JASPAR concordance plot. They are not shown below until stable public example assets are available.
-
-Named abundance models now produce donor-proportion plots and contrast plots with 95% Wald intervals. The previous coefficient and pooled-baseline-change examples have been retired; updated public abundance examples are pending.
-
-[Generated Quarto chunk omitted: `render_gallery_section( gallery_items, "Differential analyses module", subsection_descriptions = c( "Gene expression"...`]
-
-
-<!-- source: website/gallery_genetic_enrichment.md -->
-
-# Genetic enrichment gallery
-
-
-
-These curated outputs use the larger `PBMC_human_6x` aggregation, not the quickstart with two GEM wells, and show selected SCAVENGE/WNN results rather than every attribution output. See [Genetic enrichment](downstream_genetic_enrichment.md) for prerequisites, module target selection, and interpretation guidance.
-
-[Generated Quarto chunk omitted: `render_gallery_section( gallery_items, "Genetic enrichment module", subsection_descriptions = c( "Single-nucleus chro...`]
 
 
 ## Part: Try the public demo
@@ -158,7 +116,7 @@ Continue to [Run the demo](demo_running.md) from the R prompt.
 
 In the R session opened during installation, run the command below to process the `immune_human_2x` aggregation. It combines the two demo GEM wells, produces a Seurat/Signac object containing the multimodal results, and draws the integrated WNN UMAPs colored by cluster, cell type, and the other categorical metadata.
 
-`names` selects these two targets by their exact names using `all_of()`. `tar_make()` also builds the dependencies needed for them, but does not build every plot in the gallery.
+`names` selects these two targets by their exact names using `all_of()`. `tar_make()` also builds the dependencies needed for them, but does not build every plot in the [output gallery](gallery.md).
 
 ``` {.r filename="R"}
 demo_targets <- c(
@@ -239,7 +197,7 @@ targets::tar_read(categorical.UMAPs.8_multimodal_QC.immune_human_2x)
 
 Open `WNN_harmony_SNN_cluster_cell_type.png` there to see the integrated clusters and cell-type labels from your own run. It should resemble this documentation snapshot:
 
-[Generated Quarto chunk omitted: `render_gallery_grid(gallery_items[gallery_items$id == "wnn-umap", ])`]
+[Image omitted; source: `figures/demo_WNN_cell_type_UMAP.png`; alt: WNN UMAP of the two demo GEM wells, colored by cluster and cell type]
 
 ## Plot objects
 
@@ -317,7 +275,7 @@ targets::tar_make(
 )
 ```
 
-**Review plots:**
+**Review plots** (examples: [checkpoint 1](gallery.md#1-pre-aggregation-qc)):
 
 ``` text
 <store>/plots/my_aggregation/1_pre_aggregation_QC/
@@ -356,7 +314,7 @@ targets::tar_make(
 )
 ```
 
-**Review plots:**
+**Review plots** (examples: [checkpoint 2](gallery.md#2-gex-pca-qc)):
 
 ``` text
 <store>/plots/my_aggregation/2_GEX_PCA_QC/
@@ -379,7 +337,7 @@ targets::tar_make(
 )
 ```
 
-**Review plots:**
+**Review plots** (examples: [checkpoint 3](gallery.md#3-gex-qc)):
 
 ``` text
 <store>/plots/my_aggregation/3_GEX_QC/
@@ -418,7 +376,7 @@ targets::tar_make(
 )
 ```
 
-**Review plots:**
+**Review plots** (examples: [checkpoint 4](gallery.md#4-peak-qc) and [checkpoint 5](gallery.md#5-pre-lsi-qc)):
 
 ``` text
 <store>/plots/my_aggregation/
@@ -446,7 +404,7 @@ targets::tar_make(
 )
 ```
 
-**Review plots:**
+**Review plots** (examples: [checkpoint 6](gallery.md#6-atac-lsi-qc)):
 
 ``` text
 <store>/plots/my_aggregation/6_ATAC_LSI_QC/
@@ -470,7 +428,7 @@ targets::tar_make(
 )
 ```
 
-**Review plots:**
+**Review plots** (examples: [checkpoint 7](gallery.md#7-atac-qc)):
 
 ``` text
 <store>/plots/my_aggregation/7_ATAC_QC/
@@ -502,7 +460,7 @@ targets::tar_make(
 )
 ```
 
-**Review plots:**
+**Review plots** (examples: [checkpoint 8](gallery.md#8-multimodal-qc)):
 
 ``` text
 <store>/plots/my_aggregation/8_multimodal_QC/
@@ -549,7 +507,7 @@ Use this module to ask how cell-type proportions, gene expression, or chromatin 
 
 The module does not create biological replication. The donor structure, covariates, design formula, and contrasts must be defensible for the intended analysis before the workflow is run.
 
-See the [Differential analyses gallery](gallery_differential_analyses.md) for representative diagnostics and the [implementation graph](implementation/implementation_differential_analyses.html) for target structure.
+See the [example plots](gallery.md#differential-analyses) for representative diagnostics and the [implementation graph](implementation/implementation_differential_analyses.html) for target structure.
 
 ## Prerequisites
 
@@ -648,7 +606,7 @@ targets::tar_make(
 
 ## Review
 
-Open the configured model outputs listed above and the [differential gallery](gallery_differential_analyses.md). Interpretation and method details are included in the plot subtitles and captions.
+Open the configured model outputs listed above; the [output gallery](gallery.md#differential-analyses) shows one example per plot. Interpretation and method details are included in the plot subtitles and captions.
 
 Runtime depends on donors, cell types, models, contrasts, and gene-set analyses. Use [Troubleshooting](troubleshooting.md) if a formula, contrast, or metadata join fails.
 
@@ -673,7 +631,7 @@ Use this module to ask which cell types or nuclei have accessible regions overla
 
 A **credible set** contains candidate causal variants at a GWAS locus, with probabilities from fine-mapping. Enrichment helps prioritize cellular contexts; it does not by itself identify a causal cell type, gene, or mechanism.
 
-See the [Genetic enrichment gallery](gallery_genetic_enrichment.md) for representative results and the [implementation graph](implementation/implementation_genetic_enrichment.html) for upstream ATAC and WNN dependencies.
+See the [example plots](gallery.md#genetic-enrichment) for representative results and the [implementation graph](implementation/implementation_genetic_enrichment.html) for upstream ATAC and WNN dependencies.
 
 ## Prerequisites
 
@@ -745,9 +703,9 @@ targets::tar_make(
 
 ## Review
 
-Open the study-selection summaries, chromVAR summaries, SCAVENGE heatmaps and locus-contribution plots produced for your configured studies. See the [genetic enrichment gallery](gallery_genetic_enrichment.md) for available previews; interpretation belongs to each plot.
+Open the study-selection summaries, chromVAR summaries, SCAVENGE heatmaps and locus-contribution plots produced for your configured studies. The [output gallery](gallery.md#genetic-enrichment) shows one example per plot; interpretation belongs to each plot.
 
-Runtime and disk use grow with studies, cells, graph representations, permutations, and attributed loci. The [Genetic enrichment gallery](gallery_genetic_enrichment.md) uses a larger aggregation with six GEM wells and is not produced by the minimal quickstart.
+Runtime and disk use grow with studies, cells, graph representations, permutations, and attributed loci.
 
 ## Parameter reference
 
@@ -788,7 +746,7 @@ targets::tar_make(
 
 ## Review
 
-All module targets have description tag `[checkpoint:peak_gene_correlation]`. Their paths are `<store>/plots/my_aggregation/peak_gene_correlation/`; file exports use the corresponding `files` directory, with any modality suffixes as deeper subdirectories. For example, read selected links with:
+The [output gallery](gallery.md#peak-gene-correlation) shows one example per plot. All module targets have description tag `[checkpoint:peak_gene_correlation]`. Their paths are `<store>/plots/my_aggregation/peak_gene_correlation/`; file exports use the corresponding `files` directory, with any modality suffixes as deeper subdirectories. For example, read selected links with:
 
 ```r
 targets::tar_read(
@@ -1008,6 +966,17 @@ Use an unqualified `targets::tar_make()` only when every active aggregation and 
 
 
 ## Part: Reference
+
+
+<!-- source: website/gallery.md -->
+
+# Output gallery
+
+
+
+Each plot target has one example here, taken from `mixed_human_31x`: 31 public GEM wells from 10x Genomics and ENCODE covering heart, blood, pancreas, liver, colon, lung and cerebellum, with all optional analyses enabled. A card shows one of the files its target saves, the target's description and its name; select a preview to enlarge it. [Run your own analysis](main_running.md#steps) explains when to review each checkpoint.
+
+[Generated Quarto chunk omitted: `render_output_gallery()`]
 
 
 <!-- source: website/review_outputs.md -->

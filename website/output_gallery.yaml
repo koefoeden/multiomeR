@@ -1,141 +1,753 @@
-- id: aggregation-input-qc-exclusions
-  section: Main pipeline
-  subsection: Aggregation input QC
-  title: GEM-well QC exclusion overlaps
-  description: Shows the overlap between pre-aggregation filters among Cell Ranger-called cells entering the two-GEM-well aggregation.
-  target: aggregation_excluded_cellranger_only_barcodes_by_type_upset.1_pre_aggregation_QC.immune_human_2x
-  asset: gallery_assets/parallel_GEM_well_preprocessing/qc_excluded_upset.png
-  source_file: outputs/plots/immune_human_2x/1_pre_aggregation_QC/aggregation_excluded_cellranger_only_barcodes_by_type_upset.png
-  status: available
-
-- id: gex-harmony-umap
-  section: Main pipeline
-  subsection: GEX
-  title: Harmony UMAP
-  description: Shows the gene-expression embedding and accepted cell-type labels for the two-GEM-well aggregation.
-  target: harmony.categorical.UMAPs.3_GEX_QC.immune_human_2x
-  asset: gallery_assets/GEX/harmony_categorical_umap.png
-  source_file: outputs/plots/immune_human_2x/3_GEX_QC/UMAPs/categorical/harmony/PCA_harmony_SNN_cluster_cell_type.png
-  status: available
-
-- id: gex-marker-dot-plot
-  section: Main pipeline
-  subsection: GEX
-  title: Marker expression by cell type
-  description: Highlights marker gene patterns used to evaluate the inferred GEX cell types.
-  target: markers_by_cell_type_dot_plot.3_GEX_QC.immune_human_2x
-  asset: null
-  status: pending
-
-- id: peak-qc-distributions
-  section: Main pipeline
-  subsection: Peak QC
-  title: Peak-based QC distributions
-  description: Compares peak enrichment, blacklist fraction, peak fraction, and ATAC counts across the two demo GEM wells before peak-based filtering.
-  target: peaks_QC_violins_plot.4_peak_QC.immune_human_2x
-  asset: gallery_assets/ATAC/peak_qc_violins.png
-  source_file: outputs/plots/immune_human_2x/4_peak_QC/peaks_QC_violins_plot/01_nCount_ATAC.png
-  status: available
-
-- id: pre-lsi-qc-exclusions
-  section: Main pipeline
-  subsection: Pre-LSI QC
-  title: Peak-QC exclusion overlaps
-  description: Shows the overlap between aggregation-level peak-QC filters before LSI and ATAC clustering.
-  target: QC_excluded_upset_plot.5_pre_LSI_QC.immune_human_2x
-  asset: gallery_assets/ATAC/qc_excluded_upset.png
-  source_file: outputs/plots/immune_human_2x/5_pre_LSI_QC/QC_excluded_upset_plot.png
-  status: available
-
-- id: atac-harmony-umap
-  section: Main pipeline
-  subsection: ATAC
-  title: Harmony UMAP
-  description: Shows the chromatin-accessibility embedding and accepted cell-type labels for the two-GEM-well aggregation.
-  target: categorical.UMAPs.7_ATAC_QC.immune_human_2x
-  asset: gallery_assets/ATAC/harmony_categorical_umap.png
-  source_file: outputs/plots/immune_human_2x/7_ATAC_QC/UMAPs/categorical/LSI_harmony_SNN_cluster_cell_type.png
-  status: available
-
-- id: wnn-umap
-  section: Main pipeline
-  subsection: WNN
-  title: Integrated UMAP
-  description: Shows the integrated multimodal cell-state structure and accepted cell-type labels for the two-GEM-well aggregation.
-  target: categorical.UMAPs.8_multimodal_QC.immune_human_2x
-  asset: gallery_assets/WNN/harmony_categorical_umap.png
-  source_file: outputs/plots/immune_human_2x/8_multimodal_QC/UMAPs/categorical/WNN_harmony_SNN_cluster_cell_type.png
-  status: available
-
-- id: wnn-modality-weights
-  section: Main pipeline
-  subsection: WNN
-  title: WNN weight associations
-  description: Shows how RNA and ATAC evidence contribute differently across cell groups in the two-GEM-well aggregation.
-  target: WNN_weight_metadata_associations_plot.8_multimodal_QC.immune_human_2x
-  asset: null
-  status: pending
-
-- section: Differential analyses module
-  subsection: Gene expression
-  title: Volcano plot
-  description: Highlights genes with the strongest expression differences for one comparison.
-  target: volcano_plots.gene_expression.differential_analyses.immune_human_2x
-  asset: gallery_assets/differential_analyses/gene_expression/volcano_plot.png
-  status: available
-
-- section: Differential analyses module
-  subsection: Gene expression
-  title: Significant-elements summary
-  description: Summarizes the number and direction of significant expression changes across comparisons.
-  target: significant_elements_plot.gene_expression.differential_analyses.immune_human_2x
-  asset: gallery_assets/differential_analyses/gene_expression/significant_elements.png
-  status: available
-
-- section: Differential analyses module
-  subsection: Chromatin accessibility
-  title: Volcano plot
-  description: Highlights regulatory regions with the strongest accessibility differences for one comparison.
-  target: volcano_plots.chromatin_accessibility.differential_analyses.immune_human_2x
-  asset: gallery_assets/differential_analyses/chromatin_accessibility/volcano_plot.png
-  status: available
-
-- section: Differential analyses module
-  subsection: Chromatin accessibility
-  title: Significant-elements summary
-  description: Summarizes the number and direction of significant accessibility changes across comparisons.
-  target: significant_elements_plot.chromatin_accessibility.differential_analyses.immune_human_2x
-  asset: gallery_assets/differential_analyses/chromatin_accessibility/significant_elements.png
-  status: available
-
-- section: Differential analyses module
-  subsection: Motif-family accessibility
-  title: Volcano plot
-  description: Highlights JASPAR motif families with the strongest accessibility differences for one comparison.
-  target: volcano_plots.motif_family_accessibility.differential_analyses.immune_human_2x
-  asset: gallery_assets/differential_analyses/transcription_factor_activity/volcano_plot.png
-  status: available
-
-- section: Differential analyses module
-  subsection: Motif-family accessibility
-  title: Significant-elements summary
-  description: Summarizes the number and direction of significant motif-family accessibility changes across comparisons.
-  target: significant_elements_plot.motif_family_accessibility.differential_analyses.immune_human_2x
-  asset: gallery_assets/differential_analyses/transcription_factor_activity/significant_elements.png
-  status: available
-
-- section: Genetic enrichment module
-  subsection: Single-nucleus chromVAR+SCAVENGE
-  title: Median SCAVENGE scores by cell type
-  description: Summarizes graph-propagated trait relevance scores across cell groups and GWAS traits.
-  target: median_by_cell_types_scaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x
-  asset: null
-  status: pending
-
-- section: Genetic enrichment module
-  subsection: Single-nucleus chromVAR+SCAVENGE
-  title: GWAS-specific UMAPs
-  description: Projects one graph-propagated trait relevance score across the WNN single-nucleus embedding.
-  target: TRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.PBMC_human_6x
-  asset: gallery_assets/genetic_enrichment/single_nucleus_with_scavenge/TRS_UMAP.png
-  status: available
+source:
+  aggregation: mixed_human_31x
+  refreshed: '2026-09-23'
+items:
+- checkpoint: 1_pre-aggregation-QC
+  group: Main pipeline
+  section: 1. Pre-aggregation QC
+  target: nuclei_per_donor_id_bars.1_pre_aggregation_QC
+  description: Plot pre-QC assigned singlet nuclei per donor, excluding doublets and unassigned barcodes.
+  source_file: 1_pre_aggregation_QC/nuclei_per_donor_id_bars.png
+  asset: gallery_assets/1_pre-aggregation-QC/nuclei_per_donor_id_bars.1_pre_aggregation_QC.webp
+- checkpoint: 1_pre-aggregation-QC
+  group: Main pipeline
+  section: 1. Pre-aggregation QC
+  target: demultiplexing_assignment_bars.1_pre_aggregation_QC
+  description: Plot 100-percent stacked assignment bars per GEM well, with donor labels inside singlet segments.
+  source_file: 1_pre_aggregation_QC/demultiplexing_assignment_bars.png
+  asset: gallery_assets/1_pre-aggregation-QC/demultiplexing_assignment_bars.1_pre_aggregation_QC.webp
+- checkpoint: 1_pre-aggregation-QC
+  group: Main pipeline
+  section: 1. Pre-aggregation QC
+  target: per_aggregation_GEM_well_QC_comparisons.1_pre_aggregation_QC
+  description: Compare pre-filter QC distributions and configured cutoffs across GEM wells in this aggregation.
+  source_file: 1_pre_aggregation_QC/per_aggregation_GEM_well_QC_comparisons/01_nCount_RNA.png
+  asset: gallery_assets/1_pre-aggregation-QC/per_aggregation_GEM_well_QC_comparisons.1_pre_aggregation_QC.webp
+- checkpoint: 1_pre-aggregation-QC
+  group: Main pipeline
+  section: 1. Pre-aggregation QC
+  target: aggregation_excluded_barcodes_by_type_upset.1_pre_aggregation_QC
+  description: Plot an UpSet plot of aggregation-level QC exclusion overlaps across all GEM wells and save to file.
+  source_file: 1_pre_aggregation_QC/aggregation_excluded_barcodes_by_type_upset.png
+  asset: gallery_assets/1_pre-aggregation-QC/aggregation_excluded_barcodes_by_type_upset.1_pre_aggregation_QC.webp
+- checkpoint: 1_pre-aggregation-QC
+  group: Main pipeline
+  section: 1. Pre-aggregation QC
+  target: aggregation_excluded_cellranger_only_barcodes_by_type_upset.1_pre_aggregation_QC
+  description: Plot an UpSet plot of aggregation-level CellRanger-only QC exclusion overlaps across all GEM wells and save to file.
+  source_file: 1_pre_aggregation_QC/aggregation_excluded_cellranger_only_barcodes_by_type_upset.png
+  asset: gallery_assets/1_pre-aggregation-QC/aggregation_excluded_cellranger_only_barcodes_by_type_upset.1_pre_aggregation_QC.webp
+- checkpoint: 1_pre-aggregation-QC
+  group: Main pipeline
+  section: 1. Pre-aggregation QC
+  target: cell_retention_flow_plot.1_pre_aggregation_QC
+  description: Plot cumulative nuclei retention through per-well QC.
+  source_file: 1_pre_aggregation_QC/cell_retention_flow_plot.png
+  asset: gallery_assets/1_pre-aggregation-QC/cell_retention_flow_plot.1_pre_aggregation_QC.webp
+- checkpoint: 2_GEX-PCA-QC
+  group: Main pipeline
+  section: 2. GEX dimension reduction
+  target: variable_feature_plot.2_GEX_PCA_QC
+  description: Plot residual variance of top variable genes selected from SCTransform residuals.
+  source_file: 2_GEX_PCA_QC/variable_feature_plot.png
+  asset: gallery_assets/2_GEX-PCA-QC/variable_feature_plot.2_GEX_PCA_QC.webp
+- checkpoint: 2_GEX-PCA-QC
+  group: Main pipeline
+  section: 2. GEX dimension reduction
+  target: PCA_singular_values_elbow_plot.2_GEX_PCA_QC
+  description: Elbow plot of native GEX PCA singular values.
+  source_file: 2_GEX_PCA_QC/PCA_singular_values_elbow_plot.png
+  asset: gallery_assets/2_GEX-PCA-QC/PCA_singular_values_elbow_plot.2_GEX_PCA_QC.webp
+- checkpoint: 2_GEX-PCA-QC
+  group: Main pipeline
+  section: 2. GEX dimension reduction
+  target: VizDimLoadings_plots.2_GEX_PCA_QC
+  description: Plot top gene loadings for each GEX PCA dimension.
+  source_file: 2_GEX_PCA_QC/VizDimLoadings_plots/01_PCA_1.png
+  asset: gallery_assets/2_GEX-PCA-QC/VizDimLoadings_plots.2_GEX_PCA_QC.webp
+- checkpoint: 2_GEX-PCA-QC
+  group: Main pipeline
+  section: 2. GEX dimension reduction
+  target: PCA_embedding_sdev_plot.2_GEX_PCA_QC
+  description: Non-Harmony and Harmony GEX PCA embedding coordinate SD plot.
+  source_file: 2_GEX_PCA_QC/PCA_embedding_sdev_plot.png
+  asset: gallery_assets/2_GEX-PCA-QC/PCA_embedding_sdev_plot.2_GEX_PCA_QC.webp
+- checkpoint: 2_GEX-PCA-QC
+  group: Main pipeline
+  section: 2. GEX dimension reduction
+  target: PCA_metadata_association_barplots.2_GEX_PCA_QC
+  description: Non-Harmony and Harmony GEX PCA metadata association bar plots.
+  source_file: 2_GEX_PCA_QC/PCA_metadata_association_barplots.png
+  asset: gallery_assets/2_GEX-PCA-QC/PCA_metadata_association_barplots.2_GEX_PCA_QC.webp
+- checkpoint: 3_GEX-QC
+  group: Main pipeline
+  section: 3. GEX clusters and cell types
+  target: cluster_UCell_advantage_plots.3_GEX_QC
+  description: Faceted GEX adjusted-score bars with matched background and the minimum-advantage competition cutoff.
+  source_file: 3_GEX_QC/cluster_UCell_advantage_plots/01_page_01.png
+  asset: gallery_assets/3_GEX-QC/cluster_UCell_advantage_plots.3_GEX_QC.webp
+- checkpoint: 3_GEX-QC
+  group: Main pipeline
+  section: 3. GEX clusters and cell types
+  target: module_scores_by_cluster_dot_plot.3_GEX_QC
+  description: Cached pre-doublet-filtering cluster-adjusted UCell evidence with distance-ordered marker sets and matching row order.
+  source_file: 3_GEX_QC/module_scores_by_cluster_dot_plot.png
+  asset: gallery_assets/3_GEX-QC/module_scores_by_cluster_dot_plot.3_GEX_QC.webp
+- checkpoint: 3_GEX-QC
+  group: Main pipeline
+  section: 3. GEX clusters and cell types
+  target: markers_by_cell_type_dot_plot.3_GEX_QC
+  description: Pre-doublet-filtering marker expression per assigned GEX cell type.
+  source_file: 3_GEX_QC/markers_by_cell_type_dot_plot.png
+  asset: gallery_assets/3_GEX-QC/markers_by_cell_type_dot_plot.3_GEX_QC.webp
+- checkpoint: 3_GEX-QC
+  group: Main pipeline
+  section: 3. GEX clusters and cell types
+  target: module_scores_by_cell_type_dot_plot.3_GEX_QC
+  description: Pre-doublet-filtering adjusted UCell evidence averaged per GEX cell type, with distance-ordered marker sets.
+  source_file: 3_GEX_QC/module_scores_by_cell_type_dot_plot.png
+  asset: gallery_assets/3_GEX-QC/module_scores_by_cell_type_dot_plot.3_GEX_QC.webp
+- checkpoint: 3_GEX-QC
+  group: Main pipeline
+  section: 3. GEX clusters and cell types
+  target: markers_by_cluster_dot_plot.3_GEX_QC
+  description: Pre-doublet-filtering marker expression per named GEX cluster.
+  source_file: 3_GEX_QC/markers_by_cluster_dot_plot.png
+  asset: gallery_assets/3_GEX-QC/markers_by_cluster_dot_plot.3_GEX_QC.webp
+- checkpoint: 3_GEX-QC
+  group: Main pipeline
+  section: 3. GEX clusters and cell types
+  target: cross.UMAPs.3_GEX_QC
+  description: Compute GEX UMAPs across a sweep of PC counts and neighbour counts.
+  source_file: 3_GEX_QC/UMAPs/cross/18_10.png
+  asset: gallery_assets/3_GEX-QC/cross.UMAPs.3_GEX_QC.webp
+- checkpoint: 3_GEX-QC
+  group: Main pipeline
+  section: 3. GEX clusters and cell types
+  target: categorical_by_cluster_bars_plots.3_GEX_QC
+  description: Bar plots of categorical metadata composition per SNN cluster before doublet filtering.
+  source_file: 3_GEX_QC/categorical_by_cluster_bars_plots/02_PCA_harmony_SNN_cluster_cell_type.png
+  asset: gallery_assets/3_GEX-QC/categorical_by_cluster_bars_plots.3_GEX_QC.webp
+- checkpoint: 3_GEX-QC
+  group: Main pipeline
+  section: 3. GEX clusters and cell types
+  target: continuous_by_cluster_violin_plot.3_GEX_QC
+  description: Violin plots of continuous QC and cell-cycle features per SNN cluster before doublet filtering.
+  source_file: 3_GEX_QC/continuous_by_cluster_violin_plot/01_nCount_RNA.png
+  asset: gallery_assets/3_GEX-QC/continuous_by_cluster_violin_plot.3_GEX_QC.webp
+- checkpoint: 3_GEX-QC
+  group: Main pipeline
+  section: 3. GEX clusters and cell types
+  target: categorical_by_cell_type_bars_plots.3_GEX_QC
+  description: Bar plots of categorical metadata composition per cell type before doublet filtering.
+  source_file: 3_GEX_QC/categorical_by_cell_type_bars_plots/02_PCA_harmony_SNN_cluster_cell_type.png
+  asset: gallery_assets/3_GEX-QC/categorical_by_cell_type_bars_plots.3_GEX_QC.webp
+- checkpoint: 3_GEX-QC
+  group: Main pipeline
+  section: 3. GEX clusters and cell types
+  target: continuous_by_cell_type_violin_plot.3_GEX_QC
+  description: Violin plots of continuous QC and cell-cycle features per cell type before doublet filtering.
+  source_file: 3_GEX_QC/continuous_by_cell_type_violin_plot/01_nCount_RNA.png
+  asset: gallery_assets/3_GEX-QC/continuous_by_cell_type_violin_plot.3_GEX_QC.webp
+- checkpoint: 3_GEX-QC
+  group: Main pipeline
+  section: 3. GEX clusters and cell types
+  target: cell_type_marker_volcano_plots.3_GEX_QC
+  description: Facetted volcano plot of BPCells marker genes per GEX cell type.
+  source_file: 3_GEX_QC/cell_type_marker_volcano_plots.png
+  asset: gallery_assets/3_GEX-QC/cell_type_marker_volcano_plots.3_GEX_QC.webp
+- checkpoint: 3_GEX-QC
+  group: Main pipeline
+  section: 3. GEX clusters and cell types
+  target: harmony.categorical.UMAPs.3_GEX_QC
+  description: UMAPs colored by categorical metadata variables.
+  source_file: 3_GEX_QC/UMAPs/categorical/harmony/PCA_harmony_SNN_cluster_cell_type.png
+  asset: gallery_assets/3_GEX-QC/harmony.categorical.UMAPs.3_GEX_QC.webp
+- checkpoint: 3_GEX-QC
+  group: Main pipeline
+  section: 3. GEX clusters and cell types
+  target: non_harmony.continuous.UMAPs.3_GEX_QC
+  description: UMAPs colored by continuous features on the uncorrected PCA embedding.
+  source_file: 3_GEX_QC/UMAPs/continuous/non_harmony/log10_nCount_RNA.png
+  asset: gallery_assets/3_GEX-QC/non_harmony.continuous.UMAPs.3_GEX_QC.webp
+- checkpoint: 3_GEX-QC
+  group: Main pipeline
+  section: 3. GEX clusters and cell types
+  target: harmony.continuous.UMAPs.3_GEX_QC
+  description: UMAPs colored by continuous QC and gene expression features.
+  source_file: 3_GEX_QC/UMAPs/continuous/harmony/log10_nCount_RNA.png
+  asset: gallery_assets/3_GEX-QC/harmony.continuous.UMAPs.3_GEX_QC.webp
+- checkpoint: 3_GEX-QC
+  group: Main pipeline
+  section: 3. GEX clusters and cell types
+  target: non_harmony.categorical.UMAPs.3_GEX_QC
+  description: UMAPs colored by categorical metadata variables on the uncorrected PCA embedding.
+  source_file: 3_GEX_QC/UMAPs/categorical/non_harmony/PCA_harmony_SNN_cluster_cell_type.png
+  asset: gallery_assets/3_GEX-QC/non_harmony.categorical.UMAPs.3_GEX_QC.webp
+- checkpoint: 3_GEX-QC
+  group: Main pipeline
+  section: 3. GEX clusters and cell types
+  target: cell_retention_flow_plot.3_GEX_QC
+  description: Plot cumulative nuclei retention through GEX QC.
+  source_file: 3_GEX_QC/cell_retention_flow_plot.png
+  asset: gallery_assets/3_GEX-QC/cell_retention_flow_plot.3_GEX_QC.webp
+- checkpoint: 3_GEX-QC
+  group: Main pipeline
+  section: 3. GEX clusters and cell types
+  target: cluster_marker_volcano_plots.3_GEX_QC
+  description: One cluster-marker volcano file per multicluster cell type; two clusters share one directed comparison.
+  source_file: 3_GEX_QC/cluster_marker_volcano_plots/Cardiomyocyte.png
+  asset: gallery_assets/3_GEX-QC/cluster_marker_volcano_plots.3_GEX_QC.webp
+- checkpoint: 4_peak-QC
+  group: Main pipeline
+  section: 4. Peak QC
+  target: peaks_similarity_tiles_plot.4_peak_QC
+  description: Plot pairwise peak-set similarity matrix across clusters.
+  source_file: 4_peak_QC/peaks_similarity_tiles_plot.png
+  asset: gallery_assets/4_peak-QC/peaks_similarity_tiles_plot.4_peak_QC.webp
+- checkpoint: 4_peak-QC
+  group: Main pipeline
+  section: 4. Peak QC
+  target: peaks_QC_violins_plot.4_peak_QC
+  description: Violin plots of peak-based ATAC QC metrics per GEM well.
+  source_file: 4_peak_QC/peaks_QC_violins_plot/01_nCount_ATAC.png
+  asset: gallery_assets/4_peak-QC/peaks_QC_violins_plot.4_peak_QC.webp
+- checkpoint: 5_pre-LSI-QC
+  group: Main pipeline
+  section: 5. ATAC filtering
+  target: QC_excluded_upset_plot.5_pre_LSI_QC
+  description: UpSet plot of overlapping ATAC QC exclusion reasons.
+  source_file: 5_pre_LSI_QC/QC_excluded_upset_plot.png
+  asset: gallery_assets/5_pre-LSI-QC/QC_excluded_upset_plot.5_pre_LSI_QC.webp
+- checkpoint: 5_pre-LSI-QC
+  group: Main pipeline
+  section: 5. ATAC filtering
+  target: cell_retention_flow_plot.5_pre_LSI_QC
+  description: Plot cumulative nuclei retention through peak QC.
+  source_file: 5_pre_LSI_QC/cell_retention_flow_plot.png
+  asset: gallery_assets/5_pre-LSI-QC/cell_retention_flow_plot.5_pre_LSI_QC.webp
+- checkpoint: 6_ATAC-LSI-QC
+  group: Main pipeline
+  section: 6. ATAC dimension reduction
+  target: LSI_singular_values_elbow_plot.6_ATAC_LSI_QC
+  description: Elbow plot of native ATAC LSI singular values.
+  source_file: 6_ATAC_LSI_QC/LSI_singular_values_elbow_plot.png
+  asset: gallery_assets/6_ATAC-LSI-QC/LSI_singular_values_elbow_plot.6_ATAC_LSI_QC.webp
+- checkpoint: 6_ATAC-LSI-QC
+  group: Main pipeline
+  section: 6. ATAC dimension reduction
+  target: VizDimLoadings_plots.6_ATAC_LSI_QC
+  description: Plot top feature loadings for each LSI dimension.
+  source_file: 6_ATAC_LSI_QC/VizDimLoadings_plots/01_LSI_1.png
+  asset: gallery_assets/6_ATAC-LSI-QC/VizDimLoadings_plots.6_ATAC_LSI_QC.webp
+- checkpoint: 6_ATAC-LSI-QC
+  group: Main pipeline
+  section: 6. ATAC dimension reduction
+  target: LSI_metadata_association_barplots.6_ATAC_LSI_QC
+  description: Non-Harmony and Harmony ATAC LSI metadata association bar plots.
+  source_file: 6_ATAC_LSI_QC/LSI_metadata_association_barplots.png
+  asset: gallery_assets/6_ATAC-LSI-QC/LSI_metadata_association_barplots.6_ATAC_LSI_QC.webp
+- checkpoint: 6_ATAC-LSI-QC
+  group: Main pipeline
+  section: 6. ATAC dimension reduction
+  target: LSI_embedding_sdev_plot.6_ATAC_LSI_QC
+  description: Non-Harmony and Harmony ATAC LSI embedding coordinate SD plot.
+  source_file: 6_ATAC_LSI_QC/LSI_embedding_sdev_plot.png
+  asset: gallery_assets/6_ATAC-LSI-QC/LSI_embedding_sdev_plot.6_ATAC_LSI_QC.webp
+- checkpoint: 7_ATAC-QC
+  group: Main pipeline
+  section: 7. ATAC clusters and motifs
+  target: cluster_UCell_advantage_plots.7_ATAC_QC
+  description: Faceted ATAC cluster adjusted GEX scores with matched background and the competition cutoff.
+  source_file: 7_ATAC_QC/cluster_UCell_advantage_plots/01_page_01.png
+  asset: gallery_assets/7_ATAC-QC/cluster_UCell_advantage_plots.7_ATAC_QC.webp
+- checkpoint: 7_ATAC-QC
+  group: Main pipeline
+  section: 7. ATAC clusters and motifs
+  target: coverage_tracks_plots.7_ATAC_QC
+  description: Plot ATAC coverage tracks at marker gene and DA peak loci.
+  source_file: 7_ATAC_QC/coverage_tracks_plots/top_1_chr1-16644457-16644956.png
+  asset: gallery_assets/7_ATAC-QC/coverage_tracks_plots.7_ATAC_QC.webp
+- checkpoint: 7_ATAC-QC
+  group: Main pipeline
+  section: 7. ATAC clusters and motifs
+  target: cross.UMAPs.7_ATAC_QC
+  description: Compute ATAC UMAPs across a sweep of LSI dimension counts and neighbour counts.
+  source_file: 7_ATAC_QC/UMAPs/cross/17_10.png
+  asset: gallery_assets/7_ATAC-QC/cross.UMAPs.7_ATAC_QC.webp
+- checkpoint: 7_ATAC-QC
+  group: Main pipeline
+  section: 7. ATAC clusters and motifs
+  target: confusion_matrices_plots.7_ATAC_QC
+  description: Paired RNA versus ATAC cluster and cell-type confusion matrices before WNN integration.
+  source_file: 7_ATAC_QC/confusion_matrices_plots.png
+  asset: gallery_assets/7_ATAC-QC/confusion_matrices_plots.7_ATAC_QC.webp
+- checkpoint: 7_ATAC-QC
+  group: Main pipeline
+  section: 7. ATAC clusters and motifs
+  target: continuous_by_cell_type_violin_plot.7_ATAC_QC
+  description: Violin plots of continuous QC and cell-cycle features per cell type before ATAC doublet filtering.
+  source_file: 7_ATAC_QC/continuous_by_cell_type_violin_plot/01_nCount_RNA.png
+  asset: gallery_assets/7_ATAC-QC/continuous_by_cell_type_violin_plot.7_ATAC_QC.webp
+- checkpoint: 7_ATAC-QC
+  group: Main pipeline
+  section: 7. ATAC clusters and motifs
+  target: categorical_by_cluster_bars_plots.7_ATAC_QC
+  description: Bar plots of categorical metadata composition per SNN cluster before ATAC doublet filtering.
+  source_file: 7_ATAC_QC/categorical_by_cluster_bars_plots/02_LSI_harmony_SNN_cluster_cell_type.png
+  asset: gallery_assets/7_ATAC-QC/categorical_by_cluster_bars_plots.7_ATAC_QC.webp
+- checkpoint: 7_ATAC-QC
+  group: Main pipeline
+  section: 7. ATAC clusters and motifs
+  target: continuous_by_cluster_violin_plot.7_ATAC_QC
+  description: Violin plots of continuous QC and cell-cycle features per SNN cluster before ATAC doublet filtering.
+  source_file: 7_ATAC_QC/continuous_by_cluster_violin_plot/01_nCount_RNA.png
+  asset: gallery_assets/7_ATAC-QC/continuous_by_cluster_violin_plot.7_ATAC_QC.webp
+- checkpoint: 7_ATAC-QC
+  group: Main pipeline
+  section: 7. ATAC clusters and motifs
+  target: categorical_by_cell_type_bars_plots.7_ATAC_QC
+  description: Bar plots of categorical metadata composition per cell type before ATAC doublet filtering.
+  source_file: 7_ATAC_QC/categorical_by_cell_type_bars_plots/02_LSI_harmony_SNN_cluster_cell_type.png
+  asset: gallery_assets/7_ATAC-QC/categorical_by_cell_type_bars_plots.7_ATAC_QC.webp
+- checkpoint: 7_ATAC-QC
+  group: Main pipeline
+  section: 7. ATAC clusters and motifs
+  target: categorical.UMAPs.7_ATAC_QC
+  description: UMAPs colored by categorical metadata variables.
+  source_file: 7_ATAC_QC/UMAPs/categorical/LSI_harmony_SNN_cluster_cell_type.png
+  asset: gallery_assets/7_ATAC-QC/categorical.UMAPs.7_ATAC_QC.webp
+- checkpoint: 7_ATAC-QC
+  group: Main pipeline
+  section: 7. ATAC clusters and motifs
+  target: cell_retention_flow_plot.7_ATAC_QC
+  description: Plot cumulative nuclei retention through ATAC QC.
+  source_file: 7_ATAC_QC/cell_retention_flow_plot.png
+  asset: gallery_assets/7_ATAC-QC/cell_retention_flow_plot.7_ATAC_QC.webp
+- checkpoint: 7_ATAC-QC
+  group: Main pipeline
+  section: 7. ATAC clusters and motifs
+  target: marker_gene_activity_dot_plot.7_ATAC_QC
+  description: Dot plot of marker gene activity scores per ATAC cell type.
+  source_file: 7_ATAC_QC/marker_gene_activity_dot_plot.png
+  asset: gallery_assets/7_ATAC-QC/marker_gene_activity_dot_plot.7_ATAC_QC.webp
+- checkpoint: 7_ATAC-QC
+  group: Main pipeline
+  section: 7. ATAC clusters and motifs
+  target: motif_family_accessibility_by_GEX_cluster_heatmap.7_ATAC_QC
+  description: All motif families by GEX_cluster with independently clustered rows and columns and GEX-derived labels.
+  source_file: 7_ATAC_QC/motif_family_accessibility_by_GEX_cluster_heatmap.png
+  asset: gallery_assets/7_ATAC-QC/motif_family_accessibility_by_GEX_cluster_heatmap.7_ATAC_QC.webp
+- checkpoint: 7_ATAC-QC
+  group: Main pipeline
+  section: 7. ATAC clusters and motifs
+  target: motif_family_accessibility_by_ATAC_cluster_heatmap.7_ATAC_QC
+  description: All motif families by ATAC_cluster with independently clustered rows and columns and GEX-derived labels.
+  source_file: 7_ATAC_QC/motif_family_accessibility_by_ATAC_cluster_heatmap.png
+  asset: gallery_assets/7_ATAC-QC/motif_family_accessibility_by_ATAC_cluster_heatmap.7_ATAC_QC.webp
+- checkpoint: 7_ATAC-QC
+  group: Main pipeline
+  section: 7. ATAC clusters and motifs
+  target: motif_family_accessibility_by_GEX_cell_type_heatmap.7_ATAC_QC
+  description: All motif families by GEX_cell_type with independently clustered rows and columns and GEX-derived labels.
+  source_file: 7_ATAC_QC/motif_family_accessibility_by_GEX_cell_type_heatmap.png
+  asset: gallery_assets/7_ATAC-QC/motif_family_accessibility_by_GEX_cell_type_heatmap.7_ATAC_QC.webp
+- checkpoint: 7_ATAC-QC
+  group: Main pipeline
+  section: 7. ATAC clusters and motifs
+  target: continuous.UMAPs.7_ATAC_QC
+  description: UMAPs colored by continuous motif-family accessibility and peak accessibility metrics.
+  source_file: 7_ATAC_QC/UMAPs/continuous/log10_nCount_RNA.png
+  asset: gallery_assets/7_ATAC-QC/continuous.UMAPs.7_ATAC_QC.webp
+- checkpoint: 7_ATAC-QC
+  group: Main pipeline
+  section: 7. ATAC clusters and motifs
+  target: motif_family_accessibility_marker_volcano_plots.7_ATAC_QC
+  description: Facetted volcano plot of marker motif-family accessibility per ATAC cell type.
+  source_file: 7_ATAC_QC/motif_family_accessibility_marker_volcano_plots.png
+  asset: gallery_assets/7_ATAC-QC/motif_family_accessibility_marker_volcano_plots.7_ATAC_QC.webp
+- checkpoint: 8_multimodal-QC
+  group: Main pipeline
+  section: 8. WNN integration
+  target: cluster_UCell_advantage_plots.8_multimodal_QC
+  description: Faceted WNN adjusted GEX scores with matched background and the competition cutoff.
+  source_file: 8_multimodal_QC/cluster_UCell_advantage_plots/01_page_01.png
+  asset: gallery_assets/8_multimodal-QC/cluster_UCell_advantage_plots.8_multimodal_QC.webp
+- checkpoint: 8_multimodal-QC
+  group: Main pipeline
+  section: 8. WNN integration
+  target: cluster_named_dim_tri_plot.UMAPs.8_multimodal_QC
+  description: 3×3 grid of UMAPs with cell-type-named cluster-level identities.
+  source_file: 8_multimodal_QC/UMAPs/cluster_named_dim_tri_plot.png
+  asset: gallery_assets/8_multimodal-QC/cluster_named_dim_tri_plot.UMAPs.8_multimodal_QC.webp
+- checkpoint: 8_multimodal-QC
+  group: Main pipeline
+  section: 8. WNN integration
+  target: module_scores_by_cluster_dot_plot.8_multimodal_QC
+  description: Cached adjusted GEX UCell evidence per WNN cluster, with distance-ordered marker sets.
+  source_file: 8_multimodal_QC/module_scores_by_cluster_dot_plot.png
+  asset: gallery_assets/8_multimodal-QC/module_scores_by_cluster_dot_plot.8_multimodal_QC.webp
+- checkpoint: 8_multimodal-QC
+  group: Main pipeline
+  section: 8. WNN integration
+  target: cross.UMAPs.8_multimodal_QC
+  description: Compute WNN UMAPs across a sweep of nNN counts.
+  source_file: 8_multimodal_QC/UMAPs/cross/10.png
+  asset: gallery_assets/8_multimodal-QC/cross.UMAPs.8_multimodal_QC.webp
+- checkpoint: 8_multimodal-QC
+  group: Main pipeline
+  section: 8. WNN integration
+  target: confusion_matrices_plots.8_multimodal_QC
+  description: Paired RNA versus WNN and ATAC versus WNN confusion matrices for SNN clusters and cell types.
+  source_file: 8_multimodal_QC/confusion_matrices_plots/01_RNA_vs_WNN.png
+  asset: gallery_assets/8_multimodal-QC/confusion_matrices_plots.8_multimodal_QC.webp
+- checkpoint: 8_multimodal-QC
+  group: Main pipeline
+  section: 8. WNN integration
+  target: markers_by_cluster_dot_plot.8_multimodal_QC
+  description: GEX marker expression per named WNN cluster, with nuclei counts and doublet evidence for retained WNN nuclei.
+  source_file: 8_multimodal_QC/markers_by_cluster_dot_plot.png
+  asset: gallery_assets/8_multimodal-QC/markers_by_cluster_dot_plot.8_multimodal_QC.webp
+- checkpoint: 8_multimodal-QC
+  group: Main pipeline
+  section: 8. WNN integration
+  target: cluster_cell_type_dim_tri_plot.UMAPs.8_multimodal_QC
+  description: 3×3 grid of UMAPs with cell-type identities.
+  source_file: 8_multimodal_QC/UMAPs/cluster_cell_type_dim_tri_plot.png
+  asset: gallery_assets/8_multimodal-QC/cluster_cell_type_dim_tri_plot.UMAPs.8_multimodal_QC.webp
+- checkpoint: 8_multimodal-QC
+  group: Main pipeline
+  section: 8. WNN integration
+  target: categorical.UMAPs.8_multimodal_QC
+  description: UMAPs colored by categorical metadata variables on the WNN embedding.
+  source_file: 8_multimodal_QC/UMAPs/categorical/WNN_harmony_SNN_cluster_cell_type.png
+  asset: gallery_assets/8_multimodal-QC/categorical.UMAPs.8_multimodal_QC.webp
+- checkpoint: 8_multimodal-QC
+  group: Main pipeline
+  section: 8. WNN integration
+  target: categorical_by_cell_type_bars_plots.8_multimodal_QC
+  description: Bar plots of categorical metadata composition per cell type among all WNN nuclei.
+  source_file: 8_multimodal_QC/categorical_by_cell_type_bars_plots/02_WNN_harmony_SNN_cluster_cell_type.png
+  asset: gallery_assets/8_multimodal-QC/categorical_by_cell_type_bars_plots.8_multimodal_QC.webp
+- checkpoint: 8_multimodal-QC
+  group: Main pipeline
+  section: 8. WNN integration
+  target: continuous.UMAPs.8_multimodal_QC
+  description: UMAPs colored by continuous QC and gene expression features on the WNN embedding.
+  source_file: 8_multimodal_QC/UMAPs/continuous/log10_nCount_RNA.png
+  asset: gallery_assets/8_multimodal-QC/continuous.UMAPs.8_multimodal_QC.webp
+- checkpoint: 8_multimodal-QC
+  group: Main pipeline
+  section: 8. WNN integration
+  target: continuous_by_cell_type_violin_plot.8_multimodal_QC
+  description: Violin plots of continuous QC and cell-cycle features per cell type among all WNN nuclei.
+  source_file: 8_multimodal_QC/continuous_by_cell_type_violin_plot/01_nCount_RNA.png
+  asset: gallery_assets/8_multimodal-QC/continuous_by_cell_type_violin_plot.8_multimodal_QC.webp
+- checkpoint: 8_multimodal-QC
+  group: Main pipeline
+  section: 8. WNN integration
+  target: categorical_by_cluster_bars_plots.8_multimodal_QC
+  description: Bar plots of categorical metadata composition per SNN cluster among all WNN nuclei.
+  source_file: 8_multimodal_QC/categorical_by_cluster_bars_plots/02_WNN_harmony_SNN_cluster_cell_type.png
+  asset: gallery_assets/8_multimodal-QC/categorical_by_cluster_bars_plots.8_multimodal_QC.webp
+- checkpoint: 8_multimodal-QC
+  group: Main pipeline
+  section: 8. WNN integration
+  target: continuous_by_cluster_violin_plot.8_multimodal_QC
+  description: Violin plots of continuous QC and cell-cycle features per SNN cluster among all WNN nuclei.
+  source_file: 8_multimodal_QC/continuous_by_cluster_violin_plot/01_nCount_RNA.png
+  asset: gallery_assets/8_multimodal-QC/continuous_by_cluster_violin_plot.8_multimodal_QC.webp
+- checkpoint: 8_multimodal-QC
+  group: Main pipeline
+  section: 8. WNN integration
+  target: cell_retention_flow_plot.8_multimodal_QC
+  description: Plot cumulative nuclei retention through final WNN QC.
+  source_file: 8_multimodal_QC/cell_retention_flow_plot.png
+  asset: gallery_assets/8_multimodal-QC/cell_retention_flow_plot.8_multimodal_QC.webp
+- checkpoint: 8_multimodal-QC
+  group: Main pipeline
+  section: 8. WNN integration
+  target: WNN_weight_metadata_associations_plot.8_multimodal_QC
+  description: Plot continuous and categorical WNN-weight associations pooled and within named WNN clusters.
+  source_file: 8_multimodal_QC/WNN_weight_metadata_associations_plot/01_continuous.png
+  asset: gallery_assets/8_multimodal-QC/WNN_weight_metadata_associations_plot.8_multimodal_QC.webp
+- checkpoint: differential_analyses
+  group: Differential analyses
+  section: null
+  target: model_plots.cell_type_composition.differential_analyses
+  description: Plot observed donor proportions and abundance contrasts per model.
+  source_file: differential_analyses/cell_type_composition/model_plots_left_ventricle_sex/01_sexMale.png
+  asset: gallery_assets/differential_analyses/model_plots.cell_type_composition.differential_analyses.webp
+- checkpoint: differential_analyses
+  group: Differential analyses
+  section: null
+  target: pseudobulk_depth_distribution_plot.differential_analyses
+  description: Plot depth and detected features per cluster-donor sample.
+  source_file: differential_analyses/pseudobulk_depth_distribution_plot.png
+  asset: gallery_assets/differential_analyses/pseudobulk_depth_distribution_plot.differential_analyses.webp
+- checkpoint: differential_analyses
+  group: Differential analyses
+  section: null
+  target: p_value_distribution_plot.transcription_factor_activity.differential_analyses
+  description: Save P-value density plots across all pseudobulk differential models.
+  source_file: differential_analyses/transcription_factor_activity/p_value_distribution_plot.png
+  asset: gallery_assets/differential_analyses/p_value_distribution_plot.transcription_factor_activity.differential_analyses.webp
+- checkpoint: differential_analyses
+  group: Differential analyses
+  section: null
+  target: p_value_distribution_plot.chromatin_accessibility.differential_analyses
+  description: Save P-value density plots across all pseudobulk differential models.
+  source_file: differential_analyses/chromatin_accessibility/p_value_distribution_plot.png
+  asset: gallery_assets/differential_analyses/p_value_distribution_plot.chromatin_accessibility.differential_analyses.webp
+- checkpoint: differential_analyses
+  group: Differential analyses
+  section: null
+  target: enrichment_plots.Reactome.gene_set_enrichment.gene_expression.differential_analyses
+  description: Save competitive cameraPR plots per model and contrast to file.
+  source_file: differential_analyses/gene_expression/gene_set_enrichment/Reactome/enrichment_plots/cardiomyocyte_sex/01_male_vs_female.png
+  asset: gallery_assets/differential_analyses/enrichment_plots.Reactome.gene_set_enrichment.gene_expression.differential_analyses.webp
+- checkpoint: differential_analyses
+  group: Differential analyses
+  section: null
+  target: p_value_distribution_plot.gene_expression.differential_analyses
+  description: Save P-value density plots across all pseudobulk differential models.
+  source_file: differential_analyses/gene_expression/p_value_distribution_plot.png
+  asset: gallery_assets/differential_analyses/p_value_distribution_plot.gene_expression.differential_analyses.webp
+- checkpoint: differential_analyses
+  group: Differential analyses
+  section: null
+  target: enrichment_plots.Hallmark.gene_set_enrichment.gene_expression.differential_analyses
+  description: Save competitive cameraPR plots per model and contrast to file.
+  source_file: differential_analyses/gene_expression/gene_set_enrichment/Hallmark/enrichment_plots/cardiomyocyte_sex/01_male_vs_female.png
+  asset: gallery_assets/differential_analyses/enrichment_plots.Hallmark.gene_set_enrichment.gene_expression.differential_analyses.webp
+- checkpoint: differential_analyses
+  group: Differential analyses
+  section: null
+  target: p_value_distribution_plot.motif_family_accessibility.differential_analyses
+  description: Save P-value density plots across all pseudobulk differential models.
+  source_file: differential_analyses/motif_family_accessibility/p_value_distribution_plot.png
+  asset: gallery_assets/differential_analyses/p_value_distribution_plot.motif_family_accessibility.differential_analyses.webp
+- checkpoint: differential_analyses
+  group: Differential analyses
+  section: null
+  target: significant_elements_plot.transcription_factor_activity.differential_analyses
+  description: Plot signed counts of FDR-significant pseudobulk differential elements per model and contrast.
+  source_file: differential_analyses/transcription_factor_activity/significant_elements_plot.png
+  asset: gallery_assets/differential_analyses/significant_elements_plot.transcription_factor_activity.differential_analyses.webp
+- checkpoint: differential_analyses
+  group: Differential analyses
+  section: null
+  target: significant_elements_plot.chromatin_accessibility.differential_analyses
+  description: Plot signed counts of FDR-significant pseudobulk differential elements per model and contrast.
+  source_file: differential_analyses/chromatin_accessibility/significant_elements_plot.png
+  asset: gallery_assets/differential_analyses/significant_elements_plot.chromatin_accessibility.differential_analyses.webp
+- checkpoint: differential_analyses
+  group: Differential analyses
+  section: null
+  target: significant_elements_plot.gene_expression.differential_analyses
+  description: Plot signed counts of FDR-significant pseudobulk differential elements per model and contrast.
+  source_file: differential_analyses/gene_expression/significant_elements_plot.png
+  asset: gallery_assets/differential_analyses/significant_elements_plot.gene_expression.differential_analyses.webp
+- checkpoint: differential_analyses
+  group: Differential analyses
+  section: null
+  target: significant_elements_plot.motif_family_accessibility.differential_analyses
+  description: Plot signed counts of FDR-significant pseudobulk differential elements per model and contrast.
+  source_file: differential_analyses/motif_family_accessibility/significant_elements_plot.png
+  asset: gallery_assets/differential_analyses/significant_elements_plot.motif_family_accessibility.differential_analyses.webp
+- checkpoint: differential_analyses
+  group: Differential analyses
+  section: null
+  target: volcano_plots.transcription_factor_activity.differential_analyses
+  description: Plot volcano plots of pseudobulk differential results per contrast.
+  source_file: differential_analyses/transcription_factor_activity/volcano_plots/cardiomyocyte_sex/01_male_vs_female.png
+  asset: gallery_assets/differential_analyses/volcano_plots.transcription_factor_activity.differential_analyses.webp
+- checkpoint: differential_analyses
+  group: Differential analyses
+  section: null
+  target: volcano_plots.chromatin_accessibility.differential_analyses
+  description: Plot volcano plots of pseudobulk differential results per contrast.
+  source_file: differential_analyses/chromatin_accessibility/volcano_plots/cardiomyocyte_sex/01_male_vs_female.png
+  asset: gallery_assets/differential_analyses/volcano_plots.chromatin_accessibility.differential_analyses.webp
+- checkpoint: differential_analyses
+  group: Differential analyses
+  section: null
+  target: volcano_plots.gene_expression.differential_analyses
+  description: Plot volcano plots of pseudobulk differential results per contrast.
+  source_file: differential_analyses/gene_expression/volcano_plots/cardiomyocyte_sex/01_male_vs_female.png
+  asset: gallery_assets/differential_analyses/volcano_plots.gene_expression.differential_analyses.webp
+- checkpoint: differential_analyses
+  group: Differential analyses
+  section: null
+  target: significant_elements_modality_distribution_plots.differential_analyses
+  description: Plot each contrast's share of significant elements across pseudobulk differential modalities per model.
+  source_file: differential_analyses/significant_elements_modality_distribution_plots/01_cardiomyocyte_sex.png
+  asset: gallery_assets/differential_analyses/significant_elements_modality_distribution_plots.differential_analyses.webp
+- checkpoint: differential_analyses
+  group: Differential analyses
+  section: null
+  target: volcano_plots.motif_family_accessibility.differential_analyses
+  description: Plot volcano plots of pseudobulk differential results per contrast.
+  source_file: differential_analyses/motif_family_accessibility/volcano_plots/cardiomyocyte_sex/01_male_vs_female.png
+  asset: gallery_assets/differential_analyses/volcano_plots.motif_family_accessibility.differential_analyses.webp
+- checkpoint: differential_analyses
+  group: Differential analyses
+  section: null
+  target: activity_accessibility_concordance_plots.CollecTRI_JASPAR.differential_analyses
+  description: Plot expression- versus accessibility-derived TF activity concordance per contrast.
+  source_file: differential_analyses/CollecTRI_JASPAR/activity_accessibility_concordance_plots/01_cardiomyocyte_sex.png
+  asset: gallery_assets/differential_analyses/activity_accessibility_concordance_plots.CollecTRI_JASPAR.differential_analyses.webp
+- checkpoint: genetic_enrichment
+  group: Genetic enrichment
+  section: null
+  target: GWAS_peak_weights_barplot.genetic_enrichment
+  description: Plot summary bar plot of capped summed SNP PPs within peaks and save to file.
+  source_file: genetic_enrichment/GWAS_peak_weights_barplot.png
+  asset: gallery_assets/genetic_enrichment/GWAS_peak_weights_barplot.genetic_enrichment.webp
+- checkpoint: genetic_enrichment
+  group: Genetic enrichment
+  section: null
+  target: TRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment
+  description: Plot one GWAS SCAVENGE TRS branch on the graph UMAP and save to file.
+  source_file: genetic_enrichment/single_nucleus/SCAVENGE/WNN_harmony_SNN/TRS_UMAPs/AcutePancreatitis_Bourgault2023.png
+  asset: gallery_assets/genetic_enrichment/TRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.webp
+- checkpoint: genetic_enrichment
+  group: Genetic enrichment
+  section: null
+  target: TRS_cluster_summary_plot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment
+  description: Plot per-group SCAVENGE TRS medians, interquartile ranges, and full ranges.
+  source_file: genetic_enrichment/single_nucleus/SCAVENGE/WNN_harmony_SNN/TRS_cluster_summary_plot/01_WNN_harmony_SNN_cluster_cell_type.png
+  asset: gallery_assets/genetic_enrichment/TRS_cluster_summary_plot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.webp
+- checkpoint: genetic_enrichment
+  group: Genetic enrichment
+  section: null
+  target: sig_prop_bars.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment
+  description: Plot proportion of cells with significant SCAVENGE TRS per group and GWAS and save to file.
+  source_file: genetic_enrichment/single_nucleus/SCAVENGE/WNN_harmony_SNN/sig_prop_bars/01_WNN_harmony_SNN_cluster_cell_type.png
+  asset: gallery_assets/genetic_enrichment/sig_prop_bars.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.webp
+- checkpoint: genetic_enrichment
+  group: Genetic enrichment
+  section: null
+  target: median_by_cell_types_unscaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment
+  description: Save unscaled median SCAVENGE TRS by WNN cell types with BH-adjusted permutation stars.
+  source_file: genetic_enrichment/single_nucleus/SCAVENGE/WNN_harmony_SNN/TRS_heatmap/median_by_cell_types_unscaled.png
+  asset: gallery_assets/genetic_enrichment/median_by_cell_types_unscaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.webp
+- checkpoint: genetic_enrichment
+  group: Genetic enrichment
+  section: null
+  target: median_by_clusters_unscaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment
+  description: Save unscaled median SCAVENGE TRS by WNN clusters with BH-adjusted permutation stars.
+  source_file: genetic_enrichment/single_nucleus/SCAVENGE/WNN_harmony_SNN/TRS_heatmap/median_by_clusters_unscaled.png
+  asset: gallery_assets/genetic_enrichment/median_by_clusters_unscaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.webp
+- checkpoint: genetic_enrichment
+  group: Genetic enrichment
+  section: null
+  target: median_by_cell_types_scaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment
+  description: Save scaled median SCAVENGE TRS by WNN cell types with BH-adjusted permutation stars.
+  source_file: genetic_enrichment/single_nucleus/SCAVENGE/WNN_harmony_SNN/TRS_heatmap/median_by_cell_types_scaled.png
+  asset: gallery_assets/genetic_enrichment/median_by_cell_types_scaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.webp
+- checkpoint: genetic_enrichment
+  group: Genetic enrichment
+  section: null
+  target: median_by_clusters_scaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment
+  description: Save scaled median SCAVENGE TRS by WNN clusters with BH-adjusted permutation stars.
+  source_file: genetic_enrichment/single_nucleus/SCAVENGE/WNN_harmony_SNN/TRS_heatmap/median_by_clusters_scaled.png
+  asset: gallery_assets/genetic_enrichment/median_by_clusters_scaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.webp
+- checkpoint: genetic_enrichment
+  group: Genetic enrichment
+  section: null
+  target: raw_deviation_unscaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk.genetic_enrichment
+  description: Save ordinary GWAS deviations without within-GWAS scaling.
+  source_file: genetic_enrichment/cell_type_pseudobulk/chromVAR_deviation_heatmaps/raw_deviation_unscaled.png
+  asset: gallery_assets/genetic_enrichment/raw_deviation_unscaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk.genetic_enrichment.webp
+- checkpoint: genetic_enrichment
+  group: Genetic enrichment
+  section: null
+  target: raw_deviation_scaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk.genetic_enrichment
+  description: Save ordinary GWAS deviations standardized within each GWAS.
+  source_file: genetic_enrichment/cell_type_pseudobulk/chromVAR_deviation_heatmaps/raw_deviation_scaled.png
+  asset: gallery_assets/genetic_enrichment/raw_deviation_scaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk.genetic_enrichment.webp
+- checkpoint: genetic_enrichment
+  group: Genetic enrichment
+  section: null
+  target: chromVAR_locus_contribution_per_GWAS_heatmaps.cell_type_pseudobulk.genetic_enrichment
+  description: Save one cell-type-by-locus contribution heatmap per enabled GWAS.
+  source_file: genetic_enrichment/cell_type_pseudobulk/chromVAR_locus_contribution_per_GWAS_heatmaps/01_ALT_Ghouse2024.png
+  asset: gallery_assets/genetic_enrichment/chromVAR_locus_contribution_per_GWAS_heatmaps.cell_type_pseudobulk.genetic_enrichment.webp
+- checkpoint: genetic_enrichment
+  group: Genetic enrichment
+  section: null
+  target: beta_weighted_unscaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk.genetic_enrichment
+  description: Save absolute-effect-weighted GWAS deviations without within-GWAS scaling.
+  source_file: genetic_enrichment/cell_type_pseudobulk/chromVAR_deviation_heatmaps/beta_weighted_unscaled.png
+  asset: gallery_assets/genetic_enrichment/beta_weighted_unscaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk.genetic_enrichment.webp
+- checkpoint: genetic_enrichment
+  group: Genetic enrichment
+  section: null
+  target: beta_weighted_scaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk.genetic_enrichment
+  description: Save absolute-effect-weighted GWAS deviations standardized within each GWAS.
+  source_file: genetic_enrichment/cell_type_pseudobulk/chromVAR_deviation_heatmaps/beta_weighted_scaled.png
+  asset: gallery_assets/genetic_enrichment/beta_weighted_scaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk.genetic_enrichment.webp
+- checkpoint: genetic_enrichment
+  group: Genetic enrichment
+  section: null
+  target: chromVAR_locus_contribution_per_GWAS_faceted_bars_plots.cell_type_pseudobulk.genetic_enrichment
+  description: Save compact signed locus-contribution bars faceted by cell type for each GWAS.
+  source_file: genetic_enrichment/cell_type_pseudobulk/chromVAR_locus_contribution_per_GWAS_faceted_bars_plots/AcutePancreatitis_Bourgault2023.png
+  asset: gallery_assets/genetic_enrichment/chromVAR_locus_contribution_per_GWAS_faceted_bars_plots.cell_type_pseudobulk.genetic_enrichment.webp
+- checkpoint: genetic_enrichment
+  group: Genetic enrichment
+  section: null
+  target: chromVAR_absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots.cell_type_pseudobulk.genetic_enrichment
+  description: Save one faceted locus contribution figure per eligible GWAS using the absolute-effect heatmap weights.
+  source_file: genetic_enrichment/cell_type_pseudobulk/chromVAR_absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots/01_AcutePancreatitis_Bourgault2023.png
+  asset: gallery_assets/genetic_enrichment/chromVAR_absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots.cell_type_pseudobulk.genetic_enrichment.webp
+- checkpoint: genetic_enrichment
+  group: Genetic enrichment
+  section: null
+  target: chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment
+  description: Save aligned locus facets with variant effects, gene bodies, ATAC coverage, and peaks per GWAS and focal cell type.
+  source_file: genetic_enrichment/cell_type_pseudobulk/chromVAR_variant_contribution_detail_plots/AcutePancreatitis_Bourgault2023/01_Pancreatic-acinar.png
+  asset: gallery_assets/genetic_enrichment/chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.webp
+- checkpoint: peak_gene_correlation
+  group: Peak–gene correlation
+  section: null
+  target: support_counts_plot.peak_gene_correlation
+  description: Save peak-gene correlation tested, significant, and linked pair counts by cell group
+  source_file: peak_gene_correlation/support_counts_plot.png
+  asset: gallery_assets/peak_gene_correlation/support_counts_plot.peak_gene_correlation.webp
+- checkpoint: peak_gene_correlation
+  group: Peak–gene correlation
+  section: null
+  target: correlation_histogram_plot.peak_gene_correlation
+  description: Save a facetted histogram of peak-gene correlations by cell group
+  source_file: peak_gene_correlation/correlation_histogram_plot.png
+  asset: gallery_assets/peak_gene_correlation/correlation_histogram_plot.peak_gene_correlation.webp
+- checkpoint: peak_gene_correlation
+  group: Peak–gene correlation
+  section: null
+  target: distance_correlation_plot.peak_gene_correlation
+  description: Save median peak-gene correlation by absolute TSS distance and cell group
+  source_file: peak_gene_correlation/distance_correlation_plot.png
+  asset: gallery_assets/peak_gene_correlation/distance_correlation_plot.peak_gene_correlation.webp
+- checkpoint: peak_gene_correlation
+  group: Peak–gene correlation
+  section: null
+  target: diagnostics_plot.peak_gene_correlation
+  description: Save peak-gene correlation retained and skipped branch diagnostics by cell group
+  source_file: peak_gene_correlation/diagnostics_plot.png
+  asset: gallery_assets/peak_gene_correlation/diagnostics_plot.peak_gene_correlation.webp
+- checkpoint: peak_gene_correlation
+  group: Peak–gene correlation
+  section: null
+  target: significant_pairs_vs_technical_features_plot.peak_gene_correlation
+  description: Compare FDR-significant peak-gene pairs with sampling and measurement features across WNN cell types
+  source_file: peak_gene_correlation/significant_pairs_vs_technical_features_plot.png
+  asset: gallery_assets/peak_gene_correlation/significant_pairs_vs_technical_features_plot.peak_gene_correlation.webp
+- checkpoint: peak_gene_correlation
+  group: Peak–gene correlation
+  section: null
+  target: top_link_aggregate_scatter_plots.peak_gene_correlation
+  description: Save hierarchical genomic evidence and donor-residual scatter for each top link
+  source_file: peak_gene_correlation/top_link_aggregate_scatter_plots/Alveolar_type_2_rank001_MED25_chr19.png
+  asset: gallery_assets/peak_gene_correlation/top_link_aggregate_scatter_plots.peak_gene_correlation.webp

@@ -23,7 +23,7 @@ targets::tar_make(
 
 ## Review
 
-All module targets have description tag `[checkpoint:peak_gene_correlation]`. Their paths are `<store>/plots/my_aggregation/peak_gene_correlation/`; file exports use the corresponding `files` directory, with any modality suffixes as deeper subdirectories. For example, read selected links with:
+The [output gallery](gallery.md#peak-gene-correlation) shows one example per plot. All module targets have description tag `[checkpoint:peak_gene_correlation]`. Their paths are `<store>/plots/my_aggregation/peak_gene_correlation/`; file exports use the corresponding `files` directory, with any modality suffixes as deeper subdirectories. For example, read selected links with:
 
 ```r
 targets::tar_read(

@@ -12,7 +12,13 @@ pixi run --use-environment-activation-cache -e dev export-website-llm-markdown
 
 Graph diagrams are generated from the public demo with the documented optional module examples enabled, using `website/figures/human_curated/graphs_v2.R`. Generate them in an isolated public checkout/configuration and synchronize the resulting diagrams. Do not generate shared diagrams from a personal analysis.
 
-Gallery snapshots are checked-in artifacts. When a target or plot changes, refresh the image from that public target or mark its preview pending; changing a target label does not make an old image current.
+The [output gallery](../gallery.md) is generated from one built aggregation. After its plot targets are rebuilt, refresh every preview and `output_gallery.yaml`:
+
+```bash
+pixi run --use-environment-activation-cache refresh-output-gallery mixed_human_31x
+```
+
+The command writes one WebP preview per plot target, replaces `gallery_assets/`, and keeps a hand-edited `source_file` while that file still exists. Refresh it instead of editing previews by hand.
 
 ## Parameter browser
 

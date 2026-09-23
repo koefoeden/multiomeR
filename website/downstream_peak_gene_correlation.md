@@ -4,7 +4,7 @@
 
 Use this module to nominate candidate regulatory links between accessible regions and nearby genes within each WNN cell type. It pairs consensus peaks with nearby gene transcription start sites and tests whether accessibility and expression vary together across **donor–state pseudobulks**: nuclei of one cell type summed by donor and ATAC-defined state, with each nucleus in at most one pseudobulk.
 
-A hierarchical model adjusts for donor and sequencing depth and lets the peak–gene slope vary between donors. A separate conditional correlation analysis (HC3) provides the correlation summary plots and a SuSiE prioritization of peaks per gene. Links are hypotheses: neither analysis establishes causal regulation, and the hierarchical tests are approximate and have not been broadly calibrated.
+A hierarchical model adjusts for donor and sequencing depth and lets the peak–gene slope vary between donors. Its significant positive slopes nominate candidate links, and SuSiE prioritizes peaks for each linked gene. Links are hypotheses: they do not establish causal regulation, and the hierarchical tests are approximate and have not been broadly calibrated.
 
 ## Prerequisites
 
@@ -22,7 +22,7 @@ Cell types and donors with too few nuclei are skipped. A cell type from a single
 | How many candidate pairs does each support filter retain? | Filter-retention plot |
 | Which cell types or chromosome branches were skipped, and why? | Diagnostics plot and table |
 | Which peaks are associated with a gene's expression? | Hierarchical results table and top-link figures |
-| How do conditional correlations vary by cell type and distance? | HC3 summary plots and link table |
+| How do adjusted correlations and links vary by cell type and distance? | Summary plots and link table |
 | Which peaks best explain a linked gene? | SuSiE prioritization table |
 
 ## Configure
@@ -82,7 +82,7 @@ Review the plots ([examples](gallery.md#peak-gene-correlation)); each plot's sub
 └── significant_pairs_vs_technical_features_plot.png
 ```
 
-Start with `filter_retention_plot.png`, which compares the three support filters by cell type and marks the active one. Top-link figures rank positive, estimable slopes outside self-promoter peaks by hierarchical p-value, without a significance cutoff, so appearing in a figure is not evidence of significance. `diagnostics_plot.png` shows skipped branches, and the other plots summarize the HC3 analysis.
+Start with `filter_retention_plot.png`, which compares the three support filters by cell type and marks the active one. Top-link figures rank positive, estimable slopes outside self-promoter peaks by hierarchical p-value, without a significance cutoff, so appearing in a figure is not evidence of significance. `diagnostics_plot.png` shows skipped branches, and the other plots summarize adjusted correlations and hierarchical links.
 
 Read the tables in R, for example the hierarchical results with BH FDR within each cell type:
 
@@ -92,7 +92,7 @@ targets::tar_read(
 )
 ```
 
-The HC3 links and SuSiE prioritization are in `peak_gene_correlation_links_tibble.WNN` and `peak_gene_correlation_finemapped_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix.
+The candidate links and SuSiE prioritization are in `peak_gene_correlation_links_tibble.WNN` and `peak_gene_correlation_finemapped_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix.
 
 ## Parameter reference
 

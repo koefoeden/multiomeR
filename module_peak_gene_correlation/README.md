@@ -2,8 +2,9 @@
 
 The hierarchical branch scans all pairs passing the existing distance,
 detection, aggregate-eligibility and measurement-support filters, using WNN-derived cell types.
-There is no HC3 significance, correlation, promoter or top-N screen before
-fitting.
+There is no significance, correlation, promoter or top-N screen before
+fitting. Each tested pair also carries the descriptive Pearson correlation of
+the donor- and depth-residualized peak and gene values.
 
 The model includes donor fixed intercepts, log-depth covariates and a Gaussian
 random peak slope by donor. `src/peak_gene_REML.cpp` profiles residual variance
@@ -36,9 +37,9 @@ slope or promoter cutoff. Consensus peaks are shaded; the focal peak is red
 and the gene TSS is dashed. The genomic axis uses Mb.
 
 Compact gene-context data and focal coverage are cached separately from
-rendering. Existing HC3 results and other summary figures remain a distinct
-analysis pending their separate migration; the new top-link figures and
-selection do not depend on HC3 tests.
+rendering. Candidate enhancer links are estimable positive slopes with
+hierarchical FDR < 0.05 outside self-promoter peaks; they drive the link table,
+SuSiE fine-mapping and the support summary plots.
 
 ## Measurement-support filtering
 
@@ -50,7 +51,7 @@ fixed value of this module are listed in
 `website/implementation/methods_peak_gene_correlation.md`; keep that chapter
 and the helper defaults in sync.
 
-The filter removes hypotheses before both HC3 and hierarchical testing; all
+The filter removes hypotheses before hierarchical testing; all
 observations remain in retained regressions. Excluded hypotheses do not enter
 BH correction. Unreliable tests among retained hypotheses still count in the
 hierarchical family size. Filtering is based on measurement support, not on

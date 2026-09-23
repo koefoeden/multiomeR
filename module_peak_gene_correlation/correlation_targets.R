@@ -141,18 +141,6 @@ rlang::list2(
     ) |> save_plots_structured(width = 13, height = 9)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_results_tibbles.WNN,
-    description = "Score donor-adjusted peak-gene associations for one broad cell type and chromosome [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
-    command = score_peak_gene_correlations_for_cell_group(
-      normalized_aggregate_matrices = peak_gene_correlation_normalized_aggregate_matrices.WNN,
-      candidate_pairs_tibble = peak_gene_correlation_filter_records.WNN$candidate_pairs
-    ),
-    pattern = map(peak_gene_correlation_normalized_aggregate_matrices.WNN,
-      peak_gene_correlation_filter_records.WNN),
-    iteration = "list",
-    resources = get_tar_resources(RAM_GB_req = 60)
-  ),
-  targets::tar_target(
     name = peak_gene_correlation_branch_diagnostics_tibbles.WNN,
     description = "Diagnose skipped or retained peak-gene correlation branches [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = diagnose_peak_gene_correlation_branch(
@@ -165,47 +153,30 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_results_tibble.WNN,
-    description = "Combine chromosome-level exploratory peak-gene correlations [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
-    command = finalize_peak_gene_correlation_results(
-      results_tibbles = peak_gene_correlation_results_tibbles.WNN,
-      aggregation = aggregation
-    ),
-    resources = get_tar_resources(RAM_GB_req = 16)
-  ),
-  targets::tar_target(
     name = peak_gene_correlation_links_tibble.WNN,
-    description = "Select nonpromoter candidates at adjusted r >= 0.15 and conditional aggregate FDR < 0.05 [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
-    command = make_peak_gene_correlation_links(peak_gene_correlation_results_tibble.WNN),
+    description = "Select positive, reliable nonpromoter pairs at hierarchical FDR < 0.05 [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = make_peak_gene_correlation_links(peak_gene_correlation_hierarchical_results_tibble.WNN),
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = peak_gene_correlation_finemapping_reference.WNN,
-    description = "Summarize global FDR breakpoints and gene-feature mappings for chromosome-level SuSiE inputs [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
-    command = make_peak_gene_finemapping_reference(
-      finalized_results_tibble = peak_gene_correlation_results_tibble.WNN,
-      candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.WNN
-    ),
+    description = "Summarize within-cell-group FDR breakpoints for chromosome-level SuSiE inputs [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = make_peak_gene_finemapping_reference(peak_gene_correlation_hierarchical_results_tibble.WNN),
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = peak_gene_correlation_finemapped_links_tibbles.WNN,
-    description = "Conditionally prioritize peaks for donor-adjusted candidate enhancer genes with SuSiE [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
-    command = {
-      reference <- peak_gene_correlation_finemapping_reference.WNN
-      finemap_peak_gene_correlations_for_branch(
-        normalized_aggregate_matrices = peak_gene_correlation_normalized_aggregate_matrices.WNN,
-        candidate_pairs_tibble = reference$gene_features,
-        finalized_results_tibble = restore_peak_gene_correlation_FDR(
-          peak_gene_correlation_results_tibbles.WNN,
-          reference$FDR
-        ) |>
-          dplyr::arrange(.data$cell_group, .data$TargetGeneID, dplyr::desc(.data$correlation))
+    description = "Conditionally prioritize peaks for candidate enhancer genes with SuSiE [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = finemap_peak_gene_correlations_for_branch(
+      normalized_aggregate_matrices = peak_gene_correlation_normalized_aggregate_matrices.WNN,
+      branch_results = restore_peak_gene_correlation_FDR(
+        peak_gene_correlation_hierarchical_results_tibbles.WNN,
+        peak_gene_correlation_finemapping_reference.WNN
       )
-    },
+    ),
     pattern = map(
       peak_gene_correlation_normalized_aggregate_matrices.WNN,
-      peak_gene_correlation_results_tibbles.WNN
+      peak_gene_correlation_hierarchical_results_tibbles.WNN
     ),
     iteration = "vector",
     packages = w_def("susieR"),
@@ -235,7 +206,7 @@ rlang::list2(
     command = {
       correlation_bin_width <- 0.025
       correlation_plot_tibble <- summarize_peak_gene_correlation_histogram(
-        results_tibble = peak_gene_correlation_results_tibble.WNN,
+        results_tibble = peak_gene_correlation_hierarchical_results_tibble.WNN,
         bin_width = correlation_bin_width
       )
       plot_peak_gene_correlation_histogram(
@@ -251,7 +222,7 @@ rlang::list2(
     description = "Save peak-gene correlation tested, significant, and linked pair counts by cell group [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = {
       support_plot_tibble <- summarize_peak_gene_correlation_support_counts(
-        peak_gene_correlation_results_tibble.WNN
+        peak_gene_correlation_hierarchical_results_tibble.WNN
       )
       plot_peak_gene_correlation_support_counts(support_plot_tibble) |>
         save_plots_structured()
@@ -262,7 +233,7 @@ rlang::list2(
     name = significant_pairs_technical_features_tibble.WNN,
     description = "Summarize peak-gene discovery counts and technical features across WNN cell types [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = prepare_peak_gene_support_technical_features(
-      results_tibble = peak_gene_correlation_results_tibble.WNN,
+      results_tibble = peak_gene_correlation_hierarchical_results_tibble.WNN,
       donor_state_aggregates_tibble = peak_gene_correlation_donor_state_aggregates_tibble.WNN
     ),
     resources = get_tar_resources(RAM_GB_req = 32)
@@ -280,7 +251,7 @@ rlang::list2(
     description = "Save median peak-gene correlation by absolute TSS distance and cell group [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = {
       distance_plot_tibble <- summarize_peak_gene_correlation_by_distance(
-        peak_gene_correlation_results_tibble.WNN
+        peak_gene_correlation_hierarchical_results_tibble.WNN
       )
       plot_peak_gene_correlation_by_distance(distance_plot_tibble) |>
         save_plots_structured(width = 14, height = 9)
@@ -350,7 +321,6 @@ rlang::list2(
     description = "Select lowest reliable hierarchical p-values across the full scan for QC plots [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = select_peak_gene_hierarchical_top_links(
       hierarchical_results = peak_gene_correlation_hierarchical_results_tibble.WNN,
-      candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.WNN,
       n_per_cell_group = peak_gene_correlation_top_links_per_cell_group
     ),
     iteration = "vector",
@@ -411,10 +381,8 @@ rlang::list2(
   ),
   targets::tar_target(
     name = peak_gene_correlation_top_gene_context_tibble.WNN,
-    description = "Combine compact hierarchical gene context and peak coordinates [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
-    command = dplyr::bind_rows(peak_gene_correlation_top_gene_context_tibbles.WNN) |>
-      dplyr::left_join(peak_gene_correlation_candidate_pairs_tibble.WNN,
-        by = c("peak", "TargetGeneID"), relationship = "many-to-one"),
+    description = "Combine compact hierarchical gene context with peak coordinates [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = dplyr::bind_rows(peak_gene_correlation_top_gene_context_tibbles.WNN),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(

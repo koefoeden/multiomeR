@@ -36,7 +36,7 @@ testthat::test_that("integration: BPCells WNN meets production similarity thresh
     ATAC_cluster_order = c(2L, 1L, 4L, 5L, 3L),
     seed = 848
   )
-  # k = 20 is the manifest default; k = 50 is the most common configured value.
+  # k = 20 is the helper default; k = 50 is the value in the public configurations.
   thresholds <- list(`20` = c(0.97, 0.98), `50` = c(0.98, 0.99))
   for (k in c(20L, 50L)) {
     validate_wnn_fixture(

@@ -672,13 +672,7 @@ targets::tar_read(
 )
 ```
 
-Cohort tables recording each model's included and excluded donors, and the counts and results of each abundance model, are separate file targets under `<store>/files/my_aggregation/differential_analyses/`. Build them, with all other module targets, by selecting the module suffix:
-
-```{.r filename="R"}
-targets::tar_make(
-  names = tidyselect::ends_with(".differential_analyses.my_aggregation")
-)
-```
+The run also writes cohort tables recording each model's included and excluded donors, and the counts and results of each abundance model, under `<store>/files/my_aggregation/differential_analyses/`.
 
 Use [Troubleshooting](troubleshooting.md) if a formula, contrast or metadata join fails.
 

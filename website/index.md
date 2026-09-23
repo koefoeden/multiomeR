@@ -14,7 +14,7 @@ multiomeR is in beta and may introduce breaking changes between releases. The [r
 
 The **main pipeline** processes each GEM well, combines selected GEM wells into an aggregation, clusters and labels cell types in its gene-expression (GEX) and ATAC data, and integrates both modalities with weighted nearest neighbors (WNN). Three optional modules extend a completed aggregation with differential analyses, genetic enrichment for human traits, or peak–gene correlation.
 
-![](figures/multiomeR_overview_simplified.drawio.svg){fig-alt="multiomeR workflow from cellranger-arc count outputs through per-GEM-well processing, aggregation-level GEX and ATAC analysis, and WNN integration to optional downstream modules"}
+![](figures/multiomeR_overview_simplified.drawio.svg){fig-alt="multiomeR workflow from cellranger-arc count outputs through per-GEM-well processing, aggregation-level GEX and ATAC analysis, and WNN integration to three optional modules: differential analyses, genetic enrichment and peak–gene correlation"}
 
 ## How this manual is organized
 

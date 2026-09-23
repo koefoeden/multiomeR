@@ -40,7 +40,7 @@ if (is.na(n_cells)) {
   stop("--cells must be an integer.", call. = FALSE)
 }
 
-source("R/cellranger_arc_subset_helpers.R")
+source("scripts/cellranger_arc_subset_helpers.R")
 create_cellranger_arc_count_subset(
   input_dir = input_dir,
   output_dir = output_dir,

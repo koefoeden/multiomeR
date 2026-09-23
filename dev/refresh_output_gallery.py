@@ -25,14 +25,14 @@ ASSETS = ROOT / "website" / "gallery_assets"
 
 # Checkpoint tag -> (page group, section heading within the group).
 SECTIONS = {
-    "1_pre-aggregation-QC": ("Main pipeline", "1. Pre-aggregation QC"),
-    "2_GEX-PCA-QC": ("Main pipeline", "2. GEX dimension reduction"),
-    "3_GEX-QC": ("Main pipeline", "3. GEX clusters and cell types"),
-    "4_peak-QC": ("Main pipeline", "4. Peak QC"),
-    "5_pre-LSI-QC": ("Main pipeline", "5. ATAC filtering"),
-    "6_ATAC-LSI-QC": ("Main pipeline", "6. ATAC dimension reduction"),
-    "7_ATAC-QC": ("Main pipeline", "7. ATAC clusters and motifs"),
-    "8_multimodal-QC": ("Main pipeline", "8. WNN integration"),
+    "1_pre-aggregation-QC": ("Primary module", "1. Pre-aggregation QC"),
+    "2_GEX-PCA-QC": ("Primary module", "2. GEX dimension reduction"),
+    "3_GEX-QC": ("Primary module", "3. GEX clusters and cell types"),
+    "4_peak-QC": ("Primary module", "4. Peak QC"),
+    "5_pre-LSI-QC": ("Primary module", "5. ATAC filtering"),
+    "6_ATAC-LSI-QC": ("Primary module", "6. ATAC dimension reduction"),
+    "7_ATAC-QC": ("Primary module", "7. ATAC clusters and motifs"),
+    "8_multimodal-QC": ("Primary module", "8. WNN integration"),
     "differential_analyses": ("Differential analyses", None),
     "genetic_enrichment": ("Genetic enrichment", None),
     "peak_gene_correlation": ("Peak–gene correlation", None),

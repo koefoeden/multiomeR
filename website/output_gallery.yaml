@@ -3,469 +3,469 @@ source:
   refreshed: '2026-09-23'
 items:
 - checkpoint: 1_pre-aggregation-QC
-  group: Main pipeline
+  group: Primary module
   section: 1. Pre-aggregation QC
   target: nuclei_per_donor_id_bars.1_pre_aggregation_QC
   description: Plot pre-QC assigned singlet nuclei per donor, excluding doublets and unassigned barcodes.
   source_file: 1_pre_aggregation_QC/nuclei_per_donor_id_bars.png
   asset: gallery_assets/1_pre-aggregation-QC/nuclei_per_donor_id_bars.1_pre_aggregation_QC.webp
 - checkpoint: 1_pre-aggregation-QC
-  group: Main pipeline
+  group: Primary module
   section: 1. Pre-aggregation QC
   target: demultiplexing_assignment_bars.1_pre_aggregation_QC
   description: Plot 100-percent stacked assignment bars per GEM well, with donor labels inside singlet segments.
   source_file: 1_pre_aggregation_QC/demultiplexing_assignment_bars.png
   asset: gallery_assets/1_pre-aggregation-QC/demultiplexing_assignment_bars.1_pre_aggregation_QC.webp
 - checkpoint: 1_pre-aggregation-QC
-  group: Main pipeline
+  group: Primary module
   section: 1. Pre-aggregation QC
   target: per_aggregation_GEM_well_QC_comparisons.1_pre_aggregation_QC
   description: Compare pre-filter QC distributions and configured cutoffs across GEM wells in this aggregation.
   source_file: 1_pre_aggregation_QC/per_aggregation_GEM_well_QC_comparisons/01_nCount_RNA.png
   asset: gallery_assets/1_pre-aggregation-QC/per_aggregation_GEM_well_QC_comparisons.1_pre_aggregation_QC.webp
 - checkpoint: 1_pre-aggregation-QC
-  group: Main pipeline
+  group: Primary module
   section: 1. Pre-aggregation QC
   target: aggregation_excluded_barcodes_by_type_upset.1_pre_aggregation_QC
   description: Plot an UpSet plot of aggregation-level QC exclusion overlaps across all GEM wells and save to file.
   source_file: 1_pre_aggregation_QC/aggregation_excluded_barcodes_by_type_upset.png
   asset: gallery_assets/1_pre-aggregation-QC/aggregation_excluded_barcodes_by_type_upset.1_pre_aggregation_QC.webp
 - checkpoint: 1_pre-aggregation-QC
-  group: Main pipeline
+  group: Primary module
   section: 1. Pre-aggregation QC
   target: aggregation_excluded_cellranger_only_barcodes_by_type_upset.1_pre_aggregation_QC
   description: Plot an UpSet plot of aggregation-level CellRanger-only QC exclusion overlaps across all GEM wells and save to file.
   source_file: 1_pre_aggregation_QC/aggregation_excluded_cellranger_only_barcodes_by_type_upset.png
   asset: gallery_assets/1_pre-aggregation-QC/aggregation_excluded_cellranger_only_barcodes_by_type_upset.1_pre_aggregation_QC.webp
 - checkpoint: 1_pre-aggregation-QC
-  group: Main pipeline
+  group: Primary module
   section: 1. Pre-aggregation QC
   target: cell_retention_flow_plot.1_pre_aggregation_QC
   description: Plot cumulative nuclei retention through per-well QC.
   source_file: 1_pre_aggregation_QC/cell_retention_flow_plot.png
   asset: gallery_assets/1_pre-aggregation-QC/cell_retention_flow_plot.1_pre_aggregation_QC.webp
 - checkpoint: 2_GEX-PCA-QC
-  group: Main pipeline
+  group: Primary module
   section: 2. GEX dimension reduction
   target: variable_feature_plot.2_GEX_PCA_QC
   description: Plot residual variance of top variable genes selected from SCTransform residuals.
   source_file: 2_GEX_PCA_QC/variable_feature_plot.png
   asset: gallery_assets/2_GEX-PCA-QC/variable_feature_plot.2_GEX_PCA_QC.webp
 - checkpoint: 2_GEX-PCA-QC
-  group: Main pipeline
+  group: Primary module
   section: 2. GEX dimension reduction
   target: PCA_singular_values_elbow_plot.2_GEX_PCA_QC
   description: Elbow plot of native GEX PCA singular values.
   source_file: 2_GEX_PCA_QC/PCA_singular_values_elbow_plot.png
   asset: gallery_assets/2_GEX-PCA-QC/PCA_singular_values_elbow_plot.2_GEX_PCA_QC.webp
 - checkpoint: 2_GEX-PCA-QC
-  group: Main pipeline
+  group: Primary module
   section: 2. GEX dimension reduction
   target: VizDimLoadings_plots.2_GEX_PCA_QC
   description: Plot top gene loadings for each GEX PCA dimension.
   source_file: 2_GEX_PCA_QC/VizDimLoadings_plots/01_PCA_1.png
   asset: gallery_assets/2_GEX-PCA-QC/VizDimLoadings_plots.2_GEX_PCA_QC.webp
 - checkpoint: 2_GEX-PCA-QC
-  group: Main pipeline
+  group: Primary module
   section: 2. GEX dimension reduction
   target: PCA_embedding_sdev_plot.2_GEX_PCA_QC
   description: Non-Harmony and Harmony GEX PCA embedding coordinate SD plot.
   source_file: 2_GEX_PCA_QC/PCA_embedding_sdev_plot.png
   asset: gallery_assets/2_GEX-PCA-QC/PCA_embedding_sdev_plot.2_GEX_PCA_QC.webp
 - checkpoint: 2_GEX-PCA-QC
-  group: Main pipeline
+  group: Primary module
   section: 2. GEX dimension reduction
   target: PCA_metadata_association_barplots.2_GEX_PCA_QC
   description: Non-Harmony and Harmony GEX PCA metadata association bar plots.
   source_file: 2_GEX_PCA_QC/PCA_metadata_association_barplots.png
   asset: gallery_assets/2_GEX-PCA-QC/PCA_metadata_association_barplots.2_GEX_PCA_QC.webp
 - checkpoint: 3_GEX-QC
-  group: Main pipeline
+  group: Primary module
   section: 3. GEX clusters and cell types
   target: cluster_UCell_advantage_plots.3_GEX_QC
   description: Faceted GEX adjusted-score bars with matched background and the minimum-advantage competition cutoff.
   source_file: 3_GEX_QC/cluster_UCell_advantage_plots/01_page_01.png
   asset: gallery_assets/3_GEX-QC/cluster_UCell_advantage_plots.3_GEX_QC.webp
 - checkpoint: 3_GEX-QC
-  group: Main pipeline
+  group: Primary module
   section: 3. GEX clusters and cell types
   target: module_scores_by_cluster_dot_plot.3_GEX_QC
   description: Cached pre-doublet-filtering cluster-adjusted UCell evidence with distance-ordered marker sets and matching row order.
   source_file: 3_GEX_QC/module_scores_by_cluster_dot_plot.png
   asset: gallery_assets/3_GEX-QC/module_scores_by_cluster_dot_plot.3_GEX_QC.webp
 - checkpoint: 3_GEX-QC
-  group: Main pipeline
+  group: Primary module
   section: 3. GEX clusters and cell types
   target: markers_by_cell_type_dot_plot.3_GEX_QC
   description: Pre-doublet-filtering marker expression per assigned GEX cell type.
   source_file: 3_GEX_QC/markers_by_cell_type_dot_plot.png
   asset: gallery_assets/3_GEX-QC/markers_by_cell_type_dot_plot.3_GEX_QC.webp
 - checkpoint: 3_GEX-QC
-  group: Main pipeline
+  group: Primary module
   section: 3. GEX clusters and cell types
   target: module_scores_by_cell_type_dot_plot.3_GEX_QC
   description: Pre-doublet-filtering adjusted UCell evidence averaged per GEX cell type, with distance-ordered marker sets.
   source_file: 3_GEX_QC/module_scores_by_cell_type_dot_plot.png
   asset: gallery_assets/3_GEX-QC/module_scores_by_cell_type_dot_plot.3_GEX_QC.webp
 - checkpoint: 3_GEX-QC
-  group: Main pipeline
+  group: Primary module
   section: 3. GEX clusters and cell types
   target: markers_by_cluster_dot_plot.3_GEX_QC
   description: Pre-doublet-filtering marker expression per named GEX cluster.
   source_file: 3_GEX_QC/markers_by_cluster_dot_plot.png
   asset: gallery_assets/3_GEX-QC/markers_by_cluster_dot_plot.3_GEX_QC.webp
 - checkpoint: 3_GEX-QC
-  group: Main pipeline
+  group: Primary module
   section: 3. GEX clusters and cell types
   target: cross.UMAPs.3_GEX_QC
   description: Compute GEX UMAPs across a sweep of PC counts and neighbour counts.
   source_file: 3_GEX_QC/UMAPs/cross/18_10.png
   asset: gallery_assets/3_GEX-QC/cross.UMAPs.3_GEX_QC.webp
 - checkpoint: 3_GEX-QC
-  group: Main pipeline
+  group: Primary module
   section: 3. GEX clusters and cell types
   target: categorical_by_cluster_bars_plots.3_GEX_QC
   description: Bar plots of categorical metadata composition per SNN cluster before doublet filtering.
   source_file: 3_GEX_QC/categorical_by_cluster_bars_plots/02_PCA_harmony_SNN_cluster_cell_type.png
   asset: gallery_assets/3_GEX-QC/categorical_by_cluster_bars_plots.3_GEX_QC.webp
 - checkpoint: 3_GEX-QC
-  group: Main pipeline
+  group: Primary module
   section: 3. GEX clusters and cell types
   target: continuous_by_cluster_violin_plot.3_GEX_QC
   description: Violin plots of continuous QC and cell-cycle features per SNN cluster before doublet filtering.
   source_file: 3_GEX_QC/continuous_by_cluster_violin_plot/01_nCount_RNA.png
   asset: gallery_assets/3_GEX-QC/continuous_by_cluster_violin_plot.3_GEX_QC.webp
 - checkpoint: 3_GEX-QC
-  group: Main pipeline
+  group: Primary module
   section: 3. GEX clusters and cell types
   target: categorical_by_cell_type_bars_plots.3_GEX_QC
   description: Bar plots of categorical metadata composition per cell type before doublet filtering.
   source_file: 3_GEX_QC/categorical_by_cell_type_bars_plots/02_PCA_harmony_SNN_cluster_cell_type.png
   asset: gallery_assets/3_GEX-QC/categorical_by_cell_type_bars_plots.3_GEX_QC.webp
 - checkpoint: 3_GEX-QC
-  group: Main pipeline
+  group: Primary module
   section: 3. GEX clusters and cell types
   target: continuous_by_cell_type_violin_plot.3_GEX_QC
   description: Violin plots of continuous QC and cell-cycle features per cell type before doublet filtering.
   source_file: 3_GEX_QC/continuous_by_cell_type_violin_plot/01_nCount_RNA.png
   asset: gallery_assets/3_GEX-QC/continuous_by_cell_type_violin_plot.3_GEX_QC.webp
 - checkpoint: 3_GEX-QC
-  group: Main pipeline
+  group: Primary module
   section: 3. GEX clusters and cell types
   target: cell_type_marker_volcano_plots.3_GEX_QC
   description: Facetted volcano plot of BPCells marker genes per GEX cell type.
   source_file: 3_GEX_QC/cell_type_marker_volcano_plots.png
   asset: gallery_assets/3_GEX-QC/cell_type_marker_volcano_plots.3_GEX_QC.webp
 - checkpoint: 3_GEX-QC
-  group: Main pipeline
+  group: Primary module
   section: 3. GEX clusters and cell types
   target: harmony.categorical.UMAPs.3_GEX_QC
   description: UMAPs colored by categorical metadata variables.
   source_file: 3_GEX_QC/UMAPs/categorical/harmony/PCA_harmony_SNN_cluster_cell_type.png
   asset: gallery_assets/3_GEX-QC/harmony.categorical.UMAPs.3_GEX_QC.webp
 - checkpoint: 3_GEX-QC
-  group: Main pipeline
+  group: Primary module
   section: 3. GEX clusters and cell types
   target: non_harmony.continuous.UMAPs.3_GEX_QC
   description: UMAPs colored by continuous features on the uncorrected PCA embedding.
   source_file: 3_GEX_QC/UMAPs/continuous/non_harmony/log10_nCount_RNA.png
   asset: gallery_assets/3_GEX-QC/non_harmony.continuous.UMAPs.3_GEX_QC.webp
 - checkpoint: 3_GEX-QC
-  group: Main pipeline
+  group: Primary module
   section: 3. GEX clusters and cell types
   target: harmony.continuous.UMAPs.3_GEX_QC
   description: UMAPs colored by continuous QC and gene expression features.
   source_file: 3_GEX_QC/UMAPs/continuous/harmony/log10_nCount_RNA.png
   asset: gallery_assets/3_GEX-QC/harmony.continuous.UMAPs.3_GEX_QC.webp
 - checkpoint: 3_GEX-QC
-  group: Main pipeline
+  group: Primary module
   section: 3. GEX clusters and cell types
   target: non_harmony.categorical.UMAPs.3_GEX_QC
   description: UMAPs colored by categorical metadata variables on the uncorrected PCA embedding.
   source_file: 3_GEX_QC/UMAPs/categorical/non_harmony/PCA_harmony_SNN_cluster_cell_type.png
   asset: gallery_assets/3_GEX-QC/non_harmony.categorical.UMAPs.3_GEX_QC.webp
 - checkpoint: 3_GEX-QC
-  group: Main pipeline
+  group: Primary module
   section: 3. GEX clusters and cell types
   target: cell_retention_flow_plot.3_GEX_QC
   description: Plot cumulative nuclei retention through GEX QC.
   source_file: 3_GEX_QC/cell_retention_flow_plot.png
   asset: gallery_assets/3_GEX-QC/cell_retention_flow_plot.3_GEX_QC.webp
 - checkpoint: 3_GEX-QC
-  group: Main pipeline
+  group: Primary module
   section: 3. GEX clusters and cell types
   target: cluster_marker_volcano_plots.3_GEX_QC
   description: One cluster-marker volcano file per multicluster cell type; two clusters share one directed comparison.
   source_file: 3_GEX_QC/cluster_marker_volcano_plots/Cardiomyocyte.png
   asset: gallery_assets/3_GEX-QC/cluster_marker_volcano_plots.3_GEX_QC.webp
 - checkpoint: 4_peak-QC
-  group: Main pipeline
+  group: Primary module
   section: 4. Peak QC
   target: peaks_similarity_tiles_plot.4_peak_QC
   description: Plot pairwise peak-set similarity matrix across clusters.
   source_file: 4_peak_QC/peaks_similarity_tiles_plot.png
   asset: gallery_assets/4_peak-QC/peaks_similarity_tiles_plot.4_peak_QC.webp
 - checkpoint: 4_peak-QC
-  group: Main pipeline
+  group: Primary module
   section: 4. Peak QC
   target: peaks_QC_violins_plot.4_peak_QC
   description: Violin plots of peak-based ATAC QC metrics per GEM well.
   source_file: 4_peak_QC/peaks_QC_violins_plot/01_nCount_ATAC.png
   asset: gallery_assets/4_peak-QC/peaks_QC_violins_plot.4_peak_QC.webp
 - checkpoint: 5_pre-LSI-QC
-  group: Main pipeline
+  group: Primary module
   section: 5. ATAC filtering
   target: QC_excluded_upset_plot.5_pre_LSI_QC
   description: UpSet plot of overlapping ATAC QC exclusion reasons.
   source_file: 5_pre_LSI_QC/QC_excluded_upset_plot.png
   asset: gallery_assets/5_pre-LSI-QC/QC_excluded_upset_plot.5_pre_LSI_QC.webp
 - checkpoint: 5_pre-LSI-QC
-  group: Main pipeline
+  group: Primary module
   section: 5. ATAC filtering
   target: cell_retention_flow_plot.5_pre_LSI_QC
   description: Plot cumulative nuclei retention through peak QC.
   source_file: 5_pre_LSI_QC/cell_retention_flow_plot.png
   asset: gallery_assets/5_pre-LSI-QC/cell_retention_flow_plot.5_pre_LSI_QC.webp
 - checkpoint: 6_ATAC-LSI-QC
-  group: Main pipeline
+  group: Primary module
   section: 6. ATAC dimension reduction
   target: LSI_singular_values_elbow_plot.6_ATAC_LSI_QC
   description: Elbow plot of native ATAC LSI singular values.
   source_file: 6_ATAC_LSI_QC/LSI_singular_values_elbow_plot.png
   asset: gallery_assets/6_ATAC-LSI-QC/LSI_singular_values_elbow_plot.6_ATAC_LSI_QC.webp
 - checkpoint: 6_ATAC-LSI-QC
-  group: Main pipeline
+  group: Primary module
   section: 6. ATAC dimension reduction
   target: VizDimLoadings_plots.6_ATAC_LSI_QC
   description: Plot top feature loadings for each LSI dimension.
   source_file: 6_ATAC_LSI_QC/VizDimLoadings_plots/01_LSI_1.png
   asset: gallery_assets/6_ATAC-LSI-QC/VizDimLoadings_plots.6_ATAC_LSI_QC.webp
 - checkpoint: 6_ATAC-LSI-QC
-  group: Main pipeline
+  group: Primary module
   section: 6. ATAC dimension reduction
   target: LSI_metadata_association_barplots.6_ATAC_LSI_QC
   description: Non-Harmony and Harmony ATAC LSI metadata association bar plots.
   source_file: 6_ATAC_LSI_QC/LSI_metadata_association_barplots.png
   asset: gallery_assets/6_ATAC-LSI-QC/LSI_metadata_association_barplots.6_ATAC_LSI_QC.webp
 - checkpoint: 6_ATAC-LSI-QC
-  group: Main pipeline
+  group: Primary module
   section: 6. ATAC dimension reduction
   target: LSI_embedding_sdev_plot.6_ATAC_LSI_QC
   description: Non-Harmony and Harmony ATAC LSI embedding coordinate SD plot.
   source_file: 6_ATAC_LSI_QC/LSI_embedding_sdev_plot.png
   asset: gallery_assets/6_ATAC-LSI-QC/LSI_embedding_sdev_plot.6_ATAC_LSI_QC.webp
 - checkpoint: 7_ATAC-QC
-  group: Main pipeline
+  group: Primary module
   section: 7. ATAC clusters and motifs
   target: cluster_UCell_advantage_plots.7_ATAC_QC
   description: Faceted ATAC cluster adjusted GEX scores with matched background and the competition cutoff.
   source_file: 7_ATAC_QC/cluster_UCell_advantage_plots/01_page_01.png
   asset: gallery_assets/7_ATAC-QC/cluster_UCell_advantage_plots.7_ATAC_QC.webp
 - checkpoint: 7_ATAC-QC
-  group: Main pipeline
+  group: Primary module
   section: 7. ATAC clusters and motifs
   target: coverage_tracks_plots.7_ATAC_QC
   description: Plot ATAC coverage tracks at marker gene and DA peak loci.
   source_file: 7_ATAC_QC/coverage_tracks_plots/top_1_chr1-16644457-16644956.png
   asset: gallery_assets/7_ATAC-QC/coverage_tracks_plots.7_ATAC_QC.webp
 - checkpoint: 7_ATAC-QC
-  group: Main pipeline
+  group: Primary module
   section: 7. ATAC clusters and motifs
   target: cross.UMAPs.7_ATAC_QC
   description: Compute ATAC UMAPs across a sweep of LSI dimension counts and neighbour counts.
   source_file: 7_ATAC_QC/UMAPs/cross/17_10.png
   asset: gallery_assets/7_ATAC-QC/cross.UMAPs.7_ATAC_QC.webp
 - checkpoint: 7_ATAC-QC
-  group: Main pipeline
+  group: Primary module
   section: 7. ATAC clusters and motifs
   target: confusion_matrices_plots.7_ATAC_QC
   description: Paired RNA versus ATAC cluster and cell-type confusion matrices before WNN integration.
   source_file: 7_ATAC_QC/confusion_matrices_plots.png
   asset: gallery_assets/7_ATAC-QC/confusion_matrices_plots.7_ATAC_QC.webp
 - checkpoint: 7_ATAC-QC
-  group: Main pipeline
+  group: Primary module
   section: 7. ATAC clusters and motifs
   target: continuous_by_cell_type_violin_plot.7_ATAC_QC
   description: Violin plots of continuous QC and cell-cycle features per cell type before ATAC doublet filtering.
   source_file: 7_ATAC_QC/continuous_by_cell_type_violin_plot/01_nCount_RNA.png
   asset: gallery_assets/7_ATAC-QC/continuous_by_cell_type_violin_plot.7_ATAC_QC.webp
 - checkpoint: 7_ATAC-QC
-  group: Main pipeline
+  group: Primary module
   section: 7. ATAC clusters and motifs
   target: categorical_by_cluster_bars_plots.7_ATAC_QC
   description: Bar plots of categorical metadata composition per SNN cluster before ATAC doublet filtering.
   source_file: 7_ATAC_QC/categorical_by_cluster_bars_plots/02_LSI_harmony_SNN_cluster_cell_type.png
   asset: gallery_assets/7_ATAC-QC/categorical_by_cluster_bars_plots.7_ATAC_QC.webp
 - checkpoint: 7_ATAC-QC
-  group: Main pipeline
+  group: Primary module
   section: 7. ATAC clusters and motifs
   target: continuous_by_cluster_violin_plot.7_ATAC_QC
   description: Violin plots of continuous QC and cell-cycle features per SNN cluster before ATAC doublet filtering.
   source_file: 7_ATAC_QC/continuous_by_cluster_violin_plot/01_nCount_RNA.png
   asset: gallery_assets/7_ATAC-QC/continuous_by_cluster_violin_plot.7_ATAC_QC.webp
 - checkpoint: 7_ATAC-QC
-  group: Main pipeline
+  group: Primary module
   section: 7. ATAC clusters and motifs
   target: categorical_by_cell_type_bars_plots.7_ATAC_QC
   description: Bar plots of categorical metadata composition per cell type before ATAC doublet filtering.
   source_file: 7_ATAC_QC/categorical_by_cell_type_bars_plots/02_LSI_harmony_SNN_cluster_cell_type.png
   asset: gallery_assets/7_ATAC-QC/categorical_by_cell_type_bars_plots.7_ATAC_QC.webp
 - checkpoint: 7_ATAC-QC
-  group: Main pipeline
+  group: Primary module
   section: 7. ATAC clusters and motifs
   target: categorical.UMAPs.7_ATAC_QC
   description: UMAPs colored by categorical metadata variables.
   source_file: 7_ATAC_QC/UMAPs/categorical/LSI_harmony_SNN_cluster_cell_type.png
   asset: gallery_assets/7_ATAC-QC/categorical.UMAPs.7_ATAC_QC.webp
 - checkpoint: 7_ATAC-QC
-  group: Main pipeline
+  group: Primary module
   section: 7. ATAC clusters and motifs
   target: cell_retention_flow_plot.7_ATAC_QC
   description: Plot cumulative nuclei retention through ATAC QC.
   source_file: 7_ATAC_QC/cell_retention_flow_plot.png
   asset: gallery_assets/7_ATAC-QC/cell_retention_flow_plot.7_ATAC_QC.webp
 - checkpoint: 7_ATAC-QC
-  group: Main pipeline
+  group: Primary module
   section: 7. ATAC clusters and motifs
   target: marker_gene_activity_dot_plot.7_ATAC_QC
   description: Dot plot of marker gene activity scores per ATAC cell type.
   source_file: 7_ATAC_QC/marker_gene_activity_dot_plot.png
   asset: gallery_assets/7_ATAC-QC/marker_gene_activity_dot_plot.7_ATAC_QC.webp
 - checkpoint: 7_ATAC-QC
-  group: Main pipeline
+  group: Primary module
   section: 7. ATAC clusters and motifs
   target: motif_family_accessibility_by_GEX_cluster_heatmap.7_ATAC_QC
   description: All motif families by GEX_cluster with independently clustered rows and columns and GEX-derived labels.
   source_file: 7_ATAC_QC/motif_family_accessibility_by_GEX_cluster_heatmap.png
   asset: gallery_assets/7_ATAC-QC/motif_family_accessibility_by_GEX_cluster_heatmap.7_ATAC_QC.webp
 - checkpoint: 7_ATAC-QC
-  group: Main pipeline
+  group: Primary module
   section: 7. ATAC clusters and motifs
   target: motif_family_accessibility_by_ATAC_cluster_heatmap.7_ATAC_QC
   description: All motif families by ATAC_cluster with independently clustered rows and columns and GEX-derived labels.
   source_file: 7_ATAC_QC/motif_family_accessibility_by_ATAC_cluster_heatmap.png
   asset: gallery_assets/7_ATAC-QC/motif_family_accessibility_by_ATAC_cluster_heatmap.7_ATAC_QC.webp
 - checkpoint: 7_ATAC-QC
-  group: Main pipeline
+  group: Primary module
   section: 7. ATAC clusters and motifs
   target: motif_family_accessibility_by_GEX_cell_type_heatmap.7_ATAC_QC
   description: All motif families by GEX_cell_type with independently clustered rows and columns and GEX-derived labels.
   source_file: 7_ATAC_QC/motif_family_accessibility_by_GEX_cell_type_heatmap.png
   asset: gallery_assets/7_ATAC-QC/motif_family_accessibility_by_GEX_cell_type_heatmap.7_ATAC_QC.webp
 - checkpoint: 7_ATAC-QC
-  group: Main pipeline
+  group: Primary module
   section: 7. ATAC clusters and motifs
   target: continuous.UMAPs.7_ATAC_QC
   description: UMAPs colored by continuous motif-family accessibility and peak accessibility metrics.
   source_file: 7_ATAC_QC/UMAPs/continuous/log10_nCount_RNA.png
   asset: gallery_assets/7_ATAC-QC/continuous.UMAPs.7_ATAC_QC.webp
 - checkpoint: 7_ATAC-QC
-  group: Main pipeline
+  group: Primary module
   section: 7. ATAC clusters and motifs
   target: motif_family_accessibility_marker_volcano_plots.7_ATAC_QC
   description: Facetted volcano plot of marker motif-family accessibility per ATAC cell type.
   source_file: 7_ATAC_QC/motif_family_accessibility_marker_volcano_plots.png
   asset: gallery_assets/7_ATAC-QC/motif_family_accessibility_marker_volcano_plots.7_ATAC_QC.webp
 - checkpoint: 8_multimodal-QC
-  group: Main pipeline
+  group: Primary module
   section: 8. WNN integration
   target: cluster_UCell_advantage_plots.8_multimodal_QC
   description: Faceted WNN adjusted GEX scores with matched background and the competition cutoff.
   source_file: 8_multimodal_QC/cluster_UCell_advantage_plots/01_page_01.png
   asset: gallery_assets/8_multimodal-QC/cluster_UCell_advantage_plots.8_multimodal_QC.webp
 - checkpoint: 8_multimodal-QC
-  group: Main pipeline
+  group: Primary module
   section: 8. WNN integration
   target: cluster_named_dim_tri_plot.UMAPs.8_multimodal_QC
   description: 3×3 grid of UMAPs with cell-type-named cluster-level identities.
   source_file: 8_multimodal_QC/UMAPs/cluster_named_dim_tri_plot.png
   asset: gallery_assets/8_multimodal-QC/cluster_named_dim_tri_plot.UMAPs.8_multimodal_QC.webp
 - checkpoint: 8_multimodal-QC
-  group: Main pipeline
+  group: Primary module
   section: 8. WNN integration
   target: module_scores_by_cluster_dot_plot.8_multimodal_QC
   description: Cached adjusted GEX UCell evidence per WNN cluster, with distance-ordered marker sets.
   source_file: 8_multimodal_QC/module_scores_by_cluster_dot_plot.png
   asset: gallery_assets/8_multimodal-QC/module_scores_by_cluster_dot_plot.8_multimodal_QC.webp
 - checkpoint: 8_multimodal-QC
-  group: Main pipeline
+  group: Primary module
   section: 8. WNN integration
   target: cross.UMAPs.8_multimodal_QC
   description: Compute WNN UMAPs across a sweep of nNN counts.
   source_file: 8_multimodal_QC/UMAPs/cross/10.png
   asset: gallery_assets/8_multimodal-QC/cross.UMAPs.8_multimodal_QC.webp
 - checkpoint: 8_multimodal-QC
-  group: Main pipeline
+  group: Primary module
   section: 8. WNN integration
   target: confusion_matrices_plots.8_multimodal_QC
   description: Paired RNA versus WNN and ATAC versus WNN confusion matrices for SNN clusters and cell types.
   source_file: 8_multimodal_QC/confusion_matrices_plots/01_RNA_vs_WNN.png
   asset: gallery_assets/8_multimodal-QC/confusion_matrices_plots.8_multimodal_QC.webp
 - checkpoint: 8_multimodal-QC
-  group: Main pipeline
+  group: Primary module
   section: 8. WNN integration
   target: markers_by_cluster_dot_plot.8_multimodal_QC
   description: GEX marker expression per named WNN cluster, with nuclei counts and doublet evidence for retained WNN nuclei.
   source_file: 8_multimodal_QC/markers_by_cluster_dot_plot.png
   asset: gallery_assets/8_multimodal-QC/markers_by_cluster_dot_plot.8_multimodal_QC.webp
 - checkpoint: 8_multimodal-QC
-  group: Main pipeline
+  group: Primary module
   section: 8. WNN integration
   target: cluster_cell_type_dim_tri_plot.UMAPs.8_multimodal_QC
   description: 3×3 grid of UMAPs with cell-type identities.
   source_file: 8_multimodal_QC/UMAPs/cluster_cell_type_dim_tri_plot.png
   asset: gallery_assets/8_multimodal-QC/cluster_cell_type_dim_tri_plot.UMAPs.8_multimodal_QC.webp
 - checkpoint: 8_multimodal-QC
-  group: Main pipeline
+  group: Primary module
   section: 8. WNN integration
   target: categorical.UMAPs.8_multimodal_QC
   description: UMAPs colored by categorical metadata variables on the WNN embedding.
   source_file: 8_multimodal_QC/UMAPs/categorical/WNN_harmony_SNN_cluster_cell_type.png
   asset: gallery_assets/8_multimodal-QC/categorical.UMAPs.8_multimodal_QC.webp
 - checkpoint: 8_multimodal-QC
-  group: Main pipeline
+  group: Primary module
   section: 8. WNN integration
   target: categorical_by_cell_type_bars_plots.8_multimodal_QC
   description: Bar plots of categorical metadata composition per cell type among all WNN nuclei.
   source_file: 8_multimodal_QC/categorical_by_cell_type_bars_plots/02_WNN_harmony_SNN_cluster_cell_type.png
   asset: gallery_assets/8_multimodal-QC/categorical_by_cell_type_bars_plots.8_multimodal_QC.webp
 - checkpoint: 8_multimodal-QC
-  group: Main pipeline
+  group: Primary module
   section: 8. WNN integration
   target: continuous.UMAPs.8_multimodal_QC
   description: UMAPs colored by continuous QC and gene expression features on the WNN embedding.
   source_file: 8_multimodal_QC/UMAPs/continuous/log10_nCount_RNA.png
   asset: gallery_assets/8_multimodal-QC/continuous.UMAPs.8_multimodal_QC.webp
 - checkpoint: 8_multimodal-QC
-  group: Main pipeline
+  group: Primary module
   section: 8. WNN integration
   target: continuous_by_cell_type_violin_plot.8_multimodal_QC
   description: Violin plots of continuous QC and cell-cycle features per cell type among all WNN nuclei.
   source_file: 8_multimodal_QC/continuous_by_cell_type_violin_plot/01_nCount_RNA.png
   asset: gallery_assets/8_multimodal-QC/continuous_by_cell_type_violin_plot.8_multimodal_QC.webp
 - checkpoint: 8_multimodal-QC
-  group: Main pipeline
+  group: Primary module
   section: 8. WNN integration
   target: categorical_by_cluster_bars_plots.8_multimodal_QC
   description: Bar plots of categorical metadata composition per SNN cluster among all WNN nuclei.
   source_file: 8_multimodal_QC/categorical_by_cluster_bars_plots/02_WNN_harmony_SNN_cluster_cell_type.png
   asset: gallery_assets/8_multimodal-QC/categorical_by_cluster_bars_plots.8_multimodal_QC.webp
 - checkpoint: 8_multimodal-QC
-  group: Main pipeline
+  group: Primary module
   section: 8. WNN integration
   target: continuous_by_cluster_violin_plot.8_multimodal_QC
   description: Violin plots of continuous QC and cell-cycle features per SNN cluster among all WNN nuclei.
   source_file: 8_multimodal_QC/continuous_by_cluster_violin_plot/01_nCount_RNA.png
   asset: gallery_assets/8_multimodal-QC/continuous_by_cluster_violin_plot.8_multimodal_QC.webp
 - checkpoint: 8_multimodal-QC
-  group: Main pipeline
+  group: Primary module
   section: 8. WNN integration
   target: cell_retention_flow_plot.8_multimodal_QC
   description: Plot cumulative nuclei retention through final WNN QC.
   source_file: 8_multimodal_QC/cell_retention_flow_plot.png
   asset: gallery_assets/8_multimodal-QC/cell_retention_flow_plot.8_multimodal_QC.webp
 - checkpoint: 8_multimodal-QC
-  group: Main pipeline
+  group: Primary module
   section: 8. WNN integration
   target: WNN_weight_metadata_associations_plot.8_multimodal_QC
   description: Plot continuous and categorical WNN-weight associations pooled and within named WNN clusters.

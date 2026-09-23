@@ -23,14 +23,14 @@ multiomeR is in beta and may introduce breaking changes between releases. The [r
 
 ## Workflow at a glance
 
-The **main pipeline** processes each GEM well, combines selected GEM wells into an aggregation, clusters and labels cell types in its gene-expression (GEX) and ATAC data, and integrates both modalities with weighted nearest neighbors (WNN). Three optional modules extend a completed aggregation with differential analyses, genetic enrichment for human traits, or peak–gene correlation.
+The **primary module** processes each GEM well, combines selected GEM wells into an aggregation, clusters and labels cell types in its gene-expression (GEX) and ATAC data, and integrates both modalities with weighted nearest neighbors (WNN). Three optional modules extend a completed aggregation with differential analyses, genetic enrichment for human traits, or peak–gene correlation.
 
 [Image omitted; source: `figures/multiomeR_overview_simplified.drawio.svg`; alt: Image]
 
 ## How this manual is organized
 
 - **Try the public demo:** [install multiomeR](demo_installation.md), then run and inspect a small example analysis.
-- **Analyze your own data:** [check your inputs](main_overview.md), then configure, run, and review the main pipeline one checkpoint at a time.
+- **Analyze your own data:** [check your inputs](main_overview.md), then configure, run, and review the primary module one checkpoint at a time.
 - **Add an optional analysis:** run [differential analyses](downstream_differential_analyses.md), [genetic enrichment](downstream_genetic_enrichment.md), or [peak–gene correlation](downstream_peak_gene_correlation.md) on a completed aggregation.
 - **Operation and scaling:** [run locally or on a scheduler](performance_distributed_computing.md), and [troubleshoot](troubleshooting.md) failed or outdated targets.
 - **Reference:** browse the [output gallery](gallery.md) for an example of each plot, and look up output files, configuration tables, and methods.
@@ -45,7 +45,7 @@ You need basic R skills, a Linux terminal, and a machine with sufficient [memory
 
 - A **GEM well** is one 10x Chromium chip channel and its `cellranger-arc count` output directory. It may contain nuclei from several **donors**, the individuals identified by `donor_id`.
 - An **aggregation** is a joint analysis of one or more GEM wells.
-- A **checkpoint** is one of the eight stages of the main pipeline, each ending with plots to review before you continue. Its name, such as `8_multimodal_QC`, appears in target names and plot folders.
+- A **checkpoint** is one of the eight stages of the primary module, each ending with plots to review before you continue. Its name, such as `8_multimodal_QC`, appears in target names and plot folders.
 - A **target** is a named result, such as a metadata table, matrix directory, or plot. You request the targets you want; `targets` builds the earlier results they depend on, in order, and reuses those that are up to date. Most target names end with their GEM well or aggregation, as in `multimodal_Seurat_object.8_multimodal_QC.immune_human_2x`.
 - The **store** is the folder where `targets` keeps results and the records needed for reruns. Paths in this manual write it as `<store>`.
 
@@ -272,7 +272,7 @@ Continue to [Run your own analysis](main_running.md#steps).
 
 # Run your own analysis
 
-Configure your data once, then work through the eight checkpoints of the main pipeline in order. At each checkpoint, run its targets, review its plots and revise its settings until you accept the result. Start with the defaults and revise as the plots suggest: each plot's subtitle and caption say what to look for, and the [output gallery](gallery.md) shows an example of every plot.
+Configure your data once, then work through the eight checkpoints of the primary module in order. At each checkpoint, run its targets, review its plots and revise its settings until you accept the result. Start with the defaults and revise as the plots suggest: each plot's subtitle and caption say what to look for, and the [output gallery](gallery.md) shows an example of every plot.
 
 Run the R commands from the repository root, as in the demo. Replace `my_aggregation` and `my_GEM_well` with your own names. `<store>` is the targets store set in `_targets.yaml`, normally `outputs/` in the repository root. Edit the files in the [selected configuration directory](main_overview.md#configuration-directory); linked parameters belong in your aggregation's entry in `cfg_aggregations.yaml`.
 
@@ -1326,7 +1326,7 @@ Omit it until the peak QC plots at [checkpoint 4](main_running.md#checkpoint-4) 
 
 ## Optional modules
 
-Omit [`modules`](parameters.html#modules) for the first run. After reviewing the main results, list the modules to run:
+Omit [`modules`](parameters.html#modules) for the first run. After reviewing the primary module's results, list the optional modules to run:
 
 ``` {.yaml filename="cfg_aggregations.yaml"}
 my_aggregation:
@@ -1343,7 +1343,7 @@ Each listed module also needs an entry named after the aggregation in its own co
 
 ## Parameter reference {#parameter-reference}
 
-The [parameter browser](parameters.html) lists every parameter of the main workflow and the optional modules with its default, type and an example. Choose a workflow, then search by name or purpose. The [committed example](https://github.com/koefoeden/multiomeR/blob/main/configuration/cfg_aggregations.yaml) shows complete entries.
+The [parameter browser](parameters.html) lists every parameter of the primary module and the optional modules with its default, type and an example. Choose a workflow, then search by name or purpose. The [committed example](https://github.com/koefoeden/multiomeR/blob/main/configuration/cfg_aggregations.yaml) shows complete entries.
 
 <details>
 
@@ -1370,7 +1370,7 @@ Use this book when you need to trace a configuration value into mapped targets, 
 For a first implementation pass:
 
 1. Read [Reading the graph views](graph_methodology.md) and follow its configuration-to-target trace.
-2. Open the [main pipeline](implementation_main.md) graph for the modality or checkpoint you plan to change.
+2. Open the [primary module](implementation_main.md) graph for the modality or checkpoint you plan to change.
 3. Use [Implementation conventions](implementation_conventions.md) to understand the relevant manifest, mapping, symbol, tag, and runtime contracts.
 4. Read [Background and design philosophy](background_philosophy.md) when you need the rationale for the editable-workflow design.
 
@@ -1406,7 +1406,7 @@ The graph chapters collect simplified views of the real `{targets}` dependency g
 
 The diagrams are generated from tagged target metadata and the real dependency graph, then simplified by pruning or bypassing lower-level nodes that would make each view harder to read. They keep real target names and preserve the dependency structure where practical, while staying compact enough to build intuition about the main control points.
 
-The following chapters cover the main pipeline, the differential analyses module, and the genetic enrichment module.
+The following chapters cover the primary module and the differential analyses, genetic enrichment and peak–gene correlation modules.
 
 ## Trace one configured aggregation
 
@@ -1466,7 +1466,7 @@ The currently meaningful tag families are:
 [resource_observation:<note>]   compact empirical resource note
 ```
 
-`[checkpoint:<name>]` marks targets selectable with `targets::tar_described_as()`. The eight numbered main-pipeline groups are listed in `QC_checkpoint_manifest.tsv`; optional module groups remain unnumbered. UMAP parameter sweeps belong to their modality's numbered checkpoint, and compatibility objects belong to GEX checkpoint 3 or multimodal checkpoint 8. Selection matches description substrings; include the closing `]` to match a complete checkpoint tag. Dependencies still come from the target commands. [Run your own analysis](../main_running.html#steps) explains each boundary; acceptance criteria depend on the study.
+`[checkpoint:<name>]` marks targets selectable with `targets::tar_described_as()`. The eight numbered primary-module groups are listed in `QC_checkpoint_manifest.tsv`; optional module groups remain unnumbered. UMAP parameter sweeps belong to their modality's numbered checkpoint, and compatibility objects belong to GEX checkpoint 3 or multimodal checkpoint 8. Selection matches description substrings; include the closing `]` to match a complete checkpoint tag. Dependencies still come from the target commands. [Run your own analysis](../main_running.html#steps) explains each boundary; acceptance criteria depend on the study.
 
 Numbered checkpoint plot targets end in the checkpoint name with hyphens replaced by underscores, before the mapped dataset or aggregation suffix. For example, `VizDimLoadings_plots.2_GEX_PCA_QC.my_aggregation` writes beneath `<store>/plots/my_aggregation/2_GEX_PCA_QC/`. Only plot targets use this naming convention; computational and metadata targets retain their modality suffixes.
 
@@ -1618,7 +1618,7 @@ combined_counts_matrix <- purrr::reduce(
 
 Column names should describe the downstream scope, the upstream target, and the fact that the value is a symbol list. The `aggregation_*_syms` columns, such as `aggregation_GEX_counts_BPCells_matrix_syms`, splice per GEM well targets into aggregation-level targets.
 
-Module target files also need aggregation-specific references to main-pipeline targets. For this, `add_aggregation_target_syms()` creates one symbol per row, suffixed by the aggregation name. These columns are named like the target they replace rather than with `*_syms`, because each cell is a single symbol rather than a list.
+Module target files also need aggregation-specific references to primary-module targets. For this, `add_aggregation_target_syms()` creates one symbol per row, suffixed by the aggregation name. These columns are named like the target they replace rather than with `*_syms`, because each cell is a single symbol rather than a list.
 
 ``` r
 differential_analyses_tibble |>
@@ -1867,7 +1867,7 @@ Separate targets make intermediate tables, matrices, and files available for ins
 
 <!-- source: website/implementation/implementation_main.md -->
 
-# Main pipeline
+# Primary module
 
 
 
@@ -1983,7 +1983,7 @@ This view covers the TSS table, candidate peak–gene pairs, the broad WNN cell 
 
 # Preprocessing and nucleus QC
 
-This chapter describes per-GEM-well preprocessing and the successive nucleus filters up to the final WNN cell set, and lists every setting that determines them, using the layout defined in [Methods and parameter tables](implementation_conventions.md#methods-and-parameter-tables). The target structure is shown in the [main pipeline graph](implementation_main.md). GEM-well-level settings are columns of `cfg_GEM_wells.tsv`, described in [GEM well table](../reference_GEM_wells.html); aggregation-level settings are manifest parameters.
+This chapter describes per-GEM-well preprocessing and the successive nucleus filters up to the final WNN cell set, and lists every setting that determines them, using the layout defined in [Methods and parameter tables](implementation_conventions.md#methods-and-parameter-tables). The target structure is shown in the [primary-module graph](implementation_main.md). GEM-well-level settings are columns of `cfg_GEM_wells.tsv`, described in [GEM well table](../reference_GEM_wells.html); aggregation-level settings are manifest parameters.
 
 ## Aggregation inputs and operational settings
 
@@ -2089,7 +2089,7 @@ WNN integration uses the nuclei retained by the ATAC branch that have rows in bo
 
 # GEX, ATAC, batch correction and WNN
 
-This chapter describes normalization and dimensional reduction of both modalities, peak definition, batch correction, weighted nearest-neighbour (WNN) integration, and the shared graph, clustering and UMAP steps. It lists every setting that determines them, using the layout defined in [Methods and parameter tables](implementation_conventions.md#methods-and-parameter-tables). The target structure is shown in the [main pipeline graph](implementation_main.md). Library versions are pinned by the Pixi environment: BPCells 0.3.1, igraph 2.3.0, harmony 2.0.2, uwot 0.2.4 and Seurat 5.5.0 at the time of writing.
+This chapter describes normalization and dimensional reduction of both modalities, peak definition, batch correction, weighted nearest-neighbour (WNN) integration, and the shared graph, clustering and UMAP steps. It lists every setting that determines them, using the layout defined in [Methods and parameter tables](implementation_conventions.md#methods-and-parameter-tables). The target structure is shown in the [primary-module graph](implementation_main.md). Library versions are pinned by the Pixi environment: BPCells 0.3.1, igraph 2.3.0, harmony 2.0.2, uwot 0.2.4 and Seurat 5.5.0 at the time of writing.
 
 ## GEX normalization and PCA
 
@@ -2383,7 +2383,7 @@ Nuclei are counted by donor and annotation class. Every observed class is tested
 
 ## Pseudobulk construction
 
-GEX and ATAC counts are summed within each donor and annotation class in the main pipeline, so the module reuses the same pseudobulk targets as the compatibility export. Sample identifiers combine the class and the donor. Four feature matrices are tested:
+GEX and ATAC counts are summed within each donor and annotation class in the primary module, so this module reuses the same pseudobulk targets as the compatibility export. Sample identifiers combine the class and the donor. Four feature matrices are tested:
 
 - **Gene expression (DGE)**: the GEX pseudobulk count matrix.
 - **Chromatin accessibility (DCA)**: the consensus-peak pseudobulk count matrix after peak-level QC.
@@ -2521,7 +2521,7 @@ Study identifiers of the Open Targets form are resolved against the pinned platf
 
 ## Nucleus-level deviations
 
-The trait peak weights form a chromVAR annotation. Deviations and z-scores per nucleus are computed analytically with betterChromVAR on the ATAC chromVAR object reused from the main pipeline, with the GC-bias background described in [Cell-type annotation and motif accessibility](methods_annotation_and_motifs.md#motif-families-and-motif-accessibility).
+The trait peak weights form a chromVAR annotation. Deviations and z-scores per nucleus are computed analytically with betterChromVAR on the ATAC chromVAR object reused from the primary module, with the GC-bias background described in [Cell-type annotation and motif accessibility](methods_annotation_and_motifs.md#motif-families-and-motif-accessibility).
 
 | Step | Setting | Status | Value | Source |
 |---|---|---|---|---|

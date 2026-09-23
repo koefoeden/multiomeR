@@ -55,7 +55,7 @@ Omit it until the peak QC plots at [checkpoint 4](main_running.md#checkpoint-4) 
 
 ## Optional modules
 
-Omit [`modules`](parameters.html#modules) for the first run. After reviewing the main results, list the modules to run:
+Omit [`modules`](parameters.html#modules) for the first run. After reviewing the primary module's results, list the optional modules to run:
 
 ``` {.yaml filename="cfg_aggregations.yaml"}
 my_aggregation:
@@ -72,7 +72,7 @@ Each listed module also needs an entry named after the aggregation in its own co
 
 ## Parameter reference {#parameter-reference}
 
-The [parameter browser](parameters.html) lists every parameter of the main workflow and the optional modules with its default, type and an example. Choose a workflow, then search by name or purpose. The [committed example](https://github.com/koefoeden/multiomeR/blob/main/configuration/cfg_aggregations.yaml) shows complete entries.
+The [parameter browser](parameters.html) lists every parameter of the primary module and the optional modules with its default, type and an example. Choose a workflow, then search by name or purpose. The [committed example](https://github.com/koefoeden/multiomeR/blob/main/configuration/cfg_aggregations.yaml) shows complete entries.
 
 <details>
 

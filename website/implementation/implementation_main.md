@@ -1,4 +1,4 @@
-# Main pipeline
+# Primary module
 
 ```{r setup, include = FALSE}
 pipeline_name <- "processing_and_aggregation"

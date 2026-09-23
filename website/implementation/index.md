@@ -9,7 +9,7 @@ Use this book when you need to trace a configuration value into mapped targets, 
 For a first implementation pass:
 
 1. Read [Reading the graph views](graph_methodology.md) and follow its configuration-to-target trace.
-2. Open the [main pipeline](implementation_main.md) graph for the modality or checkpoint you plan to change.
+2. Open the [primary module](implementation_main.md) graph for the modality or checkpoint you plan to change.
 3. Use [Implementation conventions](implementation_conventions.md) to understand the relevant manifest, mapping, symbol, tag, and runtime contracts.
 4. Read [Background and design philosophy](background_philosophy.md) when you need the rationale for the editable-workflow design.
 

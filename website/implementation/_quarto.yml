@@ -29,7 +29,7 @@ book:
     - part: "Target graph views"
       chapters:
         - href: implementation_main.md
-          text: Main pipeline
+          text: Primary module
         - href: implementation_differential_analyses.md
           text: Differential analyses
         - href: implementation_genetic_enrichment.md

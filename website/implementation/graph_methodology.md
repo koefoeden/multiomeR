@@ -9,7 +9,7 @@ The graph chapters collect simplified views of the real `{targets}` dependency g
 
 The diagrams are generated from tagged target metadata and the real dependency graph, then simplified by pruning or bypassing lower-level nodes that would make each view harder to read. They keep real target names and preserve the dependency structure where practical, while staying compact enough to build intuition about the main control points.
 
-The following chapters cover the main pipeline, the differential analyses module, and the genetic enrichment module.
+The following chapters cover the primary module and the differential analyses, genetic enrichment and peak–gene correlation modules.
 
 ## Trace one configured aggregation
 

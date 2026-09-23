@@ -24,7 +24,7 @@ Study identifiers of the Open Targets form are resolved against the pinned platf
 
 ## Nucleus-level deviations
 
-The trait peak weights form a chromVAR annotation. Deviations and z-scores per nucleus are computed analytically with betterChromVAR on the ATAC chromVAR object reused from the main pipeline, with the GC-bias background described in [Cell-type annotation and motif accessibility](methods_annotation_and_motifs.md#motif-families-and-motif-accessibility).
+The trait peak weights form a chromVAR annotation. Deviations and z-scores per nucleus are computed analytically with betterChromVAR on the ATAC chromVAR object reused from the primary module, with the GC-bias background described in [Cell-type annotation and motif accessibility](methods_annotation_and_motifs.md#motif-families-and-motif-accessibility).
 
 | Step | Setting | Status | Value | Source |
 |---|---|---|---|---|

@@ -32,65 +32,6 @@ min_max_scale_vec <- function(x) {
   (x - x_range[[1]]) / (x_range[[2]] - x_range[[1]])
 }
 
-if (!exists("SCAVENGE_native_state_env", inherits = FALSE)) {
-  SCAVENGE_native_state_env <- new.env(parent = emptyenv())
-  SCAVENGE_native_state_env$dll_name <- NULL
-}
-
-load_SCAVENGE_native_library <- function(native_source_file) {
-  if (!is.null(SCAVENGE_native_state_env$dll_name)) {
-    return(SCAVENGE_native_state_env$dll_name)
-  }
-
-  build_dir <- tempfile("multiomeR_scavenge_")
-  dir.create(build_dir)
-  build_source_file <- file.path(build_dir, basename(native_source_file))
-  if (!file.copy(native_source_file, build_source_file)) {
-    stop(
-      "Could not copy the SCAVENGE native source into its temporary build directory.",
-      call. = FALSE
-    )
-  }
-  shared_library_file <- file.path(
-    build_dir,
-    paste0("multiomeR_scavenge", .Platform$dynlib.ext)
-  )
-  compile_library <- function(env = character()) {
-    system2(
-      command = file.path(R.home("bin"), "R"),
-      args = c("CMD", "SHLIB", "-o", shared_library_file, build_source_file),
-      stdout = TRUE,
-      stderr = TRUE,
-      env = env
-    )
-  }
-  build_output <- compile_library(
-    c("PKG_CXXFLAGS=-fopenmp", "PKG_LIBS=-fopenmp")
-  )
-  build_status <- attr(build_output, "status")
-  if (!is.null(build_status) && build_status != 0L) {
-    openmp_output <- build_output
-    unlink(c(
-      shared_library_file,
-      sub("[.]cpp$", ".o", build_source_file)
-    ))
-    build_output <- compile_library()
-    build_status <- attr(build_output, "status")
-    if (!is.null(build_status) && build_status != 0L) {
-      stop(
-        "Could not compile the SCAVENGE native random-walk helper with ",
-        "OpenMP or its serial fallback:\n",
-        paste(c(openmp_output, build_output), collapse = "\n"),
-        call. = FALSE
-      )
-    }
-  }
-
-  loaded_library <- dyn.load(shared_library_file)
-  SCAVENGE_native_state_env$dll_name <- loaded_library[["name"]]
-  SCAVENGE_native_state_env$dll_name
-}
-
 #' Prepare a SCAVENGE adjacency matrix
 #'
 #' Convert a sparse weighted neighbor graph to the binary adjacency matrix
@@ -153,7 +94,7 @@ get_SCAVENGE_transition_matrix <- function(NN_graph) {
 run_sparse_random_walk_with_restart <- function(
   NN_graph,
   seed_cells,
-  restart_prob = 0.05,
+  restart_prob,
   stationary_cutoff = 1e-5,
   max_iter = 10000,
   transition_matrix = get_SCAVENGE_transition_matrix(NN_graph)
@@ -193,200 +134,64 @@ drop_SCAVENGE_degree_zero_cells <- function(NN_graph) {
   }
 }
 
-#' Sample SCAVENGE seeds within exact degree strata
+#' Propagate SCAVENGE seed signal from a chromVAR z-score record
 #'
-#' Reproduce the reference implementation's sequential base-R sampling while
-#' storing only the sampled seed indices needed by the streamed native walks.
+#' Restrict the binary graph to cells with finite z scores and neighbors, select
+#' seed cells, and propagate their signal. Cells without propagated signal are
+#' then removed together with any cells this leaves without neighbors.
 #'
-#' @param NN_graph Binary sparse adjacency matrix without degree-zero cells.
-#' @param seed_idx Named logical vector identifying observed seed cells.
-#' @param permutation_times Number of degree-matched seed samples.
-#' @return List of sorted one-based integer cell indices, one per permutation.
+#' @param chromVAR_z_score_record List containing `GWAS_ID` and named cell-level
+#'   `z_score_vec`.
+#' @param NN_graph Sparse cell-by-cell neighbor graph; cells are intersected with
+#'   the z-score vector before scoring.
+#' @param restart_prob Restart probability for random-walk propagation.
+#' @param seed_percent Fraction of highest z-score cells used as seed cells.
+#' @param max_z_score Upper z-score cap for finite-cell filtering before seed selection.
+#' @return List with `GWAS_ID`, the filtered `z_score_vec` used for seed
+#'   selection, and for the retained cells a binary adjacency `graph`, named
+#'   logical `seed_idx`, and named `propagation_score_vec`. Scores are zero when
+#'   no cell qualifies as a seed.
 #' @keywords internal
 
-sample_SCAVENGE_degree_matched_seed_indices <- function(
+get_SCAVENGE_propagation_record <- function(
+  chromVAR_z_score_record,
   NN_graph,
-  seed_idx,
-  permutation_times
-) {
-  seed_idx <- seed_idx[rownames(NN_graph)]
-  degree_vec <- Matrix::colSums(NN_graph)
-  seed_counts_by_degree <- table(degree_vec[seed_idx])
-  cells_by_degree <- split(
-    seq_along(degree_vec),
-    degree_vec
-  )[names(seed_counts_by_degree)]
-  if (any(lengths(cells_by_degree) == 0L)) {
-    stop("Could not resolve every SCAVENGE seed-degree group.")
-  }
-  sample_sizes <- as.integer(seed_counts_by_degree)
-  lapply(seq_len(permutation_times), function(permutation) {
-    sampled_indices <- Map(
-      function(cell_indices, sample_size) {
-        if (length(cell_indices) == 1L) {
-          cell_indices
-        } else {
-          sample(cell_indices, sample_size)
-        }
-      },
-      cells_by_degree,
-      sample_sizes
-    )
-    sort(as.integer(unlist(sampled_indices, use.names = FALSE)))
-  })
-}
-
-get_SCAVENGE_cluster_index_record <- function(
-  metadata_tibble,
-  cell_names,
-  graph_name
-) {
-  grouping_cols <- paste0(
-    graph_name,
-    c("_cluster_named", "_cluster_cell_type")
-  )
-  aligned_metadata <- metadata_tibble |>
-    dplyr::distinct(barcode_w_prefix, .keep_all = TRUE)
-  aligned_metadata <- aligned_metadata[
-    match(cell_names, aligned_metadata$barcode_w_prefix),
-    grouping_cols,
-    drop = FALSE
-  ]
-  membership_tibble <- aligned_metadata |>
-    dplyr::mutate(cell_index = seq_along(cell_names) - 1L) |>
-    tidyr::pivot_longer(
-      cols = dplyr::all_of(grouping_cols),
-      names_to = "grouping_col",
-      values_to = "cluster"
-    ) |>
-    dplyr::mutate(cluster = as.character(cluster)) |>
-    dplyr::filter(!is.na(cluster), cluster != "")
-  groups <- membership_tibble |>
-    dplyr::distinct(grouping_col, cluster) |>
-    dplyr::arrange(grouping_col, cluster) |>
-    dplyr::mutate(group_id = dplyr::row_number())
-  indexed_membership <- membership_tibble |>
-    dplyr::inner_join(groups, by = c("grouping_col", "cluster")) |>
-    dplyr::arrange(group_id, cell_index)
-  cluster_cells <- split(
-    indexed_membership$cell_index,
-    factor(indexed_membership$group_id, levels = groups$group_id)
-  )
-
-  groups$n_cells <- lengths(cluster_cells)
-  list(
-    groups = groups,
-    cluster_offsets = as.integer(c(0L, cumsum(lengths(cluster_cells)))),
-    cluster_cell_indices = as.integer(unlist(cluster_cells, use.names = FALSE))
-  )
-}
-
-run_SCAVENGE_permutation_statistics <- function(
-  transition_matrix,
-  sampled_cell_idx_list,
-  observed_score_vec,
-  cluster_index_record,
-  cores,
   restart_prob,
-  native_source_file
+  seed_percent,
+  max_z_score = 1000
 ) {
-  permutation_times <- length(sampled_cell_idx_list)
-  core_count <- min(cores, permutation_times)
-  chunk_count <- min(permutation_times, 4L * core_count)
-  chunk_sizes <- rep(permutation_times %/% chunk_count, chunk_count)
-  chunk_sizes[seq_len(permutation_times %% chunk_count)] <-
-    chunk_sizes[seq_len(permutation_times %% chunk_count)] + 1L
-  dll_name <- load_SCAVENGE_native_library(native_source_file)
+  z_score_vec <- chromVAR_z_score_record$z_score_vec
+  shared_cells <- intersect(names(z_score_vec), rownames(NN_graph))
+  z_score_vec <- z_score_vec[shared_cells]
+  graph <- get_SCAVENGE_adjacency_matrix(NN_graph[shared_cells, shared_cells])
 
-  statistics <- .Call(
-    "multiomeR_scavenge_permutation_statistics",
-    transition_matrix@p,
-    transition_matrix@i,
-    transition_matrix@x,
-    as.integer(c(0L, cumsum(lengths(sampled_cell_idx_list)))),
-    as.integer(unlist(sampled_cell_idx_list, use.names = FALSE) - 1L),
-    as.integer(c(0L, cumsum(chunk_sizes))),
-    unname(observed_score_vec),
-    cluster_index_record$cluster_offsets,
-    cluster_index_record$cluster_cell_indices,
-    as.double(restart_prob),
-    as.double(1e-5),
-    as.integer(10000L),
-    as.integer(core_count),
-    PACKAGE = dll_name
+  finite_z_score_cell_idx <- which(is.finite(z_score_vec) & z_score_vec <= max_z_score)
+  graph <- drop_SCAVENGE_degree_zero_cells(graph[finite_z_score_cell_idx, finite_z_score_cell_idx])
+  z_score_vec <- z_score_vec[rownames(graph)]
+  seed_idx <- if (length(z_score_vec) == 0) logical() else get_SCAVENGE_seed_index(z_score_vec, seed_percent = seed_percent)
+  record <- list(
+    GWAS_ID = chromVAR_z_score_record$GWAS_ID,
+    z_score_vec = z_score_vec,
+    graph = graph,
+    seed_idx = seed_idx,
+    propagation_score_vec = z_score_vec * 0
   )
-  statistics$cell_exceedance_counts <-
-    rowSums(statistics$cell_exceedance_counts)
-  statistics
-}
+  if (!any(seed_idx)) {
+    return(record)
+  }
 
-summarize_SCAVENGE_cluster_permutations <- function(
-  observed_score_vec,
-  cluster_index_record,
-  cluster_statistics,
-  permutation_times,
-  GWAS_ID,
-  graph_name
-) {
-  cluster_indices <- purrr::map(
-    seq_len(nrow(cluster_index_record$groups)),
-    \(i) seq.int(
-      cluster_index_record$cluster_offsets[[i]] + 1L,
-      cluster_index_record$cluster_offsets[[i + 1L]]
-    )
+  propagation_score_vec <- run_sparse_random_walk_with_restart(
+    NN_graph = graph,
+    seed_cells = names(z_score_vec)[seed_idx],
+    restart_prob = restart_prob
   )
-  cell_indices <- purrr::map(
-    cluster_indices,
-    \(idx) cluster_index_record$cluster_cell_indices[idx] + 1L
+  graph <- drop_SCAVENGE_degree_zero_cells(
+    graph[propagation_score_vec != 0, propagation_score_vec != 0, drop = FALSE]
   )
-  observed_median_raw_score <- purrr::map_dbl(
-    cell_indices,
-    \(idx) stats::median(observed_score_vec[idx])
-  )
-
-  cluster_index_record$groups |>
-    dplyr::mutate(
-      GWAS_ID = GWAS_ID,
-      graph = graph_name,
-      observed_median_raw_score = observed_median_raw_score,
-      null_median_raw_score = apply(
-        cluster_statistics,
-        1,
-        stats::median
-      ),
-      null_q95_raw_score = apply(
-        cluster_statistics,
-        1,
-        stats::quantile,
-        probs = 0.95,
-        names = FALSE
-      ),
-      exceedance_count = rowSums(
-        cluster_statistics >= observed_median_raw_score
-      ),
-      permutation_times = permutation_times,
-      permutation_p_value = (exceedance_count + 1) / (permutation_times + 1)
-    ) |>
-    dplyr::mutate(
-      permutation_p_adj_BH = stats::p.adjust(
-        permutation_p_value,
-        method = "BH"
-      ),
-      .by = grouping_col
-    ) |>
-    dplyr::select(
-      GWAS_ID,
-      graph,
-      grouping_col,
-      cluster,
-      observed_median_raw_score,
-      null_median_raw_score,
-      null_q95_raw_score,
-      exceedance_count,
-      permutation_times,
-      permutation_p_value,
-      permutation_p_adj_BH
-    )
+  record$graph <- graph
+  record$seed_idx <- seed_idx[rownames(graph)]
+  record$propagation_score_vec <- propagation_score_vec[rownames(graph)]
+  record
 }
 
 get_empty_TRS_tibble <- function() {
@@ -394,197 +199,46 @@ get_empty_TRS_tibble <- function() {
     barcode_w_prefix = character(),
     score = numeric(),
     GWAS_ID = character(),
-    seed_idx = logical(),
-    p_val = numeric(),
-    log10_p_val = numeric(),
-    score_is_sig = logical()
+    seed_idx = logical()
   )
 }
 
-#' Get SCAVENGE results from a chromVAR z-score record
+#' Get SCAVENGE trait-relevance scores from a chromVAR z-score record
 #'
-#' Compute cell-level SCAVENGE TRS and empirical cluster-level significance from
-#' the same degree-matched permutation random walks.
+#' Cap the propagation scores at their 0.95 quantile, min-max scale them, and
+#' multiply by the mean z score of the top-scoring cells.
 #'
-#' @param chromVAR_z_score_record List containing `GWAS_ID` and named cell-level
-#'   `z_score_vec`.
-#' @param NN_graph Sparse cell-by-cell neighbor graph; cells are intersected with
-#'   the z-score vector before scoring.
-#' @param metadata_tibble Cell metadata containing the graph-specific named and
-#'   cell-type cluster columns.
-#' @param graph_name Graph-name prefix used to resolve cluster columns.
-#' @param cores Number of CPU cores requested for external tools or parallel work.
-#' @param max_z_score Upper z-score cap for finite-cell filtering before seed selection.
-#' @param permutation_times Number of degree-matched permutations used for cell-
-#'   and cluster-level empirical P-values.
-#' @param restart_prob Restart probability for random-walk propagation.
-#' @param seed_percent Fraction of highest z-score cells used as seed cells.
+#' @inheritParams get_SCAVENGE_propagation_record
 #' @param scale_percent Upper quantile used to derive the TRS scale factor from
 #'   filtered z scores.
-#' @param native_source_file Tracked C++ source for the shared-memory random-walk
-#'   kernel.
-#' @return List containing a cell-level `TRS_tibble` and a group-level
-#'   `TRS_summary_tibble` with empirical cluster P-values.
+#' @return Cell-level tibble with `barcode_w_prefix`, `score`, `GWAS_ID`, and
+#'   `seed_idx`.
 #' @keywords internal
 
-get_SCAVENGE_result_from_chromVAR_z_score_record <- function(
+get_SCAVENGE_TRS_tibble <- function(
   chromVAR_z_score_record,
   NN_graph,
-  metadata_tibble,
-  graph_name,
-  cores,
-  max_z_score = 1000,
-  permutation_times = 1000,
-  restart_prob = 0.05,
-  seed_percent = 0.05,
-  scale_percent = 0.01,
-  native_source_file = file.path(
-    get_project_root(),
-    "src",
-    "scavenge_random_walk.cpp"
-  )
+  restart_prob,
+  seed_percent,
+  scale_percent = 0.01
 ) {
-  z_score_vec <- chromVAR_z_score_record$z_score_vec
-  GWAS_ID <- chromVAR_z_score_record$GWAS_ID
-  empty_result <- function() {
-    list(
-      TRS_tibble = get_empty_TRS_tibble(),
-      TRS_summary_tibble = get_empty_TRS_summary_tibble()
-    )
-  }
-  if (permutation_times < 1) {
-    stop("permutation_times must be at least 1.")
-  }
-
-  shared_cells <- intersect(names(z_score_vec), rownames(NN_graph))
-  z_score_vec <- z_score_vec[shared_cells]
-  NN_graph <- get_SCAVENGE_adjacency_matrix(
-    NN_graph[shared_cells, shared_cells]
-  )
-
-  finite_z_score_cell_idx <- which(is.finite(z_score_vec) & z_score_vec <= max_z_score)
-  z_score_vec_filtered <- z_score_vec[finite_z_score_cell_idx]
-  z_score_filtered_graph <- NN_graph[finite_z_score_cell_idx, finite_z_score_cell_idx]
-
-  deg0_filtered_graph <- drop_SCAVENGE_degree_zero_cells(z_score_filtered_graph)
-  deg0_z_score_vec_filtered <- z_score_vec_filtered[rownames(deg0_filtered_graph)]
-  if (length(deg0_z_score_vec_filtered) == 0) {
-    return(empty_result())
-  }
-
-  is_seed_bool_vec <- get_SCAVENGE_seed_index(deg0_z_score_vec_filtered, seed_percent = seed_percent)
-  if (!any(is_seed_bool_vec)) {
-    TRS_tibble <- tibble::tibble(
-      barcode_w_prefix = names(deg0_z_score_vec_filtered),
-      score = 0,
-      GWAS_ID = GWAS_ID,
-      seed_idx = FALSE,
-      p_val = 1,
-      log10_p_val = 0,
-      score_is_sig = FALSE
-    )
-    TRS_summary_tibble <- summarize_SCAVENGE_TRS_by_groups(
-      TRS_tibble = TRS_tibble,
-      metadata_tibble = metadata_tibble,
-      graph_name = graph_name
-    ) |>
-      dplyr::mutate(
-        graph = graph_name,
-        observed_median_raw_score = 0,
-        null_median_raw_score = NA_real_,
-        null_q95_raw_score = NA_real_,
-        exceedance_count = NA_integer_,
-        permutation_times = 0L,
-        permutation_p_value = 1,
-        permutation_p_adj_BH = 1,
-        .after = GWAS_ID
-      )
-    return(list(
-      TRS_tibble = TRS_tibble,
-      TRS_summary_tibble = TRS_summary_tibble
-    ))
-  }
-
-  # Calculate network propagation score and filter out cells with no score
-  net_prop_score_named_vec <- run_sparse_random_walk_with_restart(
-    NN_graph = deg0_filtered_graph,
-    seed_cells = rownames(deg0_filtered_graph)[is_seed_bool_vec],
-    restart_prob = restart_prob
-  )
-  zero_net_prop_score <- net_prop_score_named_vec == 0
-  net_prop_score_named_vec_filtered <- net_prop_score_named_vec[!zero_net_prop_score]
-  kept_cells <- names(net_prop_score_named_vec_filtered)
-  if (length(kept_cells) == 0) {
-    return(empty_result())
-  }
-
-  triple_filtered_graph <- drop_SCAVENGE_degree_zero_cells(deg0_filtered_graph[kept_cells, kept_cells, drop = FALSE])
-  kept_cells <- rownames(triple_filtered_graph)
-  net_prop_score_named_vec_filtered <- net_prop_score_named_vec_filtered[kept_cells]
-  if (length(kept_cells) == 0) {
-    return(empty_result())
-  }
-
-  # Cap, scale, and multiply by scale factor
-  scale_factor <- get_SCAVENGE_scale_factor(deg0_z_score_vec_filtered, scale_percent = scale_percent)
-
-  cell_named_TRS_vec <- net_prop_score_named_vec_filtered %>%
-    cap_values_by_quantile(q_ceiling = 0.95) %>%
-    min_max_scale_vec() %>%
-    magrittr::multiply_by(scale_factor)
-
-  seed_idx <- is_seed_bool_vec[kept_cells]
-  cluster_index_record <- get_SCAVENGE_cluster_index_record(
-    metadata_tibble = metadata_tibble,
-    cell_names = kept_cells,
-    graph_name = graph_name
-  )
-  sampled_cell_idx_list <- sample_SCAVENGE_degree_matched_seed_indices(
-    NN_graph = triple_filtered_graph,
-    seed_idx = seed_idx,
-    permutation_times = permutation_times
-  )
-  permutation_statistics <- run_SCAVENGE_permutation_statistics(
-    transition_matrix = get_SCAVENGE_transition_matrix(triple_filtered_graph),
-    sampled_cell_idx_list = sampled_cell_idx_list,
-    observed_score_vec = net_prop_score_named_vec_filtered,
-    cluster_index_record = cluster_index_record,
-    cores = cores,
+  propagation_record <- get_SCAVENGE_propagation_record(
+    chromVAR_z_score_record = chromVAR_z_score_record,
+    NN_graph = NN_graph,
     restart_prob = restart_prob,
-    native_source_file = native_source_file
+    seed_percent = seed_percent
   )
+  propagation_score_vec <- propagation_record$propagation_score_vec
+  if (length(propagation_score_vec) == 0) {
+    return(get_empty_TRS_tibble())
+  }
 
-  TRS_tibble <- cell_named_TRS_vec |>
-    tibble::enframe(name = "barcode_w_prefix", value = "score") |>
-    dplyr::mutate(
-      GWAS_ID = GWAS_ID,
-      seed_idx = unname(seed_idx),
-      p_val = permutation_statistics$cell_exceedance_counts /
-        permutation_times,
-      log10_p_val = -log10(p_val),
-      score_is_sig = p_val <= 0.05
-    )
-  cluster_permutation_tibble <- summarize_SCAVENGE_cluster_permutations(
-    observed_score_vec = net_prop_score_named_vec_filtered,
-    cluster_index_record = cluster_index_record,
-    cluster_statistics = permutation_statistics$cluster_statistics,
-    permutation_times = permutation_times,
-    GWAS_ID = GWAS_ID,
-    graph_name = graph_name
-  )
-  TRS_summary_tibble <- summarize_SCAVENGE_TRS_by_groups(
-    TRS_tibble = TRS_tibble,
-    metadata_tibble = metadata_tibble,
-    graph_name = graph_name
-  ) |>
-    dplyr::left_join(
-      cluster_permutation_tibble,
-      by = c("GWAS_ID", "grouping_col", "cluster")
-    )
-
-  list(
-    TRS_tibble = TRS_tibble,
-    TRS_summary_tibble = TRS_summary_tibble
+  scale_factor <- get_SCAVENGE_scale_factor(propagation_record$z_score_vec, scale_percent = scale_percent)
+  tibble::tibble(
+    barcode_w_prefix = names(propagation_score_vec),
+    score = unname(min_max_scale_vec(cap_values_by_quantile(propagation_score_vec, q_ceiling = 0.95)) * scale_factor),
+    GWAS_ID = propagation_record$GWAS_ID,
+    seed_idx = unname(propagation_record$seed_idx)
   )
 }
 
@@ -594,8 +248,6 @@ get_empty_TRS_summary_tibble <- function() {
     grouping_col = character(),
     cluster = character(),
     n_cells = integer(),
-    n_sig = integer(),
-    prop_sig = numeric(),
     median_score = numeric(),
     mean_score = numeric(),
     q25_score = numeric(),
@@ -614,8 +266,8 @@ get_empty_TRS_summary_tibble <- function() {
 #' @param graph_name Name of the neighbor graph or modality used in SCAVENGE group summaries.
 #' @param group_by_cols Suffixes appended to `graph_name` to find metadata
 #'   grouping columns, for example `cluster_named`.
-#' @return Summary tibble with cell counts, significant-cell fractions, and score
-#'   quantiles for each GWAS/group combination.
+#' @return Summary tibble with cell counts and score quantiles for each
+#'   GWAS/group combination.
 #' @keywords internal
 
 summarize_SCAVENGE_TRS_by_groups <- function(
@@ -650,12 +302,10 @@ summarize_SCAVENGE_TRS_by_groups <- function(
   }
 
   TRS_tibble |>
-    dplyr::inner_join(cell_group_tibble, by = "barcode_w_prefix") |>
+    dplyr::inner_join(cell_group_tibble, by = "barcode_w_prefix", relationship = "many-to-many") |>
     dplyr::group_by(GWAS_ID, grouping_col, cluster) |>
     dplyr::summarise(
       n_cells = dplyr::n(),
-      n_sig = sum(score_is_sig, na.rm = TRUE),
-      prop_sig = n_sig / n_cells,
       median_score = stats::median(score, na.rm = TRUE),
       mean_score = mean(score, na.rm = TRUE),
       q25_score = as.numeric(stats::quantile(score, 0.25, na.rm = TRUE, names = FALSE)),

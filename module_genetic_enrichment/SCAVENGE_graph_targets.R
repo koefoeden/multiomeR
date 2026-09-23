@@ -6,33 +6,16 @@ rlang::list2(
     resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
   ),
   targets::tar_target(
-    name = SCAVENGE_result_records,
-    description = "Compute cell-level SCAVENGE TRS and cluster-level permutation significance for one GWAS [part_of_graph:genetic_enrichment_single_nucleus]",
-    command = get_SCAVENGE_result_from_chromVAR_z_score_record(
+    name = TRS_tibbles,
+    description = "Compute cell-level SCAVENGE TRS for one GWAS [part_of_graph:genetic_enrichment_single_nucleus]",
+    command = get_SCAVENGE_TRS_tibble(
       chromVAR_z_score_record = chromVAR_z_score_records.single_nucleus,
       NN_graph = graph_matrix,
-      metadata_tibble = metadata_w_cell_types_tibble.WNN,
-      graph_name = map_SCAVENGE_graph_name,
-      cores = 6,
-      permutation_times = genetic_enrichment_SCAVENGE_permutation_times,
       restart_prob = genetic_enrichment_SCAVENGE_restart_prob,
-      seed_percent = genetic_enrichment_SCAVENGE_seed_percent,
-      native_source_file = SCAVENGE_native_source_file
+      seed_percent = genetic_enrichment_SCAVENGE_seed_percent
     ),
     pattern = map(chromVAR_z_score_records.single_nucleus),
-    resources = get_tar_resources(RAM_GB_req = 60, cores_req = 6)
-  ),
-  targets::tar_target(
-    name = TRS_tibbles,
-    description = "Extract one cell-level SCAVENGE TRS tibble",
-    command = purrr::pluck(SCAVENGE_result_records, "TRS_tibble"),
-    pattern = map(SCAVENGE_result_records)
-  ),
-  targets::tar_target(
-    name = TRS_summary_tibbles,
-    description = "Extract one cluster-level SCAVENGE summary with empirical permutation P-values",
-    command = purrr::pluck(SCAVENGE_result_records, "TRS_summary_tibble"),
-    pattern = map(SCAVENGE_result_records)
+    resources = get_tar_resources(RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = TRS_tibble,

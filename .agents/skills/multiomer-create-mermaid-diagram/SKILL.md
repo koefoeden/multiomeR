@@ -18,7 +18,9 @@ repositories; never overwrite them with diagrams from a private analysis.
 Keep analysis-specific graph exports outside `website/`.
 
 After changing membership, regenerate every tagged view and review the changed
-`*_v2.mmd` files. Follow the root `AGENTS.md` workflow to render both books and
+`*_v2.mmd` files. Edge order can differ between checkouts: compare sorted lines,
+discard reorder-only views, and keep a changed view's committed order so both
+repositories hold the same file. Follow the root `AGENTS.md` workflow to render both books and
 refresh the Markdown export. Graph generation must not execute targets.
 
 ## Hand-curated overviews

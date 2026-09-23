@@ -280,17 +280,12 @@ summarize_SCAVENGE_TRS_by_groups <- function(
     return(get_empty_TRS_summary_tibble())
   }
 
-  full_group_cols <- stringr::str_c(graph_name, "_", group_by_cols)
-  available_group_cols <- intersect(full_group_cols, colnames(metadata_tibble))
-  if (length(available_group_cols) == 0) {
-    return(get_empty_TRS_summary_tibble())
-  }
-
+  group_cols <- stringr::str_c(graph_name, "_", group_by_cols)
   cell_group_tibble <- metadata_tibble |>
     dplyr::distinct(barcode_w_prefix, .keep_all = TRUE) |>
-    dplyr::select(barcode_w_prefix, dplyr::all_of(available_group_cols)) |>
+    dplyr::select(barcode_w_prefix, dplyr::all_of(group_cols)) |>
     tidyr::pivot_longer(
-      cols = dplyr::all_of(available_group_cols),
+      cols = dplyr::all_of(group_cols),
       names_to = "grouping_col",
       values_to = "cluster"
     ) |>

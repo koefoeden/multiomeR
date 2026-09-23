@@ -5,8 +5,9 @@
 #' in its own temporary directory to avoid concurrent writes.
 #' @param native_source_file C or C++ source compiled with `R CMD SHLIB`.
 #' @param library_prefix Prefix of the loaded library name.
+#' @param env Named character vector of extra build variables, such as `PKG_CXXFLAGS`.
 #' @return Name of the loaded DLL, for use as the `PACKAGE` of `.Call()`.
-load_native_library <- function(native_source_file, library_prefix) {
+load_native_library <- function(native_source_file, library_prefix, env = character()) {
   library_name <- paste0(library_prefix, "_", substr(unname(tools::md5sum(native_source_file)), 1, 12))
   if (library_name %in% names(getLoadedDLLs())) {
     return(library_name)
@@ -20,6 +21,7 @@ load_native_library <- function(native_source_file, library_prefix) {
     command = file.path(R.home("bin"), "R"),
     args = c("CMD", "SHLIB", "-o", shared_library_file, build_source_file),
     wd = build_dir,
+    env = c("current", env),
     error_on_status = FALSE
   )
   if (build_result$status != 0L) {

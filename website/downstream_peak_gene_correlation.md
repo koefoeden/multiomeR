@@ -69,7 +69,9 @@ targets::tar_make(
 
 ## Review
 
-``` text
+Review the plots ([examples](gallery.md#peak-gene-correlation)); each plot's subtitle and caption say what to look for.
+
+```text
 <store>/plots/my_aggregation/peak_gene_correlation/
 ├── filter_retention_plot.png
 ├── diagnostics_plot.png
@@ -80,7 +82,7 @@ targets::tar_make(
 └── significant_pairs_vs_technical_features_plot.png
 ```
 
-Start with `filter_retention_plot.png`, which compares the three support filters by cell type and marks the active one. Top-link figures rank positive, estimable slopes outside self-promoter peaks by hierarchical p-value, without a significance cutoff, so appearing in a figure is not evidence of significance. `diagnostics_plot.png` shows skipped branches, and the other plots summarize the HC3 analysis. Interpretation guidance is in each plot's subtitle and caption; representative plots are in the [output gallery](gallery.md#peak-gene-correlation).
+Start with `filter_retention_plot.png`, which compares the three support filters by cell type and marks the active one. Top-link figures rank positive, estimable slopes outside self-promoter peaks by hierarchical p-value, without a significance cutoff, so appearing in a figure is not evidence of significance. `diagnostics_plot.png` shows skipped branches, and the other plots summarize the HC3 analysis.
 
 Read the tables in R, for example the hierarchical results with BH FDR within each cell type:
 

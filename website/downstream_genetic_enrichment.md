@@ -96,7 +96,9 @@ Runtime and disk use grow with the number of studies, nuclei, SCAVENGE permutati
 
 ## Review
 
-``` text
+Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtitle and caption say what to look for.
+
+```text
 <store>/plots/my_aggregation/genetic_enrichment/
 ├── GWAS_peak_weights_barplot.png
 ├── cell_type_pseudobulk/
@@ -111,8 +113,6 @@ Runtime and disk use grow with the number of studies, nuclei, SCAVENGE permutati
     ├── TRS_cluster_summary_plot/
     └── sig_prop_bars/
 ```
-
-Interpretation guidance is in each plot's subtitle and caption; representative plots are in the [output gallery](gallery.md#genetic-enrichment).
 
 Read the tables behind the plots in R, for example the cell-type enrichment scores:
 

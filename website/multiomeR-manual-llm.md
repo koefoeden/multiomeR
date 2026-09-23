@@ -974,7 +974,7 @@ Use an unqualified `targets::tar_make()` only when every active aggregation and 
 
 
 
-Each plot target has one example here, taken from `mixed_human_31x`: 31 public GEM wells from 10x Genomics and ENCODE covering heart, blood, pancreas, liver, colon, lung and cerebellum, with all optional analyses enabled. A card shows one of the files its target saves, the target's description and its name; select a preview to enlarge it. [Run your own analysis](main_running.md#steps) explains when to review each checkpoint.
+Each plot target has one example here, taken from `mixed_human_31x`: 31 public GEM wells from 10x Genomics and ENCODE covering heart, blood, pancreas, liver, colon, lung and cerebellum, with all optional analyses enabled. Its configuration is included as an inactive example; the raw data are public, but the reprocessed Cell Ranger ARC inputs are not supplied. A card shows one of the files its target saves, the target's description and its name; select a preview to enlarge it. [Run your own analysis](main_running.md#steps) explains when to review each checkpoint.
 
 [Generated Quarto chunk omitted: `render_output_gallery()`]
 
@@ -1113,7 +1113,7 @@ The [differential analyses](downstream_differential_analyses.md) module can read
 
 
 
-`cfg_aggregations.yaml` has one top-level entry per aggregation: a joint GEX, ATAC, and WNN analysis of one or more GEM wells. The committed file enables the two human GEM wells in `immune_human_2x`, with optional modules disabled. The mouse and ENCODE validation examples are inactive by default. Edit the file directly; the demo entries can stay as worked examples. This page describes the entry structure and lists every parameter. When to set each parameter, and how to review the effect, is given step by step in [Run your own analysis](main_running.md#steps).
+`cfg_aggregations.yaml` has one top-level entry per aggregation: a joint GEX, ATAC, and WNN analysis of one or more GEM wells. The committed file enables the two human GEM wells in `immune_human_2x`, with optional modules disabled. The mouse and ENCODE validation examples, and the `mixed_human_31x` aggregation behind the [output gallery](gallery.md), are inactive by default. Edit the file directly; the demo entries can stay as worked examples. This page describes the entry structure and lists every parameter. When to set each parameter, and how to review the effect, is given step by step in [Run your own analysis](main_running.md#steps).
 
 ## Minimal entry
 

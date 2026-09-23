@@ -14,3 +14,20 @@ ENCODE_heart_LV_6x:
         male_vs_female: sexMale
       plot_phenotype_vars: sexMale
       color_by: sex
+mixed_human_31x:
+  differential_analyses_extended_donor_id_metadata_tsv: module_differential_analyses/mixed_human_31x_donor_metadata.tsv
+  differential_analyses_pseudobulk_models:
+    cardiomyocyte_sex:
+      cell_type_subset: Cardiomyocyte
+      formula: ~ sexMale
+      contrast_specs_vec:
+        male_vs_female: sexMale
+  differential_analyses_cell_type_composition_models:
+    left_ventricle_sex:
+      GEM_well_IDs: [ENCSR245BNT, ENCSR508WRP, ENCSR568QKW, ENCSR793DNM, ENCSR956ZER, ENCSR987VTJ]
+      formula: ~ sexMale
+      contrast_specs_vec:
+        male_vs_female: sexMale
+      plot_phenotype_vars: sexMale
+      color_by: sex
+      # Test all observed cell-type labels; keep all nuclei in the denominator.

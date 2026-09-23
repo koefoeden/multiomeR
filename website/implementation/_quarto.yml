@@ -20,19 +20,7 @@ book:
           text: Reading the graph views
         - href: implementation_conventions.md
           text: Implementation conventions
-        - href: algorithm_validation.md
-          text: Algorithmic implementations, deviations and validation
-    - part: "Target graph views"
-      chapters:
-        - href: implementation_main.md
-          text: Primary module
-        - href: implementation_differential_analyses.md
-          text: Differential analyses
-        - href: implementation_genetic_enrichment.md
-          text: Genetic enrichment
-        - href: implementation_peak_gene_correlation.md
-          text: Peak–gene correlation
-    - part: "Methods and parameters"
+    - part: "Primary module"
       chapters:
         - href: methods_preprocessing_and_QC.md
           text: Preprocessing and nucleus QC
@@ -40,12 +28,18 @@ book:
           text: GEX, ATAC, batch correction and WNN
         - href: methods_annotation_and_motifs.md
           text: Cell-type annotation and motif accessibility
+    - part: "Optional modules"
+      chapters:
         - href: methods_peak_gene_correlation.md
           text: Peak–gene correlation
         - href: methods_differential_analyses.md
           text: Differential analyses
         - href: methods_genetic_enrichment.md
           text: Genetic enrichment
+    - part: "Validation"
+      chapters:
+        - href: algorithm_validation.md
+          text: Algorithmic implementations, deviations and validation
 
 bibliography: references.bib
 

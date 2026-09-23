@@ -1,6 +1,6 @@
 # Implementation conventions
 
-This chapter explains how configuration becomes target definitions: the parameter manifest supplies defaults and validation rules, mapping tables define repeated analyses, and target symbols connect their dependencies. Description tags support result selection and graph views. The last two sections cover project startup and the layout of the methods chapters. Preserve these contracts unless a change is meant to replace one of them.
+This chapter explains how configuration becomes target definitions: the parameter manifest supplies defaults and validation rules, mapping tables define repeated analyses, and target symbols connect their dependencies. Description tags support result selection and graph views. The last two sections cover project startup and the layout of the stage pages. Preserve these contracts unless a change is meant to replace one of them.
 
 ## Target metadata tags
 
@@ -216,24 +216,10 @@ targets::tar_target(
 
 If `get_tar_resources()` is called before controller resources are loaded, it fails deliberately with an instruction to call `load_project_runtime()` first. Scheduler-specific examples belong in the main manual's [Choose where the analysis runs](../performance_distributed_computing.html) page; the implementation contract is that target code can request resources declaratively once the runtime has been loaded.
 
-## Methods and parameter tables {#methods-and-parameter-tables}
+## Stage pages
 
-The chapters in the **Methods and parameters** part pair a description of each analysis stage with a table of the settings that determine its results.
+Each page under **Primary module** and **Optional modules** describes what its stage does, states the key fixed values that are not exposed as parameters, links to the source files, and shows the target graph. Configurable settings are documented only in the [parameter browser](../parameters.html), which is generated from the manifest.
 
-The descriptions state what each step does and why, without numerical values or links. They are kept in heading-less fragments under `_shared_methods/` and included both by these chapters and by the Supplementary Methods of the multiomeR manuscript, so the two texts cannot diverge while the manuscript is prepared. The submitted supplement cites an archived software release, which freezes the matching version of this book; afterwards the book continues to follow the code.
+The descriptions are heading-less fragments under `_shared_methods/`, included both by these pages and by the Supplementary Methods of the multiomeR manuscript, so the two texts cannot diverge while the manuscript is prepared. Keep the fragments free of links, and keep source links, graphs and configuration pointers on the pages. The submitted supplement cites an archived software release, which freezes the matching version of this book; afterwards the book continues to follow the code.
 
-The tables record the values. Each uses one layout:
-
-| Column | Content |
-|---|---|
-| Step | The analysis step, in the order the targets run. |
-| Setting | The quantity or method choice. |
-| Status | `Configurable` or `Fixed`. |
-| Value | Shown only for fixed settings. |
-| Source | Where the setting is controlled. |
-
-A setting is **configurable** when a row of `cfg_pipeline_parameters.tsv` controls it, directly or as a field of a nested parameter such as a model specification, or when a column of `cfg_GEM_wells.tsv` controls it. Configurable rows link to the [parameter browser](../parameters.html), which renders the current default from the public manifest snapshot, and never repeat the default.
-
-A setting is **fixed** when changing it requires a code edit. The Source cell names the symbol that fixes the value: the project function `f()` that contains it, the target whose command passes it, a vendored file, or `pkg::f()` when the value is a default of that package function. Package versions are locked by `pixi.lock`.
-
-The tables list settings a methods section would report or a user might want to change. Parallelism, plotting style and input validation are left to the code. `pixi run --use-environment-activation-cache -e dev check-methods-parameters` checks that every manifest link resolves, every manifest parameter is linked and every cited symbol exists; it does not compare values with the code.
+`pixi run --use-environment-activation-cache -e dev check-source-links` checks that every GitHub source link in the documentation names an existing repository path and that the fragments contain no links.

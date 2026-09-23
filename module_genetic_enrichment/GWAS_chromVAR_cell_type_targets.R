@@ -3,8 +3,7 @@ rlang::list2(
     name = GWAS_peak_weight_matrix,
     description = "Combine per-GWAS peak posterior-probability weights into one peak-by-GWAS annotation matrix [part_of_graph:genetic_enrichment_cell_type_contributions]",
     command = get_GWAS_chromVAR_peak_weight_matrix(
-      peak_weight_records = GWAS_peak_weight_records,
-      RSE_ATAC = chromVAR_obj.ATAC
+      peak_weight_records = GWAS_peak_weight_records
     ),
     resources = get_tar_resources(RAM_GB_req = 40)
   ),

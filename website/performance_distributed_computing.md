@@ -1,58 +1,64 @@
 # Choose where the analysis runs
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  eval = FALSE
-)
-```
+A **worker** is an R process that builds targets. A **controller** starts and manages workers, either on your machine or through a cluster scheduler. multiomeR defines its controllers with `crew` in `crew_controllers.R` in the repository root; the [targets distributed-computing guide](https://books.ropensci.org/targets/crew.html) explains the general setup.
 
-A **worker** is an R process that runs an analysis task. A **controller** starts and manages those workers, either on your machine or through a cluster scheduler. multiomeR uses `crew` for this. The committed configuration runs the demo unchanged on a machine that meets the [system requirements](demo_installation.md#system-requirements); adjust it as described below before running on a smaller machine or a scheduler.
+Independent GEM wells, modalities, and analysis branches run in parallel, so more workers shorten a run until the longest chain of dependent targets limits it. Use local workers on a workstation that meets the [system requirements](demo_installation.md#system-requirements). For large datasets, use a cluster scheduler and ask your support team which account and resource limits to use.
 
-Use local workers on a suitable workstation. On a shared cluster, ask your support team which scheduler, account, and resource limits to use. The [targets distributed-computing guide](https://books.ropensci.org/targets/crew.html) explains the general setup; this page covers multiomeR's configuration file.
+## What to expect
+
+The table shows two recorded runs to `multimodal_Seurat_object.8_multimodal_QC.my_aggregation`, estimated from the recorded runtime of each target:
+
+| Aggregation | GEM wells | Nuclei called by Cell Ranger ARC | Estimated critical path | Sum if targets ran one at a time |
+|---|---:|---:|---:|---:|
+| `immune_human_2x` | 2 | 17,277 | 17.3 minutes | 31.4 minutes |
+| `PBMC_human_6x` | 6 | 51,291 | 23.8 minutes | 52.4 minutes |
+
+`immune_human_2x` is the demo aggregation. `PBMC_human_6x` combines the six PBMC GEM wells in the public `cfg_GEM_wells.tsv`; the public `cfg_aggregations.yaml` does not define it.
+
+The critical path is the longest chain of dependent targets: the shortest possible run time when enough workers are available. Fewer workers and scheduler queue time make real runs longer, as do more nuclei, peaks, plots, or modules. Treat the numbers as examples, not predictions for another machine or configuration, and time one representative aggregation before sizing a large run.
 
 ## Local execution
 
-A fresh clone includes a local `crew_controllers.R` sized for a 16-CPU, 256-GB workstation, with four light workers and two heavy workers. A machine near the 60-GB minimum should reduce concurrency to one heavy worker and should not run several memory-intensive targets simultaneously. Edit the worker counts and resource tiers directly in `crew_controllers.R`, keeping controller names identical between `controller_list` and `controller_resources_tibble`.
+The committed `crew_controllers.R` is sized for a 16-CPU, 256-GB workstation: four `local-light` workers (1 core, 16 GB each) and two `local-heavy` workers (6 cores, 60 GB each). On a machine near the 60-GB minimum, lower the two `workers` values so that only one heavy target runs at a time:
 
-After changing the file, restart R or reload the project runtime explicitly:
+```{.r filename="crew_controllers.R"}
+controller_list <- list(
+  crew::crew_controller_local(
+    name = "local-light",
+    workers = 2
+  ),
+  crew::crew_controller_local(
+    name = "local-heavy",
+    workers = 1,
+    crashes_max = 1
+  )
+)
+```
+
+The `RAM_GB` values in `controller_resources_tibble` route each target to a controller with enough declared memory; they do not limit memory use. Choose `workers` values so that the targets that can run at once fit in physical memory, and raise them only when you know the memory headroom.
+
+After editing the file, restart R or reload the runtime, which also checks the file:
 
 ```{.r filename="R"}
 load_project_runtime(force = TRUE)
 ```
 
-Rebuild a narrow manifest selection before starting the data run to validate the controller contract.
-
 ## Scheduler execution
 
-For SLURM, PBS, SGE, or LSF, replace the local controllers with the corresponding `crew.cluster` controllers. The commented SLURM section in `crew_controllers.R` shows the expected shape.
+For SLURM, PBS, SGE, or LSF, replace the local controllers with the matching `crew.cluster` controllers. The commented SLURM example in `crew_controllers.R` defines light, heavy, and GPU tiers. For each tier:
 
-For every scheduler tier:
+1. Request, in the controller's scheduler options, the CPUs, memory, and GPUs that its `controller_resources_tibble` row declares.
+2. Set the queue, account, wall time, modules, and worker start-up commands your cluster requires.
+3. Give GPUs their own tier: only targets that request GPUs are routed to it.
 
-1. Match the controller name in both the controller object and resource table.
-2. Align scheduler CPU and memory requests with the capacity declared in the table.
-3. Set queue, account, wall-time, module, and worker-startup options required by the cluster.
-4. Keep GPU tiers separate; GPU controllers are considered only for targets requesting GPUs.
-5. Test a small target selection before increasing worker counts.
+Test a small target selection before increasing worker counts. For start-up and routing errors, see [Troubleshooting](troubleshooting.md#controller-and-scheduler-failures).
 
-Scheduler startup failures, resource-routing errors, and target failures are handled separately in [Troubleshooting](troubleshooting.md). Developer-facing details about runtime bootstrap and `get_tar_resources()` are in [Implementation conventions](implementation/implementation_conventions.html#runtime-bootstrap).
+## Rules for `crew_controllers.R` {#controller-rules}
 
-## Controller contract
+The last expression in the file must be a list with `controller_list` and `controller_resources_tibble`:
 
-`crew_controllers.R` is sourced during `load_project_runtime()` and must return a named list containing these components:
+- Each `controller_name` in the table names one controller in `controller_list`. Names are unique.
+- The table has exactly the columns `controller_name`, `cores`, `RAM_GB`, and `gpus`, in that order, with numeric, non-missing resources.
+- Each target runs on the smallest tier that meets its CPU, RAM, and GPU request; targets without a request run on the smallest tier. Tiers are compared by GPUs, then cores, then RAM, so row order does not matter.
 
-- `controller_list`: a non-empty list of `crew` controllers with unique controller names.
-- `controller_resources_tibble`: a data frame with exactly `controller_name`, `cores`, `RAM_GB`, and `gpus`, in that order.
-
-The resource columns must be numeric, non-missing, and contain one unique row per controller name represented in `controller_list`. The first resource-table row is the default controller. For explicit requests, `get_tar_resources()` selects the first compatible row after applying the requested CPU, RAM, and GPU constraints.
-
-```r
-controller_resources_tibble <- tibble::tribble(
-  ~controller_name, ~cores, ~RAM_GB, ~gpus,
-  "local-light",        1,      16,     0,
-  "local-heavy",        6,      60,     0
-)
-```
-
-The table describes controller capacity for routing. A local controller does not create physical memory: its `workers` value must be low enough that concurrent jobs cannot exhaust the machine.
+[Implementation conventions](implementation/implementation_conventions.html#runtime-bootstrap) describe how the runtime loads this file and how targets request resources.

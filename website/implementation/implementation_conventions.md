@@ -1,6 +1,6 @@
 # Implementation conventions
 
-This chapter explains how configuration becomes target definitions: the parameter manifest supplies defaults and validation rules, mapping tables define repeated analyses, and target symbols connect their dependencies. Description tags support result selection and graph views. The final section covers project startup and resource configuration.
+This chapter explains how configuration becomes target definitions: the parameter manifest supplies defaults and validation rules, mapping tables define repeated analyses, and target symbols connect their dependencies. Description tags support result selection and graph views. The last two sections cover project startup and the layout of the methods chapters. Preserve these contracts unless a change is meant to replace one of them.
 
 ## Target metadata tags
 
@@ -14,7 +14,7 @@ targets::tar_target(
 )
 ```
 
-The currently meaningful tag families are:
+The tag families are:
 
 ``` text
 [checkpoint:<name>]             review or execution checkpoint
@@ -22,7 +22,7 @@ The currently meaningful tag families are:
 [resource_observation:<note>]   compact empirical resource note
 ```
 
-`[checkpoint:<name>]` marks targets selectable with `targets::tar_described_as()`. The eight numbered primary-module groups are listed in `QC_checkpoint_manifest.tsv`; optional module groups remain unnumbered. UMAP parameter sweeps belong to their modality's numbered checkpoint, and compatibility objects belong to GEX checkpoint 3 or multimodal checkpoint 8. Selection matches description substrings; include the closing `]` to match a complete checkpoint tag. Dependencies still come from the target commands. [Run your own analysis](../main_running.html#steps) explains each boundary; acceptance criteria depend on the study.
+`[checkpoint:<name>]` marks targets selectable with `targets::tar_described_as()`. The numbered primary-module groups are listed in `QC_checkpoint_manifest.tsv`; optional module groups remain unnumbered. Selection matches description substrings; include the closing `]` to match a complete checkpoint tag. Dependencies still come from the target commands. [Run your own analysis](../main_running.html#steps) explains each boundary.
 
 Numbered checkpoint plot targets end in the checkpoint name with hyphens replaced by underscores, before the mapped dataset or aggregation suffix. For example, `VizDimLoadings_plots.2_GEX_PCA_QC.my_aggregation` writes beneath `<store>/plots/my_aggregation/2_GEX_PCA_QC/`. Only plot targets use this naming convention; computational and metadata targets retain their modality suffixes.
 
@@ -37,22 +37,15 @@ description = paste(
 )
 ```
 
-`[resource_observation:<note>]` is currently best treated as provisional documentation. It is useful when a target has a compact empirical runtime or memory observation worth keeping near the target definition, but it is not yet a structured resource-estimation system. Keep these notes short, dated when relevant, and self-explanatory.
+`[resource_observation:<note>]` keeps a short, dated runtime or memory observation next to the target that produced it. It is documentation, not a resource-estimation system.
 
 Use tags only when they create a durable handle for readers, graph helpers, or checkpoint commands. Ordinary internal dependencies can stay untagged.
 
 ## Parameter manifest
 
-`cfg_pipeline_parameters.tsv` is the schema for YAML-backed pipeline configuration. Each row defines one parameter for one scope:
+`cfg_pipeline_parameters.tsv` is the schema for YAML-backed pipeline configuration. Each row defines one parameter for one scope: `aggregation`, or the name of an optional module. Its columns record the type, cardinality, default, missing-value rule, allowed values and description of the parameter. The YAML files then only need to specify values that differ from the manifest defaults, plus values that are required because their resolved value may not be missing.
 
-``` text
-aggregation
-differential_analyses
-genetic_enrichment
-peak_gene_correlation
-```
-
-For each parameter, the manifest records its name, type, cardinality, default value, missing-value rule, allowed values, example values, topic, graph/module ownership, and human description. The YAML files then only need to specify values that differ from the manifest defaults, plus values that are required because their resolved value may not be missing.
+Configuration readers resolve file names with `configuration_path()`, within `configuration/` or the directory named by the ignored `configuration.local`. The selection does not change data-path interpretation or the targets store. Aggregation and enabled-module settings are resolved during graph construction; disabled modules do not read their configuration.
 
 At read time, the pipeline loads the manifest for a scope and parses each `default_value` as YAML. This allows defaults to be literal scalars, `NULL`, YAML lists, or evaluated YAML expressions such as `!expr 1:30`. Manifest defaults seed every config row before inheritance and row-specific overrides are applied.
 
@@ -100,15 +93,13 @@ The root `_targets.R` builds the target graph from mapping tibbles. Each mapping
 
 The core mapping flow is:
 
-Configuration readers use `configuration_path()` to resolve a basename within `configuration/` or the directory named by the ignored `configuration.local`. Relative selections are anchored at the repository root. This selection does not change data-path interpretation or `_targets.yaml`. The selected GEM-well path is a graph global consumed by the file target, so changing directories also changes its dependency. Aggregation and enabled-module settings are resolved during graph construction. Disabled modules do not read their configuration.
-
 1.  `GEM_well_tibble_all` reads only the pre-aggregation processing columns from every row in the canonical `cfg_GEM_wells.tsv`.
 2.  `aggregation_tibble_all_from_yaml` is read from `cfg_aggregations.yaml`.
 3.  `aggregation_tibble` keeps active aggregations, validates their GEM well references against the complete view, and adds upstream target-symbol columns.
 4.  `GEM_well_tibble` keeps GEM wells whose `GEM_well_is_active` value is true.
 5.  `_targets.R` expands active GEM wells and aggregations with `tar_map()`, then appends module target files. Cross-GEM-well QC summaries use the aggregation's selected wells.
 
-Within each aggregation, `GEM_well_metadata_tibble` reads the same canonical file, subsets it to `aggregation_GEM_well_IDs`, and preserves that order. Cheap keyed projection targets then expose only the columns requested for SCT, Harmony or configured analyses. Complete non-processing annotations are joined only for explicit export objects. These projection targets are cache boundaries: a newly added or edited online column can update the canonical table without changing expensive consumers whose selected view is identical.
+Aggregation targets read GEM-well annotations through keyed projection targets that expose only the columns a consumer needs. These projections are cache boundaries: editing an unrelated column of `cfg_GEM_wells.tsv` does not invalidate expensive consumers.
 
 ``` r
 tarchetypes::tar_map(
@@ -227,32 +218,22 @@ If `get_tar_resources()` is called before controller resources are loaded, it fa
 
 ## Methods and parameter tables {#methods-and-parameter-tables}
 
-The chapters in the **Methods and parameters** part describe each analysis stage and list every setting that determines its result. They are the single place where exact values are recorded; the manuscript supplement describes the same algorithms without values. Each chapter uses one table layout:
+The chapters in the **Methods and parameters** part pair a description of each analysis stage with a table of the settings that determine its results.
+
+The descriptions state what each step does and why, without numerical values or links. They are kept in heading-less fragments under `_shared_methods/` and included both by these chapters and by the Supplementary Methods of the multiomeR manuscript, so the two texts cannot diverge while the manuscript is prepared. The submitted supplement cites an archived software release, which freezes the matching version of this book; afterwards the book continues to follow the code.
+
+The tables record the values. Each uses one layout:
 
 | Column | Content |
 |---|---|
 | Step | The analysis step, in the order the targets run. |
 | Setting | The quantity or method choice. |
-| Status | `Configurable` or `Hardcoded`, as defined below. |
-| Value | Shown only for hardcoded settings. |
-| Source | Where the setting lives. |
+| Status | `Configurable` or `Fixed`. |
+| Value | Shown only for fixed settings. |
+| Source | Where the setting is controlled. |
 
-A setting is **configurable** when a row in `cfg_pipeline_parameters.tsv` controls it, directly or as a field inside a nested manifest parameter such as a model specification, or when a column of `cfg_GEM_wells.tsv` controls it. Configurable rows link to the [parameter browser](../parameters.html), which renders the current default from the public manifest snapshot. They never repeat the default in prose, so a default change needs no edit outside the manifest.
+A setting is **configurable** when a row of `cfg_pipeline_parameters.tsv` controls it, directly or as a field of a nested parameter such as a model specification, or when a column of `cfg_GEM_wells.tsv` controls it. Configurable rows link to the [parameter browser](../parameters.html), which renders the current default from the public manifest snapshot, and never repeat the default.
 
-A setting is **hardcoded** when no manifest row or GEM-well column controls it. Hardcoded rows show the value and the source, which is one of:
+A setting is **fixed** when changing it requires a code edit. The Source cell names the symbol that fixes the value: the project function `f()` that contains it, the target whose command passes it, a vendored file, or `pkg::f()` when the value is a default of that package function. Package versions are locked by `pixi.lock`.
 
-``` text
-helper default   default argument of an R helper that the calling target does not override
-target literal   a literal passed explicitly in a target command
-inline literal   a constant inside a function body
-```
-
-Helper defaults are the easiest to expose as parameters later; inline literals require a code change. Changing any hardcoded value invalidates the affected targets on the next run, like any other code change.
-
-The demonstration settings in the manuscript supplement are resolved values for one aggregation and are not repeated here.
-
-## How to read the rest of the implementation book
-
-These conventions are the connective tissue behind the graph chapters. The parameter manifest explains why config rows can be compact. Mapping tibbles explain why target names have stable suffixes. Target-symbol columns explain how mapped targets pass sets of upstream targets across graph levels. Target metadata tags explain why some nodes remain visible in curated graph views. The bootstrap contract explains why helper functions, controller resources, and target options are available before `_targets.R` is evaluated.
-
-When modifying the implementation, preserve these contracts unless the change is explicitly meant to replace one of them.
+The tables list settings a methods section would report or a user might want to change. Parallelism, plotting style and input validation are left to the code. `pixi run --use-environment-activation-cache -e dev check-methods-parameters` checks that every manifest link resolves, every manifest parameter is linked and every cited symbol exists; it does not compare values with the code.

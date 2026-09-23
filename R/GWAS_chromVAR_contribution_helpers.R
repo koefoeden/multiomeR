@@ -98,8 +98,8 @@ get_GWAS_chromVAR_peak_contribution_tibble <- function(
       FUN = "/"
     )
 
-    deviation_vec <- colSums(deviation_contribution_matrix)
-    z_vec <- colSums(z_contribution_matrix)
+    deviation_vec <- unname(colSums(deviation_contribution_matrix))
+    z_vec <- unname(colSums(z_contribution_matrix))
     deviation_sd <- stats::sd(deviation_vec)
     relative_deviation_vec <- scale_within_vector(deviation_vec)
     relative_contribution_matrix <- if (is.na(deviation_sd) || deviation_sd == 0) {
@@ -185,9 +185,12 @@ summarize_GWAS_chromVAR_peak_contributions <- function(
 
 #' Allocate peak contributions to credible-set variants
 #'
+#' Consensus peaks do not overlap and variants are single positions, so each
+#' variant contributes through at most one peak.
+#'
 #' @param peak_contribution_tibble Exact peak-level chromVAR contributions.
 #' @param peak_variant_weight_tibble Peak-variant weights.
-#' @return Variant-level contribution rows, summed across overlapping peaks.
+#' @return One row per variant and cluster.
 #' @keywords internal
 
 get_GWAS_chromVAR_variant_contribution_tibble <- function(peak_contribution_tibble, peak_variant_weight_tibble) {
@@ -205,36 +208,31 @@ get_GWAS_chromVAR_variant_contribution_tibble <- function(peak_contribution_tibb
       by = c("GWAS_ID", "peak_name", "peak_chromosome", "peak_start", "peak_end"),
       relationship = "many-to-many"
     ) |>
-    dplyr::mutate(
-      variant_share_of_peak_weight = .data$peak_variant_weight / .data$peak_weight,
-      dplyr::across(dplyr::all_of(contribution_cols), \(value) value * .data$variant_share_of_peak_weight)
-    ) |>
-    dplyr::summarise(
-      Category = dplyr::first(.data$Category),
-      credibleSetIndex = dplyr::first(.data$credibleSetIndex),
-      finemappingMethod = dplyr::first(.data$finemappingMethod),
-      chromosome = dplyr::first(.data$chromosome),
-      position = dplyr::first(.data$position),
-      locusStart = dplyr::first(.data$locusStart),
-      locusEnd = dplyr::first(.data$locusEnd),
-      posteriorProbability = dplyr::first(.data$posteriorProbability),
-      peak_variant_weight = sum(.data$peak_variant_weight),
-      n_peaks = dplyr::n_distinct(.data$peak_name),
-      peak_names = list(sort(unique(.data$peak_name))),
-      peak_start = min(.data$peak_start),
-      peak_end = max(.data$peak_end),
-      dplyr::across(dplyr::all_of(contribution_cols), sum),
-      deviation = dplyr::first(.data$deviation),
-      relative_deviation = dplyr::first(.data$relative_deviation),
-      z = dplyr::first(.data$z),
-      .by = c(GWAS_ID, cluster, studyLocusId, variantId)
-    ) |>
-    dplyr::relocate(
+    dplyr::mutate(dplyr::across(
+      dplyr::all_of(contribution_cols),
+      \(value) value * (.data$peak_variant_weight / .data$peak_weight)
+    )) |>
+    dplyr::select(
       GWAS_ID,
       Category,
       cluster,
       studyLocusId,
-      variantId
+      variantId,
+      credibleSetIndex,
+      finemappingMethod,
+      chromosome,
+      position,
+      locusStart,
+      locusEnd,
+      posteriorProbability,
+      peak_variant_weight,
+      peak_name,
+      peak_start,
+      peak_end,
+      dplyr::all_of(contribution_cols),
+      deviation,
+      relative_deviation,
+      z
     )
 }
 
@@ -391,7 +389,7 @@ get_GWAS_chromVAR_locus_contribution_tibble <- function(variant_contribution_tib
       locus_start = min(c(.data$locusStart, .data$peak_start, .data$position), na.rm = TRUE),
       locus_end = max(c(.data$locusEnd, .data$peak_end, .data$position), na.rm = TRUE),
       n_variants = dplyr::n_distinct(.data$variantId),
-      n_peaks = length(unique(unlist(.data$peak_names))),
+      n_peaks = dplyr::n_distinct(.data$peak_name),
       posterior_probability_sum = sum(.data$posteriorProbability),
       deviation_numerator_contribution = sum(.data$deviation_numerator_contribution),
       deviation_contribution = sum(.data$deviation_contribution),

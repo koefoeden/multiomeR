@@ -5,9 +5,9 @@ pipeline_name <- "genetic_enrichment"
 source("helpers/_setup.R")
 ```
 
-`module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, and attaches symbols for WNN metadata, graphs, embeddings, consensus peaks, chromVAR state, and ATAC fragments. It does not check the species; the GRCh38 GWAS inputs assume a human aggregation.
+`module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in `module_genetic_enrichment/`. It does not check the species; the GRCh38 GWAS inputs assume a human aggregation.
 
-The main target fragments live in `setup_targets.R`, `gchromVAR_targets.R`, `SCAVENGE_graph_targets.R`, `SCAVENGE_group_targets.R`, `GWAS_chromVAR_cell_type_targets.R`, and `GWAS_chromVAR_contribution_targets.R`. The user-facing release, method-selection, and interpretation contracts are documented in [Genetic enrichment](../downstream_genetic_enrichment.html).
+The methods and settings are in [Genetic enrichment methods](methods_genetic_enrichment.md), and the release, method-selection, and interpretation contracts in [Genetic enrichment](../downstream_genetic_enrichment.html).
 
 ## Single-nucleus and graph-based enrichment
 
@@ -18,8 +18,6 @@ The sparse SCAVENGE reimplementation, deliberate graph and permutation differenc
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_mermaid("website/figures/human_curated/genetic_enrichment_single_nucleus_v2.mmd")
 ```
-
-The fixed thresholds and the configurable settings of this module are listed in [Genetic enrichment methods](methods_genetic_enrichment.md).
 
 ## Cell-type pseudobulk enrichment
 

@@ -1363,20 +1363,21 @@ The [parameter browser](parameters.html) lists every parameter of the primary mo
 
 Use this book to trace a result back to its code or change how multiomeR works. For installation, configuration, execution, and output inspection, start with the [user manual](../). You do not need to read this book to run the demo.
 
-Use this book when you need to trace a configuration value into mapped targets, understand how the simplified graph views relate to the real `{targets}` graph, or decide where an implementation change belongs.
+## Design
+
+multiomeR keeps the analysis steps in an editable repository. Configuration covers common choices such as inputs, markers, dimensions, and models; R helpers and target definitions are available when a study needs a change beyond those settings. This flexibility also means that users must review which methods and assumptions fit their data.
+
+- **Reuse completed work.** [`targets`](https://books.ropensci.org/targets/) records dependencies between results, so a change rebuilds only the affected parts of an analysis, and independent tasks such as GEM wells run concurrently when workers are available.
+- **Keep large matrices on disk.** [BPCells](https://bnprks.github.io/BPCells/) provides disk-backed matrices and streaming operations; some steps still need substantial RAM. [Choose where the analysis runs](../performance_distributed_computing.html#what-to-expect) gives multiomeR examples.
+- **Keep the analysis inspectable.** Separate targets make intermediate tables, matrices, and files available for inspection, and Seurat/Signac exports allow exploration outside the pipeline.
 
 ## Where to start
 
-For a first implementation pass:
-
 1. Read [Reading the graph views](graph_methodology.md) and follow its configuration-to-target trace.
-2. Open the [primary module](implementation_main.md) graph for the modality or checkpoint you plan to change.
-3. Use [Implementation conventions](implementation_conventions.md) to understand the relevant manifest, mapping, symbol, tag, and runtime contracts.
-4. Read [Background and design philosophy](background_philosophy.md) when you need the rationale for the editable-workflow design.
+2. Open the [primary module](implementation_main.md) graph for the modality or checkpoint you plan to change. The [differential analyses](implementation_differential_analyses.md), [genetic enrichment](implementation_genetic_enrichment.md) and [peak–gene correlation](implementation_peak_gene_correlation.md) chapters cover the optional modules.
+3. Use [Implementation conventions](implementation_conventions.md) for the manifest, mapping, symbol, tag, and runtime contracts.
 
-The [differential analyses](implementation_differential_analyses.md), [genetic enrichment](implementation_genetic_enrichment.md) and [peak–gene correlation](implementation_peak_gene_correlation.md) chapters cover the optional module graphs.
-
-The **Methods and parameters** chapters, from [Preprocessing and nucleus QC](methods_preprocessing_and_QC.md) to [Genetic enrichment](methods_genetic_enrichment.md), describe each stage and list every fixed value and every configurable setting, using the table layout defined in [Implementation conventions](implementation_conventions.md#methods-and-parameter-tables). Read them when you need the exact behaviour behind a result, or when deciding whether a change is a configuration edit or a code edit.
+The **Methods and parameters** chapters, from [Preprocessing and nucleus QC](methods_preprocessing_and_QC.md) to [Genetic enrichment](methods_genetic_enrichment.md), describe each stage and tabulate the settings that determine its results. Read them when you need the behaviour behind a result, or when deciding whether a change is a configuration edit or a code edit. [Algorithmic implementations, deviations and validation](algorithm_validation.md) records how the reimplemented reference algorithms differ from their references and how they are tested.
 
 ## Common entry points
 
@@ -1389,8 +1390,6 @@ The **Methods and parameters** chapters, from [Preprocessing and nucleus QC](met
 | Inspect existing review selections | `[checkpoint:<name>]` description tags and the steps in [Run your own analysis](../main_running.html#steps). |
 | Add a graph-visible target | Existing `[part_of_graph:<graph_id>]` tags and graph-pruning rules. |
 | Change resource routing | `crew_controllers.R`, `packages/multiomeRCore/R/resource_helpers.R`, and the runtime bootstrap convention. |
-
-If you are trying to run multiomeR rather than modify it, start with the [main manual](../).
 
 
 ## Part: Orientation
@@ -1840,28 +1839,6 @@ pixi run --use-environment-activation-cache test
 ```
 
 
-## Part: Background
-
-
-<!-- source: website/implementation/background_philosophy.md -->
-
-# Why an editable workflow?
-
-multiomeR keeps the analysis steps in an editable repository. Configuration covers common choices such as inputs, markers, dimensions, and models; R helpers and target definitions are available when a study needs a change beyond those settings. This flexibility also means that users must review which methods and assumptions fit their data.
-
-## Reuse completed work
-
-`targets` records dependencies between results so that a change can rebuild the affected parts of an analysis. Independent tasks can run concurrently when worker capacity permits. This is useful when processing several GEM wells or repeating analyses with revised settings. The [targets manual](https://books.ropensci.org/targets/) explains the execution model and its limits.
-
-## Keep large matrices on disk
-
-BPCells provides disk-backed matrices and streaming operations that can reduce the need to hold full matrices in memory. Some analysis steps still need substantial RAM, and performance depends on the data, storage, and available workers. See the [BPCells documentation](https://bnprks.github.io/BPCells/) for its matrix operations and [Choose where the analysis runs](../performance_distributed_computing.html#what-to-expect) for multiomeR examples.
-
-## Keep the analysis inspectable
-
-Separate targets make intermediate tables, matrices, and files available for inspection. Seurat/Signac exports provide another way to explore completed results. The [implementation conventions](implementation_conventions.md) explain where to change parameters, helpers, and target definitions; the [user manual](../) covers running an existing configuration.
-
-
 ## Part: Target graph views
 
 
@@ -1915,11 +1892,9 @@ The native implementation, its differences from Seurat, and the maintained simil
 
 
 
-`module_differential_analyses/targets.R` filters aggregations that enabled the module, joins their module config, attaches symbols for accepted WNN metadata and pseudobulk inputs, and maps the composition, pseudobulk, gene-set enrichment, and cross-modality target fragments. The generic pseudobulk model family is instantiated for gene expression, chromatin accessibility, motif-family accessibility, and expression-derived CollecTRI activity (transcription-factor activity). transcription-factor activity first converts filtered, normalized GEX pseudobulks to signed ULM scores and then reuses the same model and contrast machinery.
+`module_differential_analyses/targets.R` filters the aggregations that enabled the module, joins their module configuration, attaches symbols for the accepted WNN metadata and pseudobulk inputs, and maps the target files in `module_differential_analyses/`. One generic pseudobulk model family is instantiated for each tested feature matrix.
 
-The cross-modality fragment creates a CollecTRI-to-JASPAR family crosswalk, a detailed regulator-level table containing transcription-factor activity, motif-family accessibility, and TF-expression results, a family-level comparison table, a contrast-level concordance summary, and its plot. CollecTRI complexes remain intact in transcription-factor activity; complex-member mappings are introduced only by the comparison crosswalk.
-
-The graph below is an orientation view. Inspect `setup_and_cell_type_composition_targets.R`, `pseudobulk_differential_targets.R`, `gene_set_enrichment_targets.R`, and `cross_modality_targets.R` for the complete model and plotting commands. The methods, model routes and every fixed or configurable setting are listed in [Differential analyses methods](methods_differential_analyses.md). The user-facing prerequisites and module selector are documented in [Differential analyses](../downstream_differential_analyses.html).
+The graph below is an orientation view; the target files hold the complete model and plotting commands. The methods, model routes and settings are in [Differential analyses methods](methods_differential_analyses.md), and the prerequisites and module selector in [Differential analyses](../downstream_differential_analyses.html).
 
 [Mermaid graph omitted; source: `website/figures/human_curated/differential_analyses_v2.mmd`]
 
@@ -1930,9 +1905,9 @@ The graph below is an orientation view. Inspect `setup_and_cell_type_composition
 
 
 
-`module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, and attaches symbols for WNN metadata, graphs, embeddings, consensus peaks, chromVAR state, and ATAC fragments. It does not check the species; the GRCh38 GWAS inputs assume a human aggregation.
+`module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in `module_genetic_enrichment/`. It does not check the species; the GRCh38 GWAS inputs assume a human aggregation.
 
-The main target fragments live in `setup_targets.R`, `gchromVAR_targets.R`, `SCAVENGE_graph_targets.R`, `SCAVENGE_group_targets.R`, `GWAS_chromVAR_cell_type_targets.R`, and `GWAS_chromVAR_contribution_targets.R`. The user-facing release, method-selection, and interpretation contracts are documented in [Genetic enrichment](../downstream_genetic_enrichment.html).
+The methods and settings are in [Genetic enrichment methods](methods_genetic_enrichment.md), and the release, method-selection, and interpretation contracts in [Genetic enrichment](../downstream_genetic_enrichment.html).
 
 ## Single-nucleus and graph-based enrichment
 
@@ -1941,8 +1916,6 @@ This view covers the configured GWAS inputs, single-nucleus enrichment state, gr
 The sparse SCAVENGE reimplementation, deliberate graph and permutation differences, and validation evidence are recorded in [Algorithmic implementations, deviations and validation](algorithm_validation.md#sparse-scavenge-propagation-and-significance).
 
 [Mermaid graph omitted; source: `website/figures/human_curated/genetic_enrichment_single_nucleus_v2.mmd`]
-
-The fixed thresholds and the configurable settings of this module are listed in [Genetic enrichment methods](methods_genetic_enrichment.md).
 
 ## Cell-type pseudobulk enrichment
 
@@ -1963,11 +1936,9 @@ This view covers the per-cell-type contribution and locus-attribution branches t
 
 
 
-`module_peak_gene_correlation/targets.R` maps only opted-in aggregations and binds their existing WNN metadata, GEX and ATAC matrices, ATAC embeddings, fragments and reference annotations. `correlation_targets.R` owns the candidate-pair construction, donor–state pseudobulking, filtering, the conditional and hierarchical analyses, SuSiE prioritization, exports and plots.
+`module_peak_gene_correlation/targets.R` maps only opted-in aggregations, binds the primary-module inputs they consume, and maps the target files in `module_peak_gene_correlation/`. Parameters use the `peak_gene_correlation` manifest scope, targets end in `.peak_gene_correlation.<aggregation>`, and plot checkpoint tags use `peak_gene_correlation`, outside the numbered QC selections.
 
-Parameters use the `peak_gene_correlation` manifest scope and matching module YAML rows. Targets end in `.peak_gene_correlation.<aggregation>`, with `.WNN` before that suffix for intermediate results. Plot checkpoint tags use `peak_gene_correlation`, keeping this analysis outside the numbered QC selections.
-
-The fixed thresholds and the configurable settings of this module are listed in [Peak–gene correlation methods](methods_peak_gene_correlation.md). The user-facing prerequisites and module selector are documented in [Peak–gene correlation](../downstream_peak_gene_correlation.html).
+The methods and settings are in [Peak–gene correlation methods](methods_peak_gene_correlation.md), and the prerequisites and module selector in [Peak–gene correlation](../downstream_peak_gene_correlation.html).
 
 ## Candidate pairs, pseudobulks and tests
 

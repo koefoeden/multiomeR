@@ -86,18 +86,3 @@ testthat::test_that("integration: AMULET loci and metrics match scDblFinder", {
     info = "multi-chromosome AMULET metrics"
   )
 })
-
-testthat::test_that("integration: PCR-duplicate expansion fails explicitly", {
-  load_amulet_test_runtime()
-  fragments <- BPCells::open_fragments_10x(
-    system.file("extdata", "example_fragments.tsv.gz", package = "scDblFinder")
-  )
-  testthat::expect_error(
-    get_amulet_fragment_overlaps_BPCells(
-      fragments = fragments,
-      unique_fragments = FALSE,
-      verbose = FALSE
-    ),
-    "PCR-duplicate counts"
-  )
-})

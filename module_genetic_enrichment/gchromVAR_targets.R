@@ -37,6 +37,20 @@ rlang::list2(
     }
   ),
   targets::tar_target(
+    name = GWAS_credible_set_similarity_matrix,
+    description = "Compare enabled GWAS credible sets by their shared normalized posterior-probability mass",
+    command = get_GWAS_credible_set_similarity_matrix(GWAS_input_records)
+  ),
+  tarchetypes::tar_file(
+    name = GWAS_credible_set_similarity_heatmap,
+    description = "Plot the category-ordered GWAS credible-set similarity matrix and save to file. [checkpoint:genetic_enrichment]",
+    command = plot_GWAS_credible_set_similarity(GWAS_credible_set_similarity_matrix, GWAS_inputs_tibble) |>
+      save_plots_structured(
+        width = 0.3 * nrow(GWAS_credible_set_similarity_matrix) + 6,
+        height = 0.3 * nrow(GWAS_credible_set_similarity_matrix) + 4
+      )
+  ),
+  targets::tar_target(
     name = chromVAR_z_score_chunk_records.single_nucleus,
     description = "Compute single-nucleus chromVAR z-scores for one GWAS and one reusable ATAC chunk",
     command = get_GWAS_chromVAR_z_score_chunk_record(

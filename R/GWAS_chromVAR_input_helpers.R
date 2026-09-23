@@ -465,3 +465,33 @@ get_GWAS_chromVAR_input_record <- function(
     credible_set_GRanges = get_open_targets_credible_set_GRanges(variants_tibble)
   )
 }
+
+#' Get GWAS credible-set similarity matrix
+#'
+#' Sum each GWAS's posterior probabilities per variant, normalize them to unit
+#' mass and compare GWAS pairs by their shared mass, `sum(pmin(PIP_1, PIP_2))`,
+#' which is one minus the total variation distance. Only exact variant matches
+#' count.
+#'
+#' @param GWAS_input_records List of GWAS input records.
+#' @return Symmetric GWAS-by-GWAS matrix with values from 0 to 1.
+#' @keywords internal
+
+get_GWAS_credible_set_similarity_matrix <- function(GWAS_input_records) {
+  GWAS_IDs <- purrr::map_chr(GWAS_input_records, "GWAS_ID")
+  PIP_tibble <- GWAS_input_records |>
+    purrr::map_dfr(\(record) tibble::tibble(
+      GWAS_ID = record$GWAS_ID,
+      variantId = record$credible_set_GRanges$variantId,
+      PIP = record$credible_set_GRanges$posteriorProbability
+    )) |>
+    dplyr::summarise(PIP = sum(.data$PIP), .by = c(GWAS_ID, variantId)) |>
+    dplyr::mutate(PIP = .data$PIP / sum(.data$PIP), .by = GWAS_ID)
+  shared_tibble <- PIP_tibble |>
+    dplyr::inner_join(PIP_tibble, by = "variantId", relationship = "many-to-many") |>
+    dplyr::summarise(similarity = sum(pmin(.data$PIP.x, .data$PIP.y)), .by = c(GWAS_ID.x, GWAS_ID.y))
+
+  similarity_matrix <- matrix(0, length(GWAS_IDs), length(GWAS_IDs), dimnames = list(GWAS_IDs, GWAS_IDs))
+  similarity_matrix[cbind(shared_tibble$GWAS_ID.x, shared_tibble$GWAS_ID.y)] <- shared_tibble$similarity
+  similarity_matrix
+}

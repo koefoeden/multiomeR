@@ -42,6 +42,71 @@ plot_GWAS_chromVAR_peak_weights_summary <- function(peak_weight_records, overlap
     )
 }
 
+#' Plot GWAS credible-set similarity
+#'
+#' @param similarity_matrix Output of `get_GWAS_credible_set_similarity_matrix()`.
+#' @param GWAS_inputs_tibble GWAS metadata with `GWAS_ID` and `Category`.
+#' @return A ggplot of the lower triangle, ordered by configured category.
+#' @keywords internal
+
+plot_GWAS_credible_set_similarity <- function(similarity_matrix, GWAS_inputs_tibble) {
+  ordered_metadata <- dplyr::arrange(GWAS_inputs_tibble, .data$Category, .data$GWAS_ID)
+  GWAS_IDs <- ordered_metadata$GWAS_ID
+  GWAS_labels <- stringr::str_replace_all(GWAS_IDs, "_", " ")
+  category_breaks <- get_plot_group_breaks(ordered_metadata$Category)
+  n_GWAS <- length(GWAS_IDs)
+  # Category separators stop at the diagonal of the lower triangle.
+  separator_tibble <- tibble::tibble(
+    x = c(rep(0.5, length(category_breaks)), category_breaks),
+    xend = c(category_breaks, category_breaks),
+    y = c(category_breaks, category_breaks),
+    yend = c(category_breaks, rep(n_GWAS + 0.5, length(category_breaks)))
+  )
+  plot_tibble <- tidyr::expand_grid(row = seq_len(n_GWAS), column = seq_len(n_GWAS)) |>
+    dplyr::filter(.data$row > .data$column) |>
+    dplyr::mutate(similarity = similarity_matrix[cbind(GWAS_IDs[.data$row], GWAS_IDs[.data$column])])
+
+  ggplot2::ggplot(plot_tibble, ggplot2::aes(x = column, y = row, fill = similarity)) +
+    ggplot2::geom_tile(color = "grey85", linewidth = 0.2) +
+    ggplot2::geom_text(
+      ggplot2::aes(label = dplyr::if_else(similarity >= 0.005, sprintf("%.2f", similarity), "")),
+      size = 2
+    ) +
+    ggplot2::geom_segment(
+      data = separator_tibble,
+      ggplot2::aes(x = x, xend = xend, y = y, yend = yend),
+      inherit.aes = FALSE,
+      color = "grey25",
+      linewidth = 0.4
+    ) +
+    ggplot2::scale_x_continuous(breaks = seq_len(n_GWAS), labels = GWAS_labels, expand = c(0, 0)) +
+    ggplot2::scale_y_reverse(breaks = seq_len(n_GWAS), labels = GWAS_labels, expand = c(0, 0)) +
+    ggplot2::scale_fill_gradient(
+      name = "Shared PIP mass",
+      low = "white",
+      high = "#08519C",
+      limits = c(0, NA),
+      transform = "sqrt"
+    ) +
+    ggplot2::coord_fixed() +
+    ggplot2::labs(
+      title = "GWAS credible-set similarity",
+      subtitle = "Similar pairs share peak weights, so their enrichment results are not independent.",
+      caption = paste(
+        "Shared mass of the per-GWAS normalized posterior probabilities of identical variants (one minus the total variation distance);",
+        "not a colocalization test. Lines separate configured GWAS categories; labels show similarities of at least 0.005."
+      ),
+      x = NULL,
+      y = NULL
+    ) +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = 60, hjust = 1),
+      panel.grid = ggplot2::element_blank(),
+      panel.border = ggplot2::element_blank(),
+      legend.position = "right"
+    )
+}
+
 #' Get SCAVENGE TRS UMAP plots
 #'
 #' Build UMAP overlay plots from cell-level SCAVENGE TRS scores.

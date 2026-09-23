@@ -2,7 +2,7 @@ rlang::list2(
   targets::tar_target(
     name = signac_annotation_GRanges,
     description = "Build gene annotation ranges for the Signac compatibility assay",
-    command = build_signac_annotation_GRanges(marker_validated_Ensembl_annotations_GRanges_list),
+    command = ensure_signac_annotation_GRanges(marker_validated_Ensembl_annotations_GRanges_list$genes),
     packages = w_def("Signac")
   ),
   targets::tar_target(

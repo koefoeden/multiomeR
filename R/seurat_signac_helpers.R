@@ -23,60 +23,22 @@ check_seurat_export_cells <- function(cells, named_cell_sets) {
   invisible(cells)
 }
 
-#' Prepare seurat export metadata
+#' Prepare Seurat export metadata
 #'
-#' Build the legacy Seurat/Signac export object from BPCells-native matrices and metadata.
-#'
-#' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
-#' @param WNN_results List returned by WNN helpers, including KNN/SNN structures and modality weights aligned by barcode.
-#' @param cells Character vector of cell barcodes defining the order and subset to export or align.
-#' @return A Seurat/Signac object or component with metadata, assays, reductions, and graphs aligned by cell barcode.
+#' Drop stored UMAP coordinates and WNN weights, then attach the WNN modality
+#' weights under Seurat's SCTregr/ATAC names.
 #' @keywords internal
-
-prepare_seurat_export_metadata <- function(metadata_tibble, cells, WNN_results = NULL) {
+prepare_seurat_export_metadata <- function(metadata_tibble, WNN_results = NULL) {
   metadata_df <- metadata_tibble |>
-    dplyr::distinct(.data$barcode_w_prefix, .keep_all = TRUE) |>
-    dplyr::filter(.data$barcode_w_prefix %in% cells) |>
-    dplyr::arrange(match(.data$barcode_w_prefix, cells)) |>
-    dplyr::select(-dplyr::matches("(_UMAP_[12]$)")) |>
-    dplyr::select(-dplyr::any_of(c("RNA.weight", "SCTregr.weight", "ATAC.weight"))) |>
+    dplyr::select(-dplyr::matches("(_UMAP_[12]$)"), -dplyr::any_of(c("RNA.weight", "SCTregr.weight", "ATAC.weight"))) |>
     base::as.data.frame()
-
   if (!is.null(WNN_results)) {
-    modality_weights <- WNN_results$modality_weights |>
-      dplyr::filter(.data$barcode_w_prefix %in% cells) |>
-      dplyr::arrange(match(.data$barcode_w_prefix, cells))
-
-    gex_weight_col <- base::setdiff(colnames(modality_weights), c("barcode_w_prefix", "ATAC"))[[1]]
-    modality_weights <- modality_weights |>
-      dplyr::transmute(
-        barcode_w_prefix = .data$barcode_w_prefix,
-        SCTregr.weight = .data[[gex_weight_col]],
-        ATAC.weight = .data$ATAC
-      ) |>
-      base::as.data.frame()
-
-    metadata_df <- dplyr::left_join(metadata_df, modality_weights, by = "barcode_w_prefix")
+    weight_rows <- match(metadata_df$barcode_w_prefix, WNN_results$modality_weights$barcode_w_prefix)
+    metadata_df$SCTregr.weight <- WNN_results$modality_weights$RNA[weight_rows]
+    metadata_df$ATAC.weight <- WNN_results$modality_weights$ATAC[weight_rows]
   }
-
   rownames(metadata_df) <- metadata_df$barcode_w_prefix
   metadata_df
-}
-
-align_matrix_columns <- function(matrix, cells, matrix_name) {
-  missing_cells <- base::setdiff(cells, colnames(matrix))
-  if (length(missing_cells) > 0) {
-    stop(matrix_name, " is missing ", length(missing_cells), " requested cell(s).")
-  }
-  matrix[, cells, drop = FALSE]
-}
-
-align_matrix_rows <- function(matrix, features, matrix_name) {
-  missing_features <- base::setdiff(features, rownames(matrix))
-  if (length(missing_features) > 0) {
-    stop(matrix_name, " is missing ", length(missing_features), " requested feature(s).")
-  }
-  matrix[features, , drop = FALSE]
 }
 
 add_feature_metadata <- function(assay, feature_metadata_df) {
@@ -162,10 +124,6 @@ ensure_signac_annotation_GRanges <- function(annotation_GRanges) {
   annotation_GRanges
 }
 
-build_signac_annotation_GRanges <- function(reference_Ensembl_annotations_GRanges_list) {
-  ensure_signac_annotation_GRanges(reference_Ensembl_annotations_GRanges_list$genes)
-}
-
 #' Make signac fragment records
 #'
 #' Build the legacy Seurat/Signac export object from BPCells-native matrices and metadata.
@@ -219,17 +177,6 @@ create_signac_fragment_object <- function(fragment_record) {
   )
 }
 
-create_signac_fragment_objects <- function(fragment_records_tibble) {
-  if (is.null(fragment_records_tibble) || nrow(fragment_records_tibble) == 0) {
-    return(list())
-  }
-
-  purrr::map(
-    seq_len(nrow(fragment_records_tibble)),
-    \(record_index) create_signac_fragment_object(fragment_records_tibble[record_index, , drop = FALSE])
-  )
-}
-
 #' Add dimreduc from matrix
 #'
 #' Add an embedding matrix as a Seurat dimensional reduction.
@@ -280,39 +227,21 @@ embedding_tibble_to_matrix <- function(embedding_tibble) {
     as.matrix()
 }
 
-first_or_null <- function(x) {
-  if (length(x) == 0) {
-    return(NULL)
-  }
-  x[[1]]
-}
-
-set_seurat_export_defaults <- function(object, preferred_cluster_col = NULL, preferred_reduction = NULL, preferred_graph = NULL, preferred_neighbor = NULL) {
-  cluster_col <- preferred_cluster_col %||%
-    first_or_null(base::intersect(
-      c("WNN_harmony_SNN_cluster", "PCA_harmony_SNN_cluster_cell_type", "PCA_harmony_SNN_cluster"),
-      colnames(object@meta.data)
-    ))
-
-  reduction <- preferred_reduction %||%
-    first_or_null(base::intersect(
-      c("WNN_harmony_NN_UMAP", "PCA_harmony_UMAP", "PCA_UMAP", "PCA_harmony", "PCA"),
-      names(object@reductions)
-    ))
-
-  graph <- preferred_graph %||%
-    first_or_null(base::intersect(c("WNN_harmony_SNN", "PCA_harmony_SNN"), names(object@graphs))) %||%
-    NA_character_
-
-  neighbor <- preferred_neighbor %||%
-    first_or_null(base::intersect(c("WNN_harmony_NN"), names(object@neighbors))) %||%
-    NA_character_
+set_seurat_export_defaults <- function(object) {
+  cluster_col <- base::intersect(
+    c("WNN_harmony_SNN_cluster", "PCA_harmony_SNN_cluster_cell_type", "PCA_harmony_SNN_cluster"),
+    colnames(object@meta.data)
+  )[1]
+  reduction <- base::intersect(
+    c("WNN_harmony_NN_UMAP", "PCA_harmony_UMAP", "PCA_UMAP", "PCA_harmony", "PCA"),
+    names(object@reductions)
+  )[1]
 
   object@misc$def_dim_reduc_full <- reduction
   object@misc$def_dim_reduc <- reduction
-  object@misc$def_graph <- graph
+  object@misc$def_graph <- base::intersect(c("WNN_harmony_SNN", "PCA_harmony_SNN"), names(object@graphs))[1]
   object@misc$def_cluster_col <- cluster_col
-  object@misc$def_NN_object <- neighbor
+  object@misc$def_NN_object <- base::intersect("WNN_harmony_NN", names(object@neighbors))[1]
 
   SeuratObject::Idents(object) <- object@meta.data[[cluster_col]]
   SeuratObject::DefaultAssay(object) <- if ("SCTregr" %in% names(object@assays)) "SCTregr" else "RNA"
@@ -334,11 +263,6 @@ set_seurat_export_defaults <- function(object, preferred_cluster_col = NULL, pre
 #' @keywords internal
 
 embedding_matrix_to_knn <- function(embedding_matrix, cells, dims, k, dim_prefix, threads = 1) {
-  missing_cells <- base::setdiff(cells, rownames(embedding_matrix))
-  if (length(missing_cells) > 0) {
-    stop("Embedding matrix is missing ", length(missing_cells), " requested cell(s).")
-  }
-
   graph_input <- select_embedding_dimensions(
     embedding_matrix = embedding_matrix[cells, , drop = FALSE],
     dims = dims,
@@ -445,7 +369,6 @@ align_WNN_knn_to_cells <- function(WNN_results, cells) {
 #' @param WNN_UMAP_embeddings_tibble Optional tibble of WNN UMAP coordinates keyed by `barcode_w_prefix`.
 #' @param motif_family_accessibility_matrix Optional motif-family-by-cell chromVAR accessibility score matrix.
 #' @param signac_annotation_GRanges Optional GRanges object containing signac annotation GRanges coordinates and metadata.
-#' @param fragment_records_tibble Optional tibble describing fragment files and cell sets used to create Signac Fragment objects.
 #' @param fragment_objects Optional prebuilt list of Signac Fragment objects.
 #' @param ATAC_dims Optional ATAC dimensions used when reconstructing reductions and neighbors in the export object.
 #' @param graph_threads Thread count used for KNN graph reconstruction during export.
@@ -472,7 +395,6 @@ build_seurat_signac_convenience_object <- function(
   WNN_UMAP_embeddings_tibble = NULL,
   motif_family_accessibility_matrix = NULL,
   signac_annotation_GRanges = NULL,
-  fragment_records_tibble = NULL,
   fragment_objects = NULL,
   ATAC_dims = NULL,
   graph_threads = 1
@@ -492,8 +414,8 @@ build_seurat_signac_convenience_object <- function(
     ))
   )
 
-  metadata_df <- prepare_seurat_export_metadata(metadata_tibble, cells, WNN_results)
-  RNA_counts <- align_matrix_columns(GEX_counts_matrix, cells, "GEX_counts_matrix")
+  metadata_df <- prepare_seurat_export_metadata(metadata_tibble, WNN_results)
+  RNA_counts <- GEX_counts_matrix[, cells, drop = FALSE]
 
   object <- SeuratObject::CreateSeuratObject(
     counts = RNA_counts,
@@ -507,11 +429,11 @@ build_seurat_signac_convenience_object <- function(
   )
 
   if (!is.null(ATAC_peak_matrix)) {
-    peak_counts <- align_matrix_columns(ATAC_peak_matrix, cells, "ATAC_peak_matrix")
+    peak_counts <- ATAC_peak_matrix[, cells, drop = FALSE]
     peak_ranges <- align_peak_GRanges_to_matrix(ATAC_peak_GRanges, rownames(peak_counts))
     object[["ATAC"]] <- Signac::CreateGRangesAssay(counts = peak_counts, ranges = peak_ranges)
-    Signac::Annotation(object[["ATAC"]]) <- ensure_signac_annotation_GRanges(signac_annotation_GRanges)
-    Signac::Fragments(object[["ATAC"]]) <- fragment_objects %||% create_signac_fragment_objects(fragment_records_tibble)
+    Signac::Annotation(object[["ATAC"]]) <- signac_annotation_GRanges
+    Signac::Fragments(object[["ATAC"]]) <- fragment_objects %||% list()
     SeuratObject::VariableFeatures(object[["ATAC"]]) <- rownames(object[["ATAC"]])
     object[["ATAC"]] <- add_feature_metadata(
       assay = object[["ATAC"]],
@@ -523,16 +445,12 @@ build_seurat_signac_convenience_object <- function(
   if (length(sct_features) == 0) {
     sct_features <- rownames(RNA_counts)
   }
-  SCTregr_counts <- align_matrix_rows(RNA_counts, sct_features, "RNA_counts")
+  SCTregr_counts <- RNA_counts[sct_features, , drop = FALSE]
   object[["SCTregr"]] <- SeuratObject::CreateAssay5Object(counts = SCTregr_counts)
   SeuratObject::VariableFeatures(object[["SCTregr"]]) <- base::intersect(PCA_results$variable_features, rownames(object[["SCTregr"]]))
 
   if (!is.null(motif_family_accessibility_matrix)) {
-    motif_family_accessibility_data <- align_matrix_columns(
-      motif_family_accessibility_matrix,
-      cells,
-      "motif_family_accessibility_matrix"
-    )
+    motif_family_accessibility_data <- motif_family_accessibility_matrix[, cells, drop = FALSE]
     object[["motif_family_accessibility"]] <- SeuratObject::CreateAssay5Object(data = motif_family_accessibility_data)
   }
 
@@ -609,7 +527,7 @@ build_seurat_signac_convenience_object <- function(
   object <- add_graph_from_sparse_matrix(object, "PCA_harmony_NN", knn_to_sparse_knn_matrix(GEX_knn, cells), "SCTregr")
   object <- add_graph_from_sparse_matrix(object, "PCA_harmony_SNN", get_SNN_matrix_from_knn(GEX_knn, cells), "SCTregr")
 
-  if ("ATAC" %in% names(object@assays) && !is.null(ATAC_harmony_embeddings)) {
+  if ("ATAC" %in% names(object@assays)) {
     ATAC_knn <- embedding_matrix_to_knn(ATAC_harmony_embeddings, cells, ATAC_dims, data_nNNs, "LSI_", graph_threads)
     object <- add_graph_from_sparse_matrix(object, "LSI_harmony_NN", knn_to_sparse_knn_matrix(ATAC_knn, cells), "ATAC")
     object <- add_graph_from_sparse_matrix(object, "LSI_harmony_SNN", get_SNN_matrix_from_knn(ATAC_knn, cells), "ATAC")

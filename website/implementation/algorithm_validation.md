@@ -91,7 +91,7 @@ pixi run --use-environment-activation-cache test-algorithm-validation
 
 **Deliberate deviations and consequences.** The reference builds a mutual-kNN graph, whereas multiomeR uses the binary support of its BPCells-derived SNN graph; edge weights are discarded, but topology can differ. Seed and scale-factor helpers guarantee at least one selected cell for small inputs, and the random walk has a maximum-iteration guard. The degree-matched seed permutations and significant-cell calls are omitted: multiomeR reports trait relevance scores and their group summaries without P-values.
 
-**Implementation.** `R/SCAVENGE_helpers.R` and `src/scavenge_random_walk.cpp`; `module_genetic_enrichment/SCAVENGE_graph_targets.R` builds the graph and cell-level trait relevance scores, and `SCAVENGE_group_targets.R` summarizes and plots them by cluster.
+**Implementation.** `R/SCAVENGE_helpers.R`; `module_genetic_enrichment/SCAVENGE_graph_targets.R` builds the graph and cell-level trait relevance scores, and `SCAVENGE_group_targets.R` summarizes and plots them by cluster.
 
 **Validation.** `tests/testthat/test-scavenge-parity.R` uses a deterministic fixture with heterogeneous-degree graph blocks and nonuniform edge weights, so it also tests conversion to binary adjacency. The iterative random walk must match the closed-form solution
 

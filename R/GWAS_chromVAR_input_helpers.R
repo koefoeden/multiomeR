@@ -47,9 +47,6 @@ resolve_open_targets_GWAS_input_tibble <- function(
   GWAS_config_tibble,
   open_targets_credible_set_dataset_path
 ) {
-  if (nrow(GWAS_config_tibble) != 1L) {
-    stop("GWAS_config_tibble must contain exactly one Open Targets row.")
-  }
   study_id <- GWAS_config_tibble$sourceId[[1]]
   available_methods <- arrow::open_dataset(open_targets_credible_set_dataset_path) |>
     dplyr::filter(studyType == "gwas", studyId == .env$study_id) |>
@@ -117,38 +114,6 @@ resolve_open_targets_GWAS_input_tibble <- function(
 #' @keywords internal
 
 get_open_targets_credible_set_variants_tibble <- function(GWAS_inputs_tibble, open_targets_credible_set_dataset_path) {
-  if (nrow(GWAS_inputs_tibble) == 0) {
-    return(tibble::tibble(
-      GWAS_ID = character(),
-      sourceId = character(),
-      sourceType = character(),
-      sourceRelease = character(),
-      open_targets_release = character(),
-      studyId = character(),
-      studyLocusId = character(),
-      credibleSetIndex = integer(),
-      finemappingMethod = character(),
-      confidence = character(),
-      credibleSetProbability = numeric(),
-      variantId = character(),
-      chromosome = character(),
-      position = integer(),
-      variantRepresentation = character(),
-      posteriorProbability = numeric(),
-      posteriorProbability_raw = numeric(),
-      logBF = numeric(),
-      pValueMantissa = numeric(),
-      pValueExponent = integer(),
-      beta = numeric(),
-      standardError = numeric(),
-      r2Overall = numeric(),
-      is95CredibleSet = logical(),
-      is99CredibleSet = logical(),
-      locusStart = integer(),
-      locusEnd = integer()
-    ))
-  }
-
   study_ids <- unique(GWAS_inputs_tibble$studyId)
   credible_set_tibble <- arrow::open_dataset(open_targets_credible_set_dataset_path) |>
     dplyr::filter(studyType == "gwas", studyId %in% study_ids) |>
@@ -241,7 +206,8 @@ get_open_targets_credible_set_variants_tibble <- function(GWAS_inputs_tibble, op
     stop("Open Targets method-only filtering duplicated GWAS_ID/studyLocusId/variantId rows. Review confidence values before processing.")
   }
 
-  variants_tibble
+  # Arrow returns dataset rows in a nondeterministic order.
+  dplyr::arrange(variants_tibble, .data$studyLocusId, .data$variantId)
 }
 
 get_open_targets_credible_set_GRanges <- function(variants_tibble) {
@@ -365,9 +331,6 @@ get_local_finemapped_GWAS_variants_tibble <- function(
   GWAS_config_tibble,
   source_tibble
 ) {
-  if (nrow(GWAS_config_tibble) != 1L) {
-    stop("Expected one local GWAS configuration row.")
-  }
   validate_local_finemapped_GWAS_tibble(source_tibble)
   source_tibble |>
     dplyr::transmute(
@@ -464,8 +427,7 @@ get_GWAS_chromVAR_input_record <- function(
       open_targets_credible_set_dataset_path = open_targets_credible_set_dataset_path
     )
     metadata_tibble <- get_open_targets_GWAS_metadata_tibble(
-      GWAS_inputs_tibble = GWAS_input_tibble |>
-        dplyr::mutate(Category = NA_character_, .before = 1),
+      GWAS_inputs_tibble = GWAS_input_tibble,
       open_targets_study_dataset_path = open_targets_study_dataset_path,
       open_targets_credible_set_dataset_path = open_targets_credible_set_dataset_path
     ) |>
@@ -482,9 +444,8 @@ get_GWAS_chromVAR_input_record <- function(
         n_credible_set_loci,
         dplyr::across(dplyr::matches("^ancestry_(EUR|EAS|AFR|AMR|SAS|OTH)$"))
       )
-  } else if (identical(GWAS_config_tibble$sourceType[[1]], "local_file")) {
+  } else {
     source_tibble <- arrow::read_parquet(local_source_file)
-    validate_local_finemapped_GWAS_tibble(source_tibble)
     variants_tibble <- get_local_finemapped_GWAS_variants_tibble(
       GWAS_config_tibble = GWAS_config_tibble,
       source_tibble = source_tibble
@@ -494,8 +455,6 @@ get_GWAS_chromVAR_input_record <- function(
       GWAS_config_tibble = GWAS_config_tibble
     )
     GWAS_input_tibble <- metadata_tibble
-  } else {
-    stop("Unsupported GWAS sourceType: ", GWAS_config_tibble$sourceType[[1]])
   }
 
   list(

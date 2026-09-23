@@ -133,7 +133,6 @@ get_open_targets_GWAS_metadata_tibble <- function(GWAS_inputs_tibble, open_targe
       sample_size = dplyr::coalesce(as.numeric(nSamples), as.numeric(nCases) + as.numeric(nControls), max_locus_sample_size)
     ) |>
     dplyr::select(
-      Category,
       GWAS_ID,
       studyId,
       finemappingMethod,

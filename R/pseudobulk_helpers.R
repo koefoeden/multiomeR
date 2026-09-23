@@ -726,23 +726,13 @@ fit_pseudobulk_feature_matrix_model <- function(pseudobulk_feature_matrix, exten
     ))
   }
 
-  n_samples <- nrow(design_matrix)
-  n_params <- ncol(design_matrix)
-  residual_df <- n_samples - n_params
-  assert_with_info(
-    residual_df > 0,
-    glue_info = "Residual degrees of freedom in model fitting are less than 1. Please reduce the number of parameters in the model. Current design matrix: {design_matrix}"
-  )
-
   # Determine analysis type based on data characteristics and model configuration
   is_count_data <- is_count_matrix(pseudobulk_feature_matrix)
-  has_random_effect <- !(is.null(model_list$random_effect) || model_list$random_effect == "")
-  has_sufficient_params <- n_params > 1
-
-  analysis_type <- if (has_random_effect) {
+  random_effect <- model_list$random_effect
+  analysis_type <- if (!is.null(random_effect) && random_effect != "") {
     # Random effects require limma with duplicateCorrelation (works with any data type)
     "limma_duplicateCorrelation"
-  } else if (is_count_data && has_sufficient_params) {
+  } else if (is_count_data && ncol(design_matrix) > 1) {
     # EdgeR requires integer count matrix and at least 2 parameters
     "edgeR"
   } else {
@@ -750,84 +740,46 @@ fit_pseudobulk_feature_matrix_model <- function(pseudobulk_feature_matrix, exten
     "limma_basic"
   }
 
-  if (analysis_type == "edgeR" || (analysis_type == "limma_duplicateCorrelation" && is_count_data)) {
-    # EdgeR or limma_duplicateCorrelation with count data requires DGEList
+  if (is_count_data && analysis_type != "limma_basic") {
     gene_expression_list <- edgeR::DGEList(counts = pseudobulk_feature_matrix, samples = final_sample_tibble)
-
-    sample_cols_expressed <- gene_expression_list$counts |>
-      colSums() |>
-      magrittr::is_greater_than(0)
-
+    sample_cols_expressed <- colSums(gene_expression_list$counts) > 0
     gene_expression_list <- gene_expression_list[, sample_cols_expressed, keep.lib.sizes = FALSE]
     design_matrix <- design_matrix[sample_cols_expressed, , drop = FALSE]
     feature_rows_expressed <- edgeR::filterByExpr(gene_expression_list, design = design_matrix)
-
     gene_expression_list <- edgeR::normLibSizes(gene_expression_list[feature_rows_expressed, , keep.lib.sizes = FALSE]) # consider using method="TMMwsp" that is designed for 0-inflated data. However, needs quantification of 0-inflatedness.
-    residual_df <- nrow(design_matrix) - ncol(design_matrix)
-
-    assert_with_info(
-      assertthat::not_empty(gene_expression_list$counts) && residual_df > 0,
-      glue_info = "No valid count model remains after expression/sample filtering. Please check count depth and model complexity."
-    )
-  } else {
-    # limma framework for continuous data (limma_basic or limma_duplicateCorrelation without count data)
-    gene_expression_list <- {
-      features_tibble <- tibble::enframe(rownames(pseudobulk_feature_matrix), value = "feature_id", name = NULL)
-
-      # sanity check that sample order matches
-      assert_with_info(
-        identical(colnames(pseudobulk_feature_matrix), final_sample_tibble$ID),
-        glue_info = "Sample order mismatch between pseudobulk_feature_matrix and final_sample_tibble$ID."
-      )
-
-      # build EList for limma
-      structure(
-        list(
-          E = pseudobulk_feature_matrix,
-          samples = tibble::column_to_rownames(final_sample_tibble, var = "ID"),
-          genes = features_tibble
-        ),
-        class = "EList"
-      )
+    if (!nrow(gene_expression_list$counts)) {
+      stop("No features remain after expression filtering. Please check count depth and model complexity.")
     }
+  } else {
+    gene_expression_list <- structure(
+      list(E = pseudobulk_feature_matrix, samples = tibble::column_to_rownames(final_sample_tibble, var = "ID")),
+      class = "EList"
+    )
   }
-
   validate_differential_design(design_matrix)
 
-  # Fit model based on analysis_type
-  random_effect <- model_list$random_effect
   gene_expression_list_fit <- if (analysis_type == "limma_duplicateCorrelation") {
-    # Limma with duplicateCorrelation for random effects
     # Apply voom transformation only for count data; use EList directly for non-count data
     expression_object <- if (is_count_data) {
       limma::voom(gene_expression_list, design = design_matrix, plot = FALSE)
     } else {
       gene_expression_list
     }
-    corfit <- limma::duplicateCorrelation(expression_object, design = design_matrix, block = gene_expression_list$samples[[random_effect]])
-    expression_object |>
-      limma::lmFit(design = design_matrix, correlation = corfit$consensus, block = gene_expression_list$samples[[random_effect]]) |>
-      magrittr::inset2("samples", gene_expression_list$samples) |>
-      magrittr::inset2("data_matrix", dplyr::coalesce(gene_expression_list$E, gene_expression_list$counts))
+    block <- gene_expression_list$samples[[random_effect]]
+    corfit <- limma::duplicateCorrelation(expression_object, design = design_matrix, block = block)
+    limma::lmFit(expression_object, design = design_matrix, correlation = corfit$consensus, block = block)
   } else if (analysis_type == "edgeR") {
-    # EdgeR for count data without random effects
     gene_expression_list |>
       edgeR::estimateDisp.DGEList(design = design_matrix) |>
       edgeR::glmQLFit(design = design_matrix, robust = TRUE)
   } else {
-    # limma_basic as fallback for continuous data or insufficient parameters
-    gene_expression_list |>
-      limma::lmFit(design = design_matrix) |>
-      magrittr::inset2("samples", gene_expression_list$samples) |>
-      magrittr::inset2("data_matrix", gene_expression_list$E %||% gene_expression_list$counts)
+    limma::lmFit(gene_expression_list, design = design_matrix)
   }
   # add basis matrix possibly required for complex contrast functions
-  pseudobulk_feature_matrix_fit <- gene_expression_list_fit |>
+  gene_expression_list_fit |>
     magrittr::inset2("basis_matrix", basis_matrix) |>
     magrittr::inset2("analysis_type", analysis_type) |>
-    magrittr::inset2("samples", gene_expression_list$samples) |>
-    magrittr::inset2("data_matrix", gene_expression_list$E %||% gene_expression_list$counts)
-  return(pseudobulk_feature_matrix_fit)
+    magrittr::inset2("samples", gene_expression_list$samples)
 }
 
 #' Get design and basis matrices from model list

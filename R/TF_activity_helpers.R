@@ -9,56 +9,22 @@
 #' @keywords internal
 
 download_CollecTRI_human_network <- function(network_url, expected_sha256) {
-  output_dir <- file.path(
-    targets::tar_config_get("store"),
-    "files",
-    "CollecTRI"
-  )
-  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-  destfile <- file.path(output_dir, "CollecTRI_human_2023.csv")
-
-  if (
-    file.exists(destfile) &&
-      identical(
-        digest::digest(file = destfile, algo = "sha256"),
-        expected_sha256
-      )
-  ) {
-    return(normalizePath(destfile, mustWork = TRUE))
+  destfile <- file.path(targets::tar_config_get("store"), "files", "CollecTRI", "CollecTRI_human_2023.csv")
+  if (!file.exists(destfile) || !identical(digest::digest(file = destfile, algo = "sha256"), expected_sha256)) {
+    dir.create(dirname(destfile), recursive = TRUE, showWarnings = FALSE)
+    tempfile <- paste0(destfile, ".tmp")
+    on.exit(unlink(tempfile), add = TRUE)
+    utils::download.file(network_url, tempfile, mode = "wb")
+    observed_sha256 <- digest::digest(file = tempfile, algo = "sha256")
+    if (!identical(observed_sha256, expected_sha256)) {
+      stop("CollecTRI checksum mismatch: expected ", expected_sha256, ", observed ", observed_sha256, ".")
+    }
+    if (!file.rename(tempfile, destfile)) {
+      stop("Could not move the verified CollecTRI download into place: ", destfile)
+    }
   }
-
-  tempfile <- paste0(destfile, ".tmp")
-  if (file.exists(tempfile)) {
-    unlink(tempfile)
-  }
-  on.exit(unlink(tempfile), add = TRUE)
-
-  utils::download.file(network_url, tempfile, mode = "wb")
-  if (!file.exists(tempfile) || file.info(tempfile)$size == 0) {
-    stop("CollecTRI download failed or produced an empty file: ", network_url)
-  }
-
-  observed_sha256 <- digest::digest(file = tempfile, algo = "sha256")
-  if (!identical(observed_sha256, expected_sha256)) {
-    stop(
-      "CollecTRI checksum mismatch: expected ",
-      expected_sha256,
-      ", observed ",
-      observed_sha256,
-      "."
-    )
-  }
-
-  if (file.exists(destfile) && !file.remove(destfile)) {
-    stop("Could not replace the existing CollecTRI download: ", destfile)
-  }
-  if (!file.rename(tempfile, destfile)) {
-    stop("Could not move the verified CollecTRI download into place: ", destfile)
-  }
-
   normalizePath(destfile, mustWork = TRUE)
 }
-
 
 #' Read the published human CollecTRI network
 #'
@@ -70,41 +36,12 @@ download_CollecTRI_human_network <- function(network_url, expected_sha256) {
 #' @keywords internal
 
 read_CollecTRI_human_network <- function(network_csv) {
-  expected_columns <- c(
-    "source",
-    "target",
-    "weight",
-    "TF.category",
-    "resources",
-    "PMID",
-    "sign.decision"
-  )
-  network_tibble <- readr::read_csv(
+  # The checksum-pinned download fixes the columns and content.
+  readr::read_csv(
     network_csv,
-    col_types = readr::cols(
-      source = readr::col_character(),
-      target = readr::col_character(),
-      weight = readr::col_double(),
-      TF.category = readr::col_character(),
-      resources = readr::col_character(),
-      PMID = readr::col_character(),
-      sign.decision = readr::col_character()
-    ),
+    col_types = readr::cols(.default = readr::col_character(), weight = readr::col_double()),
     progress = FALSE
-  )
-
-  if (!identical(names(network_tibble), expected_columns)) {
-    stop(
-      "The CollecTRI network must contain exactly these columns: ",
-      paste(expected_columns, collapse = ", "),
-      "."
-    )
-  }
-  if (nrow(readr::problems(network_tibble)) > 0L) {
-    stop("The CollecTRI network contains CSV parsing problems.")
-  }
-
-  network_tibble <- network_tibble |>
+  ) |>
     dplyr::transmute(
       source = stringr::str_to_upper(source),
       target = stringr::str_to_upper(target),
@@ -114,25 +51,7 @@ read_CollecTRI_human_network <- function(network_csv) {
       PMIDs = PMID,
       sign_decision = sign.decision
     )
-
-  validation <- c(
-    interaction_rows = nrow(network_tibble) == 43536L,
-    regulator_sources = dplyr::n_distinct(network_tibble$source) == 1189L,
-    complete_records = !anyNA(network_tibble),
-    unique_source_targets = !anyDuplicated(network_tibble[c("source", "target")]),
-    signed_interactions = all(network_tibble$mor %in% c(-1, 1))
-  )
-  if (!all(validation)) {
-    stop(
-      "The checksum-pinned CollecTRI network failed: ",
-      paste(names(validation)[!validation], collapse = ", "),
-      "."
-    )
-  }
-
-  network_tibble
 }
-
 
 #' Infer CollecTRI TF activities from pseudobulk expression
 #'

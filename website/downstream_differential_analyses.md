@@ -1,33 +1,23 @@
 # Differential analyses
 
-```{r setup, include = FALSE}
-pipeline_name <- "differential_analyses"
-source("helpers/_setup.R")
-```
+## When to use
 
-## When to use this module
+Use this module to test how cell-type proportions, gene expression or chromatin accessibility differ with a donor condition or phenotype. Donors are the biological replicates: proportions are modelled per donor, and molecular measurements are summed into **pseudobulks**, one per cell type and donor.
 
-Use this module to ask how cell-type proportions, gene expression, or chromatin accessibility differ with a condition or donor phenotype. It requires biological replication across donors or samples. Molecular measurements are combined into **pseudobulks**: counts summarized for each cell type within a donor or sample.
-
-The module does not create biological replication. The donor structure, covariates, design formula, and contrasts must be defensible for the intended analysis before the workflow is run.
-
-See the [example plots](gallery.md#differential-analyses) for representative diagnostics and the [implementation graph](implementation/implementation_differential_analyses.html) for target structure.
+The module does not create replication. The donors, covariates, formula and contrasts must support the intended comparison. For this reason the public demo leaves the module off: one healthy PBMC donor and one lymphoma lymph-node donor cannot separate condition, donor and tissue effects.
 
 ## Prerequisites
 
 Before enabling the module, confirm that:
 
-- you have reviewed the main aggregation and its cell-type annotations;
-- WNN cell-type metadata and GEX and ATAC pseudobulk matrices are available;
-- the donor metadata contains one unique row per `donor_id` and every variable used in a model;
-- model variables are donor- or pseudobulk-sample-level variables, not duplicated cell-level measurements; and
-- the number and distribution of donors support the specified design and contrasts.
+- you have reviewed the aggregation through [checkpoint 8](main_running.md#checkpoint-8), including its cell-type annotations;
+- the donor metadata has one row per `donor_id` and every variable used in a model;
+- model variables describe donors, not individual nuclei; and
+- each compared group has enough donors for the design and contrasts.
 
-Use [`differential_analyses_extended_donor_id_metadata_tsv`](parameters.html#differential_analyses_extended_donor_id_metadata_tsv) when the modelling table needs variables beyond the aggregation's normal donor metadata. It must retain the same unique `donor_id` key.
+If the models need variables beyond the aggregation's donor metadata, supply a second table in [`differential_analyses_extended_donor_id_metadata_tsv`](parameters.html#differential_analyses_extended_donor_id_metadata_tsv) with the same unique `donor_id` key.
 
 ## Outputs
-
-Choose the output that matches your question:
 
 | Question | Output family |
 |------------------------------------|------------------------------------|
@@ -37,25 +27,21 @@ Choose the output that matches your question:
 | Which motif families change accessibility? | `motif_family_accessibility` (JASPAR) |
 | Which regulators show altered expression-based activity? | `transcription_factor_activity` (CollecTRI) |
 
-The module also produces model diagnostics, comparisons across modalities, and gene-set tests for Hallmark and Reactome pathways. Motif-family accessibility summarizes ATAC evidence; transcription-factor activity is inferred from gene expression using CollecTRI. Interpret each in the context of its measurement.
-
-Plot directories use these descriptive family names below `plots/<aggregation>/differential_analyses/`. Gene-set plots appear under `gene_expression/gene_set_enrichment/Hallmark/enrichment_plots/<model>/` or the corresponding `Reactome` directory. Volcano outputs use `<family>/volcano_plots/<model>/`; saved plot targets omit redundant `_file` and `_files` suffixes. Renaming targets creates new cache entries and output paths on the next run; existing output directories are not migrated.
-
-See the [differential analyses methods](implementation/methods_differential_analyses.html) for activity inference, motif-family definitions, gene-set testing and the fixed and configurable settings.
+Motif-family accessibility summarizes ATAC data; transcription-factor activity is inferred from GEX data. The module also produces pseudobulk-depth and model diagnostics, comparisons across the feature families, and Hallmark and Reactome gene-set tests for gene expression.
 
 ## Configure
 
-Add [`modules`](parameters.html#modules) to the existing aggregation entry, keeping its input and marker settings:
+Add `differential_analyses` to the aggregation's [`modules`](parameters.html#modules) list, keeping its other settings:
 
-``` {.yaml filename="cfg_aggregations.yaml"}
-your_aggregation:
+```{.yaml filename="cfg_aggregations.yaml"}
+my_aggregation:
   modules: [differential_analyses]
 ```
 
-Then create a matching row directly in `configuration/cfg_module_differential_analyses.yaml`.
+Then add an entry for `my_aggregation` to `cfg_module_differential_analyses.yaml` in the [selected configuration directory](main_overview.md#configuration-directory):
 
-``` {.yaml filename="configuration/cfg_module_differential_analyses.yaml"}
-your_aggregation:
+```{.yaml filename="cfg_module_differential_analyses.yaml"}
+my_aggregation:
   differential_analyses_cell_type_composition_models:
     condition_abundance:
       formula: ~ condition
@@ -65,59 +51,87 @@ your_aggregation:
       color_by: condition
   differential_analyses_pseudobulk_models:
     condition_model:
-      cell_type_subset: NULL
-      design_matrix_func_name: NULL
       formula: ~ 0 + cluster + condition
-      random_effect: NULL
       contrast_specs_vec:
         treated_vs_control: conditiontreated
 ```
 
-Both branches use named models, donor eligibility checks and named contrasts. Abundance models use [`differential_analyses_cell_type_composition_models`](parameters.html#differential_analyses_cell_type_composition_models); feature models use [`differential_analyses_pseudobulk_models`](parameters.html#differential_analyses_pseudobulk_models). Omitting abundance models disables that branch. The former aggregation-wide cell-type composition formula, phenotype and colour settings have been replaced by fields inside each named model.
+Each branch holds named models; the model and contrast names label the outputs.
 
-For mixed tissues, set `GEM_well_IDs` inside an abundance model to define its population, for example the six left-ventricle wells. Optional `donor_ids` can further restrict donors in either branch. Donors with missing model metadata or no selected samples are excluded and recorded in model-specific cohort TSVs. Feature cohorts also report retained pseudobulk sample counts and depth-filter exclusions.
+- **Abundance models** ([`differential_analyses_cell_type_composition_models`](parameters.html#differential_analyses_cell_type_composition_models)) fit each cell type's share of a donor's nuclei. Use a one-sided, fixed-effects formula; the response is added for you. `plot_phenotype_vars` and `color_by` choose the plotted variables. Omit the field to skip this branch.
+- **Feature models** ([`differential_analyses_pseudobulk_models`](parameters.html#differential_analyses_pseudobulk_models)) test the four feature families. The formula can use `cluster`, the cell type of each pseudobulk, and donor metadata variables. The example estimates one condition effect across cell types; to test within one cell type, add `cell_type_subset` and use `~ condition`.
+- **Contrasts** in `contrast_specs_vec` are coefficient names of the model matrix, or linear combinations of them. A text variable's alphabetically first value is the reference, so `conditiontreated` is treated minus control. Replace the example variable, formula and contrast with your own.
 
-By default, abundance models test all cell-type labels observed in their eligible population, including unassigned labels. Optional `cell_types_to_test` restricts the response cell types **without changing the denominator**: every retained nucleus in the selected wells contributes to its donor's total. Zero donor–cell-type counts remain in the analysis. In contrast, feature-model `cell_type_subset` selects the cells represented by the pseudobulks. Feature matrices already pool wells within donors and cell types, so they cannot support a late `GEM_well_IDs` filter; the module rejects that field for feature models.
+Optional fields narrow a model:
 
-Abundance models fit a separate fixed-effects beta-binomial logit model per cell type. Use a one-sided predictor formula, `formula: ~ ...`, and named `contrast_specs_vec`; two-sided formulas, random effects and custom design or contrast functions are rejected in this branch. Contrast tables report log-odds effects, Wald uncertainty, donor counts and BH FDR across tested cell types within each model and contrast, and failed fits are marked non-estimable. The response construction, test and every fixed setting are documented in [Differential analyses methods](implementation/methods_differential_analyses.html#cell-type-composition).
+- `donor_ids` restricts the donors in either branch;
+- `cell_type_subset` restricts the cell types whose pseudobulks a feature model tests;
+- `GEM_well_IDs` restricts the GEM wells that define an abundance model's population; and
+- `cell_types_to_test` restricts the cell types an abundance model tests, while every retained nucleus still counts towards its donor's total.
 
-The module selection below requests both configured abundance and pseudobulk outputs. Formula terms and contrast coefficients must match columns produced by the model matrix. The two branches retain their distinct response construction and fitting methods; sharing configuration does not make their effect estimates interchangeable.
-
-The model example assumes `condition` distinguishes treated and control donors. Check which group is the reference and what each model coefficient represents before using `conditiontreated` as a contrast. Replace the example formula and contrast to match your study.
+Donors missing a model variable are excluded. The branches use different models, so their effect sizes are not directly comparable. The methods describe [abundance models](implementation/methods_differential_analyses.html#cell-type-composition) and the [feature-model routes](implementation/methods_differential_analyses.html#model-routes), including random effects, custom design and contrast functions and paired cell-type designs.
 
 ## Run
 
-Preview the selected module outputs before running them:
+Preview the targets tagged for this module:
 
-``` {.r filename="R"}
+```{.r filename="R"}
 targets::tar_manifest(
   names = targets::tar_described_as(
     tidyselect::contains("checkpoint:differential_analyses")
-  ) & tidyselect::ends_with(".your_aggregation"),
+  ) & tidyselect::ends_with(".my_aggregation"),
   callr_function = NULL
 )[, c("name", "description")]
 ```
 
 Then run the same selection:
 
-``` {.r filename="R"}
+```{.r filename="R"}
 targets::tar_make(
   names = targets::tar_described_as(
     tidyselect::contains("checkpoint:differential_analyses")
-  ) & tidyselect::ends_with(".your_aggregation")
+  ) & tidyselect::ends_with(".my_aggregation")
 )
 ```
 
 ## Review
 
-Open the configured model outputs listed above; the [output gallery](gallery.md#differential-analyses) shows one example per plot. Interpretation and method details are included in the plot subtitles and captions.
+``` text
+<store>/plots/my_aggregation/differential_analyses/
+├── pseudobulk_depth_distribution_plot.png
+├── cell_type_composition/model_plots_condition_abundance/
+├── gene_expression/
+│   ├── volcano_plots/condition_model/
+│   ├── gene_set_enrichment/{Hallmark,Reactome}/enrichment_plots/condition_model/
+│   ├── significant_elements_plot.png
+│   └── p_value_distribution_plot.png
+├── chromatin_accessibility/
+├── motif_family_accessibility/
+├── transcription_factor_activity/
+├── significant_elements_modality_distribution_plots/
+└── CollecTRI_JASPAR/activity_accessibility_concordance_plots/
+```
 
-Runtime depends on donors, cell types, models, contrasts, and gene-set analyses. Use [Troubleshooting](troubleshooting.md) if a formula, contrast, or metadata join fails.
+The other feature families follow the `gene_expression/` layout without gene sets. Interpretation guidance is in each plot's subtitle and caption; representative plots are in the [output gallery](gallery.md#differential-analyses).
+
+Read feature-model results in R, for example for gene expression:
+
+```{.r filename="R"}
+targets::tar_read(
+  results_tibble.gene_expression.differential_analyses.my_aggregation
+)
+```
+
+Cohort tables recording each model's included and excluded donors, and the counts and results of each abundance model, are separate file targets under `<store>/files/my_aggregation/differential_analyses/`. Build them, with all other module targets, by selecting the module suffix:
+
+```{.r filename="R"}
+targets::tar_make(
+  names = tidyselect::ends_with(".differential_analyses.my_aggregation")
+)
+```
+
+Use [Troubleshooting](troubleshooting.md) if a formula, contrast or metadata join fails.
 
 ## Parameter reference
 
-The OLINK and bulk-RNA path fields are reserved optional integration inputs and are not consumed by the current public differential-analysis selection. Leave them `NULL` unless the corresponding integration is implemented in your downstream workflow.
-
-[Open the searchable parameter browser](parameters.html#workflow=differential_analyses).
-
-The public demos leave this module disabled. Comparing one healthy PBMC donor with one lymphoma lymph-node donor cannot separate condition, donor, and tissue effects. Configure differential analyses for a design with biological replication.
+[Open the searchable parameter browser](parameters.html#workflow=differential_analyses). The [differential analyses methods](implementation/methods_differential_analyses.html) list every fixed and configurable setting, and the [implementation graph](implementation/implementation_differential_analyses.html) shows the target structure.

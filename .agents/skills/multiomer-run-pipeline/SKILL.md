@@ -17,7 +17,8 @@ the calling R session.
 
 Use the live configuration instead of a hardcoded store. `tar_pid()` can retain
 the PID of a completed run, so verify it with `ps` before reporting that a run is
-active.
+active. `ps` sees only the current node; also check that the store's
+`meta/progress` file has not changed recently.
 
 ```bash
 pixi run --use-environment-activation-cache Rscript - <<'EOF'
@@ -34,7 +35,8 @@ print(targets::tar_progress_summary())
 EOF
 ```
 
-For a target family, keep outdatedness checks narrow:
+Keep outdatedness checks narrow for a target family. A full-graph check takes
+minutes and suits an impact baseline:
 
 ```bash
 pixi run --use-environment-activation-cache Rscript - <<'EOF'
@@ -70,6 +72,9 @@ targets::tar_make(
 )
 EOF
 ```
+
+For many trivial targets, such as file tracking, `tar_make(use_crew = FALSE)`
+avoids worker startup.
 
 After `tar_make()` returns, inspect the selected endpoints. Report completion
 only when each endpoint has data, no error, and terminal progress; partial

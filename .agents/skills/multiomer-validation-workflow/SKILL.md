@@ -48,6 +48,14 @@ preview-and-run patterns in `multiomer-run-pipeline`. Run the smallest target
 that exercises the changed code, and avoid setup/download targets unless the
 edit directly changed download/setup behavior.
 
+## Invalidation Impact
+
+To confirm an impact line against an existing store, save `tar_outdated()`
+before editing code (it loads the current code), apply the change, build only
+the earliest changed targets, and compare a second `tar_outdated()` with the
+baseline. File targets hash content only: a moved but byte-identical input keeps
+its hash, while a reformatted copy does not.
+
 ## Known Waste
 
 Do not use `tar_validate()` while the project sets `error = "trim"`: the

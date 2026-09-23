@@ -146,7 +146,7 @@ testthat::test_that("integration: cluster annotation evidence matches UCell aver
 
 testthat::test_that("integration: cell-cycle scores and phases match Seurat::CellCycleScoring", {
   load_scoring_test_runtime()
-  require_reference_version("Seurat", "5.5.0")
+  require_reference_version("Seurat", "5.5.1")
   cell_cycle_genes <- Seurat::cc.genes.updated.2019
   genes <- c(cell_cycle_genes$s.genes, cell_cycle_genes$g2m.genes, sprintf("gene%04d", seq_len(2900L)))
   cells <- sprintf("cell%02d", seq_len(60L))

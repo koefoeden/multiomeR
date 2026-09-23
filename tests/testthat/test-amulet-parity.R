@@ -7,7 +7,7 @@ load_amulet_test_runtime <- function() {
 # scDblFinder 1.24.0 emits stack-imbalance warnings under R 4.5, so every reference
 # result is computed in one disposable process and compared in this session.
 run_reference_amulet <- function(calls) {
-  require_reference_version("scDblFinder", "1.24.0")
+  require_reference_version("scDblFinder", "1.24.10")
   callr::r(
     function(calls) lapply(calls, function(call) do.call(
       getExportedValue("scDblFinder", call$fun), c(list(x = call$x, verbose = FALSE), call$arguments)

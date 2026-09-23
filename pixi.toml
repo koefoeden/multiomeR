@@ -8,8 +8,9 @@ channels = ["conda-forge", "bioconda"]
 platforms = ["linux-64"]
 
 [tasks]
+refresh-output-gallery = { cmd = "python dev/refresh_output_gallery.py", description = "Refresh the output-gallery previews and manifest from one built aggregation's plots." }
 validate-local = { cmd = "Rscript validation/run.R", description = "Check external sources, run the three public validation aggregations, and verify outputs in the existing store." }
-test = { cmd = "Rscript tests/testthat.R", description = "Run fast unit tests and slow algorithm parity tests." }
+test = { cmd = "Rscript tests/testthat.R", description = "Run all reference-parity tests of the reimplemented algorithms." }
 install-r-github-packages = { cmd = "Rscript scripts/install_r_github_packages.R", description = "Install GitHub-only R packages into the pixi R library." }
 download-demo-data = { cmd = "bash example_data/download_10X_cellranger_count_data.sh example_data/public_immune_human_2x_manifest.tsv", description = "Download the required subsets of two public Cell Ranger ARC outputs." }
 setup-demo = { depends-on = ["download-demo-data", "install-r-github-packages"], description = "Prepare the environment and inputs for the public quickstart." }
@@ -18,58 +19,42 @@ test-amulet-parity = { cmd = "Rscript -e 'testthat::test_file(\"tests/testthat/t
 test-algorithm-validation = { cmd = "Rscript -e 'testthat::test_dir(\"tests/testthat\", filter = \"scoring-parity|wnn-parity|scavenge-parity|amulet-parity\")'", description = "Run slow UCell, WNN, SCAVENGE, and AMULET parity and acceptance tests." }
 
 [dependencies]
-r-susier = ">=0.14.2,<0.15"
-r-testthat = ">=3.2.3,<4"
+pillow = ">=12.3.0,<13"
+python = ">=3.13.15,<3.14"
+pyyaml = ">=6.0.3,<7"
+quarto = ">=1.9.38,<1.10"
+r-desolve = ">=1.42,<2"
+r-testthat = ">=3.3.2,<4"
 r-tmb = "==1.9.19" # Match the glmmTMB binary ABI.
-# we still need some more general cleanup before we do a final dependency hygiene check. Lots of prefix calls in functions/targets that are not used anymore.
 # system tools
-bcftools = "1.22.*"
-htslib = "1.23.*"
-bcftools-liftover-plugin = "1.22.*"
+htslib = "1.24.*"
 macs3 = "3.0.*"
 cellsnp-lite = "1.2.*"
 vireosnp = "0.5.*"
-bedtools = "2.31.*"
-ucsc-bedtobigbed = ">=482,<483"
-ucsc-bedgraphtobigwig = ">=482,<483"
-python-kaleido = ">=1.3.0,<2"
-# below are R packages to re-enable while testing the pixi-managed R environment. If updated versions prove problematic, pin the affected packages explicitly.
 r-svglite = ">=2.2.2,<3"
 bioconductor-annotationhub = ">=4.0.0,<5"
 bioconductor-biocparallel = ">=1.44.0,<2"
-# bioconductor-biomart = ">=2.66.1,<3" # no direct source use; AnnotationHub/ensembldb are used instead
-# bioconductor-biostrings = ">=2.78.0,<3" # no direct source use; BSgenome/TFBSTools should pull it if needed
-bioconductor-bsgenome = ">=1.78.0,<2"
 "bioconductor-bsgenome.hsapiens.ucsc.hg38" = ">=1.4.5,<2"
 "bioconductor-bsgenome.mmusculus.ucsc.mm10" = ">=1.4.3,<2"
 "bioconductor-bsgenome.mmusculus.ucsc.mm39" = ">=1.4.3,<2"
 bioconductor-cagefightr = ">=1.30.0,<2"
 bioconductor-chromvar = ">=1.32.0,<2" # used indirectly by betterChromVAR
-# bioconductor-complexheatmap = ">=2.26.1,<3" # no direct source use after replacing genetic enrichment heatmaps with ggplot
-# bioconductor-delayedarray = ">=0.36.0,<0.37" # no direct source use; SummarizedExperiment should pull it if needed
 bioconductor-edger = ">=4.8.2,<5"
 bioconductor-ensembldb = ">=2.34.0,<3"
-# bioconductor-genomation = ">=1.42.0,<2" # no direct source use
 bioconductor-genomeinfodb = ">=1.46.2,<2"
-bioconductor-genomicalignments = ">=1.46.0,<2"
-bioconductor-genomicfeatures = ">=1.62.0,<2"
 bioconductor-genomicranges = ">=1.62.1,<2"
 bioconductor-glmgampoi = ">=1.22.0,<2" # used indirectly by Seurat SCTransform(vst.flavor = "v2")
 bioconductor-gviz = ">=1.54.0,<2"
 bioconductor-iranges = ">=2.44.0,<3"
 bioconductor-limma = ">=3.66.0,<4"
 bioconductor-matrixgenerics = ">=1.22.0,<2"
-bioconductor-milor = ">=2.6.0,<3"
 bioconductor-rsamtools = ">=2.26.0,<3"
 bioconductor-rtracklayer = ">=1.70.1,<2"
-# bioconductor-s4arrays = ">=1.10.1,<2" # no direct source use; SummarizedExperiment/DelayedArray should pull it if needed
-bioconductor-s4vectors = ">=0.48.0,<0.49"
-bioconductor-scdblfinder = ">=1.24.0,<2"
-bioconductor-singlecellexperiment = ">=1.32.0,<2"
+bioconductor-s4vectors = ">=0.48.1,<0.49"
+bioconductor-scdblfinder = ">=1.24.10,<2"
 bioconductor-summarizedexperiment = ">=1.40.0,<2"
 bioconductor-tfbstools = ">=1.48.0,<2"
 bioconductor-ucell = ">=2.14.0,<3"
-# bioconductor-variantannotation = ">=1.56.0,<2" # no direct source use
 r-base = ">=4.5.3,<4.6"
 # BPCells is intentionally installed from GitHub into the pixi default/dev R libraries:
 # pak::pkg_install("bnprks/BPCells/r")
@@ -78,125 +63,87 @@ r-base = ">=4.5.3,<4.6"
 # r-bpcells is not available yet for R 4.5.x. PR submitted.
 libhwy = ">=1.4.0,<2" # preinstalls Highway so the GitHub BPCells install does not build it from source
 r-assertthat = ">=0.2.1,<0.3"
-# r-bedr = ">=1.1.5,<2" # no direct source use after GWAS cleanup
-"r-broom.mixed" = ">=0.2.9.7,<0.3"
 r-callr = ">=3.7.6,<4"
-r-checkmate = ">=2.3.3,<3"
-# r-circlize = ">=0.4.18,<0.5" # no direct source use after replacing ComplexHeatmap genetic enrichment plots
-r-collapse = ">=2.1.6,<3"
-r-coloc = ">=5.2.3,<6"
-r-config = ">=0.3.2,<0.4"
 r-conflicted = ">=1.2.0,<2"
-r-crew = ">=1.3.0,<2"
+r-crew = ">=1.3.3,<2"
+r-mirai = ">=2.7.0,<3" # crew 1.3.3 needs mirai 2.7, which its conda-forge build omits
+r-nanonext = ">=1.9.0,<2"
 "r-crew.cluster" = ">=0.4.0,<0.5"
-# r-curl = ">=7.0.0,<8" # no direct R package use; shell curl is used as a system command
-"r-data.table" = ">=1.17.8,<2"
-# r-devtools = ">=2.5.0,<3" # no direct source use; use pak/remotes only when installing GitHub packages manually
+"r-data.table" = ">=1.18.6.1,<2"
 r-dplyr = ">=1.2.1,<2"
-r-dt = ">=0.34.0,<0.35"
-r-fnn = ">=1.1.4,<2"
 r-forcats = ">=1.0.1,<2"
-r-fs = ">=1.6.7,<2"
-# r-future = ">=1.70.0,<2"
-# r-ggforce = ">=0.5.0,<0.6"
-r-ggbeeswarm = ">=0.7.3,<0.8"
-r-ggplot2 = ">=4.0.2,<5"
+r-fs = ">=2.1.0,<3"
+r-ggplot2 = ">=4.0.3,<5"
 r-ggplotify = ">=0.1.3,<0.2"
-r-ggpubr = ">=0.6.3,<0.7"
 r-ggrastr = ">=1.0.2,<2"
 r-ggrepel = ">=0.9.8,<0.10"
-r-ggtern = ">=4.0.0,<5"
-r-ggtext = ">=0.1.2,<0.2"
+r-ggtext = ">=0.2.0,<0.3"
 r-ghql = ">=0.1.2,<0.2"
-r-gifski = ">=1.32.0_2,<2"
 r-glmmtmb = ">=1.1.14,<2"
-r-glue = ">=1.8.0,<2"
-r-googlesheets4 = ">=1.1.2,<2"
-# r-gprofiler2 = ">=0.2.4,<0.3" # no direct source use
+r-glue = ">=1.8.1,<2"
 r-gtools = ">=3.9.5,<4"
-r-harmony = ">=2.0.2,<3"
-r-hdf5r = ">=1.3.12,<2"
+r-harmony = ">=2.0.5,<3"
+r-hdf5r = ">=1.3.16,<2"
 r-htmltools = ">=0.5.9,<0.6"
-# r-htmlwidgets = ">=1.6.4,<2" # no direct source use; plotly/DT/visNetwork should pull it if needed
-r-ieugwasr = ">=1.1.0,<2"
-r-igraph = ">=2.1.4,<3"
+r-igraph = ">=2.3.3,<3"
 r-jsonlite = ">=2.0.0,<3"
-r-knitr = ">=1.51,<2"
-r-lubridate = ">=1.9.5,<2"
+r-knitr = ">=1.52,<2"
 r-magrittr = ">=2.0.5,<3"
-r-matrix = ">=1.7_4,<2"
+r-matrix = ">=1.7_5,<2"
 r-matrixstats = ">=1.5.0,<2"
-r-msigdbr = ">=26.1.0,<27"
-r-pak = ">=0.9.5,<1" # used by R/dev_helpers.R for dependency inspection/install helpers
+r-msigdbr = ">=26.1.1,<27"
 r-patchwork = ">=1.3.2,<2"
-r-pheatmap = ">=1.0.13,<2"
-r-plotly = ">=4.12.0,<5"
-r-processx = ">=3.8.7,<4"
+r-processx = ">=3.9.0,<4"
 r-purrr = ">=1.2.2,<2"
 "r-r.utils" = ">=2.13.0,<3"
 r-ragg = ">=1.5.2,<2"
 r-rcolorbrewer = ">=1.1_3,<2"
-r-rcurl = ">=1.98_1.18,<2"
 r-readr = ">=2.2.0,<3"
-r-readxl = ">=1.4.5,<2"
-r-reticulate = ">=1.46.0,<2"
-r-rlang = ">=1.2.0,<2"
-r-rnomni = ">=1.0.1.2,<2"
+r-readxl = ">=1.5.0.1,<2"
+r-rlang = ">=1.3.0,<2"
 r-rprojroot = ">=2.1.1,<3"
 r-scales = ">=1.4.0,<2"
 r-scattermore = ">=1.2,<2" # used indirectly by BPCells for plotting
-r-seurat = ">=5.5.0,<6"
-# Signac v2 is required for the Seurat/Signac convenience export target.
-# Do not enable bioconda r-signac here yet: bioconda currently provides Signac 1.17.x,
-# while the target needs the v2 branch for ChromatinAssay5 / GRangesAssay support.
-# Install through DESCRIPTION Remotes / remotes until Signac v2 is published on conda-forge or bioconda.
-# r-signac = ">=2.0.0,<3"
+r-seurat = ">=5.5.1,<6"
+# Signac is pinned in scripts/github_packages.R for ChromatinAssay5 / GRangesAssay
+# export support; install it with the install-r-github-packages task.
 r-stringr = ">=1.6.0,<2"
+r-susier = ">=0.14.2,<0.15"
 r-tarchetypes = ">=0.14.1,<0.15"
 r-targets = ">=1.12.0,<2"
 r-tibble = ">=3.3.1,<4"
 r-tidyr = ">=1.3.2,<2"
 r-tidyselect = ">=1.2.1,<2"
 r-tidytext = ">=0.4.3,<0.5"
-r-viridis = ">=0.6.5,<0.7"
 r-visnetwork = ">=2.1.4,<3"
-r-withr = ">=3.0.2,<4"
-r-xml = ">=3.99_0.22,<4"
+r-withr = ">=3.0.3,<4"
 r-yaml = ">=2.3.12,<3"
-r-qs2 = ">=0.2.0,<0.3" # used indirectly by targets for saving/loading target objects
+r-qs2 = ">=0.2.1,<0.3" # used indirectly by targets for saving/loading target objects
 bioconductor-motifmatchr = ">=1.32.0,<2"
 r-autometric = ">=0.1.2,<0.2" # used indirectly by targets
 libblas = { version = "*", build = "*openblas" }
 liblapack = { version = "*", build = "*openblas" }
 libcblas = { version = "*", build = "*openblas" }
-openblas = ">=0.3.32,<0.4"
-# r-rcpparmadillo = ">=15.2.6_1,<16" # no native RcppArmadillo source in this repo
-r-arrow = ">=24.0.0,<25"
+openblas = ">=0.3.34,<0.4"
+r-arrow = ">=25.0.0,<26"
 r-remotes = ">=2.5.0,<3" # install helper for GitHub-only R dependencies such as Signac v2
 r-fastmatch = ">=1.1_8,<2" # indirect dependency of Signac v2
-r-rcpproll = ">=0.3.2,<0.4" # indirect dependency of Signac v2
+r-rcpproll = ">=0.4.0,<0.5" # indirect dependency of Signac v2
 bioconductor-sparsematrixstats = ">=1.22.0,<2" # indirect dependency of Signac v2
 bioconductor-decoupler = ">=2.16.0,<3"
-r-lme4 = "==2.0.1"
+r-lme4 = ">=2.0_6,<3"
 r-pbkrtest = ">=0.5.5,<0.6"
-r-rcpp = "==1.1.1_1.1"
+r-rcpp = ">=1.1.2,<2"
 r-rcppeigen = ">=0.3.4.0.2,<0.4"
 
 [feature.dev.dependencies]
-python = ">=3.12,<3.13"
-pyyaml = ">=6.0.2,<7"
 radian = ">=0.6.15,<0.7"
 r-languageserver = "*"
 r-httpgd = "*"
-r-googlesheets4 = ">=1.1.2,<2"
-r-assertthat = ">=0.2.1,<0.3"
-r-nanoparquet = ">=0.5.1,<0.6" # doesn't work?
-nodejs = ">=26.3.1,<26.4"
-imagemagick = ">=7.1.2_26,<8"
-pngquant = ">=2.17.0,<3"
-quarto = ">=1.9.36,<1.10"
 
 [feature.dev.tasks]
 render-parameter-overview = { cmd = "Rscript dev/render_parameter_overview.R", env = { R_PROFILE_USER = "/dev/null" }, description = "Regenerate the standalone parameter browser from shared public defaults." }
 render-website = { cmd = "python dev/render_website.py", description = "Render both Markdown documentation books through temporary Quarto sources." }
 export-website-llm-markdown = { cmd = "python dev/export_website_llm_markdown.py", description = "Export the Quarto website books to one LLM-friendly Markdown file." }
+check-website-links = { cmd = "python dev/check_website_links.py", description = "Report broken internal links in the rendered documentation books." }
+check-source-links = { cmd = "python dev/check_source_links.py", description = "Check that documentation source links name existing repository paths." }

@@ -4,7 +4,7 @@ source_project_file("tests/testthat/fixtures/algorithm-deviations.R")
 # settings, so a real loss of agreement fails rather than passing a loose floor.
 testthat::test_that("integration: BPCells WNN meets the stress-fixture similarity thresholds", {
   load_algorithm_test_runtime()
-  require_reference_version("Seurat", "5.5.0")
+  require_reference_version("Seurat", "5.5.1")
   metrics <- get_wnn_similarity_metrics(
     embeddings = make_wnn_fixture(
       n_cells = 160L,
@@ -28,7 +28,7 @@ testthat::test_that("integration: BPCells WNN meets the stress-fixture similarit
 
 testthat::test_that("integration: BPCells WNN meets production similarity thresholds", {
   load_algorithm_test_runtime()
-  require_reference_version("Seurat", "5.5.0")
+  require_reference_version("Seurat", "5.5.1")
   embeddings <- make_wnn_fixture(
     n_cells = 400L,
     n_dimensions = 12L,

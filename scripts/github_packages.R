@@ -3,16 +3,16 @@ github_packages <- list(
     package = "BPCells",
     repo = "bnprks/BPCells",
     subdir = "r",
-    ref = "28759cdd512578b6cbe549e226e1cd52a2d2308c"
+    ref = "016296413cd7a5725c8b35816df02365d7def853"
   ),
   list(
     package = "Signac",
     repo = "stuart-lab/signac",
-    ref = "5d66cf6c34322309d5b8aece3fa294f5531b8eee"
+    ref = "e2351168585569e5e27ad508bcad1b941eb245b7"
   ),
   list(
     package = "betterChromVAR",
     repo = "plger/betterChromVAR",
-    ref = "82ae1e4ada8a43c721aa2ae1c3f2c6dfc3d5a637"
+    ref = "0341160ba7e994ad6755cbba92d6f644efebeb3a"
   )
 )

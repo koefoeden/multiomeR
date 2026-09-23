@@ -1,17 +1,7 @@
 source("scripts/github_packages.R")
 
 is_installed_ref <- function(package, ref) {
-  description <- tryCatch(
-    utils::packageDescription(package),
-    error = function(error) NULL
-  )
-
-  if (!is.list(description)) {
-    return(FALSE)
-  }
-
-  remote_sha <- description[["RemoteSha"]]
-  !is.null(remote_sha) && identical(remote_sha, ref)
+  identical(tryCatch(utils::packageDescription(package)[["RemoteSha"]], error = function(error) NULL), ref)
 }
 
 install_github_package <- function(package) {

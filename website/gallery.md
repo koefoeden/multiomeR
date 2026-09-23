@@ -1,7 +1,6 @@
 # Output gallery
 
 ```{r, include = FALSE}
-source("../packages/multiomeRCore/R/null_default.R")
 source("../R/output_gallery_helpers.R")
 ```
 

@@ -35,8 +35,7 @@ rlang::list2(
     name = GWAS_absolute_effect_peak_weight_matrix,
     description = "Combine eligible PIP x absolute-beta peak weights into one annotation matrix [part_of_graph:genetic_enrichment_cell_type_absolute_effect]",
     command = get_GWAS_chromVAR_peak_weight_matrix(
-      peak_weight_records = GWAS_absolute_effect_peak_weight_records,
-      RSE_ATAC = chromVAR_obj.ATAC
+      peak_weight_records = GWAS_absolute_effect_peak_weight_records
     ),
     resources = get_tar_resources(RAM_GB_req = 40)
   ),

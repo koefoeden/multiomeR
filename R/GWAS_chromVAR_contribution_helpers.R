@@ -493,49 +493,6 @@ get_GWAS_chromVAR_locus_contribution_tibble <- function(variant_contribution_tib
     )
 }
 
-#' Validate additive GWAS chromVAR contribution
-#'
-#' @param peak_contribution_tibble Peak-level contribution.
-#' @param variant_contribution_tibble Variant-level contribution.
-#' @param locus_contribution_tibble Locus-level contribution.
-#' @return Reconciliation errors for each GWAS and cell type.
-#' @keywords internal
-
-get_GWAS_chromVAR_contribution_reconciliation_tibble <- function(
-  peak_contribution_tibble,
-  variant_contribution_tibble,
-  locus_contribution_tibble
-) {
-  summarize_level <- function(contribution_tibble, level) {
-    contribution_tibble |>
-      dplyr::summarise(
-        deviation_contribution_sum = sum(.data$deviation_contribution),
-        relative_deviation_contribution_sum = sum(.data$relative_deviation_contribution),
-        z_contribution_sum = sum(.data$z_contribution),
-        deviation = dplyr::first(.data$deviation),
-        relative_deviation = dplyr::first(.data$relative_deviation),
-        z = dplyr::first(.data$z),
-        .by = c(GWAS_ID, cluster)
-      ) |>
-      dplyr::mutate(level = level)
-  }
-
-  dplyr::bind_rows(
-    summarize_level(peak_contribution_tibble, "peak"),
-    summarize_level(variant_contribution_tibble, "variant"),
-    summarize_level(locus_contribution_tibble, "locus")
-  ) |>
-    dplyr::mutate(
-      deviation_error = .data$deviation_contribution_sum - .data$deviation,
-      relative_deviation_error = .data$relative_deviation_contribution_sum - .data$relative_deviation,
-      z_error = .data$z_contribution_sum - .data$z,
-      contribution_reconciles = abs(.data$deviation_error) < 1e-8 &
-        abs(.data$relative_deviation_error) < 1e-8 &
-        abs(.data$z_error) < 1e-8
-    ) |>
-    dplyr::relocate(GWAS_ID, cluster, level)
-}
-
 collapse_GWAS_locus_contribution_for_plot <- function(locus_contribution_tibble, n_top_loci = 15L) {
   top_locus_ids <- locus_contribution_tibble |>
     dplyr::summarise(

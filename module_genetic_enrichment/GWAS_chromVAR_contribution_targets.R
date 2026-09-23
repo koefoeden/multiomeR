@@ -70,15 +70,6 @@ rlang::list2(
       locus_to_gene_tibble = GWAS_locus_to_gene_tibble
     )
   ),
-  targets::tar_target(
-    name = chromVAR_contribution_reconciliation_tibble.cell_type_pseudobulk,
-    description = "Reconcile peak, variant, and locus contribution sums with the original chromVAR heatmap values",
-    command = get_GWAS_chromVAR_contribution_reconciliation_tibble(
-      peak_contribution_tibble = chromVAR_peak_contribution_tibble.cell_type_pseudobulk,
-      variant_contribution_tibble = chromVAR_variant_contribution_tibble.cell_type_pseudobulk,
-      locus_contribution_tibble = chromVAR_locus_contribution_tibble.cell_type_pseudobulk
-    )
-  ),
   tarchetypes::tar_file(
     name = chromVAR_locus_contribution_per_GWAS_heatmaps.cell_type_pseudobulk,
     description = "Save one cell-type-by-locus contribution heatmap per enabled GWAS. [checkpoint:genetic_enrichment]",

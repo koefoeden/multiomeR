@@ -155,32 +155,13 @@ get_GWAS_chromVAR_peak_weight_summary_tibble <- function(peak_weight_records) {
     })
 }
 
-get_GWAS_chromVAR_peak_weight_matrix <- function(peak_weight_records, RSE_ATAC) {
+# Peak weights are named from the rowRanges of the chromVAR object they annotate.
+get_GWAS_chromVAR_peak_weight_matrix <- function(peak_weight_records) {
   peak_weights_matrix <- peak_weight_records |>
     purrr::map("peak_weights_vec") |>
     do.call(what = cbind)
   colnames(peak_weights_matrix) <- purrr::map_chr(peak_weight_records, "GWAS_ID")
-
-  peak_weights_matrix |>
-    align_peak_weights_to_RSE(RSE_ATAC = RSE_ATAC) |>
-    Matrix::Matrix(sparse = TRUE)
-}
-
-align_peak_weights_to_RSE <- function(peak_weights_matrix, RSE_ATAC) {
-  peak_names <- get_peak_names_from_GRanges(SummarizedExperiment::rowRanges(RSE_ATAC))
-  if (is.null(rownames(peak_weights_matrix))) {
-    if (nrow(peak_weights_matrix) != length(peak_names)) {
-      stop("Unnamed peak_weights_matrix must have the same number of rows as RSE_ATAC peaks.")
-    }
-    rownames(peak_weights_matrix) <- peak_names
-  }
-
-  missing_peaks <- setdiff(peak_names, rownames(peak_weights_matrix))
-  if (length(missing_peaks) > 0) {
-    stop("Missing peak weight rows for ", length(missing_peaks), " ATAC peak(s).")
-  }
-
-  peak_weights_matrix[peak_names, , drop = FALSE]
+  Matrix::Matrix(peak_weights_matrix, sparse = TRUE)
 }
 
 #' Get GWAS chromVAR z-score chunk record
@@ -199,17 +180,12 @@ get_GWAS_chromVAR_z_score_chunk_record <- function(peak_weight_record, chunk_con
   peak_weights_matrix <- matrix(peak_weight_record$peak_weights_vec, ncol = 1)
   rownames(peak_weights_matrix) <- names(peak_weight_record$peak_weights_vec)
   colnames(peak_weights_matrix) <- peak_weight_record$GWAS_ID
-  peak_weights_matrix <- align_peak_weights_to_RSE(
-    peak_weights_matrix = peak_weights_matrix,
-    RSE_ATAC = RSE_ATAC
-  )
   peak_weights_matrix <- Matrix::Matrix(peak_weights_matrix, sparse = TRUE)
 
   chunk_obj <- SummarizedExperiment::SummarizedExperiment(
     assays = list(counts = chunk_context_record$counts),
     rowRanges = SummarizedExperiment::rowRanges(RSE_ATAC)
   )
-  SummarizedExperiment::rowData(chunk_obj) <- SummarizedExperiment::rowData(RSE_ATAC)
 
   z_score_matrix <- betterChromVAR::computeDeviationsAnalytic(
     object = chunk_obj,

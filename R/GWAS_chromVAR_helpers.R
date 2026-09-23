@@ -1,145 +1,72 @@
-#' Filter credible set variants
+#' Map credible-set variant weights to ATAC peaks
 #'
-#' Filter credible-set variants by posterior probability before peak overlap.
+#' Sum the weights of the variants overlapping each peak, cap each peak weight
+#' at 1 for the betterChromVAR continuous-annotation contract, and allocate the
+#' capped weight back to the variants in proportion to their weights.
 #'
-#' @param credible_set_GRanges GRanges object containing credible set GRanges coordinates and metadata.
-#' @param posterior_probability_cutoff Minimum posterior probability/PIP retained before assigning variants to peaks.
-#' @return A GRanges object containing retained variants.
+#' @param GWAS_ID Configured GWAS label.
+#' @param variant_GRanges Retained credible-set variants.
+#' @param peak_ranges Ordered ATAC peak ranges.
+#' @param weight_col Variant weight column.
+#' @return One row per peak-variant overlap.
 #' @keywords internal
 
-filter_credible_set_variants <- function(credible_set_GRanges, posterior_probability_cutoff = NULL) {
-  if (!is.null(posterior_probability_cutoff)) {
-    credible_set_GRanges <- S4Vectors::subset(credible_set_GRanges, posteriorProbability > posterior_probability_cutoff)
-  }
-
-  credible_set_GRanges
-}
-
-#' Sum variant weights in peaks
-#'
-#' Sum overlapping variant weights for each peak range.
-#'
-#' @param variant_GRanges GRanges object containing variant GRanges coordinates and metadata.
-#' @param peak_ranges GRanges of consensus peaks; names must match peak rows used in peak-weight or accessibility matrices.
-#' @param weight_col Column in `variant_tibble` to draw as vertical PIP/weight values.
-#' @return Named numeric vector with one value per peak; peaks without variants
-#'   receive zero.
-#' @keywords internal
-
-sum_variant_weights_in_peaks <- function(variant_GRanges, peak_ranges, weight_col = "posteriorProbability") {
-  if (!weight_col %in% names(GenomicRanges::mcols(variant_GRanges))) {
-    stop("variant_GRanges is missing weight column: ", weight_col)
-  }
-
-  peak_variant_overlaps_hits <- GenomicRanges::findOverlaps(
-    query = peak_ranges,
-    subject = variant_GRanges
-  )
-
-  out <- numeric(length(peak_ranges))
-  names(out) <- get_peak_names_from_GRanges(peak_ranges)
-  if (length(peak_variant_overlaps_hits) == 0) {
-    return(out)
-  }
-
-  peak_idx <- S4Vectors::queryHits(peak_variant_overlaps_hits)
-  variant_idx <- S4Vectors::subjectHits(peak_variant_overlaps_hits)
-  variant_weights <- GenomicRanges::mcols(variant_GRanges)[[weight_col]][variant_idx]
-  variant_weights[is.na(variant_weights)] <- 0
-
-  out <- Matrix::sparseMatrix(
-    i = peak_idx,
-    j = rep.int(1L, length(peak_idx)),
-    x = variant_weights,
-    dims = c(length(peak_ranges), 1)
-  ) |>
-    Matrix::rowSums()
-  names(out) <- get_peak_names_from_GRanges(peak_ranges)
-  out
-}
-
-#' Get summed posterior probabilities per peak
-#'
-#' Convert credible-set variant PIPs into peak-level GWAS weights.
-#'
-#' @param credible_set_GRanges GRanges object containing credible set GRanges coordinates and metadata.
-#' @param peak_ranges GRanges of consensus peaks; names must match peak rows used in peak-weight or accessibility matrices.
-#' @param GWAS_ID Configured GWAS label used in target names, plots, and Open Targets joins.
-#' @param posterior_probability_cutoff Minimum posterior probability/PIP retained before assigning variants to peaks.
-#' @param weight_transform Weight post-processing mode. `cap_1` caps summed peak
-#'   weights at 1; `sum` leaves summed weights unchanged.
-#' @return Named numeric vector of peak weights, with names matching peak ranges.
-#'   Errors if no credible-set variants overlap peaks for the GWAS.
-#' @keywords internal
-
-get_summed_posterior_probabilities_per_peak <- function(
-  credible_set_GRanges,
-  peak_ranges,
+get_GWAS_chromVAR_peak_variant_weight_tibble <- function(
   GWAS_ID,
-  posterior_probability_cutoff = NULL,
-  weight_transform = "cap_1"
+  variant_GRanges,
+  peak_ranges,
+  weight_col = "posteriorProbability"
 ) {
-  credible_set_GRanges <- credible_set_GRanges |>
-    filter_credible_set_variants(
-      posterior_probability_cutoff = posterior_probability_cutoff
+  overlap_hits <- GenomicRanges::findOverlaps(peak_ranges, variant_GRanges)
+  if (length(overlap_hits) == 0L) {
+    stop("No credible-set variants overlap ATAC peaks for GWAS_ID: ", GWAS_ID)
+  }
+
+  peak_idx <- S4Vectors::queryHits(overlap_hits)
+  variant_tibble <- GenomicRanges::mcols(variant_GRanges)[S4Vectors::subjectHits(overlap_hits), , drop = FALSE] |>
+    as.data.frame() |>
+    tibble::as_tibble()
+
+  tibble::tibble(
+    peak_name = get_peak_names_from_GRanges(peak_ranges)[peak_idx],
+    peak_chromosome = as.character(GenomicRanges::seqnames(peak_ranges))[peak_idx],
+    peak_start = GenomicRanges::start(peak_ranges)[peak_idx],
+    peak_end = GenomicRanges::end(peak_ranges)[peak_idx]
+  ) |>
+    dplyr::bind_cols(variant_tibble) |>
+    dplyr::mutate(
+      GWAS_ID = .env$GWAS_ID,
+      uncapped_peak_weight = sum(.data[[weight_col]]),
+      peak_weight = pmin(.data$uncapped_peak_weight, 1),
+      peak_weight_scale = .data$peak_weight / .data$uncapped_peak_weight,
+      peak_variant_weight = .data[[weight_col]] * .data$peak_weight_scale,
+      .by = peak_name
+    ) |>
+    dplyr::relocate(
+      GWAS_ID,
+      peak_name,
+      peak_chromosome,
+      peak_start,
+      peak_end,
+      peak_weight,
+      uncapped_peak_weight,
+      peak_variant_weight,
+      peak_weight_scale
     )
-
-  posterior_probability_sums_per_peak <- sum_variant_weights_in_peaks(
-    variant_GRanges = credible_set_GRanges,
-    peak_ranges = peak_ranges,
-    weight_col = "posteriorProbability"
-  )
-
-  if (sum(posterior_probability_sums_per_peak > 0) == 0) {
-    stop(sprintf("No peaks overlap with credible-set variants for GWAS trait: %s - skipped.", GWAS_ID))
-  }
-
-  if (identical(weight_transform, "cap_1")) {
-    n_capped <- sum(posterior_probability_sums_per_peak > 1)
-    if (n_capped > 0) {
-      message(sprintf(
-        "Capped %s GWAS_chromVAR peak weight(s) above 1 for %s; max uncapped weight was %.3f.",
-        n_capped,
-        GWAS_ID,
-        max(posterior_probability_sums_per_peak)
-      ))
-    }
-    posterior_probability_sums_per_peak <- pmin(posterior_probability_sums_per_peak, 1)
-  } else if (!identical(weight_transform, "sum")) {
-    stop("Unsupported weight_transform: ", weight_transform)
-  }
-
-  posterior_probability_sums_per_peak
 }
 
 #' Get GWAS chromVAR peak weight record
 #'
-#' Build one peak-weight record for GWAS chromVAR scoring.
-#'
-#' @param GWAS_input_record Single GWAS branch record containing the study and finemapping method.
-#' @param peak_ranges GRanges of consensus peaks; names must match peak rows used in peak-weight or accessibility matrices.
-#' @param posterior_probability_cutoff Minimum posterior probability/PIP retained before assigning variants to peaks.
-#' @param weight_transform Optional function or scalar transform applied to variant weights before aggregation.
-#' @return A single branch record, usually a list or one-row tibble, carrying all inputs needed by a dynamic target branch.
+#' @param peak_variant_weight_tibble Peak-variant weights of one GWAS.
+#' @param peak_ranges Ordered ATAC peak ranges.
+#' @return List with `GWAS_ID` and the capped weight of every peak, named by peak.
 #' @keywords internal
 
-get_GWAS_chromVAR_peak_weight_record <- function(
-  GWAS_input_record,
-  peak_ranges,
-  posterior_probability_cutoff = NULL,
-  weight_transform = "cap_1"
-) {
-  GWAS_ID <- GWAS_input_record$GWAS_ID
-  list(
-    GWAS_ID = GWAS_ID,
-    peak_weights_vec = get_summed_posterior_probabilities_per_peak(
-      credible_set_GRanges = GWAS_input_record$credible_set_GRanges,
-      peak_ranges = peak_ranges,
-      GWAS_ID = GWAS_ID,
-      posterior_probability_cutoff = posterior_probability_cutoff,
-      weight_transform = weight_transform
-    )
-  )
+get_GWAS_chromVAR_peak_weight_record <- function(peak_variant_weight_tibble, peak_ranges) {
+  peak_weight_tibble <- dplyr::distinct(peak_variant_weight_tibble, peak_name, peak_weight)
+  peak_weights_vec <- stats::setNames(numeric(length(peak_ranges)), get_peak_names_from_GRanges(peak_ranges))
+  peak_weights_vec[peak_weight_tibble$peak_name] <- peak_weight_tibble$peak_weight
+  list(GWAS_ID = peak_variant_weight_tibble$GWAS_ID[[1]], peak_weights_vec = peak_weights_vec)
 }
 
 get_GWAS_chromVAR_peak_weight_summary_tibble <- function(peak_weight_records) {

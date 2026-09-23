@@ -10,38 +10,14 @@
 #' @return One-row tibble describing eligibility, route, and beta coverage.
 #' @keywords internal
 
-infer_GWAS_absolute_effect_weighting <- function(
-  GWAS_input_record,
-  posterior_probability_cutoff = NULL
-) {
-  GWAS_ID <- GWAS_input_record$GWAS_ID
+infer_GWAS_absolute_effect_weighting <- function(GWAS_input_record, posterior_probability_cutoff) {
   variant_tibble <- S4Vectors::mcols(GWAS_input_record$credible_set_GRanges) |>
     as.data.frame() |>
     tibble::as_tibble()
-  required_columns <- c("studyLocusId", "posteriorProbability_raw", "beta")
-  missing_columns <- setdiff(required_columns, names(variant_tibble))
 
-  if (length(missing_columns) > 0L) {
-    return(tibble::tibble(
-      GWAS_ID = GWAS_ID,
-      studyId = GWAS_input_record$studyId,
-      finemappingMethod = GWAS_input_record$finemappingMethod,
-      eligible = FALSE,
-      effect_weighting_route = NA_character_,
-      status = paste0("missing_columns:", paste(missing_columns, collapse = ",")),
-      n_variants = nrow(variant_tibble),
-      n_variants_with_beta = 0L,
-      n_loci = dplyr::n_distinct(variant_tibble$studyLocusId),
-      n_loci_with_beta = 0L
-    ))
-  }
-
-  raw_PIP <- variant_tibble$posteriorProbability_raw
+  raw_PIP <- variant_tibble$posteriorProbability
   finite_beta <- is.finite(variant_tibble$beta)
-  retained <- is.finite(raw_PIP) & raw_PIP >= 0
-  if (!is.null(posterior_probability_cutoff)) {
-    retained <- retained & raw_PIP > posterior_probability_cutoff
-  }
+  retained <- is.finite(raw_PIP) & raw_PIP > posterior_probability_cutoff
   locus_has_beta <- tapply(
     finite_beta,
     variant_tibble$studyLocusId,
@@ -66,7 +42,7 @@ infer_GWAS_absolute_effect_weighting <- function(
   )
 
   tibble::tibble(
-    GWAS_ID = GWAS_ID,
+    GWAS_ID = GWAS_input_record$GWAS_ID,
     studyId = GWAS_input_record$studyId,
     finemappingMethod = GWAS_input_record$finemappingMethod,
     eligible = eligible,
@@ -87,10 +63,7 @@ infer_GWAS_absolute_effect_weighting <- function(
 #' @return One row per GWAS input with eligibility and coverage.
 #' @keywords internal
 
-get_GWAS_absolute_effect_weighting_status_tibble <- function(
-  GWAS_input_records,
-  posterior_probability_cutoff = NULL
-) {
+get_GWAS_absolute_effect_weighting_status_tibble <- function(GWAS_input_records, posterior_probability_cutoff) {
   GWAS_input_records |>
     purrr::map_dfr(
       infer_GWAS_absolute_effect_weighting,
@@ -111,13 +84,13 @@ get_GWAS_absolute_effect_weighting_status_tibble <- function(
 get_GWAS_absolute_effect_variant_GRanges <- function(
   GWAS_input_record,
   effect_weighting_route,
-  posterior_probability_cutoff = NULL
+  posterior_probability_cutoff
 ) {
   variant_GRanges <- GWAS_input_record$credible_set_GRanges
   variant_tibble <- S4Vectors::mcols(variant_GRanges) |>
     as.data.frame() |>
     tibble::as_tibble()
-  raw_PIP <- variant_tibble$posteriorProbability_raw
+  raw_PIP <- variant_tibble$posteriorProbability
 
   effect_beta <- if (identical(effect_weighting_route, "variant_absolute_effect")) {
     variant_tibble$beta
@@ -135,10 +108,7 @@ get_GWAS_absolute_effect_variant_GRanges <- function(
     stop("Unsupported effect_weighting_route: ", effect_weighting_route)
   }
 
-  keep <- is.finite(raw_PIP) & raw_PIP >= 0 & is.finite(effect_beta)
-  if (!is.null(posterior_probability_cutoff)) {
-    keep <- keep & raw_PIP > posterior_probability_cutoff
-  }
+  keep <- is.finite(raw_PIP) & raw_PIP > posterior_probability_cutoff & is.finite(effect_beta)
   absolute_effect_weight <- raw_PIP * abs(effect_beta)
   keep <- keep & absolute_effect_weight > 0
   absolute_effect_weight <- absolute_effect_weight[keep]
@@ -150,7 +120,6 @@ get_GWAS_absolute_effect_variant_GRanges <- function(
     sum(absolute_effect_weight) / sum(retained_raw_PIP)
 
   variant_GRanges <- variant_GRanges[keep]
-  S4Vectors::mcols(variant_GRanges)$posteriorProbability_raw <- retained_raw_PIP
   S4Vectors::mcols(variant_GRanges)$effect_beta <- effect_beta[keep]
   S4Vectors::mcols(variant_GRanges)$absolute_effect_scale <-
     absolute_effect_scale
@@ -159,7 +128,7 @@ get_GWAS_absolute_effect_variant_GRanges <- function(
   variant_GRanges
 }
 
-#' Build peak weights for every automatically eligible GWAS
+#' Map absolute-effect variant weights to ATAC peaks for every eligible GWAS
 #'
 #' @param GWAS_input_records List of normalized GWAS input records.
 #' @param weighting_status_tibble Output of
@@ -167,65 +136,29 @@ get_GWAS_absolute_effect_variant_GRanges <- function(
 #' @param peak_ranges Ordered ATAC peak ranges.
 #' @param posterior_probability_cutoff Raw PIP threshold applied before effect
 #'   weighting.
-#' @return List of eligible GWAS peak-weight records. Variant weights preserve
-#'   retained raw-PIP mass before peak aggregation; summed peak annotations are
-#'   capped at 1 for the betterChromVAR continuous-annotation contract.
+#' @return One peak-variant weight tibble per eligible GWAS. Variant weights
+#'   preserve retained raw-PIP mass before peak aggregation.
 #' @keywords internal
 
-get_GWAS_absolute_effect_peak_weight_records <- function(
+get_GWAS_absolute_effect_peak_variant_weight_records <- function(
   GWAS_input_records,
   weighting_status_tibble,
   peak_ranges,
-  posterior_probability_cutoff = NULL
+  posterior_probability_cutoff
 ) {
-  eligible_status <- weighting_status_tibble |>
-    dplyr::filter(.data$eligible)
-  input_records <- GWAS_input_records |>
-    purrr::keep(\(record) record$GWAS_ID %in% eligible_status$GWAS_ID)
-
-  purrr::map(input_records, \(record) {
-    route <- eligible_status$effect_weighting_route[
-      match(record$GWAS_ID, eligible_status$GWAS_ID)
-    ]
-    variant_GRanges <- get_GWAS_absolute_effect_variant_GRanges(
-      GWAS_input_record = record,
-      effect_weighting_route = route,
-      posterior_probability_cutoff = posterior_probability_cutoff
-    )
-    uncapped_peak_weights_vec <- sum_variant_weights_in_peaks(
-      variant_GRanges = variant_GRanges,
-      peak_ranges = peak_ranges,
-      weight_col = "absolute_effect_weight"
-    )
-    peak_weights_vec <- pmin(uncapped_peak_weights_vec, 1)
-    if (!any(peak_weights_vec > 0)) {
-      stop("No absolute-effect-weighted variants overlap ATAC peaks for GWAS_ID: ", record$GWAS_ID)
-    }
-    list(
-      GWAS_ID = record$GWAS_ID,
-      effect_weighting_route = route,
-      n_capped_peaks = sum(uncapped_peak_weights_vec > 1),
-      peak_weights_vec = peak_weights_vec
-    )
-  })
-}
-
-#' Allocate absolute-effect peak weights to their contributing variants
-#' @param GWAS_input_records Original credible-set records.
-#' @param weighting_status_tibble Existing absolute-effect eligibility and routes.
-#' @param peak_ranges ATAC peaks used by the absolute-effect heatmap.
-#' @param posterior_probability_cutoff Raw PIP cutoff, applied before weighting.
-#' @return Peak-to-variant allocations using the heatmap's calibrated weights.
-get_GWAS_absolute_effect_peak_variant_weights <- function(GWAS_input_records,
-  weighting_status_tibble, peak_ranges, posterior_probability_cutoff = NULL) {
-  eligible <- dplyr::filter(weighting_status_tibble, eligible)
+  eligible <- dplyr::filter(weighting_status_tibble, .data$eligible)
   GWAS_input_records |>
     purrr::keep(\(record) record$GWAS_ID %in% eligible$GWAS_ID) |>
-    purrr::map_dfr(\(record) {
-      route <- eligible$effect_weighting_route[match(record$GWAS_ID, eligible$GWAS_ID)]
-      ranges <- get_GWAS_absolute_effect_variant_GRanges(record, route, posterior_probability_cutoff)
-      ranges$posteriorProbability <- ranges$absolute_effect_weight
-      record$credible_set_GRanges <- ranges
-      get_GWAS_chromVAR_peak_variant_weight_tibble(record, peak_ranges)
+    purrr::map(\(record) {
+      get_GWAS_chromVAR_peak_variant_weight_tibble(
+        GWAS_ID = record$GWAS_ID,
+        variant_GRanges = get_GWAS_absolute_effect_variant_GRanges(
+          GWAS_input_record = record,
+          effect_weighting_route = eligible$effect_weighting_route[match(record$GWAS_ID, eligible$GWAS_ID)],
+          posterior_probability_cutoff = posterior_probability_cutoff
+        ),
+        peak_ranges = peak_ranges,
+        weight_col = "absolute_effect_weight"
+      )
     })
 }

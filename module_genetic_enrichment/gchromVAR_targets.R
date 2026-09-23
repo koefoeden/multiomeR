@@ -5,14 +5,27 @@ rlang::list2(
     command = SummarizedExperiment::rowRanges(chromVAR_obj.ATAC)
   ),
   targets::tar_target(
+    name = GWAS_peak_variant_weight_records,
+    description = "Allocate capped peak posterior-probability weights to the overlapping credible-set variants of one GWAS",
+    command = get_GWAS_chromVAR_peak_variant_weight_tibble(
+      GWAS_ID = GWAS_input_records$GWAS_ID,
+      variant_GRanges = S4Vectors::subset(
+        GWAS_input_records$credible_set_GRanges,
+        posteriorProbability > genetic_enrichment_posterior_probability_cutoff
+      ),
+      peak_ranges = genetic_enrichment_peak_ranges
+    ),
+    pattern = map(GWAS_input_records),
+    resources = get_tar_resources(RAM_GB_req = 40)
+  ),
+  targets::tar_target(
     name = GWAS_peak_weight_records,
     description = "Build capped peak posterior-probability weights for one GWAS [part_of_graph:genetic_enrichment_single_nucleus]",
     command = get_GWAS_chromVAR_peak_weight_record(
-      GWAS_input_record = GWAS_input_records,
-      peak_ranges = genetic_enrichment_peak_ranges,
-      posterior_probability_cutoff = genetic_enrichment_posterior_probability_cutoff
+      peak_variant_weight_tibble = GWAS_peak_variant_weight_records,
+      peak_ranges = genetic_enrichment_peak_ranges
     ),
-    pattern = map(GWAS_input_records),
+    pattern = map(GWAS_peak_variant_weight_records),
     resources = get_tar_resources(RAM_GB_req = 40)
   ),
   tarchetypes::tar_file(

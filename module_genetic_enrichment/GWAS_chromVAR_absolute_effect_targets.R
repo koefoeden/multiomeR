@@ -8,13 +8,23 @@ rlang::list2(
     )
   ),
   targets::tar_target(
-    name = GWAS_absolute_effect_peak_weight_records,
-    description = "Build PIP-mass-calibrated and peak-capped PIP x absolute-beta weights for eligible GWAS inputs [part_of_graph:genetic_enrichment_cell_type_absolute_effect]",
-    command = get_GWAS_absolute_effect_peak_weight_records(
+    name = GWAS_absolute_effect_peak_variant_weight_records,
+    description = "Allocate PIP-mass-calibrated and peak-capped PIP x absolute-beta weights to the variants of eligible GWAS inputs",
+    command = get_GWAS_absolute_effect_peak_variant_weight_records(
       GWAS_input_records = GWAS_input_records,
       weighting_status_tibble = GWAS_absolute_effect_weighting_status_tibble,
       peak_ranges = genetic_enrichment_peak_ranges,
       posterior_probability_cutoff = genetic_enrichment_posterior_probability_cutoff
+    ),
+    resources = get_tar_resources(RAM_GB_req = 40)
+  ),
+  targets::tar_target(
+    name = GWAS_absolute_effect_peak_weight_records,
+    description = "Build PIP-mass-calibrated and peak-capped PIP x absolute-beta weights for eligible GWAS inputs [part_of_graph:genetic_enrichment_cell_type_absolute_effect]",
+    command = purrr::map(
+      GWAS_absolute_effect_peak_variant_weight_records,
+      get_GWAS_chromVAR_peak_weight_record,
+      peak_ranges = genetic_enrichment_peak_ranges
     ),
     resources = get_tar_resources(RAM_GB_req = 40)
   ),
@@ -86,11 +96,8 @@ rlang::list2(
   ),
   targets::tar_target(
     name = GWAS_absolute_effect_peak_variant_weight_tibble,
-    description = "Allocate the absolute-effect heatmap's calibrated, capped peak weights to variants",
-    command = get_GWAS_absolute_effect_peak_variant_weights(
-      GWAS_input_records, GWAS_absolute_effect_weighting_status_tibble,
-      genetic_enrichment_peak_ranges, genetic_enrichment_posterior_probability_cutoff),
-    resources = get_tar_resources(RAM_GB_req = 40)
+    description = "Combine the absolute-effect peak-to-variant weight allocations of eligible GWAS inputs",
+    command = dplyr::bind_rows(GWAS_absolute_effect_peak_variant_weight_records)
   ),
   targets::tar_target(
     name = chromVAR_absolute_effect_peak_contribution_tibble.cell_type_pseudobulk,

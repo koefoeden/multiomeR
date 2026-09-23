@@ -1,17 +1,5 @@
 rlang::list2(
   targets::tar_target(
-    name = GWAS_peak_variant_weight_records,
-    description = "Allocate capped trait-level GWAS peak weights to overlapping credible-set variants",
-    command = get_GWAS_chromVAR_peak_variant_weight_tibble(
-      GWAS_input_record = GWAS_input_records,
-      peak_ranges = genetic_enrichment_peak_ranges,
-      posterior_probability_cutoff = genetic_enrichment_posterior_probability_cutoff
-    ),
-    pattern = map(GWAS_input_records),
-    iteration = "list",
-    resources = get_tar_resources(RAM_GB_req = 40)
-  ),
-  targets::tar_target(
     name = GWAS_peak_variant_weight_tibble,
     description = "Combine peak-to-credible-variant weight allocations across all enabled GWAS",
     command = dplyr::bind_rows(GWAS_peak_variant_weight_records)

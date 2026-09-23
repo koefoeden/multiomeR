@@ -7,67 +7,6 @@ chromVAR_Z_support_labels <- function(z) {
   )
 }
 
-#' Map credible-set variant weights to ATAC peaks
-#'
-#' Allocate each capped trait-level peak weight back to its overlapping
-#' credible-set variants in proportion to their configured posterior weights.
-#'
-#' @param GWAS_input_record One trait-level GWAS input record.
-#' @param peak_ranges Ordered ATAC peak ranges.
-#' @param posterior_probability_cutoff Minimum posterior probability retained.
-#' @return One row per peak-variant overlap with weights summing to the capped
-#'   trait-level weight for each peak.
-#' @keywords internal
-
-get_GWAS_chromVAR_peak_variant_weight_tibble <- function(
-  GWAS_input_record,
-  peak_ranges,
-  posterior_probability_cutoff = NULL
-) {
-  variant_GRanges <- GWAS_input_record$credible_set_GRanges |>
-    filter_credible_set_variants(
-      posterior_probability_cutoff = posterior_probability_cutoff
-    )
-  overlap_hits <- GenomicRanges::findOverlaps(peak_ranges, variant_GRanges)
-  if (length(overlap_hits) == 0L) {
-    stop("No credible-set variants overlap ATAC peaks for GWAS_ID: ", GWAS_input_record$GWAS_ID)
-  }
-
-  peak_idx <- S4Vectors::queryHits(overlap_hits)
-  variant_idx <- S4Vectors::subjectHits(overlap_hits)
-  peak_tibble <- tibble::tibble(
-    peak_name = get_peak_names_from_GRanges(peak_ranges)[peak_idx],
-    peak_chromosome = as.character(GenomicRanges::seqnames(peak_ranges))[peak_idx],
-    peak_start = GenomicRanges::start(peak_ranges)[peak_idx],
-    peak_end = GenomicRanges::end(peak_ranges)[peak_idx]
-  )
-  variant_tibble <- GenomicRanges::mcols(variant_GRanges)[variant_idx, , drop = FALSE] |>
-    as.data.frame() |>
-    tibble::as_tibble()
-
-  dplyr::bind_cols(peak_tibble, variant_tibble) |>
-    dplyr::mutate(GWAS_ID = GWAS_input_record$GWAS_ID, .before = 1) |>
-    dplyr::mutate(
-      uncapped_peak_weight = sum(.data$posteriorProbability),
-      peak_weight = pmin(.data$uncapped_peak_weight, 1),
-      peak_weight_scale = .data$peak_weight / .data$uncapped_peak_weight,
-      peak_variant_weight = .data$posteriorProbability * .data$peak_weight_scale,
-      .by = c(GWAS_ID, peak_name)
-    ) |>
-    dplyr::select(
-      GWAS_ID,
-      peak_name,
-      peak_chromosome,
-      peak_start,
-      peak_end,
-      peak_weight,
-      uncapped_peak_weight,
-      peak_variant_weight,
-      peak_weight_scale,
-      dplyr::everything()
-    )
-}
-
 scale_within_vector <- function(x) {
   x_sd <- stats::sd(x, na.rm = TRUE)
   if (is.na(x_sd) || x_sd == 0) {
@@ -258,26 +197,15 @@ get_GWAS_chromVAR_variant_contribution_tibble <- function(peak_contribution_tibb
     "z_contribution"
   )
 
-  peak_variant_contribution_tibble <- peak_contribution_tibble |>
-    dplyr::rename(contribution_peak_weight = peak_weight) |>
+  peak_contribution_tibble |>
     dplyr::inner_join(
       peak_variant_weight_tibble |>
-        dplyr::select(-dplyr::any_of("Category")) |>
-        dplyr::rename(mapped_peak_weight = peak_weight),
+        dplyr::select(-dplyr::any_of("Category"), -peak_weight),
       by = c("GWAS_ID", "peak_name", "peak_chromosome", "peak_start", "peak_end"),
       relationship = "many-to-many"
-    )
-  peak_weight_error <- max(
-    abs(peak_variant_contribution_tibble$contribution_peak_weight - peak_variant_contribution_tibble$mapped_peak_weight),
-    na.rm = TRUE
-  )
-  if (peak_weight_error > 1e-10) {
-    stop("Peak-variant weights do not reproduce the trait-level annotation matrix; maximum error: ", peak_weight_error)
-  }
-
-  peak_variant_contribution_tibble |>
+    ) |>
     dplyr::mutate(
-      variant_share_of_peak_weight = .data$peak_variant_weight / .data$mapped_peak_weight,
+      variant_share_of_peak_weight = .data$peak_variant_weight / .data$peak_weight,
       dplyr::across(dplyr::all_of(contribution_cols), \(value) value * .data$variant_share_of_peak_weight)
     ) |>
     dplyr::summarise(
@@ -289,7 +217,6 @@ get_GWAS_chromVAR_variant_contribution_tibble <- function(peak_contribution_tibb
       locusStart = dplyr::first(.data$locusStart),
       locusEnd = dplyr::first(.data$locusEnd),
       posteriorProbability = dplyr::first(.data$posteriorProbability),
-      posteriorProbability_raw = dplyr::first(.data$posteriorProbability_raw),
       peak_variant_weight = sum(.data$peak_variant_weight),
       n_peaks = dplyr::n_distinct(.data$peak_name),
       peak_names = list(sort(unique(.data$peak_name))),
@@ -858,7 +785,7 @@ plot_GWAS_variant_contribution_detail_panels <- function(plot_records, variants,
     ggplot2::geom_segment(data = contributions, ggplot2::aes(x = position, xend = position,
       y = 0, yend = relative_deviation_contribution, colour = effect_magnitude), linewidth = 0.4) +
     ggplot2::geom_point(data = contributions, ggplot2::aes(position, relative_deviation_contribution,
-      size = posteriorProbability_raw, colour = effect_magnitude, shape = effect_source), stroke = 0.8, show.legend = TRUE) +
+      size = posteriorProbability, colour = effect_magnitude, shape = effect_source), stroke = 0.8, show.legend = TRUE) +
     ggrepel::geom_text_repel(data = contributions |>
       dplyr::slice_max(abs(relative_deviation_contribution), n = 3, with_ties = FALSE, by = locus),
       ggplot2::aes(position, relative_deviation_contribution, label = variantId),
@@ -927,7 +854,7 @@ plot_GWAS_variant_contribution_details <- function(plot_records, GWAS_input_reco
   variants <- tibble::as_tibble(as.data.frame(S4Vectors::mcols(input$credible_set_GRanges))) |>
     dplyr::mutate(beta = dplyr::if_else(is.finite(beta), beta, NA_real_)) |>
     dplyr::group_by(studyLocusId) |>
-    dplyr::arrange(dplyr::desc(posteriorProbability_raw), variantId, .by_group = TRUE) |>
+    dplyr::arrange(dplyr::desc(posteriorProbability), variantId, .by_group = TRUE) |>
     dplyr::mutate(
       lead_id = dplyr::first(variantId),
       lead_beta = beta[match(lead_id, variantId)],
@@ -1001,7 +928,7 @@ get_GWAS_locus_prioritization_effects <- function(GWAS_input_records) {
   dplyr::bind_rows(empty, purrr::map_dfr(GWAS_input_records, function(record) {
     tibble::as_tibble(as.data.frame(S4Vectors::mcols(record$credible_set_GRanges))) |>
       dplyr::filter(is.finite(beta)) |>
-      dplyr::arrange(dplyr::desc(posteriorProbability_raw), variantId) |>
+      dplyr::arrange(dplyr::desc(posteriorProbability), variantId) |>
       dplyr::slice_head(n = 1L, by = studyLocusId) |>
       dplyr::transmute(GWAS_ID = record$GWAS_ID, studyLocusId,
         locus_effect_magnitude = abs(beta), effect_variantId = variantId,

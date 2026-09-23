@@ -1,9 +1,12 @@
-#' Load the profiled REML kernel once per source revision in each worker
-load_peak_gene_REML_kernel <- function(native_source_file) {
+#' Load a peak-gene Rcpp kernel once per source revision in each worker
+#'
+#' Each worker compiles into its own temporary cache, avoiding concurrent writes
+#' to shared build artifacts.
+load_peak_gene_kernel <- function(native_source_file, kernel_name) {
   environment <- new.env(parent = baseenv())
   Rcpp::sourceCpp(native_source_file, env = environment,
-    cacheDir = file.path(tempdir(), "peak_gene_REML"), showOutput = FALSE)
-  environment$peak_gene_REML_batch_cpp
+    cacheDir = file.path(tempdir(), kernel_name), showOutput = FALSE)
+  environment[[kernel_name]]
 }
 
 #' Scan every eligible pair in one cell-type/chromosome branch
@@ -39,8 +42,8 @@ score_peak_gene_hierarchical_associations <- function(
   if (!nrow(pairs)) return(tibble::as_tibble(result))
   donor <- factor(matrices$aggregate_depth_tibble$donor_id)
   if (nlevels(donor) < 2L) return(tibble::as_tibble(result))
-  fit_kernel <- load_peak_gene_REML_kernel(REML_source_file)
-  correction_kernel <- load_peak_gene_KR_kernel(KR_source_file)
+  fit_kernel <- load_peak_gene_kernel(REML_source_file, "peak_gene_REML_batch_cpp")
+  correction_kernel <- load_peak_gene_kernel(KR_source_file, "peak_gene_KR_batch_cpp")
   donor_indices <- split(seq_along(donor), donor)
   donor_matrix <- stats::model.matrix(~ 0 + donor)
   design <- branch$design

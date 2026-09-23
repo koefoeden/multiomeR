@@ -1,6 +1,5 @@
 source_project_file("R/peak_gene_correlation_helpers.R")
 source_project_file("R/peak_gene_hierarchical_helpers.R")
-source_project_file("R/peak_gene_KR_helpers.R")
 
 # Reference donor-slope fit: lme4 REML with pbkrtest Kenward-Roger inference.
 #
@@ -94,7 +93,7 @@ make_hierarchical_scan_case <- function() {
 
 testthat::test_that("the compiled REML kernel matches multi-start lme4 fits", {
   require_reference_version("lme4", "2.0.1")
-  kernel <- load_peak_gene_REML_kernel(file.path(multiomeR_project_root, "src/peak_gene_REML.cpp"))
+  kernel <- load_peak_gene_kernel(file.path(multiomeR_project_root, "src/peak_gene_REML.cpp"), "peak_gene_REML_batch_cpp")
   set.seed(1702)
   donor <- factor(rep(seq_len(6), each = 8))
   x <- stats::rnorm(length(donor))

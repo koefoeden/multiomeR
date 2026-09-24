@@ -30,8 +30,8 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 8)
   ),
   targets::tar_target(
-    name = PCA_BPCells.GEX,
-    description = "Run Seurat SCTransform on BPCells-backed GEX counts and compute PCA [part_of_graph:GEX] [part_of_graph:seurat_export]",
+    name = GEX_normalization.GEX,
+    description = "Normalize BPCells-backed GEX counts with Pearson residuals, compute PCA, and keep the normalized data for the Seurat export [part_of_graph:GEX] [part_of_graph:seurat_export]",
     command = run_GEX_PCA_BPCells(
       GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX,
       metadata_tibble = GEX_cellranger_kept_metadata_tibble |>
@@ -40,9 +40,15 @@ rlang::list2(
       GEX_PCA_backend = aggregation_GEX_PCA_backend,
       SCT_regress_vars = aggregation_SCT_regress_vars,
       n_components = aggregation_GEX_PCA_n_components,
-      threads = 6
+      threads = 6,
+      return_normalized = TRUE
     ),
     resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60) # temporary increase for large datasets using SCT_backend until we optimize this.
+  ),
+  targets::tar_target(
+    name = PCA_BPCells.GEX,
+    description = "Select the GEX PCA results, which are unchanged by keeping the normalized data [part_of_graph:GEX] [part_of_graph:seurat_export]",
+    command = GEX_normalization.GEX$PCA_results
   ),
   targets::tar_target(
     name = metadata_tibble.GEX,

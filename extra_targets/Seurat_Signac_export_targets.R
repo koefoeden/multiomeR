@@ -34,6 +34,7 @@ rlang::list2(
       ATAC_peak_GRanges = consensus_peak_GRanges.ATAC,
       ATAC_annotated_peak_GRanges = consensus_peak_annotated_GRanges.ATAC,
       PCA_results = PCA_BPCells.GEX,
+      GEX_normalization = GEX_normalization.GEX,
       GEX_harmony_embeddings = harmony_embeddings_matrix.GEX,
       ATAC_LSI_results = LSI_BPCells.ATAC,
       ATAC_harmony_embeddings = harmony_embeddings_matrix.ATAC,

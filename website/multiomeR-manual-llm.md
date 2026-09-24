@@ -1141,6 +1141,15 @@ Two targets export Seurat objects for work outside the pipeline:
 - `GEX_Seurat_object.3_GEX_QC.my_aggregation`: GEX data only, available after checkpoint 3, before peak calling.
 - `multimodal_Seurat_object.8_multimodal_QC.my_aggregation`: the final Seurat/Signac object with GEX, ATAC and WNN results.
 
+Both keep the raw GEX counts in the `RNA` assay with a log-normalized `data` layer (counts scaled to 10,000 per cell, then log1p), computed lazily by BPCells. The Pearson residuals that the GEX PCA used, with [`aggregation_SCT_regress_vars`](parameters.html#aggregation_SCT_regress_vars) regressed out, are stored according to [`aggregation_GEX_PCA_backend`](parameters.html#aggregation_GEX_PCA_backend):
+
+| Backend | GEX assay | Residuals |
+|---|---|---|
+| `BPCells_native` | `RNA` | `scale.data` of `RNA`: the variable genes, clipped to [−10, 10], computed lazily |
+| `Seurat_SCT` | `SCT` | the `SCTransform()` assay, which also holds corrected counts and their log1p `data` |
+
+The GEX assay is the default assay and carries the GEX reductions and graphs; the `misc$normalization` entry of each assay records how its layers were computed.
+
 ## Cell retention tables {#cell-retention}
 
 Append `.my_aggregation` to these target names when reading them with `targets::tar_read()`. The `cell_retention_flow_plot.png` of each checkpoint draws its table.

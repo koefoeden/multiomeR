@@ -73,7 +73,7 @@ aggregations and review the migration notes first.
   positive, reliable hierarchical estimate at FDR < 0.05.
 - Filter hypotheses by RNA, ATAC and shared-donor measurement support, and show
   genomic context, coverage and donor-adjusted scatterplots in top-link figures.
-  The moderate support preset is the default; `mixed_human_31x` keeps lenient.
+  The moderate support preset is the default.
 - Fit the hierarchical model in donor space, without aggregate-by-aggregate
   matrices, so a branch projected at about a day takes minutes.
 

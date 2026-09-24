@@ -33,10 +33,28 @@ Rcpp::List peak_gene_REML_batch_cpp(const Eigen::Map<MatrixXd> X,
   MatrixXd XtX=MatrixXd::Zero(p,p);
   XtX.selfadjointView<Eigen::Lower>().rankUpdate(X.transpose());
   XtX=XtX.selfadjointView<Eigen::Lower>();
+  Rcpp::List covariance(m);
+  Rcpp::NumericMatrix beta(p,m);
+  std::fill(beta.begin(),beta.end(),NA_REAL);
+  Rcpp::NumericVector sigma2(m,NA_REAL),tau2(m,NA_REAL),ratio(m,NA_REAL),deviance(m,NA_REAL);
+  Rcpp::CharacterVector diagnostic(m,"");
+  Rcpp::IntegerVector evaluations(m);
+  auto result=[&]() {
+    return Rcpp::List::create(Rcpp::Named("beta")=beta,Rcpp::Named("covariance")=covariance,
+      Rcpp::Named("residual_variance")=sigma2,Rcpp::Named("slope_variance")=tau2,
+      Rcpp::Named("variance_ratio")=ratio,Rcpp::Named("REML_deviance")=deviance,
+      Rcpp::Named("diagnostic")=diagnostic,Rcpp::Named("evaluations")=evaluations);
+  };
   Eigen::LLT<MatrixXd> xchol(XtX);
   const VectorXd Ldiag=xchol.matrixLLT().diagonal();
-  if(xchol.info()!=Eigen::Success || Ldiag.minCoeff()<=std::sqrt(std::numeric_limits<double>::epsilon())*Ldiag.maxCoeff())
-    Rcpp::stop("Fixed-effect design is rank deficient");
+  // L_ii^2 / (X'X)_ii is one minus the R^2 of column i on the preceding columns; the
+  // caller already screens the peak column at 1e-12. A deficient design marks this
+  // peak's genes instead of stopping the branch.
+  if(xchol.info()!=Eigen::Success ||
+      !(Ldiag.array().square()>1e-13*XtX.diagonal().array()).all()) {
+    for(int j=0;j<m;++j) {covariance[j]=Rcpp::NumericMatrix(p,p);diagnostic[j]="Fixed-effect design is rank deficient";}
+    return result();
+  }
   const double logdetX=2*Ldiag.array().log().sum();
   const MatrixXd XtY=X.transpose()*Y, beta_ols=xchol.solve(XtY);
   const MatrixXd LB=xchol.matrixL().solve(B.transpose());
@@ -56,12 +74,6 @@ Rcpp::List peak_gene_REML_batch_cpp(const Eigen::Map<MatrixXd> X,
   // The same basis vectors, applied as W c = Z c - X (X'X)^-1 Z'X' c.
   const MatrixXd C=V*(1/eigenvalues.array().sqrt()).matrix().asDiagonal()*projections;
   const MatrixXd fitted_beta=beta_ols-xchol.solve(B.transpose()*C);
-  Rcpp::List covariance(m);
-  Rcpp::NumericMatrix beta(p,m);
-  std::fill(beta.begin(),beta.end(),NA_REAL);
-  Rcpp::NumericVector sigma2(m,NA_REAL),tau2(m,NA_REAL),ratio(m,NA_REAL),deviance(m,NA_REAL);
-  Rcpp::CharacterVector diagnostic(m,"");
-  Rcpp::IntegerVector evaluations(m);
   for(int j=0;j<m;++j) {
     Rcpp::checkUserInterrupt();
     covariance[j]=Rcpp::NumericMatrix(p,p);
@@ -118,8 +130,5 @@ Rcpp::List peak_gene_REML_batch_cpp(const Eigen::Map<MatrixXd> X,
     covariance[j]=Rcpp::wrap((sigma2[j]*chol.solve(MatrixXd::Identity(p,p))).eval());
     for(int i=0;i<p;++i)beta(i,j)=estimate[i];
   }
-  return Rcpp::List::create(Rcpp::Named("beta")=beta,Rcpp::Named("covariance")=covariance,
-    Rcpp::Named("residual_variance")=sigma2,Rcpp::Named("slope_variance")=tau2,
-    Rcpp::Named("variance_ratio")=ratio,Rcpp::Named("REML_deviance")=deviance,
-    Rcpp::Named("diagnostic")=diagnostic,Rcpp::Named("evaluations")=evaluations);
+  return result();
 }

@@ -23,12 +23,16 @@ rlang::list2(
   targets::tar_target(
     name = donor_id_metadata_tibble.analysis,
     description = "Project metadata to aggregation donors and all configured model variables [part_of_graph:differential_analyses]",
-    command = project_keyed_metadata_tibble(
-      subset_keyed_metadata_tibble(donor_id_metadata_tibble.extended, "donor_id",
-        sort(unique(metadata_w_cell_types_tibble.WNN$donor_id)), donor_id_metadata_tsv.extended),
-      "donor_id", get_differential_analysis_metadata_columns(models, models.cell_type_composition),
-      strict = TRUE, canonical = TRUE
-    )
+    command = {
+      donor_ids <- sort(unique(metadata_w_cell_types_tibble.WNN$donor_id))
+      # Donors absent from the table get missing model variables, so each model excludes them.
+      metadata <- donor_id_metadata_tibble.extended[
+        match(donor_ids, as.character(donor_id_metadata_tibble.extended$donor_id)), , drop = FALSE]
+      metadata$donor_id <- donor_ids
+      project_keyed_metadata_tibble(metadata, "donor_id",
+        get_differential_analysis_metadata_columns(models, models.cell_type_composition),
+        strict = TRUE, canonical = TRUE)
+    }
   ),
   tarchetypes::tar_file(
     name = pseudobulk_depth_distribution_plot,

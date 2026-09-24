@@ -1231,39 +1231,28 @@ plot_peak_gene_significant_pairs_vs_technical_features <- function(plot_tibble) 
     )
 }
 
-#' Summarize peak-gene correlations by TSS distance
+#' Summarize peak-gene correlations and p-values by TSS distance
 #'
 #' @param results_tibble Peak-gene correlation results.
-#' @return A compact tibble of correlation summaries by cell group and distance
-#'   bin.
+#' @return A long tibble of median correlation and median -log10 hierarchical
+#'   p-value by cell group and 10 kb distance-bin midpoint.
 #' @keywords internal
 
 summarize_peak_gene_correlation_by_distance <- function(results_tibble) {
   results_tibble |>
-    dplyr::select(
-      "cell_group",
-      "correlation",
-      "isSelfPromoter",
-      "distance",
-      "hierarchical_FDR"
-    ) |>
+    dplyr::select("cell_group", "correlation", "isSelfPromoter", "distance", "hierarchical_pvalue") |>
     dplyr::filter(!is.na(.data$correlation), !.data$isSelfPromoter) |>
-    dplyr::mutate(
-      abs_distance_bin = pmin(
-        245000,
-        floor(abs(.data$distance) / 5000) * 5000
-      )
-    ) |>
+    dplyr::mutate(distance_kb = pmin(24, abs(.data$distance) %/% 10000) * 10 + 5) |>
     dplyr::summarise(
-      n_pairs = dplyr::n(),
-      median_correlation = stats::median(.data$correlation, na.rm = TRUE),
-      significant_fraction = if (all(is.na(.data$hierarchical_FDR))) NA_real_ else
-        mean(.data$hierarchical_FDR < 0.05, na.rm = TRUE),
-      .by = c("cell_group", "abs_distance_bin")
-    )
+      median_correlation = stats::median(.data$correlation),
+      median_neg_log10_p = stats::median(-log10(.data$hierarchical_pvalue), na.rm = TRUE),
+      .by = c("cell_group", "distance_kb")
+    ) |>
+    tidyr::pivot_longer(c("median_correlation", "median_neg_log10_p"),
+      names_to = "metric", values_drop_na = TRUE)
 }
 
-#' Plot peak-gene correlations by TSS distance
+#' Plot peak-gene correlations and p-values by TSS distance
 #'
 #' @param plot_tibble Compact output from
 #'   `summarize_peak_gene_correlation_by_distance()`.
@@ -1275,21 +1264,24 @@ plot_peak_gene_correlation_by_distance <- function(plot_tibble) {
     return(make_empty_peak_gene_correlation_plot())
   }
   endpoint_tibble <- plot_tibble |>
-    dplyr::slice_max(.data$abs_distance_bin, n = 1, with_ties = FALSE, by = "cell_group")
+    dplyr::slice_max(.data$distance_kb, n = 1, with_ties = FALSE, by = c("cell_group", "metric"))
   mean_tibble <- plot_tibble |>
-    dplyr::summarise(median_correlation = mean(.data$median_correlation),
-      .by = "abs_distance_bin")
+    dplyr::summarise(value = mean(.data$value), .by = c("metric", "distance_kb"))
+  # Uniform null p-values have median -log10(p) = log10(2).
+  reference_tibble <- tibble::tibble(metric = c("median_correlation", "median_neg_log10_p"),
+    value = c(0, log10(2)))
   cell_groups <- sort(unique(plot_tibble$cell_group))
   ggplot2::ggplot(
     plot_tibble,
     ggplot2::aes(
-      x = (.data$abs_distance_bin + 2500) / 1000,
-      y = .data$median_correlation,
+      x = .data$distance_kb,
+      y = .data$value,
       colour = .data$cell_group
     )
   ) +
     ggplot2::geom_hline(
-      yintercept = 0,
+      data = reference_tibble,
+      ggplot2::aes(yintercept = .data$value),
       linetype = 3,
       color = "grey70"
     ) +
@@ -1304,22 +1296,27 @@ plot_peak_gene_correlation_by_distance <- function(plot_tibble) {
       max.overlaps = Inf, max.iter = 10000, seed = 1, size = 3.5
     ) +
     ggrepel::geom_text_repel(
-      data = dplyr::slice_max(mean_tibble, .data$abs_distance_bin, n = 1),
+      data = dplyr::slice_max(mean_tibble, .data$distance_kb, n = 1, by = "metric"),
       label = "Mean across cell types", colour = "black", fontface = "bold",
       nudge_x = -20, nudge_y = 0.015, min.segment.length = 0,
       seed = 1, size = 3.5
     ) +
+    ggplot2::facet_wrap(~metric, ncol = 1, scales = "free_y", strip.position = "left",
+      labeller = ggplot2::as_labeller(c(median_correlation = "Median correlation",
+        median_neg_log10_p = "Median -log10(p)"))) +
     ggplot2::scale_colour_manual(values = stats::setNames(
       grDevices::hcl.colors(length(cell_groups), "Dark 3"), cell_groups
     ), guide = "none") +
-    ggplot2::scale_x_continuous(breaks = seq(0, 250, 50),
+    ggplot2::scale_x_continuous(breaks = seq(0, 250, 50), limits = c(0, NA),
       expand = ggplot2::expansion(mult = c(0.01, 0.3))) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = 0.15)) +
+    ggplot2::theme(strip.placement = "outside", strip.background = ggplot2::element_blank(),
+      strip.text = ggplot2::element_text(size = ggplot2::rel(1))) +
     ggplot2::labs(
-      title = "Peak-gene correlation by distance from the gene TSS",
-      subtitle = stringr::str_wrap("Compare distance-dependent trends across WNN-derived cell types; colours and endpoint labels identify each curve. Nearby peaks are not necessarily regulatory.", width = 110),
-      caption = stringr::str_wrap("Median donor/depth-adjusted correlation among non-missing, non-self-promoter pairs, with no FDR filter. Absolute peak-centre to TSS distances use 5 kb bins plotted at their midpoints; the final 245–250 kb bin includes the 250 kb boundary. The black dashed curve is the mean of the available cell-type medians in each bin, weighting cell types equally rather than pooling pairs. Pair counts vary between bins and cell types. The grey dotted line marks zero correlation.", width = 130),
+      title = "Peak-gene correlation and association p-values by distance from the gene TSS",
+      subtitle = stringr::str_wrap("Compare distance-dependent trends across WNN-derived cell types; colours and endpoint labels identify each curve. -log10(p) also rises with each cell type's statistical power, so compare curve shapes rather than levels between cell types. Nearby peaks are not necessarily regulatory.", width = 110),
+      caption = stringr::str_wrap("Medians among non-missing, non-self-promoter pairs, with no FDR filter. Correlation is the descriptive donor/depth-adjusted Pearson correlation; p is the nominal two-sided hierarchical Kenward-Roger p-value for the donor-varying peak slope, available only for reliable fits. Absolute peak-centre to TSS distances use 10 kb bins plotted at their midpoints; the final 240–250 kb bin includes the 250 kb boundary. Black dashed curves are means of the available cell-type medians in each bin, weighting cell types equally rather than pooling pairs. Pair counts vary between bins and cell types, and rows use separate y-scales. Grey dotted lines mark zero correlation and log10(2) ≈ 0.30, the median -log10(p) expected for null pairs.", width = 130),
       x = "Absolute TSS distance, kb",
-      y = "Median correlation"
+      y = NULL
     )
 }

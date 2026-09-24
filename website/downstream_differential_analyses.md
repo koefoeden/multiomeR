@@ -15,7 +15,7 @@ Before enabling the module, confirm that:
 - model variables describe donors, not individual nuclei; and
 - each compared group has enough donors for the design and contrasts.
 
-If the models need variables beyond the aggregation's donor metadata, supply a second table in [`differential_analyses_extended_donor_id_metadata_tsv`](parameters.html#differential_analyses_extended_donor_id_metadata_tsv) with the same unique `donor_id` key.
+If the models need variables beyond the aggregation's donor metadata, supply a second table in [`differential_analyses_extended_donor_id_metadata_tsv`](parameters.html#differential_analyses_extended_donor_id_metadata_tsv) with the same unique `donor_id` key. Donors missing from it, like donors with missing values, are excluded from the models that use its variables.
 
 ## Outputs
 

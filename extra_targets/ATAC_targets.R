@@ -184,7 +184,7 @@ rlang::list2(
     targets::tar_target(
       name = consensus_peak_BPCells_matrix.ATAC,
       description = "Open the consensus ATAC peak BPCells matrix",
-      command = BPCells::open_matrix_dir(consensus_peak_BPCells_matrix_dir.ATAC),
+      command = open_BPCells_dir(consensus_peak_BPCells_matrix_dir.ATAC),
       resources = get_tar_resources(RAM_GB_req = 8)
     )
   ),
@@ -922,7 +922,7 @@ rlang::list2(
     targets::tar_target(
       name = motif_family_accessibility_BPCells_matrix.ATAC,
       description = "Open the disk-backed betterChromVAR motif-family accessibility Z-score matrix",
-      command = BPCells::open_matrix_dir(motif_family_accessibility_BPCells_matrix_dir.ATAC),
+      command = open_BPCells_dir(motif_family_accessibility_BPCells_matrix_dir.ATAC),
       resources = get_tar_resources(RAM_GB_req = 8)
     ),
     targets::tar_target(
@@ -1083,7 +1083,7 @@ rlang::list2(
     targets::tar_target(
       name = gene_score_archr_BPCells_matrix.ATAC,
       description = "Open the BPCells ArchR-style ATAC gene activity score matrix",
-      command = BPCells::open_matrix_dir(gene_score_archr_BPCells_matrix_dir.ATAC),
+      command = open_BPCells_dir(gene_score_archr_BPCells_matrix_dir.ATAC),
       resources = get_tar_resources(RAM_GB_req = 8)
     ),
     tarchetypes::tar_file(

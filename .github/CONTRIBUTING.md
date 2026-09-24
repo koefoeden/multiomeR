@@ -47,6 +47,7 @@ For code changes:
 - add optional downstream analyses under a `module_*` directory
 - avoid compatibility layers for retired workflow shapes unless there is a clear public need
 - prefer BPCells-native matrices, `GRanges`, tibbles, and file targets over creating large in-memory objects as intermediate state
+- open BPCells directories in target commands with `open_BPCells_dir()`, so dependents rerun when a directory's content changes
 
 ## Validation
 

@@ -43,6 +43,9 @@ aggregations and review the migration notes first.
 - Test gene sets on the existing contrast results.
 - Give donors absent from the extended donor metadata missing model variables,
   so models exclude them instead of the module stopping.
+- Estimate intra-block correlations on at most 50,000 evenly spaced features and
+  give each forked cell-type fit one BLAS thread, so a 590,000-peak
+  chromatin-accessibility fit takes minutes instead of hours.
 
 ## Genetic enrichment
 

@@ -177,6 +177,61 @@ create_signac_fragment_object <- function(fragment_record) {
   )
 }
 
+#' Attach Signac fragment objects without rehashing their files
+#'
+#' `Signac::Fragments<-` recomputes the MD5 sum of every fragment file, reading
+#' each file in full, although the objects were hashed when they were created.
+#' Its other checks are kept: cells are restricted to the assay, each cell may
+#' belong to only one fragment object, and each file may be attached once.
+#'
+#' @param assay Signac ChromatinAssay5 to receive the fragment objects.
+#' @param fragment_objects List of Signac Fragment objects with named cells.
+#' @return `assay` with the fragment objects attached.
+#' @keywords internal
+set_signac_fragments <- function(assay, fragment_objects) {
+  fragment_objects <- lapply(fragment_objects %||% list(), function(fragments) {
+    cells <- Signac::GetFragmentData(fragments, slot = "cells")
+    if (is.null(names(cells))) stop("Fragment objects must list their cells.")
+    keep <- names(cells) %in% colnames(assay)
+    if (!any(keep)) stop("None of the cells in a fragment object are present in the assay.")
+    methods::slot(fragments, "cells") <- cells[keep]
+    fragments
+  })
+  all_cells <- unlist(lapply(fragment_objects, \(fragments) names(Signac::GetFragmentData(fragments, slot = "cells"))))
+  if (anyDuplicated(all_cells)) stop("Each cell can be linked to only one fragment file.")
+  paths <- vapply(fragment_objects, \(fragments) Signac::GetFragmentData(fragments, slot = "file.path"), character(1))
+  if (anyDuplicated(paths)) stop("A fragment file is attached more than once.")
+  methods::slot(assay, "fragments") <- unname(fragment_objects)
+  assay
+}
+
+#' Add an assay's nCount and nFeature cell metadata
+#'
+#' Seurat computes these serially, in two passes, whenever an assay is added;
+#' BPCells computes both in one threaded pass.
+#'
+#' @param object Seurat object whose cells match the columns of `counts`.
+#' @param assay Assay name used in the `nCount_<assay>` and `nFeature_<assay>` columns.
+#' @param counts Feature-by-cell count matrix, a BPCells or Matrix object.
+#' @param threads Threads for BPCells.
+#' @return `object` with the two columns set.
+#' @keywords internal
+add_count_metadata <- function(object, assay, counts, threads = 1) {
+  if (inherits(counts, "IterableMatrix")) {
+    stats <- BPCells::matrix_stats(counts, col_stats = "mean", threads = threads)$col_stats
+    n_count <- stats["mean", ] * nrow(counts)
+    # Integer counts: undo the rounding of mean * nrow to give the exact sums.
+    if (identical(BPCells::matrix_type(counts), "uint32_t")) n_count <- round(n_count)
+    n_feature <- stats["nonzero", ]
+  } else {
+    n_count <- Matrix::colSums(counts)
+    n_feature <- Matrix::colSums(counts > 0)
+  }
+  object@meta.data[[paste0("nCount_", assay)]] <- unname(n_count)
+  object@meta.data[[paste0("nFeature_", assay)]] <- unname(n_feature)
+  object
+}
+
 #' Add dimreduc from matrix
 #'
 #' Add an embedding matrix as a Seurat dimensional reduction.
@@ -275,6 +330,7 @@ add_GEX_normalized_layers <- function(object, RNA_counts, normalized, variable_f
       method = "Seurat::SCTransform() v2 with corrected counts",
       scale.data = paste0("Pearson residuals of the variable genes used by the PCA; regressed: ", regressed))
     object[["SCT"]] <- SCT_assay
+    object <- add_count_metadata(object, "SCT", SeuratObject::GetAssayData(SCT_assay, layer = "counts"))
   } else {
     SeuratObject::LayerData(object, assay = "RNA", layer = "scale.data") <- normalized$scale_data[, cells, drop = FALSE]
     SeuratObject::VariableFeatures(object[["RNA"]]) <- variable_features
@@ -461,12 +517,19 @@ build_seurat_signac_convenience_object <- function(
   }
   RNA_counts <- GEX_counts_matrix[, cells, drop = FALSE]
 
+  # Seurat recounts every assay it adds or replaces; add the counts once instead.
+  previous_options <- options(Seurat.object.assay.calcn = FALSE)
+  on.exit(options(previous_options), add = TRUE)
   object <- SeuratObject::CreateSeuratObject(
     counts = RNA_counts,
     assay = "RNA",
     meta.data = metadata_df,
     project = "SeuratProject"
   )
+  # Seurat keeps the metadata's RNA counts when both are present.
+  if (!all(c("nCount_RNA", "nFeature_RNA") %in% colnames(metadata_df))) {
+    object <- add_count_metadata(object, "RNA", RNA_counts, graph_threads)
+  }
   object[["RNA"]] <- add_feature_metadata(
     assay = object[["RNA"]],
     feature_metadata_df = get_RNA_feature_metadata(gene_features_df, rownames(object[["RNA"]]))
@@ -478,12 +541,13 @@ build_seurat_signac_convenience_object <- function(
     peak_ranges <- align_peak_GRanges_to_matrix(ATAC_peak_GRanges, rownames(peak_counts))
     object[["ATAC"]] <- Signac::CreateGRangesAssay(counts = peak_counts, ranges = peak_ranges)
     Signac::Annotation(object[["ATAC"]]) <- signac_annotation_GRanges
-    Signac::Fragments(object[["ATAC"]]) <- fragment_objects %||% list()
+    object[["ATAC"]] <- set_signac_fragments(object[["ATAC"]], fragment_objects)
     SeuratObject::VariableFeatures(object[["ATAC"]]) <- rownames(object[["ATAC"]])
     object[["ATAC"]] <- add_feature_metadata(
       assay = object[["ATAC"]],
       feature_metadata_df = get_peak_feature_metadata(ATAC_annotated_peak_GRanges, rownames(peak_counts))
     )
+    object <- add_count_metadata(object, "ATAC", peak_counts, graph_threads)
   }
 
   if (!is.null(motif_family_accessibility_matrix)) {

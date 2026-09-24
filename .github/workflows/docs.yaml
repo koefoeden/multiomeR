@@ -1,19 +1,25 @@
-# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
-# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+# Build both documentation books with the repository builder and deploy them
+# to GitHub Pages. Pull requests rely on the cheap checks in checks.yaml.
+name: docs
+
 on:
   push:
     branches: [main]
-  pull_request:
+    paths:
+      - website/**
+      - dev/render_website.py
+      - dev/render_parameter_overview.R
+      - dev/check_website_links.py
+      - cfg_pipeline_parameters.tsv
+      - pixi.toml
+      - pixi.lock
+      - .github/workflows/docs.yaml
   release:
     types: [published]
   workflow_dispatch:
 
-name: docs.yaml
-
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -22,34 +28,31 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
-      - uses: quarto-dev/quarto-actions/setup@v2
-
       - uses: prefix-dev/setup-pixi@v0.9.4
         with:
+          environments: dev
           cache: true
-          activate-environment: true
 
-      - name: Build site
-        run: |
-          rm -rf docs
-          quarto render website
-          quarto render website/implementation
+      - name: Render both books
+        run: pixi run --use-environment-activation-cache -e dev render-website
 
-      - name: Upload GitHub Pages artifact
-        if: github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@v4
+      - name: Check rendered internal links
+        run: pixi run --use-environment-activation-cache -e dev check-website-links
+
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: docs
 
   deploy:
-    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

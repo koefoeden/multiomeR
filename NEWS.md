@@ -87,6 +87,9 @@ aggregations and review the migration notes first.
   residuals as `RNA` `scale.data`, and the Seurat backend adds the
   `SCTransform()` assay as `SCT`. The cell metadata includes the Seurat
   cell-cycle scores.
+- Build the multimodal Seurat export without rehashing every fragment file and
+  count each assay once, which takes about a fifth of the time for large
+  aggregations.
 - Save plots through one staged path that removes only obsolete outputs recorded
   in each target's inventory, and build each ggplot once.
 - Compute ATAC coverage tracks from an in-memory copy of the plotted regions,

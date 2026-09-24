@@ -76,6 +76,11 @@ aggregations and review the migration notes first.
 
 ## Runtime and dependencies
 
+- Export normalized GEX data in the Seurat objects: `RNA` gains a lazy
+  log-normalized `data` layer, the BPCells backend adds the regressed Pearson
+  residuals as `RNA` `scale.data`, and the Seurat backend adds the
+  `SCTransform()` assay as `SCT`. The cell metadata includes the Seurat
+  cell-cycle scores.
 - Save plots through one staged path that removes only obsolete outputs recorded
   in each target's inventory, and build each ggplot once.
 - Compute ATAC coverage tracks from an in-memory copy of the plotted regions,
@@ -107,6 +112,9 @@ aggregations and review the migration notes first.
 
 ## Migration
 
+- The Seurat objects no longer contain the counts-only `SCTregr` assay. Use
+  `RNA` (BPCells backend) or `SCT` (Seurat backend); the WNN weight column is
+  `RNA.weight` or `SCT.weight` instead of `SCTregr.weight`.
 - Move existing settings into a configuration directory and select it in
   `configuration.local`.
 - Remove these parameters, which configuration validation now rejects:

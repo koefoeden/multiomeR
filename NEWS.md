@@ -38,6 +38,8 @@ aggregations and review the migration notes first.
 - Use WNN-derived cell-type labels throughout, with named abundance and feature
   models, predictor-only abundance formulas and descriptive target names.
 - Test gene sets on the existing contrast results.
+- Give donors absent from the extended donor metadata missing model variables,
+  so models exclude them instead of the module stopping.
 
 ## Genetic enrichment
 
@@ -70,6 +72,9 @@ aggregations and review the migration notes first.
 
 - Save plots through one staged path that removes only obsolete outputs recorded
   in each target's inventory, and build each ggplot once.
+- Compute ATAC coverage tracks from an in-memory copy of the plotted regions,
+  which takes seconds instead of minutes to hours per region set on large
+  merged fragment objects and returns identical data.
 - Make the project bootstrap stateless and share one checksum-keyed loader for
   the standalone native sources.
 - Update the locked environment within R 4.5 and Bioconductor 3.22 (among them

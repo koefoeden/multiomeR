@@ -83,6 +83,9 @@ aggregations and review the migration notes first.
   merged fragment objects and returns identical data.
 - Make the project bootstrap stateless and share one checksum-keyed loader for
   the standalone native sources.
+- Rerun the dependents of opened BPCells directories when the directory
+  content changes; previously they could keep results computed from the old
+  content, and a cheap CI check now rejects bare BPCells opens in targets.
 - Update the locked environment within R 4.5 and Bioconductor 3.22 (among them
   Seurat 5.5.1, scDblFinder 1.24.10, arrow 25 and Python 3.13), move BPCells,
   Signac and betterChromVAR to current revisions, and drop 31 unused

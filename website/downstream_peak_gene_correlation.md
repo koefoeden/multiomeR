@@ -39,10 +39,10 @@ Then add an entry for `my_aggregation` to `cfg_module_peak_gene_correlation.yaml
 ```{.yaml filename="cfg_module_peak_gene_correlation.yaml"}
 my_aggregation:
   peak_gene_correlation_top_links_per_cell_group: 3
-  peak_gene_correlation_filter: lenient
+  peak_gene_correlation_filter: moderate
 ```
 
-[`peak_gene_correlation_top_links_per_cell_group`](parameters.html#peak_gene_correlation_top_links_per_cell_group) sets the number of top-link figures per cell type; it does not change which pairs are tested. [`peak_gene_correlation_filter`](parameters.html#peak_gene_correlation_filter) selects the `lenient` (default), `moderate` or `strict` measurement-support filter, which removes pairs without enough expression, accessibility and shared donor support before testing. An empty entry, `my_aggregation: {}`, keeps both defaults.
+[`peak_gene_correlation_top_links_per_cell_group`](parameters.html#peak_gene_correlation_top_links_per_cell_group) sets the number of top-link figures per cell type; it does not change which pairs are tested. [`peak_gene_correlation_filter`](parameters.html#peak_gene_correlation_filter) selects the `lenient`, `moderate` (default) or `strict` measurement-support filter, which removes pairs without enough expression, accessibility and shared donor support before testing. An empty entry, `my_aggregation: {}`, keeps both defaults.
 
 ## Run
 

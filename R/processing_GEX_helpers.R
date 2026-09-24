@@ -57,7 +57,8 @@ read_cellbender_h5_matrix <- function(cellbender_h5_file, feature_type = "Gene E
 #' @param threads Number of threads used for the PCA step.
 #' @param return_normalized Whether to also return the normalized data for the
 #'   Seurat export: the lazy BPCells residuals of the variable genes, or the
-#'   Seurat `SCTAssay`, which then includes UMI-corrected counts.
+#'   Seurat `SCTAssay`, which then includes UMI-corrected counts, and the
+#'   Seurat cell-cycle scores.
 #' @return A list with cell embeddings, gene loadings, singular values, and
 #'   variable-feature diagnostics from the residual PCA workflow. With
 #'   `return_normalized`, a list of these `PCA_results` and `normalized`.
@@ -150,13 +151,25 @@ run_GEX_PCA_BPCells <- function(
   if (!return_normalized) {
     return(PCA_results)
   }
+  # Scored after the PCA so that it cannot change its value; regression may
+  # already have added the scores.
+  cell_cycle_cols <- c("S.Score", "G2M.Score", "Phase", "CC.Difference")
+  if (!all(cell_cycle_cols %in% colnames(cell_attr))) {
+    cell_attr <- tryCatch(add_cell_cycle_scores_to_cell_attr(counts_matrix, cell_attr), error = function(error) {
+      warning("Cell-cycle scores are not exported: ", conditionMessage(error), call. = FALSE)
+      cell_attr
+    })
+  }
   list(
     PCA_results = PCA_results,
     normalized = list(
       backend = GEX_PCA_backend,
       regressed_vars = SCT_regress_vars,
       scale_data = if (identical(GEX_PCA_backend, "BPCells_native")) pearson_residuals,
-      SCT_assay = residuals$SCT_assay
+      SCT_assay = residuals$SCT_assay,
+      cell_cycle_tibble = if (all(cell_cycle_cols %in% colnames(cell_attr))) {
+        tibble::tibble(barcode_w_prefix = rownames(cell_attr), cell_attr[cell_cycle_cols])
+      }
     )
   )
 }

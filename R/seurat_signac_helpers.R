@@ -455,6 +455,10 @@ build_seurat_signac_convenience_object <- function(
   normalized <- GEX_normalization$normalized
   GEX_assay <- if (identical(normalized$backend, "Seurat_SCT")) "SCT" else "RNA"
   metadata_df <- prepare_seurat_export_metadata(metadata_tibble, WNN_results, GEX_assay)
+  cell_cycle <- normalized$cell_cycle_tibble
+  for (col in setdiff(names(cell_cycle), c("barcode_w_prefix", colnames(metadata_df)))) {
+    metadata_df[[col]] <- cell_cycle[[col]][match(rownames(metadata_df), cell_cycle$barcode_w_prefix)]
+  }
   RNA_counts <- GEX_counts_matrix[, cells, drop = FALSE]
 
   object <- SeuratObject::CreateSeuratObject(

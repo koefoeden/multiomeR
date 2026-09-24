@@ -2,6 +2,28 @@ get_project_root <- function() {
   rprojroot::find_root(rprojroot::has_file("pixi.toml"))
 }
 
+#' Stop when the BSgenome data packages are missing
+#'
+#' Pixi installs these Bioconda data packages only when post-link scripts run.
+#' `_targets.R` calls this so a pipeline run names the install command instead
+#' of failing at the first target that reads a genome sequence; sessions that
+#' only test, document or install packages do not need the genomes.
+#'
+#' @return Invisibly returns `TRUE`.
+#' @keywords internal
+assert_genome_packages_installed <- function() {
+  genome_packages <- c("BSgenome.Hsapiens.UCSC.hg38", "BSgenome.Mmusculus.UCSC.mm10", "BSgenome.Mmusculus.UCSC.mm39")
+  missing_genome_packages <- Filter(\(package) !nzchar(system.file(package = package)), genome_packages)
+  if (length(missing_genome_packages)) {
+    stop(
+      paste(missing_genome_packages, collapse = ", "),
+      " is not installed. Run `pixi install --locked --run-post-link-scripts` from the repository root.",
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
 #' Load the project runtime
 #'
 #' Attach the core packages and conflict preferences, source the project
@@ -12,15 +34,6 @@ get_project_root <- function() {
 #' @return Invisibly returns `TRUE`.
 #' @keywords internal
 load_project_runtime <- function() {
-  # Pixi installs these Bioconda data packages only when post-link scripts run.
-  genome_packages <- c("BSgenome.Hsapiens.UCSC.hg38", "BSgenome.Mmusculus.UCSC.mm10", "BSgenome.Mmusculus.UCSC.mm39")
-  missing_genome_packages <- Filter(\(package) !nzchar(system.file(package = package)), genome_packages)
-  if (length(missing_genome_packages)) {
-    stop(
-      paste(missing_genome_packages, collapse = ", "),
-      " is not installed. Run `pixi install --locked --run-post-link-scripts` from the repository root."
-    )
-  }
   suppressPackageStartupMessages({
     library(Matrix)
     library(purrr)

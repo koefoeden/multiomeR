@@ -41,6 +41,12 @@ public data: ARC 2.1.0, GRCh38 2024-A, and each count's
 `outs/cellbender-output_gex_bent_only_filtered.h5`. Raw-read processing is outside
 this test. Public donor metadata and ENCODE source URLs are committed.
 
+`mixed_human_31x` also needs the ignored link `example_data/10x_arc_2.1.0`, a
+directory with the seven public 10x Genomics datasets it names, reprocessed
+from their raw reads in the same way as the ENCODE counts. Its PBMC well
+`healthy_PBMC_human_2024A` is therefore separate from the demo's downloaded
+`healthy_PBMC_human`, which uses the 10x Genomics outputs as published.
+
 `mixed_human_31x` is the aggregation behind the output gallery and manuscript
 figures, with all optional modules enabled. Its models compare male versus female
 cardiomyocytes and left-ventricle cell composition, using all eligible features.

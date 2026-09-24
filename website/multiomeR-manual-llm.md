@@ -1291,7 +1291,7 @@ The public configuration contains these entries; inactive ones can stay as examp
 - `immune_human_2x` (active): the public demo, combining two human GEM wells with optional modules disabled.
 - `brain_mouse` (inactive): a mouse example.
 - `ENCODE_heart_LV_6x` (inactive): six ENCODE left-ventricle GEM wells with a differential-analysis example.
-- `mixed_human_31x` (inactive): the aggregation behind the [output gallery](gallery.md), with all optional modules enabled.
+- `mixed_human_31x` (inactive): the aggregation behind the [output gallery](gallery.md), with all optional modules enabled. Its seven 10x Genomics and 24 ENCODE GEM wells are processed locally with Cell Ranger ARC 2.1.0 and GRCh38-2024-A, so its PBMC well `healthy_PBMC_human_2024A` is separate from the demo's downloaded `healthy_PBMC_human`.
 
 Local validation runs `immune_human_2x`, `brain_mouse` and `mixed_human_31x`.
 

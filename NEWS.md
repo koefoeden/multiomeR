@@ -28,6 +28,8 @@ aggregations and review the migration notes first.
 
 - Title the QC-exclusion UpSet plots with the number of retained barcodes and
   plot the nuclei per donor that reach the final WNN object.
+- Centre the motif-family accessibility heatmaps on each family's mean across
+  groups, so abundant groups do not set their zero point.
 - Unify pre-filter QC plots across modalities, show doublet evidence beside GEX
   cluster markers, and report the selected wells, QC rules and configuration
   values in checkpoint captions.
@@ -59,6 +61,9 @@ aggregations and review the migration notes first.
   leads.
 - Sort the Open Targets credible-set records deterministically and allocate
   peak contributions to variants without per-variant summaries.
+- Weight every cell type equally in the expected accessibility of the
+  cell-type pseudobulk chromVAR background, so an abundant cell type is no
+  longer compared mainly with itself and pinned near zero.
 
 ## Peak–gene correlation
 

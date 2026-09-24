@@ -829,6 +829,10 @@ order_accessibility_profiles <- function(profiles) {
 }
 
 #' Plot all motif families using independently clustered mean accessibility profiles.
+#'
+#' chromVAR Z-scores are relative to an expectation pooled over all cells, so
+#' the most abundant groups sit near zero. Each motif family is therefore
+#' centred on its unweighted mean across the plotted groups.
 plot_motif_family_accessibility_heatmap <- function(feature_matrix, ATAC_metadata, GEX_metadata,
                                                      family_labels, group_by = c("ATAC_cluster", "GEX_cluster", "GEX_cell_type")) {
   group_by <- match.arg(group_by)
@@ -848,6 +852,7 @@ plot_motif_family_accessibility_heatmap <- function(feature_matrix, ATAC_metadat
   }, numeric(nrow(feature_matrix)))
   dimnames(means) <- list(rownames(feature_matrix), group_names)
   stopifnot(all(is.finite(means)))
+  means <- means - rowMeans(means)
   family_order <- order_accessibility_profiles(means)
   group_order <- order_accessibility_profiles(t(means))
   plot_data <- as.data.frame(as.table(means), stringsAsFactors = FALSE)
@@ -862,10 +867,11 @@ plot_motif_family_accessibility_heatmap <- function(feature_matrix, ATAC_metadat
     ggplot2::scale_fill_gradient2(low = "#2166AC", mid = "white", high = "#B2182B", midpoint = 0,
       limits = c(-1, 1) * max(abs(means))) +
     ggplot2::labs(title = paste("Motif-family accessibility by", group_label), x = group_label, y = NULL,
-      fill = "Mean chromVAR Z-score",
+      fill = "Centred mean chromVAR Z-score",
       subtitle = stringr::str_wrap("Look for coherent motif-family patterns across groups; shared sequence preferences do not identify a specific active TF.\nCompare patterns alongside GEX markers; cell-type labels are GEX-derived.", width = 100),
       caption = paste0("All views use the same cells in the retained ATAC motif-accessibility matrix; labels come from GEX clustering.\n",
-        "Colour: unscaled cell-weighted mean chromVAR Z-score. Average-linkage clustering uses 1 - Pearson correlation; constant profiles follow last.\n",
+        "Colour: cell-weighted mean chromVAR Z-score per group, centred on each family's unweighted mean across groups so abundant groups do not set zero; not SD-scaled.\n",
+        "Average-linkage clustering uses 1 - Pearson correlation; constant profiles follow last.\n",
         "Motif-family accessibility reflects shared sequence preferences, not TF-specific activity or a cell-type assignment.")) +
     ggplot2::theme_classic() +
     ggplot2::theme(axis.text.y = ggplot2::element_text(size = 8), axis.text.x = ggplot2::element_text(angle = 60, hjust = 0),

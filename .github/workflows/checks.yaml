@@ -1,0 +1,30 @@
+# Cheap checks that need no Pixi environment. Pipeline runs and the
+# reference-parity tests run locally; see .github/CONTRIBUTING.md.
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # External URLs can break without a commit.
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-links:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 dev/check_source_links.py
+
+  external-urls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 dev/check_external_urls.py

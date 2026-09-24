@@ -8,7 +8,7 @@ The evidence labels are intentionally narrow:
 - **Reference-similarity tested** means exact equality is not an appropriate contract, so predefined similarity thresholds are checked against the named reference implementation.
 - **Algorithmically derived** means the implementation is checked against an independent mathematical result, not against another software implementation.
 
-Passing these fixtures does not validate every dataset, parameter regime, approximate-neighbour realization, biological interpretation, or downstream target. The test suite contains only such reference comparisons. Each test asserts the reference version it was written against; versions are locked by `pixi.lock`. The [CI workflow](https://github.com/koefoeden/multiomeR/blob/main/.github/workflows/algorithm-validation.yaml) runs the complete suite when tests, relevant helpers, or the Pixi environment change.
+Passing these fixtures does not validate every dataset, parameter regime, approximate-neighbour realization, biological interpretation, or downstream target. The test suite contains only such reference comparisons. Each test asserts the reference version it was written against; versions are locked by `pixi.lock`. Run the complete suite locally with `pixi run --use-environment-activation-cache test` after changing tests, tested helpers, native sources, or the Pixi environment; cloud CI runs only checks that need no environment.
 
 Run the complete suite with `pixi run --use-environment-activation-cache test`. The narrower `pixi run --use-environment-activation-cache test-algorithm-validation` task runs only the slow UCell, AMULET, WNN, and SCAVENGE tests.
 

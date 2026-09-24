@@ -492,6 +492,7 @@ rlang::list2(
       GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX,
       metadata_tibble = metadata_w_cell_types_tibble.GEX,
       PCA_results = PCA_BPCells.GEX,
+      GEX_normalization = GEX_normalization.GEX,
       GEX_harmony_embeddings = harmony_embeddings_matrix.GEX,
       GEX_UMAP_embeddings_tibble = UMAP_embeddings_tibble.GEX,
       GEX_non_harmony_UMAP_embeddings_tibble = UMAP_embeddings_tibble.GEX_non_harmony,

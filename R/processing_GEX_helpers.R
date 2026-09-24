@@ -55,8 +55,12 @@ read_cellbender_h5_matrix <- function(cellbender_h5_file, feature_type = "Gene E
 #' @param n_variable_features Number of high-residual-variance genes kept before PCA.
 #' @param min_feature_count Minimum total counts required for a gene to be considered in GEX PCA.
 #' @param threads Number of threads used for the PCA step.
+#' @param return_normalized Whether to also return the normalized data for the
+#'   Seurat export: the lazy BPCells residuals of the variable genes, or the
+#'   Seurat `SCTAssay`, which then includes UMI-corrected counts.
 #' @return A list with cell embeddings, gene loadings, singular values, and
-#'   variable-feature diagnostics from the residual PCA workflow.
+#'   variable-feature diagnostics from the residual PCA workflow. With
+#'   `return_normalized`, a list of these `PCA_results` and `normalized`.
 #' @keywords internal
 
 run_GEX_PCA_BPCells <- function(
@@ -67,7 +71,8 @@ run_GEX_PCA_BPCells <- function(
   n_components,
   n_variable_features = 3000,
   min_feature_count = 50,
-  threads = 1
+  threads = 1,
+  return_normalized = FALSE
 ) {
   GEX_PCA_backend <- match.arg(GEX_PCA_backend)
   metadata_tibble <- dplyr::distinct(metadata_tibble, .data$barcode_w_prefix, .keep_all = TRUE)
@@ -100,7 +105,8 @@ run_GEX_PCA_BPCells <- function(
   residuals <- if (identical(GEX_PCA_backend, "BPCells_native")) {
     get_BPCells_native_GEX_residuals(counts_matrix, cell_attr, SCT_regress_vars, n_variable_features, threads)
   } else {
-    get_Seurat_SCT_GEX_residuals(counts_matrix, cell_attr, SCT_regress_vars, n_variable_features)
+    get_Seurat_SCT_GEX_residuals(counts_matrix, cell_attr, SCT_regress_vars, n_variable_features,
+      keep_assay = return_normalized)
   }
   pearson_residuals <- residuals$pearson_residuals
   n_components <- min(as.integer(n_components), nrow(pearson_residuals) - 1L, ncol(pearson_residuals) - 1L)
@@ -130,7 +136,7 @@ run_GEX_PCA_BPCells <- function(
   dimnames(cell_embeddings) <- list(colnames(pearson_residuals), component_names)
   dimnames(feature_loadings) <- list(rownames(pearson_residuals), component_names)
   variable_features <- rownames(pearson_residuals)
-  list(
+  PCA_results <- list(
     cell_embeddings = cell_embeddings,
     feature_loadings = feature_loadings,
     singular_values = singular_values,
@@ -139,6 +145,18 @@ run_GEX_PCA_BPCells <- function(
       gene = variable_features,
       residual_variance = unname(residuals$residual_variance[variable_features]),
       PCA_weighted_loading_strength = sqrt(rowSums(sweep(feature_loadings, 2, singular_values, "*")^2))
+    )
+  )
+  if (!return_normalized) {
+    return(PCA_results)
+  }
+  list(
+    PCA_results = PCA_results,
+    normalized = list(
+      backend = GEX_PCA_backend,
+      regressed_vars = SCT_regress_vars,
+      scale_data = if (identical(GEX_PCA_backend, "BPCells_native")) pearson_residuals,
+      SCT_assay = residuals$SCT_assay
     )
   )
 }
@@ -195,7 +213,8 @@ get_BPCells_native_GEX_residuals <- function(
   )
 }
 
-get_Seurat_SCT_GEX_residuals <- function(counts_matrix, cell_attr, SCT_regress_vars, n_variable_features) {
+get_Seurat_SCT_GEX_residuals <- function(counts_matrix, cell_attr, SCT_regress_vars, n_variable_features,
+                                         keep_assay = FALSE) {
   previous_options <- options(future.globals.maxSize = 40 * 1024^3)
   on.exit(options(previous_options), add = TRUE)
 
@@ -204,7 +223,8 @@ get_Seurat_SCT_GEX_residuals <- function(counts_matrix, cell_attr, SCT_regress_v
     cell.attr = cell_attr,
     variable.features.n = n_variable_features,
     conserve.memory = TRUE,
-    do.correct.umi = FALSE
+    # Corrected counts and their log1p data layer are needed only for export.
+    do.correct.umi = keep_assay
   )
   if (length(SCT_regress_vars) > 0) {
     sct_args$vars.to.regress <- SCT_regress_vars
@@ -213,13 +233,16 @@ get_Seurat_SCT_GEX_residuals <- function(counts_matrix, cell_attr, SCT_regress_v
   sct_assay <- do.call(Seurat::SCTransform, sct_args)
   scale_data <- SeuratObject::GetAssayData(sct_assay, layer = "scale.data")
   variable_features <- intersect(SeuratObject::VariableFeatures(sct_assay), rownames(scale_data))
-  rm(sct_assay)
-  gc()
+  if (!keep_assay) {
+    rm(sct_assay)
+    gc()
+  }
 
   pearson_residuals <- scale_data[variable_features, , drop = FALSE]
   residual_variance <- matrixStats::rowVars(as.matrix(pearson_residuals))
   names(residual_variance) <- rownames(pearson_residuals)
-  list(pearson_residuals = pearson_residuals, residual_variance = residual_variance)
+  list(pearson_residuals = pearson_residuals, residual_variance = residual_variance,
+    SCT_assay = if (keep_assay) sct_assay)
 }
 
 #' Add Seurat-compatible cell-cycle scores

@@ -26,15 +26,15 @@ check_seurat_export_cells <- function(cells, named_cell_sets) {
 #' Prepare Seurat export metadata
 #'
 #' Drop stored UMAP coordinates and WNN weights, then attach the WNN modality
-#' weights under Seurat's SCTregr/ATAC names.
+#' weights under Seurat's `<assay>.weight` names for the GEX and ATAC assays.
 #' @keywords internal
-prepare_seurat_export_metadata <- function(metadata_tibble, WNN_results = NULL) {
+prepare_seurat_export_metadata <- function(metadata_tibble, WNN_results = NULL, GEX_assay = "RNA") {
   metadata_df <- metadata_tibble |>
-    dplyr::select(-dplyr::matches("(_UMAP_[12]$)"), -dplyr::any_of(c("RNA.weight", "SCTregr.weight", "ATAC.weight"))) |>
+    dplyr::select(-dplyr::matches("(_UMAP_[12]$)"), -dplyr::any_of(c("RNA.weight", "SCT.weight", "SCTregr.weight", "ATAC.weight"))) |>
     base::as.data.frame()
   if (!is.null(WNN_results)) {
     weight_rows <- match(metadata_df$barcode_w_prefix, WNN_results$modality_weights$barcode_w_prefix)
-    metadata_df$SCTregr.weight <- WNN_results$modality_weights$RNA[weight_rows]
+    metadata_df[[paste0(GEX_assay, ".weight")]] <- WNN_results$modality_weights$RNA[weight_rows]
     metadata_df$ATAC.weight <- WNN_results$modality_weights$ATAC[weight_rows]
   }
   rownames(metadata_df) <- metadata_df$barcode_w_prefix
@@ -244,7 +244,44 @@ set_seurat_export_defaults <- function(object) {
   object@misc$def_NN_object <- base::intersect("WNN_harmony_NN", names(object@neighbors))[1]
 
   SeuratObject::Idents(object) <- object@meta.data[[cluster_col]]
-  SeuratObject::DefaultAssay(object) <- if ("SCTregr" %in% names(object@assays)) "SCTregr" else "RNA"
+  SeuratObject::DefaultAssay(object) <- if ("SCT" %in% names(object@assays)) "SCT" else "RNA"
+  object
+}
+
+#' Add normalized GEX layers to a Seurat export
+#'
+#' Give the RNA assay a lazy log-normalized `data` layer, as
+#' `Seurat::NormalizeData()` computes it. With the BPCells backend, the regressed
+#' Pearson residuals of the variable genes that the PCA used become the RNA
+#' `scale.data` layer; with the Seurat backend, the `SCTransform()` assay is
+#' added as `SCT`. The assay's `misc$normalization` describes each layer.
+#'
+#' @param object Seurat object with a counts-only RNA assay.
+#' @param RNA_counts BPCells counts of the exported cells.
+#' @param normalized `normalized` element of the GEX normalization target.
+#' @param variable_features Variable genes used by the PCA.
+#' @param cells Exported cells.
+#' @return The Seurat object with the normalized layers.
+#' @keywords internal
+add_GEX_normalized_layers <- function(object, RNA_counts, normalized, variable_features, cells) {
+  regressed <- if (length(normalized$regressed_vars)) paste(normalized$regressed_vars, collapse = ", ") else "none"
+  cell_totals <- pmax(BPCells::colSums(RNA_counts), 1)
+  SeuratObject::LayerData(object, assay = "RNA", layer = "data") <- log1p(BPCells::multiply_cols(RNA_counts, 1e4 / cell_totals))
+  RNA_normalization <- list(data = "log1p(counts / cell total * 10000), computed lazily by BPCells")
+  if (identical(normalized$backend, "Seurat_SCT")) {
+    SCT_assay <- subset(normalized$SCT_assay, cells = cells)
+    SeuratObject::VariableFeatures(SCT_assay) <- variable_features
+    SCT_assay@misc$normalization <- list(
+      method = "Seurat::SCTransform() v2 with corrected counts",
+      scale.data = paste0("Pearson residuals of the variable genes used by the PCA; regressed: ", regressed))
+    object[["SCT"]] <- SCT_assay
+  } else {
+    SeuratObject::LayerData(object, assay = "RNA", layer = "scale.data") <- normalized$scale_data[, cells, drop = FALSE]
+    SeuratObject::VariableFeatures(object[["RNA"]]) <- variable_features
+    RNA_normalization$scale.data <- paste0("BPCells Pearson residuals of the variable genes used by the PCA, ",
+      "clipped to [-10, 10], computed lazily; regressed: ", regressed)
+  }
+  object[["RNA"]]@misc$normalization <- RNA_normalization
   object
 }
 
@@ -379,6 +416,7 @@ build_seurat_signac_convenience_object <- function(
   GEX_counts_matrix,
   metadata_tibble,
   PCA_results,
+  GEX_normalization,
   GEX_harmony_embeddings,
   GEX_UMAP_embeddings_tibble,
   GEX_non_harmony_UMAP_embeddings_tibble,
@@ -414,7 +452,9 @@ build_seurat_signac_convenience_object <- function(
     ))
   )
 
-  metadata_df <- prepare_seurat_export_metadata(metadata_tibble, WNN_results)
+  normalized <- GEX_normalization$normalized
+  GEX_assay <- if (identical(normalized$backend, "Seurat_SCT")) "SCT" else "RNA"
+  metadata_df <- prepare_seurat_export_metadata(metadata_tibble, WNN_results, GEX_assay)
   RNA_counts <- GEX_counts_matrix[, cells, drop = FALSE]
 
   object <- SeuratObject::CreateSeuratObject(
@@ -427,6 +467,7 @@ build_seurat_signac_convenience_object <- function(
     assay = object[["RNA"]],
     feature_metadata_df = get_RNA_feature_metadata(gene_features_df, rownames(object[["RNA"]]))
   )
+  object <- add_GEX_normalized_layers(object, RNA_counts, normalized, PCA_results$variable_features, cells)
 
   if (!is.null(ATAC_peak_matrix)) {
     peak_counts <- ATAC_peak_matrix[, cells, drop = FALSE]
@@ -441,14 +482,6 @@ build_seurat_signac_convenience_object <- function(
     )
   }
 
-  sct_features <- rownames(RNA_counts)[BPCells::rowSums(RNA_counts) > 50]
-  if (length(sct_features) == 0) {
-    sct_features <- rownames(RNA_counts)
-  }
-  SCTregr_counts <- RNA_counts[sct_features, , drop = FALSE]
-  object[["SCTregr"]] <- SeuratObject::CreateAssay5Object(counts = SCTregr_counts)
-  SeuratObject::VariableFeatures(object[["SCTregr"]]) <- base::intersect(PCA_results$variable_features, rownames(object[["SCTregr"]]))
-
   if (!is.null(motif_family_accessibility_matrix)) {
     motif_family_accessibility_data <- motif_family_accessibility_matrix[, cells, drop = FALSE]
     object[["motif_family_accessibility"]] <- SeuratObject::CreateAssay5Object(data = motif_family_accessibility_data)
@@ -459,7 +492,7 @@ build_seurat_signac_convenience_object <- function(
     name = "PCA",
     embeddings = PCA_results$cell_embeddings,
     loadings = PCA_results$feature_loadings,
-    assay = "SCTregr",
+    assay = GEX_assay,
     key = "PC_",
     cells = cells
   )
@@ -467,7 +500,7 @@ build_seurat_signac_convenience_object <- function(
     object = object,
     name = "PCA_UMAP",
     embeddings = embedding_tibble_to_matrix(GEX_non_harmony_UMAP_embeddings_tibble),
-    assay = "SCTregr",
+    assay = GEX_assay,
     key = "PCAUMAP_",
     cells = cells
   )
@@ -475,7 +508,7 @@ build_seurat_signac_convenience_object <- function(
     object = object,
     name = "PCA_harmony",
     embeddings = GEX_harmony_embeddings,
-    assay = "SCTregr",
+    assay = GEX_assay,
     key = "PCAharmony_",
     cells = cells
   )
@@ -483,7 +516,7 @@ build_seurat_signac_convenience_object <- function(
     object = object,
     name = "PCA_harmony_UMAP",
     embeddings = embedding_tibble_to_matrix(GEX_UMAP_embeddings_tibble),
-    assay = "SCTregr",
+    assay = GEX_assay,
     key = "PCAharmonyUMAP_",
     cells = cells
   )
@@ -518,14 +551,14 @@ build_seurat_signac_convenience_object <- function(
     object = object,
     name = "WNN_harmony_NN_UMAP",
     embeddings = embedding_tibble_to_matrix(WNN_UMAP_embeddings_tibble),
-    assay = if ("ATAC" %in% names(object@assays)) "ATAC" else "SCTregr",
+    assay = if ("ATAC" %in% names(object@assays)) "ATAC" else GEX_assay,
     key = "WNNharmonyNNUMAP_",
     cells = cells
   )
 
   GEX_knn <- embedding_matrix_to_knn(GEX_harmony_embeddings, cells, GEX_dims, data_nNNs, "PCA_", graph_threads)
-  object <- add_graph_from_sparse_matrix(object, "PCA_harmony_NN", knn_to_sparse_knn_matrix(GEX_knn, cells), "SCTregr")
-  object <- add_graph_from_sparse_matrix(object, "PCA_harmony_SNN", get_SNN_matrix_from_knn(GEX_knn, cells), "SCTregr")
+  object <- add_graph_from_sparse_matrix(object, "PCA_harmony_NN", knn_to_sparse_knn_matrix(GEX_knn, cells), GEX_assay)
+  object <- add_graph_from_sparse_matrix(object, "PCA_harmony_SNN", get_SNN_matrix_from_knn(GEX_knn, cells), GEX_assay)
 
   if ("ATAC" %in% names(object@assays)) {
     ATAC_knn <- embedding_matrix_to_knn(ATAC_harmony_embeddings, cells, ATAC_dims, data_nNNs, "LSI_", graph_threads)
@@ -535,7 +568,7 @@ build_seurat_signac_convenience_object <- function(
 
   if (!is.null(WNN_results)) {
     WNN_knn <- align_WNN_knn_to_cells(WNN_results, cells)
-    wnn_assay <- if ("ATAC" %in% names(object@assays)) "ATAC" else "SCTregr"
+    wnn_assay <- if ("ATAC" %in% names(object@assays)) "ATAC" else GEX_assay
     object <- add_graph_from_sparse_matrix(object, "WNN_harmony_KNN", knn_to_sparse_knn_matrix(WNN_knn, cells), wnn_assay)
     object <- add_graph_from_sparse_matrix(object, "WNN_harmony_SNN", get_SNN_matrix_from_knn(WNN_knn, cells), wnn_assay)
     object <- add_neighbor_from_knn(object, "WNN_harmony_NN", WNN_knn, cells)

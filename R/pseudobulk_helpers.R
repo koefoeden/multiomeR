@@ -396,12 +396,40 @@ get_pseudobulk_cell_type_design <- function(sample_tibble, formula_chr) {
   design_matrix
 }
 
+#' Estimate the consensus intra-block correlation on evenly spaced features
+#'
+#' `limma::duplicateCorrelation()` fits a mixed model to every feature only to
+#' average one consensus correlation, which takes hours for hundreds of thousands
+#' of peaks. Evenly spaced features estimate it with negligible error; the linear
+#' models are still fitted to every feature.
+duplicate_correlation_on_feature_subset <- function(object, design, block, weights = NULL, max_features = 50000L) {
+  n_features <- nrow(limma::getEAWP(object)$exprs)
+  if (n_features <= max_features) {
+    return(limma::duplicateCorrelation(object, design, block = block, weights = weights))
+  }
+  rows <- unique(round(seq(1, n_features, length.out = max_features)))
+  limma::duplicateCorrelation(object[rows, , drop = FALSE], design, block = block,
+    weights = if (is.matrix(weights)) weights[rows, , drop = FALSE] else weights)
+}
+
+#' `edgeR::voomLmFit()` with the intra-block correlation estimated on a feature subset
+#'
+#' voomLmFit calls duplicateCorrelation() by name, so a copy evaluated in a child
+#' of its namespace uses the subset estimate without modifying edgeR code.
+voom_lm_fit_subset_correlation <- function(counts, ..., max_correlation_features = 50000L) {
+  fit <- edgeR::voomLmFit
+  environment(fit) <- list2env(list(duplicateCorrelation = function(object, design, block, weights = NULL) {
+    duplicate_correlation_on_feature_subset(object, design, block, weights, max_features = max_correlation_features)
+  }), parent = environment(edgeR::voomLmFit))
+  fit(counts, ...)
+}
+
 fit_pseudobulk_cell_type_matrix <- function(
   pseudobulk_feature_matrix,
   sample_tibble,
   formula_chr,
   correlation_block = NULL,
-  voom_fit = edgeR::voomLmFit
+  voom_fit = voom_lm_fit_subset_correlation
 ) {
   design_matrix <- get_pseudobulk_cell_type_design(sample_tibble, formula_chr)
   is_count_data <- is_count_matrix(pseudobulk_feature_matrix)
@@ -446,7 +474,7 @@ fit_pseudobulk_cell_type_matrix <- function(
     )
     if (has_correlation_block) {
       block <- factor(retained_samples[[correlation_block]])
-      correlation_fit <- limma::duplicateCorrelation(
+      correlation_fit <- duplicate_correlation_on_feature_subset(
         expression_object,
         design = design_matrix,
         block = block
@@ -621,7 +649,12 @@ fit_pseudobulk_feature_matrix_by_cell_type <- function(
   } else {
     parallel::mclapply(
       cell_types,
-      fit_cell_type,
+      function(cell_type) {
+        # Each fork makes many small BLAS calls; a multithreaded BLAS per fork
+        # oversubscribes the cores and made these fits about 50 times slower.
+        RhpcBLASctl::blas_set_num_threads(1L)
+        fit_cell_type(cell_type)
+      },
       mc.cores = n_parallel_cell_type_fits,
       mc.preschedule = TRUE
     )
@@ -749,7 +782,7 @@ fit_pseudobulk_feature_matrix_model <- function(pseudobulk_feature_matrix, exten
       gene_expression_list
     }
     block <- gene_expression_list$samples[[random_effect]]
-    corfit <- limma::duplicateCorrelation(expression_object, design = design_matrix, block = block)
+    corfit <- duplicate_correlation_on_feature_subset(expression_object, design = design_matrix, block = block)
     limma::lmFit(expression_object, design = design_matrix, correlation = corfit$consensus, block = block)
   } else if (analysis_type == "edgeR") {
     gene_expression_list |>

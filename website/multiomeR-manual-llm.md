@@ -1148,7 +1148,7 @@ Both keep the raw GEX counts in the `RNA` assay with a log-normalized `data` lay
 | `BPCells_native` | `RNA` | `scale.data` of `RNA`: the variable genes, clipped to [−10, 10], computed lazily |
 | `Seurat_SCT` | `SCT` | the `SCTransform()` assay, which also holds corrected counts and their log1p `data` |
 
-The GEX assay is the default assay and carries the GEX reductions and graphs; the `misc$normalization` entry of each assay records how its layers were computed.
+The GEX assay is the default assay and carries the GEX reductions and graphs; the `misc$normalization` entry of each assay records how its layers were computed. The cell metadata also holds the Seurat cell-cycle scores `S.Score`, `G2M.Score`, `Phase` and `CC.Difference`, computed from the log-normalized counts with the 2019 Seurat gene sets whether or not they are regressed.
 
 ## Cell retention tables {#cell-retention}
 

@@ -766,10 +766,10 @@ plot_GWAS_chromVAR_deviation_heatmap <- function(deviation_tibble,
       "GWAS-linked accessibility by cell type", if (standardize) "— standardized" else "— unscaled"),
     subtitle = paste(
       if (standardize) "Compare cell types within each trait; red indicates above-average deviation."
-      else "Positive values indicate accessibility above the weighted background expectation.",
+      else "Positive values indicate accessibility above that of the average cell type.",
       "Stars show chromVAR z-score support, not adjusted-p significance or independent donor evidence.", sep = "\n"),
     caption = stringr::str_wrap(paste(
-      "ATAC counts are summed by WNN cell type.",
+      "ATAC counts are summed by WNN cell type. The expected accessibility averages the depth-normalized cell-type profiles, so abundant cell types do not dominate the reference.",
       if (beta_weighted) paste(
         "PIP × |β| weighting uses variant effects when complete, otherwise the highest-PIP available effect per locus; only eligible GWAS are included.",
         "Genetic effect direction is discarded. Weights preserve retained PIP mass before peak weights are capped at one."),

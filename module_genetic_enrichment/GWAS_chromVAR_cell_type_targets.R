@@ -44,10 +44,11 @@ rlang::list2(
   ),
   targets::tar_target(
     name = chromVAR_background_record.cell_type_pseudobulk,
-    description = "Fit the cell-type pseudobulk betterChromVAR background used by GWAS score contributions [part_of_graph:genetic_enrichment_cell_type_contributions]",
+    description = "Fit the cell-type pseudobulk betterChromVAR background used by GWAS score contributions, weighting every cell type equally in the expected accessibility [part_of_graph:genetic_enrichment_cell_type_contributions]",
     command = get_pseudobulk_chromVAR_background_record(
       pseudobulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
-      chromVAR_obj = chromVAR_obj.ATAC
+      chromVAR_obj = chromVAR_obj.ATAC,
+      equal_column_weights = TRUE
     ),
     resources = get_tar_resources(RAM_GB_req = 60)
   ),

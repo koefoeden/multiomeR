@@ -44,7 +44,8 @@ score_peak_gene_hierarchical_associations <- function(
   if (nlevels(donor) < 2L) return(tibble::as_tibble(result))
   fit_kernel <- load_peak_gene_kernel(REML_source_file, "peak_gene_REML_batch_cpp")
   correction_kernel <- load_peak_gene_kernel(KR_source_file, "peak_gene_KR_batch_cpp")
-  donor_indices <- split(seq_along(donor), donor)
+  donor_index <- as.integer(donor)
+  donor_counts <- tabulate(donor_index, nlevels(donor))
   donor_matrix <- stats::model.matrix(~ 0 + donor)
   design <- branch$design
   design_qr <- qr(design)
@@ -52,21 +53,25 @@ score_peak_gene_hierarchical_associations <- function(
   ATAC <- as.matrix(matrices$ATAC_norm)
   GEX_residual <- qr.resid(design_qr, t(GEX))
   GEX_residual_ss <- colSums(GEX_residual^2)
+  # Fill plain vectors per peak; assigning into data-frame columns copies them each time.
+  estimates <- as.list(result[c("correlation", "hierarchical_coefficient", "hierarchical_slope_SD",
+    "hierarchical_df", "hierarchical_raw_pvalue", "hierarchical_pvalue", "hierarchical_singular",
+    "hierarchical_status", "hierarchical_diagnostic")])
   groups <- split(seq_len(nrow(pairs)), pairs$peak)
   for (indices in groups) {
     x <- as.numeric(ATAC[pairs$peak[[indices[[1]]]], ])
-    x <- x - ave(x, donor)
+    x <- x - (rowsum(x, donor_index)[, 1] / donor_counts)[donor_index]
     x_residual <- qr.resid(design_qr, x)
     x_residual_ss <- sum(x_residual^2)
     genes <- pairs$gene_matrix_feature[indices]
     correlation <- crossprod(GEX_residual[, genes, drop = FALSE], x_residual)[, 1] /
       sqrt(x_residual_ss * GEX_residual_ss[genes])
     correlation[!is.finite(correlation) | GEX_residual_ss[genes] <= 1e-12 | x_residual_ss <= 1e-12] <- NA_real_
-    result$correlation[indices] <- pmax(pmin(correlation, 1), -1)
-    donor_ss <- vapply(donor_indices, \(i) sum(x[i]^2), numeric(1))
+    estimates$correlation[indices] <- pmax(pmin(correlation, 1), -1)
+    donor_ss <- rowsum(x^2, donor_index)[, 1]
     if (sum(donor_ss > 1e-12 * max(sum(x^2), 1)) < 2L) next
     if (x_residual_ss <= 1e-12 * max(sum(x^2), 1)) {
-      result$hierarchical_diagnostic[indices] <- "No peak variation after nuisance adjustment"
+      estimates$hierarchical_diagnostic[indices] <- "No peak variation after nuisance adjustment"
       next
     }
     X <- cbind(design, x)
@@ -79,15 +84,16 @@ score_peak_gene_hierarchical_associations <- function(
       correction$p < 0 | correction$p > 1, "numerical_failure",
       ifelse(!is.finite(correction$df) | correction$df < 1,
         "insufficient_donor_information", "estimable"))
-    result$hierarchical_coefficient[indices] <- fit$beta[ncol(X), ]
-    result$hierarchical_slope_SD[indices] <- sqrt(fit$slope_variance)
-    result$hierarchical_singular[indices] <- sqrt(fit$variance_ratio) < 1e-4
-    result$hierarchical_df[indices] <- correction$df
-    result$hierarchical_raw_pvalue[indices] <- correction$p
-    result$hierarchical_pvalue[indices] <- ifelse(status == "estimable", correction$p, NA_real_)
-    result$hierarchical_status[indices] <- status
-    result$hierarchical_diagnostic[indices] <- diagnostic
+    estimates$hierarchical_coefficient[indices] <- fit$beta[ncol(X), ]
+    estimates$hierarchical_slope_SD[indices] <- sqrt(fit$slope_variance)
+    estimates$hierarchical_singular[indices] <- sqrt(fit$variance_ratio) < 1e-4
+    estimates$hierarchical_df[indices] <- correction$df
+    estimates$hierarchical_raw_pvalue[indices] <- correction$p
+    estimates$hierarchical_pvalue[indices] <- ifelse(status == "estimable", correction$p, NA_real_)
+    estimates$hierarchical_status[indices] <- status
+    estimates$hierarchical_diagnostic[indices] <- diagnostic
   }
+  result[names(estimates)] <- estimates
   tibble::as_tibble(result)
 }
 

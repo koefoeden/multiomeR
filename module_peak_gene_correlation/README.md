@@ -9,8 +9,10 @@ the donor- and depth-residualized peak and gene values.
 The model includes donor fixed intercepts, log-depth covariates and a Gaussian
 random peak slope by donor. `src/peak_gene_REML.cpp` profiles residual variance
 and independently searches the slope/residual variance ratio, including zero.
-Genes sharing a peak reuse an immutable spectral decomposition.
-`src/peak_gene_KR.cpp` supplies batched Kenward–Roger inference. Workers compile
+`src/peak_gene_KR.cpp` supplies batched Kenward–Roger inference. Because each
+aggregate belongs to one donor, both kernels work in donor space without
+aggregate-by-aggregate matrices; genes sharing a peak reuse one donor-space
+eigendecomposition. Workers compile
 both kernels into private temporary caches; file targets track source changes.
 The fresh lme4/pbkrtest helper remains a numerical reference.
 

@@ -1,3 +1,5 @@
+assert_genome_packages_installed()
+
 # Mapping tibbles ---------------------------------------------------------------
 GEM_well_config_file <- configuration_path("cfg_GEM_wells.tsv")
 GEM_well_tibble_all <- build_GEM_well_tibble(GEM_well_config_file)

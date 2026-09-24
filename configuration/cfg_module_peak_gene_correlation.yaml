@@ -1,3 +1,5 @@
 ENCODE_heart_LV_6x:
   peak_gene_correlation_top_links_per_cell_group: 3
-mixed_human_31x: {}
+mixed_human_31x:
+  # The output gallery was built with the pre-1.0 default.
+  peak_gene_correlation_filter: lenient

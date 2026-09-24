@@ -18,8 +18,9 @@ aggregations and review the migration notes first.
 - Pass scalar component counts to GEX PCA and ATAC LSI, so changing only the
   selected dimensions, for example dropping the first LSI component, no longer
   recomputes either reduction.
-- Stop at startup, with the install command, when the Bioconda BSgenome data
-  packages are missing because Pixi skipped their post-link scripts.
+- Stop before building the target graph, with the install command, when the
+  Bioconda BSgenome data packages are missing because Pixi skipped their
+  post-link scripts.
 - Add the output gallery's `mixed_human_31x` aggregation of public 10x Genomics
   and ENCODE data as an inactive example with its module settings.
 
@@ -83,6 +84,9 @@ aggregations and review the migration notes first.
   dependencies. multiomeRCore 0.2.0 narrows `get_tar_resources()`.
 - Keep only reference-parity tests of the reimplemented algorithms, which pass
   with the updated reference packages.
+- Run only cheap checks in cloud CI: documentation source links and, also
+  weekly, the example-data download URLs. Run the reference-parity tests
+  locally, and build the documentation site with the repository builder.
 
 ## Documentation
 

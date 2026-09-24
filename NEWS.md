@@ -22,7 +22,8 @@ aggregations and review the migration notes first.
   Bioconda BSgenome data packages are missing because Pixi skipped their
   post-link scripts.
 - Add the output gallery's `mixed_human_31x` aggregation of public 10x Genomics
-  and ENCODE data as an inactive example with its module settings.
+  and ENCODE data as an inactive example with its module settings. Its GEM wells
+  are processed locally with Cell Ranger ARC 2.1.0 and GRCh38-2024-A.
 
 ## QC and cell-type annotation
 

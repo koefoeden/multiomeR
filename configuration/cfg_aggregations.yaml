@@ -130,7 +130,7 @@ mixed_human_31x:
   modules: [genetic_enrichment, differential_analyses, peak_gene_correlation]
   is_active: false
   aggregation_donor_id_metadata_tsv: example_data/mixed_human_31x_donor_id_metadata.tsv
-  aggregation_GEM_well_IDs: [healthy_PBMC_human, pbmc_10k_chromium_controller, pbmc_10k_chromium_x,
+  aggregation_GEM_well_IDs: [healthy_PBMC_human_2024A, pbmc_10k_chromium_controller, pbmc_10k_chromium_x,
       pbmc_granulocyte_sorted_10k, pbmc_unsorted_10k, pbmc_unsorted_3k, healthy_brain_human, ENCSR033MDU, ENCSR158DQA,
       ENCSR233SQG, ENCSR316WAS, ENCSR618WVK, ENCSR788DZO, ENCSR079UEO, ENCSR201BHG, ENCSR245BNT, ENCSR320RLS,
       ENCSR351CSQ, ENCSR508WRP, ENCSR511RDV, ENCSR534YJW, ENCSR568QKW, ENCSR613LBN, ENCSR793DNM, ENCSR923FKN,

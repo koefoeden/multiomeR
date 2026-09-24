@@ -11,7 +11,7 @@ testthat::test_that('validation activates exactly its aggregations and required 
   testthat::expect_setequal(validation$aggregation[selected], validation_aggregations())
   wells <- build_active_GEM_well_tibble(build_GEM_well_tibble())
   testthat::expect_setequal(wells$GEM_well_ID, unlist(validation$aggregation_GEM_well_IDs[selected]))
-  testthat::expect_equal(nrow(wells), 33L)
+  testthat::expect_equal(nrow(wells), 34L)
   Sys.setenv(MULTIOMER_VALIDATION = 'all')
   testthat::expect_error(validation_aggregations(), 'must be 0 or 1')
 })

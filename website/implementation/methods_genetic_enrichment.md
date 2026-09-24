@@ -5,7 +5,7 @@ pipeline_name <- "genetic_enrichment"
 source("helpers/_setup.R")
 ```
 
-`module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in its directory. It does not check the species; the GRCh38 GWAS inputs assume a human aggregation. The release, method-selection, and interpretation contracts are described in [Genetic enrichment](../downstream_genetic_enrichment.html). Configurable settings and their defaults are listed in the [parameter browser](../parameters.html). The sparse SCAVENGE implementation is compared with its reference in [Algorithmic implementations](algorithm_validation.md#sparse-scavenge-propagation-and-significance).
+`module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in its directory. It does not check the species; the GRCh38 GWAS inputs assume a human aggregation. The release, method-selection, and interpretation contracts are described in [Genetic enrichment](../downstream_genetic_enrichment.html). Configurable settings and their defaults are listed in the [parameter browser](../parameters.html). The sparse SCAVENGE implementation is compared with its reference in [Algorithmic implementations](algorithm_validation.md#sparse-scavenge-propagation).
 
 {{< include _shared_methods/genetic_enrichment.md >}}
 

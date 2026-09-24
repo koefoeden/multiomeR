@@ -53,6 +53,11 @@ helper on a stored branch's inputs and compare the result with that branch's
 stored value using `all.equal()`. `tar_read(branches = i)` of an
 `iteration = "group"` input returns every group, so filter `tar_group == i`.
 
+For a compiled kernel in `src/`, run its reference-parity test listed in
+`website/implementation/algorithm_validation.md`, compare it with the committed
+kernel on a stored branch's inputs, and try degenerate inputs such as collinear
+or constant columns: a kernel error fails the whole branch.
+
 ## Invalidation Impact
 
 `targets` hashes parsed code, so comment and formatting edits never invalidate,

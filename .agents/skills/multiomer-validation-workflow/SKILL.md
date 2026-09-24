@@ -48,6 +48,11 @@ preview-and-run patterns in `multiomer-run-pipeline`. Run the smallest target
 that exercises the changed code, and avoid setup/download targets unless the
 edit directly changed download/setup behavior.
 
+To show that a performance change reproduces its outputs, call the changed
+helper on a stored branch's inputs and compare the result with that branch's
+stored value using `all.equal()`. `tar_read(branches = i)` of an
+`iteration = "group"` input returns every group, so filter `tar_group == i`.
+
 ## Invalidation Impact
 
 `targets` hashes parsed code, so comment and formatting edits never invalidate,

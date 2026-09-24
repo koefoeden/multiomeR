@@ -11,7 +11,7 @@ and verifies outputs. It uses the same checkout and configured targets store;
 valid targets are reused. Do not run it alongside another pipeline in that store.
 
 The command sets `MULTIOMER_VALIDATION=1` for itself and its children. This selects
-exactly `immune_human_2x`, `brain_mouse`, and `ENCODE_heart_LV_6x` plus their
+exactly `immune_human_2x`, `brain_mouse`, and `mixed_human_31x` plus their
 required GEM wells, regardless of their activation flags. Other entries stay
 excluded. Without the variable (or with `0`), normal flags apply: only the human
 demo is enabled by default. Graph construction prints the validation selection.
@@ -36,16 +36,17 @@ bash example_data/download_10X_cellranger_count_data.sh
 ```
 
 The ignored link `example_data/encode` must point to a directory containing the
-six ENCODE count directories named by accession. They contain locally processed
+24 ENCODE count directories named by accession. They contain locally processed
 public data: ARC 2.1.0, GRCh38 2024-A, and each count's
 `outs/cellbender-output_gex_bent_only_filtered.h5`. Raw-read processing is outside
 this test. Public donor metadata and ENCODE source URLs are committed.
 
-The ENCODE model compares male versus female cardiomyocytes and sex-associated
-cell composition, using all eligible features. Four female and two male donors
-have imbalanced ages and health status; this is a software test and an unadjusted
-association, not a causal sex-effect estimate. It retains the source marker sets
-with public multiomeR's annotation method.
+`mixed_human_31x` is the aggregation behind the output gallery and manuscript
+figures, with all optional modules enabled. Its models compare male versus female
+cardiomyocytes and left-ventricle cell composition, using all eligible features.
+Only the four female and two male heart donors have sex recorded, with
+imbalanced ages and health status; this is a software test and an unadjusted
+association, not a causal sex-effect estimate.
 
 ## External checks and results
 
@@ -67,8 +68,8 @@ Preflight makes new, bounded network requests on every invocation:
 Requests have time and size limits. Failed or unsupported range requests fail
 preflight instead of falling back to a large download. Only AnnotationHub
 metadata may be refreshed; large analysis resources are
-untouched by these probes. Open Targets is checked even though genetic enrichment
-is disabled in the validation graph; that is not a test of the analysis module.
+untouched by these probes; the pipeline then downloads the GWAS configured for
+`mixed_human_31x`'s genetic enrichment.
 
 Reports under `outputs/validation/<timestamp>/` record the Git commit, dirty
 working-tree status, session, preflight results and output summary. `PASS` is

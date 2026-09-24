@@ -11,8 +11,11 @@ The public configuration contains these entries; inactive ones can stay as examp
 
 - `template_aggregation` (inactive): a starting point for your own entry.
 - `immune_human_2x` (active): the public demo, combining two human GEM wells with optional modules disabled.
-- `brain_mouse` and `ENCODE_heart_LV_6x` (inactive): mouse and ENCODE validation examples.
+- `brain_mouse` (inactive): a mouse example.
+- `ENCODE_heart_LV_6x` (inactive): six ENCODE left-ventricle GEM wells with a differential-analysis example.
 - `mixed_human_31x` (inactive): the aggregation behind the [output gallery](gallery.md), with all optional modules enabled.
+
+Local validation runs `immune_human_2x`, `brain_mouse` and `mixed_human_31x`.
 
 ## Minimal entry
 

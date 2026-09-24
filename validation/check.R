@@ -12,7 +12,7 @@ local({
   if (nrow(errors)) stop(paste(errors$name, errors$error, collapse = '\n'))
   config <- read_aggregation_config_tibble()
   config <- config[vapply(config$is_active, isTRUE, logical(1)), ]
-  stopifnot(setequal(config$aggregation, c('immune_human_2x', 'brain_mouse', 'ENCODE_heart_LV_6x')))
+  stopifnot(setequal(config$aggregation, validation_aggregations()))
   summary <- lapply(seq_len(nrow(config)), function(i) {
     aggregation <- config$aggregation[[i]]
     object <- targets::tar_read_raw(paste0('multimodal_Seurat_object.8_multimodal_QC.', aggregation))
@@ -22,7 +22,7 @@ local({
     data.frame(commit = commit, aggregation = aggregation,
                cells = ncol(object), GEM_wells = length(unique(object$GEM_well_ID)))
   })
-  source('validation/check_encode.R', local = TRUE)
+  source('validation/check_differential.R', local = TRUE)
   stopifnot(length(targets::tar_outdated()) == 0L)
   report <- Sys.getenv('MULTIOMER_VALIDATION_REPORT')
   stopifnot(nzchar(report))

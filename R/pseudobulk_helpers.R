@@ -284,14 +284,24 @@ filter_pseudobulk_data_matrix <- function(
 #'
 #' Fit the betterChromVAR background model for a pseudobulk count matrix.
 #'
+#' The expected accessibility defines the reference that deviations are
+#' measured against and the accessibility on which background peaks are
+#' matched. By default it pools the columns by depth, so a column holding most
+#' reads is largely compared with itself. With equal column weights, each
+#' column is depth-normalized before averaging, so every column is compared
+#' with the average column profile.
+#'
 #' @param pseudobulk_ATAC_data_matrix Peak-by-pseudobulk-sample ATAC count matrix.
 #' @param chromVAR_obj chromVAR SummarizedExperiment containing deviations, annotations, and background metadata.
+#' @param equal_column_weights Whether each column contributes equally to the
+#'   expected accessibility instead of in proportion to its depth.
 #' @return A list containing the fitted background and retained peak names.
 #' @keywords internal
 
 get_pseudobulk_chromVAR_background_record <- function(
   pseudobulk_ATAC_data_matrix,
-  chromVAR_obj
+  chromVAR_obj,
+  equal_column_weights = FALSE
 ) {
   peaks_above_cut_off_names <- pseudobulk_ATAC_data_matrix |>
     pseudobulk_rowSums() |>
@@ -316,7 +326,8 @@ get_pseudobulk_chromVAR_background_record <- function(
   )
   SummarizedExperiment::rowData(pseudobulk_chromVAR_obj) <- SummarizedExperiment::rowData(chromVAR_obj)[peak_range_idx, , drop = FALSE]
 
-  expectation_vec <- betterChromVAR::getExpectation(pseudobulk_chromVAR_obj)
+  expectation_vec <- betterChromVAR::getExpectation(pseudobulk_chromVAR_obj,
+    grouping = if (equal_column_weights) colnames(pseudobulk_chromVAR_obj), normalize = TRUE)
   background_bins <- betterChromVAR::getBackgroundBins(
     x = expectation_vec,
     bias = SummarizedExperiment::rowData(pseudobulk_chromVAR_obj)$bias,

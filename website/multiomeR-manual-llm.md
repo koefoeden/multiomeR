@@ -563,7 +563,7 @@ Before enabling the module, confirm that:
 - model variables describe donors, not individual nuclei; and
 - each compared group has enough donors for the design and contrasts.
 
-If the models need variables beyond the aggregation's donor metadata, supply a second table in [`differential_analyses_extended_donor_id_metadata_tsv`](parameters.html#differential_analyses_extended_donor_id_metadata_tsv) with the same unique `donor_id` key.
+If the models need variables beyond the aggregation's donor metadata, supply a second table in [`differential_analyses_extended_donor_id_metadata_tsv`](parameters.html#differential_analyses_extended_donor_id_metadata_tsv) with the same unique `donor_id` key. Donors missing from it, like donors with missing values, are excluded from the models that use its variables.
 
 ## Outputs
 
@@ -1885,7 +1885,7 @@ Diagnostic outputs report pseudobulk depth, retained sample and donor counts, pa
 
 
 
-`module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in its directory. It does not check the species; the GRCh38 GWAS inputs assume a human aggregation. The release, method-selection, and interpretation contracts are described in [Genetic enrichment](../downstream_genetic_enrichment.html). Configurable settings and their defaults are listed in the [parameter browser](../parameters.html). The sparse SCAVENGE implementation is compared with its reference in [Algorithmic implementations](algorithm_validation.md#sparse-scavenge-propagation-and-significance).
+`module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in its directory. It does not check the species; the GRCh38 GWAS inputs assume a human aggregation. The release, method-selection, and interpretation contracts are described in [Genetic enrichment](../downstream_genetic_enrichment.html). Configurable settings and their defaults are listed in the [parameter browser](../parameters.html). The sparse SCAVENGE implementation is compared with its reference in [Algorithmic implementations](algorithm_validation.md#sparse-scavenge-propagation).
 
 
 <!-- begin include: website/implementation/_shared_methods/genetic_enrichment.md -->

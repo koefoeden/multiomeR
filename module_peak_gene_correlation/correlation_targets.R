@@ -242,13 +242,13 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = distance_correlation_plot,
-    description = "Save median peak-gene correlation by absolute TSS distance and cell group [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    description = "Save median peak-gene correlation and -log10(p) by absolute TSS distance and cell group [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = {
       distance_plot_tibble <- summarize_peak_gene_correlation_by_distance(
         peak_gene_correlation_hierarchical_results_tibble.WNN
       )
       plot_peak_gene_correlation_by_distance(distance_plot_tibble) |>
-        save_plots_structured(width = 14, height = 9)
+        save_plots_structured(width = 14, height = 15)
     },
     resources = get_tar_resources(RAM_GB_req = 16)
   ),

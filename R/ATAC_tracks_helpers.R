@@ -105,16 +105,10 @@ plot_coverage_at_region_BPCells <- function(
     )
 
   region <- get_region_GRanges_for_BPCells_track(region_id, gene_GRanges = gene_GRanges)
-  coverage_tibble <- BPCells::trackplot_coverage(
-    fragments = fragments,
-    region = region,
-    groups = groups,
-    cell_read_counts = metadata$atac_fragments,
-    group_order = group_order,
-    colors = coverage_colors,
-    bins = 500,
-    return_data = TRUE
-  )
+  coverage_tibble <- get_BPCells_coverage_tibbles(fragments, region, groups = factor(groups, levels = group_order),
+    cell_read_counts = metadata$atac_fragments, bins = 500L)[[1]]
+  # As in BPCells::trackplot_coverage(), rows follow group_order and levels those of groups.
+  coverage_tibble$group <- factor(as.character(coverage_tibble$group), levels = levels(as.factor(groups)))
   coverage_track <- make_BPCells_ATAC_coverage_track_from_tibble(
     coverage_tibble = coverage_tibble,
     region = region,
@@ -140,6 +134,75 @@ plot_coverage_at_region_BPCells <- function(
     caption = stringr::str_wrap(paste("Coverage uses 500 bins, normalized by bin width and summed group depth; extremes are clipped at the 99.9th percentile.",
       "Depth denominator: total ATAC fragments.",
       "Groups:", label_plot_variable(group_cells_by_col), ". Tracks share the displayed coverage scale. Collapsed peaks are shown below; gene-centred windows extend 50 kb on each side."), width = 110))
+}
+
+#' Compute BPCells coverage data for many regions in few fragment passes
+#'
+#' Returns what `BPCells::trackplot_coverage(return_data = TRUE)` returns for
+#' each region. A `tile_matrix()` pass over merged fragment objects costs about
+#' a minute even for one small region, whereas `select_regions()` seeks
+#' efficiently, so the fragments in all regions are first copied to memory.
+#' Non-overlapping regions then share one pass, and repeated regions are
+#' computed once.
+#'
+#' @param fragments BPCells fragments with cell names.
+#' @param regions GRanges of regions to cover.
+#' @param groups Factor of cell groups aligned to the fragment cells.
+#' @param cell_read_counts Per-cell read counts used for normalization.
+#' @param bins Number of bins per region.
+#' @return List of coverage tibbles aligned to `regions`, with columns `pos`,
+#'   `group`, `insertions` and `normalized_insertions`.
+#' @keywords internal
+
+get_BPCells_coverage_tibbles <- function(fragments, regions, groups, cell_read_counts, bins = 500L) {
+  groups <- as.factor(groups)
+  stopifnot(length(groups) == length(BPCells::cellNames(fragments)), length(cell_read_counts) == length(groups))
+  membership <- Matrix::sparseMatrix(i = seq_along(groups), j = as.integer(groups), x = 1,
+    dims = c(length(groups), nlevels(groups)), dimnames = list(NULL, levels(groups)))
+  group_read_counts <- as.vector(Matrix::crossprod(membership, cell_read_counts))
+  keys <- as.character(regions)
+  ranges <- tibble::tibble(key = keys, chr = as.character(GenomicRanges::seqnames(regions)),
+    start = GenomicRanges::start(regions) - 1L, end = GenomicRanges::end(regions)) |>
+    dplyr::distinct(.data$key, .keep_all = TRUE) |>
+    dplyr::mutate(tile_width = pmax((.data$end - .data$start) %/% as.integer(bins), 1L)) |>
+    dplyr::arrange(match(.data$chr, BPCells::chrNames(fragments)), .data$start)
+
+  fragments <- BPCells::select_regions(fragments, GenomicRanges::reduce(regions)) |>
+    BPCells::write_fragments_memory()
+
+  # tile_matrix() rejects overlapping or touching ranges, which go to later passes.
+  ranges$pass <- NA_integer_
+  pass_end <- numeric()
+  for (i in seq_len(nrow(ranges))) {
+    if (i == 1L || ranges$chr[[i]] != ranges$chr[[i - 1L]]) pass_end[] <- -Inf
+    pass <- which(pass_end < ranges$start[[i]])[1]
+    if (is.na(pass)) pass <- length(pass_end) + 1L
+    pass_end[[pass]] <- ranges$end[[i]]
+    ranges$pass[[i]] <- pass
+  }
+
+  coverage <- split(ranges, ranges$pass) |>
+    unname() |>
+    purrr::map(\(batch) {
+      counts <- BPCells::tile_matrix(fragments, batch[c("chr", "start", "end", "tile_width")], zero_based_coords = TRUE) %*%
+        membership
+      counts <- as.matrix(methods::as(counts, "dgCMatrix"))
+      n_tiles <- as.integer(ceiling((batch$end - batch$start) / batch$tile_width))
+      stopifnot(nrow(counts) == sum(n_tiles))
+      tile_rows <- split(seq_len(nrow(counts)), rep(seq_len(nrow(batch)), n_tiles))
+      purrr::map(seq_len(nrow(batch)), \(i) {
+        width <- batch$tile_width[[i]]
+        bin_centers <- pmin(seq(batch$start[[i]], batch$end[[i]] - 1, width) + (width - 1) / 2, batch$end[[i]] - 1)
+        mat <- counts[tile_rows[[i]], , drop = FALSE]
+        tibble::tibble(pos = rep(bin_centers, ncol(mat)),
+          group = factor(rep(colnames(mat), each = nrow(mat)), levels = levels(groups)),
+          insertions = as.vector(mat),
+          normalized_insertions = as.vector(sweep(mat, 2, 1e9 / (group_read_counts * width), "*")))
+      }) |>
+        rlang::set_names(batch$key)
+    }) |>
+    purrr::list_flatten()
+  unname(coverage[keys])
 }
 
 #' Make BPCells ATAC coverage track from tibble

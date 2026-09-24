@@ -650,8 +650,24 @@ prepare_GWAS_variant_contribution_detail_records <- function(
   locus_tibble_list <- selected_locus_tibble |>
     dplyr::group_by(.data$GWAS_ID, .data$cluster, .data$studyLocusId, .data$detail_rank) |>
     dplyr::group_split()
-  plot_records <- locus_tibble_list |>
-    purrr::map(\(locus_tibble) {
+  regions <- purrr::map(locus_tibble_list, \(locus_tibble) GenomicRanges::GRanges(
+    seqnames = stringr::str_c("chr", locus_tibble$chromosome[[1]]),
+    ranges = IRanges::IRanges(
+      start = max(1L, locus_tibble$locus_start[[1]] - flank),
+      end = locus_tibble$locus_end[[1]] + flank
+    )
+  ))
+  sorted_groups <- gtools::mixedsort(unique(group_values))
+  all_regions <- GenomicRanges::GRanges(
+    seqnames = purrr::map_chr(regions, \(region) as.character(GenomicRanges::seqnames(region))),
+    ranges = IRanges::IRanges(purrr::map_int(regions, GenomicRanges::start), purrr::map_int(regions, GenomicRanges::end))
+  )
+  coverage_tibbles <- get_BPCells_coverage_tibbles(fragments, all_regions,
+    groups = factor(group_values, levels = sorted_groups), cell_read_counts = cell_read_counts, bins = 500L)
+  plot_records <- seq_along(locus_tibble_list) |>
+    purrr::map(\(index) {
+      locus_tibble <- locus_tibble_list[[index]]
+      region <- regions[[index]]
       GWAS_ID <- locus_tibble$GWAS_ID[[1]]
       cluster <- locus_tibble$cluster[[1]]
       studyLocusId <- locus_tibble$studyLocusId[[1]]
@@ -661,28 +677,14 @@ prepare_GWAS_variant_contribution_detail_records <- function(
           .data$cluster == .env$cluster,
           .data$studyLocusId == .env$studyLocusId
         )
-      region <- GenomicRanges::GRanges(
-        seqnames = stringr::str_c("chr", locus_tibble$chromosome[[1]]),
-        ranges = IRanges::IRanges(
-          start = max(1L, locus_tibble$locus_start[[1]] - flank),
-          end = locus_tibble$locus_end[[1]] + flank
-        )
-      )
-      group_levels <- c(cluster, setdiff(gtools::mixedsort(unique(group_values)), cluster))
+      group_levels <- c(cluster, setdiff(sorted_groups, cluster))
       coverage_colors <- stats::setNames(
         c("#B40426", rep("grey75", length(group_levels) - 1L)),
         group_levels
       )
-      coverage_tibble <- BPCells::trackplot_coverage(
-        fragments = fragments,
-        region = region,
-        groups = factor(group_values, levels = group_levels),
-        cell_read_counts = cell_read_counts,
-        group_order = group_levels,
-        colors = coverage_colors,
-        bins = 500,
-        return_data = TRUE
-      )
+      coverage_tibble <- coverage_tibbles[[index]] |>
+        dplyr::mutate(group = factor(as.character(.data$group), levels = group_levels)) |>
+        dplyr::arrange(.data$group)
 
       plot_title <- stringr::str_glue(
         "{GWAS_ID} - {cluster} - {locus_tibble$locus_label[[1]]}; ",

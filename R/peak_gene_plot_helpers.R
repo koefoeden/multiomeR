@@ -27,9 +27,8 @@ compute_peak_gene_focal_coverage <- function(plot_data, metadata, fragments) {
   metadata <- metadata |> dplyr::filter(.data$barcode_w_prefix %in% fragment_names) |>
     dplyr::arrange(match(.data$barcode_w_prefix, fragment_names))
   fragments <- BPCells::select_cells(fragments, metadata$barcode_w_prefix)
-  BPCells::trackplot_coverage(fragments = fragments, region = plot_data$region,
-    groups = rep(focal_group, nrow(metadata)), cell_read_counts = metadata$atac_fragments,
-    group_order = focal_group, bins = 500, return_data = TRUE)
+  get_BPCells_coverage_tibbles(fragments, plot_data$region, groups = rep(focal_group, nrow(metadata)),
+    cell_read_counts = metadata$atac_fragments, bins = 500L)[[1]]
 }
 
 plot_peak_gene_correlation_top_link <- function(plot_data, coverage, aggregate_scatter, cell_types) {

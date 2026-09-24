@@ -121,7 +121,7 @@ rlang::list2(
   targets::tar_target(
     name = GEX_counts_BPCells_matrix,
     description = "Open the matrix from the GEX BPCells directory",
-    command = BPCells::open_matrix_dir(GEX_counts_BPcells_matrix_dir)
+    command = open_BPCells_dir(GEX_counts_BPcells_matrix_dir)
   ),
   tarchetypes::tar_file(
     name = fragments_w_prefix_bpcells_dir,
@@ -140,7 +140,7 @@ rlang::list2(
   targets::tar_target(
     name = fragments_w_prefix_bpcells,
     description = "Convert the CellRanger fragment file to a BPCells directory with GEM well-prefixed barcodes",
-    command = BPCells::open_fragments_dir(fragments_w_prefix_bpcells_dir)
+    command = open_BPCells_dir(fragments_w_prefix_bpcells_dir, open = BPCells::open_fragments_dir)
   ),
   targets::tar_target(
     name = ATAC_qc_metrics_tibble,

@@ -27,7 +27,7 @@ rlang::list2(
   targets::tar_target(
     name = cell_type_pseudobulk_counts_matrix.ATAC,
     description = "Open BPCells-backed ATAC counts summed per WNN cell type",
-    command = BPCells::open_matrix_dir(cell_type_pseudobulk_counts_BPCells_matrix_dir.ATAC)
+    command = open_BPCells_dir(cell_type_pseudobulk_counts_BPCells_matrix_dir.ATAC)
   ),
   targets::tar_target(
     name = cell_type_pseudobulk_support_tibble.ATAC,

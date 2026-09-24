@@ -26,7 +26,7 @@ rlang::list2(
   targets::tar_target(
     name = aggregated_counts_BPCells_matrix.GEX,
     description = "Open the combined GEX BPCells count matrix",
-    command = BPCells::open_matrix_dir(aggregated_GEX_BPCells_matrix_dir.GEX),
+    command = open_BPCells_dir(aggregated_GEX_BPCells_matrix_dir.GEX),
     resources = get_tar_resources(RAM_GB_req = 8)
   ),
   targets::tar_target(

@@ -301,6 +301,7 @@ rlang::list2(
         peak_matrix_mode = aggregation_ATAC_peak_matrix_mode
       ),
       pattern = map(GEX_cells_per_GEM_well_tibble.ATAC),
+      iteration = "vector",
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     targets::tar_target(

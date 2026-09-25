@@ -596,6 +596,59 @@ format_peak_GRanges <- function(GRanges, cluster_name) {
 }
 
 
+#' Split cells by GEM well
+#'
+#' Pair each GEM well's nuclei with its fragment directory, so per-cell ATAC
+#' counts can run per well instead of on the merged fragments of all wells.
+#'
+#' @param metadata_tibble Cell metadata with `barcode_w_prefix` and `GEM_well_ID`.
+#' @param GEM_well_IDs GEM well IDs of the aggregation, in configured order.
+#' @param fragment_dirs BPCells fragment directories in the order of `GEM_well_IDs`.
+#' @return Tibble with one row per GEM well that has nuclei: `GEM_well_ID`,
+#'   `fragments_dir` and a `barcodes` list-column in metadata order.
+#' @keywords internal
+split_cells_by_GEM_well <- function(metadata_tibble, GEM_well_IDs, fragment_dirs) {
+  tibble::tibble(
+    GEM_well_ID = GEM_well_IDs,
+    fragments_dir = unlist(fragment_dirs, use.names = FALSE),
+    barcodes = unname(split(metadata_tibble$barcode_w_prefix, factor(metadata_tibble$GEM_well_ID, levels = GEM_well_IDs)))
+  ) |>
+    dplyr::filter(lengths(.data$barcodes) > 0L)
+}
+
+#' Open GEM well fragments
+#'
+#' Open one GEM well's prefixed BPCells fragments on the standard chromosomes,
+#' matching that well's part of `combined_BPCells_fragment_obj.ATAC`.
+#'
+#' @param GEM_well_cells One row of `split_cells_by_GEM_well()`.
+#' @param genome Genome build key used to select the standard chromosomes.
+#' @return A BPCells fragment object.
+#' @keywords internal
+open_GEM_well_fragments <- function(GEM_well_cells, genome) {
+  BPCells::open_fragments_dir(GEM_well_cells$fragments_dir[[1]]) |>
+    BPCells::select_chromosomes(get_standard_chroms(genome))
+}
+
+#' Count blacklist fragments per GEM well
+#'
+#' Count fragment insertions or overlaps in blacklisted regions for one GEM
+#' well's nuclei.
+#'
+#' @param GEM_well_cells One row of `split_cells_by_GEM_well()`.
+#' @param blacklist_GRanges Blacklisted regions.
+#' @param genome Genome build key used to select the standard chromosomes.
+#' @param peak_matrix_mode Counting mode passed to `BPCells::peak_matrix()`.
+#' @return Tibble of `barcode_w_prefix` and `atac_peak_counts_blacklist`.
+#' @keywords internal
+count_blacklist_fragments_per_GEM_well <- function(GEM_well_cells, blacklist_GRanges, genome, peak_matrix_mode) {
+  barcodes <- GEM_well_cells$barcodes[[1]]
+  counts <- open_GEM_well_fragments(GEM_well_cells, genome) |>
+    BPCells::peak_matrix(ranges = blacklist_GRanges, mode = peak_matrix_mode) |>
+    BPCells::colSums()
+  tibble::tibble(barcode_w_prefix = barcodes, atac_peak_counts_blacklist = as.numeric(counts[barcodes]))
+}
+
 #' Get ATAC QC metadata from BPCells
 #'
 #' Add BPCells-derived ATAC peak and blacklist QC metrics to cell metadata.
@@ -603,12 +656,10 @@ format_peak_GRanges <- function(GRanges, cluster_name) {
 #' @param metadata_df Cell metadata data frame. If `barcode_w_prefix` is absent,
 #'   row names are promoted to that column before joining.
 #' @param ATAC_peak_BPCells_matrix BPCells peak-by-cell ATAC matrix with peak names in rows and cell barcodes in columns.
-#' @param ATAC_combined_BPCells_fragment_obj Combined BPCells fragment object for one aggregation, with prefixed cell names.
-#' @param blacklist_GRanges GRanges object containing blacklist GRanges coordinates and metadata.
+#' @param blacklist_counts_tibble Tibble of `barcode_w_prefix` and
+#'   `atac_peak_counts_blacklist`, e.g. from `count_blacklist_fragments_per_GEM_well()`.
 #' @param ATAC_peak_GRanges GRanges for ATAC peaks, aligned by peak name to the corresponding ATAC matrix rows.
 #' @param genome Genome build key used to choose chromosome sizes, blacklist resources, and external-tool parameters.
-#' @param peak_matrix_mode Fragment counting mode passed to `BPCells::peak_matrix()`
-#'   for blacklist counts.
 #' @return The input metadata as a tibble with `nCount_ATAC`,
 #'   `atac_peak_counts_blacklist`, fraction/enrichment columns, and missing
 #'   count values replaced by zero.
@@ -617,26 +668,19 @@ format_peak_GRanges <- function(GRanges, cluster_name) {
 get_ATAC_QC_metadata_from_BPCells <- function(
   metadata_df,
   ATAC_peak_BPCells_matrix,
-  ATAC_combined_BPCells_fragment_obj,
-  blacklist_GRanges,
+  blacklist_counts_tibble,
   ATAC_peak_GRanges,
-  genome,
-  peak_matrix_mode
+  genome
 ) {
   metadata_tibble <- tibble::as_tibble(metadata_df)
   peak_counts <- BPCells::colSums(ATAC_peak_BPCells_matrix)
 
-  blacklist_matrix <- BPCells::peak_matrix(
-    fragments = ATAC_combined_BPCells_fragment_obj,
-    ranges = blacklist_GRanges,
-    mode = peak_matrix_mode
-  )
-  blacklist_counts <- BPCells::colSums(blacklist_matrix)
-
   qc_tibble <- tibble::tibble(
     barcode_w_prefix = colnames(ATAC_peak_BPCells_matrix),
     nCount_ATAC = as.numeric(peak_counts),
-    atac_peak_counts_blacklist = as.numeric(blacklist_counts[colnames(ATAC_peak_BPCells_matrix)])
+    atac_peak_counts_blacklist = blacklist_counts_tibble$atac_peak_counts_blacklist[
+      match(colnames(ATAC_peak_BPCells_matrix), blacklist_counts_tibble$barcode_w_prefix)
+    ]
   )
 
   genome_peak_cov <- ATAC_peak_GRanges |>

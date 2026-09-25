@@ -6,7 +6,7 @@ This page covers marker-signature cluster annotation and motif-family accessibil
 
 {{< include _shared_methods/cell_type_annotation.md >}}
 
-**Source:** [`R/cluster_annotation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/cluster_annotation_helpers.R), [`R/processing_GEX_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_GEX_helpers.R), [`extra_targets/GEX_graph_and_cluster_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/GEX_graph_and_cluster_targets.R).
+**Source:** [`R/cluster_annotation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/cluster_annotation_helpers.R), [`src/cluster_UCell_chunk.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/cluster_UCell_chunk.cpp), [`R/processing_GEX_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_GEX_helpers.R), [`extra_targets/GEX_graph_and_cluster_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/GEX_graph_and_cluster_targets.R).
 
 ## Motif families and motif accessibility
 

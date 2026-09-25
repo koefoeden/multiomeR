@@ -76,6 +76,11 @@ rlang::list2(
     command = "src/wnn_snn_bandwidth.cpp"
   ),
   tarchetypes::tar_file(
+    name = UCell_native_source_file,
+    description = "Track the native cluster UCell scoring kernel",
+    command = "src/cluster_UCell_chunk.cpp"
+  ),
+  tarchetypes::tar_file(
     name = JASPAR2026_vertebrate_familial_root_motifs_tf,
     description = "Track the 233 official JASPAR2026 CORE vertebrate familial root motifs [part_of_graph:ATAC] [part_of_graph:seurat_export] [part_of_graph:differential_analyses]",
     command = "resources/JASPAR2026_vertebrate_familial_root_motifs.tf"

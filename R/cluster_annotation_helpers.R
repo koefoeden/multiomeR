@@ -167,54 +167,70 @@ score_signed_UCell_cells <- function(gap, control, genes) {
 }
 
 #' Aggregate cluster UCell statistics in bounded count chunks, clipping signed scores per cell.
-#' Only marker/control genes are retained after ranking all genes in each cell.
+#' A native kernel ranks each cell from its nonzero counts, because zero counts
+#' tie below the rank cutoff, and keeps only marker/control genes. Chunks are
+#' added in the same order and worker split as the reference R implementation,
+#' so the sums are identical to it.
 summarize_cluster_UCell_counts <- function(counts_matrix, metadata_tibble, control,
                                            cluster_column, chunk_size = 250L,
-                                           workers = 2L, include_cell_scores = FALSE) {
+                                           workers = 2L, include_cell_scores = FALSE,
+                                           native_source_file = file.path(get_project_root(), "src", "cluster_UCell_chunk.cpp")) {
   barcodes <- metadata_tibble$barcode_w_prefix
   clusters <- as.character(metadata_tibble[[cluster_column]])
   stopifnot(length(barcodes) > 0L, !anyNA(clusters), !anyDuplicated(barcodes),
     all(barcodes %in% colnames(counts_matrix)),
     identical(rownames(counts_matrix), control$reference_genes))
+  library_name <- load_native_library(native_source_file, "multiomeR_UCell")
+  columns <- match(barcodes, colnames(counts_matrix))
   cluster_names <- unique(clusters)
+  cluster_index <- match(clusters, cluster_names) - 1L
   genes <- unique(c(sub("-$", "", unlist(control$markers, use.names = FALSE)),
     control$reference_genes[control$draws]))
-  chunks <- split(seq_along(barcodes), ceiling(seq_along(barcodes) / chunk_size))
-  signed_markers <- Filter(function(genes) any(grepl("-$", genes)), control$markers)
-  add_cluster_sums <- function(total, values, rows) {
-    sums <- rowsum(t(values), clusters[rows], reorder = FALSE)
-    total[, rownames(sums)] <- total[, rownames(sums), drop = FALSE] + t(sums)
-    total
+  gene_position <- match(control$reference_genes, genes) - 1L
+  gene_position[is.na(gene_position)] <- -1L
+  replicates <- control$n_controls + 1L
+  # 0-based gene indices of a signature (first column) and its matched controls.
+  component <- function(selected) {
+    if (!length(selected)) return(list(NULL, 1))
+    index <- cbind(match(selected, genes),
+      matrix(match(control$reference_genes[control$draws[selected, , drop = FALSE]], genes), length(selected)))
+    stopifnot(!anyNA(index))
+    list(index - 1L, 1 - (length(selected) + 1) / (2 * control$max_rank))
   }
+  labels <- lapply(control$markers, function(markers) {
+    c(component(markers[!grepl("-$", markers)]), component(sub("-$", "", markers[grepl("-$", markers)])))
+  })
+  signed_labels <- names(Filter(function(genes) any(grepl("-$", genes)), control$markers))
+  chunks <- split(seq_along(barcodes), ceiling(seq_along(barcodes) / chunk_size))
   aggregate_chunks <- function(chunk_ids) {
-    signed_sum <- lapply(signed_markers, function(genes) {
-      matrix(0, control$n_controls + 1L, length(cluster_names), dimnames = list(NULL, cluster_names))
-    })
-    rank_sum <- detected_sum <- matrix(0, length(genes), length(cluster_names),
-      dimnames = list(genes, cluster_names))
-    cell_scores <- list()
-    for (chunk_id in chunk_ids) {
-      rows <- chunks[[chunk_id]]
-      values <- as.matrix(counts_matrix[, barcodes[rows], drop = FALSE])
-      ranks <- rank_UCell_count_chunk(values)
-      gap <- (control$max_rank - pmin(ranks[genes, , drop = FALSE], control$max_rank)) / control$max_rank
-      rank_sum <- add_cluster_sums(rank_sum, gap, rows)
-      detected_sum <- add_cluster_sums(detected_sum, (values[genes, , drop = FALSE] > 0) * 1, rows)
-      signed_scores <- lapply(signed_markers, score_signed_UCell_cells, gap = gap, control = control)
-      for (label in names(signed_markers)) {
-        signed_sum[[label]] <- add_cluster_sums(signed_sum[[label]], signed_scores[[label]], rows)
-      }
-      if (include_cell_scores) {
-        scores <- vapply(names(control$markers), function(label) {
-          if (label %in% names(signed_scores)) signed_scores[[label]][1L, ]
-          else score_UCell_rank_means(gap, control$markers[[label]], control$max_rank)
-        }, numeric(length(rows)))
-        dim(scores) <- c(length(rows), length(control$markers))
-        dimnames(scores) <- list(barcodes[rows], names(control$markers))
-        cell_scores[[as.character(chunk_id)]] <- scores
+    total <- list(
+      rank_sum = matrix(0, length(genes), length(cluster_names), dimnames = list(genes, cluster_names)),
+      detected_sum = matrix(0, length(genes), length(cluster_names), dimnames = list(genes, cluster_names)),
+      signed_sum = lapply(stats::setNames(nm = signed_labels), function(label) {
+        matrix(0, replicates, length(cluster_names), dimnames = list(NULL, cluster_names))
+      }),
+      cell_scores = list())
+    # Read eight chunks per matrix access, but score and add each chunk separately.
+    for (block in split(chunk_ids, ceiling(seq_along(chunk_ids) / 8L))) {
+      values <- methods::as(counts_matrix[, columns[unlist(chunks[block])], drop = FALSE], "dgCMatrix")
+      offsets <- cumsum(c(0L, lengths(chunks[block])))
+      for (k in seq_along(block)) {
+        rows <- chunks[[block[k]]]
+        part <- .Call("multiomeR_UCell_chunk", values@p[(offsets[k] + 1L):(offsets[k + 1L] + 1L)],
+          values@i, values@x, nrow(values), gene_position, length(genes), cluster_index[rows],
+          length(cluster_names), labels, replicates, as.numeric(control$max_rank), PACKAGE = library_name)
+        total$rank_sum <- total$rank_sum + part[[1L]]
+        total$detected_sum <- total$detected_sum + part[[2L]]
+        names(part[[3L]]) <- names(labels)
+        for (label in signed_labels) total$signed_sum[[label]] <- total$signed_sum[[label]] + part[[3L]][[label]]
+        if (include_cell_scores) {
+          dimnames(part[[4L]]) <- list(barcodes[rows], names(control$markers))
+          total$cell_scores[[length(total$cell_scores) + 1L]] <- part[[4L]]
+        }
       }
     }
-    list(rank_sum = rank_sum, detected_sum = detected_sum, signed_sum = signed_sum, cell_scores = do.call(rbind, cell_scores))
+    total$cell_scores <- do.call(rbind, total$cell_scores)
+    total
   }
   worker_chunks <- split(seq_along(chunks), rep(seq_len(min(workers, length(chunks))), length.out = length(chunks)))
   parts <- if (workers == 1L) lapply(worker_chunks, aggregate_chunks) else {
@@ -225,7 +241,7 @@ summarize_cluster_UCell_counts <- function(counts_matrix, metadata_tibble, contr
   cluster_means <- function(part_sums) sweep(Reduce(`+`, part_sums), 2L, cells, `/`)
   list(rank_means = cluster_means(lapply(parts, `[[`, "rank_sum")),
     detection = cluster_means(lapply(parts, `[[`, "detected_sum")),
-    signed_means = lapply(stats::setNames(nm = names(signed_markers)), function(label) {
+    signed_means = lapply(stats::setNames(nm = signed_labels), function(label) {
       cluster_means(lapply(parts, function(part) part$signed_sum[[label]]))
     }),
     cells = cells,
@@ -241,9 +257,11 @@ score_cluster_UCell_summaries <- function(summaries, control) {
 }
 
 prepare_cluster_UCell_evidence <- function(counts_matrix, metadata_tibble, control,
-                                           cluster_column, include_cell_scores = FALSE, workers = 2L) {
+                                           cluster_column, include_cell_scores = FALSE, workers = 2L,
+                                           native_source_file = file.path(get_project_root(), "src", "cluster_UCell_chunk.cpp")) {
   summaries <- summarize_cluster_UCell_counts(counts_matrix, metadata_tibble, control,
-    cluster_column, workers = workers, include_cell_scores = include_cell_scores)
+    cluster_column, workers = workers, include_cell_scores = include_cell_scores,
+    native_source_file = native_source_file)
   score_cluster_UCell_summaries(summaries, control)
 }
 

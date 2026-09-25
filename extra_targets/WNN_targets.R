@@ -142,9 +142,10 @@ rlang::list2(
         metadata_tibble = metadata_w_clusters_tibble.WNN,
         control = cluster_UCell_controls.GEX,
         cluster_column = "WNN_harmony_SNN_cluster",
-        workers = 2
+        workers = 2,
+        native_source_file = UCell_native_source_file
       ),
-      resources = get_tar_resources(cores_req = 2, RAM_GB_req = 32)
+      resources = get_tar_resources(cores_req = 2, RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = cluster_UCell_annotation.8_multimodal_QC,

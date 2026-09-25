@@ -211,10 +211,6 @@ cull_dense_discrete_legends <- function(plot, n_distinct_max, plot_build) {
   plot + do.call(ggplot2::guides, guide_args)
 }
 
-# Changing this value invalidates plot-saving targets through
-# save_plots_structured()'s default argument.
-multiomeR_save_serialized_plot_objects <- TRUE
-
 #' Save plots structured
 #'
 #' Save one plot or a named list of plots to structured target-derived paths, adding titles and suppressing dense legends where needed.
@@ -225,15 +221,13 @@ multiomeR_save_serialized_plot_objects <- TRUE
 #' @param dyn_suffix_in_subdir Logical; when TRUE, dynamic-branch suffixes are used as subdirectories instead of filename suffixes.
 #' @param target_name Full targets name used to derive structured output paths; defaults to the currently running target.
 #' @param discrete_legend_n_distinct_max Maximum number of discrete legend entries to keep before replacing dense legends with `guide = 'none'`.
-#' @param save_serialized_plot_objects Logical; when TRUE, save mirrored `.rds`
-#'   sidecars under `plot_objects`.
 #' @param ... Additional arguments forwarded to `ggplot2::ggsave()` and the
 #'   graphics device. ggplot objects without explicit dimensions are sized from
 #'   their facets and discrete breaks; other grid objects default to 10 x 10 in.
-#' @details Rendering and serialization complete in staging before published files change.
-#' A per-target inventory removes only previously owned images and sidecars,
-#' including when the new result is empty. On first use, existing ownership is
-#' recovered from file paths registered in the targets store when available.
+#' @details Rendering completes in staging before published files change.
+#' A per-target inventory removes only previously owned files, including when
+#' the new result is empty. On first use, existing ownership is recovered from
+#' file paths registered in the targets store when available.
 #' @return Image paths for the saved plots, or `character()` for an empty result.
 #' @keywords internal
 
@@ -244,7 +238,6 @@ save_plots_structured <- function(
   dyn_suffix_in_subdir = FALSE,
   target_name = targets::tar_name(),
   discrete_legend_n_distinct_max = 20,
-  save_serialized_plot_objects = multiomeR_save_serialized_plot_objects,
   ...
 ) {
   save_args <- list(...)
@@ -273,18 +266,7 @@ save_plots_structured <- function(
   if (dyn_suffix_in_subdir && is.na(dyn_suffix)) {
     stop("`dyn_suffix_in_subdir = TRUE` requires a dynamically suffixed target name.")
   }
-  get_plot_object_path <- function(image_path) {
-    relative_image_path <- fs::path_rel(
-      image_path,
-      start = file.path(targets::tar_config_get("store"), "plots")
-    )
-    file.path(
-      targets::tar_config_get("store"),
-      "plot_objects",
-      paste0(tools::file_path_sans_ext(relative_image_path), ".rds")
-    )
-  }
-  save_one_plot <- function(plot, image_path, plot_object_path, plot_index = 1L) {
+  save_one_plot <- function(plot, image_path, plot_index = 1L) {
     plot <- align_plot_captions(plot)
     plot_save_args <- save_args
     for (dimension_arg in c("width", "height")) {
@@ -316,10 +298,6 @@ save_plots_structured <- function(
         plot_save_args
       )
     )
-    if (save_serialized_plot_objects) {
-      fs::dir_create(dirname(plot_object_path))
-      saveRDS(plot, plot_object_path)
-    }
     image_path
   }
   # Build the complete destination inventory before touching published files.
@@ -343,8 +321,6 @@ save_plots_structured <- function(
     image_paths <- if (length(plots)) file.path(out_dir, paste0(file_stems, ".", filetype)) else character()
     plots <- purrr::map2(plots, plot_names, add_ggplot_title_if_missing)
   }
-  object_paths <- if (save_serialized_plot_objects && length(image_paths)) get_plot_object_path(image_paths) else character()
-  output_paths <- c(image_paths, object_paths)
   store <- targets::tar_config_get("store")
   inventory_dir <- file.path(store, "plot_inventory")
   fs::dir_create(inventory_dir)
@@ -360,29 +336,27 @@ save_plots_structured <- function(
     previous_images <- if (is.character(registered)) registered else character()
     relative_paths <- fs::path_rel(previous_images, start = file.path(store, "plots"))
     previous_images <- previous_images[!grepl("^\\.\\.(/|$)", relative_paths) & grepl("\\.(png|svg)$", previous_images)]
-    previous_paths <- c(previous_images, if (length(previous_images)) get_plot_object_path(previous_images))
+    previous_paths <- previous_images
   }
 
   staging_dir <- tempfile(".staging-", tmpdir = inventory_dir)
   fs::dir_create(staging_dir)
   on.exit(unlink(staging_dir, recursive = TRUE), add = TRUE)
   staged_images <- file.path(staging_dir, paste0(seq_along(plots), ".", filetype))
-  staged_objects <- file.path(staging_dir, paste0(seq_along(plots), ".rds"))
   for (i in seq_along(plots)) {
-    save_one_plot(plots[[i]], staged_images[[i]], staged_objects[[i]], i)
+    save_one_plot(plots[[i]], staged_images[[i]], i)
   }
   # Nothing above this point replaces or deletes the last successful output.
-  staged_paths <- c(if (length(plots)) staged_images, if (length(object_paths)) staged_objects)
-  for (i in seq_along(output_paths)) {
-    fs::dir_create(dirname(output_paths[[i]]))
-    if (!file.rename(staged_paths[[i]], output_paths[[i]])) {
-      stop("Could not publish plot output: ", output_paths[[i]], call. = FALSE)
+  for (i in seq_along(image_paths)) {
+    fs::dir_create(dirname(image_paths[[i]]))
+    if (!file.rename(staged_images[[i]], image_paths[[i]])) {
+      stop("Could not publish plot output: ", image_paths[[i]], call. = FALSE)
     }
   }
-  obsolete <- setdiff(fs::path_abs(previous_paths), fs::path_abs(output_paths))
+  obsolete <- setdiff(fs::path_abs(previous_paths), fs::path_abs(image_paths))
   if (length(obsolete)) fs::file_delete(obsolete[file.exists(obsolete)])
   staged_inventory <- file.path(staging_dir, "inventory.rds")
-  saveRDS(as.character(fs::path_rel(output_paths, start = store)), staged_inventory)
+  saveRDS(as.character(fs::path_rel(image_paths, start = store)), staged_inventory)
   if (!file.rename(staged_inventory, inventory_file)) {
     stop("Could not publish plot inventory: ", inventory_file, call. = FALSE)
   }

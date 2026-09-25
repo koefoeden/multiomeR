@@ -1,19 +1,3 @@
-#' Derive serialized plot object path
-#'
-#' Convert a target-tracked plot image path into its mirrored serialized plot
-#' object path.
-#'
-#' @param image_path Path to an image saved under a structured `plots`
-#'   directory.
-#' @return Character vector with the corresponding `.rds` path under
-#'   `plot_objects`.
-#' @keywords internal
-plot_object_path <- function(image_path) {
-  image_path |>
-    sub("/plots/", "/plot_objects/", x = _, fixed = TRUE) |>
-    sub("[.](png|svg)$", ".rds", x = _)
-}
-
 #' Add outer panel tag
 #'
 #' Add a stable panel letter to a plot without relying on nested patchwork
@@ -39,40 +23,14 @@ tag_panel <- function(plot, tag) {
     )
 }
 
-#' Pick plot output path
-#'
-#' Select one target output path from a dynamic/list file target by matching on
-#' the file basename.
-#'
-#' @param image_paths Character vector or nested list of image paths.
-#' @param pick_regex Optional regular expression required to match the basename.
-#' @param exclude_regex Optional regular expression excluded from the basename.
-#' @return One image path.
-#' @keywords internal
-pick_plot_path <- function(image_paths, pick_regex = NULL, exclude_regex = NULL) {
-  image_paths <- sort(unlist(image_paths, use.names = FALSE))
-
-  if (!is.null(pick_regex) && nzchar(pick_regex)) {
-    image_paths <- image_paths[grepl(pick_regex, basename(image_paths))]
-  }
-  if (!is.null(exclude_regex) && nzchar(exclude_regex)) {
-    image_paths <- image_paths[!grepl(exclude_regex, basename(image_paths))]
-  }
-  if (!length(image_paths)) {
-    stop("No image paths matched.", call. = FALSE)
-  }
-  image_paths[[1]]
-}
-
 #' Prepare manuscript figure panels
 #'
 #' Build tagged figure panels and captions from a compact panel specification
 #' table.
 #'
-#' @param panel_specs Tibble with `tag` and a `plot_input` list-column containing
-#'   plot objects or target-tracked image paths. Optional columns are
-#'   `pick_regex`, `title`, `caption`, and `plot_modifier`; modifiers must be
-#'   functions accepting and returning one plot.
+#' @param panel_specs Tibble with `tag` and a `plot_input` list-column of plot
+#'   objects. Optional columns are `title`, `caption`, and `plot_modifier`;
+#'   modifiers must be functions accepting and returning one plot.
 #' @param figure_theme Theme added to each panel. By default, plot subtitles and
 #'   plot captions are omitted because explanatory detail belongs in the
 #'   assembled figure caption.
@@ -107,7 +65,7 @@ prepare_plot_panels <- function(
     stop("Panel tags must be unique.", call. = FALSE)
   }
 
-  for (column_name in c("pick_regex", "title", "caption")) {
+  for (column_name in c("title", "caption")) {
     if (!column_name %in% colnames(panel_specs)) {
       panel_specs[[column_name]] <- rep(NA_character_, nrow(panel_specs))
     }
@@ -132,23 +90,12 @@ prepare_plot_panels <- function(
   } else {
     panel_specs$caption[[which(caption_is_present)[[1]]]]
   }
-  read_panel_plot <- function(plot_input, pick_regex, title, tag, plot_modifier) {
-    pick_regex <- if (is.na(pick_regex)) NULL else pick_regex
+  prepare_panel_plot <- function(plot_input, title, tag, plot_modifier) {
     title <- if (is.na(title)) NULL else title
-
-    if (inherits(plot_input, c("ggplot", "grob", "gTree", "gtable", "recordedplot"))) {
-      plot <- plot_input
-    } else {
-      image_path <- pick_plot_path(
-        plot_input,
-        pick_regex = pick_regex
-      )
-      object_path <- plot_object_path(image_path)
-      if (!file.exists(object_path)) {
-        stop("Missing serialized plot object: ", object_path, call. = FALSE)
-      }
-      plot <- readRDS(object_path)
+    if (!inherits(plot_input, c("ggplot", "grob", "gTree", "gtable", "recordedplot"))) {
+      stop("Panel `plot_input` entries must be plot objects.", call. = FALSE)
     }
+    plot <- plot_input
 
     if (inherits(plot, "patchwork")) {
       plot <- plot & figure_theme
@@ -179,8 +126,8 @@ prepare_plot_panels <- function(
   }
 
   panel_plots <- purrr::pmap(
-    panel_specs[c("plot_input", "pick_regex", "title", "tag", "plot_modifier")],
-    read_panel_plot
+    panel_specs[c("plot_input", "title", "tag", "plot_modifier")],
+    prepare_panel_plot
   ) |>
     purrr::set_names(panel_specs$tag)
 

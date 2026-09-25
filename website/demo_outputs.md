@@ -8,12 +8,11 @@ knitr::opts_chunk$set(
 )
 ```
 
-The demo saved its results in the targets store, the `outputs/` folder of the clone (set by `store` in `_targets.yaml`; later pages write `<store>`). The store holds four kinds of output:
+The demo saved its results in the targets store, the `outputs/` folder of the clone (set by `store` in `_targets.yaml`; later pages write `<store>`). The store holds three kinds of output:
 
 - `objects/`: R objects, such as tables and the Seurat/Signac object.
 - `files/`: data files, such as matrix folders and TSV tables.
 - `plots/`: PNG plot images.
-- `plot_objects/`: an editable R copy of each plot.
 
 This page opens one example of each kind in the R session. The [output reference](review_outputs.md#output-folders) describes the folders in detail.
 
@@ -66,28 +65,18 @@ Open `WNN_harmony_SNN_cluster_cell_type.png` from that list to see the WNN clust
 
 Plot subtitles and captions explain how to read each plot.
 
-## Plot objects
+## Customize a plot
 
-Each image has an R copy under `plot_objects/`, at the same relative path with `.rds` instead of `.png`. Reopen a plot without rerunning the analysis:
+Plots are saved as images only. To change one, redraw it from the data it shows. `targets::tar_manifest()` prints the command of a plot target, which names its plotting helper and input targets:
 
 ```{.r filename="R"}
-plot_file <- file.path(
-  targets::tar_config_get("store"),
-  "plot_objects/immune_human_2x/8_multimodal_QC/UMAPs/categorical",
-  "WNN_harmony_SNN_cluster_cell_type.rds"
+targets::tar_manifest(
+  names = "categorical.UMAPs.8_multimodal_QC.immune_human_2x",
+  fields = command
 )
-p <- readRDS(plot_file)
-p
 ```
 
-Edit a ggplot object with the usual ggplot2 functions and save your copy outside the store, where a rerun cannot overwrite it:
-
-```{.r filename="R"}
-p <- p + ggplot2::labs(title = "My integrated cell types")
-ggplot2::ggsave("my_cell_types.png", p, width = 10, height = 8)
-```
-
-Some plots are composites rather than single ggplot objects and need their own editing methods.
+Read the inputs with `targets::tar_read()`, call the helper to get a ggplot object, edit it with the usual ggplot2 functions and save your copy outside the store, where a rerun cannot overwrite it.
 
 ## Possible next steps
 

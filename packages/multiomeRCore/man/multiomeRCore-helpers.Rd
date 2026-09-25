@@ -34,7 +34,6 @@ save_plots_structured(
   dyn_suffix_in_subdir = FALSE,
   target_name = targets::tar_name(),
   discrete_legend_n_distinct_max = 20,
-  save_serialized_plot_objects = multiomeR_save_serialized_plot_objects,
   ...
 )
 
@@ -56,7 +55,6 @@ tar_name_wo_suffixes(target_name = targets::tar_name())
   \item{dyn_suffix_in_subdir}{Whether to place a dynamic branch suffix in a subdirectory.}
   \item{target_name}{Target name used to derive the output path.}
   \item{discrete_legend_n_distinct_max}{Maximum number of discrete legend entries to retain.}
-  \item{save_serialized_plot_objects}{Whether to save mirrored serialized plot objects.}
   \item{...}{Additional arguments forwarded to the process or graphics helper.}
 }
 \value{
@@ -64,10 +62,10 @@ The configured resource object, command output path, structured path, saved
 plot path, or target stem appropriate to the selected helper.
 }
 \details{
-Plot rendering and serialization finish in a temporary directory before saved
-outputs are replaced. A per-target inventory under the store's
-\code{plot_inventory} directory records owned images and RDS sidecars; subsequent
-saves remove obsolete owned files, including for empty results. Sibling outputs
+Plot rendering finishes in a temporary directory before saved outputs are
+replaced. A per-target inventory under the store's \code{plot_inventory}
+directory records owned images; subsequent saves remove obsolete owned files,
+including for empty results. Sibling outputs
 and unrelated files are preserved. For older outputs without an inventory, only
 paths registered to the target in the targets store can be recovered safely.
 Captions on saved ggplots and patchwork composites are left-aligned.

@@ -32,9 +32,10 @@ add_plot_parameters <- function(plot, config_file, ..., .max_value_chars = 40L) 
 }
 
 align_plot_captions <- function(plot) {
+  # ggtext textboxes set their own alignment and cannot be merged with element_text().
   caption_theme <- function(theme) ggplot2::theme(
-    plot.caption = if (inherits(theme$plot.caption, "element_blank"))
-      ggplot2::element_blank() else ggplot2::element_text(hjust = 0, vjust = 1),
+    plot.caption = if (inherits(theme$plot.caption, c("element_blank", "element_textbox")))
+      theme$plot.caption else ggplot2::element_text(hjust = 0, vjust = 1),
     plot.caption.position = "plot"
   )
   if (inherits(plot, "patchwork")) {

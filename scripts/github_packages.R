@@ -18,6 +18,6 @@ github_packages <- list(
   list(
     package = "targetsworktree",
     repo = "koefoeden/targetsworktree",
-    ref = "2789e09d98e10db10c70d531655a96d8f2430aa9"
+    ref = "f1be676bc022247e4bfea031e72035e7eb5044b7"
   )
 )

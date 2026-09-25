@@ -48,7 +48,9 @@ repository skills should use the matching `SKILL.md`, especially for:
 - validating R helper or target-graph changes;
 - creating commits, pull requests, releases, or pipeline diagrams.
 
-Always pass `--use-environment-activation-cache` when invoking `pixi run`.
+Always pass `--use-environment-activation-cache` when invoking `pixi run`. In a
+worktree whose `.pixi` links another checkout's environment, also pass
+`--as-is` so Pixi never installs into that shared environment.
 
 Treat repository-local skills as living workflow documentation. Unless a task
 is explicitly read-only, revise the relevant skill when its use reveals

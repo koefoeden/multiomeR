@@ -161,15 +161,23 @@ rlang::list2(
         peak_GRanges
       }
     ),
+    targets::tar_target(
+      name = GEX_cells_per_GEM_well_tibble.ATAC,
+      description = "Pair each GEM well's GEX-retained nuclei with its fragment directory for per-well ATAC counts",
+      command = split_cells_by_GEM_well(
+        metadata_w_cell_types_tibble.GEX,
+        GEM_well_IDs = aggregation_GEM_well_IDs,
+        fragment_dirs = aggregation_fragments_w_prefix_bpcells_dir_syms
+      ),
+      iteration = "vector"
+    ),
     tarchetypes::tar_file(
-      name = consensus_peak_BPCells_matrix_dir.ATAC,
-      description = "Compute the consensus peak-by-cell count matrix using BPCells [part_of_graph:ATAC] [part_of_graph:seurat_export]",
+      name = consensus_peak_BPCells_matrix_dirs_per_GEM_well.ATAC,
+      description = "Count consensus-peak fragments for one GEM well's GEX-retained nuclei using BPCells",
       command = {
-        out_dir <- get_structured_file_path()
-        frags <- BPCells::select_cells(
-          combined_BPCells_fragment_obj.ATAC,
-          metadata_w_cell_types_tibble.GEX$barcode_w_prefix
-        )
+        out_dir <- get_structured_file_path(override_suffix = GEX_cells_per_GEM_well_tibble.ATAC$GEM_well_ID)
+        frags <- open_GEM_well_fragments(GEX_cells_per_GEM_well_tibble.ATAC, aggregated_cellranger_ref_list$genomes[[1]]) |>
+          BPCells::select_cells(GEX_cells_per_GEM_well_tibble.ATAC$barcodes[[1]])
 
         peaks_df <- GenomicRanges::as.data.frame(consensus_peak_GRanges.ATAC) |>
           dplyr::transmute(chr = as.character(seqnames), start, end)
@@ -179,7 +187,20 @@ rlang::list2(
         BPCells::write_matrix_dir(consensus_mat, out_dir, buffer_size = 65536L, overwrite = TRUE)
         out_dir
       },
-      resources = get_tar_resources(RAM_GB_req = 60)
+      pattern = map(GEX_cells_per_GEM_well_tibble.ATAC),
+      resources = get_tar_resources(RAM_GB_req = 16)
+    ),
+    tarchetypes::tar_file(
+      name = consensus_peak_BPCells_matrix_dir.ATAC,
+      description = "Combine the per-GEM-well consensus peak-by-cell count matrices using BPCells [part_of_graph:ATAC] [part_of_graph:seurat_export]",
+      command = {
+        out_dir <- get_structured_file_path()
+        consensus_mat <- do.call(cbind, lapply(consensus_peak_BPCells_matrix_dirs_per_GEM_well.ATAC, BPCells::open_matrix_dir))
+        stopifnot(identical(colnames(consensus_mat), metadata_w_cell_types_tibble.GEX$barcode_w_prefix))
+        BPCells::write_matrix_dir(consensus_mat, out_dir, buffer_size = 65536L, overwrite = TRUE)
+        out_dir
+      },
+      resources = get_tar_resources(RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = consensus_peak_BPCells_matrix.ATAC,
@@ -271,18 +292,28 @@ rlang::list2(
 
   ATAC_dim_reduc_and_plots_targets = rlang::list2(
     targets::tar_target(
+      name = blacklist_counts_tibbles_per_GEM_well.ATAC,
+      description = "Count blacklist-region fragments for one GEM well's GEX-retained nuclei",
+      command = count_blacklist_fragments_per_GEM_well(
+        GEX_cells_per_GEM_well_tibble.ATAC,
+        blacklist_GRanges = blacklist_GRanges.ATAC,
+        genome = aggregated_cellranger_ref_list$genomes[[1]],
+        peak_matrix_mode = aggregation_ATAC_peak_matrix_mode
+      ),
+      pattern = map(GEX_cells_per_GEM_well_tibble.ATAC),
+      resources = get_tar_resources(RAM_GB_req = 16)
+    ),
+    targets::tar_target(
       name = metadata_w_QC_tibble.ATAC,
       description = "Compute ATAC QC metadata from BPCells peak and fragment objects. [checkpoint:4_peak-QC]",
       command = get_ATAC_QC_metadata_from_BPCells(
         metadata_df = metadata_w_cell_types_tibble.GEX,
         ATAC_peak_BPCells_matrix = consensus_peak_BPCells_matrix.ATAC,
-        ATAC_combined_BPCells_fragment_obj = combined_BPCells_fragment_obj.ATAC,
-        blacklist_GRanges = blacklist_GRanges.ATAC,
+        blacklist_counts_tibble = blacklist_counts_tibbles_per_GEM_well.ATAC,
         ATAC_peak_GRanges = consensus_peak_GRanges.ATAC,
-        genome = aggregated_cellranger_ref_list$genomes[[1]],
-        peak_matrix_mode = aggregation_ATAC_peak_matrix_mode
+        genome = aggregated_cellranger_ref_list$genomes[[1]]
       ),
-      resources = get_tar_resources(RAM_GB_req = 60)
+      resources = get_tar_resources(RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = metadata_w_QC_analysis_tibble.ATAC,
@@ -1040,18 +1071,26 @@ rlang::list2(
     )
   ),
   ATAC_w_gene_activity_targets = rlang::list2(
+    targets::tar_target(
+      name = ATAC_cells_per_GEM_well_tibble.ATAC,
+      description = "Pair each GEM well's ATAC-retained nuclei with its fragment directory for per-well gene scores",
+      command = split_cells_by_GEM_well(
+        metadata_w_cell_types_tibble.ATAC,
+        GEM_well_IDs = aggregation_GEM_well_IDs,
+        fragment_dirs = aggregation_fragments_w_prefix_bpcells_dir_syms
+      ),
+      iteration = "vector"
+    ),
     tarchetypes::tar_file(
-      name = gene_score_archr_BPCells_matrix_dir.ATAC,
-      description = "Compute ArchR-style ATAC gene activity scores with BPCells and write them to disk",
+      name = gene_score_archr_BPCells_matrix_dirs_per_GEM_well.ATAC,
+      description = "Compute ArchR-style ATAC gene activity scores for one GEM well's nuclei with BPCells and write them to disk",
       command = {
-        out_dir <- get_structured_file_path()
+        out_dir <- get_structured_file_path(override_suffix = ATAC_cells_per_GEM_well_tibble.ATAC$GEM_well_ID)
         tile_matrix_dir <- tempfile(pattern = "gene_score_tiles_", tmpdir = dirname(out_dir))
         on.exit(if (fs::dir_exists(tile_matrix_dir)) fs::dir_delete(tile_matrix_dir), add = TRUE)
 
-        fragments <- BPCells::select_cells(
-          combined_BPCells_fragment_obj.ATAC,
-          metadata_w_cell_types_tibble.ATAC$barcode_w_prefix
-        )
+        fragments <- open_GEM_well_fragments(ATAC_cells_per_GEM_well_tibble.ATAC, aggregated_cellranger_ref_list$genomes[[1]]) |>
+          BPCells::select_cells(ATAC_cells_per_GEM_well_tibble.ATAC$barcodes[[1]])
         genes <- marker_validated_Ensembl_annotations_GRanges_list$genes
         chromosome_sizes <- get_chrom_sizes_for_BPCells_tile_calling(aggregated_cellranger_ref_list$genomes[[1]])
         genes <- filter_GRanges_to_chrom_sizes(genes, chromosome_sizes)
@@ -1079,12 +1118,13 @@ rlang::list2(
         BPCells::write_matrix_dir(gene_scores, out_dir, overwrite = TRUE)
         out_dir
       },
-      resources = get_tar_resources(RAM_GB_req = 60)
+      pattern = map(ATAC_cells_per_GEM_well_tibble.ATAC),
+      resources = get_tar_resources(RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = gene_score_archr_BPCells_matrix.ATAC,
-      description = "Open the BPCells ArchR-style ATAC gene activity score matrix",
-      command = open_BPCells_dir(gene_score_archr_BPCells_matrix_dir.ATAC),
+      description = "Open the per-GEM-well BPCells ArchR-style ATAC gene activity scores as one matrix",
+      command = do.call(cbind, lapply(gene_score_archr_BPCells_matrix_dirs_per_GEM_well.ATAC, open_BPCells_dir)),
       resources = get_tar_resources(RAM_GB_req = 8)
     ),
     tarchetypes::tar_file(

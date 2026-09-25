@@ -354,6 +354,7 @@ build_aggregation_tibble <- function(aggregation_tibble_all_from_yaml, GEM_well_
       "vireo_donor_ids_tibble",
       "cellranger_barcodes_tsv",
       "fragments_w_prefix_bpcells",
+      "fragments_w_prefix_bpcells_dir",
       "cellranger_summary_file",
       "cellranger_kept_metadata_tibble",
       "unfiltered_cells_n_vecs",

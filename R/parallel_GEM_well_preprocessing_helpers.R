@@ -21,17 +21,6 @@ get_cellsnp_dir <- function(
   minCOUNT = 20
 ) {
   cellsnp_out_dir <- get_structured_file_path(filetype = NULL)
-  # -T streams each VCF contig once rather than seeking to every SNP (-R), with
-  # identical counts. Listing the contigs keeps the VCF order and includes
-  # chromosomes beyond the autosomes, which -T otherwise skips. Streaming the
-  # records takes seconds and needs no VCF index.
-  VCF_contigs <- processx::run(
-    "bash",
-    c("-o", "pipefail", "-c", "gzip -cdf \"$1\" | awk '!/^#/ && !seen[$1]++ { print $1 }'",
-      "bash", GEM_well_donors_VCF_file)
-  )$stdout |>
-    strsplit("\n") |>
-    unlist()
 
   run_w_error_check(
     command_string = "cellsnp-lite",
@@ -39,8 +28,7 @@ get_cellsnp_dir <- function(
       c("-s", bam_file),
       c("-b", cellranger_barcodes_tsv),
       c("-O", cellsnp_out_dir),
-      c("-T", GEM_well_donors_VCF_file),
-      c("--chrom", paste(VCF_contigs, collapse = ",")),
+      c("-R", GEM_well_donors_VCF_file),
       c("-p", cores),
       c("--minMAF", minMAF),
       c("--minCOUNT", minCOUNT),

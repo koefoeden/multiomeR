@@ -96,10 +96,9 @@ aggregations and review the migration notes first.
 - Save plots as images only. The mirrored `plot_objects/*.rds` copies
   re-serialized each plot's inputs, reaching hundreds of gigabytes for large
   aggregations, and took about half of all plot-saving time.
-- Score the cluster UCell evidence with a compiled kernel, stream the BAM
-  contigs in cellsnp-lite genotyping, and compute the consensus peak matrix,
-  ATAC blacklist counts and gene scores per GEM well; all return identical
-  results, several times faster.
+- Score the cluster UCell evidence with a compiled kernel, and compute the
+  consensus peak matrix, ATAC blacklist counts and gene scores per GEM well;
+  both return identical results, several times faster.
 - Compute ATAC coverage tracks from an in-memory copy of the plotted regions,
   which takes seconds instead of minutes to hours per region set on large
   merged fragment objects and returns identical data.

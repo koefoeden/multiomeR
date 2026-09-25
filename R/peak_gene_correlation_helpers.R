@@ -1263,10 +1263,15 @@ plot_peak_gene_correlation_by_distance <- function(plot_tibble) {
   if (nrow(plot_tibble) == 0L) {
     return(make_empty_peak_gene_correlation_plot())
   }
-  endpoint_tibble <- plot_tibble |>
-    dplyr::slice_max(.data$distance_kb, n = 1, with_ties = FALSE, by = c("cell_group", "metric"))
   mean_tibble <- plot_tibble |>
     dplyr::summarise(value = mean(.data$value), .by = c("metric", "distance_kb"))
+  mean_label <- "Mean across cell types"
+  # One label layer repels the mean and cell-type labels from each other.
+  endpoint_tibble <- dplyr::bind_rows(
+    dplyr::mutate(plot_tibble, label = gsub("_", " ", .data$cell_group)),
+    dplyr::mutate(mean_tibble, cell_group = mean_label, label = mean_label)
+  ) |>
+    dplyr::slice_max(.data$distance_kb, n = 1, with_ties = FALSE, by = c("cell_group", "metric"))
   # Uniform null p-values have median -log10(p) = log10(2).
   reference_tibble <- tibble::tibble(metric = c("median_correlation", "median_neg_log10_p"),
     value = c(0, log10(2)))
@@ -1288,25 +1293,21 @@ plot_peak_gene_correlation_by_distance <- function(plot_tibble) {
     ggplot2::geom_line(linewidth = 0.7) +
     ggplot2::geom_line(data = mean_tibble, colour = "black",
       linetype = "dashed", linewidth = 1) +
+    # Thin grey leaders keep label offsets from reading as curve segments.
     ggrepel::geom_text_repel(
       data = endpoint_tibble,
-      ggplot2::aes(label = gsub("_", " ", .data$cell_group)),
+      ggplot2::aes(label = .data$label),
       nudge_x = 15, direction = "y", hjust = 0,
       box.padding = 0.4, min.segment.length = 0,
+      segment.colour = "grey60", segment.size = 0.3,
       max.overlaps = Inf, max.iter = 10000, seed = 1, size = 3.5
-    ) +
-    ggrepel::geom_text_repel(
-      data = dplyr::slice_max(mean_tibble, .data$distance_kb, n = 1, by = "metric"),
-      label = "Mean across cell types", colour = "black", fontface = "bold",
-      nudge_x = -20, nudge_y = 0.015, min.segment.length = 0,
-      seed = 1, size = 3.5
     ) +
     ggplot2::facet_wrap(~metric, ncol = 1, scales = "free_y", strip.position = "left",
       labeller = ggplot2::as_labeller(c(median_correlation = "Median correlation",
         median_neg_log10_p = "Median -log10(p)"))) +
-    ggplot2::scale_colour_manual(values = stats::setNames(
+    ggplot2::scale_colour_manual(values = c(stats::setNames(
       grDevices::hcl.colors(length(cell_groups), "Dark 3"), cell_groups
-    ), guide = "none") +
+    ), stats::setNames("black", mean_label)), guide = "none") +
     ggplot2::scale_x_continuous(breaks = seq(0, 250, 50), limits = c(0, NA),
       expand = ggplot2::expansion(mult = c(0.01, 0.3))) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = 0.15)) +

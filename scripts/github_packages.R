@@ -14,10 +14,5 @@ github_packages <- list(
     package = "betterChromVAR",
     repo = "plger/betterChromVAR",
     ref = "0341160ba7e994ad6755cbba92d6f644efebeb3a"
-  ),
-  list(
-    package = "targetsworktree",
-    repo = "koefoeden/targetsworktree",
-    ref = "f1be676bc022247e4bfea031e72035e7eb5044b7"
   )
 )

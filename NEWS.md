@@ -33,6 +33,12 @@ new data and markers; other aggregations need no recomputation.
 - Use US spelling throughout the manual.
 - Deploy the documentation only from `main`.
 
+## Validation
+
+- Retry each live preflight check of `validate-local` up to four times, also
+  after refused connections, so an intermittent outage of a remote source no
+  longer fails the whole validation.
+
 ## Migration
 
 - Run `pixi run --use-environment-activation-cache setup-demo` again to

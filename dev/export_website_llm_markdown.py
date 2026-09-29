@@ -79,13 +79,15 @@ def walk_chapters(book_dir: Path, chapters: list) -> list[tuple[str, str | Page]
 
         part = item.get("part")
         if part:
-            entries.append(("part", str(part)))
+            entries.append(("part", re.sub(r"\s*<(\w+)[^>]*>(.*?)</\1>", r" (\2)", str(part))))
             entries.extend(walk_chapters(book_dir, item.get("chapters", [])))
             continue
 
         href = item.get("href")
         if href:
-            entries.append(("page", Page(book_dir / href)))
+            # Generated HTML pages such as the parameter browser have no Markdown source.
+            if href.endswith(".md"):
+                entries.append(("page", Page(book_dir / href)))
             continue
 
         entries.extend(walk_chapters(book_dir, item.get("chapters", [])))

@@ -29,25 +29,27 @@ book:
         - downstream_differential_analyses.md
         - downstream_genetic_enrichment.md
         - downstream_peak_gene_correlation.md
-    - part: "Operation and development"
+    - part: "Operation and scaling"
       chapters:
         - performance_distributed_computing.md
         - troubleshooting.md
-        - change_the_pipeline.md
     - part: "Reference"
       chapters:
-        - gallery.md
-        - review_outputs.md
+        - href: parameters.html
+          text: Parameter browser
         - reference_GEM_wells.md
         - reference_donor_metadata.md
         - reference_aggregations.md
-    - part: "Methods"
+        - review_outputs.md
+        - gallery.md
+    - part: "In depth <span class='badge text-bg-light'>advanced</span>"
       chapters:
         - methods_primary_module.md
         - methods_differential_analyses.md
         - methods_genetic_enrichment.md
         - methods_peak_gene_correlation.md
         - algorithm_validation.md
+        - change_the_pipeline.md
 
 bibliography: references.bib
 

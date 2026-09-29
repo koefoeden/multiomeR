@@ -1,6 +1,6 @@
 # Change the pipeline
 
-multiomeR keeps its analysis steps in an editable repository. Configuration covers common choices such as inputs, markers, dimensions and models; when a study needs a change beyond those settings, edit the R helpers and target definitions. This page explains how configuration becomes target definitions, so that a change preserves the contracts other code relies on. What each analysis does is described on the Methods pages, starting with [Primary-module methods](methods_primary_module.md).
+multiomeR keeps its analysis steps in an editable repository. Configuration covers common choices such as inputs, markers, dimensions and models; when a study needs a change beyond those settings, edit the R helpers and target definitions. This page explains how configuration becomes target definitions, so that a change preserves the contracts other code relies on. What each analysis does is described on the methods pages, starting with [Primary-module methods](methods_primary_module.md).
 
 ## Design
 
@@ -15,7 +15,7 @@ This flexibility also means that users must review which methods and assumptions
 | Change | Start with |
 |---|---|
 | Add or revise a YAML parameter | `cfg_pipeline_parameters.tsv`, then the owning config reader or target; see [Parameter manifest](#parameter-manifest). |
-| Find whether a threshold is configurable or fixed | The [parameter browser](parameters.html), then the stage's Methods section and its source links. |
+| Find whether a threshold is configurable or fixed | The [parameter browser](parameters.html), then the stage's methods section and its source links. |
 | Change GEM well preprocessing | The `_targets.R` mapping and `extra_targets/per_GEM_well_targets.R`; see [Mapping tibbles](#mapping-tibbles). |
 | Change aggregation GEX, ATAC, or WNN processing | The stage's section in [Primary-module methods](methods_primary_module.md) and its `extra_targets/*_targets.R` file. |
 | Inspect existing review selections | `[checkpoint:<name>]` [description tags](#target-metadata-tags) and the checkpoints in [Run your own analysis](main_running.md). |
@@ -209,7 +209,7 @@ Use tags only when they create a durable handle for readers, graph helpers, or c
 
 ## Graph views {#graph-views}
 
-The target graphs on the Methods pages are simplified views of the real `targets` dependency graph, meant to make the workflow easier to reason about before reading the target code. [`graphs_v2.R`](https://github.com/koefoeden/multiomeR/blob/main/website/figures/human_curated/graphs_v2.R) generates one view per `[part_of_graph:<graph_id>]` tag: it keeps the tagged targets, bypasses untagged intermediate targets while preserving the dependencies between tagged ones, replaces configured suffixes with placeholders such as `<aggregation_name>`, and merges duplicate labels.
+The target graphs on the methods pages are simplified views of the real `targets` dependency graph, meant to make the workflow easier to reason about before reading the target code. [`graphs_v2.R`](https://github.com/koefoeden/multiomeR/blob/main/website/figures/human_curated/graphs_v2.R) generates one view per `[part_of_graph:<graph_id>]` tag: it keeps the tagged targets, bypasses untagged intermediate targets while preserving the dependencies between tagged ones, replaces configured suffixes with placeholders such as `<aggregation_name>`, and merges duplicate labels.
 
 The views are orientation aids, not alternate target definitions. A target can be absent because it lacks the tag for that view or was bypassed as a lower-level implementation detail. Use `targets::tar_manifest()`, `targets::tar_network()` or the source target files when exact completeness matters. The [figure README](https://github.com/koefoeden/multiomeR/blob/main/website/figures/human_curated/README.md) describes how to regenerate the views.
 

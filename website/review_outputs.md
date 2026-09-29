@@ -63,4 +63,4 @@ The `cluster_UCell_diagnostics` targets write these files to `<store>/files/my_a
 
 ## Further methods
 
-The Methods pages, starting with [Primary-module methods](methods_primary_module.md), describe each analysis, and [Algorithm validation](algorithm_validation.md) compares the reimplemented algorithms with their references.
+The methods pages, starting with [Primary-module methods](methods_primary_module.md), describe each analysis, and [Algorithm validation](algorithm_validation.md) compares the reimplemented algorithms with their references.

@@ -119,6 +119,7 @@ render_parameter_overview_document <- function(overview_data, scope, search_plac
 </head>
 <body class="parameter-overview-standalone">
 <main>
+<a href="index.html">← multiomeR manual</a>
 <h1>{scope_label} parameters</h1>
 <p>Search settings across the pipeline and optional modules. Open a parameter for details or use its permalink to share it.</p>
 {fragment}

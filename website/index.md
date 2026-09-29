@@ -18,12 +18,17 @@ The **primary module** processes each GEM well, combines selected GEM wells into
 
 ## How this manual is organized
 
+Read the first four parts in order, as far as your analysis needs them:
+
 - **Try the public demo:** [install multiomeR](demo_installation.md), then run and inspect a small example analysis.
 - **Analyze your own data:** [check your inputs](main_overview.md), then configure, run, and review the primary module one checkpoint at a time.
 - **Add an optional analysis:** run [differential analyses](downstream_differential_analyses.md), [genetic enrichment](downstream_genetic_enrichment.md), or [peak–gene correlation](downstream_peak_gene_correlation.md) on a completed aggregation.
-- **Operation and development:** [run locally or on a scheduler](performance_distributed_computing.md), [troubleshoot](troubleshooting.md) failed or outdated targets, and [change the pipeline](change_the_pipeline.md) itself.
-- **Reference:** browse the [output gallery](gallery.md) for an example of each plot, and look up output files and configuration tables.
-- **Methods:** read what each analysis does, from the [primary module](methods_primary_module.md) to the optional modules, and how the [reimplemented algorithms](algorithm_validation.md) were validated. The running guide and module pages link to the matching section.
+- **Operation and scaling:** [run locally or on a scheduler](performance_distributed_computing.md), and [troubleshoot](troubleshooting.md) failed or outdated targets.
+
+Look up the rest when you need it:
+
+- **Reference:** the [parameter browser](parameters.html), the configuration tables, the output files and the [output gallery](gallery.md), with an example of each plot.
+- **In depth** (advanced): what each analysis does, from the [primary module](methods_primary_module.md) to the optional modules, how the [reimplemented algorithms](algorithm_validation.md) were validated, and how to [change the pipeline](change_the_pipeline.md) itself. The running guide and module pages link to the matching methods section.
 
 ## Your first analysis
 

@@ -1,6 +1,6 @@
 # Algorithm validation
 
-multiomeR reimplements a small number of reference algorithms so they can operate on the workflow's native matrices and graph state. The algorithms themselves are described on the Methods pages. This page records why each was reimplemented, where it deliberately differs from its reference, and what the executable validation establishes.
+multiomeR reimplements a small number of reference algorithms so they can operate on the workflow's native matrices and graph state. The algorithms themselves are described on the methods pages. This page records why each was reimplemented, where it deliberately differs from its reference, and what the executable validation establishes.
 
 The evidence labels are intentionally narrow:
 

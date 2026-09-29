@@ -8,13 +8,13 @@ knitr::opts_chunk$set(
 )
 ```
 
-The demo analyzes two public 10x Genomics GEM wells: peripheral blood mononuclear cells from a healthy donor and a lymph node with lymphoma, 17,277 nuclei in total.
+The demo analyzes two public 10x Genomics GEM wells of peripheral blood mononuclear cells (PBMCs) from healthy donors, one with granulocytes removed by cell sorting and one unsorted, 5,720 nuclei in total.
 
 ## System requirements
 
 - 64-bit x86 Linux with `git` and `curl`.
 - At least 60 GB of RAM, enough for one memory-intensive target at a time.
-- About 30 GB of free disk space. This covers 3.9 GB of demo inputs, about 6 GB of results and up to 15 GB for the Pixi environment and its package cache, which Pixi keeps in your home directory by default.
+- About 25 GB of free disk space. This covers 1.3 GB of demo inputs, about 3.5 GB of results and up to 15 GB for the Pixi environment and its package cache, which Pixi keeps in your home directory by default.
 - Multiple CPU cores. The run time in the next chapter was measured with 16 logical threads.
 
 The committed `crew_controllers.R` suits a 16-CPU, 256-GB workstation. On a machine near the 60-GB minimum, lower its worker counts before running the demo, starting with the heavy workers; see [Local execution](performance_distributed_computing.md#local-execution).

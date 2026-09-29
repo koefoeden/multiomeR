@@ -4,7 +4,7 @@
 
 Use this module to test how cell-type proportions, gene expression or chromatin accessibility differ with a donor condition or phenotype. Donors are the biological replicates: proportions are modeled per donor, and molecular measurements are summed into **pseudobulks**, one per cell type and donor. [Method details](methods_differential_analyses.md)
 
-The module does not create replication. The donors, covariates, formula and contrasts must support the intended comparison. For this reason the public demo leaves the module off: one healthy PBMC donor and one lymphoma lymph-node donor cannot separate condition, donor and tissue effects.
+The module does not create replication. The donors, covariates, formula and contrasts must support the intended comparison. For this reason the public demo leaves the module off: its two healthy PBMC GEM wells have no condition to compare.
 
 ## Prerequisites
 

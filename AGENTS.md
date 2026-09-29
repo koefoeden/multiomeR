@@ -9,17 +9,19 @@ tracked here. A missing home-level file is normal.
 ## Documentation entry points
 
 - Start with `website/multiomeR-manual-llm.md` when compact, repository-wide
-  documentation context is useful. It combines the user and implementation
-  books in authored order and retains source-file provenance comments.
-- The canonical documentation sources are the Markdown files under `website/`
-  and `website/implementation/`; the LLM-oriented Markdown file is generated.
-- Exact fixed values and configurable settings per stage live only in the
-  `website/implementation/methods_*.md` chapters; the manuscript supplement
-  describes algorithms without values. Run `python3 dev/check_methods_parameters.py`
-  after editing those chapters or the parameter manifest.
+  documentation context is useful. It combines the manual's pages in authored
+  order and retains source-file provenance comments.
+- The canonical documentation sources are the Markdown files under `website/`;
+  the LLM-oriented Markdown file is generated.
+- The `website/methods_*.md` pages include algorithm descriptions from
+  `website/_shared_methods/`, which the manuscript supplement also includes.
+  State only key hardcoded values there and keep the fragments free of links;
+  source links and graphs belong on the pages. Run
+  `pixi run --use-environment-activation-cache -e dev check-source-links`
+  after moving or renaming linked source files.
 - Use `.github/CONTRIBUTING.md` for contribution scope and validation guidance.
 
-After changing either documentation book, render both books and refresh the
+After changing the documentation, render the manual and refresh the
 LLM-oriented export:
 
 ```bash

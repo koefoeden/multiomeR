@@ -31,7 +31,7 @@ Document user-visible changes, migration steps, scientific interpretation and
 precise target-invalidation boundaries in `NEWS.md`.
 
 Validate the destination configuration, relevant numerical tests, generated
-manifest and dependency diagrams, and both documentation books. Record whether
+manifest and dependency diagrams, and the manual. Record whether
 validation used synthetic fixtures, saved data or actual target execution. A
 successful manifest alone is not evidence of numerical or biological validity.
 Use isolated worktrees when another checkout is running a pipeline; never alter

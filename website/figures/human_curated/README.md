@@ -10,4 +10,4 @@ Edit membership in the owning target fragment, then regenerate all views. Graph 
 
 The generator bypasses untagged intermediate nodes, normalizes configured suffixes, and merges duplicate labels. These diagrams explain dependencies; use `targets::tar_network()` for the exact configured graph.
 
-Keep manually drawn conceptual overviews in separately named files. Do not hand-edit generated `*_v2.mmd` files. After changes, render both documentation books and refresh the Markdown export as described in the root `AGENTS.md`.
+Keep manually drawn conceptual overviews in separately named files. Do not hand-edit generated `*_v2.mmd` files. After changes, render the manual and refresh the Markdown export as described in the root `AGENTS.md`.

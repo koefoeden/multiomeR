@@ -143,7 +143,7 @@ r-httpgd = "*"
 
 [feature.dev.tasks]
 render-parameter-overview = { cmd = "Rscript dev/render_parameter_overview.R", env = { R_PROFILE_USER = "/dev/null" }, description = "Regenerate the standalone parameter browser from shared public defaults." }
-render-website = { cmd = "python dev/render_website.py", description = "Render both Markdown documentation books through temporary Quarto sources." }
-export-website-llm-markdown = { cmd = "python dev/export_website_llm_markdown.py", description = "Export the Quarto website books to one LLM-friendly Markdown file." }
-check-website-links = { cmd = "python dev/check_website_links.py", description = "Report broken internal links in the rendered documentation books." }
+render-website = { cmd = "python dev/render_website.py", description = "Render the Markdown manual through temporary Quarto sources." }
+export-website-llm-markdown = { cmd = "python dev/export_website_llm_markdown.py", description = "Export the Quarto manual to one LLM-friendly Markdown file." }
+check-website-links = { cmd = "python dev/check_website_links.py", description = "Report broken internal links in the rendered manual." }
 check-source-links = { cmd = "python dev/check_source_links.py", description = "Check that documentation source links name existing repository paths." }

@@ -7,7 +7,7 @@ source("helpers/_setup.R")
 
 ## When to use
 
-Use this module to ask which cell types or nuclei have accessible chromatin overlapping genetic evidence for a human trait. It weights ATAC peaks by the fine-mapping probabilities of the GWAS variants they contain, scores enrichment per cell type and per nucleus, and uses the [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) method to propagate nucleus scores through the WNN neighbor graph.
+Use this module to ask which cell types or nuclei have accessible chromatin overlapping genetic evidence for a human trait. It weights ATAC peaks by the fine-mapping probabilities of the GWAS variants they contain, scores enrichment per cell type and per nucleus, and uses the [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) method to propagate nucleus scores through the WNN neighbor graph. [Method details](methods_genetic_enrichment.md)
 
 A **credible set** contains candidate causal variants at a GWAS locus, with probabilities from fine-mapping. Enrichment helps prioritize cellular contexts; it does not by itself identify a causal cell type, gene or mechanism.
 
@@ -123,7 +123,7 @@ targets::tar_read(
 
 ## Parameter reference
 
-[Open the searchable parameter browser](parameters.html#workflow=genetic_enrichment). The [genetic enrichment implementation page](implementation/methods_genetic_enrichment.html) describes the methods and their key fixed values, links to the source files and shows the target structure.
+[Open the searchable parameter browser](parameters.html#workflow=genetic_enrichment). [Genetic-enrichment methods](methods_genetic_enrichment.md) describes the analyses and their key fixed values, links to the source files and shows the target structure.
 
 <details>
 <summary>Show the public <code>immune_human_2x</code> example</summary>

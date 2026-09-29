@@ -46,7 +46,7 @@ Leiden clusters are numbered by size, starting with 1 for the largest, before cl
 
 ## Cluster annotation {#cluster-annotation}
 
-GEX, ATAC and WNN clusters are all labelled from GEX data. Each cluster is scored against every marker set in [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes), relative to random control genes matched for expression level and detection rate. A cluster is `Assigned` its best-scoring label when that label leads both the control background and the next-best label by at least [`aggregation_cluster_annotation_min_advantage`](parameters.html#aggregation_cluster_annotation_min_advantage); otherwise it is `Unassigned`. Raising the threshold can only withdraw assignments, and unassigned clusters keep their nuclei. The scores are cached separately, so changing the threshold does not recompute them. The scoring rule, control construction and fixed constants are described in [Cell-type annotation and motif accessibility](implementation/methods_annotation_and_motifs.html).
+GEX, ATAC and WNN clusters are all labelled from GEX data. Each cluster is scored against every marker set in [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes), relative to random control genes matched for expression level and detection rate. A cluster is `Assigned` its best-scoring label when that label leads both the control background and the next-best label by at least [`aggregation_cluster_annotation_min_advantage`](parameters.html#aggregation_cluster_annotation_min_advantage); otherwise it is `Unassigned`. Raising the threshold can only withdraw assignments, and unassigned clusters keep their nuclei. The scores are cached separately, so changing the threshold does not recompute them. The scoring rule, control construction and fixed constants are described in [Cell-type annotation](methods_primary_module.md#cell-type-annotation).
 
 In the cell metadata, the cluster IDs are in `PCA_harmony_SNN_cluster` (GEX), `LSI_harmony_SNN_cluster` (ATAC) and `WNN_harmony_SNN_cluster` (WNN). Each has companion columns with the suffixes `_cell_type` (the label, or `Unassigned`), `_named` (cluster ID and label) and `_annotation_status` (`Assigned` or `Unassigned`).
 
@@ -63,4 +63,4 @@ The `cluster_UCell_diagnostics` targets write these files to `<store>/files/my_a
 
 ## Further methods
 
-See [algorithm validation](implementation/algorithm_validation.html) for reference comparisons and deviations, and the [peak–gene module](downstream_peak_gene_correlation.md) for its model, support filters and output paths.
+The Methods pages, starting with [Primary-module methods](methods_primary_module.md), describe each analysis, and [Algorithm validation](algorithm_validation.md) compares the reimplemented algorithms with their references.

@@ -22,7 +22,7 @@ public diff for private material; merge accepted public work forward into the
 private destination and retain its own configuration and release record.
 
 For code and graph changes use `multiomer-validation-workflow`; regenerate
-manifest diagrams and render both books and the Markdown export when affected.
+manifest diagrams and render the manual and the Markdown export when affected.
 State exactly which tests and runtime checks passed and which were not run.
 
 Before publication, run the documented `validate-local` command on the exact

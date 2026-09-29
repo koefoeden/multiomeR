@@ -56,6 +56,25 @@ aggregation_QC_exclude_list_combined_object:
 
 Omit it until the peak QC plots at [checkpoint 4](main_running.md#checkpoint-4) have shown the distributions; checkpoint 5 then shows which nuclei the filters remove.
 
+## Inherit settings from another aggregation {#inheritance}
+
+An entry can start from the settings of other entries listed in `inherits`, for example to rerun an aggregation with more GEM wells:
+
+``` {.yaml filename="cfg_aggregations.yaml"}
+my_aggregation:
+  aggregation_GEM_well_IDs: [GEM_well_1, GEM_well_2]
+  aggregation_donor_id_metadata_tsv: /path/to/donor_metadata.tsv
+  aggregation_GEX_marker_genes:
+    Cell_type_A: [GENE1, GENE2]
+    Cell_type_B: [GENE3, GENE4]
+
+my_aggregation_all_wells:
+  inherits: my_aggregation
+  aggregation_GEM_well_IDs: [GEM_well_1, GEM_well_2, GEM_well_3]
+```
+
+The entry starts from the parameter defaults, applies each parent in the listed order and then its own values. Every parameter is inherited, including `is_active`, and a value replaces the inherited one as a whole: here the child's `aggregation_GEM_well_IDs` replaces the parent's list rather than extending it. Entries in the module configuration files can inherit in the same way.
+
 ## Optional modules
 
 Omit [`modules`](parameters.html#modules) for the first run. After reviewing the primary module's results, list the optional modules to run:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render Markdown book sources through temporary Quarto execution inputs."""
+"""Render the Markdown manual through temporary Quarto execution inputs."""
 
 from pathlib import Path
 import os
@@ -30,11 +30,10 @@ def main():
             path.write_text(text)
         for path in sources:
             path.rename(path.with_suffix(".qmd"))
-        for book in ("website", "website/implementation"):
-            subprocess.run(
-                ["quarto", "render", book], cwd=stage, check=True,
-                env={**os.environ, "R_PROFILE_USER": os.devnull},
-            )
+        subprocess.run(
+            ["quarto", "render", "website"], cwd=stage, check=True,
+            env={**os.environ, "R_PROFILE_USER": os.devnull},
+        )
         # Source links must point to the editable Markdown files on GitHub.
         for path in (stage / "docs").rglob("*.html"):
             path.write_text(path.read_text().replace(".qmd", ".md"))

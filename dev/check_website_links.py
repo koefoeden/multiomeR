@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Report internal links in the rendered documentation books whose page or anchor is missing."""
+"""Report internal links in the rendered manual whose page or anchor is missing."""
 
 import argparse
 from pathlib import Path

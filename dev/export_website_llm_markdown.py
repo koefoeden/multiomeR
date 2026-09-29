@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export the Quarto website books as one LLM-friendly Markdown file."""
+"""Export the Quarto manual as one LLM-friendly Markdown file."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ class ExportOptions:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Collect website/ and website/implementation/ Quarto pages into one Markdown file."
+        description="Collect the website/ Quarto pages into one Markdown file."
     )
     parser.add_argument("--site-dir", type=Path, default=Path("website"))
     parser.add_argument(
@@ -67,8 +67,8 @@ def read_book_config(book_dir: Path) -> dict:
     return yaml.safe_load(config_path.read_text(encoding="utf-8"))
 
 
-def walk_chapters(book_dir: Path, chapters: list) -> list[tuple[str, str | Page | Path]]:
-    entries: list[tuple[str, str | Page | Path]] = []
+def walk_chapters(book_dir: Path, chapters: list) -> list[tuple[str, str | Page]]:
+    entries: list[tuple[str, str | Page]] = []
     for item in chapters:
         if isinstance(item, str):
             entries.append(("page", Page(book_dir / item)))
@@ -85,11 +85,7 @@ def walk_chapters(book_dir: Path, chapters: list) -> list[tuple[str, str | Page 
 
         href = item.get("href")
         if href:
-            target = book_dir / href
-            if target.is_dir():
-                entries.append(("book", target))
-            else:
-                entries.append(("page", Page(target)))
+            entries.append(("page", Page(book_dir / href)))
             continue
 
         entries.extend(walk_chapters(book_dir, item.get("chapters", [])))
@@ -111,8 +107,6 @@ def render_book(
     for kind, value in walk_chapters(book_dir, chapters):
         if kind == "part":
             out.append(f"\n## Part: {value}\n")
-        elif kind == "book":
-            out.append(render_book(Path(value), repo_root, used_sources, options))
         elif kind == "page":
             page = value
             assert isinstance(page, Page)

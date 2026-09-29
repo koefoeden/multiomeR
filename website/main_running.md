@@ -4,7 +4,7 @@ Configure your data once, then work through the eight checkpoints of the primary
 
 Run the R commands from the repository root, as in the demo. Replace `my_aggregation` and `my_GEM_well` with your own names. `<store>` is the targets store set in `_targets.yaml`, normally `outputs/` in the repository root. Edit the files in the [selected configuration directory](main_overview.md#configuration-directory); linked parameters belong in your aggregation's entry in `cfg_aggregations.yaml`.
 
-Each command also builds the earlier results it depends on. After changing a setting, rerun the checkpoint: `targets` rebuilds only the results the change affects, and later checkpoints pick up the change when they run. The methods behind the checkpoints are described in [Preprocessing and nucleus QC](implementation/methods_preprocessing_and_QC.html), [GEX, ATAC, batch correction and WNN](implementation/methods_GEX_ATAC_and_WNN.html) and [Cell-type annotation and motif accessibility](implementation/methods_annotation_and_motifs.html).
+Each command also builds the earlier results it depends on. After changing a setting, rerun the checkpoint: `targets` rebuilds only the results the change affects, and later checkpoints pick up the change when they run.
 
 ## Configure your data {#steps}
 
@@ -15,7 +15,7 @@ Each command also builds the earlier results it depends on. After changing a set
 
 ## Checkpoint 1: Pre-aggregation QC {#checkpoint-1}
 
-Computes QC metrics and donor assignments for each GEM well, applies the GEM well QC filters and compares the GEM wells of the aggregation.
+Computes QC metrics and donor assignments for each GEM well, applies the GEM well QC filters and compares the GEM wells of the aggregation. [Method details](methods_primary_module.md#preprocessing)
 
 **Run pipeline:**
 
@@ -55,7 +55,7 @@ targets::tar_make(
 
 ## Checkpoint 2: GEX dimension reduction {#checkpoint-2}
 
-Normalizes the combined GEX data, selects variable genes and computes PCA, with Harmony correction when covariates are configured.
+Normalizes the combined GEX data, selects variable genes and computes PCA, with Harmony correction when covariates are configured. [Method details](methods_primary_module.md#gex)
 
 **Run pipeline:**
 
@@ -80,7 +80,7 @@ targets::tar_make(
 
 ## Checkpoint 3: GEX clusters and cell types {#checkpoint-3}
 
-Clusters the GEX data, labels the clusters from your marker genes and removes GEX doublets.
+Clusters the GEX data, labels the clusters from your marker genes and removes GEX doublets. [Method details](methods_primary_module.md#batch-correction-and-clustering)
 
 **Run pipeline:**
 
@@ -120,7 +120,7 @@ targets::tar_make(
 
 ## Checkpoint 4: Peak QC {#checkpoint-4}
 
-Calls peaks within groups of nuclei, by default the GEX clusters, merges them into one consensus peak set and computes peak-based ATAC QC metrics.
+Calls peaks within groups of nuclei, by default the GEX clusters, merges them into one consensus peak set and computes peak-based ATAC QC metrics. [Method details](methods_primary_module.md#peaks-and-lsi)
 
 **Run pipeline:**
 
@@ -142,7 +142,7 @@ targets::tar_make(
 
 ## Checkpoint 5: ATAC filtering {#checkpoint-5}
 
-Applies the ATAC filters from checkpoint 4 to the GEX-retained nuclei.
+Applies the ATAC filters from checkpoint 4 to the GEX-retained nuclei. [Method details](methods_primary_module.md#atac-filtering)
 
 **Run pipeline:**
 
@@ -164,7 +164,7 @@ targets::tar_make(
 
 ## Checkpoint 6: ATAC dimension reduction {#checkpoint-6}
 
-Computes LSI embeddings of the filtered peak matrix, with Harmony correction when covariates are configured.
+Computes LSI embeddings of the filtered peak matrix, with Harmony correction when covariates are configured. [Method details](methods_primary_module.md#peaks-and-lsi)
 
 **Run pipeline:**
 
@@ -188,7 +188,7 @@ targets::tar_make(
 
 ## Checkpoint 7: ATAC clusters and motifs {#checkpoint-7}
 
-Clusters the ATAC data, names the clusters from GEX marker scores, removes ATAC doublets, and computes gene activity and motif accessibility.
+Clusters the ATAC data, names the clusters from GEX marker scores, removes ATAC doublets, and computes gene activity and motif accessibility. [Method details](methods_primary_module.md#atac-filtering)
 
 **Configure:** optionally, list expected transcription factors per cell type in [`aggregation_ATAC_marker_TFs`](parameters.html#aggregation_ATAC_marker_TFs) to organize the motif-accessibility plots.
 
@@ -224,7 +224,7 @@ targets::tar_make(
 
 ## Checkpoint 8: WNN integration {#checkpoint-8}
 
-Integrates the GEX and ATAC embeddings with weighted nearest neighbors (WNN), clusters and labels the integrated graph, and builds the final multimodal Seurat/Signac object.
+Integrates the GEX and ATAC embeddings with weighted nearest neighbors (WNN), clusters and labels the integrated graph, and builds the final multimodal Seurat/Signac object. [Method details](methods_primary_module.md#wnn)
 
 **Run pipeline:**
 

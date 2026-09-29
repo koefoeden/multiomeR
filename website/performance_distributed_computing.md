@@ -61,4 +61,4 @@ The last expression in the file must be a list with `controller_list` and `contr
 - The table has exactly the columns `controller_name`, `cores`, `RAM_GB`, and `gpus`, in that order, with numeric, non-missing resources.
 - Each target runs on the smallest tier that meets its CPU, RAM, and GPU request; targets without a request run on the smallest tier. Tiers are compared by GPUs, then cores, then RAM, so row order does not matter.
 
-[Implementation conventions](implementation/implementation_conventions.html#runtime-bootstrap) describe how the runtime loads this file and how targets request resources.
+[Runtime bootstrap](change_the_pipeline.md#runtime-bootstrap) describes how the runtime loads this file and how targets request resources.

@@ -21,8 +21,9 @@ The **primary module** processes each GEM well, combines selected GEM wells into
 - **Try the public demo:** [install multiomeR](demo_installation.md), then run and inspect a small example analysis.
 - **Analyze your own data:** [check your inputs](main_overview.md), then configure, run, and review the primary module one checkpoint at a time.
 - **Add an optional analysis:** run [differential analyses](downstream_differential_analyses.md), [genetic enrichment](downstream_genetic_enrichment.md), or [peak–gene correlation](downstream_peak_gene_correlation.md) on a completed aggregation.
-- **Operation and scaling:** [run locally or on a scheduler](performance_distributed_computing.md), and [troubleshoot](troubleshooting.md) failed or outdated targets.
-- **Reference:** browse the [output gallery](gallery.md) for an example of each plot, and look up output files, configuration tables, and methods.
+- **Operation and development:** [run locally or on a scheduler](performance_distributed_computing.md), [troubleshoot](troubleshooting.md) failed or outdated targets, and [change the pipeline](change_the_pipeline.md) itself.
+- **Reference:** browse the [output gallery](gallery.md) for an example of each plot, and look up output files and configuration tables.
+- **Methods:** read what each analysis does, from the [primary module](methods_primary_module.md) to the optional modules, and how the [reimplemented algorithms](algorithm_validation.md) were validated. The running guide and module pages link to the matching section.
 
 ## Your first analysis
 

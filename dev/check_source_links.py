@@ -3,7 +3,7 @@
 
 Every https://github.com/koefoeden/multiomeR/{blob,tree}/main/<path> link in
 website/**/*.md must name an existing path, and the methods fragments in
-website/implementation/_shared_methods/, which the manuscript supplement also
+website/_shared_methods/, which the manuscript supplement also
 includes, must contain no Markdown links.
 """
 
@@ -25,7 +25,7 @@ def main() -> int:
             if not (root / match.group(1)).exists():
                 line = text.count("\n", 0, match.start()) + 1
                 errors.append(f"{page.relative_to(root)}:{line}: missing source path {match.group(1)}")
-    for fragment in sorted((root / "website" / "implementation" / "_shared_methods").glob("*.md")):
+    for fragment in sorted((root / "website" / "_shared_methods").glob("*.md")):
         if MARKDOWN_LINK_RE.search(fragment.read_text()):
             errors.append(f"{fragment.relative_to(root)}: shared methods fragments must not contain links")
     for error in errors:

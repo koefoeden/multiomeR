@@ -50,7 +50,7 @@ SuSiE fine-mapping and the support summary plots.
 it for an aggregation in `configuration/cfg_module_peak_gene_correlation.yaml`.
 The preset thresholds, the depth scaling of the count thresholds and every other
 fixed value of this module are listed in
-`website/implementation/methods_peak_gene_correlation.md`; keep that chapter
+`website/methods_peak_gene_correlation.md`; keep that page
 and the helper defaults in sync.
 
 The filter removes hypotheses before hierarchical testing; all

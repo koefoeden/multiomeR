@@ -1,4 +1,4 @@
-# Build both documentation books with the repository builder and deploy them
+# Build the manual with the repository builder and deploy it
 # to GitHub Pages. Pull requests rely on the cheap checks in checks.yaml.
 name: docs
 
@@ -35,7 +35,7 @@ jobs:
           environments: dev
           cache: true
 
-      - name: Render both books
+      - name: Render the manual
         run: pixi run --use-environment-activation-cache -e dev render-website
 
       - name: Check rendered internal links

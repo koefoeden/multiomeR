@@ -2,7 +2,7 @@
 
 ## When to use
 
-Use this module to test how cell-type proportions, gene expression or chromatin accessibility differ with a donor condition or phenotype. Donors are the biological replicates: proportions are modelled per donor, and molecular measurements are summed into **pseudobulks**, one per cell type and donor.
+Use this module to test how cell-type proportions, gene expression or chromatin accessibility differ with a donor condition or phenotype. Donors are the biological replicates: proportions are modelled per donor, and molecular measurements are summed into **pseudobulks**, one per cell type and donor. [Method details](methods_differential_analyses.md)
 
 The module does not create replication. The donors, covariates, formula and contrasts must support the intended comparison. For this reason the public demo leaves the module off: one healthy PBMC donor and one lymphoma lymph-node donor cannot separate condition, donor and tissue effects.
 
@@ -69,7 +69,7 @@ Optional fields narrow a model:
 - `GEM_well_IDs` restricts the GEM wells that define an abundance model's population; and
 - `cell_types_to_test` restricts the cell types an abundance model tests, while every retained nucleus still counts towards its donor's total.
 
-Donors missing a model variable are excluded. The branches use different models, so their effect sizes are not directly comparable. The methods describe [abundance models](implementation/methods_differential_analyses.html#cell-type-composition) and the [feature-model routes](implementation/methods_differential_analyses.html#molecular-pseudobulk-analyses), including random effects, custom design and contrast functions and paired cell-type designs.
+Donors missing a model variable are excluded. The branches use different models, so their effect sizes are not directly comparable. The methods describe [abundance models](methods_differential_analyses.md#cell-type-composition) and the [feature-model routes](methods_differential_analyses.md#molecular-pseudobulk-analyses), including random effects, custom design and contrast functions and paired cell-type designs.
 
 ## Run
 
@@ -130,4 +130,4 @@ Use [Troubleshooting](troubleshooting.md) if a formula, contrast or metadata joi
 
 ## Parameter reference
 
-[Open the searchable parameter browser](parameters.html#workflow=differential_analyses). The [differential analyses implementation page](implementation/methods_differential_analyses.html) describes the methods and their key fixed values, links to the source files and shows the target structure.
+[Open the searchable parameter browser](parameters.html#workflow=differential_analyses). [Differential-analysis methods](methods_differential_analyses.md) describes the models and their key fixed values, links to the source files and shows the target structure.

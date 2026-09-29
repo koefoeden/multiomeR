@@ -1,6 +1,6 @@
-# Algorithmic implementations, deviations and validation
+# Algorithm validation
 
-multiomeR reimplements a small number of reference algorithms so they can operate on the workflow's native matrices and graph state. The algorithms themselves are described on the primary-module and optional-module pages. This page records why each was reimplemented, where it deliberately differs from its reference, and what the executable validation establishes.
+multiomeR reimplements a small number of reference algorithms so they can operate on the workflow's native matrices and graph state. The algorithms themselves are described on the Methods pages. This page records why each was reimplemented, where it deliberately differs from its reference, and what the executable validation establishes.
 
 The evidence labels are intentionally narrow:
 
@@ -8,20 +8,19 @@ The evidence labels are intentionally narrow:
 - **Reference-similarity tested** means exact equality is not an appropriate contract, so predefined similarity thresholds are checked against the named reference implementation.
 - **Algorithmically derived** means the implementation is checked against an independent mathematical result, not against another software implementation.
 
-Passing these fixtures does not validate every dataset, parameter regime, approximate-neighbour realization, biological interpretation, or downstream target. The test suite contains only such reference comparisons. Each test asserts the reference version it was written against; versions are locked by `pixi.lock`. Run the complete suite locally with `pixi run --use-environment-activation-cache test` after changing tests, tested helpers, native sources, or the Pixi environment; cloud CI runs only checks that need no environment.
-
-Run the complete suite with `pixi run --use-environment-activation-cache test`. The narrower `pixi run --use-environment-activation-cache test-algorithm-validation` task runs only the slow UCell, AMULET, WNN, and SCAVENGE tests.
+Passing these fixtures does not validate every dataset, parameter regime, approximate-neighbour realization, biological interpretation, or downstream target. The test suite contains only such reference comparisons. Each test asserts the reference version it was written against; versions are locked by `pixi.lock`. Run the complete suite locally with `pixi run --use-environment-activation-cache test` after changing tests, tested helpers, native sources, or the Pixi environment; cloud CI runs only checks that need no environment. The narrower `pixi run --use-environment-activation-cache test-algorithm-validation` task runs only the slow UCell, AMULET, WNN, and SCAVENGE tests.
 
 | Implementation | Evidence status | Reference | Validation contract |
 |---|---|---|---|
 | BPCells-native UCell | Reference-parity tested | UCell | Identical values, dimensions, and dimnames |
 | BPCells-native AMULET | Reference-parity tested | scDblFinder | Identical metrics and loci, including order |
+| BPCells-backed ATAC scDblFinder feature aggregation | Not reference-tested | scDblFinder | None; scores and calls can differ from its internal aggregation |
 | Native WNN | Reference-similarity tested | Seurat | Modality-weight Spearman and neighbour-overlap thresholds per fixture |
 | Sparse SCAVENGE propagation | Algorithmically derived and reference-parity tested | SCAVENGE source at `8ee8b173d965` | Closed-form propagation; identical seeds; propagation and trait relevance scores within 1e-12 |
 | Peak–gene donor-slope REML and Kenward–Roger kernels | Reference-parity tested | lme4 and pbkrtest | Coefficients, df and P-values within 1e-6; identical fit statuses |
 | Peak–gene compact BH breakpoints | Reference-parity tested | `stats::p.adjust()` | Identical FDR per chromosome slice |
 
-The peak–gene rows belong to the analyses in [Peak–gene correlation](methods_peak_gene_correlation.md); their tests are `test-peak-gene-hierarchical-parity.R` and `test-peak-gene-correlation-parity.R`.
+The peak–gene rows belong to the analyses in [Peak–gene correlation methods](methods_peak_gene_correlation.md#models-and-candidate-links); their tests are `test-peak-gene-hierarchical-parity.R` and `test-peak-gene-correlation-parity.R`.
 
 ## BPCells-native UCell scoring
 
@@ -31,7 +30,7 @@ The peak–gene rows belong to the analyses in [Peak–gene correlation](methods
 
 **Deliberate deviations and consequences.** Only one cell chunk is materialized at a time, and optional fork workers operate across chunks; this changes memory and execution behaviour but not the tested values. The helper returns a data frame instead of mutating a Seurat object. The target-level marker validator rejects configured genes missing from the reference, whereas the lower-level helper still exposes UCell's impute and skip modes. The production annotation ranks each cell from its nonzero counts in a compiled kernel, because zero counts tie below the rank cap, and scores signed signatures per cell before aggregation, which costs more computation than a positive-only rank-summary shortcut. It adds the chunk sums in the order of the R implementation, so its results are identical to it.
 
-**Implementation.** `calculate_BPCells_UCell_scores_from_matrix()` and `rank_UCell_count_chunk()` in `R/processing_GEX_helpers.R`; the cluster annotation is in `R/cluster_annotation_helpers.R` with its kernel `src/cluster_UCell_chunk.cpp`, and is described in [Cell-type annotation and motif accessibility](methods_annotation_and_motifs.md#cell-type-annotation).
+**Implementation.** `calculate_BPCells_UCell_scores_from_matrix()` and `rank_UCell_count_chunk()` in `R/processing_GEX_helpers.R`; the cluster annotation is in `R/cluster_annotation_helpers.R` with its kernel `src/cluster_UCell_chunk.cpp`, and is described in [Cell-type annotation](methods_primary_module.md#cell-type-annotation).
 
 **Validation.** `tests/testthat/test-scoring-parity.R` compares signed signatures, with imputed and skipped missing genes, on a deterministic BPCells fixture and requires `identical()` values, dimensions, and dimnames. It also runs the production annotation path on unsigned, signed and negative-only signatures and compares per-cell scores, cluster means and matched-control summaries with reference scores averaged within clusters, within 1e-12, and checks that chunking and fork workers leave them unchanged. The production cell-cycle scorer is compared with `Seurat::CellCycleScoring()`: phases are identical and scores agree within 1e-6, because BPCells normalizes counts at lower floating-point precision.
 
@@ -65,7 +64,7 @@ pixi run --use-environment-activation-cache test-amulet-parity
 
 **Implementation.** `get_feature_groups_from_LSI_loadings()` and `aggregate_BPCells_rows_by_group()` in `R/processing_GEX_helpers.R`, called from `extra_targets/ATAC_targets.R`.
 
-**Validation scope.** The reference-parity fixtures do not establish equivalence for this path. Its settings are described in [Preprocessing and nucleus QC](methods_preprocessing_and_QC.md).
+**Validation scope.** The reference-parity fixtures do not establish equivalence for this path. The method is described in [Filtering and doublet removal](methods_primary_module.md#atac-filtering).
 
 ## Native weighted nearest neighbors
 

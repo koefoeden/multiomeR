@@ -1,7 +1,8 @@
 # Bounded live GET requests; no resource is written into the targets cache.
 fetch_validation_resource <- function(url, destination, max_bytes, range = NULL) {
   args <- c('--fail', '--location', '--silent', '--show-error',
-            '--connect-timeout', '15', '--max-time', '60', '--retry', '1',
+            '--connect-timeout', '15', '--max-time', '60', '--retry', '4',
+            '--retry-connrefused', '--retry-delay', '10',
             '--max-filesize', sprintf('%.0f', max_bytes), '--output', destination,
             '--write-out', '%{http_code}')
   if (!is.null(range)) args <- c(args, '--range', range)

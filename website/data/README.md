@@ -1,6 +1,6 @@
 # Shared documentation inputs
 
-`public_defaults/` is a generated snapshot of the public runtime schema and example YAML files. Both repositories render from these same inputs; personal configuration and deployment-specific schemas are not documentation sources.
+`public_defaults/` is a generated snapshot of the public runtime schema, the example YAML files and the demo's donor metadata table. Both repositories render from these same inputs; personal configuration and deployment-specific schemas are not documentation sources.
 
 After changing public defaults, refresh this snapshot from the reviewed public checkout, then synchronize `website/` and the documentation scripts between repositories:
 

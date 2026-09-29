@@ -69,12 +69,7 @@ head(value)
 
 ## Input and metadata failures
 
-Metadata files are checked when the targets that read them run. Compare the error with the [GEM well table](reference_GEM_wells.md), [donor metadata table](reference_donor_metadata.md), and [aggregation configuration](reference_aggregations.md) references, and check that:
-
-- each `GEM_well_cellranger_arc_count_dir` contains the required `outs/` files, plus `atac_possorted_bam.bam` for genotype demultiplexing;
-- `GEM_well_ID` values in `cfg_GEM_wells.tsv` and `donor_id` values in the donor metadata table are unique;
-- every donor ID from the GEM well table or from genotype demultiplexing appears in the donor metadata table with identical spelling; and
-- apart from these two keys, no column name appears in both tables.
+The configuration files are checked when the pipeline starts, the donor metadata table and the Cell Ranger outputs when the targets that read them run. Compare the error with the rules checked for the [GEM well table](reference_GEM_wells.md#rules), the [donor metadata table](reference_donor_metadata.md#rules) and the [aggregation configuration](reference_aggregations.md#rules), and with the [Cell Ranger inputs](reference_GEM_wells.md#cellranger-inputs) each GEM well needs. Nuclei with `NA` donor variables have a donor ID missing from the donor metadata table; see [Matching donors to nuclei](reference_donor_metadata.md#matching-donors-to-nuclei).
 
 ## Controller and scheduler failures
 

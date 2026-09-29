@@ -349,10 +349,10 @@ Before the first run, prepare the inputs below and choose where your settings wi
 
 ## Inputs to prepare
 
-- **Cell Ranger ARC outputs:** one `cellranger-arc count` output directory per GEM well. Its `outs/` folder must contain `summary.csv`, `filtered_feature_bc_matrix.h5`, `atac_fragments.tsv.gz`, `atac_fragments.tsv.gz.tbi` and `per_barcode_metrics.csv`. GEM wells analyzed together must use the same Cell Ranger ARC reference.
+- **Cell Ranger ARC outputs:** one `cellranger-arc count` output directory per GEM well, with the [files the pipeline reads](reference_GEM_wells.md#cellranger-inputs). GEM wells analyzed together must use the same Cell Ranger ARC reference.
 - **Donor metadata table:** a TSV with one row per donor and the phenotypes or covariates you want to analyze; see [Donor metadata table](reference_donor_metadata.md).
-- **Donor genotypes (optional):** to demultiplex a GEM well that pools several donors, a VCF with their genotypes, as described in the [Vireo genotype-input documentation](https://vireosnp.readthedocs.io/en/stable/manual.html). The GEM well's `outs/` folder must then also contain `atac_possorted_bam.bam`.
-- **CellBender output (optional):** to use gene-expression counts corrected for ambient RNA, run [CellBender remove-background](https://cellbender.readthedocs.io/en/latest/usage/) first and give its H5 file in the [GEM well table](reference_GEM_wells.md).
+- **Donor genotypes (pooled GEM wells only):** a VCF with the genotypes of the pooled donors, whose sample names become the donor IDs; see [Pooled GEM wells](reference_GEM_wells.md#pooled-wells).
+- **CellBender output (optional):** to use gene-expression counts corrected for ambient RNA, run [CellBender remove-background](https://cellbender.readthedocs.io/en/latest/usage/) first and give its H5 file in the [GEM well table](reference_GEM_wells.md#cellranger-inputs).
 - **Compute resources:** for large datasets, use a compute cluster with a job scheduler; see [Choose where the analysis runs](performance_distributed_computing.md).
 
 ## Where the configuration lives {#configuration-directory}
@@ -1169,12 +1169,7 @@ head(value)
 
 ## Input and metadata failures
 
-Metadata files are checked when the targets that read them run. Compare the error with the [GEM well table](reference_GEM_wells.md), [donor metadata table](reference_donor_metadata.md), and [aggregation configuration](reference_aggregations.md) references, and check that:
-
-- each `GEM_well_cellranger_arc_count_dir` contains the required `outs/` files, plus `atac_possorted_bam.bam` for genotype demultiplexing;
-- `GEM_well_ID` values in `cfg_GEM_wells.tsv` and `donor_id` values in the donor metadata table are unique;
-- every donor ID from the GEM well table or from genotype demultiplexing appears in the donor metadata table with identical spelling; and
-- apart from these two keys, no column name appears in both tables.
+The configuration files are checked when the pipeline starts, the donor metadata table and the Cell Ranger outputs when the targets that read them run. Compare the error with the rules checked for the [GEM well table](reference_GEM_wells.md#rules), the [donor metadata table](reference_donor_metadata.md#rules) and the [aggregation configuration](reference_aggregations.md#rules), and with the [Cell Ranger inputs](reference_GEM_wells.md#cellranger-inputs) each GEM well needs. Nuclei with `NA` donor variables have a donor ID missing from the donor metadata table; see [Matching donors to nuclei](reference_donor_metadata.md#matching-donors-to-nuclei).
 
 ## Controller and scheduler failures
 
@@ -1220,28 +1215,17 @@ Run `targets::tar_make()` without `names` only when you want every active aggreg
 
 
 
-`cfg_GEM_wells.tsv` in the [selected configuration directory](main_overview.md#configuration-directory) has one row per GEM well, that is, one `cellranger-arc count` output. Aggregations select wells by their `GEM_well_ID`.
+`cfg_GEM_wells.tsv` in the [selected configuration directory](main_overview.md#configuration-directory) has one row per GEM well, that is, one `cellranger-arc count` output. You fill it in at [step 1 of Configure your data](main_running.md#steps), and aggregations select wells by their `GEM_well_ID`.
 
-## Fill in a row
+## Columns
 
-Copy an example row, give it a unique `GEM_well_ID`, and fill in these columns:
+Copy a row of the [public example](#public-example), give it a unique `GEM_well_ID`, and fill in these columns:
 
-| Column | What to enter |
-|---|---|
-| `GEM_well_ID` | A unique identifier used in target names and output folders. |
-| `GEM_well_dataset` | A label for the dataset or study. |
-| `GEM_well_cellranger_arc_count_dir` | The directory containing `outs/`, not `outs/` itself. |
-| `GEM_well_n_donors` | Number of donors in the well. |
-| `GEM_well_donor_id` | For a single-donor well, an ID matching the [donor metadata table](reference_donor_metadata.md); otherwise `NA`. |
-| `GEM_well_donors_VCF_file` | For a multiplexed well, the donor-genotype VCF used for demultiplexing; otherwise `NA`. |
-| `GEM_well_add_cellbender` | `TRUE` to use externally generated CellBender counts; otherwise `FALSE`. |
-| `GEM_well_cellbender_h5_file` | The CellBender H5 file when `GEM_well_add_cellbender` is `TRUE`; otherwise `NA`. |
-| `GEM_well_QC_exclude_list` | `NA` for the first run; later, [QC filters](#qc-filters). |
-| `GEM_well_is_active` | `TRUE` to process the well; `FALSE` for unused rows, including unused demo wells. Every well selected by an active aggregation must be active. |
+[Generated Quarto chunk omitted: `emit_GEM_well_column_table("website/data/GEM_well_columns.tsv")`]
 
-Add library or batch annotations as extra columns prefixed with `GEM_well_`, such as `GEM_well_multiplex_batch`. They become cell metadata for batch correction and plots. Keep donor phenotypes in the donor metadata table; apart from their keys, the two tables must not share column names.
+Add library or batch annotations as extra columns prefixed with `GEM_well_`, such as `GEM_well_multiplex_batch`. They become cell metadata: select them for plots with [`aggregation_categorical_vars`](parameters.html#aggregation_categorical_vars) or [`aggregation_continuous_vars`](parameters.html#aggregation_continuous_vars), and for batch correction with [`aggregation_harmony_correction_metadata_col_names`](parameters.html#aggregation_harmony_correction_metadata_col_names). Keep donor phenotypes in the [donor metadata table](reference_donor_metadata.md).
 
-## Required inputs
+## Cell Ranger inputs {#cellranger-inputs}
 
 Each `GEM_well_cellranger_arc_count_dir` must contain:
 
@@ -1254,21 +1238,38 @@ outs/
 └── per_barcode_metrics.csv
 ```
 
-Genotype demultiplexing also requires `atac_possorted_bam.bam` in `outs/`. Prepare optional VCF and CellBender inputs as described in [Plan your analysis](main_overview.md).
+A [pooled GEM well](#pooled-wells) also needs `atac_possorted_bam.bam` in `outs/`. For CellBender counts, run [CellBender remove-background](https://cellbender.readthedocs.io/en/latest/usage/) first and give its H5 file in `GEM_well_cellbender_h5_file`.
 
-The pipeline identifies each well's Cell Ranger ARC reference by matching the FASTA and GTF hashes in the `atac_fragments.tsv.gz` header to a `reference.json` under `reference_metadata/`, so keep that header intact. JSON files for the GRCh38 2020-A, GRCh38 2024-A and mm10 2020-A references are included; for another reference, copy its `reference.json` into a new subdirectory there. Exactly one JSON must match, and all wells in an aggregation must share the same reference.
+The pipeline identifies each well's Cell Ranger ARC reference by matching the FASTA and GTF hashes in the `atac_fragments.tsv.gz` header to a `reference.json` in the repository's `reference_metadata/` folder, so keep that header intact. JSON files for the GRCh38 2020-A, GRCh38 2024-A and mm10 2020-A references are included; for another reference, copy its `reference.json` into a new subdirectory there.
+
+## Pooled GEM wells {#pooled-wells}
+
+A GEM well that pools several donors needs a donor-genotype VCF in `GEM_well_donors_VCF_file`, the number of donors in `GEM_well_n_donors`, and `NA` in `GEM_well_donor_id`; the [Vireo documentation](https://vireosnp.readthedocs.io/en/stable/manual.html) describes the VCF. The pipeline genotypes each nucleus with cellsnp-lite and assigns it with Vireo. Every nucleus receives its most likely single donor, named by the VCF's sample name, and `vireo_type` records whether Vireo called it a singlet, a doublet or unassigned; remove doublets and unassigned nuclei with a [QC filter](#qc-filters) such as `vireo_type != "singlet"`.
+
+Without a VCF, no demultiplexing runs and every nucleus receives `GEM_well_donor_id`, so a pooled well needs its VCF to obtain donors.
+
+## Rules checked {#rules}
+
+When the pipeline starts, it checks that:
+
+- `GEM_well_ID` values are unique;
+- every GEM well that an active aggregation selects exists and is active;
+- `GEM_well_add_cellbender` and `GEM_well_cellbender_h5_file` agree; and
+- each QC filter is a valid R expression.
+
+When the targets of a well run, exactly one `reference.json` must match its fragments, and all wells of an aggregation must share the same reference. Apart from the keys, no column name may appear both here and in the [donor metadata table](reference_donor_metadata.md#rules).
 
 ## Set QC filters after the first run {#qc-filters}
 
-Leave `GEM_well_QC_exclude_list` as `NA` for the first run. After reviewing the QC distributions at [checkpoint 1](main_running.md#checkpoint-1), enter filters and rerun checkpoint 1. Each filter is a complete R expression over the per-nucleus QC metrics; separate filters with `;;`:
+Leave `GEM_well_QC_exclude_list` as `NA` for the first run. After reviewing the QC distributions at [checkpoint 1](main_running.md#checkpoint-1), enter filters and rerun checkpoint 1. Each filter is a complete R expression over the per-nucleus metadata; separate filters with `;;`:
 
 ``` {.text filename="cfg_GEM_wells.tsv"}
 TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250
 ```
 
-Nuclei for which an expression is `TRUE` are excluded, and each expression is reported as a separate exclusion reason. The checkpoint 1 GEM well comparison plots draw simple cutoffs such as these on each metric's distribution. These cutoffs are examples, not recommendations for your tissue.
+A nucleus for which any expression is `TRUE` is excluded, and each expression is reported as a separate exclusion reason in the checkpoint 1 UpSet and retention plots. Filters can use the metrics that [`QC_metric_manifest.tsv`](https://github.com/koefoeden/multiomeR/blob/main/QC_metric_manifest.tsv) lists as available from checkpoint 1, and other per-nucleus columns such as `vireo_type`. The checkpoint 1 comparison plots show each metric's distribution and draw simple cutoffs such as these; they are examples, not recommendations for your tissue.
 
-## Example rows
+## Public example {#public-example}
 
 The table below shows the two public demo wells with the required columns in bold and one optional annotation, `GEM_well_cell_sorting`. Scroll horizontally, and focus or hover over a column's **i** button for its meaning. The [committed example](https://github.com/koefoeden/multiomeR/blob/main/configuration/cfg_GEM_wells.tsv) contains further inactive rows and annotation columns.
 
@@ -1279,7 +1280,9 @@ The table below shows the two public demo wells with the required columns in bol
 
 # Donor metadata table
 
-The donor metadata table is a TSV with one row per `donor_id`. Each aggregation points to one such file through [`aggregation_donor_id_metadata_tsv`](parameters.html#aggregation_donor_id_metadata_tsv) in the [aggregation configuration](reference_aggregations.md). Prepare it before the first run, as listed in [Plan your analysis](main_overview.md); the nuclei-per-donor plot at [checkpoint 1](main_running.md#checkpoint-1) shows the `donor_id` values the nuclei received.
+
+
+The donor metadata table is a TSV with one row per donor, keyed by `donor_id`. You prepare it at [step 2 of Configure your data](main_running.md#steps), and each aggregation points to its file with [`aggregation_donor_id_metadata_tsv`](parameters.html#aggregation_donor_id_metadata_tsv).
 
 ## Minimal table
 
@@ -1288,17 +1291,33 @@ donor_id	condition
 donor_1	control
 ```
 
-## Matching donors to nuclei
+## Columns
 
-Every nucleus receives a `donor_id` from its GEM well: the configured `GEM_well_donor_id` for a non-multiplexed well, or a genotype-based assignment for a well with a configured VCF; see the [GEM well table](reference_GEM_wells.md#fill-in-a-row). Give each of those IDs exactly one row. Duplicated IDs stop the pipeline; nuclei whose donor is missing from the table get `NA` donor variables.
+- `donor_id` (required): one row for each donor ID that the nuclei receive; see [Matching donors to nuclei](#matching-donors-to-nuclei).
+- Every other column is a donor-level variable, such as condition, age or sex. The variables become cell metadata: select them for plots with [`aggregation_categorical_vars`](parameters.html#aggregation_categorical_vars) or [`aggregation_continuous_vars`](parameters.html#aggregation_continuous_vars), and use them in the model formulas of the [differential analyses](downstream_differential_analyses.md).
 
-## Which variables belong here
+Put library-, run- or batch-specific variables in the [GEM well table](reference_GEM_wells.md) instead, with a `GEM_well_` prefix.
 
-Put donor-specific phenotypes and covariates in this table, for example condition, age, or sex. Put library-, run-, or batch-specific variables in the GEM well table with a `GEM_well_` prefix. Apart from their key columns, the two tables must not share column names. These rules are checked when the targets that read the table run, not when the pipeline starts.
+## Matching donors to nuclei {#matching-donors-to-nuclei}
+
+Every nucleus receives a `donor_id` from its GEM well: `GEM_well_donor_id` for a single-donor well, or the VCF sample name that Vireo assigns in a [pooled well](reference_GEM_wells.md#pooled-wells). Give each of those IDs one row, with identical spelling; the nuclei-per-donor plot at [checkpoint 1](main_running.md#checkpoint-1) shows the IDs the nuclei received. Nuclei whose donor is missing from the table get `NA` donor variables, and rows for donors without nuclei are ignored.
+
+## Rules checked {#rules}
+
+When the targets that read the table run, they check that:
+
+- `donor_id` values are unique; and
+- apart from `donor_id` and `GEM_well_ID`, no column name appears both here and in the [GEM well table](reference_GEM_wells.md).
 
 ## Extended table for differential analyses
 
 The [differential analyses](downstream_differential_analyses.md) module can read additional donor-level model variables from a second table given in [`differential_analyses_extended_donor_id_metadata_tsv`](parameters.html#differential_analyses_extended_donor_id_metadata_tsv). It must keep the same unique `donor_id` key. If it is not set, the module uses the aggregation's donor table.
+
+## Public example {#public-example}
+
+The public demo's table also lists the donors of other example aggregations; only `pbmc1` and `lymph1` have nuclei in the demo:
+
+[Generated Quarto chunk omitted: `emit_file( "website/data/public_defaults/immune_human_dataset_donor_id_metadata.tsv", "example_data/immune_human_data...`]
 
 
 <!-- source: website/reference_aggregations.md -->
@@ -1307,7 +1326,7 @@ The [differential analyses](downstream_differential_analyses.md) module can read
 
 
 
-`cfg_aggregations.yaml` in the [selected configuration directory](main_overview.md#configuration-directory) has one top-level entry per aggregation: a joint GEX, ATAC and WNN analysis of one or more GEM wells. This page describes the entry structure; the [running guide](main_running.md#steps) explains when to set each parameter and how to review its effect.
+`cfg_aggregations.yaml` in the [selected configuration directory](main_overview.md#configuration-directory) has one top-level entry per aggregation: a joint GEX, ATAC and WNN analysis of one or more GEM wells. You add an entry at [step 3 of Configure your data](main_running.md#steps); the running guide explains when to revise each setting at its checkpoint.
 
 The public configuration contains these entries; inactive ones can stay as examples:
 
@@ -1317,37 +1336,40 @@ The public configuration contains these entries; inactive ones can stay as examp
 - `ENCODE_heart_LV_6x` (inactive): six ENCODE left-ventricle GEM wells with a differential-analysis example.
 - `mixed_human_31x` (inactive): the aggregation behind the [output gallery](gallery.md), with all optional modules enabled. Its seven 10x Genomics and 24 ENCODE GEM wells are processed locally with Cell Ranger ARC 2.1.0 and GRCh38-2024-A, so its PBMC well `healthy_PBMC_human_2024A` is separate from the demo's downloaded `healthy_PBMC_human`.
 
-Local validation runs `immune_human_2x`, `brain_mouse` and `mixed_human_31x`.
-
 ## Minimal entry
+
+Copy `template_aggregation`, rename the copy and fill it in. The result needs at least:
 
 ``` {.yaml filename="cfg_aggregations.yaml"}
 my_aggregation:
+  is_active: true
   aggregation_GEM_well_IDs: [my_GEM_well]
   aggregation_donor_id_metadata_tsv: /path/to/donor_metadata.tsv
   aggregation_GEX_marker_genes:
     Cell_type_A: [GENE1, GENE2]
     Cell_type_B: [GENE3, GENE4]
-  is_active: true
 ```
 
-Every other parameter is optional or has a default, listed in the [parameter reference](#parameter-reference) below. Add a parameter to the entry only to change its default.
+`is_active: true` replaces the template's `false`; an entry written from scratch is active by default. Every other parameter is optional or has a default, listed in the [parameter browser](parameters.html#workflow=aggregation). Add a parameter to the entry only to change its default.
 
-## Required keys
+## Keys
 
-- [`aggregation_GEM_well_IDs`](parameters.html#aggregation_GEM_well_IDs): the `GEM_well_ID` values to combine. Each must be an active row of the [GEM well table](reference_GEM_wells.md), and all must use the same Cell Ranger ARC reference.
+- [`aggregation_GEM_well_IDs`](parameters.html#aggregation_GEM_well_IDs): the `GEM_well_ID` values to combine, from the [GEM well table](reference_GEM_wells.md).
 - [`aggregation_donor_id_metadata_tsv`](parameters.html#aggregation_donor_id_metadata_tsv): the [donor metadata table](reference_donor_metadata.md) for these GEM wells.
 - [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes): marker genes per expected cell type, used for cluster annotation and marker plots.
-
-[`is_active`](parameters.html#is_active) (default `true`) controls whether targets are constructed for the aggregation. Set it to `false` for aggregations you are not ready to run before an unqualified `targets::tar_make()`; this does not delete existing results.
+- [`is_active`](parameters.html#is_active) (default `true`): whether targets are constructed for the aggregation. Set it to `false` for aggregations you are not ready to run before an unqualified `targets::tar_make()`; this does not delete existing results.
 
 ## Marker genes and transcription factors
 
 Replace the placeholder genes with symbols appropriate for the tissue. List at least two cell types, and use gene names from the Cell Ranger ARC reference. A gene without a suffix or with a `+` suffix is a positive marker; a `-` suffix marks a gene that should be absent. Each cell type needs at least one positive marker. The optional [`aggregation_ATAC_marker_TFs`](parameters.html#aggregation_ATAC_marker_TFs) names transcription factors per cell type for the motif-accessibility plots at checkpoint 7. [Cluster annotation](review_outputs.md#cluster-annotation) describes how the marker lists are used.
 
-## QC filters after peak calling
+## Rules checked {#rules}
 
-[`aggregation_QC_exclude_list_combined_object`](parameters.html#aggregation_QC_exclude_list_combined_object) lists filter expressions over the peak-based ATAC metrics. Nuclei for which an expression is `TRUE` are removed, for example:
+When the pipeline starts, it checks every entry against the [parameter manifest](change_the_pipeline.md#parameter-manifest): unknown parameters fail, and the resolved values are checked for missingness, type, cardinality and allowed values. It also checks that every listed GEM well exists and is active, and that each listed module has an entry in its configuration file. When the targets run, all GEM wells of an aggregation must share the same Cell Ranger ARC reference, and every marker gene must be present in the GEX count matrix.
+
+## QC filters after peak calling {#qc-filters-after-peak-calling}
+
+Leave [`aggregation_QC_exclude_list_combined_object`](parameters.html#aggregation_QC_exclude_list_combined_object) unset for the first run. After reviewing the peak QC distributions at [checkpoint 4](main_running.md#checkpoint-4), list filters and run checkpoint 5, which applies them to the GEX-retained nuclei. Each filter is a complete R expression over the per-nucleus metadata:
 
 ``` {.yaml filename="cfg_aggregations.yaml"}
 aggregation_QC_exclude_list_combined_object:
@@ -1356,7 +1378,7 @@ aggregation_QC_exclude_list_combined_object:
   - atac_peak_counts_blacklist_frac > 0.01
 ```
 
-Omit it until the peak QC plots at [checkpoint 4](main_running.md#checkpoint-4) have shown the distributions; checkpoint 5 then shows which nuclei the filters remove.
+A nucleus for which any expression is `TRUE` is excluded, and each expression is reported as a separate exclusion reason in the checkpoint 5 UpSet and retention plots. Filters can use the metrics that [`QC_metric_manifest.tsv`](https://github.com/koefoeden/multiomeR/blob/main/QC_metric_manifest.tsv) lists as available from checkpoint 4 or earlier. These cutoffs are examples, not recommendations for your tissue.
 
 ## Inherit settings from another aggregation {#inheritance}
 
@@ -1394,17 +1416,11 @@ Each listed module also needs an entry named after the aggregation in its own co
 | `genetic_enrichment` | `cfg_module_genetic_enrichment.yaml` | [Genetic enrichment](downstream_genetic_enrichment.md) |
 | `peak_gene_correlation` | `cfg_module_peak_gene_correlation.yaml` | [Peak–gene correlation](downstream_peak_gene_correlation.md) |
 
-## Parameter reference {#parameter-reference}
+## Public example {#public-example}
 
-The [parameter browser](parameters.html) lists every parameter of the primary module and the optional modules with its default, type and an example. Choose a workflow, then search by name or purpose. The [committed example](https://github.com/koefoeden/multiomeR/blob/main/configuration/cfg_aggregations.yaml) shows complete entries.
-
-<details>
-
-<summary>Show the public <code>immune_human_2x</code> example</summary>
+The public demo's entry is shown below; the [committed example](https://github.com/koefoeden/multiomeR/blob/main/configuration/cfg_aggregations.yaml) shows every entry.
 
 [Generated Quarto chunk omitted: `emit_yaml_entry(aggregations_config_file, "immune_human_2x")`]
-
-</details>
 
 
 <!-- source: website/review_outputs.md -->
@@ -2059,13 +2075,12 @@ The naming convention is therefore compositional:
 
 ``` text
 <target>.<GEM_well_ID>
-<target>.<dataset_name>
 <target>.<aggregation_name>
 <module_target>.<module_name>.<aggregation_name>
 <nested_module_target>.<nested_suffix>.<module_name>.<aggregation_name>
 ```
 
-Because these suffixes become target names and cache identity, config keys should be stable, human-readable, and free of unnecessary punctuation. In particular, avoid dots in GEM well, dataset, aggregation, and module IDs unless there is a compelling reason.
+Because these suffixes become target names and cache identity, config keys should be stable, human-readable, and free of unnecessary punctuation. In particular, avoid dots in GEM well, aggregation, and module IDs unless there is a compelling reason.
 
 ## Target-symbol columns
 

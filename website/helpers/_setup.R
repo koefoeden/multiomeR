@@ -94,6 +94,15 @@ emit_yaml_entry <- function(path, key) {
   )
 }
 
+emit_file <- function(path, filename) {
+  cat(
+    "```{.text filename=\"", filename, "\"}\n",
+    paste(readLines(path, warn = FALSE), collapse = "\n"),
+    "\n```\n",
+    sep = ""
+  )
+}
+
 github_repo <- "https://github.com/koefoeden/multiomeR/tree/main"
 pipeline_github_file <- file.path(github_repo, "_targets.R")
 aggregations_config_file <- "website/data/public_defaults/cfg_aggregations.yaml"

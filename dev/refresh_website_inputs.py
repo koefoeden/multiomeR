@@ -18,6 +18,7 @@ def main():
         "cfg_aggregations.yaml", "cfg_module_differential_analyses.yaml",
         "cfg_module_genetic_enrichment.yaml", "cfg_module_peak_gene_correlation.yaml",
     )]
+    files += [source / "example_data" / "immune_human_dataset_donor_id_metadata.tsv"]
     for path in files:
         shutil.copyfile(path, destination / path.name)
 

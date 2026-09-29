@@ -15,13 +15,7 @@ format_GEM_well_value <- function(value, column) {
   paste0("<code>", escape_html(value), "</code>")
 }
 
-emit_GEM_well_demo_table <- function(
-  GEM_well_config_file,
-  dictionary_file
-) {
-  demo <- list(GEM_wells = utils::read.delim(
-    GEM_well_config_file, check.names = FALSE, colClasses = "character"
-  ))
+read_GEM_well_dictionary <- function(dictionary_file) {
   dictionary <- utils::read.delim(
     dictionary_file,
     check.names = FALSE,
@@ -50,6 +44,35 @@ emit_GEM_well_demo_table <- function(
   if (!all(dictionary$is_required %in% c("TRUE", "FALSE"))) {
     stop("GEM-well dictionary is_required values must be TRUE or FALSE", call. = FALSE)
   }
+  dictionary
+}
+
+emit_GEM_well_column_table <- function(dictionary_file) {
+  dictionary <- read_GEM_well_dictionary(dictionary_file)
+  dictionary <- dictionary[dictionary$is_required == "TRUE", , drop = FALSE]
+  entry <- gsub(
+    "\\b((GEM_well|aggregation)_[[:alnum:]_]+)",
+    "`\\1`",
+    paste(dictionary$purpose, dictionary$details),
+    perl = TRUE
+  )
+
+  cat(
+    "| Column | What to enter |\n|---|---|\n",
+    paste0("| `", dictionary$column, "` | ", entry, " |\n", collapse = ""),
+    sep = ""
+  )
+}
+
+emit_GEM_well_demo_table <- function(
+  GEM_well_config_file,
+  dictionary_file
+) {
+  demo <- list(GEM_wells = utils::read.delim(
+    GEM_well_config_file, check.names = FALSE, colClasses = "character"
+  ))
+  dictionary <- read_GEM_well_dictionary(dictionary_file)
+
   if (!setequal(dictionary$column, names(demo$GEM_wells))) {
     missing_columns <- setdiff(names(demo$GEM_wells), dictionary$column)
     extra_columns <- setdiff(dictionary$column, names(demo$GEM_wells))

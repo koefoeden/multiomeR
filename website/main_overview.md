@@ -4,10 +4,10 @@ Before the first run, prepare the inputs below and choose where your settings wi
 
 ## Inputs to prepare
 
-- **Cell Ranger ARC outputs:** one `cellranger-arc count` output directory per GEM well. Its `outs/` folder must contain `summary.csv`, `filtered_feature_bc_matrix.h5`, `atac_fragments.tsv.gz`, `atac_fragments.tsv.gz.tbi` and `per_barcode_metrics.csv`. GEM wells analyzed together must use the same Cell Ranger ARC reference.
+- **Cell Ranger ARC outputs:** one `cellranger-arc count` output directory per GEM well, with the [files the pipeline reads](reference_GEM_wells.md#cellranger-inputs). GEM wells analyzed together must use the same Cell Ranger ARC reference.
 - **Donor metadata table:** a TSV with one row per donor and the phenotypes or covariates you want to analyze; see [Donor metadata table](reference_donor_metadata.md).
-- **Donor genotypes (optional):** to demultiplex a GEM well that pools several donors, a VCF with their genotypes, as described in the [Vireo genotype-input documentation](https://vireosnp.readthedocs.io/en/stable/manual.html). The GEM well's `outs/` folder must then also contain `atac_possorted_bam.bam`.
-- **CellBender output (optional):** to use gene-expression counts corrected for ambient RNA, run [CellBender remove-background](https://cellbender.readthedocs.io/en/latest/usage/) first and give its H5 file in the [GEM well table](reference_GEM_wells.md).
+- **Donor genotypes (pooled GEM wells only):** a VCF with the genotypes of the pooled donors, whose sample names become the donor IDs; see [Pooled GEM wells](reference_GEM_wells.md#pooled-wells).
+- **CellBender output (optional):** to use gene-expression counts corrected for ambient RNA, run [CellBender remove-background](https://cellbender.readthedocs.io/en/latest/usage/) first and give its H5 file in the [GEM well table](reference_GEM_wells.md#cellranger-inputs).
 - **Compute resources:** for large datasets, use a compute cluster with a job scheduler; see [Choose where the analysis runs](performance_distributed_computing.md).
 
 ## Where the configuration lives {#configuration-directory}

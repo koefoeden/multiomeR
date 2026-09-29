@@ -116,13 +116,12 @@ The naming convention is therefore compositional:
 
 ``` text
 <target>.<GEM_well_ID>
-<target>.<dataset_name>
 <target>.<aggregation_name>
 <module_target>.<module_name>.<aggregation_name>
 <nested_module_target>.<nested_suffix>.<module_name>.<aggregation_name>
 ```
 
-Because these suffixes become target names and cache identity, config keys should be stable, human-readable, and free of unnecessary punctuation. In particular, avoid dots in GEM well, dataset, aggregation, and module IDs unless there is a compelling reason.
+Because these suffixes become target names and cache identity, config keys should be stable, human-readable, and free of unnecessary punctuation. In particular, avoid dots in GEM well, aggregation, and module IDs unless there is a compelling reason.
 
 ## Target-symbol columns
 

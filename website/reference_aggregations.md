@@ -5,7 +5,7 @@ pipeline_name <- "processing_and_aggregation"
 source("helpers/_setup.R")
 ```
 
-`cfg_aggregations.yaml` in the [selected configuration directory](main_overview.md#configuration-directory) has one top-level entry per aggregation: a joint GEX, ATAC and WNN analysis of one or more GEM wells. This page describes the entry structure; the [running guide](main_running.md#steps) explains when to set each parameter and how to review its effect.
+`cfg_aggregations.yaml` in the [selected configuration directory](main_overview.md#configuration-directory) has one top-level entry per aggregation: a joint GEX, ATAC and WNN analysis of one or more GEM wells. You add an entry at [step 3 of Configure your data](main_running.md#steps); the running guide explains when to revise each setting at its checkpoint.
 
 The public configuration contains these entries; inactive ones can stay as examples:
 
@@ -15,37 +15,40 @@ The public configuration contains these entries; inactive ones can stay as examp
 - `ENCODE_heart_LV_6x` (inactive): six ENCODE left-ventricle GEM wells with a differential-analysis example.
 - `mixed_human_31x` (inactive): the aggregation behind the [output gallery](gallery.md), with all optional modules enabled. Its seven 10x Genomics and 24 ENCODE GEM wells are processed locally with Cell Ranger ARC 2.1.0 and GRCh38-2024-A, so its PBMC well `healthy_PBMC_human_2024A` is separate from the demo's downloaded `healthy_PBMC_human`.
 
-Local validation runs `immune_human_2x`, `brain_mouse` and `mixed_human_31x`.
-
 ## Minimal entry
+
+Copy `template_aggregation`, rename the copy and fill it in. The result needs at least:
 
 ``` {.yaml filename="cfg_aggregations.yaml"}
 my_aggregation:
+  is_active: true
   aggregation_GEM_well_IDs: [my_GEM_well]
   aggregation_donor_id_metadata_tsv: /path/to/donor_metadata.tsv
   aggregation_GEX_marker_genes:
     Cell_type_A: [GENE1, GENE2]
     Cell_type_B: [GENE3, GENE4]
-  is_active: true
 ```
 
-Every other parameter is optional or has a default, listed in the [parameter reference](#parameter-reference) below. Add a parameter to the entry only to change its default.
+`is_active: true` replaces the template's `false`; an entry written from scratch is active by default. Every other parameter is optional or has a default, listed in the [parameter browser](parameters.html#workflow=aggregation). Add a parameter to the entry only to change its default.
 
-## Required keys
+## Keys
 
-- [`aggregation_GEM_well_IDs`](parameters.html#aggregation_GEM_well_IDs): the `GEM_well_ID` values to combine. Each must be an active row of the [GEM well table](reference_GEM_wells.md), and all must use the same Cell Ranger ARC reference.
+- [`aggregation_GEM_well_IDs`](parameters.html#aggregation_GEM_well_IDs): the `GEM_well_ID` values to combine, from the [GEM well table](reference_GEM_wells.md).
 - [`aggregation_donor_id_metadata_tsv`](parameters.html#aggregation_donor_id_metadata_tsv): the [donor metadata table](reference_donor_metadata.md) for these GEM wells.
 - [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes): marker genes per expected cell type, used for cluster annotation and marker plots.
-
-[`is_active`](parameters.html#is_active) (default `true`) controls whether targets are constructed for the aggregation. Set it to `false` for aggregations you are not ready to run before an unqualified `targets::tar_make()`; this does not delete existing results.
+- [`is_active`](parameters.html#is_active) (default `true`): whether targets are constructed for the aggregation. Set it to `false` for aggregations you are not ready to run before an unqualified `targets::tar_make()`; this does not delete existing results.
 
 ## Marker genes and transcription factors
 
 Replace the placeholder genes with symbols appropriate for the tissue. List at least two cell types, and use gene names from the Cell Ranger ARC reference. A gene without a suffix or with a `+` suffix is a positive marker; a `-` suffix marks a gene that should be absent. Each cell type needs at least one positive marker. The optional [`aggregation_ATAC_marker_TFs`](parameters.html#aggregation_ATAC_marker_TFs) names transcription factors per cell type for the motif-accessibility plots at checkpoint 7. [Cluster annotation](review_outputs.md#cluster-annotation) describes how the marker lists are used.
 
-## QC filters after peak calling
+## Rules checked {#rules}
 
-[`aggregation_QC_exclude_list_combined_object`](parameters.html#aggregation_QC_exclude_list_combined_object) lists filter expressions over the peak-based ATAC metrics. Nuclei for which an expression is `TRUE` are removed, for example:
+When the pipeline starts, it checks every entry against the [parameter manifest](change_the_pipeline.md#parameter-manifest): unknown parameters fail, and the resolved values are checked for missingness, type, cardinality and allowed values. It also checks that every listed GEM well exists and is active, and that each listed module has an entry in its configuration file. When the targets run, all GEM wells of an aggregation must share the same Cell Ranger ARC reference, and every marker gene must be present in the GEX count matrix.
+
+## QC filters after peak calling {#qc-filters-after-peak-calling}
+
+Leave [`aggregation_QC_exclude_list_combined_object`](parameters.html#aggregation_QC_exclude_list_combined_object) unset for the first run. After reviewing the peak QC distributions at [checkpoint 4](main_running.md#checkpoint-4), list filters and run checkpoint 5, which applies them to the GEX-retained nuclei. Each filter is a complete R expression over the per-nucleus metadata:
 
 ``` {.yaml filename="cfg_aggregations.yaml"}
 aggregation_QC_exclude_list_combined_object:
@@ -54,7 +57,7 @@ aggregation_QC_exclude_list_combined_object:
   - atac_peak_counts_blacklist_frac > 0.01
 ```
 
-Omit it until the peak QC plots at [checkpoint 4](main_running.md#checkpoint-4) have shown the distributions; checkpoint 5 then shows which nuclei the filters remove.
+A nucleus for which any expression is `TRUE` is excluded, and each expression is reported as a separate exclusion reason in the checkpoint 5 UpSet and retention plots. Filters can use the metrics that [`QC_metric_manifest.tsv`](https://github.com/koefoeden/multiomeR/blob/main/QC_metric_manifest.tsv) lists as available from checkpoint 4 or earlier. These cutoffs are examples, not recommendations for your tissue.
 
 ## Inherit settings from another aggregation {#inheritance}
 
@@ -92,16 +95,10 @@ Each listed module also needs an entry named after the aggregation in its own co
 | `genetic_enrichment` | `cfg_module_genetic_enrichment.yaml` | [Genetic enrichment](downstream_genetic_enrichment.md) |
 | `peak_gene_correlation` | `cfg_module_peak_gene_correlation.yaml` | [Peak–gene correlation](downstream_peak_gene_correlation.md) |
 
-## Parameter reference {#parameter-reference}
+## Public example {#public-example}
 
-The [parameter browser](parameters.html) lists every parameter of the primary module and the optional modules with its default, type and an example. Choose a workflow, then search by name or purpose. The [committed example](https://github.com/koefoeden/multiomeR/blob/main/configuration/cfg_aggregations.yaml) shows complete entries.
-
-<details>
-
-<summary>Show the public <code>immune_human_2x</code> example</summary>
+The public demo's entry is shown below; the [committed example](https://github.com/koefoeden/multiomeR/blob/main/configuration/cfg_aggregations.yaml) shows every entry.
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_yaml_entry(aggregations_config_file, "immune_human_2x")
 ```
-
-</details>

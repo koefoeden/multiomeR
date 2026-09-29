@@ -132,7 +132,7 @@ items:
   group: Primary module
   section: 3. GEX clusters and cell types
   target: cross.UMAPs.3_GEX_QC
-  description: Compute GEX UMAPs across a sweep of PC counts and neighbour counts.
+  description: Compute GEX UMAPs across a sweep of PC counts and neighbor counts.
   source_file: 3_GEX_QC/UMAPs/cross/18_10.png
   asset: gallery_assets/3_GEX-QC/cross.UMAPs.3_GEX_QC.webp
 - checkpoint: 3_GEX-QC
@@ -286,7 +286,7 @@ items:
   group: Primary module
   section: 7. ATAC clusters and motifs
   target: cross.UMAPs.7_ATAC_QC
-  description: Compute ATAC UMAPs across a sweep of LSI dimension counts and neighbour counts.
+  description: Compute ATAC UMAPs across a sweep of LSI dimension counts and neighbor counts.
   source_file: 7_ATAC_QC/UMAPs/cross/17_10.png
   asset: gallery_assets/7_ATAC-QC/cross.UMAPs.7_ATAC_QC.webp
 - checkpoint: 7_ATAC-QC

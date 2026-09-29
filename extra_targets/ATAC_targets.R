@@ -795,7 +795,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = cross.UMAPs.7_ATAC_QC,
-      description = "Compute ATAC UMAPs across a sweep of LSI dimension counts and neighbour counts. [checkpoint:7_ATAC-QC]",
+      description = "Compute ATAC UMAPs across a sweep of LSI dimension counts and neighbor counts. [checkpoint:7_ATAC-QC]",
       command = {
         sweep_umap <- run_UMAP_from_embedding_matrix(
           embedding_matrix = harmony_embeddings_matrix.ATAC[metadata_w_cell_types_tibble.ATAC$barcode_w_prefix, , drop = FALSE],

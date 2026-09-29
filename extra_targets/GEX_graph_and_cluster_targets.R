@@ -272,7 +272,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = UMAP_neighbors_seq,
-    description = "Generate a sequence of neighbour counts for cross-parameter UMAP exploration",
+    description = "Generate a sequence of neighbor counts for cross-parameter UMAP exploration",
     command = round(seq(10, aggregation_UMAP_nNNs, length.out = 3))
   ),
   targets::tar_target(
@@ -319,7 +319,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = cross.UMAPs.3_GEX_QC,
-    description = "Compute GEX UMAPs across a sweep of PC counts and neighbour counts. [checkpoint:3_GEX-QC]",
+    description = "Compute GEX UMAPs across a sweep of PC counts and neighbor counts. [checkpoint:3_GEX-QC]",
     command = {
       sweep_umap <- run_UMAP_from_embedding_matrix(
         embedding_matrix = harmony_embeddings_matrix.GEX,

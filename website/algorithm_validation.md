@@ -8,14 +8,14 @@ The evidence labels are intentionally narrow:
 - **Reference-similarity tested** means exact equality is not an appropriate contract, so predefined similarity thresholds are checked against the named reference implementation.
 - **Algorithmically derived** means the implementation is checked against an independent mathematical result, not against another software implementation.
 
-Passing these fixtures does not validate every dataset, parameter regime, approximate-neighbour realization, biological interpretation, or downstream target. The test suite contains only such reference comparisons. Each test asserts the reference version it was written against; versions are locked by `pixi.lock`. Run the complete suite locally with `pixi run --use-environment-activation-cache test` after changing tests, tested helpers, native sources, or the Pixi environment; cloud CI runs only checks that need no environment. The narrower `pixi run --use-environment-activation-cache test-algorithm-validation` task runs only the slow UCell, AMULET, WNN, and SCAVENGE tests.
+Passing these fixtures does not validate every dataset, parameter regime, approximate-neighbor realization, biological interpretation, or downstream target. The test suite contains only such reference comparisons. Each test asserts the reference version it was written against; versions are locked by `pixi.lock`. Run the complete suite locally with `pixi run --use-environment-activation-cache test` after changing tests, tested helpers, native sources, or the Pixi environment; cloud CI runs only checks that need no environment. The narrower `pixi run --use-environment-activation-cache test-algorithm-validation` task runs only the slow UCell, AMULET, WNN, and SCAVENGE tests.
 
 | Implementation | Evidence status | Reference | Validation contract |
 |---|---|---|---|
 | BPCells-native UCell | Reference-parity tested | UCell | Identical values, dimensions, and dimnames |
 | BPCells-native AMULET | Reference-parity tested | scDblFinder | Identical metrics and loci, including order |
 | BPCells-backed ATAC scDblFinder feature aggregation | Not reference-tested | scDblFinder | None; scores and calls can differ from its internal aggregation |
-| Native WNN | Reference-similarity tested | Seurat | Modality-weight Spearman and neighbour-overlap thresholds per fixture |
+| Native WNN | Reference-similarity tested | Seurat | Modality-weight Spearman and neighbor-overlap thresholds per fixture |
 | Sparse SCAVENGE propagation | Algorithmically derived and reference-parity tested | SCAVENGE source at `8ee8b173d965` | Closed-form propagation; identical seeds; propagation and trait relevance scores within 1e-12 |
 | Peak–gene donor-slope REML and Kenward–Roger kernels | Reference-parity tested | lme4 and pbkrtest | Coefficients, df and P-values within 1e-6; identical fit statuses |
 | Peak–gene compact BH breakpoints | Reference-parity tested | `stats::p.adjust()` | Identical FDR per chromosome slice |
@@ -28,7 +28,7 @@ The peak–gene rows belong to the analyses in [Peak–gene correlation methods]
 
 **Reason for reimplementation.** The workflow keeps gene-by-cell counts in BPCells-backed matrices. Materializing the complete matrix or building a Seurat object solely for marker scoring would discard that storage contract, so multiomeR ranks bounded cell chunks and returns metadata-ready scores directly.
 
-**Deliberate deviations and consequences.** Only one cell chunk is materialized at a time, and optional fork workers operate across chunks; this changes memory and execution behaviour but not the tested values. The helper returns a data frame instead of mutating a Seurat object. The target-level marker validator rejects configured genes missing from the reference, whereas the lower-level helper still exposes UCell's impute and skip modes. The production annotation ranks each cell from its nonzero counts in a compiled kernel, because zero counts tie below the rank cap, and scores signed signatures per cell before aggregation, which costs more computation than a positive-only rank-summary shortcut. It adds the chunk sums in the order of the R implementation, so its results are identical to it.
+**Deliberate deviations and consequences.** Only one cell chunk is materialized at a time, and optional fork workers operate across chunks; this changes memory and execution behavior but not the tested values. The helper returns a data frame instead of mutating a Seurat object. The target-level marker validator rejects configured genes missing from the reference, whereas the lower-level helper still exposes UCell's impute and skip modes. The production annotation ranks each cell from its nonzero counts in a compiled kernel, because zero counts tie below the rank cap, and scores signed signatures per cell before aggregation, which costs more computation than a positive-only rank-summary shortcut. It adds the chunk sums in the order of the R implementation, so its results are identical to it.
 
 **Implementation.** `calculate_BPCells_UCell_scores_from_matrix()` and `rank_UCell_count_chunk()` in `R/processing_GEX_helpers.R`; the cluster annotation is in `R/cluster_annotation_helpers.R` with its kernel `src/cluster_UCell_chunk.cpp`, and is described in [Cell-type annotation](methods_primary_module.md#cell-type-annotation).
 
@@ -68,15 +68,15 @@ pixi run --use-environment-activation-cache test-amulet-parity
 
 ## Native weighted nearest neighbors
 
-**Reference algorithm.** [`Seurat::FindMultiModalNeighbors()`](https://satijalab.org/seurat/reference/findmultimodalneighbors) constructs cell-specific modality weights from within- and cross-modality neighbourhood prediction, collects candidate neighbours across modalities, and selects a weighted multimodal neighbour set.
+**Reference algorithm.** [`Seurat::FindMultiModalNeighbors()`](https://satijalab.org/seurat/reference/findmultimodalneighbors) constructs cell-specific modality weights from within- and cross-modality neighborhood prediction, collects candidate neighbors across modalities, and selects a weighted multimodal neighbor set.
 
-**Reason for reimplementation.** The pipeline already holds aligned RNA and ATAC embeddings and needs reusable neighbour indices, distances, and modality weights without creating a Seurat object. Native graph state also feeds UMAP, Leiden clustering, SCAVENGE, and the Seurat/Signac export.
+**Reason for reimplementation.** The pipeline already holds aligned RNA and ATAC embeddings and needs reusable neighbor indices, distances, and modality weights without creating a Seurat object. Native graph state also feeds UMAP, Leiden clustering, SCAVENGE, and the Seurat/Signac export.
 
-**Deliberate deviations and consequences.** BPCells HNSW replaces Seurat's Annoy search, so candidate sets need not be identical. The helper does not expose Seurat's optional smoothing or cross-constant list, and BPCells builds the downstream SNN graph rather than Seurat `Neighbor` and `Graph` objects. The helper's `seed` argument is not consulted by the HNSW calls and does not control neighbour-search randomness. These choices can change weights, selected neighbours, SNN edges, clusters, and UMAP coordinates, so correlation and overlap, not exact equality, are the validation contract.
+**Deliberate deviations and consequences.** BPCells HNSW replaces Seurat's Annoy search, so candidate sets need not be identical. The helper does not expose Seurat's optional smoothing or cross-constant list, and BPCells builds the downstream SNN graph rather than Seurat `Neighbor` and `Graph` objects. The helper's `seed` argument is not consulted by the HNSW calls and does not control neighbor-search randomness. These choices can change weights, selected neighbors, SNN edges, clusters, and UMAP coordinates, so correlation and overlap, not exact equality, are the validation contract.
 
 **Implementation.** `weighted_nearest_neighbors_BPCells()` in `R/processing_multimodal_helpers.R` with the small-SNN bandwidth kernel in `src/wnn_snn_bandwidth.cpp`; `extra_targets/WNN_targets.R` aligns the embeddings and wires the result into clustering, UMAP and metadata targets.
 
-**Validation.** `tests/testthat/test-wnn-parity.R` compares deterministic RNA/ATAC fixtures with Seurat at production search settings: a 400-cell fixture with candidate range 200 and `k` of 20 and 50, and a 160-cell stress fixture with `k = 15` and candidate range 50. Each case must exceed its thresholds for modality-weight Spearman correlation and mean and lower-quartile neighbour-set overlap, and one- and two-thread results must be identical. This does not assert equality of selected neighbours, SNN weights, clustering, or UMAP.
+**Validation.** `tests/testthat/test-wnn-parity.R` compares deterministic RNA/ATAC fixtures with Seurat at production search settings: a 400-cell fixture with candidate range 200 and `k` of 20 and 50, and a 160-cell stress fixture with `k = 15` and candidate range 50. Each case must exceed its thresholds for modality-weight Spearman correlation and mean and lower-quartile neighbor-set overlap, and one- and two-thread results must be identical. This does not assert equality of selected neighbors, SNN weights, clustering, or UMAP.
 
 ```bash
 pixi run --use-environment-activation-cache test-algorithm-validation
@@ -84,7 +84,7 @@ pixi run --use-environment-activation-cache test-algorithm-validation
 
 ## Sparse SCAVENGE propagation
 
-**Reference algorithm.** [SCAVENGE at commit `8ee8b173d965`](https://github.com/sankaranlab/SCAVENGE/tree/8ee8b173d965009a696b2a590d5b17b28b7cf851) selects high chromVAR z-score seed cells, constructs a binary mutual-nearest-neighbour graph, performs a column-normalized random walk with restart, caps and rescales the propagation score into a trait relevance score (TRS), and uses degree-matched seed permutations to identify significant cells.
+**Reference algorithm.** [SCAVENGE at commit `8ee8b173d965`](https://github.com/sankaranlab/SCAVENGE/tree/8ee8b173d965009a696b2a590d5b17b28b7cf851) selects high chromVAR z-score seed cells, constructs a binary mutual-nearest-neighbor graph, performs a column-normalized random walk with restart, caps and rescales the propagation score into a trait relevance score (TRS), and uses degree-matched seed permutations to identify significant cells.
 
 **Reason for reimplementation.** The reference package's dependency stack predates the pipeline's R/Bioconductor environment. multiomeR needs sparse propagation over its native SNN graphs.
 

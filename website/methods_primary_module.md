@@ -93,7 +93,7 @@ emit_mermaid("website/figures/human_curated/ATAC_v2.mmd")
 
 **Checkpoint:** [8: WNN integration](main_running.md#checkpoint-8)
 
-### Weighted nearest neighbours {#weighted-nearest-neighbours}
+### Weighted nearest neighbors {#weighted-nearest-neighbors}
 
 {{< include _shared_methods/WNN_integration.md >}}
 

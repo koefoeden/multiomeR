@@ -2,7 +2,7 @@ For molecular analyses, GEX and ATAC counts are summed within each donor–annot
 
 - **Gene expression (DGE):** gene pseudobulk counts.
 - **Chromatin accessibility (DCA):** consensus-peak pseudobulk counts after peak-level quality control.
-- **Motif-family accessibility (DTFA):** betterChromVAR deviations of the 233 JASPAR motif families calculated from the pseudobulk ATAC counts, column-centred and quantile-normalized across samples, so this matrix is continuous [@germain2026_betterchromvar].
+- **Motif-family accessibility (DTFA):** betterChromVAR deviations of the 233 JASPAR motif families calculated from the pseudobulk ATAC counts, column-centered and quantile-normalized across samples, so this matrix is continuous [@germain2026_betterchromvar].
 - **Transcription-factor activity (DCTA):** signed CollecTRI regulator activities inferred with the `decoupleR` univariate linear model from filtered, library-size-normalized log-CPM GEX pseudobulks, requiring at least five measured targets per regulator [@muller_dott2023_collectri; @badia2022_decoupler]. The CollecTRI network is accepted only when it matches a pinned checksum, and complexes such as AP1 and NF-κB remain intact as regulons.
 
 For each model, donors missing a model variable or outside an optional donor list and samples outside an optional annotation-class subset are removed; the DTFA branch additionally removes samples below a configured minimum ATAC depth. For count matrices, zero-depth samples are removed, features are filtered with the design-aware `edgeR::filterByExpr()`, and library sizes are normalized with `edgeR::normLibSizes()` [@robinson2009_edger].

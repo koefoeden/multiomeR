@@ -1,4 +1,4 @@
-# multiomeR 1.1.0 (unreleased)
+# multiomeR 1.1.0 (2026-09-29)
 
 A documentation and demo release. The public demo aggregation is rebuilt with
 new data and markers; other aggregations need no recomputation.

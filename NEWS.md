@@ -1,4 +1,4 @@
-# multiomeR 1.0.0 (unreleased)
+# multiomeR 1.0.0 (2026-09-29)
 
 The first stable release. The manuscript describing multiomeR is under peer
 review (link to come). From this release on, incompatible changes to

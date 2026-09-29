@@ -1,3 +1,47 @@
+# multiomeR 1.1.0 (unreleased)
+
+A documentation and demo release. The public demo aggregation is rebuilt with
+new data and markers; other aggregations need no recomputation.
+
+## Demo
+
+- Combine two healthy PBMC GEM wells from the same 10x Genomics series in the
+  demo: the granulocyte-sorted well as before and the unsorted 3k well, now
+  `unsorted_PBMC_human`, which replaces the lymphoma lymph node. The download
+  shrinks from about 4.1 to 1.3 GB and the stored results from about 6.4 to
+  3.3 GB.
+- Annotate the demo with marker sets whose genes single nuclei capture: B,
+  Mono, NK, DC and T. The previous two-gene markers left most demo nuclei
+  `Unassigned`; every GEX, ATAC and WNN cluster is now labeled.
+- Plot only the sorting annotation in the demo's categorical UMAPs, because its
+  other GEM-well annotations are now constant.
+
+## Documentation
+
+- Merge the implementation book into the manual. Its method descriptions form
+  an In depth part with one primary-module page organized by checkpoint stage,
+  one page per optional module and the algorithm-validation page; the
+  implementation conventions become one Change the pipeline page. Each
+  checkpoint of the running guide and each module page links to its methods.
+- Mark the reading layers in the sidebar: the guides, a Reference part that now
+  includes the parameter browser, and the In depth part with an advanced badge.
+- Show the printed results of every command on the demo-results page, refreshed
+  from the built demo with `pixi run refresh-demo-outputs`.
+- Give the GEM well, donor and aggregation reference pages one layout, and
+  document pooled GEM wells, the rules checked and when, and aggregation
+  inheritance.
+- Use US spelling throughout the manual.
+- Deploy the documentation only from `main`.
+
+## Migration
+
+- Run `pixi run --use-environment-activation-cache setup-demo` again to
+  download the new demo well; `example_data/lymphoma_lymph_human` is no longer
+  used and can be deleted.
+- Target invalidation: every `immune_human_2x` target and the per-GEM-well
+  targets of `unsorted_PBMC_human` build anew. Changed target descriptions
+  invalidate nothing, so other aggregations stay current.
+
 # multiomeR 1.0.0 (2026-09-29)
 
 The first stable release. The manuscript describing multiomeR is under peer

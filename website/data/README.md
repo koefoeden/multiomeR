@@ -20,6 +20,16 @@ pixi run --use-environment-activation-cache refresh-output-gallery mixed_human_3
 
 The command writes one WebP preview per plot target, replaces `gallery_assets/`, and keeps a hand-edited `source_file` while that file still exists. Refresh it instead of editing previews by hand.
 
+## Demo results
+
+`demo_outputs/` holds the printed output shown under the R blocks of [Inspect the demo results](../demo_outputs.md), and `figures/demo_WNN_cell_type_UMAP.png` its UMAP. After the public demo is rebuilt, refresh both from the root of a checkout whose store holds it:
+
+```bash
+pixi run --use-environment-activation-cache refresh-demo-outputs
+```
+
+The script evaluates every R block that is followed by an include of `data/demo_outputs/<name>.md` and writes the result into the repository that contains the script, so it can also be run from another checkout with `Rscript <repository>/dev/refresh_demo_outputs.R`. Edit the code in the page, not the output files.
+
 ## Parameter browser
 
 `website/parameters.html` is a generated, standalone browser with embedded styles, data and JavaScript. Do not edit it directly. After changing the public parameter snapshot, `helpers/parameter_overview.R`, `helpers/parameter_overview.js`, or the stylesheet, regenerate it:

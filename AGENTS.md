@@ -30,8 +30,9 @@ pixi run --use-environment-activation-cache -e dev export-website-llm-markdown
 ```
 
 The complete `website/` tree and `dev/render_website.py`,
-`dev/export_website_llm_markdown.py`, `dev/refresh_website_inputs.py`, and
-`dev/render_parameter_overview.R` are shared
+`dev/export_website_llm_markdown.py`, `dev/refresh_website_inputs.py`,
+`dev/refresh_output_gallery.py`, `dev/refresh_demo_outputs.R`,
+`dev/check_website_links.py`, and `dev/render_parameter_overview.R` are shared
 public documentation and must remain identical in both repositories. Keep
 private setup and benchmark notes in repository-local guides outside `website/`.
 Use Configure → Run → Review with output-file trees; interpretation belongs in

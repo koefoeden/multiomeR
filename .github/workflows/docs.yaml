@@ -14,8 +14,6 @@ on:
       - pixi.toml
       - pixi.lock
       - .github/workflows/docs.yaml
-  release:
-    types: [published]
   workflow_dispatch:
 
 permissions:

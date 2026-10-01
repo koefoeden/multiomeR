@@ -11,10 +11,13 @@ and verifies outputs. It uses the same checkout and configured targets store;
 valid targets are reused. Do not run it alongside another pipeline in that store.
 
 The command sets `MULTIOMER_VALIDATION=1` for itself and its children. This selects
-exactly `immune_human_2x`, `brain_mouse`, and `mixed_human_31x` plus their
-required GEM wells, regardless of their activation flags. Other entries stay
-excluded. Without the variable (or with `0`), normal flags apply: only the human
-demo is enabled by default. Graph construction prints the validation selection.
+whichever of `immune_human_2x`, `brain_mouse` and `mixed_human_31x` the selected
+configuration directory defines, plus their required GEM wells, regardless of
+their activation flags: the two demos in `configuration/` and `mixed_human_31x`
+in `configuration_dev/`. Other entries stay excluded. A release runs the command
+once with each directory selected in `configuration.local`. Without the variable
+(or with `0`), normal flags apply: only the human demo is enabled in
+`configuration/`. Graph construction prints the validation selection.
 
 For an interactive validation run, set the variable before `tar_make()`:
 
@@ -48,7 +51,9 @@ from their raw reads in the same way as the ENCODE counts. Its PBMC well
 `healthy_PBMC_human`, which uses the 10x Genomics outputs as published.
 
 `mixed_human_31x` is the aggregation behind the output gallery and manuscript
-figures, with all optional modules enabled. Its models compare male versus female
+figures, with all optional modules enabled. `configuration_dev/` runs it with
+Slurm workers on the node of the allocation that runs the validation; see its
+README. Its models compare male versus female
 cardiomyocytes and left-ventricle cell composition, using all eligible features.
 Only the four female and two male heart donors have sex recorded, with
 imbalanced ages and health status; this is a software test and an unadjusted

@@ -26,7 +26,8 @@ manifest diagrams and render the manual and the Markdown export when affected.
 State exactly which tests and runtime checks passed and which were not run.
 
 Before publication, run the documented `validate-local` command on the exact
-candidate with a clean working tree. Retain the report and require all preflight
+candidate with a clean working tree, once with `configuration/` and once with
+`configuration_dev/` selected. Retain the report and require all preflight
 and output checks to pass; cached target results may be reused.
 
 At publication, update the release date, verify the destination commit and

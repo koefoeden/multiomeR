@@ -1042,7 +1042,7 @@ The table shows two recorded runs to `multimodal_Seurat_object.8_multimodal_QC.m
 | `immune_human_2x` | 2 | 17,277 | 17.3 minutes | 31.4 minutes |
 | `PBMC_human_6x` | 6 | 51,291 | 23.8 minutes | 52.4 minutes |
 
-`immune_human_2x` is the demo aggregation. `PBMC_human_6x` combines the six PBMC GEM wells in the public `cfg_GEM_wells.tsv`; the public `cfg_aggregations.yaml` does not define it.
+`immune_human_2x` is the demo aggregation. `PBMC_human_6x` combines the six PBMC GEM wells in `configuration_dev/cfg_GEM_wells.tsv`; no public `cfg_aggregations.yaml` defines it.
 
 The critical path is the longest chain of dependent targets: the shortest possible run time when enough workers are available. Fewer workers and scheduler queue time make real runs longer, as do more nuclei, peaks, plots, or modules. Treat the numbers as examples, not predictions for another machine or configuration, and time one representative aggregation before sizing a large run.
 
@@ -1074,7 +1074,7 @@ load_project_runtime()
 
 ## Scheduler execution
 
-For SLURM, PBS, SGE, or LSF, replace the local controllers with the matching `crew.cluster` controllers. The commented SLURM example in `crew_controllers.R` defines light, heavy, and GPU tiers. For each tier:
+For SLURM, PBS, SGE, or LSF, replace the local controllers with the matching `crew.cluster` controllers. `configuration_dev/crew_controllers.R` defines SLURM tiers that keep every worker on the node of the allocation that runs the pipeline. For each tier:
 
 1. Request, in the controller's scheduler options, the CPUs, memory, and GPUs that its `controller_resources_tibble` row declares.
 2. Set the queue, account, wall time, modules, and worker start-up commands your cluster requires.
@@ -1330,7 +1330,8 @@ The public configuration contains these entries; inactive ones can stay as examp
 - `immune_human_2x` (active): the public demo, combining two human PBMC GEM wells with optional modules disabled.
 - `brain_mouse` (inactive): a mouse example.
 - `ENCODE_heart_LV_6x` (inactive): six ENCODE left-ventricle GEM wells with a differential-analysis example.
-- `mixed_human_31x` (inactive): the aggregation behind the [output gallery](gallery.md), with all optional modules enabled. Its seven 10x Genomics and 24 ENCODE GEM wells are processed locally with Cell Ranger ARC 2.1.0 and GRCh38-2024-A, so its PBMC well `healthy_PBMC_human_2024A` is separate from the demo's downloaded `healthy_PBMC_human`.
+
+`configuration_dev/` holds the larger public-data aggregations: `mixed_human_31x`, the aggregation behind the [output gallery](gallery.md) with all optional modules enabled, and `comparison_1x` to `comparison_20x`, nested subsets of its GEM wells for the manuscript's resource comparisons. The seven 10x Genomics and 24 ENCODE GEM wells of `mixed_human_31x` are processed locally with Cell Ranger ARC 2.1.0 and GRCh38-2024-A, so its PBMC well `healthy_PBMC_human_2024A` is separate from the demo's downloaded `healthy_PBMC_human`.
 
 ## Minimal entry
 

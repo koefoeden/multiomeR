@@ -1,6 +1,6 @@
 # Verify the full validation graph after tar_make(), without invalidating targets.
 local({
-  stopifnot(length(validation_aggregations()) == 3L)
+  stopifnot(length(validation_aggregations()) > 0L)
   commit <- system2("git", c("rev-parse", "HEAD"), stdout = TRUE)
   metadata <- targets::tar_meta(fields = c(name, type, children, error), complete_only = FALSE)
   current_names <- targets::tar_manifest(fields = name)$name
@@ -22,7 +22,7 @@ local({
     data.frame(commit = commit, aggregation = aggregation,
                cells = ncol(object), GEM_wells = length(unique(object$GEM_well_ID)))
   })
-  source('validation/check_differential.R', local = TRUE)
+  if ('mixed_human_31x' %in% config$aggregation) source('validation/check_differential.R', local = TRUE)
   stopifnot(length(targets::tar_outdated()) == 0L)
   report <- Sys.getenv('MULTIOMER_VALIDATION_REPORT')
   stopifnot(nzchar(report))

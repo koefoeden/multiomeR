@@ -172,19 +172,5 @@ rlang::list2(
       )
       stats::setNames(annotations$display_name, annotations$motif_family)
     }
-  ),
-  targets::tar_target(
-    name = chromHMMs_list_general,
-    description = "Load and liftover Roadmap Epigenomics chromHMM state annotations for all configured EDACC names",
-    command = with_annotation_hub_cache_lock({
-      AnnotationHub::setAnnotationHubOption("CACHE", file.path(targets::tar_config_get("store"), "files", "AnnotationHub"))
-      annot_hub_interface <- AnnotationHub::AnnotationHub(ask = FALSE)
-      get_roadmap_chromHMMs_from_annotation_hub(
-        annot_hub_interface = annot_hub_interface,
-        roadmap_EDACC_names = roadmap_EDACC_names
-      )
-    }),
-    packages = w_def("AnnotationHub"),
-    resources = get_tar_resources(cores_req = 1, RAM_GB_req = 16)
   )
 )

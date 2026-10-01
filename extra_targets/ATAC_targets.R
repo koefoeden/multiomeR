@@ -102,8 +102,17 @@ rlang::list2(
     ),
     targets::tar_target(
       name = chromHMMs_list_proj.ATAC,
-      description = "Subset chromHMM annotation list to the configured Roadmap/EDACC states",
-      command = chromHMMs_list_general[aggregation_roadmap_EDACC_names]
+      description = "Load and liftover Roadmap Epigenomics chromHMM state annotations for the configured EDACC names",
+      command = with_annotation_hub_cache_lock({
+        AnnotationHub::setAnnotationHubOption("CACHE", file.path(targets::tar_config_get("store"), "files", "AnnotationHub"))
+        annot_hub_interface <- AnnotationHub::AnnotationHub(ask = FALSE)
+        get_roadmap_chromHMMs_from_annotation_hub(
+          annot_hub_interface = annot_hub_interface,
+          roadmap_EDACC_names = aggregation_roadmap_EDACC_names
+        )
+      }),
+      packages = w_def("AnnotationHub"),
+      resources = get_tar_resources(cores_req = 1, RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC,

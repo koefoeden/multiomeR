@@ -19,7 +19,6 @@ peak_calling_aggregation_tibble <- aggregation_tibble |>
     "aggregated_cellranger_ref_list"
   ))
 GEM_well_tibble <- build_active_GEM_well_tibble(GEM_well_tibble_all)
-roadmap_EDACC_names <- get_roadmap_EDACC_names(aggregation_tibble = aggregation_tibble)
 
 pipeline <- rlang::list2(
   source("extra_targets/setup_targets.R")$value,

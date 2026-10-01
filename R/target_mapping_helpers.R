@@ -447,26 +447,6 @@ build_dataset_config_tibble <- function(GEM_well_tibble) {
     )
 }
 
-#' Get Roadmap EDACC names
-#'
-#' Extract the unique non-empty Roadmap EDACC names requested across active
-#' aggregations.
-#'
-#' @param aggregation_tibble Aggregation mapping tibble created by
-#'   `build_aggregation_tibble()`.
-#' @return A named character vector of Roadmap EDACC names.
-#' @keywords internal
-
-get_roadmap_EDACC_names <- function(aggregation_tibble) {
-  aggregation_tibble$aggregation_roadmap_EDACC_names |>
-    unlist(use.names = FALSE) |>
-    as.character() |>
-    purrr::discard(is.na) |>
-    purrr::discard(\(x) x == "") |>
-    unique() |>
-    purrr::set_names()
-}
-
 #' Build module mapping values
 #'
 #' Keep the active aggregations that opt into a module and join the settings

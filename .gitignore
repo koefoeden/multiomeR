@@ -47,6 +47,7 @@ logs
 **/*.quarto_ipynb
 .pixi/
 outputs
+outputs_dev*
 manuscript_figures/outputs/
 
 # Checkout-local configuration selection

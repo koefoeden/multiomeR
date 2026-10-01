@@ -15,7 +15,8 @@ whichever of `immune_human_2x`, `brain_mouse` and `mixed_human_31x` the selected
 configuration directory defines, plus their required GEM wells, regardless of
 their activation flags: the two demos in `configuration/` and `mixed_human_31x`
 in `configuration_dev/`. Other entries stay excluded. A release runs the command
-once with each directory selected in `configuration.local`. Without the variable
+once with each directory selected in `configuration.local`, with `TAR_PROJECT=dev`
+for `configuration_dev/`. Without the variable
 (or with `0`), normal flags apply: only the human demo is enabled in
 `configuration/`. Graph construction prints the validation selection.
 

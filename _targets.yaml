@@ -2,3 +2,6 @@ main:
   script: _targets.R
   store: outputs
   reporter_make: timestamp
+dev:
+  inherits: main
+  store: outputs_dev

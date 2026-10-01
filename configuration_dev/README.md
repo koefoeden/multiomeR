@@ -2,10 +2,12 @@
 
 This directory holds the larger public-data aggregations behind the output
 gallery, the release validation of the optional modules and the manuscript
-figures. Select it in `configuration.local`:
+figures. Select it in `configuration.local` and use its own targets store,
+`outputs_dev`, through the `dev` project in `_targets.yaml`:
 
 ```bash
 printf '%s\n' 'configuration_dev' > configuration.local
+export TAR_PROJECT=dev
 ```
 
 - `mixed_human_31x`: 31 public 10x Genomics and ENCODE GEM wells with every
@@ -17,9 +19,7 @@ printf '%s\n' 'configuration_dev' > configuration.local
 The Cell Ranger ARC inputs were reprocessed from the raw reads with Cell Ranger
 ARC 2.1.0 and the GRCh38 2024-A reference and are not supplied. The ignored
 links `example_data/encode` and `example_data/10x_arc_2.1.0` must point to
-them; see `validation/README.md`. The six left-ventricle GEM wells also appear
-in `configuration/` for `ENCODE_heart_LV_6x`; keep their rows identical, since
-both directories may share one targets store.
+them; see `validation/README.md`.
 
 `crew_controllers.R` runs every worker as a Slurm job on the node of the
 allocation that runs the pipeline, so start the pipeline inside an allocation

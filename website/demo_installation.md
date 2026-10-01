@@ -17,7 +17,7 @@ The demo analyzes two public 10x Genomics GEM wells of peripheral blood mononucl
 - About 25 GB of free disk space. This covers 1.3 GB of demo inputs, about 3.5 GB of results and up to 15 GB for the Pixi environment and its package cache, which Pixi keeps in your home directory by default.
 - Multiple CPU cores. The run time in the next chapter was measured with 16 logical threads.
 
-The committed `crew_controllers.R` suits a 16-CPU, 256-GB workstation. On a machine near the 60-GB minimum, lower its worker counts before running the demo, starting with the heavy workers; see [Local execution](performance_distributed_computing.md#local-execution).
+The committed `configuration/crew_controllers.R` suits a 16-CPU, 256-GB workstation. On a machine near the 60-GB minimum, lower its worker counts before running the demo, starting with the heavy workers; see [Local execution](performance_distributed_computing.md#local-execution).
 
 ## Set up the demo
 

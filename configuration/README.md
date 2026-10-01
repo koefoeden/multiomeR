@@ -10,7 +10,8 @@ printf '%s\n' 'configuration_my_project' > configuration.local
 ```
 
 Edit the files in your chosen directory. Keep `cfg_GEM_wells.tsv`,
-`cfg_aggregations.yaml`, and any enabled module settings together. Module files
+`cfg_aggregations.yaml`, `crew_controllers.R`, and any enabled module settings
+together. Module files
 use flat names such as `cfg_module_differential_analyses.yaml`.
 Disabled modules do not need configuration files.
 

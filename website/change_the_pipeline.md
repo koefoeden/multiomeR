@@ -222,7 +222,7 @@ multiomeR assumes that the repository runtime is bootstrapped before the target 
 2.  sourcing generally reusable helpers from `packages/multiomeRCore/R`,
 3.  sourcing pipeline-specific helpers from the root `R/` directory,
 4.  applying global plotting and `{targets}` options,
-5.  sourcing `crew_controllers.R` and installing controller resources.
+5.  sourcing `crew_controllers.R` from the selected configuration directory and installing controller resources.
 
 The nested `multiomeRCore` directory is both ordinary editable pipeline source and an installable package boundary for standalone repositories. multiomeR does not install or attach that package itself: `targets::tar_source()` loads the same implementation files before the root helpers. Keep domain-specific code under `R/`, but do not duplicate the generally reusable implementations there.
 

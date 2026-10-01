@@ -82,7 +82,7 @@ load_project_runtime <- function() {
   )
 
   apply_crew_controller_options(
-    source(file.path(get_project_root(), "crew_controllers.R"), chdir = TRUE)$value
+    source(configuration_path("crew_controllers.R"))$value
   )
   invisible(TRUE)
 }

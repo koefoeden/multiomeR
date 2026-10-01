@@ -17,6 +17,7 @@ The pipeline reads its settings from one configuration directory:
 - `cfg_GEM_wells.tsv`: one row per GEM well; see [GEM well table](reference_GEM_wells.md).
 - `cfg_aggregations.yaml`: one entry per aggregation, including the path to its donor metadata table; see [Aggregation configuration](reference_aggregations.md).
 - `cfg_module_<module>.yaml`: the settings of one optional module, needed only when that module is enabled.
+- `crew_controllers.R`: the workers that build the targets; see [Choose where the analysis runs](performance_distributed_computing.md).
 
 By default, this is `configuration/`, which holds the public demo and example settings. You can edit it directly, or keep your project's settings in a copy and select that copy in `configuration.local`:
 

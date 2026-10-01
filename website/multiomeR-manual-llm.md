@@ -78,7 +78,7 @@ The demo analyzes two public 10x Genomics GEM wells of peripheral blood mononucl
 - About 25 GB of free disk space. This covers 1.3 GB of demo inputs, about 3.5 GB of results and up to 15 GB for the Pixi environment and its package cache, which Pixi keeps in your home directory by default.
 - Multiple CPU cores. The run time in the next chapter was measured with 16 logical threads.
 
-The committed `crew_controllers.R` suits a 16-CPU, 256-GB workstation. On a machine near the 60-GB minimum, lower its worker counts before running the demo, starting with the heavy workers; see [Local execution](performance_distributed_computing.md#local-execution).
+The committed `configuration/crew_controllers.R` suits a 16-CPU, 256-GB workstation. On a machine near the 60-GB minimum, lower its worker counts before running the demo, starting with the heavy workers; see [Local execution](performance_distributed_computing.md#local-execution).
 
 ## Set up the demo
 
@@ -358,6 +358,7 @@ The pipeline reads its settings from one configuration directory:
 - `cfg_GEM_wells.tsv`: one row per GEM well; see [GEM well table](reference_GEM_wells.md).
 - `cfg_aggregations.yaml`: one entry per aggregation, including the path to its donor metadata table; see [Aggregation configuration](reference_aggregations.md).
 - `cfg_module_<module>.yaml`: the settings of one optional module, needed only when that module is enabled.
+- `crew_controllers.R`: the workers that build the targets; see [Choose where the analysis runs](performance_distributed_computing.md).
 
 By default, this is `configuration/`, which holds the public demo and example settings. You can edit it directly, or keep your project's settings in a copy and select that copy in `configuration.local`:
 
@@ -1028,7 +1029,7 @@ The candidate links and SuSiE prioritization are in `peak_gene_correlation_links
 
 # Choose where the analysis runs
 
-A **worker** is an R process that builds targets. A **controller** starts and manages workers, either on your machine or through a cluster scheduler. multiomeR defines its controllers with `crew` in `crew_controllers.R` in the repository root; the [targets distributed-computing guide](https://books.ropensci.org/targets/crew.html) explains the general setup.
+A **worker** is an R process that builds targets. A **controller** starts and manages workers, either on your machine or through a cluster scheduler. multiomeR defines its controllers with `crew` in `crew_controllers.R` in the [selected configuration directory](main_overview.md#configuration-directory); the [targets distributed-computing guide](https://books.ropensci.org/targets/crew.html) explains the general setup.
 
 Independent GEM wells, modalities, and analysis branches run in parallel, so more workers shorten a run until the longest chain of dependent targets limits it. Use local workers on a workstation that meets the [system requirements](demo_installation.md#system-requirements). For large datasets, use a cluster scheduler and ask your support team which account and resource limits to use.
 
@@ -1047,7 +1048,7 @@ The critical path is the longest chain of dependent targets: the shortest possib
 
 ## Local execution
 
-The committed `crew_controllers.R` is sized for a 16-CPU, 256-GB workstation: four `local-light` workers (1 core, 16 GB each) and two `local-heavy` workers (6 cores, 60 GB each). On a machine near the 60-GB minimum, lower the two `workers` values so that only one heavy target runs at a time:
+The committed `configuration/crew_controllers.R` is sized for a 16-CPU, 256-GB workstation: four `local-light` workers (1 core, 16 GB each) and two `local-heavy` workers (6 cores, 60 GB each). On a machine near the 60-GB minimum, lower the two `workers` values so that only one heavy target runs at a time:
 
 ```{.r filename="crew_controllers.R"}
 controller_list <- list(
@@ -2176,7 +2177,7 @@ multiomeR assumes that the repository runtime is bootstrapped before the target 
 2.  sourcing generally reusable helpers from `packages/multiomeRCore/R`,
 3.  sourcing pipeline-specific helpers from the root `R/` directory,
 4.  applying global plotting and `{targets}` options,
-5.  sourcing `crew_controllers.R` and installing controller resources.
+5.  sourcing `crew_controllers.R` from the selected configuration directory and installing controller resources.
 
 The nested `multiomeRCore` directory is both ordinary editable pipeline source and an installable package boundary for standalone repositories. multiomeR does not install or attach that package itself: `targets::tar_source()` loads the same implementation files before the root helpers. Keep domain-specific code under `R/`, but do not duplicate the generally reusable implementations there.
 

@@ -13,6 +13,9 @@ w_def <- function(packages) {
 #' times, which targets itself uses to decide whether to rehash a file, changes
 #' whenever the directory is rewritten. The opening target reruns only after
 #' targets detects new content, so dependents rerun exactly when it changes.
+#' BPCells records the resolved absolute path; the object keeps `path` as
+#' given instead, normally relative to the project root, so objects built from
+#' it still open after the store moves.
 #'
 #' @param path BPCells matrix or fragments directory.
 #' @param open BPCells function that opens `path`.
@@ -22,6 +25,7 @@ open_BPCells_dir <- function(path, open = BPCells::open_matrix_dir) {
   files <- sort(list.files(path, recursive = TRUE, all.files = TRUE, no.. = TRUE))
   info <- file.info(file.path(path, files))
   object <- open(path)
+  object@dir <- path
   attr(object, "file_signature") <- digest::digest(
     paste(files, info$size, format(as.numeric(info$mtime), digits = 15), sep = ":", collapse = ";"),
     algo = "xxhash64", serialize = FALSE

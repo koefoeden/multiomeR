@@ -1,6 +1,6 @@
 ---
 name: multiomer-git-commit-format
-description: Create git commits for multiomeR with the correct message format, including target-impact lines and agent task provenance. Use when the user asks to commit changes, write or amend a commit message, or classify target invalidation for commits, pull requests, or release notes.
+description: Create git commits for multiomeR with the correct message format, including target-impact lines. Use when the user asks to commit changes, write or amend a commit message, or classify target invalidation for commits, pull requests, or release notes.
 ---
 
 # multiomeR Git Commit Format
@@ -17,8 +17,6 @@ git commit -F - <<'EOF'
 [optional body: what changed and why]
 
 <mandatory impact keyword line(s)>
-
-<Agent>-Task-ID: <resolved task ID>
 EOF
 ```
 
@@ -49,22 +47,11 @@ them with the final diff against the destination base or previous release.
 Drop effects from reverted or superseded changes, deduplicate surviving lines,
 and retain the cascading classification when it applies to the same target.
 
-## Agent Task Provenance
+## No Agent Attribution
 
-An agent that creates a commit records its own thread or session identifier in
-a trailer named after the agent. Resolve the literal value from the current
-environment; do not guess an ID or copy one from another task.
-
-| Agent | Trailer | Identifier |
-|---|---|---|
-| Codex | `Codex-Task-ID` | `CODEX_THREAD_ID`, else `CODEX_SESSION_ID` |
-| Claude Code | `Claude-Task-ID` | `CLAUDE_CODE_SESSION_ID` |
-
-Other agents use their own thread or session identifier in a matching
-`<Agent>-Task-ID` trailer. If none is available, ask the user before committing
-without one. Include exactly one trailer for the current agent on a new commit.
-When amending, preserve distinct existing task-ID trailers and add the current
-one only when the current task materially contributed to the amended commit.
+Public commits, pull requests and issues carry no agent co-author or task-ID
+trailers. GitHub lists co-authors with an account, such as Claude's, among the
+repository's contributors, and removing them requires a history rewrite.
 
 ## Examples
 
@@ -73,8 +60,6 @@ one only when the current task materially contributed to the amended commit.
 add continuous SNN UMAP plot target
 
 non_target_breaking
-
-Codex-Task-ID: <resolved task ID>
 ```
 
 **Bug fix — changes one terminal plot target:**
@@ -84,8 +69,6 @@ fix ATAC UMAP column filter
 str_starts("score_") returns logical; replace with str_subset("^score_")
 
 contained_target_breaking: categorical.UMAPs.7_ATAC_QC
-
-Claude-Task-ID: <resolved task ID>
 ```
 
 **Refactor — changes an intermediate target whose output flows downstream:**
@@ -95,6 +78,4 @@ revise accepted ATAC cell metadata
 Change the accepted barcode set used by downstream ATAC processing.
 
 cascading_target_breaking: metadata_w_cell_types_tibble.ATAC
-
-Codex-Task-ID: <resolved task ID>
 ```

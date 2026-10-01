@@ -25,6 +25,8 @@ controller_list <- purrr::pmap(tiers, function(controller_name, cores, RAM_GB, g
     name = controller_name,
     workers = workers,
     host = "127.0.0.1",
+    # Several workers connecting at once over TLS crash mirai daemons; loopback needs no TLS.
+    tls = crew::crew_tls(mode = "none"),
     seconds_idle = 120,
     crashes_max = 1,
     options_metrics = crew::crew_options_metrics(path = "/dev/stdout", seconds_interval = 30),

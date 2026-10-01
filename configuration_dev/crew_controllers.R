@@ -3,8 +3,12 @@
 # Every worker runs on the compute node of the Slurm allocation that runs the
 # pipeline and connects to it through the loopback interface, as local workers
 # would. Runtimes are therefore measured on one CPU model, and each worker's
-# Slurm log carries crew's resource metrics with the target it runs. The worker
-# counts fit a 128-CPU, 2-TB node; adjust them and the wall time for your cluster.
+# Slurm log carries crew's resource metrics with the target it runs. Targets are
+# routed by RAM_GB, but each worker's Slurm memory limit, limit_GB, leaves
+# headroom: the pipeline sizes its requests for local workers, which have no
+# memory limit, and the large aggregations here exceed several of them. The
+# worker counts fit a 128-CPU, 2-TB node; adjust them and the wall time for your
+# cluster.
 
 node <- Sys.getenv("SLURMD_NODENAME")
 if (!nzchar(node)) stop("Run configuration_dev inside a Slurm allocation.", call. = FALSE)
@@ -13,14 +17,14 @@ if (!nzchar(node)) stop("Run configuration_dev inside a Slurm allocation.", call
 log_file <- file.path(fs::dir_create(file.path(getwd(), "logs", "scheduler")), "%j.txt")
 
 tiers <- tibble::tribble(
-  ~controller_name, ~cores, ~RAM_GB, ~gpus, ~workers,
-  "slurm-light",         1,      16,     0,       28,
-  "slurm-heavy",         6,      60,     0,       10,
-  "slurm-large",         6,     200,     0,        2,
-  "slurm-huge",          6,     500,     0,        1
+  ~controller_name, ~cores, ~RAM_GB, ~gpus, ~limit_GB, ~workers,
+  "slurm-light",         1,      16,     0,        48,       16,
+  "slurm-heavy",         6,      60,     0,       120,        6,
+  "slurm-large",         6,     200,     0,       200,        1,
+  "slurm-huge",          6,     500,     0,       500,        1
 )
 
-controller_list <- purrr::pmap(tiers, function(controller_name, cores, RAM_GB, gpus, workers) {
+controller_list <- purrr::pmap(tiers, function(controller_name, cores, RAM_GB, gpus, limit_GB, workers) {
   crew.cluster::crew_controller_slurm(
     name = controller_name,
     workers = workers,
@@ -35,7 +39,7 @@ controller_list <- purrr::pmap(tiers, function(controller_name, cores, RAM_GB, g
       log_output = log_file,
       log_error = log_file,
       cpus_per_task = cores,
-      memory_gigabytes_required = RAM_GB,
+      memory_gigabytes_required = limit_GB,
       time_minutes = 24 * 60
     )
   )

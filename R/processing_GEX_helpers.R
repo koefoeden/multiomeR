@@ -1,44 +1,48 @@
 #' Read cellbender h5 matrix
 #'
-#' Read a Cell Ranger HDF5 count matrix into a sparse gene-by-cell matrix.
+#' Read one feature type of a CellBender HDF5 count matrix into a sparse
+#' feature-by-cell matrix. Barcodes are read in blocks, so only the kept
+#' features accumulate in memory. BPCells cannot open these files when the
+#' counts are stored as 64-bit integers.
 #'
 #' @param cellbender_h5_file Path to a CellBender HDF5 output file with a 10x-style `matrix` group.
 #' @param feature_type 10x feature type to retain from the HDF5 file, usually `Gene Expression`.
+#' @param barcodes_per_block Number of barcodes read at a time.
 #' @return A named matrix-like object with rows and columns aligned to the input feature/cell identifiers.
 #' @keywords internal
 
-read_cellbender_h5_matrix <- function(cellbender_h5_file, feature_type = "Gene Expression") {
+read_cellbender_h5_matrix <- function(cellbender_h5_file, feature_type = "Gene Expression", barcodes_per_block = 2000L) {
   cellbender_h5_file_con <- hdf5r::H5File$new(cellbender_h5_file, mode = "r")
   on.exit(cellbender_h5_file_con$close_all(), add = TRUE)
 
   matrix_group <- cellbender_h5_file_con[["matrix"]]
-  matrix_shape <- as.integer(matrix_group[["shape"]][])
-  matrix_data <- as.numeric(matrix_group[["data"]][])
-  feature_index <- as.integer(matrix_group[["indices"]][]) + 1L
-  column_pointer <- as.integer(matrix_group[["indptr"]][])
-  column_lengths <- diff(column_pointer)
-  barcode_index <- rep.int(seq_along(column_lengths), column_lengths)
-
-  counts_matrix <- Matrix::sparseMatrix(
-    i = feature_index,
-    j = barcode_index,
-    x = matrix_data,
-    dims = matrix_shape
-  )
-
-  barcodes <- as.character(matrix_group[["barcodes"]][])
   feature_names <- as.character(matrix_group[["features/name"]][])
-  feature_types <- as.character(matrix_group[["features/feature_type"]][])
-  keep_features <- feature_types == feature_type
+  keep_features <- as.character(matrix_group[["features/feature_type"]][]) == feature_type
 
   if (!any(keep_features)) {
     stop("No features with feature_type '", feature_type, "' found in CellBender h5 file.")
   }
 
-  counts_matrix <- counts_matrix[keep_features, , drop = FALSE]
+  kept_feature_rows <- cumsum(keep_features)
+  column_pointer <- as.numeric(matrix_group[["indptr"]][])
+  barcode_index <- seq_len(length(column_pointer) - 1L)
+
+  counts_matrix <- do.call(cbind, lapply(split(barcode_index, ceiling(barcode_index / barcodes_per_block)), \(block) {
+    block_pointer <- column_pointer[c(block, max(block) + 1L)]
+    entries <- seq.int(block_pointer[1] + 1, length.out = block_pointer[length(block_pointer)] - block_pointer[1])
+    feature_index <- matrix_group[["indices"]][entries] + 1L
+    keep <- keep_features[feature_index]
+    Matrix::sparseMatrix(
+      i = kept_feature_rows[feature_index[keep]],
+      j = rep.int(seq_along(block), diff(block_pointer))[keep],
+      x = as.numeric(matrix_group[["data"]][entries][keep]),
+      dims = c(sum(keep_features), length(block))
+    )
+  }))
+
   rownames(counts_matrix) <- make.unique(feature_names[keep_features])
-  colnames(counts_matrix) <- barcodes
-  methods::as(counts_matrix, "dgCMatrix")
+  colnames(counts_matrix) <- as.character(matrix_group[["barcodes"]][])
+  counts_matrix
 }
 
 

@@ -25,7 +25,11 @@ targets::tar_make(
 )
 ```
 
-The graph builds only the dependencies of the selected results. S2 also needs
+The graph builds only the dependencies of the selected results. S2 reads the
+recorded metadata of both workflows rather than depending on their targets, so
+build it after they have finished; before that it stops with missing runtimes.
+Its measurements come from the run that builds the workflows, so build the
+results afterwards from a copy of that store if needed. S2 also needs
 the per-job resource history of
 [slurm-monitor](https://github.com/koefoeden/slurm-monitor), read from
 `SLURM_MONITOR_HISTORY_DIR` (default `~/slurm_monitor_history`): schema 2

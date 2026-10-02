@@ -3,8 +3,8 @@
 #' Download all Parquet shards for one Open Targets dataset release.
 #'
 #' @param dataset_url Open Targets dataset URL ending in release and dataset path components.
-#' @return Normalized local directory path under the targets store containing
-#'   the downloaded Parquet files.
+#' @return Directory path under the targets store containing the downloaded
+#'   Parquet files.
 #' @keywords internal
 
 download_open_targets_dataset <- function(dataset_url) {
@@ -41,7 +41,7 @@ download_open_targets_dataset <- function(dataset_url) {
     }
   })
 
-  normalizePath(output_path, mustWork = TRUE)
+  output_path
 }
 
 #' Get open targets GWAS metadata tibble

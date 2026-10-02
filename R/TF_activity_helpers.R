@@ -5,7 +5,7 @@
 #'
 #' @param network_url URL of the published CollecTRI CSV snapshot.
 #' @param expected_sha256 Expected SHA-256 checksum of the downloaded file.
-#' @return Normalized path to the checksum-verified CSV under the targets store.
+#' @return Path to the checksum-verified CSV under the targets store.
 #' @keywords internal
 
 download_CollecTRI_human_network <- function(network_url, expected_sha256) {
@@ -23,7 +23,7 @@ download_CollecTRI_human_network <- function(network_url, expected_sha256) {
       stop("Could not move the verified CollecTRI download into place: ", destfile)
     }
   }
-  normalizePath(destfile, mustWork = TRUE)
+  destfile
 }
 
 #' Read the published human CollecTRI network

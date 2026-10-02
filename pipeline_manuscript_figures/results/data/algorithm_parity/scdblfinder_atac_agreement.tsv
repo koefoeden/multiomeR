@@ -1,0 +1,3 @@
+algorithm	n_native_cells	n_reference_cells	n_shared_cells	n_native_doublets	n_reference_doublets	n_shared_doublets	score_rank_spearman	doublet_jaccard	overall_class_agreement
+scdblfinder_atac	11152	11152	11152	1163	1128	1015	0.6638859293360447	0.7954545454545454	0.9765961262553802
+scdblfinder_atac_predoublet	11152	11152	11152	1582	1589	1393	0.7293342289487671	0.7834645669291339	0.9654770444763271

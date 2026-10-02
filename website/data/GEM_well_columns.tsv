@@ -4,8 +4,7 @@ GEM_well_dataset	Dataset	Identity and ownership	Groups related GEM wells in the 
 GEM_well_donor_id	Donor ID	Identity and ownership	Links a single-donor GEM well to its row in the donor metadata table.	Use NA for a pooled well, whose donors come from GEM_well_donors_VCF_file.	TRUE
 GEM_well_n_donors	Expected donors	Identity and ownership	Number of donors in the GEM well.	Use 1 for a single-donor well; for a pooled well, Vireo assigns nuclei to this many donors.	TRUE
 GEM_well_cellranger_arc_count_dir	Cell Ranger ARC count directory	Input files	Locates the Cell Ranger ARC count output for this GEM well.	Point to the directory containing outs, not to outs itself.	TRUE
-GEM_well_add_cellbender	Use CellBender	Input files	Chooses whether CellBender-corrected GEX counts replace the Cell Ranger counts.	When TRUE, GEM_well_cellbender_h5_file must give the CellBender H5 file; otherwise FALSE.	TRUE
-GEM_well_cellbender_h5_file	CellBender H5 file	Input files	Gives the CellBender-corrected GEX count file.	Required when GEM_well_add_cellbender is TRUE; otherwise NA.	TRUE
+GEM_well_cellbender_h5_file	CellBender H5 file	Input files	Gives the CellBender-corrected GEX count file, whose counts then replace the Cell Ranger counts.	Use NA to keep the Cell Ranger counts.	TRUE
 GEM_well_donors_VCF_file	Donor VCF file	Input files	Donor-genotype VCF that enables demultiplexing of a pooled GEM well.	Its sample names become the donor IDs. Use NA for a single-donor well, whose nuclei all receive GEM_well_donor_id.	TRUE
 GEM_well_QC_exclude_list	Pre-aggregation QC filters	Processing and scope	Per-nucleus filters applied before aggregation.	NA for the first run; later, complete R expressions separated by ;;.	TRUE
 GEM_well_is_active	Active	Processing and scope	TRUE to process the GEM well; FALSE for unused rows, including unused demo wells.	Every GEM well selected by an active aggregation must also be active.	TRUE

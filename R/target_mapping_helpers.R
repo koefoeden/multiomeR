@@ -168,7 +168,6 @@ get_GEM_well_annotation_metadata_tibble <- function(GEM_well_metadata_tibble) {
     "GEM_well_donor_id",
     "GEM_well_n_donors",
     "GEM_well_cellranger_arc_count_dir",
-    "GEM_well_add_cellbender",
     "GEM_well_cellbender_h5_file",
     "GEM_well_donors_VCF_file",
     "GEM_well_QC_exclude_list",
@@ -240,7 +239,6 @@ build_GEM_well_tibble <- function(GEM_well_config_file = configuration_path("cfg
     "GEM_well_donor_id",
     "GEM_well_n_donors",
     "GEM_well_cellranger_arc_count_dir",
-    "GEM_well_add_cellbender",
     "GEM_well_cellbender_h5_file",
     "GEM_well_donors_VCF_file",
     "GEM_well_QC_exclude_list",
@@ -268,20 +266,8 @@ build_GEM_well_tibble <- function(GEM_well_config_file = configuration_path("cfg
       call. = FALSE
     )
   }
-  if (anyNA(GEM_well_tibble$GEM_well_add_cellbender) ||
-      anyNA(GEM_well_tibble$GEM_well_is_active)) {
-    stop("Every GEM well must define GEM_well_add_cellbender and GEM_well_is_active.", call. = FALSE)
-  }
-  inconsistent_cellbender <- xor(
-    GEM_well_tibble$GEM_well_add_cellbender,
-    !is.na(GEM_well_tibble$GEM_well_cellbender_h5_file)
-  )
-  if (any(inconsistent_cellbender)) {
-    stop(
-      "GEM_well_add_cellbender and GEM_well_cellbender_h5_file disagree for GEM well(s): ",
-      paste(GEM_well_tibble$GEM_well_ID[inconsistent_cellbender], collapse = ", "),
-      call. = FALSE
-    )
+  if (anyNA(GEM_well_tibble$GEM_well_is_active)) {
+    stop("Every GEM well must define GEM_well_is_active.", call. = FALSE)
   }
 
   if (length(validation_aggregations())) {

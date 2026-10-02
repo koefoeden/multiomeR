@@ -45,8 +45,7 @@ Without a VCF, no demultiplexing runs and every nucleus receives `GEM_well_donor
 When the pipeline starts, it checks that:
 
 - `GEM_well_ID` values are unique;
-- every GEM well that an active aggregation selects exists and is active;
-- `GEM_well_add_cellbender` and `GEM_well_cellbender_h5_file` agree; and
+- every GEM well that an active aggregation selects exists and is active; and
 - each QC filter is a valid R expression.
 
 When the targets of a well run, exactly one `reference.json` must match its fragments, and all wells of an aggregation must share the same reference. Apart from the keys, no column name may appear both here and in the [donor metadata table](reference_donor_metadata.md#rules).

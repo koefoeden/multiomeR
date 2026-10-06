@@ -61,6 +61,8 @@ comparison_write_RNA_dirs <- function(config, out_dir) {
 }
 
 comparison_process_RNA <- function(RNA_dirs, config) {
+  # SCTransform passes its gene models to future even in a sequential plan.
+  withr::local_options(future.globals.maxSize = Inf)
   counts <- purrr::map(RNA_dirs, open_BPCells_dir)
   object <- SeuratObject::CreateSeuratObject(purrr::reduce(counts, cbind), assay = "RNA")
   object$GEM_well_ID <- rep(config$sample_tibble$sample_id, purrr::map_int(counts, ncol))

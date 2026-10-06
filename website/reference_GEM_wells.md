@@ -60,7 +60,7 @@ Leave `GEM_well_QC_exclude_list` as `NA` for the first run. After reviewing the 
 TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250
 ```
 
-A nucleus for which any expression is `TRUE` is excluded, and each expression is reported as a separate exclusion reason in the checkpoint 1 UpSet and retention plots. Filters can use the metrics that [`QC_metric_manifest.tsv`](https://github.com/koefoeden/multiomeR/blob/main/QC_metric_manifest.tsv) lists as available from checkpoint 1, and other per-nucleus columns such as `vireo_type`. The checkpoint 1 comparison plots show each metric's distribution and draw simple cutoffs such as these; they are examples, not recommendations for your tissue.
+A nucleus for which any expression is `TRUE` is excluded, and each expression is reported as a separate exclusion reason in the checkpoint 1 UpSet and retention plots. Nuclei absent from the GEX count matrix are always excluded, as `not_found_in_GEX_matrix`, whether or not the list names it. Filters can use the metrics that [`QC_metric_manifest.tsv`](https://github.com/koefoeden/multiomeR/blob/main/QC_metric_manifest.tsv) lists as available from checkpoint 1, and other per-nucleus columns such as `vireo_type`. The checkpoint 1 comparison plots show each metric's distribution and draw simple cutoffs such as these; they are examples, not recommendations for your tissue.
 
 ## Public example {#public-example}
 

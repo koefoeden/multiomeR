@@ -286,7 +286,8 @@ rlang::list2(
   targets::tar_target(
     name = excluded_barcodes_by_type_list,
     description = "Identify barcodes failing per GEM well QC thresholds and group them by exclusion reason",
-    command = get_excluded_BCs(full_metadata_tibble, QC_exclude_vector = GEM_well_QC_exclude_list)
+    # Nuclei without GEX counts are always excluded, so retention reports them here rather than as small clusters.
+    command = get_excluded_BCs(full_metadata_tibble, QC_exclude_vector = union(GEM_well_QC_exclude_list, "not_found_in_GEX_matrix"))
   ),
   tarchetypes::tar_file(
     name = excluded_barcodes_by_type_upset.1_pre_aggregation_QC,
@@ -307,7 +308,7 @@ rlang::list2(
     description = "Identify CellRanger-only barcodes failing per GEM well QC and group by exclusion reason [part_of_graph:parallel] [part_of_graph:seurat_export]",
     command = full_metadata_tibble |>
       dplyr::filter(!discarded_by_cellranger) |>
-      get_excluded_BCs(QC_exclude_vector = GEM_well_QC_exclude_list)
+      get_excluded_BCs(QC_exclude_vector = union(GEM_well_QC_exclude_list, "not_found_in_GEX_matrix"))
   ),
   tarchetypes::tar_file(
     name = excluded_cellranger_only_barcodes_by_type_upset.1_pre_aggregation_QC,

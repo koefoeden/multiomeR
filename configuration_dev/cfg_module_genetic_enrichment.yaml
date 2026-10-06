@@ -1,6 +1,6 @@
 mixed_human_31x:
   # Exploratory trait panel for the observed cell types across GEX, ATAC and WNN. See
-  # module_genetic_enrichment/mixed_human_31x_GWAS_selection.tsv for rationale, power and
+  # configuration_dev/mixed_human_31x_GWAS_selection.tsv for rationale, power and
   # credible-set coverage.
   # Cell-type links are hypotheses, not guaranteed enrichment or exclusive origins.
   # Selection metadata is from Open Targets 26.03, checked 2026-09-08. Counts are

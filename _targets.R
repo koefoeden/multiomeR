@@ -55,9 +55,9 @@ pipeline <- rlang::list2(
     delimiter = ".",
     source("extra_targets/ATAC_tile_targets.R")$value
   ),
-  source("module_differential_analyses/targets.R")$value,
-  source("module_genetic_enrichment/targets.R")$value,
-  source("module_peak_gene_correlation/targets.R")$value
+  source("extra_targets/module_differential_analyses/targets.R")$value,
+  source("extra_targets/module_genetic_enrichment/targets.R")$value,
+  source("extra_targets/module_peak_gene_correlation/targets.R")$value
 )
 
 pipeline

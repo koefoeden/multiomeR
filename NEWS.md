@@ -67,6 +67,10 @@ carries its own crew controllers.
 
 ## Development
 
+- Move the optional modules' target definitions from `module_*/` at the root
+  to `extra_targets/module_*/`, beside those of the primary module, and the
+  donor metadata and GWAS selection of `mixed_human_31x` into
+  `configuration_dev/`.
 - Move `validation/` and `RELEASES.md` into `dev/`, keep release validation
   reports in `dev/validation/reports/`, move the scripts that make Cell Ranger
   ARC test subsets to `dev/`, and remove the unused `air.toml`.
@@ -77,7 +81,8 @@ carries its own crew controllers.
   `configuration/crew_controllers.R` and adapt it. Move any changes you made to
   the former root `crew_controllers.R` into it.
 - Select `configuration_dev/` to rebuild `mixed_human_31x` or the comparison
-  aggregations.
+  aggregations. A configuration that points to files in `module_*/` must use
+  their new paths.
 - Target invalidation: targets that open BPCells matrices or fragments
   (`GEX_counts_BPCells_matrix`, `fragments_w_prefix_bpcells`,
   `aggregated_counts_BPCells_matrix.GEX`, `consensus_peak_BPCells_matrix.ATAC`,
@@ -93,7 +98,8 @@ carries its own crew controllers.
   QC list lacks `not_found_in_GEX_matrix`, which includes every GEM well of the
   public configurations; the changes stop at the checkpoint 1 plots and
   retention tables. The new composition tables build without rerunning
-  anything else. The Figure 1 targets affect only `configuration_dev/`.
+  anything else. The moved donor metadata reruns only its own file target in
+  `configuration_dev/`. The Figure 1 targets affect only `configuration_dev/`.
 - In `configuration_dev/`, Supplementary Figure S2 reads the recorded runtimes
   of the compared workflows from the store, so rebuild its data before
   rerunning targets of the `comparison_` aggregations.

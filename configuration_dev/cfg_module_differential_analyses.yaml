@@ -1,5 +1,5 @@
 mixed_human_31x:
-  differential_analyses_extended_donor_id_metadata_tsv: module_differential_analyses/mixed_human_31x_donor_metadata.tsv
+  differential_analyses_extended_donor_id_metadata_tsv: configuration_dev/mixed_human_31x_donor_metadata.tsv
   differential_analyses_pseudobulk_models:
     cardiomyocyte_sex:
       cell_type_subset: Cardiomyocyte

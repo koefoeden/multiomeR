@@ -16,5 +16,5 @@ if (nrow(peak_gene_correlation_tibble) == 0L) list() else tarchetypes::tar_map(
   names = peak_gene_correlation_target_suffix,
   descriptions = NULL,
   delimiter = ".",
-  source("module_peak_gene_correlation/correlation_targets.R")$value
+  source("extra_targets/module_peak_gene_correlation/correlation_targets.R")$value
 )

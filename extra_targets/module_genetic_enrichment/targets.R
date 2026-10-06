@@ -91,17 +91,17 @@ genetic_enrichment_tibble <- genetic_enrichment_tibble |>
   ))
 
 rlang::list2(
-  if (nrow(genetic_enrichment_tibble) > 0L) source("module_genetic_enrichment/shared_targets.R")$value,
+  if (nrow(genetic_enrichment_tibble) > 0L) source("extra_targets/module_genetic_enrichment/shared_targets.R")$value,
   tarchetypes::tar_map(
     values = genetic_enrichment_tibble,
     names = genetic_enrichment_target_suffix,
     descriptions = NULL,
     delimiter = ".",
-    source("module_genetic_enrichment/setup_targets.R")$value,
-    source("module_genetic_enrichment/gchromVAR_targets.R")$value,
-    source("module_genetic_enrichment/GWAS_chromVAR_cell_type_targets.R")$value,
-    source("module_genetic_enrichment/GWAS_chromVAR_absolute_effect_targets.R")$value,
-    source("module_genetic_enrichment/GWAS_chromVAR_contribution_targets.R")$value,
+    source("extra_targets/module_genetic_enrichment/setup_targets.R")$value,
+    source("extra_targets/module_genetic_enrichment/gchromVAR_targets.R")$value,
+    source("extra_targets/module_genetic_enrichment/GWAS_chromVAR_cell_type_targets.R")$value,
+    source("extra_targets/module_genetic_enrichment/GWAS_chromVAR_absolute_effect_targets.R")$value,
+    source("extra_targets/module_genetic_enrichment/GWAS_chromVAR_contribution_targets.R")$value,
     tarchetypes::tar_map(
       values = tibble::tibble(
         map_SCAVENGE_tar_suffix = "WNN_harmony_SNN.SCAVENGE.single_nucleus",
@@ -111,8 +111,8 @@ rlang::list2(
       names = map_SCAVENGE_tar_suffix,
       descriptions = NULL,
       delimiter = ".",
-      source("module_genetic_enrichment/SCAVENGE_graph_targets.R")$value,
-      source("module_genetic_enrichment/SCAVENGE_group_targets.R")$value
+      source("extra_targets/module_genetic_enrichment/SCAVENGE_graph_targets.R")$value,
+      source("extra_targets/module_genetic_enrichment/SCAVENGE_group_targets.R")$value
     )
   )
 )

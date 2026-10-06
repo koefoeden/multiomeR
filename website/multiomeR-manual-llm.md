@@ -1773,9 +1773,9 @@ Diagnostic outputs report pseudobulk depth, retained sample and donor counts, pa
 
 ## Source and target graph
 
-`module_differential_analyses/targets.R` filters the aggregations that enabled the module, joins their module configuration, attaches symbols for the accepted WNN metadata and pseudobulk inputs, and maps the target files in its directory. One generic pseudobulk model family is instantiated for each tested feature matrix.
+`extra_targets/module_differential_analyses/targets.R` filters the aggregations that enabled the module, joins their module configuration, attaches symbols for the accepted WNN metadata and pseudobulk inputs, and maps the target files in its directory. One generic pseudobulk model family is instantiated for each tested feature matrix.
 
-**Source:** [`module_differential_analyses/`](https://github.com/koefoeden/multiomeR/tree/main/module_differential_analyses), [`R/differential_analysis_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/differential_analysis_helpers.R), [`R/pseudobulk_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/pseudobulk_helpers.R), [`R/TF_activity_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/TF_activity_helpers.R).
+**Source:** [`extra_targets/module_differential_analyses/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_differential_analyses), [`R/differential_analysis_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/differential_analysis_helpers.R), [`R/pseudobulk_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/pseudobulk_helpers.R), [`R/TF_activity_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/TF_activity_helpers.R).
 
 This view covers the donor metadata, the pseudobulk and motif-family inputs, the CollecTRI network, the composition and feature models, and the cross-modality comparison.
 
@@ -1824,9 +1824,9 @@ The sparse SCAVENGE implementation is compared with its reference in [Algorithm 
 
 ## Source and target graphs
 
-`module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in its directory.
+`extra_targets/module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in its directory.
 
-**Source:** [`module_genetic_enrichment/`](https://github.com/koefoeden/multiomeR/tree/main/module_genetic_enrichment), [`R/open_targets_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/open_targets_helpers.R), [`R/GWAS_chromVAR_input_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_input_helpers.R), [`R/GWAS_chromVAR_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_helpers.R), [`R/GWAS_chromVAR_absolute_effect_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_absolute_effect_helpers.R), [`R/GWAS_chromVAR_contribution_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_contribution_helpers.R), [`R/SCAVENGE_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SCAVENGE_helpers.R).
+**Source:** [`extra_targets/module_genetic_enrichment/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_genetic_enrichment), [`R/open_targets_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/open_targets_helpers.R), [`R/GWAS_chromVAR_input_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_input_helpers.R), [`R/GWAS_chromVAR_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_helpers.R), [`R/GWAS_chromVAR_absolute_effect_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_absolute_effect_helpers.R), [`R/GWAS_chromVAR_contribution_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_contribution_helpers.R), [`R/SCAVENGE_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SCAVENGE_helpers.R).
 
 ### Nucleus-level enrichment and SCAVENGE
 
@@ -1883,9 +1883,9 @@ The compiled kernels are compared with `lme4`, `pbkrtest` and `stats::p.adjust()
 
 ## Source and target graph
 
-`module_peak_gene_correlation/targets.R` maps only opted-in aggregations and binds the primary-module inputs they consume. Parameters use the `peak_gene_correlation` manifest scope, targets end in `.peak_gene_correlation.<aggregation>`, and plot checkpoint tags use `peak_gene_correlation`, outside the numbered QC selections.
+`extra_targets/module_peak_gene_correlation/targets.R` maps only opted-in aggregations and binds the primary-module inputs they consume. Parameters use the `peak_gene_correlation` manifest scope, targets end in `.peak_gene_correlation.<aggregation>`, and plot checkpoint tags use `peak_gene_correlation`, outside the numbered QC selections.
 
-**Source:** [`module_peak_gene_correlation/`](https://github.com/koefoeden/multiomeR/tree/main/module_peak_gene_correlation), [`R/peak_gene_correlation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_correlation_helpers.R), [`R/peak_gene_filter_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_filter_helpers.R), [`R/peak_gene_hierarchical_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_hierarchical_helpers.R), [`R/peak_gene_finemapping_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_finemapping_helpers.R), [`src/peak_gene_REML.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/peak_gene_REML.cpp), [`src/peak_gene_KR.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/peak_gene_KR.cpp).
+**Source:** [`extra_targets/module_peak_gene_correlation/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_peak_gene_correlation), [`R/peak_gene_correlation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_correlation_helpers.R), [`R/peak_gene_filter_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_filter_helpers.R), [`R/peak_gene_hierarchical_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_hierarchical_helpers.R), [`R/peak_gene_finemapping_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_finemapping_helpers.R), [`src/peak_gene_REML.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/peak_gene_REML.cpp), [`src/peak_gene_KR.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/peak_gene_KR.cpp).
 
 This view covers the TSS table, candidate peak–gene pairs, the WNN cell groups, donor–state pseudobulk construction, measurement-support filtering, the per-chromosome analysis branches and the diagnostic and top-link outputs.
 
@@ -1986,7 +1986,7 @@ pixi run --use-environment-activation-cache test-algorithm-validation
 
 **Deliberate deviations and consequences.** The reference builds a mutual-kNN graph, whereas multiomeR uses the binary support of its BPCells-derived SNN graph; edge weights are discarded, but topology can differ. Seed and scale-factor helpers guarantee at least one selected cell for small inputs, and the random walk has a maximum-iteration guard. The degree-matched seed permutations and significant-cell calls are omitted: multiomeR reports trait relevance scores and their group summaries without P-values.
 
-**Implementation.** `R/SCAVENGE_helpers.R`; `module_genetic_enrichment/SCAVENGE_graph_targets.R` builds the graph and cell-level trait relevance scores, and `SCAVENGE_group_targets.R` summarizes and plots them by cluster.
+**Implementation.** `R/SCAVENGE_helpers.R`; `extra_targets/module_genetic_enrichment/SCAVENGE_graph_targets.R` builds the graph and cell-level trait relevance scores, and `SCAVENGE_group_targets.R` summarizes and plots them by cluster.
 
 **Validation.** `tests/testthat/test-scavenge-parity.R` uses a deterministic fixture with heterogeneous-degree graph blocks and nonuniform edge weights, so it also tests conversion to binary adjacency. The iterative random walk must match the closed-form solution
 

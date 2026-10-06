@@ -13,13 +13,13 @@ differential_analyses_tibble <- build_module_tibble("differential_analyses", agg
   ))
 
 rlang::list2(
-  if (nrow(differential_analyses_tibble) > 0L) source("module_differential_analyses/shared_targets.R")$value,
+  if (nrow(differential_analyses_tibble) > 0L) source("extra_targets/module_differential_analyses/shared_targets.R")$value,
   tarchetypes::tar_map(
     values = differential_analyses_tibble,
     names = differential_analyses_target_suffix,
     descriptions = NULL,
     delimiter = ".",
-    source("module_differential_analyses/setup_and_cell_type_composition_targets.R")$value,
+    source("extra_targets/module_differential_analyses/setup_and_cell_type_composition_targets.R")$value,
     targets::tar_target(
       name = pseudobulk_CollecTRI_TF_activity_matrix.GEX,
       description = "Infer signed CollecTRI ULM TF activities from GEX pseudobulks [part_of_graph:differential_analyses]",
@@ -41,9 +41,9 @@ rlang::list2(
       names = map_analysis_suffix,
       descriptions = NULL,
       delimiter = ".",
-      source("module_differential_analyses/pseudobulk_differential_targets.R")$value
+      source("extra_targets/module_differential_analyses/pseudobulk_differential_targets.R")$value
     ),
-    source("module_differential_analyses/cross_modality_targets.R")$value,
+    source("extra_targets/module_differential_analyses/cross_modality_targets.R")$value,
     tarchetypes::tar_map(
       values = tibble::tribble(
         ~map_gene_set_enrichment_suffix, ~map_MSigDB_collection, ~map_MSigDB_subcollection,
@@ -53,7 +53,7 @@ rlang::list2(
       names = map_gene_set_enrichment_suffix,
       descriptions = NULL,
       delimiter = ".",
-      source("module_differential_analyses/gene_set_enrichment_targets.R")$value
+      source("extra_targets/module_differential_analyses/gene_set_enrichment_targets.R")$value
     )
   )
 )

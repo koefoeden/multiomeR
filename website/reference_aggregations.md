@@ -58,7 +58,7 @@ aggregation_QC_exclude_list_combined_object:
   - atac_peak_counts_blacklist_frac > 0.01
 ```
 
-A nucleus for which any expression is `TRUE` is excluded, and each expression is reported as a separate exclusion reason in the checkpoint 5 UpSet and retention plots. Filters can use the metrics that [`QC_metric_manifest.tsv`](https://github.com/koefoeden/multiomeR/blob/main/QC_metric_manifest.tsv) lists as available from checkpoint 4 or earlier. These cutoffs are examples, not recommendations for your tissue.
+A nucleus for which any expression is `TRUE` is excluded, and each expression is reported as a separate exclusion reason in the checkpoint 5 UpSet and retention plots. Filters can use the metrics that [`QC_metric_manifest.tsv`](https://github.com/koefoeden/multiomeR/blob/main/manifests/QC_metric_manifest.tsv) lists as available from checkpoint 4 or earlier. These cutoffs are examples, not recommendations for your tissue.
 
 ## Inherit settings from another aggregation {#inheritance}
 

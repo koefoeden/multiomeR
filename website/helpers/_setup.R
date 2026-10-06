@@ -11,7 +11,7 @@ find_repo_root <- function(start_dir = ".") {
   repeat {
     if (
       dir.exists(file.path(current_dir, ".git")) ||
-        file.exists(file.path(current_dir, "cfg_pipeline_parameters.tsv"))
+        file.exists(file.path(current_dir, "manifests", "cfg_pipeline_parameters.tsv"))
     ) {
       return(current_dir)
     }
@@ -109,7 +109,7 @@ aggregations_config_file <- "website/data/public_defaults/cfg_aggregations.yaml"
 pipeline_parameters_file <- "website/data/public_defaults/cfg_pipeline_parameters.tsv"
 GEM_wells_github_file <- file.path(github_repo, "configuration", "cfg_GEM_wells.tsv")
 aggregations_github_file <- file.path(github_repo, "configuration", "cfg_aggregations.yaml")
-pipeline_parameters_github_file <- file.path(github_repo, "cfg_pipeline_parameters.tsv")
+pipeline_parameters_github_file <- file.path(github_repo, "manifests/cfg_pipeline_parameters.tsv")
 
 module_config_file <- switch(
   pipeline_name,

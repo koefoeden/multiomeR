@@ -13,12 +13,12 @@ def main():
     source = args.public_repo.resolve()
     destination = Path(__file__).resolve().parents[1] / "website/data/public_defaults"
     destination.mkdir(parents=True, exist_ok=True)
-    files = [source / "cfg_pipeline_parameters.tsv"]
+    files = [source / "manifests" / "cfg_pipeline_parameters.tsv"]
     files += [source / "configuration" / name for name in (
         "cfg_aggregations.yaml", "cfg_module_differential_analyses.yaml",
         "cfg_module_genetic_enrichment.yaml", "cfg_module_peak_gene_correlation.yaml",
     )]
-    files += [source / "example_data" / "immune_human_dataset_donor_id_metadata.tsv"]
+    files += [source / "configuration" / "immune_human_dataset_donor_id_metadata.tsv"]
     for path in files:
         shutil.copyfile(path, destination / path.name)
 

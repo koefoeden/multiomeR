@@ -31,8 +31,6 @@ __*.mro
 
 # example data
 example_data/*
-!example_data/*.tsv
-!example_data/*.sh
 
 # outputs
 pipelines/*/outputs

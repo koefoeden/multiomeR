@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-manifest="${1:-${script_dir}/public_core_cellranger_count_manifest.tsv}"
-dest_root="${TENX_PUBLIC_DATA_DIR:-${script_dir}}"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+manifest="${1:-${repo_root}/manifests/public_core_cellranger_count_manifest.tsv}"
+dest_root="${TENX_PUBLIC_DATA_DIR:-${repo_root}/example_data}"
 overwrite="${OVERWRITE:-0}"
 
 if ! command -v curl >/dev/null 2>&1; then

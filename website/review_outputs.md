@@ -6,7 +6,7 @@ This page collects facts about the saved outputs. For a guided first look, see [
 
 Plots and files are saved under `<store>/plots/` and `<store>/files/`, in folders given by the target name read from right to left. For example, `cross.UMAPs.3_GEX_QC.my_aggregation` saves to `<store>/plots/my_aggregation/3_GEX_QC/UMAPs/cross/`. The first folder is the GEM well or aggregation. Existing files do not show which results are current: after a configuration change, run `targets::tar_outdated()` before reviewing them.
 
-`QC_metric_manifest.tsv` in the repository root selects the plotted QC metrics, their display labels and plotting quantiles. `do_plot = FALSE` hides a metric. Plotting quantiles change the displayed range, not the nuclei retained; filters are set in `cfg_GEM_wells.tsv` and `cfg_aggregations.yaml`.
+`manifests/QC_metric_manifest.tsv` selects the plotted QC metrics, their display labels and plotting quantiles. `do_plot = FALSE` hides a metric. Plotting quantiles change the displayed range, not the nuclei retained; filters are set in `cfg_GEM_wells.tsv` and `cfg_aggregations.yaml`.
 
 `UMAPs/cross/` at checkpoints 3, 7 and 8 redraws the cell-type UMAP for several numbers of dimensions and neighbors (neighbors only at checkpoint 8). Clusters and labels stay fixed, so these plots show whether the layout depends on the UMAP settings.
 

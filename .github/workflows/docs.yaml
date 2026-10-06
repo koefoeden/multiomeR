@@ -10,7 +10,7 @@ on:
       - dev/render_website.py
       - dev/render_parameter_overview.R
       - dev/check_website_links.py
-      - cfg_pipeline_parameters.tsv
+      - manifests/cfg_pipeline_parameters.tsv
       - pixi.toml
       - pixi.lock
       - .github/workflows/docs.yaml

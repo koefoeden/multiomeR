@@ -32,7 +32,7 @@ resolve_cellranger_reference_json <- function(fragment_file, reference_json_file
     stop(
       "Expected exactly one supplied reference JSON matching the FASTA/GTF hashes in ",
       fragment_file, "; found ", sum(matches),
-      ". Supply the matching reference.json under reference_metadata/ and remove duplicate matches.",
+      ". Supply the matching reference.json under resources/reference_metadata/ and remove duplicate matches.",
       call. = FALSE
     )
   }

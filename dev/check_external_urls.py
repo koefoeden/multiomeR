@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check that the example-data download URLs still respond.
 
-The download script reads example_data/*manifest.tsv directly, so these are
+The download script reads manifests/public_*_manifest.tsv directly, so these are
 exactly the URLs the public examples download. Each request asks for one byte.
 """
 
@@ -35,7 +35,7 @@ def main() -> int:
     root = Path(__file__).resolve().parents[1]
     urls = sorted({
         row["url"]
-        for manifest in sorted((root / "example_data").glob("*manifest.tsv"))
+        for manifest in sorted((root / "manifests").glob("public_*_manifest.tsv"))
         for row in csv.DictReader(manifest.open(), delimiter="\t")
     })
     with ThreadPoolExecutor(max_workers=8) as pool:

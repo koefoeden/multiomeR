@@ -419,7 +419,7 @@ comparison_seurat_signac_targets <- function(values, peak_resources) {
 
 comparison_seurat_signac_config_paths <- c(
   configuration_path("cfg_aggregations.yaml"), configuration_path("cfg_GEM_wells.tsv"),
-  "cfg_pipeline_parameters.tsv"
+  "manifests/cfg_pipeline_parameters.tsv"
 )
 
 comparison_seurat_signac_pipeline <- rlang::list2(

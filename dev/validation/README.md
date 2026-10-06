@@ -36,7 +36,7 @@ No files, branches, or stores are swapped or cleared.
 Download the public demos if needed:
 
 ```sh
-bash example_data/download_10X_cellranger_count_data.sh
+bash scripts/download_10X_cellranger_count_data.sh
 ```
 
 The ignored link `example_data/encode` must point to a directory containing the

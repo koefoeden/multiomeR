@@ -1271,7 +1271,7 @@ The pipeline is tested with the outputs of Cell Ranger ARC 2.0.0 and 2.1.0.
 
 A [pooled GEM well](#pooled-wells) also needs `atac_possorted_bam.bam` in `outs/`. For CellBender counts, run [CellBender remove-background](https://cellbender.readthedocs.io/en/latest/usage/) first and give its H5 file in `GEM_well_cellbender_h5_file`.
 
-The pipeline identifies each well's Cell Ranger ARC reference by matching the FASTA and GTF hashes in the `atac_fragments.tsv.gz` header to a `reference.json` in the repository's `reference_metadata/` folder, so keep that header intact. JSON files for the GRCh38 2020-A, GRCh38 2024-A and mm10 2020-A references are included; for another reference, copy its `reference.json` into a new subdirectory there.
+The pipeline identifies each well's Cell Ranger ARC reference by matching the FASTA and GTF hashes in the `atac_fragments.tsv.gz` header to a `reference.json` in the repository's `resources/reference_metadata/` folder, so keep that header intact. JSON files for the GRCh38 2020-A, GRCh38 2024-A and mm10 2020-A references are included; for another reference, copy its `reference.json` into a new subdirectory there.
 
 ## Pooled GEM wells {#pooled-wells}
 
@@ -1297,7 +1297,7 @@ Leave `GEM_well_QC_exclude_list` as `NA` for the first run. After reviewing the 
 TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250
 ```
 
-A nucleus for which any expression is `TRUE` is excluded, and each expression is reported as a separate exclusion reason in the checkpoint 1 UpSet and retention plots. Nuclei absent from the GEX count matrix are always excluded, as `not_found_in_GEX_matrix`, whether or not the list names it. Filters can use the metrics that [`QC_metric_manifest.tsv`](https://github.com/koefoeden/multiomeR/blob/main/QC_metric_manifest.tsv) lists as available from checkpoint 1, and other per-nucleus columns such as `vireo_type`. The checkpoint 1 comparison plots show each metric's distribution and draw simple cutoffs such as these; they are examples, not recommendations for your tissue.
+A nucleus for which any expression is `TRUE` is excluded, and each expression is reported as a separate exclusion reason in the checkpoint 1 UpSet and retention plots. Nuclei absent from the GEX count matrix are always excluded, as `not_found_in_GEX_matrix`, whether or not the list names it. Filters can use the metrics that [`QC_metric_manifest.tsv`](https://github.com/koefoeden/multiomeR/blob/main/manifests/QC_metric_manifest.tsv) lists as available from checkpoint 1, and other per-nucleus columns such as `vireo_type`. The checkpoint 1 comparison plots show each metric's distribution and draw simple cutoffs such as these; they are examples, not recommendations for your tissue.
 
 ## Public example {#public-example}
 
@@ -1347,7 +1347,7 @@ The [differential analyses](downstream_differential_analyses.md) module can read
 
 The public demo's table also lists the donors of other example aggregations; only `pbmc1` and `pbmc6` have nuclei in the demo:
 
-[Generated Quarto chunk omitted: `emit_file( "website/data/public_defaults/immune_human_dataset_donor_id_metadata.tsv", "example_data/immune_human_data...`]
+[Generated Quarto chunk omitted: `emit_file( "website/data/public_defaults/immune_human_dataset_donor_id_metadata.tsv", "configuration/immune_human_dat...`]
 
 
 <!-- source: website/reference_aggregations.md -->
@@ -1409,7 +1409,7 @@ aggregation_QC_exclude_list_combined_object:
   - atac_peak_counts_blacklist_frac > 0.01
 ```
 
-A nucleus for which any expression is `TRUE` is excluded, and each expression is reported as a separate exclusion reason in the checkpoint 5 UpSet and retention plots. Filters can use the metrics that [`QC_metric_manifest.tsv`](https://github.com/koefoeden/multiomeR/blob/main/QC_metric_manifest.tsv) lists as available from checkpoint 4 or earlier. These cutoffs are examples, not recommendations for your tissue.
+A nucleus for which any expression is `TRUE` is excluded, and each expression is reported as a separate exclusion reason in the checkpoint 5 UpSet and retention plots. Filters can use the metrics that [`QC_metric_manifest.tsv`](https://github.com/koefoeden/multiomeR/blob/main/manifests/QC_metric_manifest.tsv) lists as available from checkpoint 4 or earlier. These cutoffs are examples, not recommendations for your tissue.
 
 ## Inherit settings from another aggregation {#inheritance}
 
@@ -1473,7 +1473,7 @@ This page collects facts about the saved outputs. For a guided first look, see [
 
 Plots and files are saved under `<store>/plots/` and `<store>/files/`, in folders given by the target name read from right to left. For example, `cross.UMAPs.3_GEX_QC.my_aggregation` saves to `<store>/plots/my_aggregation/3_GEX_QC/UMAPs/cross/`. The first folder is the GEM well or aggregation. Existing files do not show which results are current: after a configuration change, run `targets::tar_outdated()` before reviewing them.
 
-`QC_metric_manifest.tsv` in the repository root selects the plotted QC metrics, their display labels and plotting quantiles. `do_plot = FALSE` hides a metric. Plotting quantiles change the displayed range, not the nuclei retained; filters are set in `cfg_GEM_wells.tsv` and `cfg_aggregations.yaml`.
+`manifests/QC_metric_manifest.tsv` selects the plotted QC metrics, their display labels and plotting quantiles. `do_plot = FALSE` hides a metric. Plotting quantiles change the displayed range, not the nuclei retained; filters are set in `cfg_GEM_wells.tsv` and `cfg_aggregations.yaml`.
 
 `UMAPs/cross/` at checkpoints 3, 7 and 8 redraws the cell-type UMAP for several numbers of dimensions and neighbors (neighbors only at checkpoint 8). Clusters and labels stay fixed, so these plots show whether the layout depends on the UMAP settings.
 
@@ -2017,7 +2017,7 @@ This flexibility also means that users must review which methods and assumptions
 
 | Change | Start with |
 |---|---|
-| Add or revise a YAML parameter | `cfg_pipeline_parameters.tsv`, then the owning config reader or target; see [Parameter manifest](#parameter-manifest). |
+| Add or revise a YAML parameter | `manifests/cfg_pipeline_parameters.tsv`, then the owning config reader or target; see [Parameter manifest](#parameter-manifest). |
 | Find whether a threshold is configurable or fixed | The [parameter browser](parameters.html), then the stage's methods section and its source links. |
 | Change GEM well preprocessing | The `_targets.R` mapping and `extra_targets/per_GEM_well_targets.R`; see [Mapping tibbles](#mapping-tibbles). |
 | Change aggregation GEX, ATAC, or WNN processing | The stage's section in [Primary-module methods](methods_primary_module.md) and its `extra_targets/*_targets.R` file. |
@@ -2052,7 +2052,7 @@ The following sections describe each step. Preserve these contracts unless a cha
 
 ## Parameter manifest
 
-`cfg_pipeline_parameters.tsv` is the schema for YAML-backed pipeline configuration. Each row defines one parameter for one scope: `aggregation`, or the name of an optional module. Its columns record the type, cardinality, default, missing-value rule, allowed values and description of the parameter. The YAML files then only need to specify values that differ from the manifest defaults, plus values that are required because their resolved value may not be missing.
+`manifests/cfg_pipeline_parameters.tsv` is the schema for YAML-backed pipeline configuration. Each row defines one parameter for one scope: `aggregation`, or the name of an optional module. Its columns record the type, cardinality, default, missing-value rule, allowed values and description of the parameter. The YAML files then only need to specify values that differ from the manifest defaults, plus values that are required because their resolved value may not be missing.
 
 Configuration readers resolve file names with `configuration_path()` in the [selected configuration directory](main_overview.md#configuration-directory). Aggregation and enabled-module settings are resolved during graph construction; disabled modules do not read their configuration.
 
@@ -2190,7 +2190,7 @@ The tag families are:
 [resource_observation:<note>]   compact empirical resource note
 ```
 
-`[checkpoint:<name>]` marks targets selectable with `targets::tar_described_as()`. The numbered primary-module groups are listed in `QC_checkpoint_manifest.tsv`; optional module groups remain unnumbered. Selection matches description substrings; include the closing `]` to match a complete checkpoint tag. Dependencies still come from the target commands. [Run your own analysis](main_running.md) explains each checkpoint.
+`[checkpoint:<name>]` marks targets selectable with `targets::tar_described_as()`. The numbered primary-module groups are listed in `manifests/QC_checkpoint_manifest.tsv`; optional module groups remain unnumbered. Selection matches description substrings; include the closing `]` to match a complete checkpoint tag. Dependencies still come from the target commands. [Run your own analysis](main_running.md) explains each checkpoint.
 
 Numbered checkpoint plot targets end in the checkpoint name, with hyphens replaced by underscores, before the mapped dataset or aggregation suffix; [Output folders](review_outputs.md#output-folders) explains how the name sets the plot folder. Only plot targets use this naming convention; computational and metadata targets retain their modality suffixes.
 

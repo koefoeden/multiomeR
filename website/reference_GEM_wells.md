@@ -34,7 +34,7 @@ The pipeline is tested with the outputs of Cell Ranger ARC 2.0.0 and 2.1.0.
 
 A [pooled GEM well](#pooled-wells) also needs `atac_possorted_bam.bam` in `outs/`. For CellBender counts, run [CellBender remove-background](https://cellbender.readthedocs.io/en/latest/usage/) first and give its H5 file in `GEM_well_cellbender_h5_file`.
 
-The pipeline identifies each well's Cell Ranger ARC reference by matching the FASTA and GTF hashes in the `atac_fragments.tsv.gz` header to a `reference.json` in the repository's `reference_metadata/` folder, so keep that header intact. JSON files for the GRCh38 2020-A, GRCh38 2024-A and mm10 2020-A references are included; for another reference, copy its `reference.json` into a new subdirectory there.
+The pipeline identifies each well's Cell Ranger ARC reference by matching the FASTA and GTF hashes in the `atac_fragments.tsv.gz` header to a `reference.json` in the repository's `resources/reference_metadata/` folder, so keep that header intact. JSON files for the GRCh38 2020-A, GRCh38 2024-A and mm10 2020-A references are included; for another reference, copy its `reference.json` into a new subdirectory there.
 
 ## Pooled GEM wells {#pooled-wells}
 
@@ -60,7 +60,7 @@ Leave `GEM_well_QC_exclude_list` as `NA` for the first run. After reviewing the 
 TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250
 ```
 
-A nucleus for which any expression is `TRUE` is excluded, and each expression is reported as a separate exclusion reason in the checkpoint 1 UpSet and retention plots. Nuclei absent from the GEX count matrix are always excluded, as `not_found_in_GEX_matrix`, whether or not the list names it. Filters can use the metrics that [`QC_metric_manifest.tsv`](https://github.com/koefoeden/multiomeR/blob/main/QC_metric_manifest.tsv) lists as available from checkpoint 1, and other per-nucleus columns such as `vireo_type`. The checkpoint 1 comparison plots show each metric's distribution and draw simple cutoffs such as these; they are examples, not recommendations for your tissue.
+A nucleus for which any expression is `TRUE` is excluded, and each expression is reported as a separate exclusion reason in the checkpoint 1 UpSet and retention plots. Nuclei absent from the GEX count matrix are always excluded, as `not_found_in_GEX_matrix`, whether or not the list names it. Filters can use the metrics that [`QC_metric_manifest.tsv`](https://github.com/koefoeden/multiomeR/blob/main/manifests/QC_metric_manifest.tsv) lists as available from checkpoint 1, and other per-nucleus columns such as `vireo_type`. The checkpoint 1 comparison plots show each metric's distribution and draw simple cutoffs such as these; they are examples, not recommendations for your tissue.
 
 ## Public example {#public-example}
 

@@ -46,7 +46,7 @@ SuSiE fine-mapping and the support summary plots.
 ## Measurement-support filtering
 
 `peak_gene_correlation_filter` is a module setting with allowed values `lenient`
-(default in `cfg_pipeline_parameters.tsv`), `moderate`, and `strict`. Override
+(default in `manifests/cfg_pipeline_parameters.tsv`), `moderate`, and `strict`. Override
 it for an aggregation in `configuration/cfg_module_peak_gene_correlation.yaml`.
 The preset thresholds, the depth scaling of the count thresholds and every other
 fixed value of this module are listed in

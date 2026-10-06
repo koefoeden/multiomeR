@@ -12,13 +12,13 @@ find_parameter_manifest_root <- function(start_dir = ".") {
   current_dir <- normalizePath(start_dir, winslash = "/", mustWork = TRUE)
 
   repeat {
-    if (file.exists(file.path(current_dir, "cfg_pipeline_parameters.tsv"))) {
+    if (file.exists(file.path(current_dir, "manifests", "cfg_pipeline_parameters.tsv"))) {
       return(current_dir)
     }
 
     parent_dir <- dirname(current_dir)
     if (identical(parent_dir, current_dir)) {
-      stop("Could not find cfg_pipeline_parameters.tsv in current or parent directories.", call. = FALSE)
+      stop("Could not find manifests/cfg_pipeline_parameters.tsv in current or parent directories.", call. = FALSE)
     }
     current_dir <- parent_dir
   }
@@ -86,7 +86,7 @@ render_parameter_overview_fragment <- function(
 <div class="parameter-section-list"></div>
 <p class="parameter-empty-state" hidden>No parameters match in this workflow. Clear the search or choose another tab.</p>
 </div>
-<noscript><p>Enable JavaScript to browse this reference, or read <a href="https://github.com/koefoeden/multiomeR/blob/main/cfg_pipeline_parameters.tsv">the parameter manifest</a>.</p></noscript>
+<noscript><p>Enable JavaScript to browse this reference, or read <a href="https://github.com/koefoeden/multiomeR/blob/main/manifests/cfg_pipeline_parameters.tsv">the parameter manifest</a>.</p></noscript>
 <script type="application/json" class="parameter-overview-data">{data_json}</script>
 </div>
 <script>{script}</script>'

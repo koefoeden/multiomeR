@@ -15,7 +15,7 @@ Use this when adding or changing targets, helpers, or analysis steps.
    `packages/multiomeRCore/R` instead.
 3. Add targets to the nearest `extra_targets/*.R` or `module_*/*.R` fragment;
    reserve `_targets.R` for graph composition and mapping.
-4. Add or revise YAML parameters in `cfg_pipeline_parameters.tsv` before using
+4. Add or revise YAML parameters in `manifests/cfg_pipeline_parameters.tsv` before using
    them in config readers or targets.
 5. Run R through Pixi with `multiomer-run-r-code` and validate with
    `multiomer-validation-workflow`.

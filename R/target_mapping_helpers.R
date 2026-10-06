@@ -472,7 +472,7 @@ build_module_tibble <- function(module_name, aggregation_tibble, aggregation_tib
   }
   module_config_tibble <- read_manifest_config_tibble(
     config_file = config_file,
-    manifest_file = "cfg_pipeline_parameters.tsv",
+    manifest_file = "manifests/cfg_pipeline_parameters.tsv",
     scope = module_name,
     key_col = "aggregation"
   )

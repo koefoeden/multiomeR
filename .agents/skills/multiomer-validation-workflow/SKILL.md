@@ -40,7 +40,7 @@ git diff --check
 
 For checkpoint-tag changes, validate the selected targets' transitive
 dependencies: a description tag does not prevent a downstream dependency from
-crossing the intended review boundary. Keep `QC_checkpoint_manifest.tsv` and the
+crossing the intended review boundary. Keep `manifests/QC_checkpoint_manifest.tsv` and the
 review guide consistent.
 
 Run targets only when the changed behavior needs runtime proof, using the

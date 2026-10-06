@@ -2,7 +2,7 @@ rlang::list2(
   tarchetypes::tar_file(
     name = cellranger_reference_json_files,
     description = "Discover and track supplied Cell Ranger reference metadata",
-    command = c(!!list.files("reference_metadata", pattern = "^reference[.]json$", recursive = TRUE, full.names = TRUE)),
+    command = c(!!list.files("resources/reference_metadata", pattern = "^reference[.]json$", recursive = TRUE, full.names = TRUE)),
     deployment = "main"
   ),
   tarchetypes::tar_file(
@@ -14,7 +14,7 @@ rlang::list2(
   tarchetypes::tar_file(
     name = QC_metric_manifest_tsv,
     description = "Track the informational QC metric manifest",
-    command = "QC_metric_manifest.tsv",
+    command = "manifests/QC_metric_manifest.tsv",
     deployment = "main"
   ),
   targets::tar_target(
@@ -62,7 +62,7 @@ rlang::list2(
   tarchetypes::tar_file(
     name = QC_checkpoint_manifest_tsv,
     description = "Track the QC checkpoint names and review guidance",
-    command = "QC_checkpoint_manifest.tsv",
+    command = "manifests/QC_checkpoint_manifest.tsv",
     deployment = "main"
   ),
   tarchetypes::tar_file(

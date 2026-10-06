@@ -43,6 +43,6 @@ The public demo's table also lists the donors of other example aggregations; onl
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_file(
   "website/data/public_defaults/immune_human_dataset_donor_id_metadata.tsv",
-  "example_data/immune_human_dataset_donor_id_metadata.tsv"
+  "configuration/immune_human_dataset_donor_id_metadata.tsv"
 )
 ```

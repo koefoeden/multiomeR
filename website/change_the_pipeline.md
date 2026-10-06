@@ -14,7 +14,7 @@ This flexibility also means that users must review which methods and assumptions
 
 | Change | Start with |
 |---|---|
-| Add or revise a YAML parameter | `cfg_pipeline_parameters.tsv`, then the owning config reader or target; see [Parameter manifest](#parameter-manifest). |
+| Add or revise a YAML parameter | `manifests/cfg_pipeline_parameters.tsv`, then the owning config reader or target; see [Parameter manifest](#parameter-manifest). |
 | Find whether a threshold is configurable or fixed | The [parameter browser](parameters.html), then the stage's methods section and its source links. |
 | Change GEM well preprocessing | The `_targets.R` mapping and `extra_targets/per_GEM_well_targets.R`; see [Mapping tibbles](#mapping-tibbles). |
 | Change aggregation GEX, ATAC, or WNN processing | The stage's section in [Primary-module methods](methods_primary_module.md) and its `extra_targets/*_targets.R` file. |
@@ -49,7 +49,7 @@ The following sections describe each step. Preserve these contracts unless a cha
 
 ## Parameter manifest
 
-`cfg_pipeline_parameters.tsv` is the schema for YAML-backed pipeline configuration. Each row defines one parameter for one scope: `aggregation`, or the name of an optional module. Its columns record the type, cardinality, default, missing-value rule, allowed values and description of the parameter. The YAML files then only need to specify values that differ from the manifest defaults, plus values that are required because their resolved value may not be missing.
+`manifests/cfg_pipeline_parameters.tsv` is the schema for YAML-backed pipeline configuration. Each row defines one parameter for one scope: `aggregation`, or the name of an optional module. Its columns record the type, cardinality, default, missing-value rule, allowed values and description of the parameter. The YAML files then only need to specify values that differ from the manifest defaults, plus values that are required because their resolved value may not be missing.
 
 Configuration readers resolve file names with `configuration_path()` in the [selected configuration directory](main_overview.md#configuration-directory). Aggregation and enabled-module settings are resolved during graph construction; disabled modules do not read their configuration.
 
@@ -187,7 +187,7 @@ The tag families are:
 [resource_observation:<note>]   compact empirical resource note
 ```
 
-`[checkpoint:<name>]` marks targets selectable with `targets::tar_described_as()`. The numbered primary-module groups are listed in `QC_checkpoint_manifest.tsv`; optional module groups remain unnumbered. Selection matches description substrings; include the closing `]` to match a complete checkpoint tag. Dependencies still come from the target commands. [Run your own analysis](main_running.md) explains each checkpoint.
+`[checkpoint:<name>]` marks targets selectable with `targets::tar_described_as()`. The numbered primary-module groups are listed in `manifests/QC_checkpoint_manifest.tsv`; optional module groups remain unnumbered. Selection matches description substrings; include the closing `]` to match a complete checkpoint tag. Dependencies still come from the target commands. [Run your own analysis](main_running.md) explains each checkpoint.
 
 Numbered checkpoint plot targets end in the checkpoint name, with hyphens replaced by underscores, before the mapped dataset or aggregation suffix; [Output folders](review_outputs.md#output-folders) explains how the name sets the plot folder. Only plot targets use this naming convention; computational and metadata targets retain their modality suffixes.
 

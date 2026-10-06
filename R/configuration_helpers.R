@@ -61,7 +61,7 @@ read_config_parameter_manifest <- function(manifest_file, scope = NULL) {
 
 read_aggregation_config_tibble <- function(
   config_file = configuration_path("cfg_aggregations.yaml"),
-  manifest_file = "cfg_pipeline_parameters.tsv"
+  manifest_file = "manifests/cfg_pipeline_parameters.tsv"
 ) {
   config <- read_manifest_config_tibble(config_file, manifest_file, scope = "aggregation", key_col = "aggregation")
   selected <- validation_aggregations()

@@ -451,6 +451,22 @@ plot_categorical_bars_plot <- function(
     )
 }
 
+#' Write, per variable and cluster, the top category, its share and every category above 5%; NA counts as a category.
+save_cluster_composition_table <- function(metadata_tibble, cluster_col, metadata_cols,
+                                           path = get_structured_file_path(filetype = "tsv")) {
+  composition_tibble <- purrr::set_names(metadata_cols) |>
+    purrr::map(\(metadata_col) dplyr::count(metadata_tibble,
+      cluster = .data[[cluster_col]], category = as.character(.data[[metadata_col]]))) |>
+    dplyr::bind_rows(.id = "variable") |>
+    dplyr::mutate(cells = sum(n), share = n / cells, .by = c(variable, cluster)) |>
+    dplyr::arrange(match(variable, metadata_cols), cluster, dplyr::desc(n)) |>
+    dplyr::summarise(cells = cells[[1]], top_category = category[[1]], top_share = round(share[[1]], 2),
+      categories_above_5pct = paste(paste0(category, ": ", round(share, 2))[share > 0.05], collapse = "; "),
+      .by = c(variable, cluster))
+  readr::write_tsv(composition_tibble, path)
+  path
+}
+
 #' Plot cluster confusion matrix
 #'
 #' Plot row-normalized overlap between two cluster or annotation columns.

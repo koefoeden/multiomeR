@@ -467,6 +467,12 @@ rlang::list2(
       save_plots_structured(height = max(9, 4 + 0.25 * dplyr::n_distinct(metadata_w_cell_types_unfiltered_analysis_tibble.GEX$PCA_harmony_SNN_cluster_named)))
   ),
   tarchetypes::tar_file(
+    name = cluster_composition_table.3_GEX_QC,
+    description = "Tabulate each SNN cluster's top category and categories above 5% per configured categorical variable before doublet filtering. [checkpoint:3_GEX-QC]",
+    command = save_cluster_composition_table(metadata_w_cell_types_unfiltered_analysis_tibble.GEX,
+      "PCA_harmony_SNN_cluster_named", aggregation_proj_spec_categorical_vars)
+  ),
+  tarchetypes::tar_file(
     name = cluster_marker_volcano_plots.3_GEX_QC,
     description = "One cluster-marker volcano file per multicluster cell type; two clusters share one directed comparison. [checkpoint:3_GEX-QC]",
     command = plot_cluster_marker_volcano(cluster_marker_tibbles.GEX) |>

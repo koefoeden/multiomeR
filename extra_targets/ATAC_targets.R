@@ -772,6 +772,12 @@ rlang::list2(
         save_plots_structured(height = max(9, 4 + 0.25 * dplyr::n_distinct(metadata_w_cell_types_unfiltered_analysis_tibble.ATAC$LSI_harmony_SNN_cluster_named)))
     ),
     tarchetypes::tar_file(
+      name = cluster_composition_table.7_ATAC_QC,
+      description = "Tabulate each SNN cluster's top category and categories above 5% per configured categorical variable before ATAC doublet filtering. [checkpoint:7_ATAC-QC]",
+      command = save_cluster_composition_table(metadata_w_cell_types_unfiltered_analysis_tibble.ATAC,
+        "LSI_harmony_SNN_cluster_named", aggregation_proj_spec_categorical_vars)
+    ),
+    tarchetypes::tar_file(
       name = QC_excluded_upset_plot.5_pre_LSI_QC,
       description = "UpSet plot of overlapping ATAC QC exclusion reasons. [checkpoint:5_pre-LSI-QC]",
       command = {

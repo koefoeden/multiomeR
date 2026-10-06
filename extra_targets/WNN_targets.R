@@ -305,6 +305,12 @@ rlang::list2(
         save_plots_structured(height = max(9, 4 + 0.25 * dplyr::n_distinct(metadata_w_cell_types_analysis_tibble.WNN$WNN_harmony_SNN_cluster_named)))
     ),
     tarchetypes::tar_file(
+      name = cluster_composition_table.8_multimodal_QC,
+      description = "Tabulate each SNN cluster's top category and categories above 5% per configured categorical variable among all WNN nuclei. [checkpoint:8_multimodal-QC]",
+      command = save_cluster_composition_table(metadata_w_cell_types_analysis_tibble.WNN,
+        "WNN_harmony_SNN_cluster_named", aggregation_proj_spec_categorical_vars)
+    ),
+    tarchetypes::tar_file(
       name = markers_by_cluster_dot_plot.8_multimodal_QC,
       description = "GEX marker expression per named WNN cluster, with nuclei counts and doublet evidence for retained WNN nuclei. [checkpoint:8_multimodal-QC]",
       command = {

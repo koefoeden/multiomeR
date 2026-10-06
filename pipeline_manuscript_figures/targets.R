@@ -39,7 +39,7 @@ figure_pipeline <- list(
   ),
   targets::tar_target(
     figure_1_panel_C.mixed_human_31x,
-    description = "Figure 1C: raw_deviation_unscaled data, up to six raw Z >= qnorm(0.95) traits, all cell types, no metadata tracks",
+    description = "Figure 1C: raw_deviation_unscaled data, up to six raw Z >= qnorm(0.95) traits, all cell types, BH-adjusted stars, no metadata tracks",
     command = local({
       scores <- chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x
       plot_figure_1_heatmap(scores, select_figure_1_traits(scores)) |> compact_figure_1_plot()
@@ -48,7 +48,7 @@ figure_pipeline <- list(
   ),
   targets::tar_target(
     figure_1_panel_D.mixed_human_31x,
-    description = "Figure 1D: variant-detail data for the top absolute-contribution locus in the two strongest raw Z combinations, left to right; focal coverage and PIP only",
+    description = "Figure 1D: variant-detail data for the top absolute-contribution locus in the two strongest raw Z combinations, left to right; protein-coding genes, focal coverage and PIP only",
     command = local({
       selections <- select_figure_1_combinations(chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x)
       locus_records <- lapply(seq_len(nrow(selections)), function(i) {
@@ -65,8 +65,9 @@ figure_pipeline <- list(
         })
         stopifnot(length(records) == 1L)
         record <- records[[1]]
+        gene_ranges <- marker_validated_Ensembl_annotations_GRanges_list.mixed_human_31x$genes
         genes <- prepare_genomic_gene_bodies(
-          marker_validated_Ensembl_annotations_GRanges_list.mixed_human_31x$genes, record$region)
+          gene_ranges[gene_ranges$gene_biotype == "protein_coding"], record$region)
         list(record = record, genes = genes, selection = selection)
       })
       plot_figure_1_loci(locus_records) |> compact_figure_1_plot()

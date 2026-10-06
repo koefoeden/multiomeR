@@ -149,6 +149,21 @@ figure_1_trait_labels <- function(x) {
   gsub("([a-z])([A-Z])", "\\1 \\2", sub("_[^_]+[0-9]{4}$", "", x))
 }
 
+# Deviation clusters use hyphens and metadata cell types underscores.
+figure_1_cell_type_labels <- function(x) gsub("[-_]", " ", x)
+
+# Lanes from gene bodies widened to their labels' approximate extent, so labels in
+# one lane do not overlap; char_fraction is one character's share of the facet width.
+figure_1_gene_lanes <- function(genes, window_width, char_fraction = .018) {
+  half_label <- (nchar(genes$gene) + 2) * char_fraction * window_width / 2
+  middle <- (genes$start + genes$end) / 2
+  genes <- dplyr::mutate(genes, label_start = floor(pmin(.data$start, middle - half_label)),
+    label_end = ceiling(pmax(.data$end, middle + half_label))) |>
+    dplyr::arrange(.data$label_start, .data$label_end)
+  genes$lane <- IRanges::disjointBins(IRanges::IRanges(genes$label_start, genes$label_end))
+  dplyr::select(genes, -"label_start", -"label_end")
+}
+
 # A: inspired by top_link_aggregate_scatter_plots. Separate compact genomic
 # panel, focal cell type only, selected peak/TSS and link arc; omit the large
 # cross-cell-type evidence stack. Zoom to the peak and TSS with 25 kb flanks; retain cached coverage bins.
@@ -209,17 +224,19 @@ plot_figure_1_scatter <- function(data) {
 
 # C: raw_deviation_unscaled inspiration; at most six traits passing the existing
 # raw Z >= qnorm(0.95), no metadata tracks or clustering. All cell
-# types retained, common raw-deviation scale. Stars use unadjusted upper-tail normal P <= 0.05 and <= 0.01.
+# types retained, common raw-deviation scale. Stars use upper-tail normal P <= 0.05 and
+# <= 0.01 after Benjamini-Hochberg adjustment across all trait-cell-type tests (z_q).
 plot_figure_1_heatmap <- function(data, traits) {
   data <- data |> dplyr::filter(.data$GWAS_ID %in% traits$GWAS_ID) |>
     dplyr::mutate(GWAS_ID = factor(.data$GWAS_ID, levels = rev(traits$GWAS_ID)),
-      label = chromVAR_Z_support_labels(.data$z))
+      label = dplyr::case_when(.data$z_q <= .01 ~ "**", .data$z_q <= .05 ~ "*", .default = ""))
   limit <- max(abs(data$deviation), na.rm = TRUE)
   ggplot2::ggplot(data, ggplot2::aes(.data$cluster, .data$GWAS_ID, fill = .data$deviation)) +
     ggplot2::geom_tile(colour = "white", linewidth = .3) +
     ggplot2::geom_text(ggplot2::aes(label = .data$label), size = 3) +
     ggplot2::scale_fill_gradient2(low = "#3B4CC0", mid = "white", high = "#B40426",
       limits = c(-limit, limit), name = "Deviation") +
+    ggplot2::scale_x_discrete(labels = figure_1_cell_type_labels) +
     ggplot2::scale_y_discrete(labels = figure_1_trait_labels) + figure_1_theme() +
     ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 40, hjust = 1, size = 6),
       panel.grid = ggplot2::element_blank(), legend.position = "right") +
@@ -230,13 +247,16 @@ plot_figure_1_heatmap <- function(data, traits) {
 # and independent genomic x ranges. PIP retains the same scale in both columns.
 plot_figure_1_loci <- function(records) {
   labels <- vapply(records, function(x) paste0(
-    figure_1_trait_labels(x$selection$GWAS_ID[[1]]), " — ", x$selection$cluster[[1]]), character(1))
+    figure_1_trait_labels(x$selection$GWAS_ID[[1]]), " — ",
+    figure_1_cell_type_labels(x$selection$cluster[[1]])), character(1))
   bounds <- purrr::map2_dfr(records, labels, function(x, label) tibble::tibble(
     locus = label, position = c(GenomicRanges::start(x$record$region), GenomicRanges::end(x$record$region))))
   variants <- purrr::map2_dfr(records, labels, function(x, label) {
     dplyr::mutate(x$record$variant_tibble, locus = label)
   })
-  genes <- purrr::map2_dfr(records, labels, function(x, label) dplyr::mutate(x$genes, locus = label))
+  genes <- purrr::map2_dfr(records, labels, function(x, label) {
+    figure_1_gene_lanes(x$genes, GenomicRanges::width(x$record$region)) |> dplyr::mutate(locus = label)
+  })
   coverage <- purrr::map2_dfr(records, labels, function(x, label) {
     x$record$coverage_tibble |>
       dplyr::filter(.data$group == x$selection$cluster[[1]]) |>
@@ -294,7 +314,7 @@ plot_figure_1_loci <- function(records) {
   # Keep each axis label beside its track while aligning the faceted panels.
   patchwork::wrap_plots(lapply(list(contribution, gene_track, accessibility),
     function(plot) patchwork::free(plot, type = "label", side = "l")),
-    ncol = 1, heights = c(1.1, 1.4, .9), guides = "collect") +
+    ncol = 1, heights = c(.9, 2.1, .7), guides = "collect") +
     patchwork::plot_annotation(title = "Leading GWAS loci", theme = figure_1_theme())
 }
 
@@ -304,7 +324,7 @@ plot_figure_1_TRS <- function(data, trait, score_limits) {
   labels <- data |> dplyr::summarise(x = stats::median(.data$WNN_UMAP_1),
     y = stats::median(.data$WNN_UMAP_2), .by = "PCA_harmony_SNN_cluster_cell_type") |>
     dplyr::mutate(PCA_harmony_SNN_cluster_cell_type =
-      gsub("_", " ", .data$PCA_harmony_SNN_cluster_cell_type))
+      figure_1_cell_type_labels(.data$PCA_harmony_SNN_cluster_cell_type))
   # Unlabelled sampled nuclei repel text away from the point clouds, not just
   # from other centroids. A fixed seed keeps placement matched between traits.
   obstacles <- withr::with_seed(1L, dplyr::slice_sample(data, n = min(2000L, nrow(data)))) |>
@@ -345,7 +365,7 @@ compose_figure_1 <- function(A, B, C, D, E) {
         plot.title.position = "plot")
   })
   (patchwork::wrap_plots(plots, design = "AB\nCC\nDD\nEE",
-    heights = c(1.15, .95, 1.3, 2.75)) +
+    heights = c(1.15, .85, 1.4, 2.75)) +
     patchwork::plot_annotation(tag_levels = "A")) &
     ggplot2::theme(plot.tag = ggplot2::element_text(family = "NimbusSan", face = "bold",
         size = 12, hjust = 0, vjust = 1), plot.tag.position = c(0, 1))

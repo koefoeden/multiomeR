@@ -13,6 +13,7 @@ validate-local = { cmd = "Rscript validation/run.R", description = "Check extern
 refresh-demo-outputs = { cmd = "Rscript dev/refresh_demo_outputs.R", description = "Refresh the printed output and UMAP snapshot of the demo-results page from the built public demo." }
 test = { cmd = "Rscript tests/testthat.R", description = "Run all reference-parity tests of the reimplemented algorithms." }
 install-r-github-packages = { cmd = "Rscript scripts/install_r_github_packages.R", description = "Install GitHub-only R packages into the pixi R library." }
+install-fragtk = { cmd = "curl -fsSL https://github.com/stuart-lab/fragtk/releases/download/1.7.0/fragtk_1.7.0_x86_64-unknown-linux-musl.tar.gz -o fragtk.tar.gz && echo 'f7e447e440a2f766063e37424b1d02fc3a702522da38154e41f84c469cb52422  fragtk.tar.gz' | sha256sum -c - && tar -xzf fragtk.tar.gz -C $CONDA_PREFIX/bin fragtk && rm fragtk.tar.gz", description = "Install the pinned fragtk binary that Signac's FeatureMatrix() uses for peak quantification." }
 download-demo-data = { cmd = "bash example_data/download_10X_cellranger_count_data.sh example_data/public_immune_human_2x_manifest.tsv", description = "Download the required subsets of two public Cell Ranger ARC outputs." }
 setup-demo = { depends-on = ["download-demo-data", "install-r-github-packages"], description = "Prepare the environment and inputs for the public quickstart." }
 test-scoring-parity = { cmd = "Rscript -e 'testthat::test_file(\"tests/testthat/test-scoring-parity.R\", stop_on_failure = TRUE)'", description = "Run slow BPCells scoring integration tests against reference implementations." }
@@ -106,6 +107,10 @@ r-rprojroot = ">=2.1.1,<3"
 r-scales = ">=1.4.0,<2"
 r-scattermore = ">=1.2,<2" # used indirectly by BPCells for plotting
 r-seurat = ">=5.5.1,<6"
+# Build dependencies of Seurat 5.6.0, pinned in scripts/github_packages.R until
+# conda-forge ships r-seurat 5.6.0.
+r-pbapply = ">=1.7_4,<2"
+r-rcppthread = ">=2.4.0,<3"
 # Signac is pinned in scripts/github_packages.R for ChromatinAssay5 / GRangesAssay
 # export support; install it with the install-r-github-packages task.
 r-stringr = ">=1.6.0,<2"

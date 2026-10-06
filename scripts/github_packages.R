@@ -1,5 +1,10 @@
 github_packages <- list(
   list(
+    package = "Seurat",
+    repo = "satijalab/seurat",
+    ref = "75dfa8603befe31505e6287d32dc86c607732bd6"
+  ),
+  list(
     package = "BPCells",
     repo = "bnprks/BPCells",
     subdir = "r",

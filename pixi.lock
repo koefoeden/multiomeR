@@ -476,6 +476,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-rcppparallel-5.1.11_2-r45h0d96847_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-rcppprogress-0.4.2-r45hc72bb7e_5.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-rcpproll-0.4.0-r45hfa9885e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/r-rcppthread-2.4.0-r45h3697838_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-rcpptoml-0.2.3-r45h3697838_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-rcurl-1.98_1.18-r45h46721d4_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-rdpack-2.6.6-r45hc72bb7e_0.conda
@@ -1097,6 +1098,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-rcppparallel-5.1.11_2-r45h0d96847_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-rcppprogress-0.4.2-r45hc72bb7e_5.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-rcpproll-0.4.0-r45hfa9885e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/r-rcppthread-2.4.0-r45h3697838_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-rcpptoml-0.2.3-r45h3697838_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/r-rcurl-1.98_1.18-r45h46721d4_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/r-rdpack-2.6.6-r45hc72bb7e_0.conda
@@ -8200,6 +8202,18 @@ packages:
   license_family: GPL3
   size: 139402
   timestamp: 1788694150715
+- conda: https://conda.anaconda.org/conda-forge/linux-64/r-rcppthread-2.4.0-r45h3697838_0.conda
+  sha256: 72575c6a2d80fbcc91dc4d2c3e2b5d5938dd4149633160ec1e25165402bf9628
+  md5: 37010c83589d93eac8a1d9731e187a14
+  depends:
+  - __glibc >=2.17,<3.0.a0
+  - libgcc >=14
+  - libstdcxx >=14
+  - r-base >=4.5,<4.6.0a0
+  license: MIT
+  license_family: MIT
+  size: 349222
+  timestamp: 1781340642092
 - conda: https://conda.anaconda.org/conda-forge/linux-64/r-rcpptoml-0.2.3-r45h3697838_1.conda
   sha256: 8e10fa6f550c83cdc99175443ecc92db178369e82a7dcb743e1fe7ce87d39530
   md5: 707ba8dabbbffd03f5907406a0fe8368

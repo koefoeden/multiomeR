@@ -1,3 +1,71 @@
+# multiomeR 1.2.0 (unreleased)
+
+Adds the public configuration, figures and results of the multiomeR manuscript,
+lowers the memory use of CellBender input, and lets targets stores move between
+disks. Each configuration directory now carries its own crew controllers.
+
+## Configuration
+
+- Read `crew_controllers.R` from the selected configuration directory, so each
+  directory carries controllers that suit its aggregations; the default file
+  moves to `configuration/crew_controllers.R`.
+- Use CellBender counts whenever a GEM well gives a CellBender H5 file. The
+  `GEM_well_add_cellbender` column is no longer needed; a leftover column is
+  ignored.
+- Move `mixed_human_31x` and the nested `comparison_1x` to `comparison_20x`
+  aggregations into the new `configuration_dev/`, which builds the manuscript's
+  results in its own targets store (`TAR_PROJECT=dev`, store `outputs_dev`),
+  with Slurm workers on one node. `configuration/` keeps the demo and the small
+  examples, and validation now covers whichever validation aggregations the
+  selected directory defines.
+
+## Fixes and performance
+
+- Read CellBender matrices in blocks of 2,000 barcodes and keep only the gene
+  features, so a 34,498-nucleus GEM well peaks at 5.2 GB instead of 17.1 GB.
+  The written matrices are byte-identical.
+- Load Roadmap chromHMM annotations per aggregation, so activating another
+  aggregation or selecting another configuration directory no longer rebuilds
+  them.
+- Record unresolved, project-relative paths for opened BPCells matrices and
+  fragments and for downloaded reference files, so a targets store keeps
+  working after it moves, for example from node-local disk to shared storage.
+
+## Manuscript
+
+- Add `pipeline_manuscript_figures/`, which builds Figure 1, Supplementary
+  Figure S2 and Supplementary Table S4 of the manuscript from public data in
+  `configuration_dev/`, with the results and their data under `results/`. It
+  replaces `manuscript_figures/`.
+- In Figure 1, spell cell types alike in panels C to E and show protein-coding
+  genes in panel D with labels that no longer overlap.
+
+## Documentation
+
+- Remove the dropped HC3 scan from the workflow overview figure.
+- Complete and case-protect bibliography entries.
+- Add `CITATION.cff`, which GitHub shows as "Cite this repository" and Zenodo
+  uses for the authors of archived releases.
+
+## Migration
+
+- A custom configuration directory needs its own `crew_controllers.R`: copy
+  `configuration/crew_controllers.R` and adapt it. Move any changes you made to
+  the former root `crew_controllers.R` into it.
+- Select `configuration_dev/` to rebuild `mixed_human_31x` or the comparison
+  aggregations.
+- Target invalidation: targets that open BPCells matrices or fragments
+  (`GEX_counts_BPCells_matrix`, `fragments_w_prefix_bpcells`,
+  `aggregated_counts_BPCells_matrix.GEX`, `consensus_peak_BPCells_matrix.ATAC`,
+  `motif_family_accessibility_BPCells_matrix.ATAC`,
+  `gene_score_archr_BPCells_matrix.ATAC` and the pseudobulk count matrices)
+  rerun with unchanged data, and their consumers rerun with them. Smaller
+  reruns that reproduce their results: `GEM_well_config_tsv`,
+  `GEM_well_metadata_tibble`, `GEM_well_annotation_metadata_tibble`,
+  `GEX_counts_BPcells_matrix_dir`, `chromHMMs_list_proj.ATAC` and the five
+  downloaded reference-file targets. The Figure 1 targets affect only
+  `configuration_dev/`.
+
 # multiomeR 1.1.0 (2026-09-29)
 
 A documentation and demo release. The public demo aggregation is rebuilt with

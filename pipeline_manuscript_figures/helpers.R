@@ -224,12 +224,11 @@ plot_figure_1_scatter <- function(data) {
 
 # C: raw_deviation_unscaled inspiration; at most six traits passing the existing
 # raw Z >= qnorm(0.95), no metadata tracks or clustering. All cell
-# types retained, common raw-deviation scale. Stars use upper-tail normal P <= 0.05 and
-# <= 0.01 after Benjamini-Hochberg adjustment across all trait-cell-type tests (z_q).
+# types retained, common raw-deviation scale. Stars use unadjusted upper-tail normal P <= 0.05 and <= 0.01.
 plot_figure_1_heatmap <- function(data, traits) {
   data <- data |> dplyr::filter(.data$GWAS_ID %in% traits$GWAS_ID) |>
     dplyr::mutate(GWAS_ID = factor(.data$GWAS_ID, levels = rev(traits$GWAS_ID)),
-      label = dplyr::case_when(.data$z_q <= .01 ~ "**", .data$z_q <= .05 ~ "*", .default = ""))
+      label = chromVAR_Z_support_labels(.data$z))
   limit <- max(abs(data$deviation), na.rm = TRUE)
   ggplot2::ggplot(data, ggplot2::aes(.data$cluster, .data$GWAS_ID, fill = .data$deviation)) +
     ggplot2::geom_tile(colour = "white", linewidth = .3) +

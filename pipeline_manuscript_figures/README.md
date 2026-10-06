@@ -48,9 +48,8 @@ Selections are deterministic but follow the data.
   aggregate residuals coloured by donor with a descriptive regression line. The
   ranking is not an FDR claim, and aggregates are not independent donors.
 - **C:** up to six traits with a raw chromVAR Z ≥ qnorm(0.95), ordered by their
-  strongest cell type, across all cell types; stars mark upper-tail P ≤ 0.05
-  and P ≤ 0.01 after Benjamini–Hochberg adjustment across all trait–cell-type
-  tests.
+  strongest cell type, across all cell types; stars mark unadjusted upper-tail
+  P ≤ 0.05 and P ≤ 0.01.
 - **D:** for the two strongest cell-type–trait combinations, the locus with the
   largest absolute contribution to the deviation, as aligned facets of variant
   contributions (point area: PIP), protein-coding genes, focal coverage and

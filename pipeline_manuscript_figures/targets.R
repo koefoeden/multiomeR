@@ -39,7 +39,7 @@ figure_pipeline <- list(
   ),
   targets::tar_target(
     figure_1_panel_C.mixed_human_31x,
-    description = "Figure 1C: raw_deviation_unscaled data, up to six raw Z >= qnorm(0.95) traits, all cell types, BH-adjusted stars, no metadata tracks",
+    description = "Figure 1C: raw_deviation_unscaled data, up to six raw Z >= qnorm(0.95) traits, all cell types, no metadata tracks",
     command = local({
       scores <- chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x
       plot_figure_1_heatmap(scores, select_figure_1_traits(scores)) |> compact_figure_1_plot()

@@ -1,8 +1,16 @@
 # multiomeR 1.2.0 (unreleased)
 
 Adds the public configuration, figures and results of the multiomeR manuscript,
-lowers the memory use of CellBender input, and lets targets stores move between
-disks. Each configuration directory now carries its own crew controllers.
+per-cluster composition tables, lower memory use for CellBender input, and
+targets stores that can move between disks. Each configuration directory now
+carries its own crew controllers.
+
+## Outputs
+
+- Write `cluster_composition_table.tsv` at checkpoints 3, 7 and 8: for each
+  cluster and each categorical variable, `GEM_well_ID` and `donor_id`, the
+  cluster size, its most frequent category and that category's share, and
+  every category above 5%.
 
 ## Configuration
 
@@ -21,6 +29,9 @@ disks. Each configuration directory now carries its own crew controllers.
 
 ## Fixes and performance
 
+- Always exclude nuclei missing from the GEX count matrix at checkpoint 1, so
+  the checkpoint 1 plots and retention tables report them instead of the
+  checkpoint 3 retention table counting them as small GEX clusters.
 - Read CellBender matrices in blocks of 2,000 barcodes and keep only the gene
   features, so a 34,498-nucleus GEM well peaks at 5.2 GB instead of 17.1 GB.
   The written matrices are byte-identical.
@@ -42,6 +53,10 @@ disks. Each configuration directory now carries its own crew controllers.
 
 ## Documentation
 
+- Add guidance for aggregations that combine tissues, and show how to preview
+  the per-GEM-well targets of checkpoint 1 and leave the costly Seurat exports
+  out until the cell-type labels are accepted.
+- Describe the per-cluster composition tables.
 - Remove the dropped HC3 scan from the workflow overview figure.
 - Complete and case-protect bibliography entries.
 - Add `CITATION.cff`, which GitHub shows as "Cite this repository" and Zenodo
@@ -49,6 +64,11 @@ disks. Each configuration directory now carries its own crew controllers.
 - Ask users, in the README and on the manual's home page, to cite multiomeR,
   targets and BPCells, and the methods behind the results they report;
   `CITATION.cff` lists targets and BPCells as references.
+
+## Development
+
+- Keep release validation reports in `validation/reports/` and move the
+  scripts that make Cell Ranger ARC test subsets to `dev/`.
 
 ## Migration
 
@@ -66,8 +86,16 @@ disks. Each configuration directory now carries its own crew controllers.
   reruns that reproduce their results: `GEM_well_config_tsv`,
   `GEM_well_metadata_tibble`, `GEM_well_annotation_metadata_tibble`,
   `GEX_counts_BPcells_matrix_dir`, `chromHMMs_list_proj.ATAC` and the five
-  downloaded reference-file targets. The Figure 1 targets affect only
-  `configuration_dev/`.
+  downloaded reference-file targets. The per-GEM-well exclusion lists
+  (`excluded_barcodes_by_type_list`,
+  `excluded_cellranger_only_barcodes_by_type_list`) rerun for GEM wells whose
+  QC list lacks `not_found_in_GEX_matrix`, which includes every GEM well of the
+  public configurations; the changes stop at the checkpoint 1 plots and
+  retention tables. The new composition tables build without rerunning
+  anything else. The Figure 1 targets affect only `configuration_dev/`.
+- In `configuration_dev/`, Supplementary Figure S2 reads the recorded runtimes
+  of the compared workflows from the store, so rebuild its data before
+  rerunning targets of the `comparison_` aggregations.
 
 # multiomeR 1.1.0 (2026-09-29)
 

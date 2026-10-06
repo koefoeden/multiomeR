@@ -2,16 +2,13 @@ comparison_aggregation_names <- function() {
   paste0("comparison_", c(1, 2, 5, 10, 20), "x")
 }
 
-comparison_configure_parallelism <- function() {
-  workers <- suppressWarnings(as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", unset = "1")))
-  if (is.na(workers) || workers < 1L) {
-    workers <- 1L
-  }
-  if (workers > 1L) {
-    options(future.globals.maxSize = 160 * 1024^3)
-    future::plan(future::multicore, workers = workers)
-  }
-  invisible(workers)
+# Evaluates expr with one forked future worker per allocated core, then restores
+# the previous plan: crew workers run several targets, and a plan left in place
+# would oversubscribe the threads of Seurat's own kernels in later targets.
+comparison_with_workers <- function(expr) {
+  withr::local_options(future.globals.maxSize = Inf)
+  with(future::plan(future::multicore, workers = parallelly::availableCores()), local = TRUE)
+  expr
 }
 
 comparison_build_config <- function(aggregation) {
@@ -52,97 +49,30 @@ comparison_input_files <- function(config) {
   )
 }
 
-comparison_create_sample_object <- function(counts_list, sample_id, fragment_file, cells) {
-  required_assays <- c("Gene Expression", "Peaks")
-  if (!all(required_assays %in% names(counts_list))) {
-    stop("Input does not contain Gene Expression and Peaks matrices.", call. = FALSE)
-  }
-
-  object <- SeuratObject::CreateSeuratObject(
-    counts = counts_list[["Gene Expression"]][, cells, drop = FALSE],
-    assay = "RNA",
-    project = sample_id,
-    min.cells = 0L,
-    min.features = 0L
-  )
-  object[["ATAC"]] <- Signac::CreateChromatinAssay5(
-    counts = counts_list[["Peaks"]][, cells, drop = FALSE],
-    fragments = fragment_file,
-    validate.fragments = TRUE,
-    verbose = FALSE
-  )
-  object$GEM_well_ID <- sample_id
-  SeuratObject::RenameCells(object, add.cell.id = sample_id)
+# One BPCells directory of GEM-well-prefixed GEX counts per GEM well.
+comparison_write_RNA_dirs <- function(config, out_dir) {
+  purrr::map2_chr(config$sample_tibble$sample_id, config$sample_tibble$matrix_h5, \(sample_id, matrix_h5) {
+    counts <- BPCells::open_matrix_10x_hdf5(matrix_h5, feature_type = "Gene Expression")
+    colnames(counts) <- paste0(sample_id, "_", colnames(counts))
+    dir <- file.path(out_dir, sample_id)
+    BPCells::write_matrix_dir(counts, dir, overwrite = TRUE)
+    dir
+  })
 }
 
-comparison_read_inputs <- function(config) {
-  sample_objects <- purrr::map2(
-    config$sample_tibble$sample_id,
-    config$sample_tibble$matrix_h5,
-    \(sample_id, matrix_h5) {
-      counts_list <- Seurat::Read10X_h5(matrix_h5, use.names = TRUE)
-      cells <- colnames(counts_list[["Gene Expression"]])
-      fragment_file <- config$sample_tibble$fragment_file[
-        match(sample_id, config$sample_tibble$sample_id)
-      ]
-      comparison_create_sample_object(counts_list, sample_id, fragment_file, cells)
-    }
-  )
-
-  object <- purrr::reduce(
-    sample_objects,
-    \(x, y) merge(x, y, merge.data = FALSE, merge.dr = FALSE)
-  )
-  object[["RNA"]] <- SeuratObject::JoinLayers(object[["RNA"]])
-  object[["ATAC"]] <- SeuratObject::JoinLayers(object[["ATAC"]])
-  object
-}
-
-comparison_preprocess_RNA <- function(object, config) {
-  comparison_configure_parallelism()
-  SeuratObject::DefaultAssay(object) <- "RNA"
-  object <- Seurat::SCTransform(
-    object,
-    conserve.memory = TRUE,
-    seed.use = config$random_seed,
-    verbose = TRUE
-  )
-  Seurat::RunPCA(
-    object,
-    npcs = max(config$RNA_dims),
-    seed.use = config$random_seed,
-    verbose = TRUE
-  )
-}
-
-comparison_cluster_RNA <- function(object, config) {
-  comparison_configure_parallelism()
-  object <- Seurat::FindNeighbors(
-    object,
-    reduction = "pca",
-    dims = config$RNA_dims,
-    k.param = config$WNN_k,
-    verbose = TRUE
-  )
-  object <- Seurat::FindClusters(
-    object,
-    resolution = config$GEX_cluster_resolution,
-    algorithm = 4L,
-    random.seed = config$random_seed,
-    verbose = TRUE
-  )
+comparison_process_RNA <- function(RNA_dirs, config) {
+  counts <- purrr::map(RNA_dirs, open_BPCells_dir)
+  object <- SeuratObject::CreateSeuratObject(purrr::reduce(counts, cbind), assay = "RNA")
+  object$GEM_well_ID <- rep(config$sample_tibble$sample_id, purrr::map_int(counts, ncol))
+  object <- Seurat::SCTransform(object, conserve.memory = TRUE, seed.use = config$random_seed)
+  object <- Seurat::RunPCA(object, npcs = max(config$RNA_dims), seed.use = config$random_seed)
+  object <- Seurat::FindNeighbors(object, reduction = "pca", dims = config$RNA_dims, k.param = config$WNN_k)
+  object <- Seurat::FindClusters(object, resolution = config$GEX_cluster_resolution, algorithm = 4L,
+    random.seed = config$random_seed)
   object$RNA_clusters <- object$seurat_clusters
-  Seurat::RunUMAP(
-    object,
-    reduction = "pca",
-    dims = config$RNA_dims,
-    n.neighbors = config$UMAP_n_neighbors,
-    min.dist = config$UMAP_min_dist,
-    reduction.name = "umap.rna",
-    reduction.key = "rnaUMAP_",
-    seed.use = config$random_seed,
-    verbose = TRUE
-  )
+  Seurat::RunUMAP(object, reduction = "pca", dims = config$RNA_dims, n.neighbors = config$UMAP_n_neighbors,
+    min.dist = config$UMAP_min_dist, reduction.name = "umap.rna", reduction.key = "rnaUMAP_",
+    seed.use = config$random_seed)
 }
 
 comparison_call_consensus_peaks <- function(
@@ -151,14 +81,13 @@ comparison_call_consensus_peaks <- function(
   config,
   blacklist_GRanges
 ) {
-  comparison_configure_parallelism()
   fragment_files <- unlist(fragment_files, use.names = FALSE)
   cluster_names <- as.character(cluster_names)
   if (length(fragment_files) != length(cluster_names)) {
     stop("Peak-calling fragment files and cluster names must have equal lengths.", call. = FALSE)
   }
 
-  within_cluster_peaks <- future.apply::future_lapply(
+  within_cluster_peaks <- comparison_with_workers(future.apply::future_lapply(
     seq_along(fragment_files),
     \(cluster_index) {
       cluster_name <- cluster_names[[cluster_index]]
@@ -181,7 +110,7 @@ comparison_call_consensus_peaks <- function(
         format_peak_GRanges(cluster_name = cluster_name)
     },
     future.seed = config$random_seed
-  )
+  ))
 
   combine_collapse_GRanges_ArchR(
     within_cluster_peaks,
@@ -189,67 +118,41 @@ comparison_call_consensus_peaks <- function(
   )
 }
 
-comparison_rebuild_ATAC_assay <- function(object, peaks) {
-  comparison_configure_parallelism()
-  old_ATAC_assay <- object[["ATAC"]]
-  counts <- Signac::FeatureMatrix(
-    object = old_ATAC_assay,
-    features = peaks,
-    cells = colnames(object),
-    fragtk = FALSE,
-    process_n = 2000L,
-    verbose = TRUE
-  )
-  object[["ATAC"]] <- Signac::CreateChromatinAssay5(
-    counts = counts,
-    fragments = Signac::Fragments(old_ATAC_assay),
-    validate.fragments = FALSE,
-    verbose = FALSE
-  )
-  object
+# Object cell names map to the barcodes of the GEM well's fragment file.
+comparison_fragments <- function(fragment_file, sample_id, cells, ...) {
+  Signac::CreateFragmentObject(fragment_file, cells = stats::setNames(sub(paste0("^", sample_id, "_"), "", cells), cells), ...)
 }
 
-comparison_preprocess_ATAC <- function(object, config) {
-  comparison_configure_parallelism()
+# Quantifies the consensus peaks per GEM well, as Signac's merging vignette does,
+# with FeatureMatrix()'s default fragtk backend, into one BPCells directory each.
+comparison_write_ATAC_dirs <- function(RNA_dirs, config, peaks, out_dir) {
+  unlist(comparison_with_workers(future.apply::future_Map(\(RNA_dir, sample_id, fragment_file) {
+    dir <- file.path(out_dir, sample_id)
+    unlink(dir, recursive = TRUE)
+    fragments <- comparison_fragments(fragment_file, sample_id, colnames(BPCells::open_matrix_dir(RNA_dir)))
+    Signac::FeatureMatrix(fragments, features = peaks, bpcells = TRUE, bpcells.dir = dir)
+    dir
+  }, RNA_dirs, config$sample_tibble$sample_id, config$sample_tibble$fragment_file, future.seed = TRUE)), use.names = FALSE)
+}
+
+comparison_build_object <- function(RNA_object, ATAC_dirs, config) {
+  cells <- split(colnames(RNA_object), RNA_object$GEM_well_ID)[config$sample_tibble$sample_id]
+  fragments <- purrr::pmap(list(config$sample_tibble$fragment_file, config$sample_tibble$sample_id, cells),
+    comparison_fragments, validate.fragments = FALSE)
+  counts <- purrr::reduce(purrr::map(ATAC_dirs, open_BPCells_dir), cbind)
+  object <- RNA_object
+  object[["ATAC"]] <- Signac::CreateChromatinAssay5(counts = counts[, colnames(object)], fragments = fragments,
+    validate.fragments = FALSE)
   SeuratObject::DefaultAssay(object) <- "ATAC"
   object <- Signac::RunTFIDF(object)
   object <- Signac::FindTopFeatures(object, min.cutoff = "q0")
-  object <- Signac::RunSVD(
-    object,
-    n = max(config$ATAC_dims)
-  )
-  if (is.null(object[["lsi"]])) {
-    stop("Signac::RunSVD() did not create the expected lsi reduction.", call. = FALSE)
-  }
-  object
-}
-
-comparison_run_WNN <- function(object, config) {
-  comparison_configure_parallelism()
-  object <- Seurat::FindMultiModalNeighbors(
-    object,
-    reduction.list = list("pca", "lsi"),
-    dims.list = list(config$RNA_dims, config$ATAC_dims),
-    k.nn = config$WNN_k,
-    verbose = TRUE
-  )
-  object <- Seurat::RunUMAP(
-    object,
-    nn.name = "weighted.nn",
-    min.dist = config$UMAP_min_dist,
-    reduction.name = "wnn.umap",
-    reduction.key = "wnnUMAP_",
-    seed.use = config$random_seed,
-    verbose = TRUE
-  )
-  Seurat::FindClusters(
-    object,
-    graph.name = "wsnn",
-    algorithm = 3L,
-    resolution = config$WNN_cluster_resolution,
-    random.seed = config$random_seed,
-    verbose = TRUE
-  )
+  object <- Signac::RunSVD(object, n = max(config$ATAC_dims))
+  object <- Seurat::FindMultiModalNeighbors(object, reduction.list = list("pca", "lsi"),
+    dims.list = list(config$RNA_dims, config$ATAC_dims), k.nn = config$WNN_k)
+  object <- Seurat::RunUMAP(object, nn.name = "weighted.nn", min.dist = config$UMAP_min_dist,
+    reduction.name = "wnn.umap", reduction.key = "wnnUMAP_", seed.use = config$random_seed)
+  Seurat::FindClusters(object, graph.name = "wsnn", algorithm = 3L, resolution = config$WNN_cluster_resolution,
+    random.seed = config$random_seed)
 }
 
 comparison_summarize <- function(object, config, peaks) {

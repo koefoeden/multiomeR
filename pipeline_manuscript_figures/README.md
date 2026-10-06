@@ -25,12 +25,13 @@ targets::tar_make(
 )
 ```
 
-The graph builds only the dependencies of the selected results. S2 reads the
-recorded metadata of both workflows rather than depending on their targets, so
-build it after they have finished; before that it stops with missing runtimes.
-Its measurements come from the run that builds the workflows, so build the
-results afterwards from a copy of that store if needed. S2 also needs
-the per-job resource history of
+The conventional Seurat/Signac chain needs fragtk; install it into the
+environment with `pixi run install-fragtk`. The graph builds only the
+dependencies of the selected results. S2 reads the recorded metadata of both
+workflows rather than depending on their targets, so build it after they have
+finished; before that it stops with missing runtimes. Its measurements come
+from the run that builds the workflows, so build the results afterwards from a
+copy of that store if needed. S2 also needs the per-job resource history of
 [slurm-monitor](https://github.com/koefoeden/slurm-monitor), read from
 `SLURM_MONITOR_HISTORY_DIR` (default `~/slurm_monitor_history`): schema 2
 files (`<job>.v2.tsv`) with the columns `name`, `timestamp`, `target`,
@@ -60,12 +61,15 @@ Selections are deterministic but follow the data.
 ## Supplementary Figure S2
 
 The conventional chain is a compact `{targets}` implementation of a standard
-Seurat/Signac analysis in the same graph, store and controllers as multiomeR:
-it reads and merges the Cell Ranger ARC matrices, runs SCTransform, PCA and RNA
-clustering, repeats the same MACS3, fixed-width, blacklist and consensus-peak
-algorithm in one target, requantifies the peaks with `Signac::FeatureMatrix()`,
-runs TF-IDF/LSI and builds the WNN graph, UMAP and clusters. Its Seurat steps
-use `future` parallelism on the cores of their Slurm worker.
+Seurat v5/Signac v2 analysis on BPCells-backed assays, in the same graph, store
+and controllers as multiomeR: it writes each GEM well's gene-expression counts
+to a BPCells directory and runs SCTransform, PCA and RNA clustering on their
+joined matrix, repeats the same MACS3, fixed-width, blacklist and consensus-peak
+algorithm in one target, quantifies the peaks per GEM well with
+`Signac::FeatureMatrix()` and its default fragtk backend into BPCells
+directories, and runs Signac's TF-IDF/LSI on them before building the WNN graph,
+UMAP and clusters. Seurat's kernels use the cores of their Slurm worker, and
+peak calling and quantification run one `future` worker per core.
 
 `comparison_1x` to `comparison_20x` take the first 1, 2, 5, 10 and 20 GEM wells
 of `mixed_human_31x` without per-well QC filters, CellBender or doublet removal,

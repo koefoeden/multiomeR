@@ -79,6 +79,15 @@ my_aggregation_all_wells:
 
 The entry starts from the parameter defaults, applies each parent in the listed order and then its own values. Every parameter is inherited, including `is_active`, and a value replaces the inherited one as a whole: here the child's `aggregation_GEM_well_IDs` replaces the parent's list rather than extending it. Entries in the module configuration files can inherit in the same way.
 
+## Combine several tissues {#multi-tissue}
+
+An aggregation can add GEM wells from other tissues to a single-tissue analysis, for example public wells as background. Such aggregations usually need these settings revised:
+
+- **Batch correction:** when each GEM well holds one tissue, `GEM_well_ID` is confounded with tissue, and Harmony on it aligns tissue-specific populations, so that, for example, hepatocytes or cardiomyocytes join clusters of the main tissue. Leave [`aggregation_harmony_correction_metadata_col_names`](parameters.html#aggregation_harmony_correction_metadata_col_names) unset. List `GEM_well_tissue` or `GEM_well_dataset` in [`aggregation_categorical_vars`](parameters.html#aggregation_categorical_vars) and check each cluster's makeup in `categorical_by_cluster_bars_plots/` before accepting the labels.
+- **Clustering resolution:** many diverse nuclei coarsen the clusters at a given resolution, so the single-tissue [`aggregation_GEX_cluster_res`](parameters.html#aggregation_GEX_cluster_res) gives the main tissue fewer clusters. Raise it, [`aggregation_ATAC_cluster_res`](parameters.html#aggregation_ATAC_cluster_res) and [`aggregation_WNN_cluster_res`](parameters.html#aggregation_WNN_cluster_res) above the single-tissue values; marker sets that lead no cluster in the [marker-set summary](review_outputs.md#cluster-annotation) suggest that the clusters are too coarse.
+- **Dimensions:** the PCA and LSI compute only as many components as the largest value in [`aggregation_GEX_data_PCs`](parameters.html#aggregation_GEX_data_PCs) and [`aggregation_ATAC_data_PCs`](parameters.html#aggregation_ATAC_data_PCs), and the elbow plots show only these. Small populations from other tissues may need more, for example 40 instead of 20 dimensions to separate related epithelial or stromal cell types.
+- **Marker genes:** for the background tissues, one marker set per broad population, such as one colon-epithelium set rather than separate colonocyte and goblet-cell sets, gives clearer labels. Markers well detected in nuclei work better than short transcripts, for example BCL11B and THEMIS rather than only CD3D and TRAC for T cells.
+
 ## Optional modules
 
 Omit [`modules`](parameters.html#modules) for the first run. After reviewing the primary module's results, list the optional modules to run:

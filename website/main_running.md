@@ -25,6 +25,15 @@ targets::tar_make(
 )
 ```
 
+The command also builds every per-GEM-well target the aggregation needs: Cell Ranger input conversion, genotyping of pooled wells with cellsnp-lite and Vireo, and per-well QC. After new or re-run sequencing, these dominate its run time, so list the outdated targets first:
+
+```{.r filename="R"}
+targets::tar_outdated(
+  names = tidyselect::ends_with("1_pre_aggregation_QC.my_aggregation"),
+  callr_function = NULL
+)
+```
+
 **Review plots** ([examples](gallery.md#1-pre-aggregation-qc)):
 
 ```text
@@ -76,7 +85,7 @@ targets::tar_make(
 └── PCA_metadata_association_barplots.png
 ```
 
-**Revise:** choose the PCs used for clustering with [`aggregation_GEX_data_PCs`](parameters.html#aggregation_GEX_data_PCs) and for the UMAP with [`aggregation_UMAP_GEX_PCs`](parameters.html#aggregation_UMAP_GEX_PCs). When components track a batch variable such as `GEM_well_ID`, list it in [`aggregation_harmony_correction_metadata_col_names`](parameters.html#aggregation_harmony_correction_metadata_col_names); Harmony then corrects both modalities, and the embedding and association plots add Harmony panels.
+**Revise:** choose the PCs used for clustering with [`aggregation_GEX_data_PCs`](parameters.html#aggregation_GEX_data_PCs) and for the UMAP with [`aggregation_UMAP_GEX_PCs`](parameters.html#aggregation_UMAP_GEX_PCs). When components track a batch variable such as `GEM_well_ID`, list it in [`aggregation_harmony_correction_metadata_col_names`](parameters.html#aggregation_harmony_correction_metadata_col_names); Harmony then corrects both modalities, and the embedding and association plots add Harmony panels. Do not correct for `GEM_well_ID` when the GEM wells hold different tissues; see [Combine several tissues](reference_aggregations.md#multi-tissue).
 
 ## Checkpoint 3: GEX clusters and cell types {#checkpoint-3}
 
@@ -87,6 +96,15 @@ Clusters the GEX data, labels the clusters from your marker genes and removes GE
 ```{.r filename="R"}
 targets::tar_make(
   names = tidyselect::ends_with("3_GEX_QC.my_aggregation")
+)
+```
+
+The command also builds `GEX_Seurat_object.3_GEX_QC.my_aggregation`, a Seurat export that is costly for large aggregations and outdated whenever the labels change. While you revise the labels, leave it out, and run the command above once you accept them:
+
+```{.r filename="R"}
+targets::tar_make(
+  names = tidyselect::ends_with("3_GEX_QC.my_aggregation") &
+    !tidyselect::starts_with("GEX_Seurat_object")
 )
 ```
 
@@ -264,7 +282,7 @@ targets::tar_make(
 
 **Revise:** choose [`aggregation_WNN_cluster_res`](parameters.html#aggregation_WNN_cluster_res). The WNN clusters and cell types are the populations used in downstream summaries and comparisons.
 
-The final object is `multimodal_Seurat_object.8_multimodal_QC.my_aggregation`; read it as in [Inspect the demo results](demo_outputs.md).
+The final object is `multimodal_Seurat_object.8_multimodal_QC.my_aggregation`; read it as in [Inspect the demo results](demo_outputs.md). Like the checkpoint 3 export, it is costly and outdated whenever the labels change: until you accept them, add `& !tidyselect::starts_with("multimodal_Seurat_object")` to `names` in the command above.
 
 ## Choose your next analysis
 

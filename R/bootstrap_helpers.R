@@ -74,6 +74,9 @@ load_project_runtime <- function() {
   ggplot2::theme_set(ggplot2::theme_bw())
   ggplot2::theme_update(legend.position = "bottom")
   Sys.setenv("R_MSG_PKG_START_MSG" = "FALSE")
+  # Seurat's C++ kernels run single-threaded unless told otherwise; give them the
+  # cores of the worker's Slurm job.
+  options(Seurat.nthreads = as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "1")))
   targets::tar_option_set(
     error = "trim",
     iteration = "list",

@@ -498,8 +498,10 @@ plot_seurat_signac_comparison_resources <- function(data) {
     dplyr::filter(.data$cellranger_input_nuclei == largest_nuclei) |>
     dplyr::select("measure", "workflow", "value") |>
     tidyr::pivot_wider(names_from = "workflow", values_from = "value") |>
+    dplyr::mutate(ratio = .data$`Seurat/Signac` / .data$multiomeR) |>
     dplyr::transmute(.data$measure,
-      label = sprintf("  multiomeR %.1f\u00d7 lower at %s nuclei", .data$`Seurat/Signac` / .data$multiomeR, scales::comma(largest_nuclei)))
+      label = sprintf("  multiomeR %.1f\u00d7 %s at %s nuclei", pmax(.data$ratio, 1 / .data$ratio),
+        dplyr::if_else(.data$ratio >= 1, "lower", "higher"), scales::comma(largest_nuclei)))
   ggplot2::ggplot(data, ggplot2::aes(.data$cellranger_input_nuclei, .data$value, colour = .data$workflow)) +
     ggplot2::geom_line(linewidth = .5) + ggplot2::geom_point(size = 1.5) +
     ggplot2::geom_text(data = labels, ggplot2::aes(x = -Inf, y = Inf, label = .data$label),

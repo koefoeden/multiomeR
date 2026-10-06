@@ -67,9 +67,9 @@ carries its own crew controllers.
 
 ## Development
 
-- Keep release validation reports in `validation/reports/` and move the
-  scripts that make Cell Ranger ARC test subsets to `dev/`; remove the unused
-  `air.toml`.
+- Move `validation/` and `RELEASES.md` into `dev/`, keep release validation
+  reports in `dev/validation/reports/`, move the scripts that make Cell Ranger
+  ARC test subsets to `dev/`, and remove the unused `air.toml`.
 
 ## Migration
 
@@ -153,7 +153,7 @@ new data and markers; other aggregations need no recomputation.
 The first stable release. The manuscript describing multiomeR is under peer
 review (link to come). From this release on, incompatible changes to
 configuration, target names or output schemas require a new major version; see
-[RELEASES.md](RELEASES.md).
+[RELEASES.md](dev/RELEASES.md).
 
 This release changes cell-type labels, peak–gene inference, genetic-enrichment
 inputs and several target and parameter names. Expect a full rebuild of existing

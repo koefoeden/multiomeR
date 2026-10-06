@@ -22,7 +22,7 @@ local({
     data.frame(commit = commit, aggregation = aggregation,
                cells = ncol(object), GEM_wells = length(unique(object$GEM_well_ID)))
   })
-  if ('mixed_human_31x' %in% config$aggregation) source('validation/check_differential.R', local = TRUE)
+  if ('mixed_human_31x' %in% config$aggregation) source('dev/validation/check_differential.R', local = TRUE)
   stopifnot(length(targets::tar_outdated()) == 0L)
   report <- Sys.getenv('MULTIOMER_VALIDATION_REPORT')
   stopifnot(nzchar(report))

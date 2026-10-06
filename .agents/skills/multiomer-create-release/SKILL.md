@@ -5,7 +5,7 @@ description: Prepare or publish multiomeR releases using the repository release 
 
 # multiomeR Create Release
 
-Read `RELEASES.md`, `NEWS.md`, any downstream release notes, current remote refs,
+Read `dev/RELEASES.md`, `NEWS.md`, any downstream release notes, current remote refs,
 tags and GitHub releases before selecting a boundary. The workflow is not a root
 R package; never add `DESCRIPTION` for versioning. When the user asks you to
 establish or revise the convention, document that choice and proceed within the

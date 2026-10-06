@@ -19,7 +19,7 @@ export TAR_PROJECT=dev
 The Cell Ranger ARC inputs were reprocessed from the raw reads with Cell Ranger
 ARC 2.1.0 and the GRCh38 2024-A reference and are not supplied. The ignored
 links `example_data/encode` and `example_data/10x_arc_2.1.0` must point to
-them; see `validation/README.md`.
+them; see `dev/validation/README.md`.
 
 `crew_controllers.R` runs every worker as a Slurm job on the node of the
 allocation that runs the pipeline, so start the pipeline inside an allocation

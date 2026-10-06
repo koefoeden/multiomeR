@@ -19,7 +19,7 @@ The active workflow is a single root `targets` project driven by `_targets.R`, t
 
 multiomeR 1.0 is the first stable release. The manuscript describing it is under peer review (link to come).
 
-See [release notes and migration steps](NEWS.md) and the [release convention](RELEASES.md).
+See [release notes and migration steps](NEWS.md) and the [release convention](dev/RELEASES.md).
 
 ## User manual
 

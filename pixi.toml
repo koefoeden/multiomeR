@@ -9,7 +9,7 @@ platforms = ["linux-64"]
 
 [tasks]
 refresh-output-gallery = { cmd = "python dev/refresh_output_gallery.py", description = "Refresh the output-gallery previews and manifest from one built aggregation's plots." }
-validate-local = { cmd = "Rscript validation/run.R", description = "Check external sources, run the three public validation aggregations, and verify outputs in the existing store." }
+validate-local = { cmd = "Rscript dev/validation/run.R", description = "Check external sources, run the three public validation aggregations, and verify outputs in the existing store." }
 refresh-demo-outputs = { cmd = "Rscript dev/refresh_demo_outputs.R", description = "Refresh the printed output and UMAP snapshot of the demo-results page from the built public demo." }
 test = { cmd = "Rscript tests/testthat.R", description = "Run all reference-parity tests of the reimplemented algorithms." }
 install-r-github-packages = { cmd = "Rscript scripts/install_r_github_packages.R", description = "Install GitHub-only R packages into the pixi R library." }

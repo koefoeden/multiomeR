@@ -91,7 +91,7 @@ run is development evidence, not validation of the recorded commit alone.
 For a quick external-only check, without running targets:
 
 ```sh
-pixi run --use-environment-activation-cache Rscript -e 'source("validation/preflight.R"); checks <- run_validation_preflight(); print(checks); stopifnot(all(checks$result == "PASS"))'
+pixi run --use-environment-activation-cache Rscript -e 'source("dev/validation/preflight.R"); checks <- run_validation_preflight(); print(checks); stopifnot(all(checks$result == "PASS"))'
 ```
 
 Use a clean working tree for release evidence. Reuse relies on dependencies being

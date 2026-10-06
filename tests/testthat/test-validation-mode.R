@@ -19,7 +19,7 @@ testthat::test_that('validation activates exactly its aggregations and required 
 testthat::test_that('resource probes reject ignored ranges and oversized responses', {
   withr::local_dir(rprojroot::find_root(rprojroot::has_file("pixi.toml")))
   probe <- new.env(parent = globalenv())
-  sys.source('validation/preflight.R', envir = probe)
+  sys.source('dev/validation/preflight.R', envir = probe)
   file <- tempfile()
   withr::defer(unlink(file))
   writeBin(charToRaw('PAR1'), file)

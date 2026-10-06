@@ -57,6 +57,10 @@ You need basic R skills, a Linux terminal, and a machine with sufficient [memory
 
 For a small worked introduction to `targets`, see the [targets walkthrough](https://books.ropensci.org/targets/walkthrough.html).
 
+## Citing multiomeR
+
+If you use multiomeR, cite the release you used: its [citation file](https://github.com/koefoeden/multiomeR/blob/main/CITATION.cff) gives the authors, and the release's Zenodo record gives its DOI. multiomeR is built on targets ([Landau, 2021](https://doi.org/10.21105/joss.02959)) and BPCells ([Parks and Greenleaf, 2025](https://doi.org/10.1101/2025.03.27.645853)), so please cite them too. Also cite the methods behind the results you report: the In depth pages, starting with the [primary module](methods_primary_module.md), cite each method where it is used.
+
 Continue to [Install and prepare the demo](demo_installation.md).
 
 

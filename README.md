@@ -29,6 +29,17 @@ The user manual is built from the Quarto book in `website/`. It includes a quick
 
 - Linux system with at least 60 GB of RAM, preferably equipped with a job-scheduler supported by the crew.cluster package: SLURM, PBS, SGE or LSf.
 
+## Citation
+
+If you use multiomeR, please cite the release you used: GitHub's **Cite this repository** gives its authors from [`CITATION.cff`](CITATION.cff), and the release's Zenodo record gives its DOI. Once the manuscript describing multiomeR is published, this section will cite it.
+
+multiomeR is built on targets and BPCells, so please also cite them:
+
+- Landau WM. The targets R package: a dynamic Make-like function-oriented pipeline toolkit for reproducibility and high-performance computing. *Journal of Open Source Software* 2021;6:2959. <https://doi.org/10.21105/joss.02959>
+- Parks B, Greenleaf W. Scalable high-performance single cell data analysis with BPCells. *bioRxiv* 2025. <https://doi.org/10.1101/2025.03.27.645853>
+
+Please also cite the methods behind the results you report, such as weighted nearest-neighbor integration or SCAVENGE. The In depth pages of the [user manual](https://koefoeden.github.io/multiomeR/) cite each method where it is used.
+
 ## Contributions
 
 Bug reports and broadly useful feature requests are welcome, especially when they affect users analyzing 10x Multiome data. The project prioritizes lean, inspectable workflow changes over broad abstractions or site-specific convenience layers. See `.github/CONTRIBUTING.md`.

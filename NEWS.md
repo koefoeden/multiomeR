@@ -46,6 +46,9 @@ disks. Each configuration directory now carries its own crew controllers.
 - Complete and case-protect bibliography entries.
 - Add `CITATION.cff`, which GitHub shows as "Cite this repository" and Zenodo
   uses for the authors of archived releases.
+- Ask users, in the README and on the manual's home page, to cite multiomeR,
+  targets and BPCells, and the methods behind the results they report;
+  `CITATION.cff` lists targets and BPCells as references.
 
 ## Migration
 

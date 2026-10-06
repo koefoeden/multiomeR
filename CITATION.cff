@@ -52,6 +52,28 @@ authors:
 repository-code: https://github.com/koefoeden/multiomeR
 url: https://koefoeden.github.io/multiomeR/
 license: MIT
+references:
+  - type: article
+    title: "The targets R package: a dynamic Make-like function-oriented pipeline toolkit for reproducibility and high-performance computing"
+    authors:
+      - given-names: William Michael
+        family-names: Landau
+    journal: Journal of Open Source Software
+    volume: 6
+    issue: 57
+    start: 2959
+    year: 2021
+    doi: 10.21105/joss.02959
+  - type: article
+    title: Scalable high-performance single cell data analysis with BPCells
+    authors:
+      - given-names: Benjamin
+        family-names: Parks
+      - given-names: William
+        family-names: Greenleaf
+    journal: bioRxiv
+    year: 2025
+    doi: 10.1101/2025.03.27.645853
 keywords:
   - single-nucleus multiome
   - chromatin accessibility

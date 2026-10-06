@@ -405,6 +405,15 @@ targets::tar_make(
 )
 ```
 
+The command also builds every per-GEM-well target the aggregation needs: Cell Ranger input conversion, genotyping of pooled wells with cellsnp-lite and Vireo, and per-well QC. After new or re-run sequencing, these dominate its run time, so list the outdated targets first:
+
+```{.r filename="R"}
+targets::tar_outdated(
+  names = tidyselect::ends_with("1_pre_aggregation_QC.my_aggregation"),
+  callr_function = NULL
+)
+```
+
 **Review plots** ([examples](gallery.md#1-pre-aggregation-qc)):
 
 ```text
@@ -456,7 +465,7 @@ targets::tar_make(
 └── PCA_metadata_association_barplots.png
 ```
 
-**Revise:** choose the PCs used for clustering with [`aggregation_GEX_data_PCs`](parameters.html#aggregation_GEX_data_PCs) and for the UMAP with [`aggregation_UMAP_GEX_PCs`](parameters.html#aggregation_UMAP_GEX_PCs). When components track a batch variable such as `GEM_well_ID`, list it in [`aggregation_harmony_correction_metadata_col_names`](parameters.html#aggregation_harmony_correction_metadata_col_names); Harmony then corrects both modalities, and the embedding and association plots add Harmony panels.
+**Revise:** choose the PCs used for clustering with [`aggregation_GEX_data_PCs`](parameters.html#aggregation_GEX_data_PCs) and for the UMAP with [`aggregation_UMAP_GEX_PCs`](parameters.html#aggregation_UMAP_GEX_PCs). When components track a batch variable such as `GEM_well_ID`, list it in [`aggregation_harmony_correction_metadata_col_names`](parameters.html#aggregation_harmony_correction_metadata_col_names); Harmony then corrects both modalities, and the embedding and association plots add Harmony panels. Do not correct for `GEM_well_ID` when the GEM wells hold different tissues; see [Combine several tissues](reference_aggregations.md#multi-tissue).
 
 ## Checkpoint 3: GEX clusters and cell types {#checkpoint-3}
 
@@ -467,6 +476,15 @@ Clusters the GEX data, labels the clusters from your marker genes and removes GE
 ```{.r filename="R"}
 targets::tar_make(
   names = tidyselect::ends_with("3_GEX_QC.my_aggregation")
+)
+```
+
+The command also builds `GEX_Seurat_object.3_GEX_QC.my_aggregation`, a Seurat export that is costly for large aggregations and outdated whenever the labels change. While you revise the labels, leave it out, and run the command above once you accept them:
+
+```{.r filename="R"}
+targets::tar_make(
+  names = tidyselect::ends_with("3_GEX_QC.my_aggregation") &
+    !tidyselect::starts_with("GEX_Seurat_object")
 )
 ```
 
@@ -490,6 +508,8 @@ targets::tar_make(
 ├── continuous_by_cluster_violin_plot/
 ├── continuous_by_cell_type_violin_plot/
 └── cell_retention_flow_plot.png
+<store>/files/my_aggregation/3_GEX_QC/
+└── cluster_composition_table.tsv
 ```
 
 **Revise:**
@@ -598,6 +618,8 @@ targets::tar_make(
 ├── continuous_by_cluster_violin_plot/
 ├── continuous_by_cell_type_violin_plot/
 └── cell_retention_flow_plot.png
+<store>/files/my_aggregation/7_ATAC_QC/
+└── cluster_composition_table.tsv
 ```
 
 **Revise:** choose [`aggregation_ATAC_cluster_res`](parameters.html#aggregation_ATAC_cluster_res) from the motif patterns and the agreement with GEX labels in `confusion_matrices_plots.png`.
@@ -634,11 +656,13 @@ targets::tar_make(
 ├── continuous_by_cluster_violin_plot/
 ├── continuous_by_cell_type_violin_plot/
 └── cell_retention_flow_plot.png
+<store>/files/my_aggregation/8_multimodal_QC/
+└── cluster_composition_table.tsv
 ```
 
 **Revise:** choose [`aggregation_WNN_cluster_res`](parameters.html#aggregation_WNN_cluster_res). The WNN clusters and cell types are the populations used in downstream summaries and comparisons.
 
-The final object is `multimodal_Seurat_object.8_multimodal_QC.my_aggregation`; read it as in [Inspect the demo results](demo_outputs.md).
+The final object is `multimodal_Seurat_object.8_multimodal_QC.my_aggregation`; read it as in [Inspect the demo results](demo_outputs.md). Like the checkpoint 3 export, it is costly and outdated whenever the labels change: until you accept them, add `& !tidyselect::starts_with("multimodal_Seurat_object")` to `names` in the command above.
 
 ## Choose your next analysis
 
@@ -1273,7 +1297,7 @@ Leave `GEM_well_QC_exclude_list` as `NA` for the first run. After reviewing the 
 TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250
 ```
 
-A nucleus for which any expression is `TRUE` is excluded, and each expression is reported as a separate exclusion reason in the checkpoint 1 UpSet and retention plots. Filters can use the metrics that [`QC_metric_manifest.tsv`](https://github.com/koefoeden/multiomeR/blob/main/QC_metric_manifest.tsv) lists as available from checkpoint 1, and other per-nucleus columns such as `vireo_type`. The checkpoint 1 comparison plots show each metric's distribution and draw simple cutoffs such as these; they are examples, not recommendations for your tissue.
+A nucleus for which any expression is `TRUE` is excluded, and each expression is reported as a separate exclusion reason in the checkpoint 1 UpSet and retention plots. Nuclei absent from the GEX count matrix are always excluded, as `not_found_in_GEX_matrix`, whether or not the list names it. Filters can use the metrics that [`QC_metric_manifest.tsv`](https://github.com/koefoeden/multiomeR/blob/main/QC_metric_manifest.tsv) lists as available from checkpoint 1, and other per-nucleus columns such as `vireo_type`. The checkpoint 1 comparison plots show each metric's distribution and draw simple cutoffs such as these; they are examples, not recommendations for your tissue.
 
 ## Public example {#public-example}
 
@@ -1406,6 +1430,15 @@ my_aggregation_all_wells:
 
 The entry starts from the parameter defaults, applies each parent in the listed order and then its own values. Every parameter is inherited, including `is_active`, and a value replaces the inherited one as a whole: here the child's `aggregation_GEM_well_IDs` replaces the parent's list rather than extending it. Entries in the module configuration files can inherit in the same way.
 
+## Combine several tissues {#multi-tissue}
+
+An aggregation can add GEM wells from other tissues to a single-tissue analysis, for example public wells as background. Such aggregations usually need these settings revised:
+
+- **Batch correction:** when each GEM well holds one tissue, `GEM_well_ID` is confounded with tissue, and Harmony on it aligns tissue-specific populations, so that, for example, hepatocytes or cardiomyocytes join clusters of the main tissue. Leave [`aggregation_harmony_correction_metadata_col_names`](parameters.html#aggregation_harmony_correction_metadata_col_names) unset. List `GEM_well_tissue` or `GEM_well_dataset` in [`aggregation_categorical_vars`](parameters.html#aggregation_categorical_vars) and check each cluster's makeup in `categorical_by_cluster_bars_plots/` before accepting the labels.
+- **Clustering resolution:** many diverse nuclei coarsen the clusters at a given resolution, so the single-tissue [`aggregation_GEX_cluster_res`](parameters.html#aggregation_GEX_cluster_res) gives the main tissue fewer clusters. Raise it, [`aggregation_ATAC_cluster_res`](parameters.html#aggregation_ATAC_cluster_res) and [`aggregation_WNN_cluster_res`](parameters.html#aggregation_WNN_cluster_res) above the single-tissue values; marker sets that lead no cluster in the [marker-set summary](review_outputs.md#cluster-annotation) suggest that the clusters are too coarse.
+- **Dimensions:** the PCA and LSI compute only as many components as the largest value in [`aggregation_GEX_data_PCs`](parameters.html#aggregation_GEX_data_PCs) and [`aggregation_ATAC_data_PCs`](parameters.html#aggregation_ATAC_data_PCs), and the elbow plots show only these. Small populations from other tissues may need more, for example 40 instead of 20 dimensions to separate related epithelial or stromal cell types.
+- **Marker genes:** for the background tissues, one marker set per broad population, such as one colon-epithelium set rather than separate colonocyte and goblet-cell sets, gives clearer labels. Markers well detected in nuclei work better than short transcripts, for example BCL11B and THEMIS rather than only CD3D and TRAC for T cells.
+
 ## Optional modules
 
 Omit [`modules`](parameters.html#modules) for the first run. After reviewing the primary module's results, list the optional modules to run:
@@ -1494,6 +1527,10 @@ The `cluster_UCell_diagnostics` targets write these files to `<store>/files/my_a
 | `settings.rds`, `method.txt` | The settings used and a short description of the rule. |
 
 `<store>/files/my_aggregation/3_GEX_QC/marker_set_UCell_summary/marker_sets.tsv` summarizes each marker set across the GEX clusters before doublet filtering: how many clusters it leads or is assigned, and its closest competing set.
+
+## Cluster composition {#cluster-composition}
+
+`cluster_composition_table.tsv` at checkpoints 3, 7 and 8 has one row per cluster for each variable in [`aggregation_categorical_vars`](parameters.html#aggregation_categorical_vars), `GEM_well_ID` and `donor_id`: the cluster's nuclei (before doublet filtering at checkpoints 3 and 7), its most frequent category and that category's share, and every category above 5%, with missing values counted as `NA`. A low top share means the cluster mixes categories, which is expected for donors but suspect for tissues.
 
 ## Further methods
 

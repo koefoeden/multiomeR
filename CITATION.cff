@@ -1,0 +1,63 @@
+cff-version: 1.2.0
+message: If you use multiomeR, please cite it using the metadata from this file.
+type: software
+title: multiomeR
+abstract: >-
+  multiomeR is a configurable R pipeline for multi-sample 10x Genomics Epi
+  Multiome studies. Starting from Cell Ranger ARC outputs, it performs quality
+  control, processing and integration of gene expression and chromatin
+  accessibility, and cell-type annotation, with optional modules for
+  donor-level differential analyses, peak–gene correlation and genetic
+  enrichment of fine-mapped GWAS results. It tracks every step with targets and
+  keeps data on disk with BPCells.
+authors:
+  - given-names: Thomas Gade
+    family-names: Koefoed
+    email: thomas.koefoed@sund.ku.dk
+    affiliation: Novo Nordisk Foundation Center for Basic Metabolic Research, University of Copenhagen
+    orcid: https://orcid.org/0009-0008-3306-3282
+  - given-names: Shanshan
+    family-names: He
+    affiliation: Novo Nordisk Foundation Center for Basic Metabolic Research, University of Copenhagen
+    orcid: https://orcid.org/0009-0007-4178-2810
+  - given-names: Malte
+    family-names: Thodberg
+    affiliation: Novo Nordisk Foundation Center for Basic Metabolic Research, University of Copenhagen
+    orcid: https://orcid.org/0000-0001-6244-3841
+  - given-names: Laura Maarit
+    family-names: Pikkupeura
+    affiliation: Novo Nordisk Foundation Center for Basic Metabolic Research, University of Copenhagen
+    orcid: https://orcid.org/0000-0003-4430-8552
+  - given-names: Kata
+    family-names: Krizic
+    affiliation: Novo Nordisk Foundation Center for Basic Metabolic Research, University of Copenhagen
+    orcid: https://orcid.org/0000-0002-4065-4952
+  - given-names: Benedicte Schultz
+    family-names: Kapel
+    affiliation: Novo Nordisk Foundation Center for Basic Metabolic Research, University of Copenhagen
+    orcid: https://orcid.org/0000-0002-8339-9445
+  - given-names: Raquel Sanz
+    family-names: Martinez
+    affiliation: Novo Nordisk Foundation Center for Basic Metabolic Research, University of Copenhagen
+    orcid: https://orcid.org/0009-0000-4206-0229
+  - given-names: Simon
+    family-names: Rasmussen
+    affiliation: Novo Nordisk Foundation Center for Basic Metabolic Research, University of Copenhagen
+    orcid: https://orcid.org/0000-0001-6323-9041
+  - given-names: Torben
+    family-names: Hansen
+    email: torben.hansen@sund.ku.dk
+    affiliation: Novo Nordisk Foundation Center for Basic Metabolic Research, University of Copenhagen
+    orcid: https://orcid.org/0000-0001-8748-3831
+repository-code: https://github.com/koefoeden/multiomeR
+url: https://koefoeden.github.io/multiomeR/
+license: MIT
+keywords:
+  - single-nucleus multiome
+  - chromatin accessibility
+  - gene expression
+  - 10x Genomics
+  - pipeline
+  - targets
+  - BPCells
+  - GWAS enrichment

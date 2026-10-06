@@ -52,5 +52,5 @@ Run `pixi run --use-environment-activation-cache validate-local` on the candidat
 checkout with a clean working tree. It enables the three public validation
 aggregations, checks external sources, runs the pipeline incrementally in the
 existing store, and verifies outputs. Retain the report matching the exact
-release commit. See [validation/README.md](validation/README.md). No CI branch
+release commit as `validation/reports/VALIDATION-<version>.md`. See [validation/README.md](validation/README.md). No CI branch
 or separate profile repository is needed.

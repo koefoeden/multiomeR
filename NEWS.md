@@ -68,7 +68,8 @@ carries its own crew controllers.
 ## Development
 
 - Keep release validation reports in `validation/reports/` and move the
-  scripts that make Cell Ranger ARC test subsets to `dev/`.
+  scripts that make Cell Ranger ARC test subsets to `dev/`; remove the unused
+  `air.toml`.
 
 ## Migration
 

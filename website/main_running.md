@@ -110,6 +110,8 @@ targets::tar_make(
 ├── continuous_by_cluster_violin_plot/
 ├── continuous_by_cell_type_violin_plot/
 └── cell_retention_flow_plot.png
+<store>/files/my_aggregation/3_GEX_QC/
+└── cluster_composition_table.tsv
 ```
 
 **Revise:**
@@ -218,6 +220,8 @@ targets::tar_make(
 ├── continuous_by_cluster_violin_plot/
 ├── continuous_by_cell_type_violin_plot/
 └── cell_retention_flow_plot.png
+<store>/files/my_aggregation/7_ATAC_QC/
+└── cluster_composition_table.tsv
 ```
 
 **Revise:** choose [`aggregation_ATAC_cluster_res`](parameters.html#aggregation_ATAC_cluster_res) from the motif patterns and the agreement with GEX labels in `confusion_matrices_plots.png`.
@@ -254,6 +258,8 @@ targets::tar_make(
 ├── continuous_by_cluster_violin_plot/
 ├── continuous_by_cell_type_violin_plot/
 └── cell_retention_flow_plot.png
+<store>/files/my_aggregation/8_multimodal_QC/
+└── cluster_composition_table.tsv
 ```
 
 **Revise:** choose [`aggregation_WNN_cluster_res`](parameters.html#aggregation_WNN_cluster_res). The WNN clusters and cell types are the populations used in downstream summaries and comparisons.

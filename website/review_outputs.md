@@ -61,6 +61,10 @@ The `cluster_UCell_diagnostics` targets write these files to `<store>/files/my_a
 
 `<store>/files/my_aggregation/3_GEX_QC/marker_set_UCell_summary/marker_sets.tsv` summarizes each marker set across the GEX clusters before doublet filtering: how many clusters it leads or is assigned, and its closest competing set.
 
+## Cluster composition {#cluster-composition}
+
+`cluster_composition_table.tsv` at checkpoints 3, 7 and 8 has one row per cluster for each variable in [`aggregation_categorical_vars`](parameters.html#aggregation_categorical_vars), `GEM_well_ID` and `donor_id`: the cluster's nuclei (before doublet filtering at checkpoints 3 and 7), its most frequent category and that category's share, and every category above 5%, with missing values counted as `NA`. A low top share means the cluster mixes categories, which is expected for donors but suspect for tissues.
+
 ## Further methods
 
 The methods pages, starting with [Primary-module methods](methods_primary_module.md), describe each analysis, and [Algorithm validation](algorithm_validation.md) compares the reimplemented algorithms with their references.

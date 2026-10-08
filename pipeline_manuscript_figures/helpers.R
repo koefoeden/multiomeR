@@ -505,10 +505,12 @@ plot_seurat_signac_comparison_resources <- function(data) {
     dplyr::filter(.data$cellranger_input_nuclei == largest_nuclei) |>
     dplyr::select("measure", "workflow", "value") |>
     tidyr::pivot_wider(names_from = "workflow", values_from = "value") |>
-    dplyr::mutate(ratio = .data$`Seurat/Signac` / .data$multiomeR) |>
+    dplyr::mutate(ratio = .data$`Seurat/Signac` / .data$multiomeR,
+      fold = sprintf("%.1f\u00d7", pmax(.data$ratio, 1 / .data$ratio))) |>
     dplyr::transmute(.data$measure,
-      label = sprintf("  multiomeR %.1f\u00d7 %s at %s nuclei", pmax(.data$ratio, 1 / .data$ratio),
-        dplyr::if_else(.data$ratio >= 1, "lower", "higher"), scales::comma(largest_nuclei)))
+      label = sprintf("  multiomeR %s at %s nuclei", dplyr::case_when(.data$fold == "1.0\u00d7" ~ "within 5%",
+        .data$ratio > 1 ~ paste(.data$fold, "lower"), .default = paste(.data$fold, "higher")),
+        scales::comma(largest_nuclei)))
   ggplot2::ggplot(data, ggplot2::aes(.data$cellranger_input_nuclei, .data$value, colour = .data$workflow)) +
     ggplot2::geom_line(linewidth = .5) + ggplot2::geom_point(size = 1.5) +
     ggplot2::geom_text(data = labels, ggplot2::aes(x = -Inf, y = Inf, label = .data$label),

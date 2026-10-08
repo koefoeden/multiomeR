@@ -75,8 +75,10 @@ peak calling and quantification run one `future` worker per core.
 of `mixed_human_31x` without per-well QC filters, CellBender or doublet removal,
 so both workflows keep every called nucleus and yield identical consensus peaks.
 Shared cluster-fragment preparation is excluded from both workflows, and
-cell-type annotation, which the conventional chain does not perform, from
-multiomeR. Critical paths come from recorded target runtimes, with dynamic
+analyses that the conventional chain does not perform from multiomeR: cell-type
+annotation, doublet detection, QC metrics, gene and peak annotation,
+chromatin-state projection, motif analysis, and the ATAC-only and uncorrected
+RNA embeddings. Critical paths come from recorded target runtimes, with dynamic
 branches treated as concurrent; CPU time and RAM use multiply each target's
 runtime by its job's mean sampled CPU use and unreclaimable memory, which leaves
 out page cache, and jobs too short to be sampled get the median of the sampled

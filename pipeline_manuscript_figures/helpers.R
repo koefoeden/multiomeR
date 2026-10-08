@@ -381,9 +381,16 @@ SEURAT_SIGNAC_COMPARISON_WORKFLOWS <- list(
       "^blacklist_GRanges[.]ATAC(\\.|$)", "^BCs_per_peak_cluster_list[.]ATAC(\\.|$)",
       "^peak_calling_cluster_(names|discovery_tibble)[.]ATAC(\\.|$)",
       "^fragments_per_(cluster|peak_calling_cluster_discovery)[.]fragments[.]ATAC(\\.|$)",
-      # The conventional chain performs no cell-type annotation.
+      # The conventional chain performs no cell-type annotation, doublet detection,
+      # QC metrics, gene or peak annotation, chromatin-state projection or motif
+      # analysis, and no ATAC-only or uncorrected RNA embedding.
       "^cluster_UCell_", "^(UCell_GEX_marker_genes_list|GEX_marker_genes_vec)(\\.|$)",
-      "^metadata_w_cell_types(_unfiltered|_annotation)?_tibble[.]")),
+      "^metadata_w_cell_types(_unfiltered|_annotation)?_tibble[.]",
+      "^(amulet|scDblFinder)_", "^(ATAC_qc_metrics|per_barcode_metrics|blacklist_counts)_tibble[.]",
+      "^metadata_w_QC", "Ensembl_(gene_)?annotations?_GRanges_list(\\.|$)",
+      "^(consensus_peak_annotated|signac_annotation)_GRanges(\\.|$)", "^chromHMMs_",
+      "^(chromVAR|motif_family|peak_TF_motif|JASPAR)",
+      "^UMAP_embeddings_tibble[.](ATAC|GEX_non_harmony)[.]", "^LSI_clusters[.]")),
   # Everything outside the conventional chain is imported from multiomeR.
   "Seurat/Signac" = list(endpoint = "comparison_seurat_signac_object.",
     exclude = "^(?!comparison_seurat_signac_)"))

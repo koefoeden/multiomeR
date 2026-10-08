@@ -41,6 +41,9 @@ carries its own crew controllers.
 - Record unresolved, project-relative paths for opened BPCells matrices and
   fragments and for downloaded reference files, so a targets store keeps
   working after it moves, for example from node-local disk to shared storage.
+- Install Seurat 5.6.0 from GitHub, whose C++ kernels for normalization, PCA,
+  neighbour search and UMAP are threaded, and give them the cores of each Slurm
+  worker through `Seurat.nthreads`.
 
 ## Manuscript
 
@@ -50,6 +53,10 @@ carries its own crew controllers.
   replaces `manuscript_figures/`.
 - In Figure 1, spell cell types alike in panels C to E and show protein-coding
   genes in panel D with labels that no longer overlap.
+- Compare multiomeR in Supplementary Figure S2 with a current Seurat v5/Signac
+  v2 workflow on BPCells-backed assays, counting only the analyses both
+  workflows perform. Its peak quantification uses fragtk, which
+  `pixi run install-fragtk` installs.
 
 ## Documentation
 
@@ -85,6 +92,7 @@ carries its own crew controllers.
 
 ## Migration
 
+- Run `pixi run install-r-github-packages` to install Seurat 5.6.0.
 - A custom configuration directory needs its own `crew_controllers.R`: copy
   `configuration/crew_controllers.R` and adapt it. Move any changes you made to
   the former root `crew_controllers.R` into it.

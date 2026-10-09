@@ -4,7 +4,7 @@ testthat::test_that('validation activates exactly its aggregations and required 
   normal <- read_aggregation_config_tibble()
   testthat::expect_identical(normal$aggregation[vapply(normal$is_active, isTRUE, logical(1))], 'immune_human_2x')
   normal_wells <- build_active_GEM_well_tibble(build_GEM_well_tibble())
-  testthat::expect_setequal(normal_wells$GEM_well_ID, c('healthy_PBMC_human','unsorted_PBMC_human'))
+  testthat::expect_setequal(normal_wells$GEM_well_ID, c('healthy_PBMC_human','controller_PBMC_human'))
   Sys.setenv(MULTIOMER_VALIDATION = '1')
   validation <- read_aggregation_config_tibble()
   selected <- vapply(validation$is_active, isTRUE, logical(1))

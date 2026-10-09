@@ -6,10 +6,10 @@ healthy_PBMC_human	filtered_feature_bc_matrix.h5	https://cf.10xgenomics.com/samp
 healthy_PBMC_human	raw_feature_bc_matrix.h5	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_granulocyte_sorted_3k/pbmc_granulocyte_sorted_3k_raw_feature_bc_matrix.h5
 healthy_PBMC_human	atac_fragments.tsv.gz	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_granulocyte_sorted_3k/pbmc_granulocyte_sorted_3k_atac_fragments.tsv.gz
 healthy_PBMC_human	atac_fragments.tsv.gz.tbi	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_granulocyte_sorted_3k/pbmc_granulocyte_sorted_3k_atac_fragments.tsv.gz.tbi
-unsorted_PBMC_human	web_summary.html	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_unsorted_3k/pbmc_unsorted_3k_web_summary.html
-unsorted_PBMC_human	summary.csv	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_unsorted_3k/pbmc_unsorted_3k_summary.csv
-unsorted_PBMC_human	per_barcode_metrics.csv	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_unsorted_3k/pbmc_unsorted_3k_per_barcode_metrics.csv
-unsorted_PBMC_human	filtered_feature_bc_matrix.h5	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_unsorted_3k/pbmc_unsorted_3k_filtered_feature_bc_matrix.h5
-unsorted_PBMC_human	raw_feature_bc_matrix.h5	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_unsorted_3k/pbmc_unsorted_3k_raw_feature_bc_matrix.h5
-unsorted_PBMC_human	atac_fragments.tsv.gz	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_unsorted_3k/pbmc_unsorted_3k_atac_fragments.tsv.gz
-unsorted_PBMC_human	atac_fragments.tsv.gz.tbi	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_unsorted_3k/pbmc_unsorted_3k_atac_fragments.tsv.gz.tbi
+controller_PBMC_human	web_summary.html	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/10k_PBMC_Multiome_nextgem_Chromium_Controller/10k_PBMC_Multiome_nextgem_Chromium_Controller_web_summary.html
+controller_PBMC_human	summary.csv	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/10k_PBMC_Multiome_nextgem_Chromium_Controller/10k_PBMC_Multiome_nextgem_Chromium_Controller_summary.csv
+controller_PBMC_human	per_barcode_metrics.csv	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/10k_PBMC_Multiome_nextgem_Chromium_Controller/10k_PBMC_Multiome_nextgem_Chromium_Controller_per_barcode_metrics.csv
+controller_PBMC_human	filtered_feature_bc_matrix.h5	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/10k_PBMC_Multiome_nextgem_Chromium_Controller/10k_PBMC_Multiome_nextgem_Chromium_Controller_filtered_feature_bc_matrix.h5
+controller_PBMC_human	raw_feature_bc_matrix.h5	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/10k_PBMC_Multiome_nextgem_Chromium_Controller/10k_PBMC_Multiome_nextgem_Chromium_Controller_raw_feature_bc_matrix.h5
+controller_PBMC_human	atac_fragments.tsv.gz	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/10k_PBMC_Multiome_nextgem_Chromium_Controller/10k_PBMC_Multiome_nextgem_Chromium_Controller_atac_fragments.tsv.gz
+controller_PBMC_human	atac_fragments.tsv.gz.tbi	https://cf.10xgenomics.com/samples/cell-arc/2.0.0/10k_PBMC_Multiome_nextgem_Chromium_Controller/10k_PBMC_Multiome_nextgem_Chromium_Controller_atac_fragments.tsv.gz.tbi

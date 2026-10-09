@@ -9,7 +9,7 @@ template_aggregation:
 immune_human_2x:
   is_active: true
   aggregation_donor_id_metadata_tsv: configuration/immune_human_dataset_donor_id_metadata.tsv
-  aggregation_GEM_well_IDs: [healthy_PBMC_human, unsorted_PBMC_human]
+  aggregation_GEM_well_IDs: [healthy_PBMC_human, controller_PBMC_human]
   aggregation_GEX_marker_genes:
     B: [MS4A1, PAX5, EBF1, CD22]
     Mono: [LYZ, S100A9, FCN1, VCAN]
@@ -17,7 +17,7 @@ immune_human_2x:
     DC: [LILRA4, CLEC4C, CD1C, FCER1A, CLEC10A]
     T: [TRAC, CD3D, CD3E, CD3G, BCL11B, THEMIS, CD247, CD2]
   modules: null
-  aggregation_categorical_vars: [GEM_well_cell_sorting]
+  aggregation_categorical_vars: [donor_id]
   aggregation_QC_exclude_list_combined_object: [nCount_ATAC < 1000, atac_peak_counts_frac < 0.1, atac_peak_counts_blacklist_frac > 0.01]
   aggregation_ATAC_marker_TFs:
     B: [EBF1]

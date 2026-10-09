@@ -396,9 +396,11 @@ SEURAT_SIGNAC_COMPARISON_WORKFLOWS <- local({
     multiomeR = list(endpoint = "metadata_w_clusters_tibble.WNN.", exclude = multiomeR_exclude),
     "multiomeR + Seurat exports" = list(endpoint = "multimodal_Seurat_object.8_multimodal_QC.",
       exclude = multiomeR_exclude),
-    # Everything outside the conventional chain is imported from multiomeR.
+    # Everything outside the conventional chain is imported from multiomeR. Its
+    # peak calling uses multiomeR's clusters, so in the graph it can overlap the
+    # RNA steps; a script runs the steps one after another.
     "Seurat/Signac" = list(endpoint = "comparison_seurat_signac_object.",
-      exclude = "^(?!comparison_seurat_signac_)"))
+      exclude = "^(?!comparison_seurat_signac_)", sequential = TRUE))
 })
 
 # Measured use comes from the per-job history of slurm_monitor, which samples each
@@ -440,7 +442,8 @@ add_measured_resources <- function(executions, samples) {
 
 # Recorded runtimes and bytes from tar_meta(); allocated cores and RAM from each
 # target's current controller tier; measured CPU and RAM from slurm_monitor.
-# Dynamic branches run concurrently in the critical path. Disk use counts target
+# Dynamic branches run concurrently in the critical path; a sequential workflow's
+# critical path is the sum of its runtimes. Disk use counts target
 # objects and file targets inside the store; the NA path of a disabled input
 # file is outside it.
 benchmark_resource_tibble <- function(workflows, aggregations, script = "_targets.R", store = targets::tar_config_get("store")) {
@@ -470,7 +473,8 @@ benchmark_resource_tibble <- function(workflows, aggregations, script = "_target
         dplyr::left_join(allocations, by = "static_target")
       stopifnot(!anyNA(executions[c("seconds", "bytes", "cores", "RAM_GB")]),
         executions$repository == "local")
-      list(aggregation = aggregation, workflow = workflow, estimate = estimate, executions = executions)
+      list(aggregation = aggregation, workflow = workflow, estimate = estimate, executions = executions,
+        sequential = isTRUE(spec$sequential))
     })
   first_start <- min(purrr::map_dbl(runs, \(run) min(as.numeric(run$executions$time) - run$executions$seconds)))
   samples <- read_slurm_monitor_samples(since = as.POSIXct(first_start - 3600, origin = "1970-01-01"))
@@ -480,7 +484,7 @@ benchmark_resource_tibble <- function(workflows, aggregations, script = "_target
     tibble::tibble(aggregation = run$aggregation,
       GEM_well_count = length(aggregation_tibble$aggregation_GEM_well_IDs[[match(run$aggregation, aggregation_tibble$aggregation)]]),
       cellranger_input_nuclei = nuclei[[run$aggregation]], workflow = run$workflow,
-      critical_path_hours = run$estimate$critical_path_hours,
+      critical_path_hours = if (run$sequential) sum(executions$seconds) / 3600 else run$estimate$critical_path_hours,
       allocated_CPU_hours = sum(executions$seconds * executions$cores) / 3600,
       allocated_RAM_GB_hours = sum(executions$seconds * executions$RAM_GB) / 3600,
       used_CPU_hours = sum(executions$seconds * executions$used_cores) / 3600,

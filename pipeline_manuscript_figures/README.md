@@ -80,13 +80,14 @@ preparation is excluded from all workflows, and analyses that the conventional
 chain does not perform from both multiomeR measurements: cell-type annotation,
 doublet detection, QC metrics, gene and peak annotation, chromatin-state
 projection, motif analysis, and the ATAC-only and uncorrected RNA embeddings.
-Critical paths come from recorded target runtimes, with dynamic
-branches treated as concurrent; CPU time and RAM use multiply each target's
-runtime by its job's mean sampled CPU use and unreclaimable memory, which leaves
-out page cache, and jobs too short to be sampled get the median of the sampled
-jobs; disk space counts retained objects and files inside the store plus the
-Cell Ranger inputs that every workflow reads: filtered matrices, fragment files
-and their indexes.
+Critical paths come from recorded target runtimes, with dynamic branches treated
+as concurrent; the conventional chain's is the sum of its runtimes, as when a
+script runs its steps one after another; CPU time and RAM use multiply each
+target's runtime by its job's mean sampled CPU use and unreclaimable memory,
+which leaves out page cache, and jobs too short to be sampled get the median of
+the sampled jobs; disk space counts retained objects and files inside the store
+plus the Cell Ranger inputs that every workflow reads: filtered matrices,
+fragment files and their indexes.
 
 ## Supplementary Table S4
 

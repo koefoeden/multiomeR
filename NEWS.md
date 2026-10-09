@@ -45,8 +45,28 @@ carries its own crew controllers.
   neighbour search and UMAP are threaded, and give them the cores of each Slurm
   worker through `Seurat.nthreads`.
 
+## Demo
+
+- Replace `unsorted_PBMC_human` with `controller_PBMC_human`, 10x Genomics'
+  10k PBMC set from the Chromium Controller. The unsorted 3k well came from
+  the same donor as `healthy_PBMC_human`, so the demo's donors `pbmc1` and
+  `pbmc2` are now two people, and its categorical UMAPs and composition tables
+  show the donor. Harmony corrects for the GEM well, which now separates donors
+  and runs, and cell types need a 0.02 margin over the marker background
+  instead of 0.05, which the T-cell clusters, inflated by the larger well's T
+  cells, did not reach. The NK markers drop KLRD1, which effector CD8 T cells
+  share, for SH2D1B, and a MAIT set (SLC4A10, ZBTB16, KLRB1, NCR3) labels the
+  MAIT cells, so every WNN cluster is labeled. The download grows from about 1.3 to 4.6 GB, the stored
+  results from about 3.3 to 6.6 GB and the run from about 20 to 30 minutes with
+  16 threads.
+
 ## Manuscript
 
+- Label the six 10x Genomics PBMC GEM wells of `mixed_human_31x` with their two
+  donors: `pbmc1` for the four from one woman and `pbmc2` for the two from one
+  man, as 10x Genomics' dataset descriptions, sex markers and mitochondrial
+  genotypes agree. They were six donors before. The `comparison_` copies keep
+  their labels, since those aggregations run no donor-level analyses.
 - Add `pipeline_manuscript_figures/`, which builds Figure 1, Supplementary
   Figure S2 and Supplementary Table S4 of the manuscript from public data in
   `configuration_dev/`, with the results and their data under `results/`. It
@@ -93,6 +113,8 @@ carries its own crew controllers.
 ## Migration
 
 - Run `pixi run install-r-github-packages` to install Seurat 5.6.0.
+- Run `pixi run setup-demo` again to download `controller_PBMC_human`; the
+  demo's aggregation targets rebuild.
 - A custom configuration directory needs its own `crew_controllers.R`: copy
   `configuration/crew_controllers.R` and adapt it. Move any changes you made to
   the former root `crew_controllers.R` into it.

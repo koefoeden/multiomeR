@@ -1,5 +1,5 @@
 ```{.default filename="Output"}
-# A tibble: 2,248 x 102
+# A tibble: 7,638 x 103
    orig.ident         barcode nCount_RNA nFeature_RNA log10_nCount_RNA
    <chr>              <chr>        <dbl>        <dbl>            <dbl>
  1 healthy_PBMC_human AAACAG~      4747          2272             3.68
@@ -12,8 +12,8 @@
  8 healthy_PBMC_human AAAGGA~      2731          1397             3.44
  9 healthy_PBMC_human AAAGGA~      4103.         1861             3.61
 10 healthy_PBMC_human AAAGGA~      3940.         1986             3.60
-# i 2,238 more rows
-# i 97 more variables: RNA_mito_percent <dbl>, novelty <dbl>,
+# i 7,628 more rows
+# i 98 more variables: RNA_mito_percent <dbl>, novelty <dbl>,
 #   TSS.enrichment <dbl>, nucleosome_signal <dbl>, donor_id <chr>,
 #   vireo_max_prob_singlet <lgl>, vireo_max_prob_doublet <lgl>,
 #   vireo_n_vars <lgl>, vireo_best_doublet <lgl>,

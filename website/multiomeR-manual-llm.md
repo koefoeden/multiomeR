@@ -73,13 +73,13 @@ Continue to [Install and prepare the demo](demo_installation.md).
 
 
 
-The demo analyzes two public 10x Genomics GEM wells of peripheral blood mononuclear cells (PBMCs) from healthy donors, one with granulocytes removed by cell sorting and one unsorted, 5,720 nuclei in total.
+The demo analyzes two public 10x Genomics GEM wells of peripheral blood mononuclear cells (PBMCs) from two healthy donors: one with granulocytes removed by cell sorting (2,711 nuclei) and 10x Genomics' 10k PBMC set run on the Chromium Controller (10,691 nuclei), 13,402 nuclei in total.
 
 ## System requirements
 
 - 64-bit x86 Linux with `git` and `curl`.
 - At least 60 GB of RAM, enough for one memory-intensive target at a time.
-- About 25 GB of free disk space. This covers 1.3 GB of demo inputs, about 3.5 GB of results and up to 15 GB for the Pixi environment and its package cache, which Pixi keeps in your home directory by default.
+- About 30 GB of free disk space. This covers 4.6 GB of demo inputs, about 6.6 GB of results and up to 15 GB for the Pixi environment and its package cache, which Pixi keeps in your home directory by default.
 - Multiple CPU cores. The run time in the next chapter was measured with 16 logical threads.
 
 The committed `configuration/crew_controllers.R` suits a 16-CPU, 256-GB workstation. On a machine near the 60-GB minimum, lower its worker counts before running the demo, starting with the heavy workers; see [Local execution](performance_distributed_computing.md#local-execution).
@@ -129,7 +129,7 @@ targets::tar_make(names = tidyselect::all_of(demo_targets))
 
 `tar_make()` builds these two targets and every result they depend on, from per-GEM-well quality control to WNN integration. It skips results they do not need, such as most checkpoint plots in the [output gallery](gallery.md).
 
-With 16 threads the run takes about 20 minutes and writes about 3.5 GB. Keep the R session open until it finishes; progress messages show each target as it is dispatched and completed.
+With 16 threads the run takes about 30 minutes and writes about 6.6 GB. Keep the R session open until it finishes; progress messages show each target as it is dispatched and completed.
 
 ## Confirm success
 
@@ -174,7 +174,7 @@ cell_metadata
 <!-- begin include: website/data/demo_outputs/cell_metadata.md -->
 
 ```{.default filename="Output"}
-# A tibble: 2,248 x 102
+# A tibble: 7,638 x 103
    orig.ident         barcode nCount_RNA nFeature_RNA log10_nCount_RNA
    <chr>              <chr>        <dbl>        <dbl>            <dbl>
  1 healthy_PBMC_human AAACAG~      4747          2272             3.68
@@ -187,8 +187,8 @@ cell_metadata
  8 healthy_PBMC_human AAAGGA~      2731          1397             3.44
  9 healthy_PBMC_human AAAGGA~      4103.         1861             3.61
 10 healthy_PBMC_human AAAGGA~      3940.         1986             3.60
-# i 2,238 more rows
-# i 97 more variables: RNA_mito_percent <dbl>, novelty <dbl>,
+# i 7,628 more rows
+# i 98 more variables: RNA_mito_percent <dbl>, novelty <dbl>,
 #   TSS.enrichment <dbl>, nucleosome_signal <dbl>, donor_id <chr>,
 #   vireo_max_prob_singlet <lgl>, vireo_max_prob_doublet <lgl>,
 #   vireo_n_vars <lgl>, vireo_best_doublet <lgl>,
@@ -213,7 +213,7 @@ demo_object
 
 ```{.default filename="Output"}
 An object of class Seurat
-138652 features across 2248 samples within 3 assays
+176166 features across 7638 samples within 3 assays
 Active assay: RNA (36601 features, 3000 variable features)
  3 layers present: counts, data, scale.data
  2 other assays present: ATAC, motif_family_accessibility
@@ -256,10 +256,10 @@ GEX_counts
 <!-- begin include: website/data/demo_outputs/GEX_counts.md -->
 
 ```{.default filename="Output"}
-36601 x 5720 IterableMatrix object with class MatrixDir
+36601 x 13402 IterableMatrix object with class MatrixDir
 
 Row names: MIR1302-2HG, FAM138A ... AC007325.2
-Col names: healthy_PBMC_human_AAACAGCCAAATATCC-1, healthy_PBMC_human_AAACAGCCAGGAACTG-1 ... unsorted_PBMC_human_TTTGTGTTCATGCGTG-1
+Col names: healthy_PBMC_human_AAACAGCCAAATATCC-1, healthy_PBMC_human_AAACAGCCAGGAACTG-1 ... controller_PBMC_human_TTTGTTGGTAGGATTT-1
 
 Data type: uint32_t
 Storage order: column major
@@ -290,7 +290,7 @@ unlist(
 ```{.default filename="Output"}
 [1] "outputs/plots/immune_human_2x/8_multimodal_QC/UMAPs/categorical/WNN_harmony_SNN_cluster_named.png"
 [2] "outputs/plots/immune_human_2x/8_multimodal_QC/UMAPs/categorical/WNN_harmony_SNN_cluster_cell_type.png"
-[3] "outputs/plots/immune_human_2x/8_multimodal_QC/UMAPs/categorical/GEM_well_cell_sorting.png"
+[3] "outputs/plots/immune_human_2x/8_multimodal_QC/UMAPs/categorical/donor_id.png"
 [4] "outputs/plots/immune_human_2x/8_multimodal_QC/UMAPs/categorical/GEM_well_ID.png"
 [5] "outputs/plots/immune_human_2x/8_multimodal_QC/UMAPs/categorical/donor_id.png"
 ```
@@ -391,7 +391,7 @@ Each command also builds the earlier results it depends on. After changing a set
 1. **GEM wells:** add one row per GEM well to `cfg_GEM_wells.tsv`, with `GEM_well_QC_exclude_list` set to `NA` for the first run; see [GEM well table](reference_GEM_wells.md).
 2. **Donors:** prepare the donor metadata TSV, with one row for each donor in these GEM wells; see [Donor metadata table](reference_donor_metadata.md).
 3. **Aggregation:** in `cfg_aggregations.yaml`, copy the `template_aggregation` entry and rename the copy `my_aggregation`. Set `is_active: true`, list your GEM wells in `aggregation_GEM_well_IDs`, give the path to the donor table in `aggregation_donor_id_metadata_tsv`, and replace the placeholder `aggregation_GEX_marker_genes` with markers for the cell types you expect. Optionally, list the donor or GEM well columns to show in the plots in [`aggregation_categorical_vars`](parameters.html#aggregation_categorical_vars) and [`aggregation_continuous_vars`](parameters.html#aggregation_continuous_vars). See [Aggregation configuration](reference_aggregations.md).
-4. **Demo:** set `is_active: false` for the `immune_human_2x` aggregation and `GEM_well_is_active` to `FALSE` for its GEM wells, `healthy_PBMC_human` and `unsorted_PBMC_human`. Change both together, because an active aggregation cannot use an inactive GEM well. A later `targets::tar_make()` without `names` then builds only your data.
+4. **Demo:** set `is_active: false` for the `immune_human_2x` aggregation and `GEM_well_is_active` to `FALSE` for its GEM wells, `healthy_PBMC_human` and `controller_PBMC_human`. Change both together, because an active aggregation cannot use an inactive GEM well. A later `targets::tar_make()` without `names` then builds only your data.
 
 ## Checkpoint 1: Pre-aggregation QC {#checkpoint-1}
 
@@ -1345,7 +1345,7 @@ The [differential analyses](downstream_differential_analyses.md) module can read
 
 ## Public example {#public-example}
 
-The public demo's table also lists the donors of other example aggregations; only `pbmc1` and `pbmc6` have nuclei in the demo:
+The public demo's table lists its two donors:
 
 [Generated Quarto chunk omitted: `emit_file( "website/data/public_defaults/immune_human_dataset_donor_id_metadata.tsv", "configuration/immune_human_dat...`]
 

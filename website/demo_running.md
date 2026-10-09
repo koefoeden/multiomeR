@@ -21,7 +21,7 @@ targets::tar_make(names = tidyselect::all_of(demo_targets))
 
 `tar_make()` builds these two targets and every result they depend on, from per-GEM-well quality control to WNN integration. It skips results they do not need, such as most checkpoint plots in the [output gallery](gallery.md).
 
-With 16 threads the run takes about 20 minutes and writes about 3.5 GB. Keep the R session open until it finishes; progress messages show each target as it is dispatched and completed.
+With 16 threads the run takes about 30 minutes and writes about 6.6 GB. Keep the R session open until it finishes; progress messages show each target as it is dispatched and completed.
 
 ## Confirm success
 

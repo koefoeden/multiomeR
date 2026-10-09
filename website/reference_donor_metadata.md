@@ -38,7 +38,7 @@ The [differential analyses](downstream_differential_analyses.md) module can read
 
 ## Public example {#public-example}
 
-The public demo's table also lists the donors of other example aggregations; only `pbmc1` and `pbmc6` have nuclei in the demo:
+The public demo's table lists its two donors:
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_file(

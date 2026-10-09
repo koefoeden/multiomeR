@@ -370,30 +370,36 @@ compose_figure_1 <- function(A, B, C, D, E) {
         size = 12, hjust = 0, vjust = 1), plot.tag.position = c(0, 1))
 }
 
-# Supplementary Figure S2: both workflows share one graph and store. Excluded
+# Supplementary Figure S2: the workflows share one graph and store. Excluded
 # targets keep their graph position with zero runtime and are left out of every
 # resource sum.
 SEURAT_SIGNAC_COMPARISON_SCRIPT <- "pipeline_manuscript_figures/targets.R"
-SEURAT_SIGNAC_COMPARISON_WORKFLOWS <- list(
-  multiomeR = list(endpoint = "multimodal_Seurat_object.8_multimodal_QC.",
-    exclude = c(
-      # Cluster-fragment preparation is shared by both workflows.
-      "^blacklist_GRanges[.]ATAC(\\.|$)", "^BCs_per_peak_cluster_list[.]ATAC(\\.|$)",
-      "^peak_calling_cluster_(names|discovery_tibble)[.]ATAC(\\.|$)",
-      "^fragments_per_(cluster|peak_calling_cluster_discovery)[.]fragments[.]ATAC(\\.|$)",
-      # The conventional chain performs no cell-type annotation, doublet detection,
-      # QC metrics, gene or peak annotation, chromatin-state projection or motif
-      # analysis, and no ATAC-only or uncorrected RNA embedding.
-      "^cluster_UCell_", "^(UCell_GEX_marker_genes_list|GEX_marker_genes_vec)(\\.|$)",
-      "^metadata_w_cell_types(_unfiltered|_annotation)?_tibble[.]",
-      "^(amulet|scDblFinder)_", "^(ATAC_qc_metrics|per_barcode_metrics|blacklist_counts)_tibble[.]",
-      "^metadata_w_QC", "Ensembl_(gene_)?annotations?_GRanges_list(\\.|$)",
-      "^(consensus_peak_annotated|signac_annotation)_GRanges(\\.|$)", "^chromHMMs_",
-      "^(chromVAR|motif_family|peak_TF_motif|JASPAR)",
-      "^UMAP_embeddings_tibble[.](ATAC|GEX_non_harmony)[.]", "^LSI_clusters[.]")),
-  # Everything outside the conventional chain is imported from multiomeR.
-  "Seurat/Signac" = list(endpoint = "comparison_seurat_signac_object.",
-    exclude = "^(?!comparison_seurat_signac_)"))
+SEURAT_SIGNAC_COMPARISON_WORKFLOWS <- local({
+  multiomeR_exclude <- c(
+    # Cluster-fragment preparation is shared by both workflows.
+    "^blacklist_GRanges[.]ATAC(\\.|$)", "^BCs_per_peak_cluster_list[.]ATAC(\\.|$)",
+    "^peak_calling_cluster_(names|discovery_tibble)[.]ATAC(\\.|$)",
+    "^fragments_per_(cluster|peak_calling_cluster_discovery)[.]fragments[.]ATAC(\\.|$)",
+    # The conventional chain performs no cell-type annotation, doublet detection,
+    # QC metrics, gene or peak annotation, chromatin-state projection or motif
+    # analysis, and no ATAC-only or uncorrected RNA embedding.
+    "^cluster_UCell_", "^(UCell_GEX_marker_genes_list|GEX_marker_genes_vec)(\\.|$)",
+    "^metadata_w_cell_types(_unfiltered|_annotation)?_tibble[.]",
+    "^(amulet|scDblFinder)_", "^(ATAC_qc_metrics|per_barcode_metrics|blacklist_counts)_tibble[.]",
+    "^metadata_w_QC", "Ensembl_(gene_)?annotations?_GRanges_list(\\.|$)",
+    "^(consensus_peak_annotated|signac_annotation)_GRanges(\\.|$)", "^chromHMMs_",
+    "^(chromVAR|motif_family|peak_TF_motif|JASPAR)",
+    "^UMAP_embeddings_tibble[.](ATAC|GEX_non_harmony)[.]", "^LSI_clusters[.]")
+  list(
+    # multiomeR's own result is its WNN cell metadata; the Seurat/Signac object
+    # is an optional export built from it.
+    multiomeR = list(endpoint = "metadata_w_clusters_tibble.WNN.", exclude = multiomeR_exclude),
+    "multiomeR + Seurat exports" = list(endpoint = "multimodal_Seurat_object.8_multimodal_QC.",
+      exclude = multiomeR_exclude),
+    # Everything outside the conventional chain is imported from multiomeR.
+    "Seurat/Signac" = list(endpoint = "comparison_seurat_signac_object.",
+      exclude = "^(?!comparison_seurat_signac_)"))
+})
 
 # Measured use comes from the per-job history of slurm_monitor, which samples each
 # crew worker's cgroup every 10-15 s together with its running target. RAM is the
@@ -495,32 +501,36 @@ plot_seurat_signac_comparison_resources <- function(data) {
     used_CPU_hours = "CPU time (h)",
     used_RAM_GB_hours = "RAM use (GB \u00d7 h)",
     disk_space_GB = "Disk space (GB)")
-  colours <- c(multiomeR = "#2a78d6", "Seurat/Signac" = "#eb6834")
+  colours <- c(multiomeR = "#2a78d6", "multiomeR + Seurat exports" = "#86b3e8", "Seurat/Signac" = "#eb6834")
   data <- data |>
     tidyr::pivot_longer(tidyselect::all_of(names(measures)), names_to = "measure") |>
     dplyr::mutate(measure = factor(measures[.data$measure], measures),
       workflow = factor(.data$workflow, names(colours)))
   largest_nuclei <- max(data$cellranger_input_nuclei)
+  # A multiomeR line against the conventional one, as a fold change and direction.
+  compare <- function(multiomeR, conventional) {
+    ratio <- conventional / multiomeR
+    fold <- sprintf("%.1f\u00d7", pmax(ratio, 1 / ratio))
+    dplyr::case_when(fold == "1.0\u00d7" ~ "within 5%", ratio > 1 ~ paste(fold, "lower"),
+      .default = paste(fold, "higher"))
+  }
   labels <- data |>
     dplyr::filter(.data$cellranger_input_nuclei == largest_nuclei) |>
     dplyr::select("measure", "workflow", "value") |>
     tidyr::pivot_wider(names_from = "workflow", values_from = "value") |>
-    dplyr::mutate(ratio = .data$`Seurat/Signac` / .data$multiomeR,
-      fold = sprintf("%.1f\u00d7", pmax(.data$ratio, 1 / .data$ratio))) |>
-    dplyr::transmute(.data$measure,
-      label = sprintf("  multiomeR %s at %s nuclei", dplyr::case_when(.data$fold == "1.0\u00d7" ~ "within 5%",
-        .data$ratio > 1 ~ paste(.data$fold, "lower"), .default = paste(.data$fold, "higher")),
-        scales::comma(largest_nuclei)))
+    dplyr::transmute(.data$measure, label = sprintf("  multiomeR %s at %s nuclei\n  with Seurat exports: %s",
+      compare(.data$multiomeR, .data$`Seurat/Signac`), scales::comma(largest_nuclei),
+      compare(.data$`multiomeR + Seurat exports`, .data$`Seurat/Signac`)))
   ggplot2::ggplot(data, ggplot2::aes(.data$cellranger_input_nuclei, .data$value, colour = .data$workflow)) +
     ggplot2::geom_line(linewidth = .5) + ggplot2::geom_point(size = 1.5) +
     ggplot2::geom_text(data = labels, ggplot2::aes(x = -Inf, y = Inf, label = .data$label),
-      inherit.aes = FALSE, hjust = 0, vjust = 1.5, size = 2.1) +
+      inherit.aes = FALSE, hjust = 0, vjust = 1.2, size = 2.1, lineheight = .9) +
     ggplot2::facet_wrap(ggplot2::vars(.data$measure), scales = "free_y", strip.position = "left") +
     ggplot2::scale_x_continuous(labels = scales::label_comma()) +
-    ggplot2::scale_y_continuous(limits = c(0, NA), expand = ggplot2::expansion(mult = c(0, .12))) +
+    ggplot2::scale_y_continuous(limits = c(0, NA), expand = ggplot2::expansion(mult = c(0, .22))) +
     ggplot2::scale_colour_manual(values = colours) +
     figure_1_theme() +
     ggplot2::theme(strip.placement = "outside", legend.position = "bottom",
-      strip.text = ggplot2::element_text(size = 7)) +
+      strip.text = ggplot2::element_text(size = 7), panel.spacing.y = grid::unit(12, "pt")) +
     ggplot2::labs(x = "Input nuclei", y = NULL, colour = NULL)
 }

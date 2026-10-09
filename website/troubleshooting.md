@@ -93,6 +93,10 @@ targets::tar_outdated(
 
 Changes to code, configuration, input files, or any upstream target make downstream targets outdated. Look for the most upstream name in the result before assuming that the final target itself is the cause.
 
+## Results change slightly after a rebuild
+
+Multithreaded approximate nearest-neighbor search is not bit-deterministic. When a neighbor graph is rebuilt, for example because an upstream change invalidated it, a small fraction of nuclei can get different neighbors, and clusters, UMAP coordinates and downstream statistics shift with them. This is expected; compare cluster composition and marker results rather than exact labels, and keep the store when results must stay unchanged.
+
 ## Rerun safely
 
 After fixing the cause, rerun the same selection; up-to-date results are reused:

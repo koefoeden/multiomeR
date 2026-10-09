@@ -1190,6 +1190,10 @@ targets::tar_outdated(
 
 Changes to code, configuration, input files, or any upstream target make downstream targets outdated. Look for the most upstream name in the result before assuming that the final target itself is the cause.
 
+## Results change slightly after a rebuild
+
+Multithreaded approximate nearest-neighbor search is not bit-deterministic. When a neighbor graph is rebuilt, for example because an upstream change invalidated it, a small fraction of nuclei can get different neighbors, and clusters, UMAP coordinates and downstream statistics shift with them. This is expected; compare cluster composition and marker results rather than exact labels, and keep the store when results must stay unchanged.
+
 ## Rerun safely
 
 After fixing the cause, rerun the same selection; up-to-date results are reused:
@@ -1234,6 +1238,8 @@ outs/
 ├── atac_fragments.tsv.gz.tbi
 └── per_barcode_metrics.csv
 ```
+
+The pipeline is tested with the outputs of Cell Ranger ARC 2.0.0 and 2.1.0.
 
 A [pooled GEM well](#pooled-wells) also needs `atac_possorted_bam.bam` in `outs/`. For CellBender counts, run [CellBender remove-background](https://cellbender.readthedocs.io/en/latest/usage/) first and give its H5 file in `GEM_well_cellbender_h5_file`.
 
@@ -1559,7 +1565,7 @@ For each aggregation, the quality-controlled gene-expression matrices are combin
 
 <!-- begin include: website/_shared_methods/batch_correction_and_clustering.md -->
 
-Harmony correction, with at most 25 iterations and `lambda = 1`, can be applied separately to the selected GEX principal components and ATAC LSI dimensions [@patikas2026_harmony2]. Several configured metadata columns are combined into one interaction batch factor, nuclei with missing covariate values are removed with a warning, and the embeddings pass through unchanged when no columns are configured.
+Harmony correction, with at most 25 iterations and `lambda = 1`, can be applied separately to the selected GEX principal components and ATAC LSI dimensions [@korsunsky2019_harmony; @patikas2026_harmony2]. Several configured metadata columns are combined into one interaction batch factor, nuclei with missing covariate values are removed with a warning, and the embeddings pass through unchanged when no columns are configured.
 
 For each modality, approximate nearest neighbors are found on the selected dimensions with BPCells HNSW search using cosine distance, converted to a shared-nearest-neighbor (SNN) graph with Jaccard weights, pruning weights below 1/15, and clustered with the modularity objective of the Leiden algorithm [@parks2025_bpcells; @traag2019_leiden]. The neighbor count includes the query cell itself, and clusters are renumbered by size. UMAP embeddings are computed with uwot on the same dimensions using cosine distance [@melville2026_uwot], and quality-control sweeps additionally render UMAPs over grids of dimensions and neighbor counts.
 

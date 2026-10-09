@@ -30,6 +30,8 @@ outs/
 └── per_barcode_metrics.csv
 ```
 
+The pipeline is tested with the outputs of Cell Ranger ARC 2.0.0 and 2.1.0.
+
 A [pooled GEM well](#pooled-wells) also needs `atac_possorted_bam.bam` in `outs/`. For CellBender counts, run [CellBender remove-background](https://cellbender.readthedocs.io/en/latest/usage/) first and give its H5 file in `GEM_well_cellbender_h5_file`.
 
 The pipeline identifies each well's Cell Ranger ARC reference by matching the FASTA and GTF hashes in the `atac_fragments.tsv.gz` header to a `reference.json` in the repository's `reference_metadata/` folder, so keep that header intact. JSON files for the GRCh38 2020-A, GRCh38 2024-A and mm10 2020-A references are included; for another reference, copy its `reference.json` into a new subdirectory there.

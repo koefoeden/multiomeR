@@ -1,5 +1,5 @@
 comparison_aggregation_names <- function() {
-  paste0("comparison_", c(1, 2, 5, 10, 20), "x")
+  paste0("comparison_", c(1, 2, 5, 10, 20, 31), "x")
 }
 
 # Evaluates expr with one forked future worker per allocated core, then restores

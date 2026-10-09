@@ -1337,7 +1337,7 @@ The public configuration contains these entries; inactive ones can stay as examp
 - `brain_mouse` (inactive): a mouse example.
 - `ENCODE_heart_LV_6x` (inactive): six ENCODE left-ventricle GEM wells with a differential-analysis example.
 
-`configuration_dev/` holds the larger public-data aggregations: `mixed_human_31x`, the aggregation behind the [output gallery](gallery.md) with all optional modules enabled, and `comparison_1x` to `comparison_20x`, nested subsets of its GEM wells for the manuscript's resource comparisons. The seven 10x Genomics and 24 ENCODE GEM wells of `mixed_human_31x` are processed locally with Cell Ranger ARC 2.1.0 and GRCh38-2024-A, so its PBMC well `healthy_PBMC_human_2024A` is separate from the demo's downloaded `healthy_PBMC_human`.
+`configuration_dev/` holds the larger public-data aggregations: `mixed_human_31x`, the aggregation behind the [output gallery](gallery.md) with all optional modules enabled, and `comparison_1x` to `comparison_31x`, nested sets of its GEM wells for the manuscript's resource comparisons. The seven 10x Genomics and 24 ENCODE GEM wells of `mixed_human_31x` are processed locally with Cell Ranger ARC 2.1.0 and GRCh38-2024-A, so its PBMC well `healthy_PBMC_human_2024A` is separate from the demo's downloaded `healthy_PBMC_human`.
 
 ## Minimal entry
 

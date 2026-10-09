@@ -85,7 +85,7 @@ mixed_human_31x:
   aggregation_QC_exclude_list_combined_object: [nCount_ATAC < 1000, atac_peak_counts_frac < 0.1,
       atac_peak_counts_blacklist_frac > 0.01]
 
-# Nested aggregations of the first 1, 2, 5, 10 and 20 GEM wells of mixed_human_31x, which the
+# Nested aggregations of the first 1, 2, 5, 10, 20 and all 31 GEM wells of mixed_human_31x, which the
 # manuscript's Seurat/Signac resource comparison and algorithm comparisons use. Their
 # comparison_ GEM wells reuse the same Cell Ranger ARC outputs without per-well QC filters or
 # CellBender, and doublet removal is disabled, so both workflows keep every called nucleus.
@@ -132,3 +132,15 @@ comparison_20x:
       comparison_ENCSR233SQG, comparison_ENCSR316WAS, comparison_ENCSR618WVK, comparison_ENCSR788DZO,
       comparison_ENCSR079UEO, comparison_ENCSR201BHG, comparison_ENCSR245BNT, comparison_ENCSR320RLS,
       comparison_ENCSR351CSQ, comparison_ENCSR508WRP, comparison_ENCSR511RDV]
+comparison_31x:
+  inherits: comparison_20x
+  is_active: true
+  aggregation_GEM_well_IDs: [comparison_healthy_PBMC_human, comparison_pbmc_10k_chromium_controller,
+      comparison_pbmc_10k_chromium_x, comparison_pbmc_granulocyte_sorted_10k, comparison_pbmc_unsorted_10k,
+      comparison_pbmc_unsorted_3k, comparison_healthy_brain_human, comparison_ENCSR033MDU, comparison_ENCSR158DQA,
+      comparison_ENCSR233SQG, comparison_ENCSR316WAS, comparison_ENCSR618WVK, comparison_ENCSR788DZO,
+      comparison_ENCSR079UEO, comparison_ENCSR201BHG, comparison_ENCSR245BNT, comparison_ENCSR320RLS,
+      comparison_ENCSR351CSQ, comparison_ENCSR508WRP, comparison_ENCSR511RDV, comparison_ENCSR534YJW,
+      comparison_ENCSR568QKW, comparison_ENCSR613LBN, comparison_ENCSR793DNM, comparison_ENCSR923FKN,
+      comparison_ENCSR956ZER, comparison_ENCSR987VTJ, comparison_ENCSR636WIB, comparison_ENCSR925IHI,
+      comparison_ENCSR128ZLB, comparison_ENCSR264JIX]

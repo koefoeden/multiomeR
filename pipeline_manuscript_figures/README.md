@@ -8,7 +8,7 @@ below `results/`:
 - `1.png`: Figure 1, selected outputs of `mixed_human_31x`.
 - `S2.png` and `data/seurat_signac_comparison_resources.tsv`: Supplementary
   Figure S2, resource use of multiomeR and a conventional Seurat/Signac workflow
-  on `comparison_1x` to `comparison_20x`.
+  on `comparison_1x` to `comparison_31x`.
 - `S4.md` and `data/algorithm_parity/`: Supplementary Table S4, the
   reimplemented algorithms against their references on `comparison_5x` objects.
 
@@ -71,23 +71,23 @@ directories, and runs Signac's TF-IDF/LSI on them before building the WNN graph,
 UMAP and clusters. Seurat's kernels use the cores of their Slurm worker, and
 peak calling and quantification run one `future` worker per core.
 
-`comparison_1x` to `comparison_20x` take the first 1, 2, 5, 10 and 20 GEM wells
-of `mixed_human_31x` without per-well QC filters, CellBender or doublet removal,
-so both workflows keep every called nucleus and yield identical consensus peaks.
-multiomeR is measured twice: up to its WNN cell metadata, and with the
-multimodal Seurat/Signac object it exports from it. Shared cluster-fragment
-preparation is excluded from all workflows, and analyses that the conventional
-chain does not perform from both multiomeR measurements: cell-type annotation,
-doublet detection, QC metrics, gene and peak annotation, chromatin-state
-projection, motif analysis, and the ATAC-only and uncorrected RNA embeddings.
-Critical paths come from recorded target runtimes, with dynamic branches treated
-as concurrent; the conventional chain's is the sum of its runtimes, as when a
-script runs its steps one after another; CPU time and RAM use multiply each
-target's runtime by its job's mean sampled CPU use and unreclaimable memory,
-which leaves out page cache, and jobs too short to be sampled get the median of
-the sampled jobs; disk space counts retained objects and files inside the store
-plus the Cell Ranger inputs that every workflow reads: filtered matrices,
-fragment files and their indexes.
+`comparison_1x` to `comparison_31x` take the first 1, 2, 5, 10, 20 and all 31
+GEM wells of `mixed_human_31x` without per-well QC filters, CellBender or
+doublet removal, so both workflows keep every called nucleus and yield identical
+consensus peaks. multiomeR is measured twice: up to its WNN cell metadata, and
+with the multimodal Seurat/Signac object it exports from it. Shared
+cluster-fragment preparation is excluded from all workflows, and analyses that
+the conventional chain does not perform from both multiomeR measurements:
+cell-type annotation, doublet detection, QC metrics, gene and peak annotation,
+chromatin-state projection, motif analysis, and the ATAC-only and uncorrected
+RNA embeddings. Critical paths come from recorded target runtimes, with dynamic
+branches treated as concurrent; the conventional chain's is the sum of its
+runtimes, as when a script runs its steps one after another; CPU time and RAM
+use multiply each target's runtime by its job's mean sampled CPU use and
+unreclaimable memory, which leaves out page cache, and jobs too short to be
+sampled get the median of the sampled jobs; disk space counts retained objects
+and files inside the store plus the Cell Ranger inputs that every workflow
+reads: filtered matrices, fragment files and their indexes.
 
 ## Supplementary Table S4
 

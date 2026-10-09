@@ -12,9 +12,9 @@ export TAR_PROJECT=dev
 
 - `mixed_human_31x`: 31 public 10x Genomics and ENCODE GEM wells with every
   optional module enabled.
-- `comparison_1x` to `comparison_20x`: its first 1, 2, 5, 10 and 20 GEM wells,
-  as `comparison_` copies without per-well QC filters or CellBender, for the
-  manuscript's Seurat/Signac resource comparison and algorithm comparisons.
+- `comparison_1x` to `comparison_31x`: its first 1, 2, 5, 10, 20 and all 31 GEM
+  wells, as `comparison_` copies without per-well QC filters or CellBender, for
+  the manuscript's Seurat/Signac resource comparison and algorithm comparisons.
 
 The Cell Ranger ARC inputs were reprocessed from the raw reads with Cell Ranger
 ARC 2.1.0 and the GRCh38 2024-A reference and are not supplied. The ignored

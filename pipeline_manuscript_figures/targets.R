@@ -1,6 +1,6 @@
 # Manuscript figures and tables from configuration_dev's public-data aggregations:
 # Figure 1 from mixed_human_31x, Supplementary Figure S2 comparing multiomeR with a
-# conventional Seurat/Signac workflow on comparison_1x to comparison_20x, and
+# conventional Seurat/Signac workflow on comparison_1x to comparison_31x, and
 # Supplementary Table S4 comparing the algorithm reimplementations with their
 # references on comparison_5x. See README.md.
 source("pipeline_manuscript_figures/helpers.R")
@@ -132,8 +132,7 @@ figure_pipeline <- list(
     command = {
       path <- file.path(output_dir, "data", "seurat_signac_comparison_resources.tsv")
       fs::dir_create(dirname(path))
-      readr::write_tsv(seurat_signac_comparison_resource_tibble(
-        paste0("comparison_", c(1, 2, 5, 10, 20), "x")), path)
+      readr::write_tsv(seurat_signac_comparison_resource_tibble(comparison_aggregation_names()), path)
       path
     },
     # targets lets only file targets read the store metadata, which no upstream dependency tracks.
@@ -439,7 +438,7 @@ comparison_seurat_signac_pipeline <- rlang::list2(
   ),
   comparison_seurat_signac_targets(
     values = dplyr::filter(comparison_aggregation_tibble,
-      .data$aggregation %in% c("comparison_10x", "comparison_20x")),
+      .data$aggregation %in% c("comparison_10x", "comparison_20x", "comparison_31x")),
     peak_resources = get_tar_resources(cores_req = 6, RAM_GB_req = 500)
   )
 )

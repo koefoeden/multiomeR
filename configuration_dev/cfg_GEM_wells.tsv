@@ -50,3 +50,14 @@ comparison_ENCSR320RLS	comparison	ENCDO520EJG	1	example_data/encode/ENCSR320RLS	
 comparison_ENCSR351CSQ	comparison	ENCDO856ZOJ	1	example_data/encode/ENCSR351CSQ	NA	NA	NA	TRUE	NA	NA	heart	nuclear_fraction	NA	NA	NA
 comparison_ENCSR508WRP	comparison	ENCDO575WHY	1	example_data/encode/ENCSR508WRP	NA	NA	NA	TRUE	NA	NA	heart	nuclear_fraction	NA	NA	NA
 comparison_ENCSR511RDV	comparison	ENCDO856ZOJ	1	example_data/encode/ENCSR511RDV	NA	NA	NA	TRUE	NA	NA	heart	nuclear_fraction	NA	NA	NA
+comparison_ENCSR534YJW	comparison	ENCDO411EVD	1	example_data/encode/ENCSR534YJW	NA	NA	NA	TRUE	NA	NA	heart	nuclear_fraction	NA	NA	NA
+comparison_ENCSR568QKW	comparison	ENCDO411EVD	1	example_data/encode/ENCSR568QKW	NA	NA	NA	TRUE	NA	NA	heart	nuclear_fraction	NA	NA	NA
+comparison_ENCSR613LBN	comparison	ENCDO520EJG	1	example_data/encode/ENCSR613LBN	NA	NA	NA	TRUE	NA	NA	heart	nuclear_fraction	NA	NA	NA
+comparison_ENCSR793DNM	comparison	ENCDO856ZOJ	1	example_data/encode/ENCSR793DNM	NA	NA	NA	TRUE	NA	NA	heart	nuclear_fraction	NA	NA	NA
+comparison_ENCSR923FKN	comparison	ENCDO392CRK	1	example_data/encode/ENCSR923FKN	NA	NA	NA	TRUE	NA	NA	heart	nuclear_fraction	NA	NA	NA
+comparison_ENCSR956ZER	comparison	ENCDO529CYH	1	example_data/encode/ENCSR956ZER	NA	NA	NA	TRUE	NA	NA	heart	nuclear_fraction	NA	NA	NA
+comparison_ENCSR987VTJ	comparison	ENCDO520EJG	1	example_data/encode/ENCSR987VTJ	NA	NA	NA	TRUE	NA	NA	heart	nuclear_fraction	NA	NA	NA
+comparison_ENCSR636WIB	comparison	ENCDO186XRB	1	example_data/encode/ENCSR636WIB	NA	NA	NA	TRUE	NA	NA	colon	nuclear_fraction	NA	NA	NA
+comparison_ENCSR925IHI	comparison	ENCDO856ZOJ	1	example_data/encode/ENCSR925IHI	NA	NA	NA	TRUE	NA	NA	colon	nuclear_fraction	NA	NA	NA
+comparison_ENCSR128ZLB	comparison	ENCDO528BHB	1	example_data/encode/ENCSR128ZLB	NA	NA	NA	TRUE	NA	NA	lung	nuclear_fraction	NA	NA	NA
+comparison_ENCSR264JIX	comparison	ENCDO575EGL	1	example_data/encode/ENCSR264JIX	NA	NA	NA	TRUE	NA	NA	lung	nuclear_fraction	NA	NA	NA

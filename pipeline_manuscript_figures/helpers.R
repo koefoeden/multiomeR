@@ -491,9 +491,15 @@ benchmark_resource_tibble <- function(workflows, aggregations, script = "_target
   })
 }
 
+# Every workflow also reads the same Cell Ranger outputs from outside the store,
+# which count towards its disk space.
 seurat_signac_comparison_resource_tibble <- function(aggregations, store = targets::tar_config_get("store")) {
+  input_GB <- purrr::map_dbl(aggregations, \(aggregation)
+    sum(file.size(comparison_input_files(comparison_build_config(aggregation)))) / 1e9)
   benchmark_resource_tibble(SEURAT_SIGNAC_COMPARISON_WORKFLOWS, aggregations,
-    script = SEURAT_SIGNAC_COMPARISON_SCRIPT, store = store)
+    script = SEURAT_SIGNAC_COMPARISON_SCRIPT, store = store) |>
+    dplyr::mutate(input_disk_space_GB = input_GB[match(.data$aggregation, aggregations)],
+      disk_space_GB = .data$disk_space_GB + .data$input_disk_space_GB)
 }
 
 plot_seurat_signac_comparison_resources <- function(data) {

@@ -128,13 +128,17 @@ figure_pipeline <- list(
   ),
   tarchetypes::tar_file(
     figure_1_data.mixed_human_31x,
-    description = "Figure 1 values that the manuscript quotes: the selected peak-gene link and, for each heatmap trait's strongest cell type, its raw Z, contributing loci and the largest locus share of their summed contribution",
+    description = "Figure 1 values that the manuscript quotes: the aggregation's retained nuclei and assigned cell types, the selected peak-gene link and, for each heatmap trait's strongest cell type, its raw Z, contributing loci and the largest locus share of their summed contribution",
     command = {
-      paths <- file.path(fs::dir_create(file.path(output_dir, "data")), c("figure_1_link.tsv", "figure_1_traits.tsv"))
+      paths <- file.path(fs::dir_create(file.path(output_dir, "data")),
+        c("figure_1_aggregation.tsv", "figure_1_link.tsv", "figure_1_traits.tsv"))
+      cell_types <- metadata_w_cell_types_tibble.WNN.mixed_human_31x$WNN_harmony_SNN_cluster_cell_type
+      readr::write_tsv(tibble::tibble(retained_nuclei = length(cell_types),
+        assigned_cell_types = dplyr::n_distinct(setdiff(cell_types, "Unassigned"))), paths[[1]])
       select_figure_1_link(peak_gene_correlation_top_links_tibble.WNN.peak_gene_correlation.mixed_human_31x) |>
         dplyr::select("cell_group", "TargetGene", "peak", "distance", "n_donors", "n_aggregates",
           "correlation", "hierarchical_pvalue") |>
-        readr::write_tsv(paths[[1]])
+        readr::write_tsv(paths[[2]])
       loci <- chromVAR_locus_contribution_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x |>
         dplyr::summarise(n_loci = dplyr::n(),
           top_locus_share = max(.data$relative_deviation_contribution) / sum(.data$relative_deviation_contribution),
@@ -142,7 +146,7 @@ figure_pipeline <- list(
       select_figure_1_traits(chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x) |>
         dplyr::select("GWAS_ID", "cluster", "z") |>
         dplyr::left_join(loci, by = c("GWAS_ID", "cluster")) |>
-        readr::write_tsv(paths[[2]])
+        readr::write_tsv(paths[[3]])
       paths
     },
     resources = get_tar_resources(RAM_GB_req = 4)

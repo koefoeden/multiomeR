@@ -6,8 +6,8 @@ multiomeR manuscript that come from public data. It uses the aggregations in
 below `results/`:
 
 - `1.png`: Figure 1, selected outputs of `mixed_human_31x`, and
-  `data/figure_1_link.tsv` and `data/figure_1_traits.tsv`, the values the
-  manuscript quotes from it.
+  `data/figure_1_aggregation.tsv`, `data/figure_1_link.tsv` and
+  `data/figure_1_traits.tsv`, the values the manuscript quotes from it.
 - `S2.png` and `data/seurat_signac_comparison_resources.tsv`: Supplementary
   Figure S2, resource use of multiomeR and a conventional Seurat/Signac workflow
   on `comparison_1x` to `comparison_31x`.

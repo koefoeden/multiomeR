@@ -687,6 +687,8 @@ count_blacklist_fragments_by_GEM_well <- function(GEM_well_cells, blacklist_GRan
 #'   `atac_peak_counts_blacklist`, e.g. from `count_blacklist_fragments_by_GEM_well()`.
 #' @param ATAC_peak_GRanges GRanges for ATAC peaks, aligned by peak name to the corresponding ATAC matrix rows.
 #' @param genome Genome build key used to choose chromosome sizes, blacklist resources, and external-tool parameters.
+#' @param peak_matrix_mode BPCells counting mode of the peak matrix; insertions
+#'   count two per fragment, so the peak fraction divides by twice the fragments.
 #' @return The input metadata as a tibble with `nCount_ATAC`,
 #'   `atac_peak_counts_blacklist`, fraction/enrichment columns, and missing
 #'   count values replaced by zero.
@@ -697,7 +699,8 @@ get_ATAC_QC_metadata_from_BPCells <- function(
   ATAC_peak_BPCells_matrix,
   blacklist_counts_tibble,
   ATAC_peak_GRanges,
-  genome
+  genome,
+  peak_matrix_mode
 ) {
   metadata_tibble <- tibble::as_tibble(metadata_df)
   peak_counts <- BPCells::colSums(ATAC_peak_BPCells_matrix)
@@ -719,7 +722,7 @@ get_ATAC_QC_metadata_from_BPCells <- function(
     dplyr::left_join(qc_tibble, by = "barcode_w_prefix") |>
     dplyr::mutate(
       dplyr::across(c(nCount_ATAC, atac_peak_counts_blacklist), ~ tidyr::replace_na(.x, 0)),
-      atac_peak_counts_frac = nCount_ATAC / .data$atac_fragments,
+      atac_peak_counts_frac = nCount_ATAC / (.data$atac_fragments * (1 + (peak_matrix_mode == "insertions"))),
       atac_peak_counts_blacklist_frac = atac_peak_counts_blacklist / nCount_ATAC,
       log10_nCount_ATAC = log10(nCount_ATAC),
       atac_peak_count_enrichment = atac_peak_counts_frac / genome_peak_cov

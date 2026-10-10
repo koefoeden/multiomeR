@@ -322,7 +322,8 @@ rlang::list2(
         ATAC_peak_BPCells_matrix = consensus_peak_BPCells_matrix.ATAC,
         blacklist_counts_tibble = blacklist_counts_tibble.ATAC,
         ATAC_peak_GRanges = consensus_peak_GRanges.ATAC,
-        genome = aggregated_cellranger_ref_list$genomes[[1]]
+        genome = aggregated_cellranger_ref_list$genomes[[1]],
+        peak_matrix_mode = aggregation_ATAC_peak_matrix_mode
       ),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),

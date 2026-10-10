@@ -21,7 +21,7 @@ immune_human_2x:
   aggregation_categorical_vars: [donor_id]
   aggregation_harmony_correction_metadata_col_names: GEM_well_ID
   aggregation_cluster_annotation_min_advantage: 0.02
-  aggregation_QC_exclude_list_combined_object: [nCount_ATAC < 1000, atac_peak_counts_frac < 0.1, atac_peak_counts_blacklist_frac > 0.01]
+  aggregation_QC_exclude_list_combined_object: [nCount_ATAC < 1000, atac_peak_counts_frac < 0.1, atac_peak_counts_blacklist_frac > 0.05]
   aggregation_ATAC_marker_TFs:
     B: [EBF1]
     Mono: [CEBPA, CEBPB]
@@ -81,7 +81,7 @@ ENCODE_heart_LV_6x:
     Pericyte: [RGS5, PDGFRB, CSPG4]
   modules: differential_analyses
   aggregation_categorical_vars: [GEM_well_dataset, GEM_well_tissue, GEM_well_cell_sorting, GEM_well_instrument, GEM_well_target_recovery]
-  aggregation_QC_exclude_list_combined_object: [nCount_ATAC < 1000, atac_peak_counts_frac < 0.1, atac_peak_counts_blacklist_frac > 0.01]
+  aggregation_QC_exclude_list_combined_object: [nCount_ATAC < 1000, atac_peak_counts_frac < 0.1, atac_peak_counts_blacklist_frac > 0.05]
   aggregation_ATAC_marker_TFs:
     B: EBF1
     T: [TCF7, LEF1]

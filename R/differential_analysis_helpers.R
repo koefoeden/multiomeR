@@ -77,9 +77,15 @@ prepare_cell_type_composition_model_data <- function(metadata, donor_metadata, m
   cohort$n_total_nuclei <- tidyr::replace_na(cohort$n_total_nuclei, 0L)
   selected <- metadata |> dplyr::filter(donor_id %in% cohort$donor_id[cohort$included])
   if (!nrow(selected)) stop("No eligible donors remain for composition model.")
-  cell_types <- sort(unique(as.character(selected[[cluster_col]])))
+  # By default, test the assigned labels present in at least half of the donors;
+  # absent or abstaining labels would only enlarge the multiple-testing family.
+  prevalence <- selected |>
+    dplyr::distinct(donor_id, cluster = as.character(.data[[cluster_col]])) |>
+    dplyr::count(cluster, name = "n_donors")
+  cell_types <- sort(prevalence$cluster[prevalence$n_donors >= dplyr::n_distinct(selected$donor_id) / 2 &
+    !startsWith(prevalence$cluster, "Unassigned")])
   if (!is.null(model$cell_types_to_test)) {
-    if (length(setdiff(model$cell_types_to_test, cell_types))) stop("Requested cell types are absent from the eligible cohort.")
+    if (length(setdiff(model$cell_types_to_test, prevalence$cluster))) stop("Requested cell types are absent from the eligible cohort.")
     cell_types <- model$cell_types_to_test
   }
   counts <- selected |>
@@ -143,7 +149,7 @@ plot_cell_type_composition_model <- function(model_data, model, model_name, resu
   caption <- paste0("Model: ", model_name, ". Formula: ", model$formula,
     ". Selected wells: ", paste(model$GEM_well_IDs %||% "all aggregation wells", collapse = ", "),
     ". Denominator: all retained nuclei in selected wells for each eligible donor, including unassigned labels. ",
-    "Zero cell-type counts retained. Cell types tested: ", paste(model$cell_types_to_test %||% "all observed labels", collapse = ", "), ".")
+    "Zero cell-type counts retained. Cell types tested: ", paste(model$cell_types_to_test %||% "assigned labels observed in at least half of the donors", collapse = ", "), ".")
   plots <- lapply(model$plot_phenotype_vars, function(phenotype) {
     counts <- model_data$counts
     counts$phenotype <- counts[[phenotype]]

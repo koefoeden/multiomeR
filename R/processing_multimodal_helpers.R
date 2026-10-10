@@ -5,13 +5,10 @@ normalize_embedding_rows <- function(embedding_matrix) {
   sweep(embedding_matrix, 1, row_norms, "/")
 }
 
+#' Average each cell's neighbours, given as index columns after the cell itself.
 impute_embedding_from_neighbor_indices <- function(embedding_matrix, neighbor_indices) {
-  if (ncol(neighbor_indices) > 1 && all(neighbor_indices[, 1] == seq_len(nrow(neighbor_indices)))) {
-    neighbor_indices <- neighbor_indices[, -1, drop = FALSE]
-  }
-
   t(apply(
-    neighbor_indices,
+    neighbor_indices[, -1, drop = FALSE],
     1,
     \(idx) colMeans(embedding_matrix[idx, , drop = FALSE])
   ))
@@ -124,10 +121,50 @@ calculate_small_SNN_bandwidth <- function(
   )
 }
 
+#' Find each modality's neighbours with the cell itself first
+#'
+#' HNSW occasionally misses a query cell among its own neighbours; it is then
+#' put first and the farthest neighbour dropped. The small-SNN bandwidth uses
+#' the first `k` columns.
+find_WNN_modality_neighbors <- function(embeddings_norm, knn_k, k, threads, ef, native_source_file) {
+  purrr::map(embeddings_norm, \(embedding) {
+    nn <- BPCells::knn_hnsw(data = embedding, k = knn_k, metric = "euclidean", verbose = FALSE,
+      threads = threads, ef = ef)
+    for (cell in which(nn$idx[, 1] != seq_len(nrow(nn$idx)))) {
+      keep <- nn$idx[cell, ] != cell
+      nn$idx[cell, ] <- c(cell, nn$idx[cell, keep])[seq_len(knn_k)]
+      nn$dist[cell, ] <- c(0, nn$dist[cell, keep])[seq_len(knn_k)]
+    }
+    nn$sigma <- pmax(calculate_small_SNN_bandwidth(embedding, nn$idx, k, nn$dist[, 2], native_source_file),
+      .Machine$double.eps)
+    nn
+  })
+}
+
+#' Seurat's WNN modality weights from within- versus cross-modality prediction
+get_WNN_modality_weights <- function(embeddings_norm, modality_nn, k) {
+  scores <- purrr::imap(embeddings_norm, \(embedding, modality) {
+    own <- modality_nn[[modality]]
+    kernel <- \(nn) {
+      imputed <- impute_embedding_from_neighbor_indices(embedding, nn$idx[, seq_len(k + 1L), drop = FALSE])
+      exp(-pmax(row_euclidean_distance(embedding, imputed) - own$dist[, 2], 0) / own$sigma)
+    }
+    within_kernel <- kernel(own)
+    cross_scores <- purrr::map(modality_nn[names(modality_nn) != modality],
+      \(nn) pmin(pmax(within_kernel / (kernel(nn) + 1e-4), 0), 200))
+    rowSums(exp(do.call(cbind, cross_scores)))
+  })
+  total <- Reduce(`+`, scores)
+  purrr::map(scores, \(score) score / total)
+}
+
 #' Weighted nearest neighbors BPCells
 #'
 #' Compute Seurat-style weighted nearest neighbors from aligned, L2-normalized
-#' modality embeddings with Euclidean distances.
+#' modality embeddings with Euclidean distances. Seurat's modality weights tend
+#' to 0 or 1 as the number of cells grows, because the kernel widths shrink with
+#' density, so they are estimated within random subsets of at most
+#' `weight_cells` cells; neighbours are selected among all cells.
 #'
 #' @param embeddings_list Named list of modality embedding matrices with
 #'   identical cell row names in the same order.
@@ -136,6 +173,9 @@ calculate_small_SNN_bandwidth <- function(
 #'   KNN graphs before choosing the final weighted `k`.
 #' @param threads Number of threads passed to BPCells, HNSW, or matrix-stat routines.
 #' @param ef HNSW search breadth parameter; larger values improve recall at higher runtime/memory cost.
+#' @param weight_cells Largest subset in which modality weights are estimated;
+#'   `Inf` estimates them among all cells, as Seurat does.
+#' @param seed Seed of the random assignment of cells to weight subsets.
 #' @param native_source_file Path to the tracked C++ implementation of the
 #'   small-SNN kernel bandwidth.
 #' @return A list containing modality weights per barcode and the weighted
@@ -148,6 +188,8 @@ weighted_nearest_neighbors_BPCells <- function(
   candidate_k = 200,
   threads = 1,
   ef = 500,
+  weight_cells = 1e4,
+  seed = 1,
   native_source_file = file.path(get_project_root(), "src", "wnn_snn_bandwidth.cpp")
 ) {
   cell_names <- rownames(embeddings_list[[1]])
@@ -157,55 +199,22 @@ weighted_nearest_neighbors_BPCells <- function(
   knn_k <- min(max(k + 1L, candidate_k + 1L), n_cells)
 
   embeddings_norm <- purrr::map(embeddings_list, normalize_embedding_rows)
-
-  modality_knn <- purrr::map(embeddings_norm, \(embedding) {
-    BPCells::knn_hnsw(
-      data = embedding,
-      k = knn_k,
-      metric = "euclidean",
-      verbose = FALSE,
-      threads = threads,
-      ef = ef
-    )
-  })
-
+  modality_knn <- find_WNN_modality_neighbors(embeddings_norm, knn_k, k, threads, ef, native_source_file)
   nearest_dist <- purrr::map(modality_knn, \(nn) nn$dist[, 2])
-  sigma_list <- purrr::map2(
-    embeddings_norm,
-    modality_knn,
-    \(embedding, nn) {
-      bandwidth <- calculate_small_SNN_bandwidth(
-        embedding_matrix = embedding,
-        knn_idx = nn$idx,
-        k = k,
-        nearest_dist = nn$dist[, 2],
-        native_source_file = native_source_file
-      )
-      pmax(bandwidth, .Machine$double.eps)
-    }
-  )
+  sigma_list <- purrr::map(modality_knn, "sigma")
 
-  modality_scores <- purrr::map(names(embeddings_norm), \(modality) {
-    own_embedding <- embeddings_norm[[modality]]
-    own_nn <- modality_knn[[modality]]
-    within_imputed <- impute_embedding_from_neighbor_indices(own_embedding, own_nn$idx[, seq_len(k + 1L), drop = FALSE])
-    within_dist <- pmax(row_euclidean_distance(own_embedding, within_imputed) - nearest_dist[[modality]], 0)
-    within_kernel <- exp(-1 * (within_dist / sigma_list[[modality]]))
-
-    cross_scores <- purrr::map(setdiff(names(embeddings_norm), modality), \(other_modality) {
-      other_nn <- modality_knn[[other_modality]]
-      cross_imputed <- impute_embedding_from_neighbor_indices(own_embedding, other_nn$idx[, seq_len(k + 1L), drop = FALSE])
-      cross_dist <- pmax(row_euclidean_distance(own_embedding, cross_imputed) - nearest_dist[[modality]], 0)
-      cross_kernel <- exp(-1 * (cross_dist / sigma_list[[modality]]))
-      pmin(pmax(within_kernel / (cross_kernel + 1e-4), 0), 200)
+  modality_weights <- if (n_cells <= weight_cells) {
+    get_WNN_modality_weights(embeddings_norm, modality_knn, k)
+  } else {
+    subset <- withr::with_seed(seed, sample(rep_len(seq_len(ceiling(n_cells / weight_cells)), n_cells)))
+    subset_weights <- lapply(split(seq_len(n_cells), subset), \(cells) {
+      subset_embeddings <- purrr::map(embeddings_norm, \(embedding) embedding[cells, , drop = FALSE])
+      get_WNN_modality_weights(subset_embeddings,
+        find_WNN_modality_neighbors(subset_embeddings, k + 1L, k, threads, ef, native_source_file), k)
     })
-
-    rowSums(exp(do.call(cbind, cross_scores)))
-  }) |>
-    purrr::set_names(names(embeddings_norm))
-
-  total_modality_score <- Reduce(`+`, modality_scores)
-  modality_weights <- purrr::map(modality_scores, \(score) score / total_modality_score)
+    purrr::map(purrr::set_names(names(embeddings_norm)),
+      \(modality) stats::setNames(unsplit(purrr::map(subset_weights, modality), subset), cell_names))
+  }
 
   candidate_indices <- lapply(seq_len(n_cells), \(cell_idx) {
     Reduce(

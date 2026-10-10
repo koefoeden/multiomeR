@@ -100,7 +100,7 @@ run_UCell_parity_reference <- function(fixture, cores) {
 
 run_WNN_parity_native <- function(fixture, cores, native_source_file) {
   result <- weighted_nearest_neighbors_BPCells(embeddings_list = fixture$embeddings, k = 30, candidate_k = 200,
-    threads = cores, ef = 500, native_source_file = native_source_file)
+    threads = cores, ef = 500, weight_cells = Inf, native_source_file = native_source_file)
   list(result = list(weights = result$modality_weights, nn_idx = result$nn_idx),
     version = paste("BPCells", utils::packageVersion("BPCells")))
 }

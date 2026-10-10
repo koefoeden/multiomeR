@@ -366,7 +366,7 @@ rlang::list2(
     name = peak_gene_correlation_top_gene_context_tibbles.WNN,
     description = "Extract selected-gene context from each hierarchical scan branch [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = dplyr::semi_join(
-      peak_gene_correlation_hierarchical_results_tibbles.WNN,
+      dplyr::filter(peak_gene_correlation_hierarchical_results_tibbles.WNN, .data$link_class != "background"),
       peak_gene_correlation_top_links_tibble.WNN, by = "TargetGeneID"
     ),
     pattern = map(peak_gene_correlation_hierarchical_results_tibbles.WNN),

@@ -24,6 +24,7 @@ make_peak_gene_finemapping_reference <- function(finalized_results_tibble) {
 #' @keywords internal
 
 restore_peak_gene_correlation_FDR <- function(results_tibble, FDR_reference_tibble) {
+  results_tibble <- results_tibble[results_tibble$link_class != "background", ]
   FDR <- rep(NA_real_, nrow(results_tibble))
   if (nrow(results_tibble) > 0L) {
     reference <- FDR_reference_tibble[FDR_reference_tibble$cell_group == results_tibble$cell_group[[1]], ]

@@ -211,7 +211,7 @@ make_peak_gene_correlation_cell_groups <- function(
     dplyr::distinct(.data$barcode_w_prefix, .keep_all = TRUE) |>
     dplyr::filter(.data$barcode_w_prefix %in% available_barcodes) |>
     dplyr::mutate(cell_group = as.character(.data[[cell_group_col]])) |>
-    dplyr::filter(!is.na(.data$cell_group), .data$cell_group != "") |>
+    dplyr::filter(!is.na(.data$cell_group), .data$cell_group != "", !startsWith(.data$cell_group, "Unassigned")) |>
     dplyr::summarise(
       barcodes = list(.data$barcode_w_prefix),
       n_cells = dplyr::n(),

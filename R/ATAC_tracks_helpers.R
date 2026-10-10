@@ -91,8 +91,10 @@ plot_coverage_at_region_BPCells <- function(
     dplyr::filter(.data$barcode_w_prefix %in% fragment_cell_names) |>
     dplyr::arrange(match(.data$barcode_w_prefix, fragment_cell_names))
 
-  groups <- metadata[[group_cells_by_col]]
-  group_order <- gtools::mixedsort(unique(as.character(groups)))
+  # One track for all unassigned clusters keeps the plot height bounded.
+  groups <- as.character(metadata[[group_cells_by_col]])
+  groups[startsWith(groups, "Unassigned")] <- "Unassigned"
+  group_order <- gtools::mixedsort(unique(groups))
   coverage_colors <- stats::setNames(
     grDevices::hcl.colors(length(group_order), palette = "Dark 3"),
     group_order

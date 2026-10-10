@@ -47,8 +47,11 @@ read_JASPAR_familial_root_PFMatrixList <- function(path) {
     matrix_values <- do.call(rbind, strsplit(trimws(matrix_rows), "[[:space:]]+"))
     profile_matrix <- t(apply(matrix_values[, 2:5, drop = FALSE], 2, as.numeric))
     rownames(profile_matrix) <- c("A", "C", "G", "T")
+    # Flank columns aligned from a minority of the family's members carry
+    # sparse, spuriously specific counts; keep the core that most members cover.
+    core <- range(which(colSums(profile_matrix) >= 0.5 * max(colSums(profile_matrix))))
+    profile_matrix <- profile_matrix[, core[[1]]:core[[2]], drop = FALSE]
     colnames(profile_matrix) <- seq_len(ncol(profile_matrix))
-    profile_matrix <- profile_matrix[, colSums(profile_matrix) > 0, drop = FALSE]
 
     TFBSTools::PFMatrix(
       ID = motif_id,

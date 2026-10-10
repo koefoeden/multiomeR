@@ -212,13 +212,11 @@ rlang::list2(
       calculate_amulet_metrics_BPCells(
         fragments = fragments_w_prefix_bpcells,
         barcodes = prefixed_barcodes,
+        regions_to_exclude = AMULET_excluded_regions_GRanges_list[[cellranger_ref_list$genomes[[1]]]],
         cellranger_end_inclusive = TRUE,
         native_source_file = amulet_BPCells_native_source_file
       ) |>
-        dplyr::rename_with(
-          ~ base::paste0("amulet_", .x),
-          .cols = 2:dplyr::last_col()
-        ) |>
+        dplyr::rename_with(~ base::paste0("amulet_", .x)) |>
         tibble::rownames_to_column("barcode") |>
         dplyr::mutate(
           barcode = base::substring(.data$barcode, base::nchar(barcode_prefix) + 1L)

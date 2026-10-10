@@ -206,3 +206,25 @@ calculate_amulet_metrics_BPCells <- function(fragments, ...) {
   metrics_df$q.value <- stats::p.adjust(metrics_df$p.value, method = "BH")
   metrics_df
 }
+
+#' Regions excluded from AMULET for each supported genome
+#'
+#' Following the AMULET authors, the mitochondrial and sex chromosomes are
+#' excluded in full, and for GRCh38 also their list of repeats, segmental
+#' duplications and blacklisted regions; no such list exists for mouse.
+#'
+#' @param repeat_list_zip The authors' `RestrictionRepeatLists.zip`.
+#' @return Named list of `GRanges`, one per genome.
+#' @keywords internal
+
+get_AMULET_excluded_regions_GRanges_list <- function(repeat_list_zip) {
+  sex_and_mito <- GenomicRanges::GRanges(c("chrM", "chrX", "chrY"), IRanges::IRanges(1L, width = 1e9))
+  bed <- utils::unzip(repeat_list_zip, "RestrictionRepeatLists/restrictionlist_repeats_segdups_rmsk_hg38.bed",
+    exdir = tempfile("AMULET_"))
+  on.exit(unlink(dirname(dirname(bed)), recursive = TRUE), add = TRUE)
+  repeats <- data.table::fread(bed, header = FALSE, col.names = c("chr", "start", "end"))
+  repeats <- GenomicRanges::GRanges(repeats$chr, IRanges::IRanges(repeats$start + 1L, repeats$end)) |>
+    GenomeInfoDb::keepSeqlevels(get_standard_chroms("GRCh38"), pruning.mode = "coarse") |>
+    GenomicRanges::reduce()
+  list(GRCh38 = c(sex_and_mito, repeats), mm10 = sex_and_mito, GRCm39 = sex_and_mito)
+}

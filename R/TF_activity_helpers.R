@@ -1,37 +1,9 @@
-#' Download the published human CollecTRI network
-#'
-#' Download the published snapshot from the OmniPath rescue archive and reject
-#' any content that does not match the expected SHA-256 checksum.
-#'
-#' @param network_url URL of the published CollecTRI CSV snapshot.
-#' @param expected_sha256 Expected SHA-256 checksum of the downloaded file.
-#' @return Path to the checksum-verified CSV under the targets store.
-#' @keywords internal
-
-download_CollecTRI_human_network <- function(network_url, expected_sha256) {
-  destfile <- file.path(targets::tar_config_get("store"), "files", "CollecTRI", "CollecTRI_human_2023.csv")
-  if (!file.exists(destfile) || !identical(digest::digest(file = destfile, algo = "sha256"), expected_sha256)) {
-    dir.create(dirname(destfile), recursive = TRUE, showWarnings = FALSE)
-    tempfile <- paste0(destfile, ".tmp")
-    on.exit(unlink(tempfile), add = TRUE)
-    utils::download.file(network_url, tempfile, mode = "wb")
-    observed_sha256 <- digest::digest(file = tempfile, algo = "sha256")
-    if (!identical(observed_sha256, expected_sha256)) {
-      stop("CollecTRI checksum mismatch: expected ", expected_sha256, ", observed ", observed_sha256, ".")
-    }
-    if (!file.rename(tempfile, destfile)) {
-      stop("Could not move the verified CollecTRI download into place: ", destfile)
-    }
-  }
-  destfile
-}
-
 #' Read the published human CollecTRI network
 #'
 #' Validate the checksum-pinned CollecTRI snapshot and convert it to the schema
 #' consumed by the TF activity targets.
 #'
-#' @param network_csv Path returned by `download_CollecTRI_human_network()`.
+#' @param network_csv Path to the checksum-verified CollecTRI CSV download.
 #' @return A signed source-target network tibble with CollecTRI provenance.
 #' @keywords internal
 

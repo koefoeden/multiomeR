@@ -250,3 +250,19 @@ assert_with_info <- function(..., glue_info = NULL, env = parent.frame()) {
 
   stop(final_message_chr, call. = FALSE)
 }
+
+#' Download a file into place once, rejecting content with another SHA-256 checksum
+download_checksum_verified_file <- function(url, expected_sha256, destfile) {
+  if (!file.exists(destfile) || !identical(digest::digest(file = destfile, algo = "sha256"), expected_sha256)) {
+    dir.create(dirname(destfile), recursive = TRUE, showWarnings = FALSE)
+    tempfile <- paste0(destfile, ".tmp")
+    on.exit(unlink(tempfile), add = TRUE)
+    utils::download.file(url, tempfile, mode = "wb")
+    observed_sha256 <- digest::digest(file = tempfile, algo = "sha256")
+    if (!identical(observed_sha256, expected_sha256)) {
+      stop("Checksum mismatch for ", url, ": expected ", expected_sha256, ", observed ", observed_sha256, ".")
+    }
+    if (!file.rename(tempfile, destfile)) stop("Could not move the verified download into place: ", destfile)
+  }
+  destfile
+}

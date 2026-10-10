@@ -71,6 +71,21 @@ rlang::list2(
     command = "src/amulet_bpcells.cpp"
   ),
   tarchetypes::tar_file(
+    name = AMULET_repeat_list_zip,
+    description = "Download and checksum the AMULET authors' GRCh38 list of repeats, segmental duplications and blacklisted regions",
+    command = download_checksum_verified_file(
+      url = amulet_repeat_list_source()$url,
+      expected_sha256 = amulet_repeat_list_source()$sha256,
+      destfile = file.path(targets::tar_config_get("store"), "files", "AMULET", "RestrictionRepeatLists.zip")
+    )
+  ),
+  targets::tar_target(
+    name = AMULET_excluded_regions_GRanges_list,
+    description = "Regions excluded from AMULET per genome: mitochondrial and sex chromosomes, and for GRCh38 the AMULET repeat list",
+    command = get_AMULET_excluded_regions_GRanges_list(AMULET_repeat_list_zip),
+    resources = get_tar_resources(RAM_GB_req = 16)
+  ),
+  tarchetypes::tar_file(
     name = WNN_native_source_file,
     description = "Track the native WNN small-SNN bandwidth kernel",
     command = "src/wnn_snn_bandwidth.cpp"

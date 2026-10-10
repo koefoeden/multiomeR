@@ -602,7 +602,7 @@ rlang::list2(
         metadata_tibble = metadata_w_cell_types_unfiltered_tibble.ATAC |>
           dplyr::filter(.data$barcode_w_prefix %in% QC_filtered_BCs.ATAC),
         cluster_collapse_list = aggregation_scDblFinder_GEX_cell_type_collapse_list,
-        cluster_col = "LSI_harmony_SNN_cluster_scDblFinder_group"
+        cluster_col = "LSI_harmony_SNN_cluster_cell_type"
       ),
       iteration = "vector"
     ),

@@ -134,7 +134,7 @@ figure_pipeline <- list(
         c("figure_1_aggregation.tsv", "figure_1_link.tsv", "figure_1_traits.tsv"))
       cell_types <- metadata_w_cell_types_tibble.WNN.mixed_human_31x$WNN_harmony_SNN_cluster_cell_type
       readr::write_tsv(tibble::tibble(retained_nuclei = length(cell_types),
-        assigned_cell_types = dplyr::n_distinct(setdiff(cell_types, "Unassigned"))), paths[[1]])
+        assigned_cell_types = dplyr::n_distinct(cell_types[!startsWith(as.character(cell_types), "Unassigned")])), paths[[1]])
       select_figure_1_link(peak_gene_correlation_top_links_tibble.WNN.peak_gene_correlation.mixed_human_31x) |>
         dplyr::select("cell_group", "TargetGene", "peak", "distance", "n_donors", "n_aggregates",
           "correlation", "hierarchical_pvalue") |>

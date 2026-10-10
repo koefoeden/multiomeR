@@ -180,7 +180,7 @@ rlang::list2(
     command = prepare_scDblFinder_GEM_well_tibble(
       metadata_tibble = metadata_w_cell_types_unfiltered_tibble.GEX,
       cluster_collapse_list = aggregation_scDblFinder_GEX_cell_type_collapse_list,
-      cluster_col = "PCA_harmony_SNN_cluster_scDblFinder_group"
+      cluster_col = "PCA_harmony_SNN_cluster_cell_type"
     ),
     iteration = "vector"
   ),

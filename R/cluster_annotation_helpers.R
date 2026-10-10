@@ -274,20 +274,18 @@ evaluate_cluster_UCell_evidence <- function(scored, min_advantage) {
 }
 
 #' Preserve existing metadata/score columns and attach explicit annotation status.
-#' Abstaining clusters get distinct scDblFinder groups; they must not be collapsed
-#' into one artificial unassigned population for doublet detection.
+#' Abstaining clusters keep distinct labels (`Unassigned_cluster_<id>`); collapsing
+#' them into one artificial population would mix unrelated nuclei in doublet
+#' detection, peak calling, pseudobulks and per-cell-type tests.
 add_cluster_UCell_annotations <- function(metadata_tibble, annotation, cluster_column) {
   decisions <- annotation$decisions
   index <- match(as.character(metadata_tibble[[cluster_column]]), decisions$cluster)
   if (anyNA(index) || anyDuplicated(decisions$cluster)) stop("Cluster annotation does not cover metadata uniquely.")
-  label <- ifelse(decisions$status == "Assigned", decisions$label, decisions$status)[index]
+  label <- ifelse(decisions$status == "Assigned", decisions$label, paste0("Unassigned_cluster_", decisions$cluster))[index]
   metadata_tibble[[paste0(cluster_column, "_cell_type")]] <- get_mixsorted_factor(label)
   metadata_tibble[[paste0(cluster_column, "_named")]] <- get_mixsorted_factor(
     paste(metadata_tibble[[cluster_column]], label, sep = "-"))
   metadata_tibble[[paste0(cluster_column, "_annotation_status")]] <- decisions$status[index]
-  metadata_tibble[[paste0(cluster_column, "_scDblFinder_group")]] <- ifelse(
-    decisions$status[index] == "Assigned", label,
-    paste0(label, "_cluster_", metadata_tibble[[cluster_column]]))
   if (!is.null(annotation$cell_scores)) {
     scores <- annotation$cell_scores[metadata_tibble$barcode_w_prefix, , drop = FALSE]
     for (name in colnames(scores)) metadata_tibble[[name]] <- scores[, name]

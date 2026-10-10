@@ -79,12 +79,12 @@ comparison_process_RNA <- function(RNA_dirs, config) {
 
 comparison_call_consensus_peaks <- function(
   fragment_files,
-  cluster_names,
+  discovery_tibble,
   config,
   blacklist_GRanges
 ) {
   fragment_files <- unlist(fragment_files, use.names = FALSE)
-  cluster_names <- as.character(cluster_names)
+  cluster_names <- discovery_tibble$peak_calling_cluster_name
   if (length(fragment_files) != length(cluster_names)) {
     stop("Peak-calling fragment files and cluster names must have equal lengths.", call. = FALSE)
   }
@@ -107,16 +107,14 @@ comparison_call_consensus_peaks <- function(
         genome = config$genome,
         blacklist_GRanges = blacklist_GRanges
       ) |>
-        list() |>
-        combine_collapse_GRanges_ArchR(by = "neg_log10pvalue_summit") |>
-        format_peak_GRanges(cluster_name = cluster_name)
+        collapse_group_peaks_ArchR(cluster_name, discovery_tibble$n_cells_for_peak_discovery[[cluster_index]])
     },
     future.seed = config$random_seed
   ))
 
   combine_collapse_GRanges_ArchR(
     within_cluster_peaks,
-    by = "fold_change"
+    by = "score_quantile"
   )
 }
 

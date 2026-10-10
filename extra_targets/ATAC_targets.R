@@ -117,11 +117,12 @@ rlang::list2(
     targets::tar_target(
       name = within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC,
       description = "Collapse per-cluster ATAC peaks into non-overlapping peak sets [part_of_graph:ATAC] [part_of_graph:seurat_export]",
-      command = {
-        collapsed_peaks <- combine_collapse_GRanges_ArchR(list(peak_GRanges_per_cluster.ATAC), by = "neg_log10pvalue_summit")
-        format_peak_GRanges(collapsed_peaks, cluster_name = peak_calling_cluster_names.ATAC)
-      },
-      pattern = map(peak_GRanges_per_cluster.ATAC, peak_calling_cluster_names.ATAC)
+      command = collapse_group_peaks_ArchR(
+        peak_GRanges_per_cluster.ATAC,
+        cluster_name = peak_calling_cluster_discovery_tibble.ATAC$peak_calling_cluster_name,
+        n_cells = peak_calling_cluster_discovery_tibble.ATAC$n_cells_for_peak_discovery
+      ),
+      pattern = map(peak_GRanges_per_cluster.ATAC, peak_calling_cluster_discovery_tibble.ATAC)
     ),
     tarchetypes::tar_file(
       name = peaks_similarity_tiles_plot.4_peak_QC,
@@ -137,7 +138,7 @@ rlang::list2(
     targets::tar_target(
       name = consensus_peak_GRanges.ATAC,
       description = "Iteratively collapse per-cluster peak sets into a single consensus peak set [part_of_graph:ATAC] [part_of_graph:seurat_export]",
-      command = combine_collapse_GRanges_ArchR(GRanges_list = within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC, by = "fold_change")
+      command = combine_collapse_GRanges_ArchR(GRanges_list = within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC, by = "score_quantile")
     ),
     targets::tar_target(
       name = consensus_peak_annotated_GRanges.ATAC,

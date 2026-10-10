@@ -550,13 +550,9 @@ combine_collapse_GRanges_ArchR <- function(GRanges_list, by, decreasing = TRUE) 
   .clusterGRanges <- function(gr, by, decreasing) {
     gr <- sort(GenomeInfoDb::sortSeqlevels(gr))
     r <- GenomicRanges::reduce(gr, min.gapwidth = 0L, ignore.strand = TRUE)
-    o <- GenomicRanges::findOverlaps(gr, r, ignore.strand = TRUE)
-    GenomicRanges::mcols(gr)$cluster <- S4Vectors::subjectHits(o)
-    gr <- gr[order(GenomicRanges::mcols(gr)[, by], decreasing = decreasing), ]
-    gr <- gr[!duplicated(GenomicRanges::mcols(gr)$cluster), ]
-    gr <- sort(GenomeInfoDb::sortSeqlevels(gr))
-    GenomicRanges::mcols(gr)$cluster <- NULL
-    return(gr)
+    overlap_group <- S4Vectors::subjectHits(GenomicRanges::findOverlaps(gr, r, ignore.strand = TRUE))
+    best_order <- order(GenomicRanges::mcols(gr)[, by], decreasing = decreasing)
+    sort(GenomeInfoDb::sortSeqlevels(gr[best_order[!duplicated(overlap_group[best_order])]]))
   }
 
   # Keep the best peak of each overlap cluster, drop everything it overlaps, and repeat.
@@ -568,6 +564,27 @@ combine_collapse_GRanges_ArchR <- function(GRanges_list, by, decreasing = TRUE) 
     selected <- c(selected, list(best))
   }
   sort(GenomeInfoDb::sortSeqlevels(do.call(c, selected)))
+}
+
+#' Collapse one group's peaks and keep its strongest, as ArchR does
+#'
+#' After collapsing overlaps by summit significance, at most `peaks_per_cell`
+#' peaks per discovery nucleus and `max_peaks` in all are kept. Their
+#' `score_quantile`, the rank of summit significance within the group, ranks
+#' overlapping peaks across groups independently of group depth.
+#'
+#' @param peaks Fixed-width, blacklist-filtered peaks of one group.
+#' @param cluster_name Group label stored in the `cluster` metadata column.
+#' @param n_cells Number of nuclei used for peak discovery in the group.
+#' @return Formatted `GRanges` with a `score_quantile` metadata column.
+#' @keywords internal
+
+collapse_group_peaks_ArchR <- function(peaks, cluster_name, n_cells, peaks_per_cell = 500, max_peaks = 150000) {
+  peaks <- combine_collapse_GRanges_ArchR(list(peaks), by = "neg_log10pvalue_summit")
+  peaks <- peaks[order(peaks$neg_log10pvalue_summit, decreasing = TRUE)]
+  peaks <- peaks[seq_len(min(length(peaks), peaks_per_cell * n_cells, max_peaks))]
+  peaks$score_quantile <- rank(peaks$neg_log10pvalue_summit) / length(peaks)
+  format_peak_GRanges(sort(GenomeInfoDb::sortSeqlevels(peaks)), cluster_name = cluster_name)
 }
 
 #' Format peak GRanges

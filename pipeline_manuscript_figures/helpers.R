@@ -126,9 +126,12 @@ select_figure_1_link <- function(links) {
   selected
 }
 
+# The figure shows assigned cell types; unassigned clusters stay in the module outputs.
+is_figure_1_cell_type <- function(x) !startsWith(as.character(x), "Unassigned")
+
 select_figure_1_combinations <- function(scores, n = 2L) {
   selected <- scores |>
-    dplyr::filter(is.finite(.data$z), .data$z >= stats::qnorm(.95)) |>
+    dplyr::filter(is_figure_1_cell_type(.data$cluster), is.finite(.data$z), .data$z >= stats::qnorm(.95)) |>
     dplyr::arrange(dplyr::desc(.data$z), .data$GWAS_ID, .data$cluster) |>
     dplyr::slice_head(n = n)
   if (nrow(selected) < n) stop("Too few cell-type/GWAS combinations with raw Z >= qnorm(0.95).")
@@ -137,7 +140,7 @@ select_figure_1_combinations <- function(scores, n = 2L) {
 
 select_figure_1_traits <- function(scores, n = 6L) {
   selected <- scores |>
-    dplyr::filter(is.finite(.data$z), .data$z >= stats::qnorm(.95)) |>
+    dplyr::filter(is_figure_1_cell_type(.data$cluster), is.finite(.data$z), .data$z >= stats::qnorm(.95)) |>
     dplyr::arrange(dplyr::desc(.data$z), .data$GWAS_ID, .data$cluster) |>
     dplyr::distinct(.data$GWAS_ID, .keep_all = TRUE) |>
     dplyr::slice_head(n = n)
@@ -223,10 +226,10 @@ plot_figure_1_scatter <- function(data) {
 }
 
 # C: raw_deviation_unscaled inspiration; at most six traits passing the existing
-# raw Z >= qnorm(0.95), no metadata tracks or clustering. All cell
+# raw Z >= qnorm(0.95), no metadata tracks or clustering. All assigned cell
 # types retained, common raw-deviation scale. Stars use unadjusted upper-tail normal P <= 0.05 and <= 0.01.
 plot_figure_1_heatmap <- function(data, traits) {
-  data <- data |> dplyr::filter(.data$GWAS_ID %in% traits$GWAS_ID) |>
+  data <- data |> dplyr::filter(.data$GWAS_ID %in% traits$GWAS_ID, is_figure_1_cell_type(.data$cluster)) |>
     dplyr::mutate(GWAS_ID = factor(.data$GWAS_ID, levels = rev(traits$GWAS_ID)),
       label = chromVAR_Z_support_labels(.data$z))
   limit <- max(abs(data$deviation), na.rm = TRUE)
@@ -322,6 +325,7 @@ plot_figure_1_loci <- function(records) {
 plot_figure_1_TRS <- function(data, trait, score_limits) {
   labels <- data |> dplyr::summarise(x = stats::median(.data$WNN_UMAP_1),
     y = stats::median(.data$WNN_UMAP_2), .by = "PCA_harmony_SNN_cluster_cell_type") |>
+    dplyr::filter(is_figure_1_cell_type(.data$PCA_harmony_SNN_cluster_cell_type)) |>
     dplyr::mutate(PCA_harmony_SNN_cluster_cell_type =
       figure_1_cell_type_labels(.data$PCA_harmony_SNN_cluster_cell_type))
   # Unlabelled sampled nuclei repel text away from the point clouds, not just

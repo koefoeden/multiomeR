@@ -39,7 +39,7 @@ figure_pipeline <- list(
   ),
   targets::tar_target(
     figure_1_panel_C.mixed_human_31x,
-    description = "Figure 1C: raw_deviation_unscaled data, up to six raw Z >= qnorm(0.95) traits, all cell types, no metadata tracks",
+    description = "Figure 1C: raw_deviation_unscaled data, up to six raw Z >= qnorm(0.95) traits, all assigned cell types, no metadata tracks",
     command = local({
       scores <- chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x
       plot_figure_1_heatmap(scores, select_figure_1_traits(scores)) |> compact_figure_1_plot()
@@ -134,7 +134,7 @@ figure_pipeline <- list(
         c("figure_1_aggregation.tsv", "figure_1_link.tsv", "figure_1_traits.tsv"))
       cell_types <- metadata_w_cell_types_tibble.WNN.mixed_human_31x$WNN_harmony_SNN_cluster_cell_type
       readr::write_tsv(tibble::tibble(retained_nuclei = length(cell_types),
-        assigned_cell_types = dplyr::n_distinct(cell_types[!startsWith(as.character(cell_types), "Unassigned")])), paths[[1]])
+        assigned_cell_types = dplyr::n_distinct(cell_types[is_figure_1_cell_type(cell_types)])), paths[[1]])
       select_figure_1_link(peak_gene_correlation_top_links_tibble.WNN.peak_gene_correlation.mixed_human_31x) |>
         dplyr::select("cell_group", "TargetGene", "peak", "distance", "n_donors", "n_aggregates",
           "correlation", "hierarchical_pvalue") |>

@@ -1,2 +1,2 @@
 cell_group	TargetGene	peak	distance	n_donors	n_aggregates	correlation	hierarchical_pvalue
-Macrophage	GATM	chr15-45522533-45523032	120455	9	87	0.6464635251226907	3.63321245820308e-5
+Pericyte	P2RX3	chr11-57406991-57407490	68888	8	72	0.6415450794270661	2.1571386264797494e-4

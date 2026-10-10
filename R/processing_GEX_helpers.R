@@ -530,41 +530,23 @@ filter_metadata_by_scDblFinder <- function(
     dplyr::left_join(scDblFinder_results_df, by = "barcode_w_prefix")
 }
 
-#' Get feature groups from LSI loadings
+#' Group peaks by k-means on their LSI coordinates for scDblFinder
 #'
-#' Cluster LSI loading profiles into feature groups for scDblFinder aggregation.
+#' As in scDblFinder's own feature aggregation, the coordinates are the
+#' loadings scaled by the singular values, so leading dimensions weigh more.
 #'
-#' @param LSI_loadings_tibble Feature loading tibble with `peak` and `LSI_<dim>`
-#'   columns.
-#' @param dims Integer dimension indices to use; combined with `dim_prefix` to select columns such as `PCA_1` or `LSI_2`.
-#' @param n_groups Number of k-means groups to create; must not exceed the
-#'   number of feature rows.
-#' @param seed Random seed passed to stochastic clustering, sampling, or embedding code for reproducibility.
+#' @param LSI_results LSI result with `feature_loadings` and `singular_values`.
+#' @param dims LSI dimensions to cluster on.
+#' @param n_groups Number of k-means groups.
+#' @param seed Random seed of the k-means initialisation.
 #' @return Named character vector mapping each peak to a
 #'   `scDblFinder_feature_<group>` label.
 #' @keywords internal
 
-get_feature_groups_from_LSI_loadings <- function(LSI_loadings_tibble, dims, n_groups, seed = 1) {
-  if (length(dims) == 0) {
-    stop("At least one LSI dimension is required for feature grouping.")
-  }
-  if (nrow(LSI_loadings_tibble) < n_groups) {
-    stop("n_groups cannot exceed the number of features in LSI_loadings_tibble.")
-  }
-
-  dim_cols <- paste0("LSI_", dims)
-  missing_cols <- setdiff(c("peak", dim_cols), colnames(LSI_loadings_tibble))
-  if (length(missing_cols) > 0) {
-    stop("Missing columns in LSI_loadings_tibble: ", paste(missing_cols, collapse = ", "))
-  }
-
-  set.seed(seed)
-  loadings_matrix <- LSI_loadings_tibble |>
-    dplyr::select(dplyr::all_of(dim_cols)) |>
-    as.matrix()
-
-  groups <- stats::kmeans(loadings_matrix, centers = n_groups, iter.max = 50, nstart = 1)$cluster
-  stats::setNames(paste0("scDblFinder_feature_", groups), LSI_loadings_tibble$peak)
+get_feature_groups_from_LSI <- function(LSI_results, dims, n_groups, seed = 1) {
+  coordinates <- sweep(LSI_results$feature_loadings[, dims, drop = FALSE], 2, LSI_results$singular_values[dims], "*")
+  groups <- withr::with_seed(seed, stats::kmeans(coordinates, centers = n_groups, iter.max = 50, nstart = 1)$cluster)
+  stats::setNames(paste0("scDblFinder_feature_", groups), rownames(coordinates))
 }
 
 aggregate_BPCells_rows_by_group <- function(feature_matrix, feature_groups, threads = 1) {

@@ -27,12 +27,12 @@ get_WNN_parity_fixture <- function(embeddings) {
 }
 
 #' ATAC scDblFinder fixture: one GEM well's peak counts with the global LSI feature groups and clusters
-get_scDblFinder_ATAC_parity_fixture <- function(branches, counts, feature_groups, loadings, GEM_well_ID) {
+get_scDblFinder_ATAC_parity_fixture <- function(branches, counts, feature_groups, LSI_results, GEM_well_ID) {
   branch <- branches[branches$GEM_well_ID == GEM_well_ID, , drop = FALSE]
   stopifnot("Expected one scDblFinder ATAC branch for the fixture well" = nrow(branch) == 1L)
   barcodes <- intersect(branch$barcode_vec[[1]], colnames(counts))
   stopifnot("No branch barcodes in the peak matrix" = length(barcodes) > 0L)
-  list(counts = counts[, barcodes, drop = FALSE], loadings = loadings, feature_groups = feature_groups,
+  list(counts = counts[, barcodes, drop = FALSE], LSI_results = LSI_results, feature_groups = feature_groups,
     branch = branch, n_cells = length(barcodes), n_features = nrow(counts),
     n_groups = length(unique(feature_groups)))
 }
@@ -132,8 +132,8 @@ run_scDblFinder_ATAC_parity <- function(feature_matrix, fixture, aggregate_featu
 }
 
 run_scDblFinder_ATAC_parity_native <- function(fixture, cores) {
-  if (!is.null(fixture$loadings)) {
-    groups <- get_feature_groups_from_LSI_loadings(LSI_loadings_tibble = fixture$loadings, dims = 2:20,
+  if (!is.null(fixture$LSI_results)) {
+    groups <- get_feature_groups_from_LSI(LSI_results = fixture$LSI_results, dims = 2:20,
       n_groups = fixture$n_groups, seed = 1)
     stopifnot("The global LSI grouping no longer reproduces the stored feature groups" =
       identical(groups, fixture$feature_groups))

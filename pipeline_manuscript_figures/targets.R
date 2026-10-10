@@ -237,7 +237,7 @@ algorithm_parity_pipeline <- c(
       description = "S4 ATAC scDblFinder fixture: one well's peak counts, global LSI feature groups and clusters",
       command = get_scDblFinder_ATAC_parity_fixture(scDblFinder_GEM_well_tibble.ATAC.comparison_5x,
         peak_QC_filtered_BPCells_matrix.ATAC.comparison_5x, scDblFinder_feature_groups.ATAC.comparison_5x,
-        LSI_loadings_tibble.ATAC.comparison_5x, "comparison_pbmc_10k_chromium_x"),
+        LSI_BPCells.ATAC.comparison_5x, "comparison_pbmc_10k_chromium_x"),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(

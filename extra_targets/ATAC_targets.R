@@ -611,8 +611,8 @@ rlang::list2(
     targets::tar_target(
       name = scDblFinder_feature_groups.ATAC,
       description = "Cluster consensus ATAC peaks from global LSI loadings for memory-light scDblFinder input",
-      command = get_feature_groups_from_LSI_loadings(
-        LSI_loadings_tibble = LSI_loadings_tibble.ATAC,
+      command = get_feature_groups_from_LSI(
+        LSI_results = LSI_BPCells.ATAC,
         dims = intersect(2:20, aggregation_ATAC_data_PCs),
         n_groups = 50,
         seed = 1

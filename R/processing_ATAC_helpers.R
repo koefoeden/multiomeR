@@ -918,7 +918,8 @@ cluster_knn_snn_leiden <- function(knn, resolution, seed = 1) {
       snn_graph,
       weights = igraph::E(snn_graph)$weight,
       resolution = resolution,
-      objective_function = "modularity"
+      objective_function = "modularity",
+      n_iterations = 10
     ) |>
       igraph::membership() |>
       number_clusters_by_size()

@@ -228,7 +228,7 @@ rlang::list2(
           purrr::set_names(metadata_w_cell_types_tibble.GEX$barcode_w_prefix)
         groups <- groups[colnames(consensus_peak_BPCells_matrix.ATAC)]
 
-        BPCells::marker_features(consensus_peak_BPCells_matrix.ATAC, groups, method = "wilcoxon") |>
+        BPCells::marker_features(normalize_BPCells_counts(consensus_peak_BPCells_matrix.ATAC[, names(groups)]), groups, method = "wilcoxon") |>
           dplyr::mutate(
             avg_log2FC = log2(foreground_mean / background_mean),
             p_val_adj = stats::p.adjust(p_val_raw, method = "BH"),

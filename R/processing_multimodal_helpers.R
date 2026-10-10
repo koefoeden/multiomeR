@@ -394,6 +394,11 @@ build_WNN_metadata_tibble <- function(metadata_tibble, WNN_results, UMAP_embeddi
   metadata_out
 }
 
+#' Scale each column of a count matrix to counts per 10,000.
+normalize_BPCells_counts <- function(counts_matrix) {
+  BPCells::multiply_cols(counts_matrix, 1e4 / pmax(BPCells::colSums(counts_matrix), 1))
+}
+
 #' Get BPCells markers from matrix
 #'
 #' Run BPCells Wilcoxon marker testing for selected features and metadata groups.
@@ -420,19 +425,21 @@ get_BPCells_markers_from_matrix <- function(feature_matrix, metadata_tibble, gro
     stop("No requested marker features were found in the feature matrix.")
   }
 
-  marker_mat <- feature_matrix[features, keep_barcodes, drop = FALSE]
-  if (!methods::is(marker_mat, "IterableMatrix")) {
-    marker_mat <- marker_mat |>
+  if (!methods::is(feature_matrix, "IterableMatrix")) {
+    feature_matrix <- feature_matrix |>
       Matrix::Matrix(sparse = TRUE) |>
       methods::as("dgCMatrix") |>
       BPCells::write_matrix_memory()
   }
+  # Counts per 10,000 of each nucleus's total, so means and ranks compare
+  # expression rather than sequencing depth.
+  marker_mat <- normalize_BPCells_counts(feature_matrix[, keep_barcodes, drop = FALSE])[features, , drop = FALSE]
 
   groups <- stats::setNames(metadata_tibble[[group_col]], metadata_tibble$barcode_w_prefix)[keep_barcodes]
   BPCells::marker_features(marker_mat, groups, method = "wilcoxon") |>
     dplyr::mutate(
       p_val = p_val_raw,
-      avg_log2FC = log2((foreground_mean + 1e-9) / (background_mean + 1e-9)),
+      avg_log2FC = log2((foreground_mean + 1) / (background_mean + 1)),
       p_val_adj = stats::p.adjust(p_val_raw, method = "BH"),
       cluster = foreground,
       gene = feature

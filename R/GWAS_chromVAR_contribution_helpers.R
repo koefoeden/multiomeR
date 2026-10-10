@@ -83,10 +83,12 @@ get_GWAS_chromVAR_peak_contribution_tibble <- function(
       FUN = "/"
     )
 
+    # The null variance of a weighted sum of independent peaks scales with the
+    # squared weights.
     bin_weight_vec <- Matrix::sparseMatrix(
       i = weighted_peak_bin_idx,
       j = rep.int(1L, length(weighted_peak_bin_idx)),
-      x = peak_weight_vec,
+      x = peak_weight_vec^2,
       dims = c(nrow(background_variance_matrix), 1L)
     ) |>
       Matrix::rowSums()

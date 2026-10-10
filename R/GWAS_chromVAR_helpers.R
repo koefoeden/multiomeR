@@ -123,7 +123,18 @@ get_GWAS_chromVAR_z_score_chunk_record <- function(peak_weight_record, chunk_con
     compute = "z"
   )$z
 
-  z_score_vec <- z_score_matrix[peak_weight_record$GWAS_ID, ]
+  # betterChromVAR scales the background variance by the summed weights of each
+  # bin; for a weighted sum of independent peaks it scales with the squared
+  # weights, so continuous (fine-mapping) weights deflated the z-scores.
+  bin_variance <- methods::slot(chunk_context_record$background, "V")
+  bin_idx <- methods::slot(chunk_context_record$background, "peak2bin")
+  background_variance <- \(weights) as.numeric(Matrix::crossprod(
+    Matrix::sparseMatrix(i = bin_idx, j = rep.int(1L, length(bin_idx)), x = weights, dims = c(nrow(bin_variance), 1L)),
+    bin_variance
+  ))
+  peak_weights_vec <- as.numeric(peak_weights_matrix[, 1])
+  z_score_vec <- z_score_matrix[peak_weight_record$GWAS_ID, ] *
+    sqrt(background_variance(peak_weights_vec) / background_variance(peak_weights_vec^2))
   names(z_score_vec) <- chunk_context_record$cell_names
   tibble::tibble(
     GWAS_ID = peak_weight_record$GWAS_ID,

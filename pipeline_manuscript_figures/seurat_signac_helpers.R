@@ -84,38 +84,35 @@ comparison_call_consensus_peaks <- function(
   blacklist_GRanges
 ) {
   fragment_files <- unlist(fragment_files, use.names = FALSE)
-  cluster_names <- discovery_tibble$peak_calling_cluster_name
-  if (length(fragment_files) != length(cluster_names)) {
-    stop("Peak-calling fragment files and cluster names must have equal lengths.", call. = FALSE)
+  replicate_names <- discovery_tibble$replicate_name
+  if (length(fragment_files) != length(replicate_names)) {
+    stop("Peak-calling fragment files and replicate names must have equal lengths.", call. = FALSE)
   }
 
-  within_cluster_peaks <- comparison_with_workers(future.apply::future_lapply(
+  replicate_peaks <- comparison_with_workers(future.apply::future_lapply(
     seq_along(fragment_files),
-    \(cluster_index) {
-      cluster_name <- cluster_names[[cluster_index]]
+    \(replicate_index) {
+      replicate_name <- replicate_names[[replicate_index]]
       narrow_peak_file <- call_peaks_w_MACS3(
-        ATAC_fragments_per_cluster = fragment_files[[cluster_index]],
-        ATAC_peak_calling_cluster_names = cluster_name,
+        ATAC_fragments_per_cluster = fragment_files[[replicate_index]],
+        ATAC_peak_calling_cluster_names = replicate_name,
         genome = config$genome,
-        output_suffix = cluster_name,
+        output_suffix = replicate_name,
         allow_no_peaks = TRUE
       )
       on.exit(unlink(narrow_peak_file), add = TRUE)
-
-      get_peak_GRanges_w_fixed_width(
-        narrow_peak_file,
-        genome = config$genome,
-        blacklist_GRanges = blacklist_GRanges
-      ) |>
-        collapse_group_peaks_ArchR(cluster_name, discovery_tibble$n_cells_for_peak_discovery[[cluster_index]])
+      get_peak_GRanges_w_fixed_width(narrow_peak_file, genome = config$genome, blacklist_GRanges = blacklist_GRanges)
     },
     future.seed = config$random_seed
   ))
 
-  combine_collapse_GRanges_ArchR(
-    within_cluster_peaks,
-    by = "score_quantile"
-  )
+  # Groups in discovery order, as the multiomeR targets collapse them.
+  within_cluster_peaks <- purrr::map(unique(discovery_tibble$peak_calling_cluster_name), \(cluster_name) {
+    halves <- discovery_tibble$peak_calling_cluster_name == cluster_name
+    collapse_group_peaks_ArchR(replicate_peaks[halves], cluster_name,
+      sum(lengths(discovery_tibble$BCs_for_peak_discovery[halves])))
+  })
+  combine_collapse_GRanges_ArchR(within_cluster_peaks, by = "score_quantile")
 }
 
 # Object cell names map to the barcodes of the GEM well's fragment file.

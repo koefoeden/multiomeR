@@ -81,7 +81,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = peak_calling_cluster_discovery_tibble.ATAC,
-      description = "Select full-genome ATAC peak-calling discovery cells per cluster with optional downsampling",
+      description = "Select each cluster's full-genome ATAC peak-calling discovery cells, with optional downsampling, and split them into two random halves",
       command = build_peak_calling_cluster_discovery_tibble(
         BCs_per_peak_cluster_list = BCs_per_peak_cluster_list.ATAC,
         peak_calling_cluster_names = peak_calling_cluster_names.ATAC
@@ -90,16 +90,6 @@ rlang::list2(
     )
   ),
   ATAC_peak_calling_per_cluster_w_iterative_collapsing_targets = rlang::list2(
-    targets::tar_target(
-      name = peak_GRanges_per_cluster.ATAC,
-      description = "Parse full-genome per-cluster ATAC peak calls as fixed-width blacklist-filtered GRanges",
-      command = get_peak_GRanges_w_fixed_width(
-        peaks_per_cluster_narrowPeaks.peaks.ATAC,
-        genome = aggregated_cellranger_ref_list$genomes[[1]],
-        blacklist_GRanges = blacklist_GRanges.ATAC
-      ),
-      pattern = map(peaks_per_cluster_narrowPeaks.peaks.ATAC)
-    ),
     targets::tar_target(
       name = chromHMMs_list_proj.ATAC,
       description = "Load and liftover Roadmap Epigenomics chromHMM state annotations for the configured EDACC names",
@@ -116,13 +106,17 @@ rlang::list2(
     ),
     targets::tar_target(
       name = within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC,
-      description = "Collapse per-cluster ATAC peaks into non-overlapping peak sets [part_of_graph:ATAC] [part_of_graph:seurat_export]",
-      command = collapse_group_peaks_ArchR(
-        peak_GRanges_per_cluster.ATAC,
-        cluster_name = peak_calling_cluster_discovery_tibble.ATAC$peak_calling_cluster_name,
-        n_cells = peak_calling_cluster_discovery_tibble.ATAC$n_cells_for_peak_discovery
-      ),
-      pattern = map(peak_GRanges_per_cluster.ATAC, peak_calling_cluster_discovery_tibble.ATAC)
+      description = "Keep each cluster's fixed-width peaks called in both halves of its nuclei, capped and ranked as in ArchR [part_of_graph:ATAC] [part_of_graph:seurat_export]",
+      command = {
+        halves <- peak_calling_cluster_discovery_tibble.ATAC$peak_calling_cluster_name == peak_calling_cluster_names.ATAC
+        collapse_group_peaks_ArchR(
+          purrr::map(peaks_per_cluster_narrowPeaks.peaks.ATAC[halves], get_peak_GRanges_w_fixed_width,
+            genome = aggregated_cellranger_ref_list$genomes[[1]], blacklist_GRanges = blacklist_GRanges.ATAC),
+          cluster_name = peak_calling_cluster_names.ATAC,
+          n_cells = sum(lengths(peak_calling_cluster_discovery_tibble.ATAC$BCs_for_peak_discovery[halves]))
+        )
+      },
+      pattern = map(peak_calling_cluster_names.ATAC)
     ),
     tarchetypes::tar_file(
       name = peaks_similarity_tiles_plot.4_peak_QC,

@@ -244,7 +244,9 @@ empty_peak_GRanges <- function() {
 
 #' Build peak calling cluster discovery tibble
 #'
-#' Build peak-calling branch metadata with optional barcode downsampling.
+#' Downsample each peak-calling cluster's barcodes and split them into two
+#' random halves, whose peaks are called separately so that only peaks called
+#' in both are kept (ArchR's pseudo-replicate reproducibility).
 #'
 #' @param BCs_per_peak_cluster_list Named list of barcode vectors, one element
 #'   per peak-calling cluster.
@@ -252,8 +254,9 @@ empty_peak_GRanges <- function() {
 #'   names of `BCs_per_peak_cluster_list`.
 #' @param max_cells_per_cluster Maximum number of barcodes retained per cluster;
 #'   larger clusters are downsampled for peak calling.
-#' @param seed Random seed passed to stochastic clustering, sampling, or embedding code for reproducibility.
-#' @return A tibble with identifiers and derived columns consumed by downstream targets.
+#' @param seed Random seed of the downsampling and the split.
+#' @return A tibble with two rows per cluster: `peak_calling_cluster_name`,
+#'   `replicate_name` and the half's `BCs_for_peak_discovery`.
 #' @keywords internal
 
 build_peak_calling_cluster_discovery_tibble <- function(
@@ -263,27 +266,14 @@ build_peak_calling_cluster_discovery_tibble <- function(
   seed = 1
 ) {
   max_cells_per_cluster <- max_cells_per_cluster %||% Inf
-  cluster_barcodes <- BCs_per_peak_cluster_list[peak_calling_cluster_names]
-
-  purrr::imap_dfr(cluster_barcodes, \(barcodes, cluster_name) {
-    barcodes <- sort(unique(as.character(barcodes)))
-    n_cells <- length(barcodes)
+  purrr::map_dfr(peak_calling_cluster_names, \(cluster_name) {
+    barcodes <- sort(unique(as.character(BCs_per_peak_cluster_list[[cluster_name]])))
     set.seed(seed + match(cluster_name, peak_calling_cluster_names))
-
-    discovery_barcodes <- if (n_cells <= max_cells_per_cluster) {
-      barcodes
-    } else {
-      sample(barcodes, max_cells_per_cluster)
-    }
-
+    if (length(barcodes) > max_cells_per_cluster) barcodes <- sort(sample(barcodes, max_cells_per_cluster))
     tibble::tibble(
       peak_calling_cluster_name = cluster_name,
-      BCs_per_peak_cluster = list(barcodes),
-      BCs_for_peak_discovery = list(sort(discovery_barcodes)),
-      n_cells_in_cluster = n_cells,
-      n_cells_for_peak_discovery = length(discovery_barcodes),
-      was_downsampled = length(discovery_barcodes) < n_cells,
-      downsample_fraction = length(discovery_barcodes) / n_cells
+      replicate_name = paste0(cluster_name, "__half", 1:2),
+      BCs_for_peak_discovery = unname(split(barcodes, sample(rep_len(1:2, length(barcodes)))))
     )
   })
 }
@@ -566,21 +556,25 @@ combine_collapse_GRanges_ArchR <- function(GRanges_list, by, decreasing = TRUE) 
   sort(GenomeInfoDb::sortSeqlevels(do.call(c, selected)))
 }
 
-#' Collapse one group's peaks and keep its strongest, as ArchR does
+#' Keep a group's reproducible peaks and its strongest, as ArchR does
 #'
-#' After collapsing overlaps by summit significance, at most `peaks_per_cell`
-#' peaks per discovery nucleus and `max_peaks` in all are kept. Their
-#' `score_quantile`, the rank of summit significance within the group, ranks
-#' overlapping peaks across groups independently of group depth.
+#' Each half's peaks are collapsed by summit significance, their union is
+#' collapsed again, and peaks that both halves called are kept. At most
+#' `peaks_per_cell` peaks per discovery nucleus and `max_peaks` in all are then
+#' kept. Their `score_quantile`, the rank of summit significance within the
+#' group, ranks overlapping peaks across groups independently of group depth.
 #'
-#' @param peaks Fixed-width, blacklist-filtered peaks of one group.
+#' @param replicate_peaks List of fixed-width, blacklist-filtered peaks, one
+#'   element per half of the group's discovery nuclei.
 #' @param cluster_name Group label stored in the `cluster` metadata column.
 #' @param n_cells Number of nuclei used for peak discovery in the group.
 #' @return Formatted `GRanges` with a `score_quantile` metadata column.
 #' @keywords internal
 
-collapse_group_peaks_ArchR <- function(peaks, cluster_name, n_cells, peaks_per_cell = 500, max_peaks = 150000) {
-  peaks <- combine_collapse_GRanges_ArchR(list(peaks), by = "neg_log10pvalue_summit")
+collapse_group_peaks_ArchR <- function(replicate_peaks, cluster_name, n_cells, peaks_per_cell = 500, max_peaks = 150000) {
+  replicates <- purrr::map(replicate_peaks, \(peaks) combine_collapse_GRanges_ArchR(list(peaks), by = "neg_log10pvalue_summit"))
+  peaks <- combine_collapse_GRanges_ArchR(replicates, by = "neg_log10pvalue_summit")
+  peaks <- peaks[Reduce(`&`, purrr::map(replicates, \(replicate) IRanges::overlapsAny(peaks, replicate)))]
   peaks <- peaks[order(peaks$neg_log10pvalue_summit, decreasing = TRUE)]
   peaks <- peaks[seq_len(min(length(peaks), peaks_per_cell * n_cells, max_peaks))]
   peaks$score_quantile <- rank(peaks$neg_log10pvalue_summit) / length(peaks)

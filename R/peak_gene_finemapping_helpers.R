@@ -138,7 +138,9 @@ finemap_peak_gene_correlations_for_branch <- function(
       max_iter = 100L,
       verbose = FALSE
     )
-    credible_sets <- susieR::susie_get_cs(fit, coverage = 0.95)$cs
+    # With X, susie_get_cs() keeps only credible sets whose peaks correlate
+    # (purity: minimum absolute correlation of 0.5), as susie() itself does.
+    credible_sets <- susieR::susie_get_cs(fit, X = t(peak_residual), coverage = 0.95)$cs
     credible_set <- rep(NA_integer_, nrow(gene_results))
     if (length(credible_sets) > 0L) {
       for (set_index in seq_along(credible_sets)) {

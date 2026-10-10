@@ -167,8 +167,14 @@ plot_pseudobulk_depth_distribution <- function(pseudobulk_depth_tibble, min_ATAC
 
 normalize_pseudobulk_feature_models <- function(cfg_pseudobulk_feature_models) {
   normalize_differential_models(cfg_pseudobulk_feature_models) |>
-    purrr::map(function(model) {
+    purrr::imap(function(model, name) {
       if (!is.null(model$GEM_well_IDs)) stop("Feature pseudobulks already pool wells; GEM_well_IDs filtering must occur before aggregation.")
+      # One donor's pseudobulks of different cell types are not independent
+      # replicates; a joint formula over cell types needs a donor term.
+      uses_cluster <- !is.null(model$formula) && "cluster" %in% all.vars(stats::as.formula(model$formula))
+      if (uses_cluster && is.null(model$cell_type_formula) && is.null(model$random_effect)) {
+        stop("Model ", name, " tests several cell types without a donor term; configure cell_type_formula with pairing_variable, or random_effect.")
+      }
       model$cell_type_subset <- normalize_pseudobulk_cell_type_subset(model$cell_type_subset)
       model
     })

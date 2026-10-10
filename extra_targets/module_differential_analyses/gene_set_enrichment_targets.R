@@ -11,13 +11,13 @@ rlang::list2(
   ),
   targets::tar_target(
     name = results,
-    description = "Run competitive cameraPR enrichment on pseudobulk contrasts for each gene-set subcollection [part_of_graph:differential_analyses]",
-    command = get_gene_set_enrichment_results(results_tibble.gene_expression, gene_sets),
-    pattern = map(results_tibble.gene_expression)
+    description = "Run competitive camera enrichment, with estimated inter-gene correlations, on pseudobulk contrasts for each gene-set subcollection [part_of_graph:differential_analyses]",
+    command = get_gene_set_enrichment_results(feature_matrix_fit.gene_expression, dynamic_tibble.gene_expression, gene_sets),
+    pattern = map(feature_matrix_fit.gene_expression, dynamic_tibble.gene_expression)
   ),
   tarchetypes::tar_file(
     name = enrichment_plots,
-    description = "Save competitive cameraPR plots per model and contrast to file. [checkpoint:differential_analyses]",
+    description = "Save competitive camera plots per model and contrast to file. [checkpoint:differential_analyses]",
     command = save_plots_structured(
       plots = plot_gene_set_enrichment_results(results),
       override_suffix = dynamic_tibble.gene_expression$model_name,

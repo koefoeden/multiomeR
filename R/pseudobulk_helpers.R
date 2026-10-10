@@ -717,8 +717,14 @@ fit_pseudobulk_feature_matrix_model <- function(pseudobulk_feature_matrix, exten
   } else {
     limma::lmFit(gene_expression_list, design = design_matrix)
   }
+  expression_object <- switch(analysis_type,
+    edgeR = limma::voom(gene_expression_list, design = design_matrix, plot = FALSE),
+    limma_duplicateCorrelation = expression_object,
+    gene_expression_list
+  )
   # add basis matrix possibly required for complex contrast functions
   gene_expression_list_fit |>
+    magrittr::inset2("EList", expression_object) |>
     magrittr::inset2("basis_matrix", basis_matrix) |>
     magrittr::inset2("analysis_type", analysis_type) |>
     magrittr::inset2("samples", gene_expression_list$samples)
@@ -1237,68 +1243,61 @@ plot_pseudobulk_differential_significant_elements_modality_distribution <- funct
 }
 
 
-get_cameraPR_statistic <- function(contrast_statistics) {
-  signed_normal_score <- sign(contrast_statistics$logFC) * stats::qnorm(
-    pmax(pmin(contrast_statistics$PValue, 1), .Machine$double.xmin) / 2,
-    lower.tail = FALSE
-  )
-  if ("t" %in% names(contrast_statistics)) {
-    dplyr::if_else(is.finite(contrast_statistics$t), contrast_statistics$t, signed_normal_score)
-  } else {
-    signed_normal_score
-  }
-}
-
 #' Get gene-set enrichment results
 #'
-#' Run competitive limma cameraPR gene-set tests for pseudobulk contrasts.
+#' Run competitive camera gene-set tests for pseudobulk contrasts, estimating
+#' each set's inter-gene correlation from the model residuals. A fixed small
+#' correlation makes coherent sets, whose genes co-vary across donors, look far
+#' more significant than they are.
 #'
-#' @param results_tibble Contrast results from `get_pseudobulk_feature_model_results()`.
-#' @param gene_sets Named list of detected gene identifiers per gene set.
-#' @param min_genes_per_set Minimum number of contrast-tested genes required per gene set.
-#' @return Competitive cameraPR result tibble for each contrast and gene set.
+#' @param pseudobulk_feature_matrix_fit Fitted model from `fit_pseudobulk_feature_matrix_model()`.
+#' @param pseudobulk_feature_dynamic_tibble Dynamic-branch metadata row describing the model.
+#' @param gene_sets Named list of gene identifiers per gene set.
+#' @param min_genes_per_set Minimum number of tested genes required per gene set.
+#' @return camera result tibble for each contrast and gene set.
 #' @keywords internal
 
-get_gene_set_enrichment_results <- function(results_tibble, gene_sets, min_genes_per_set = 10L) {
-  contrast_statistics <- results_tibble |>
-    dplyr::mutate(cameraPR_statistic = get_cameraPR_statistic(dplyr::pick(dplyr::everything()))) |>
-    dplyr::filter(is.finite(cameraPR_statistic))
+get_gene_set_enrichment_results <- function(pseudobulk_feature_matrix_fit, pseudobulk_feature_dynamic_tibble, gene_sets, min_genes_per_set = 10L) {
+  model_list <- pseudobulk_feature_dynamic_tibble$model[[1]]
+  pairing_variable <- model_list$pairing_variable %||% model_list$random_effect %||% "donor_id"
+  contrast_vec_list <- get_contrast_vec_list(pseudobulk_feature_matrix_fit, model_list)
 
-  contrast_statistics |>
-    dplyr::group_split(contrast) |>
-    purrr::map_dfr(function(statistics) {
-      gene_indices <- limma::ids2indices(
-        gene.sets = gene_sets,
-        identifiers = statistics$feature_id,
-        remove.empty = FALSE
-      )
-      gene_indices <- gene_indices[lengths(gene_indices) >= min_genes_per_set]
-      if (!length(gene_indices)) {
-        return(tibble::tibble())
+  purrr::imap_dfr(contrast_vec_list, function(contrast_vec, contrast_name) {
+    test <- if (inherits(pseudobulk_feature_matrix_fit, "pseudobulk_cell_type_fit")) {
+      cell_type_contrasts <- get_pseudobulk_cell_type_contrasts(pseudobulk_feature_matrix_fit, contrast_vec)
+      if (length(cell_type_contrasts) == 1L) {
+        fit <- pseudobulk_feature_matrix_fit$cell_type_fits[[names(cell_type_contrasts)]]
+        list(elist = fit$EList, design = fit$design, contrast = cell_type_contrasts[[1]])
+      } else {
+        get_pseudobulk_combined_contrast_elist(pseudobulk_feature_matrix_fit, cell_type_contrasts, pairing_variable)
       }
+    } else {
+      list(elist = pseudobulk_feature_matrix_fit$EList, design = pseudobulk_feature_matrix_fit$design, contrast = contrast_vec)
+    }
+    gene_indices <- limma::ids2indices(gene.sets = gene_sets, identifiers = rownames(test$elist$E), remove.empty = FALSE)
+    gene_indices <- gene_indices[lengths(gene_indices) >= min_genes_per_set]
+    if (!length(gene_indices)) {
+      return(tibble::tibble())
+    }
 
-      limma::cameraPR(
-        statistic = statistics$cameraPR_statistic,
-        index = gene_indices,
-        inter.gene.cor = 0.01,
-        sort = FALSE
-      ) |>
-        tibble::as_tibble(rownames = "ID") |>
-        dplyr::mutate(
-          FDR = stats::p.adjust(PValue, method = "BH"),
-          contrast = statistics$contrast[[1]],
-          method = "cameraPR",
-          `-log10(PValue)` = -log10(PValue),
-          `-log10(FDR)` = -log10(FDR),
-          cell_type_subset = statistics$cell_type_subset[[1]],
-          model = statistics$model[[1]],
-          color_category = dplyr::case_when(
-            FDR < 0.05 & Direction == "Up" ~ "SigUP",
-            FDR < 0.05 & Direction == "Down" ~ "SigDown",
-            TRUE ~ "NS"
-          )
+    limma::camera(test$elist, index = gene_indices, design = test$design, contrast = test$contrast,
+      inter.gene.cor = NA, sort = FALSE) |>
+      tibble::as_tibble(rownames = "ID") |>
+      dplyr::mutate(
+        FDR = stats::p.adjust(PValue, method = "BH"),
+        contrast = contrast_name,
+        method = "camera",
+        `-log10(PValue)` = -log10(PValue),
+        `-log10(FDR)` = -log10(FDR),
+        cell_type_subset = pseudobulk_feature_dynamic_tibble$cell_type_subset,
+        model = pseudobulk_feature_dynamic_tibble$model_name,
+        color_category = dplyr::case_when(
+          FDR < 0.05 & Direction == "Up" ~ "SigUP",
+          FDR < 0.05 & Direction == "Down" ~ "SigDown",
+          TRUE ~ "NS"
         )
-    })
+      )
+  })
 }
 
 #' Plot pseudobulk gene expression volcano
@@ -1557,7 +1556,7 @@ plot_gene_set_enrichment_results <- function(gene_set_enrichment_results_tibble)
 
 #' Plot gene-set enrichment contrast results
 #'
-#' Plot top competitive cameraPR terms for one pseudobulk contrast.
+#' Plot top competitive camera terms for one pseudobulk contrast.
 #'
 #' @param gene_set_enrichment_results_tibble gene-set enrichment result tibble with contrast, pathway, enrichment score, and adjusted P-value columns.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for `save_plots_structured()` or composition.
@@ -1607,7 +1606,7 @@ build_gene_set_enrichment_plot <- function(plotting_tibble) {
         stringr::str_replace_all("_", " ") |>
         stringr::str_wrap(width = 70),
       subtitle = stringr::str_wrap("Read direction from the sign and support from the magnitude; enrichment is relative to genes outside each set.", width = 100),
-      caption = stringr::str_wrap("cameraPR results: up to 25 terms with the smallest nominal p-values are displayed, including non-significant terms. Position is signed -log10(FDR), not an enrichment effect size. Dashed lines and colour mark FDR = 0.05. Overlapping gene sets are not independent findings.", width = 110),
+      caption = stringr::str_wrap("camera results: up to 25 terms with the smallest nominal p-values are displayed, including non-significant terms. Position is signed -log10(FDR), not an enrichment effect size. Dashed lines and colour mark FDR = 0.05. Overlapping gene sets are not independent findings.", width = 110),
       x = paste(
         "Signed -log10(FDR)",
         "Positive values indicate enrichment among positive statistics",

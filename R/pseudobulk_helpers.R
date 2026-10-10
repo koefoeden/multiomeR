@@ -707,15 +707,14 @@ fit_pseudobulk_feature_matrix_model <- function(pseudobulk_feature_matrix, exten
   validate_differential_design(design_matrix)
 
   gene_expression_list_fit <- if (analysis_type == "limma_duplicateCorrelation") {
-    # Apply voom transformation only for count data; use EList directly for non-count data
-    expression_object <- if (is_count_data) {
-      limma::voom(gene_expression_list, design = design_matrix, plot = FALSE)
+    block <- factor(gene_expression_list$samples[[random_effect]])
+    if (is_count_data) {
+      # voomLmFit re-estimates the precision weights with the block and correlation.
+      voom_lm_fit_subset_correlation(gene_expression_list, design = design_matrix, block = block, normalize.method = "none", keep.EList = TRUE)
     } else {
-      gene_expression_list
+      corfit <- duplicate_correlation_on_feature_subset(gene_expression_list, design = design_matrix, block = block)
+      limma::lmFit(gene_expression_list, design = design_matrix, correlation = corfit$consensus, block = block)
     }
-    block <- gene_expression_list$samples[[random_effect]]
-    corfit <- duplicate_correlation_on_feature_subset(expression_object, design = design_matrix, block = block)
-    limma::lmFit(expression_object, design = design_matrix, correlation = corfit$consensus, block = block)
   } else if (analysis_type == "edgeR") {
     gene_expression_list |>
       edgeR::estimateDisp.DGEList(design = design_matrix) |>
@@ -723,11 +722,11 @@ fit_pseudobulk_feature_matrix_model <- function(pseudobulk_feature_matrix, exten
   } else {
     limma::lmFit(gene_expression_list, design = design_matrix)
   }
-  expression_object <- switch(analysis_type,
-    edgeR = limma::voom(gene_expression_list, design = design_matrix, plot = FALSE),
-    limma_duplicateCorrelation = expression_object,
-    gene_expression_list
-  )
+  expression_object <- if (analysis_type == "edgeR") {
+    limma::voom(gene_expression_list, design = design_matrix, plot = FALSE)
+  } else {
+    gene_expression_list_fit$EList %||% gene_expression_list
+  }
   # add basis matrix possibly required for complex contrast functions
   gene_expression_list_fit |>
     magrittr::inset2("EList", expression_object) |>

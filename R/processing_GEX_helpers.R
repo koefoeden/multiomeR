@@ -178,37 +178,30 @@ run_GEX_PCA_BPCells <- function(
   )
 }
 
+#' Analytic Pearson residuals with one overdispersion for all genes
+#'
+#' A shared theta of 100 and clipping at the square root of the number of nuclei
+#' follow Lause et al. (2021): per-gene moment estimates absorb biological
+#' heterogeneity into theta, flattening the residual variance of marker genes.
 get_BPCells_native_GEX_residuals <- function(
   counts_matrix,
   cell_attr,
   SCT_regress_vars,
   n_variable_features,
   threads,
-  min_var = 0,
-  clip_range = c(-10, 10),
-  min_theta = 1e-6,
-  max_theta = 1e6
+  theta = 100
 ) {
   cell_read_counts <- BPCells::colSums(counts_matrix)
-  row_stats <- BPCells::matrix_stats(counts_matrix, row_stats = "variance", threads = threads)$row_stats
-  gene_mean <- row_stats["mean", ]
-  gene_var <- row_stats["variance", ]
-  gene_beta <- BPCells::rowSums(counts_matrix) / sum(cell_read_counts)
-  gene_beta <- pmax(gene_beta, .Machine$double.eps)
-  gene_theta <- ifelse(
-    gene_var > gene_mean,
-    gene_mean^2 / pmax(gene_var - gene_mean, .Machine$double.eps),
-    max_theta
-  )
-  gene_theta <- pmin(pmax(gene_theta, min_theta), max_theta)
+  gene_beta <- pmax(BPCells::rowSums(counts_matrix) / sum(cell_read_counts), .Machine$double.eps)
+  clip <- sqrt(ncol(counts_matrix))
 
   pearson_residuals <- BPCells::sctransform_pearson(
     mat = counts_matrix,
-    gene_theta = gene_theta,
+    gene_theta = rep(theta, nrow(counts_matrix)),
     gene_beta = gene_beta,
     cell_read_counts = cell_read_counts,
-    min_var = min_var,
-    clip_range = clip_range
+    min_var = 0,
+    clip_range = c(-clip, clip)
   )
   if (length(SCT_regress_vars) > 0) {
     pearson_residuals <- BPCells::regress_out(

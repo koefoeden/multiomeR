@@ -348,8 +348,11 @@ get_pseudobulk_chromVAR_background_record <- function(
 
 #' Pseudobulk motif-family accessibility
 #'
-#' Compute analytic chromVAR z-scores of motif families on pseudobulk ATAC
-#' counts, centre each sample, and quantile-normalize across samples.
+#' Compute analytic chromVAR bias-corrected deviations of motif families on
+#' pseudobulk ATAC counts. Deviations are relative accessibility and, unlike
+#' z-scores, do not grow with sample depth; no per-sample centring or
+#' cross-sample normalization is applied, so global shifts and cell-type-defining
+#' families remain testable.
 #' @keywords internal
 get_pseudobulk_motif_family_accessibility_matrix <- function(
   pseudobulk_ATAC_data_matrix,
@@ -372,19 +375,15 @@ get_pseudobulk_motif_family_accessibility_matrix <- function(
     rowRanges = rowranges[peak_range_idx]
   )
   SummarizedExperiment::rowData(pseudobulk_chromVAR_obj) <- SummarizedExperiment::rowData(chromVAR_obj)[peak_range_idx, , drop = FALSE]
-  chromVAR_z_scores <- betterChromVAR::computeDeviationsAnalytic(
+  betterChromVAR::computeDeviationsAnalytic(
     object = pseudobulk_chromVAR_obj,
     background = background_record$background,
     annotations = chromVAR_motif_family_matrix[peak_names, , drop = FALSE],
     verbose = FALSE,
     retSE = TRUE,
-    compute = c("deviations", "z")
+    compute = "deviations"
   ) |>
-    SummarizedExperiment::assay("z")
-
-  chromVAR_z_scores |>
-    sweep(2, colMeans(chromVAR_z_scores), FUN = "-") |>
-    limma::normalizeBetweenArrays(method = "quantile")
+    SummarizedExperiment::assay("deviations")
 }
 
 get_pseudobulk_cell_type_design <- function(sample_tibble, formula_chr) {

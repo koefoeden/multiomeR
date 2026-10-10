@@ -500,73 +500,6 @@ fit_pseudobulk_cell_type_matrix <- function(
   )
 }
 
-get_pseudobulk_standardized_residuals <- function(cell_type_record, feature_ids, donor_ids, random_effect) {
-  sample_idx <- match(donor_ids, cell_type_record$samples[[random_effect]])
-  feature_idx <- match(feature_ids, rownames(cell_type_record$fit$coefficients))
-  expression_matrix <- cell_type_record$fit$EList$E[feature_idx, sample_idx, drop = FALSE]
-  fitted_matrix <- cell_type_record$fit$coefficients[feature_idx, , drop = FALSE] %*%
-    t(cell_type_record$design[sample_idx, , drop = FALSE])
-  residual_matrix <- expression_matrix - fitted_matrix
-  weights_matrix <- cell_type_record$fit$EList$weights
-  if (!is.null(weights_matrix)) {
-    residual_matrix <- residual_matrix * sqrt(weights_matrix[feature_idx, sample_idx, drop = FALSE])
-  }
-  residual_matrix - rowMeans(residual_matrix)
-}
-
-estimate_pseudobulk_cell_type_residual_correlations <- function(cell_type_records, random_effect, max_features = 2000L) {
-  cell_types <- names(cell_type_records)
-  correlation_matrix <- diag(length(cell_types))
-  dimnames(correlation_matrix) <- list(cell_types, cell_types)
-  common_feature_ids <- Reduce(
-    intersect,
-    purrr::map(cell_type_records, ~ rownames(.x$fit$coefficients))
-  ) |>
-    sort()
-
-  assert_with_info(
-    length(common_feature_ids) > 0,
-    glue_info = "Cell-type-specific fits do not share any testable features."
-  )
-
-  if (length(common_feature_ids) > max_features) {
-    common_feature_ids <- common_feature_ids[
-      unique(round(seq(1, length(common_feature_ids), length.out = max_features)))
-    ]
-  }
-
-  for (i in seq_len(length(cell_types) - 1L)) {
-    for (j in seq.int(i + 1L, length(cell_types))) {
-      cell_type_i <- cell_types[[i]]
-      cell_type_j <- cell_types[[j]]
-      common_donor_ids <- intersect(
-        cell_type_records[[cell_type_i]]$samples[[random_effect]],
-        cell_type_records[[cell_type_j]]$samples[[random_effect]]
-      )
-      assert_with_info(
-        length(common_donor_ids) > ncol(cell_type_records[[cell_type_i]]$design) + 2L,
-        glue_info = "Too few paired donors remain to estimate cross-cell-type residual correlation."
-      )
-
-      residuals_i <- get_pseudobulk_standardized_residuals(
-        cell_type_records[[cell_type_i]], common_feature_ids, common_donor_ids, random_effect
-      )
-      residuals_j <- get_pseudobulk_standardized_residuals(
-        cell_type_records[[cell_type_j]], common_feature_ids, common_donor_ids, random_effect
-      )
-      denominator <- sqrt(rowSums(residuals_i^2) * rowSums(residuals_j^2))
-      feature_correlations <- rowSums(residuals_i * residuals_j) / denominator
-      feature_correlations <- feature_correlations[is.finite(feature_correlations)]
-      fisher_correlations <- atanh(pmax(-0.999999, pmin(0.999999, feature_correlations)))
-      consensus_correlation <- tanh(mean(fisher_correlations, trim = 0.15))
-      correlation_matrix[i, j] <- consensus_correlation
-      correlation_matrix[j, i] <- consensus_correlation
-    }
-  }
-
-  correlation_matrix
-}
-
 get_pseudobulk_stacked_cell_type_design <- function(cell_type_records, joint_design_matrix) {
   retained_sample_ids <- purrr::map(cell_type_records, ~ rownames(.x$design)) |>
     unlist(use.names = FALSE)
@@ -666,15 +599,10 @@ fit_pseudobulk_feature_matrix_by_cell_type <- function(
   cell_type_records <- cell_type_records |>
     purrr::set_names(cell_types)
 
-  residual_correlations <- estimate_pseudobulk_cell_type_residual_correlations(
-    cell_type_records = cell_type_records,
-    random_effect = pairing_variable
-  )
   stacked_design <- get_pseudobulk_stacked_cell_type_design(cell_type_records, design_matrix)
-  cell_type_fits <- purrr::map(cell_type_records, function(record) {
-    record$fit$EList <- NULL
-    record$fit
-  })
+  # Each fit keeps its EList (expression, precision weights, samples) for
+  # cross-cell-type contrasts and competitive gene-set tests.
+  cell_type_fits <- purrr::map(cell_type_records, "fit")
   retained_sample_ids <- rownames(stacked_design$joint_design)
   samples <- final_sample_tibble[match(retained_sample_ids, final_sample_tibble$ID), , drop = FALSE] |>
     tibble::column_to_rownames(var = "ID")
@@ -682,7 +610,6 @@ fit_pseudobulk_feature_matrix_by_cell_type <- function(
   structure(
     list(
       cell_type_fits = cell_type_fits,
-      residual_correlations = residual_correlations,
       correlation_block = correlation_block,
       block_correlations = purrr::map_dbl(cell_type_records, "block_correlation"),
       n_parallel_cell_type_fits = n_parallel_cell_type_fits,
@@ -991,69 +918,73 @@ get_pseudobulk_cell_type_contrast_statistics <- function(cell_type_fit, contrast
   )
 }
 
-get_pseudobulk_paired_cell_type_contrast_statistics <- function(pseudobulk_feature_matrix_fit, cell_type_contrasts) {
-  active_cell_types <- names(cell_type_contrasts)
+# A cross-cell-type contrast compares the same within-cell-type coefficient
+# combination, scaled per cell type. Its response per donor is the scaled sum of
+# the cell types' expression, with variance from their precision weights, over
+# donors and features present in every cell type. Fitting that response directly
+# gives each feature its own covariance between cell types.
+get_pseudobulk_combined_contrast_elist <- function(pseudobulk_feature_matrix_fit, cell_type_contrasts, pairing_variable) {
   reference_contrast <- cell_type_contrasts[[1]]
   reference_unit <- reference_contrast / sqrt(sum(reference_contrast^2))
   contrast_scales <- purrr::map_dbl(cell_type_contrasts, ~ sum(.x * reference_unit))
-  proportional_residuals <- purrr::map2_dbl(
-    cell_type_contrasts,
-    contrast_scales,
-    ~ max(abs(.x - .y * reference_unit))
-  )
   assert_with_info(
-    max(proportional_residuals) < 1e-8,
+    max(purrr::map2_dbl(cell_type_contrasts, contrast_scales, ~ max(abs(.x - .y * reference_unit)))) < 1e-8,
     glue_info = "Cross-cell-type contrasts must compare the same within-cell-type coefficient combination."
   )
 
-  cell_type_statistics <- purrr::map2(
-    pseudobulk_feature_matrix_fit$cell_type_fits[active_cell_types],
-    cell_type_contrasts,
-    get_pseudobulk_cell_type_contrast_statistics
-  )
-  common_feature_ids <- Reduce(intersect, purrr::map(cell_type_statistics, ~ .x$feature_id))
+  fits <- pseudobulk_feature_matrix_fit$cell_type_fits[names(cell_type_contrasts)]
+  donor_ids <- Reduce(intersect, purrr::map(fits, ~ as.character(.x$samples[[pairing_variable]])))
+  feature_ids <- Reduce(intersect, purrr::map(fits, ~ rownames(.x$EList$E)))
+  design <- fits[[1]]$design[match(donor_ids, fits[[1]]$samples[[pairing_variable]]), , drop = FALSE]
   assert_with_info(
-    length(common_feature_ids) > 0,
-    glue_info = "No features are independently testable in every cell type required by the contrast."
-  )
-  cell_type_statistics <- purrr::map(
-    cell_type_statistics,
-    ~ .x[match(common_feature_ids, .x$feature_id), , drop = FALSE]
+    length(feature_ids) > 0 && length(donor_ids) > ncol(design) + 1L,
+    glue_info = "Too few features or donors are shared by the cell types of a cross-cell-type contrast."
   )
 
-  logFC <- Reduce(`+`, purrr::map(cell_type_statistics, ~ .x$logFC))
-  variance <- Reduce(`+`, purrr::map(cell_type_statistics, ~ .x$standard_error^2))
-  for (i in seq_len(length(active_cell_types) - 1L)) {
-    for (j in seq.int(i + 1L, length(active_cell_types))) {
-      correlation <- pseudobulk_feature_matrix_fit$residual_correlations[
-        active_cell_types[[i]], active_cell_types[[j]]
-      ]
-      covariance_sign <- sign(contrast_scales[[i]] * contrast_scales[[j]])
-      variance <- variance +
-        2 * correlation * covariance_sign *
-          cell_type_statistics[[i]]$standard_error * cell_type_statistics[[j]]$standard_error
-    }
+  pieces <- purrr::map(fits, function(fit) {
+    sample_idx <- match(donor_ids, fit$samples[[pairing_variable]])
+    assert_with_info(
+      isTRUE(all.equal(unname(fit$design[sample_idx, , drop = FALSE]), unname(design))),
+      glue_info = "Cell types of a cross-cell-type contrast must share their donor-level design."
+    )
+    feature_idx <- match(feature_ids, rownames(fit$EList$E))
+    weights <- fit$EList$weights %||% matrix(1, nrow(fit$EList$E), ncol(fit$EList$E))
+    list(E = fit$EList$E[feature_idx, sample_idx, drop = FALSE], inverse_weights = 1 / weights[feature_idx, sample_idx, drop = FALSE])
+  })
+  E <- Reduce(`+`, purrr::map2(pieces, contrast_scales, ~ .y * .x$E))
+  variance <- Reduce(`+`, purrr::map2(pieces, contrast_scales, ~ .y^2 * .x$inverse_weights))
+  samples <- fits[[1]]$samples[match(donor_ids, fits[[1]]$samples[[pairing_variable]]), , drop = FALSE]
+  dimnames(E) <- list(feature_ids, rownames(samples))
+  rownames(design) <- rownames(samples)
+
+  list(
+    elist = new("EList", list(E = E, weights = 1 / variance, samples = samples)),
+    design = design,
+    contrast = reference_unit,
+    AveExpr = Reduce(`+`, purrr::map(pieces, ~ rowMeans(.x$E))) / length(pieces)
+  )
+}
+
+get_pseudobulk_paired_cell_type_contrast_statistics <- function(pseudobulk_feature_matrix_fit, cell_type_contrasts, pairing_variable) {
+  combined <- get_pseudobulk_combined_contrast_elist(pseudobulk_feature_matrix_fit, cell_type_contrasts, pairing_variable)
+  correlation_block <- pseudobulk_feature_matrix_fit$correlation_block
+  block <- if (!is.null(correlation_block) && nzchar(correlation_block)) factor(combined$elist$samples[[correlation_block]])
+  correlation <- if (!is.null(block)) {
+    duplicate_correlation_on_feature_subset(combined$elist, combined$design, block = block)$consensus.correlation
   }
-  assert_with_info(
-    all(is.finite(variance) & variance > 0),
-    glue_info = "Paired cell-type contrast produced non-positive or non-finite variance."
-  )
-
-  standard_error <- sqrt(variance)
-  t_statistic <- logFC / standard_error
-  df_total <- Reduce(pmin, purrr::map(cell_type_statistics, ~ .x$df_total))
-  PValue <- 2 * stats::pt(-abs(t_statistic), df = df_total)
-  AveExpr <- Reduce(`+`, purrr::map(cell_type_statistics, ~ .x$AveExpr)) / length(cell_type_statistics)
+  contrast_fit <- limma::lmFit(combined$elist, combined$design, block = block, correlation = correlation) |>
+    limma::contrasts.fit(contrast = combined$contrast) |>
+    limma::eBayes()
 
   tibble::tibble(
-    feature_id = common_feature_ids,
-    logFC = logFC,
-    AveExpr = AveExpr,
-    standard_error = standard_error,
-    df_total = df_total,
-    t = t_statistic,
-    PValue = PValue,
-    B = NA_real_
+    feature_id = rownames(contrast_fit$coefficients),
+    logFC = drop(contrast_fit$coefficients),
+    AveExpr = unname(combined$AveExpr),
+    standard_error = drop(contrast_fit$stdev.unscaled) * sqrt(contrast_fit$s2.post),
+    df_total = rep_len(contrast_fit$df.total, nrow(contrast_fit)),
+    t = drop(contrast_fit$t),
+    PValue = drop(contrast_fit$p.value),
+    B = drop(contrast_fit$lods)
   )
 }
 
@@ -1117,7 +1048,8 @@ get_pseudobulk_cell_type_model_results <- function(
       } else {
         get_pseudobulk_paired_cell_type_contrast_statistics(
           pseudobulk_feature_matrix_fit,
-          cell_type_contrasts
+          cell_type_contrasts,
+          pairing_variable
         )
       }
 

@@ -230,14 +230,16 @@ rlang::list2(
     name = marker_validated_Ensembl_annotations_GRanges_list,
     description = "Validate configured marker genes against Ensembl annotation names",
     command = {
-      gene_GRanges <- reference_Ensembl_annotations_GRanges_list$genes
-      missing_marker_genes <- setdiff(GEX_marker_genes_vec, gene_GRanges$gene_name)
-      if (length(missing_marker_genes) > 0) {
+      gene_names <- reference_Ensembl_annotations_GRanges_list$genes$gene_name
+      # Count matrices keep only the first gene of a duplicated symbol under that name.
+      invalid_marker_genes <- c(setdiff(GEX_marker_genes_vec, gene_names),
+        intersect(GEX_marker_genes_vec, gene_names[duplicated(gene_names)]))
+      if (length(invalid_marker_genes) > 0) {
         stop(
-          "Configured marker gene(s) are missing from Ensembl annotation names in ",
+          "Configured marker gene(s) are missing from or ambiguous among Ensembl annotation names in ",
           targets::tar_name(),
           ": ",
-          paste(missing_marker_genes, collapse = ", "),
+          paste(invalid_marker_genes, collapse = ", "),
           ". Update aggregation_GEX_marker_genes in ",
           "cfg_aggregations.yaml",
           " to the symbols used by this reference, or update the reference/annotation mapping.",

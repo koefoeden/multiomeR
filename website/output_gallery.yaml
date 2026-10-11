@@ -777,5 +777,5 @@ items:
   section: null
   target: top_link_aggregate_scatter_plots.peak_gene_correlation
   description: Save hierarchical genomic evidence and donor-residual scatter for each top link
-  source_file: peak_gene_correlation/top_link_aggregate_scatter_plots/Endothelial_rank001_CCL21_chr9.png
+  source_file: peak_gene_correlation/top_link_aggregate_scatter_plots/Endothelial_rank001_ABLIM3_chr5.png
   asset: gallery_assets/peak_gene_correlation/top_link_aggregate_scatter_plots.peak_gene_correlation.webp

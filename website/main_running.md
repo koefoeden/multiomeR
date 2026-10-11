@@ -280,7 +280,7 @@ targets::tar_make(
 └── cluster_composition_table.tsv
 ```
 
-**Revise:** choose [`aggregation_WNN_cluster_res`](parameters.html#aggregation_WNN_cluster_res). The WNN clusters and cell types are the populations used in downstream summaries and comparisons.
+**Revise:** choose [`aggregation_WNN_cluster_res`](parameters.html#aggregation_WNN_cluster_res). To refine the WNN labels without rebuilding the earlier checkpoints, override marker sets in [`aggregation_WNN_marker_genes`](parameters.html#aggregation_WNN_marker_genes). The WNN clusters and cell types are the populations used in downstream summaries and comparisons.
 
 The final object is `multimodal_Seurat_object.8_multimodal_QC.my_aggregation`; read it as in [Inspect the demo results](demo_outputs.md). Like the checkpoint 3 export, it is costly and outdated whenever the labels change: until you accept them, add `& !tidyselect::starts_with("multimodal_Seurat_object")` to `names` in the command above.
 

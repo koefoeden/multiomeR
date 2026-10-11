@@ -49,7 +49,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = cluster_UCell_controls.GEX,
-    description = "Freeze abundance/detection-matched random signatures from a GEM-well-stratified GEX reference for all modalities",
+    description = "Freeze abundance/detection-matched random signatures from a GEM-well-stratified GEX reference for GEX and ATAC labels",
     command = prepare_cluster_UCell_controls(
       counts_matrix = aggregated_counts_BPCells_matrix.GEX,
       metadata_tibble = metadata_w_clusters_tibble.GEX,

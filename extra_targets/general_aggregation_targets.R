@@ -135,26 +135,13 @@ rlang::list2(
   targets::tar_target(
     name = UCell_GEX_marker_genes_list,
     description = "Validate configured UCell-syntax GEX marker genes against Cell Ranger feature names [part_of_graph:ATAC] [part_of_graph:GEX] [part_of_graph:WNN] [part_of_graph:seurat_export]",
-    command = {
-      marker_genes_requested <- aggregation_GEX_marker_genes |>
-        unlist(use.names = FALSE) |>
-        stringr::str_remove_all("[+-]$") |>
-        unique()
-      missing_marker_genes <- setdiff(marker_genes_requested, gene_features_df$name)
-      if (length(missing_marker_genes) > 0) {
-        stop(
-          "Configured marker gene(s) are missing from Cell Ranger gene feature names in ",
-          targets::tar_name(),
-          ": ",
-          paste(missing_marker_genes, collapse = ", "),
-          ". Update aggregation_GEX_marker_genes in ",
-          "cfg_aggregations.yaml",
-          " to the symbols used by this Cell Ranger reference.",
-          call. = FALSE
-        )
-      }
-      aggregation_GEX_marker_genes
-    }
+    command = validate_marker_genes(aggregation_GEX_marker_genes, gene_features_df$name)
+  ),
+  targets::tar_target(
+    name = UCell_WNN_marker_genes_list,
+    description = "Override GEX marker sets for WNN labels and validate them against Cell Ranger feature names",
+    command = utils::modifyList(UCell_GEX_marker_genes_list, as.list(aggregation_WNN_marker_genes)) |>
+      validate_marker_genes(gene_features_df$name)
   ),
   targets::tar_target(
     name = ATAC_coverage_marker_genes,

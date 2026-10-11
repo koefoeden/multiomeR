@@ -12,6 +12,18 @@ normalize_marker_panel <- function(markers, available_genes) {
   markers
 }
 
+#' Fail early on configured marker genes absent from the Cell Ranger features.
+validate_marker_genes <- function(markers, feature_names) {
+  missing <- setdiff(stringr::str_remove_all(unlist(markers, use.names = FALSE), "[+-]$"), feature_names)
+  if (length(missing) > 0) {
+    stop("Configured marker gene(s) are missing from Cell Ranger gene feature names in ", targets::tar_name(),
+      ": ", paste(missing, collapse = ", "),
+      ". Update the marker genes in cfg_aggregations.yaml to the symbols used by this Cell Ranger reference.",
+      call. = FALSE)
+  }
+  markers
+}
+
 build_UCell_controls <- function(reference, markers, n_controls = 999L,
                                  neighbours = 50L, seed = 20260910L, exclude = character()) {
   withr::local_seed(seed)
@@ -117,7 +129,7 @@ assign_UCell_cluster_evidence <- function(evidence, min_advantage) {
 }
 
 #' Freeze abundance/detection-matched controls using up to 50 cells per GEM well.
-#' All modalities reuse this GEX reference and the same gene-to-control mappings.
+#' All modalities reuse this GEX reference; WNN draws controls for its own marker sets.
 prepare_cluster_UCell_controls <- function(counts_matrix, metadata_tibble, markers,
                                           reference_cells_per_well = 50L,
                                           seed = 20260910L) {

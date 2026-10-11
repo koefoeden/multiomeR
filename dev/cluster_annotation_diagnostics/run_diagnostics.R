@@ -9,7 +9,7 @@ cluster_column <- c(GEX = "PCA_harmony_SNN_cluster", ATAC = "LSI_harmony_SNN_clu
 source("dev/cluster_annotation_diagnostics/helpers.R")
 
 read_target <- function(name) targets::tar_read_raw(paste(name, aggregation, sep = "."))
-control <- read_target("cluster_UCell_controls.GEX")
+control <- read_target(paste0("cluster_UCell_controls.", if (modality == "WNN") "WNN" else "GEX"))
 min_advantage <- read_aggregation_config_tibble() |>
   dplyr::filter(.data$aggregation == .env$aggregation) |>
   dplyr::pull("aggregation_cluster_annotation_min_advantage") |>

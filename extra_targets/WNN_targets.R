@@ -135,12 +135,22 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     targets::tar_target(
+      name = cluster_UCell_controls.WNN,
+      description = "Freeze matched random signatures for the WNN marker sets from the same GEX reference",
+      command = prepare_cluster_UCell_controls(
+        counts_matrix = aggregated_counts_BPCells_matrix.GEX,
+        metadata_tibble = metadata_w_clusters_tibble.GEX,
+        markers = UCell_WNN_marker_genes_list
+      ),
+      resources = get_tar_resources(RAM_GB_req = 16)
+    ),
+    targets::tar_target(
       name = cluster_UCell_evidence.WNN,
       description = "Cache adjusted GEX marker scores for WNN clusters independently of stringency",
       command = prepare_cluster_UCell_evidence(
         counts_matrix = aggregated_counts_BPCells_matrix.GEX,
         metadata_tibble = metadata_w_clusters_tibble.WNN,
-        control = cluster_UCell_controls.GEX,
+        control = cluster_UCell_controls.WNN,
         cluster_column = "WNN_harmony_SNN_cluster",
         workers = 2,
         native_source_file = UCell_native_source_file
@@ -173,7 +183,7 @@ rlang::list2(
     tarchetypes::tar_file(
       name = cluster_UCell_diagnostics.8_multimodal_QC,
       description = "Export WNN cluster decisions, GEX marker evidence, GEM-well agreement and control matching. [checkpoint:8_multimodal-QC]",
-      command = save_cluster_UCell_diagnostics(cluster_UCell_annotation.8_multimodal_QC, cluster_UCell_controls.GEX)
+      command = save_cluster_UCell_diagnostics(cluster_UCell_annotation.8_multimodal_QC, cluster_UCell_controls.WNN)
     ),
     targets::tar_target(
       name = metadata_w_cell_types_analysis_tibble.WNN,
@@ -273,7 +283,7 @@ rlang::list2(
         group_col = "WNN_harmony_SNN_cluster_named",
         group_order = get_marker_cell_type_order(
           metadata_w_cell_types_tibble.WNN$WNN_harmony_SNN_cluster_named,
-          names(UCell_GEX_marker_genes_list),
+          names(UCell_WNN_marker_genes_list),
           get_marker_group_cell_types(metadata_w_cell_types_tibble.WNN,
             "WNN_harmony_SNN_cluster_named", "WNN_harmony_SNN_cluster_cell_type"))
       ) |>
@@ -298,7 +308,7 @@ rlang::list2(
         cluster_col = "WNN_harmony_SNN_cluster_named",
         group_order = get_marker_cell_type_order(
           metadata_w_cell_types_tibble.WNN$WNN_harmony_SNN_cluster_named,
-          names(UCell_GEX_marker_genes_list),
+          names(UCell_WNN_marker_genes_list),
           get_marker_group_cell_types(metadata_w_cell_types_tibble.WNN,
             "WNN_harmony_SNN_cluster_named", "WNN_harmony_SNN_cluster_cell_type"))
       ) |>
@@ -317,7 +327,7 @@ rlang::list2(
         plot <- plot_marker_expression_dot_BPCells(
           feature_matrix = aggregated_counts_BPCells_matrix.GEX,
           metadata_tibble = metadata_w_cell_types_tibble.WNN,
-          marker_genes_list = UCell_GEX_marker_genes_list,
+          marker_genes_list = UCell_WNN_marker_genes_list,
           group_col = "WNN_harmony_SNN_cluster_named",
           cell_type_col = "WNN_harmony_SNN_cluster_cell_type", group_label = "WNN cluster"
         )
@@ -337,12 +347,14 @@ rlang::list2(
         plot <- plot_UCell_annotation_dot(cluster_UCell_annotation.8_multimodal_QC,
           metadata_w_cell_types_tibble.WNN, group_by = "cluster",
           cluster_column = "WNN_harmony_SNN_cluster", group_label = "WNN cluster",
-          cell_scores = cluster_UCell_annotation.3_GEX_QC$cell_scores[
-            metadata_w_cell_types_tibble.WNN$barcode_w_prefix, , drop = FALSE])
+          cell_scores = prepare_cluster_UCell_evidence(aggregated_counts_BPCells_matrix.GEX,
+            metadata_w_cell_types_tibble.WNN, cluster_UCell_controls.WNN, "WNN_harmony_SNN_cluster",
+            include_cell_scores = TRUE, native_source_file = UCell_native_source_file)$cell_scores)
         save_plots_structured(plot,
           width = max(16, 4 + 0.35 * nlevels(plot$data$module)),
           height = max(9, 4 + 0.25 * nlevels(plot$data$cluster)))
-      }
+      },
+      resources = get_tar_resources(cores_req = 2, RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
       name = confusion_matrices_plots.8_multimodal_QC,

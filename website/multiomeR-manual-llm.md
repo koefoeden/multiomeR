@@ -660,7 +660,7 @@ targets::tar_make(
 └── cluster_composition_table.tsv
 ```
 
-**Revise:** choose [`aggregation_WNN_cluster_res`](parameters.html#aggregation_WNN_cluster_res). The WNN clusters and cell types are the populations used in downstream summaries and comparisons.
+**Revise:** choose [`aggregation_WNN_cluster_res`](parameters.html#aggregation_WNN_cluster_res). To refine the WNN labels without rebuilding the earlier checkpoints, override marker sets in [`aggregation_WNN_marker_genes`](parameters.html#aggregation_WNN_marker_genes). The WNN clusters and cell types are the populations used in downstream summaries and comparisons.
 
 The final object is `multimodal_Seurat_object.8_multimodal_QC.my_aggregation`; read it as in [Inspect the demo results](demo_outputs.md). Like the checkpoint 3 export, it is costly and outdated whenever the labels change: until you accept them, add `& !tidyselect::starts_with("multimodal_Seurat_object")` to `names` in the command above.
 
@@ -1514,7 +1514,7 @@ Leiden clusters are numbered by size, starting with 1 for the largest, before cl
 
 ## Cluster annotation {#cluster-annotation}
 
-GEX, ATAC and WNN clusters are all labeled from GEX data. Each cluster is scored against every marker set in [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes), relative to random control genes matched for expression level and detection rate. A cluster is `Assigned` its best-scoring label when that label leads both the control background and the next-best label by at least [`aggregation_cluster_annotation_min_advantage`](parameters.html#aggregation_cluster_annotation_min_advantage); otherwise it is unassigned and labeled `Unassigned_cluster_<id>`. Raising the threshold can only withdraw assignments, and unassigned clusters keep their nuclei and their own labels. The scores are cached separately, so changing the threshold does not recompute them. The scoring rule, control construction and fixed constants are described in [Cell-type annotation](methods_primary_module.md#cell-type-annotation).
+GEX, ATAC and WNN clusters are all labeled from GEX data. Each cluster is scored against every marker set in [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes), relative to random control genes matched for expression level and detection rate. WNN clusters use these sets as modified by [`aggregation_WNN_marker_genes`](parameters.html#aggregation_WNN_marker_genes), which can replace, add or drop sets for the final labels only. A cluster is `Assigned` its best-scoring label when that label leads both the control background and the next-best label by at least [`aggregation_cluster_annotation_min_advantage`](parameters.html#aggregation_cluster_annotation_min_advantage); otherwise it is unassigned and labeled `Unassigned_cluster_<id>`. Raising the threshold can only withdraw assignments, and unassigned clusters keep their nuclei and their own labels. The scores are cached separately, so changing the threshold does not recompute them. The scoring rule, control construction and fixed constants are described in [Cell-type annotation](methods_primary_module.md#cell-type-annotation).
 
 In the cell metadata, the cluster IDs are in `PCA_harmony_SNN_cluster` (GEX), `LSI_harmony_SNN_cluster` (ATAC) and `WNN_harmony_SNN_cluster` (WNN). Each has companion columns with the suffixes `_cell_type` (the label, or `Unassigned_cluster_<id>` for a cluster without one), `_named` (cluster ID and label) and `_annotation_status` (`Assigned` or `Unassigned`).
 

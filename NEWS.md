@@ -1,12 +1,126 @@
 # multiomeR 1.2.0 (unreleased)
 
-Adds the public configuration, figures and results of the multiomeR manuscript,
-per-cluster composition tables, lower memory use for CellBender input, and
-targets stores that can move between disks. Each configuration directory now
-carries its own crew controllers.
+Revises the statistical methods after an audit: GEX normalization, WNN modality
+weights, clustering, consensus peaks, doublet detection, and the differential,
+gene-set, composition, genetic-enrichment and peak–gene tests. Also adds the
+public configuration, figures and results of the multiomeR manuscript, an
+optional WNN-specific marker list, per-cluster composition tables, lower memory
+use for CellBender input, and targets stores that can move between disks. Each
+configuration directory now carries its own crew controllers. Existing
+aggregations need a full rebuild (see Migration).
+
+## Methods
+
+Each change alters results.
+
+### Processing
+
+- Compute the BPCells backend's Pearson residuals with one overdispersion,
+  theta = 100, for every gene and clip them at ±√N, the analytic Pearson
+  residuals of Lause et al. (2021). The per-gene method-of-moments theta
+  counted differences between cell types as overdispersion and, with the ±10
+  clip, flattened marker variation: on a multi-tissue test set, 24 of 27
+  canonical markers now enter the 3,000 variable genes, against 10.
+- Leave `aggregation_SCT_regress_vars` unset by default, so the cell-cycle
+  score, mostly noise in post-mitotic nuclei, is no longer regressed out;
+  `CC.Difference` remains an example value.
+- Estimate WNN modality weights within seeded random subsets of at most 10,000
+  nuclei, so they no longer drift towards 0 or 1 as an aggregation grows.
+  Neighbours are still chosen among all nuclei, and smaller aggregations are
+  unchanged. Each nucleus is now first in its own neighbour list.
+- Run Leiden clustering for ten iterations, as Seurat does, instead of
+  igraph's default two.
+- Build consensus peaks as ArchR does. Each group's discovery nuclei are split
+  into two random halves, MACS3 calls peaks in each half, and only peaks called
+  in both are kept; each group then keeps its strongest peaks up to 500 per
+  nucleus and 150,000 in all, and overlapping peaks across groups are ranked by
+  the quantile of their significance within their group. Deep groups no longer
+  dominate, and small groups lose their weakly supported tail (a 1,200-nucleus
+  group keeps 54% of its peaks). A half takes about half the time and memory of
+  a full call, so MACS3 workers request 16 GB. Consensus peaks keep their group
+  in `cluster`.
+- Trim flank columns with less than half of the largest column count from the
+  JASPAR familial root motifs; these low-support columns restricted the matches
+  of 56 of 233 families to a sub-family.
+- Label each unassigned cluster `Unassigned_cluster_<id>` instead of merging
+  all of them into one `Unassigned` group, which peak calling, pseudobulks,
+  composition and genetic enrichment analysed as a real cell type.
+
+### Quality control
+
+- Run AMULET with chrM, chrX and chrY excluded in full and, for GRCh38, the
+  authors' list of repeats, segmental duplications and blacklisted regions,
+  downloaded once into the store and checked against its SHA-256 checksum. The
+  example configurations exclude nuclei at the authors' q < 0.01 instead of
+  0.05.
+- Divide the peak fraction by twice the fragment count in insertions mode, so
+  `atac_peak_counts_frac` is a fraction and filters on it take effect.
+- Group peaks for ATAC scDblFinder on singular-value-scaled LSI loadings, as
+  scDblFinder itself does.
+- Exclude nuclei with more than 5% of their peak counts in blacklisted regions
+  in the example configurations, instead of 1%, which removed cell types
+  unevenly.
+- Reject marker symbols that several genes share, which were scored on one of
+  them.
+
+### Differential analyses
+
+- Test GEX markers and ATAC differential peaks on counts per 10,000 instead of
+  raw counts, with Seurat-style fold changes, so they no longer follow each
+  group's sequencing depth.
+- Test motif-family pseudobulks on bias-corrected chromVAR deviations without
+  centring or quantile normalization, which collapsed cell-type-defining
+  families and produced false positives.
+- Fit contrasts between annotation classes in the paired route on each donor's
+  combined response, weighted by its precision weights, instead of using one
+  residual correlation between classes for all features, which made
+  low-expression features anti-conservative.
+- Run the Hallmark and Reactome tests with camera, estimating each set's
+  inter-gene correlation, instead of cameraPR's default of 0.01; in
+  permutations of a donor covariate, the old test called 17% of sets at
+  P < 0.05. Sets need at least ten tested genes.
+- Use edgeR's `voomLmFit()` in the random-effect route, so precision weights
+  account for the correlation block.
+- Stop when a joint formula uses `cluster` without `cell_type_formula` or
+  `random_effect`: it treated each donor's cell types as independent samples.
+  The example formula now tests one annotation class.
+- Test only assigned cell types present in at least half of the donors in
+  composition models by default.
+
+### Genetic enrichment
+
+- Scale gchromVAR's background variance with squared peak weights, the
+  variance of a weighted sum, in both the cell-type contributions and the
+  single-nucleus z-scores. Summed weights deflated the z-scores by a
+  trait-dependent factor whenever fine-mapping probabilities were below one.
+
+### Peak–gene correlation
+
+- Add up to ten principal components of each cell type's residual peak
+  accessibility, one per ten residual degrees of freedom when fewer, to the
+  model, from the new target `peak_gene_correlation_latent_factors.WNN`, so
+  peaks and genes that vary along the same chromatin states no longer appear
+  linked.
+- Calibrate each candidate pair against its own gene, following the idea of
+  Signac's LinkPeaks: up to 200 of the branch's candidate peaks more than 10 Mb
+  from the gene's TSS are scored with the same model, the pair's statistic is
+  standardized by this background (`hierarchical_gene_z`) and rescaled within
+  peak-detection quintiles, and its empirical P-value against the cell type's
+  background is Benjamini–Hochberg-corrected. Links also need a positive gene
+  z. Before, the model P-values were corrected directly, and random pairs on
+  different chromosomes passed the FDR cutoff almost as often as cis pairs. On
+  held-out background pairs, the new P-values fall below 0.05 and 0.01 within
+  5% of the nominal rates.
+- Require within-donor peak variation in at least eight donors for the
+  random-slope test, and leave unassigned clusters out.
+- Apply SuSiE's purity filter (minimum absolute correlation 0.5), so credible
+  sets no longer span most candidate peaks.
 
 ## Outputs
 
+- Add the gene-standardized statistic `hierarchical_gene_z`, the calibrated
+  `hierarchical_background_pvalue` and each cell type's `n_background_pairs` to
+  the peak–gene results.
 - Write `cluster_composition_table.tsv` at checkpoints 3, 7 and 8: for each
   cluster and each categorical variable, `GEM_well_ID` and `donor_id`, the
   cluster size, its most frequent category and that category's share, and
@@ -14,6 +128,11 @@ carries its own crew controllers.
 
 ## Configuration
 
+- Add the optional `aggregation_WNN_marker_genes`, which replaces, adds or,
+  given as `~`, drops marker sets for the WNN labels only, with their own
+  matched controls. The final cell types can then be tuned without rebuilding
+  the GEX and ATAC processing, whose doublet detection and peak calling use the
+  GEX labels.
 - Read `crew_controllers.R` from the selected configuration directory, so each
   directory carries controllers that suit its aggregations; the default file
   moves to `configuration/crew_controllers.R`.
@@ -29,6 +148,7 @@ carries its own crew controllers.
 
 ## Fixes and performance
 
+- Draw all unassigned clusters as one track in the ATAC coverage plots.
 - Always exclude nuclei missing from the GEX count matrix at checkpoint 1, so
   the checkpoint 1 plots and retention tables report them instead of the
   checkpoint 3 retention table counting them as small GEX clusters.
@@ -71,6 +191,10 @@ carries its own crew controllers.
   Figure S2 and Supplementary Table S4 of the manuscript from public data in
   `configuration_dev/`, with the results and their data under `results/`. It
   replaces `manuscript_figures/`.
+- Rebuild Figure 1, Supplementary Figure S2 and Supplementary Table S4 with
+  the revised methods. Figure 1A–B now shows a peak 72 kb from SGPL1 in NK
+  cells, its trait panels show assigned cell types only, and `figure_1_data`
+  writes the values the manuscript quotes.
 - In Figure 1, spell cell types alike in panels C to E and show protein-coding
   genes in panel D with labels that no longer overlap.
 - Compare multiomeR in Supplementary Figure S2 with a current Seurat v5/Signac
@@ -80,6 +204,8 @@ carries its own crew controllers.
 
 ## Documentation
 
+- Describe the revised methods on the In depth pages and in the shared methods
+  text, and mention the WNN marker list in the checkpoint 8 guidance.
 - Add guidance for aggregations that combine tissues, and show how to preview
   the per-GEM-well targets of checkpoint 1 and leave the costly Seurat exports
   out until the cell-type labels are accepted.
@@ -94,6 +220,8 @@ carries its own crew controllers.
 
 ## Development
 
+- Require the pinned Seurat 5.6.0 in the WNN and cell-cycle reference tests,
+  and score background pairs in the peak–gene parity test.
 - Collect the parameter and QC manifests (`cfg_pipeline_parameters.tsv`,
   `QC_checkpoint_manifest.tsv`, `QC_metric_manifest.tsv`) and the demo
   download lists in `manifests/`, and move the Cell Ranger ARC reference
@@ -112,6 +240,19 @@ carries its own crew controllers.
 
 ## Migration
 
+- Target invalidation for the revised methods: every GEM well reruns
+  `amulet_metrics_tibble` and `full_metadata_tibble`, and every aggregation
+  target rebuilds; Cell Ranger, CellBender, cellsnp-lite, Vireo and the other
+  per-GEM-well inputs stay current. The first run downloads the AMULET
+  excluded-region list.
+- Configurations that relied on the default now skip the cell-cycle
+  regression; set `aggregation_SCT_regress_vars: [CC.Difference]` to keep it.
+  Configurations copied from the old examples keep their blacklist (0.01) and
+  AMULET (q < 0.05) limits; change them to follow the examples.
+- Rewrite differential-analysis formulas that use `cluster` without
+  `cell_type_formula` or `random_effect`; they now stop.
+- Code that selects the `Unassigned` label must match the
+  `Unassigned_cluster_<id>` labels.
 - Run `pixi run install-r-github-packages` to install Seurat 5.6.0.
 - Run `pixi run setup-demo` again to download `controller_PBMC_human`; the
   demo's aggregation targets rebuild.

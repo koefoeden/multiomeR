@@ -1,6 +1,6 @@
 ```{.default filename="Output"}
 An object of class Seurat
-176166 features across 7638 samples within 3 assays
+136808 features across 7838 samples within 3 assays
 Active assay: RNA (36601 features, 3000 variable features)
  3 layers present: counts, data, scale.data
  2 other assays present: ATAC, motif_family_accessibility

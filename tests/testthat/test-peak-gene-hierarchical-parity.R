@@ -86,8 +86,12 @@ make_hierarchical_scan_case <- function() {
       gene_detected_frac = stats::setNames(rep(1, nrow(genes)), rownames(genes)),
       peak_accessible_frac = stats::setNames(rep(1, nrow(peaks)), rownames(peaks)),
       mean_gene_expression = rowMeans(genes), mean_peak_accessibility = rowMeans(peaks)),
+    # Peaks and genes lie more than 10 Mb apart, so background pairs are sampled and scored too.
     pairs = tidyr::expand_grid(gene_matrix_feature = rownames(genes), peak = rownames(peaks)) |>
-      dplyr::mutate(chr = "chr1", TargetGeneID = .data$gene_matrix_feature)
+      dplyr::mutate(chr = "chr1", TargetGeneID = .data$gene_matrix_feature, TargetGene = .data$gene_matrix_feature,
+        peak_center = 1e6 * match(.data$peak, rownames(peaks)), start = .data$peak_center - 250,
+        end = .data$peak_center + 250, TargetGeneTSS = 5e7 + 1e6 * match(.data$gene_matrix_feature, rownames(genes)),
+        TargetGeneStart = .data$TargetGeneTSS, TargetGeneEnd = .data$TargetGeneTSS + 1e4)
   )
 }
 

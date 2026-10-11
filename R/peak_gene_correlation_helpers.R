@@ -275,9 +275,11 @@ make_peak_gene_correlation_cell_group_diagnostics <- function(
 
 #' Build the donor-aware peak gene correlation nuisance design
 #'
-#' @param aggregate_depth_tibble Donor-state aggregate metadata.
-#' @return A full-rank numeric design matrix containing donor and
-#'   library-depth terms.
+#' @param aggregate_depth_tibble Donor-state aggregate metadata, optionally with
+#'   the cell type's accessibility principal components in an `ATAC_PCs` matrix
+#'   column.
+#' @return A full-rank numeric design matrix containing donor, library-depth
+#'   and accessibility principal-component terms.
 #' @keywords internal
 
 make_peak_gene_correlation_design_matrix <- function(aggregate_depth_tibble) {
@@ -294,6 +296,7 @@ make_peak_gene_correlation_design_matrix <- function(aggregate_depth_tibble) {
       colnames(design)[ncol(design)] <- depth_col
     }
   }
+  design <- cbind(design, aggregate_depth_tibble[["ATAC_PCs"]])
   design_qr <- qr(design)
   design[, design_qr$pivot[seq_len(design_qr$rank)], drop = FALSE]
 }
@@ -301,6 +304,42 @@ make_peak_gene_correlation_design_matrix <- function(aggregate_depth_tibble) {
 residualize_peak_gene_correlation_matrix <- function(feature_matrix, design) {
   feature_matrix <- as.matrix(feature_matrix)
   t(qr.resid(qr(design), t(feature_matrix)))
+}
+
+#' Principal components of each cell type's residual peak accessibility
+#'
+#' Peaks and genes that both vary along shared chromatin states correlate
+#' regardless of distance. The leading principal components of the donor- and
+#' depth-residualized, standardized log1p CPM of all peaks accessible in at
+#' least 5% of a cell type's aggregates, pooled across its chromosome branches,
+#' capture these states for the nuisance design. At most one component per ten
+#' residual degrees of freedom is kept.
+#'
+#' @param aggregate_matrices All branches from
+#'   `make_peak_gene_correlation_aggregate_matrices()`.
+#' @param n_factors Maximum number of components per cell type.
+#' @return A list named by cell group of aggregate-by-component matrices.
+#' @keywords internal
+
+make_peak_gene_correlation_latent_factors <- function(aggregate_matrices, n_factors = 10L) {
+  aggregate_matrices <- purrr::keep(aggregate_matrices, \(branch) nrow(branch$aggregate_depth_tibble) > 0L)
+  groups <- split(aggregate_matrices, purrr::map_chr(aggregate_matrices, "cell_group"))
+  purrr::map(groups, \(branches) {
+    depth <- branches[[1]]$aggregate_depth_tibble
+    design <- make_peak_gene_correlation_design_matrix(depth)
+    gram <- Reduce(`+`, purrr::map(branches, \(branch) {
+      counts <- branch$ATAC_counts[Matrix::rowMeans(branch$ATAC_counts > 0) >= 0.05, , drop = FALSE]
+      residual <- residualize_peak_gene_correlation_matrix(
+        normalize_peak_gene_correlation_counts(counts, depth = depth$ATAC_depth), design
+      )
+      residual <- residual[rowSums(residual^2) > 1e-12, , drop = FALSE]
+      crossprod(residual / sqrt(rowSums(residual^2)))
+    }))
+    n_kept <- max(0L, min(n_factors, (nrow(depth) - ncol(design) - 1L) %/% 10L))
+    factors <- eigen(gram, symmetric = TRUE)$vectors[, seq_len(n_kept), drop = FALSE] * sqrt(nrow(depth))
+    dimnames(factors) <- list(depth$aggregate_id, sprintf("ATAC_PC_%d", seq_len(n_kept)))
+    factors
+  })
 }
 
 #' Make donor by ATAC state pseudobulks for peak gene correlation
@@ -707,6 +746,7 @@ normalize_peak_gene_correlation_counts <- function(
 
 normalize_peak_gene_correlation_aggregate_matrices <- function(
   aggregate_matrices,
+  latent_factors,
   scale_factor = 1e6
 ) {
   GEX_norm <- normalize_peak_gene_correlation_counts(
@@ -719,6 +759,10 @@ normalize_peak_gene_correlation_aggregate_matrices <- function(
     depth = aggregate_matrices$aggregate_depth_tibble$ATAC_depth,
     scale_factor = scale_factor
   )
+  aggregate_depth_tibble <- aggregate_matrices$aggregate_depth_tibble
+  aggregate_depth_tibble$ATAC_PCs <- latent_factors[[aggregate_matrices$cell_group]][
+    aggregate_depth_tibble$aggregate_id, , drop = FALSE
+  ]
 
   list(
     cell_group = aggregate_matrices$cell_group,
@@ -729,7 +773,7 @@ normalize_peak_gene_correlation_aggregate_matrices <- function(
     peak_accessible_frac = Matrix::rowSums(aggregate_matrices$ATAC_counts > 0) / ncol(aggregate_matrices$ATAC_counts),
     mean_gene_expression = Matrix::rowMeans(GEX_norm),
     mean_peak_accessibility = Matrix::rowMeans(ATAC_norm),
-    aggregate_depth_tibble = aggregate_matrices$aggregate_depth_tibble
+    aggregate_depth_tibble = aggregate_depth_tibble
   )
 }
 
@@ -792,6 +836,7 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
     ))
   }
 
+  design <- make_peak_gene_correlation_design_matrix(normalized_aggregate_matrices$aggregate_depth_tibble)
   aggregate_depth_tibble <- normalized_aggregate_matrices$aggregate_depth_tibble |>
     dplyr::select(
       "aggregate_id",
@@ -802,7 +847,6 @@ extract_peak_gene_correlation_top_link_aggregate_values <- function(
       "ATAC_depth"
     )
   n_aggregates <- nrow(aggregate_depth_tibble)
-  design <- make_peak_gene_correlation_design_matrix(aggregate_depth_tibble)
 
   purrr::map_dfr(seq_len(nrow(branch_links)), \(index) {
     link_row <- branch_links[index, , drop = FALSE]
@@ -860,9 +904,9 @@ plot_peak_gene_correlation_aggregate_scatter <- function(plot_tibble) {
       subtitle = stringr::str_wrap("Full-scan hierarchical model: check whether the association is supported across donors or driven by a few aggregates; ranking alone does not establish significance.", width = 100),
       x = "ATAC log1p CPM residual", y = "GEX log1p CPM residual", color = "Donor",
       caption = stringr::str_wrap(paste0(
-        "Points: non-overlapping donor-state aggregates, residualized for donor and depth; line: descriptive fit. Adjusted r = ",
+        "Points: non-overlapping donor-state aggregates, residualized for donor, depth and accessibility components; line: descriptive fit. Adjusted r = ",
         round(plot_tibble$correlation[[1]], 3), ". Hierarchical Kenward-Roger p = ", signif(plot_tibble$hierarchical_pvalue[[1]], 3),
-        " (df = ", round(plot_tibble$hierarchical_df[[1]], 2), "); model: donor fixed intercepts, depth covariates and Gaussian random donor slopes. Hierarchical BH FDR = ",
+        " (df = ", round(plot_tibble$hierarchical_df[[1]], 2), "); model: donor fixed intercepts, depth and accessibility-component covariates and Gaussian random donor slopes. Hierarchical BH FDR = ",
         signif(plot_tibble$hierarchical_FDR[[1]], 3), ", adjusted across all eligible pairs/cell type, counting unreliable fits in the family size. Ranked positive estimable nonpromoter slopes without a significance cutoff. ",
         "Aggregates are not independent donor replicates."), width = 110)
     )

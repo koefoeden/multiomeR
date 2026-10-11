@@ -99,10 +99,17 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
+    name = peak_gene_correlation_latent_factors.WNN,
+    description = "Compute each cell type's leading principal components of residual peak accessibility across chromosomes [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = make_peak_gene_correlation_latent_factors(peak_gene_correlation_aggregate_matrices.WNN),
+    resources = get_tar_resources(RAM_GB_req = 60)
+  ),
+  targets::tar_target(
     name = peak_gene_correlation_normalized_aggregate_matrices.WNN,
-    description = "Normalize donor-state pseudobulk GEX and ATAC matrices as log1p CPM [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    description = "Normalize donor-state pseudobulk GEX and ATAC matrices as log1p CPM and attach the accessibility components [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = normalize_peak_gene_correlation_aggregate_matrices(
-      peak_gene_correlation_aggregate_matrices.WNN
+      peak_gene_correlation_aggregate_matrices.WNN,
+      peak_gene_correlation_latent_factors.WNN
     ),
     pattern = map(peak_gene_correlation_aggregate_matrices.WNN),
     resources = get_tar_resources(RAM_GB_req = 16)

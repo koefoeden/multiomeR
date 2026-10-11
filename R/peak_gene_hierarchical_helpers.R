@@ -15,7 +15,7 @@ load_peak_gene_kernel <- function(native_source_file, kernel_name) {
 #' non-specific covariation of peaks and genes along chromatin states but no
 #' cis-regulatory relationship; their tests reproduce those of pairs on
 #' different chromosomes. Their number is `fraction` of the candidate pairs.
-add_peak_gene_background_pairs <- function(pairs, fraction = 0.5, min_distance = 1e7) {
+add_peak_gene_background_pairs <- function(pairs, fraction = 2, min_distance = 1e7) {
   peaks <- dplyr::distinct(pairs, .data$peak, .data$chr, .data$start, .data$end, .data$peak_center)
   genes <- dplyr::distinct(pairs, .data$TargetGeneID, .data$TargetGene, .data$gene_matrix_feature,
     .data$TargetGeneTSS, .data$TargetGeneStart, .data$TargetGeneEnd)
@@ -38,7 +38,7 @@ add_peak_gene_background_pairs <- function(pairs, fraction = 0.5, min_distance =
 #' the branch preparation. No correlation, promoter or top-N screen is applied
 #' before fitting. Dense matrices and nuisance design are reused across peak
 #' batches. The descriptive `correlation` is the Pearson correlation of the
-#' donor- and depth-adjusted peak and gene values. Background pairs
+#' nuisance-adjusted peak and gene values. Background pairs
 #' (`link_class == "background"`) are scored with the same model to calibrate the
 #' candidate pairs' significance; random slopes need `min_donors` donors with
 #' within-donor peak variation.

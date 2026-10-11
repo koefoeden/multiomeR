@@ -4,10 +4,12 @@ The hierarchical branch scans all pairs passing the existing distance,
 detection, aggregate-eligibility and measurement-support filters, using WNN-derived cell types.
 There is no significance, correlation, promoter or top-N screen before
 fitting. Each tested pair also carries the descriptive Pearson correlation of
-the donor- and depth-residualized peak and gene values.
+the residualized peak and gene values.
 
-The model includes donor fixed intercepts, log-depth covariates and a Gaussian
-random peak slope by donor. `src/peak_gene_REML.cpp` profiles residual variance
+The model includes donor fixed intercepts, log-depth covariates, up to ten
+principal components of the cell type's residual peak accessibility
+(`peak_gene_correlation_latent_factors.WNN`) and a Gaussian random peak slope by
+donor. `src/peak_gene_REML.cpp` profiles residual variance
 and independently searches the slope/residual variance ratio, including zero.
 `src/peak_gene_KR.cpp` supplies batched Kenward–Roger inference. Because each
 aggregate belongs to one donor, both kernels work in donor space without

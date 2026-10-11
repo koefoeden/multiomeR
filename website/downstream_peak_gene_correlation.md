@@ -4,7 +4,7 @@
 
 Use this module to nominate candidate regulatory links between accessible regions and nearby genes within each WNN cell type. It pairs consensus peaks with nearby gene transcription start sites and tests whether accessibility and expression vary together across **donor–state pseudobulks**: nuclei of one cell type summed by donor and ATAC-defined state, with each nucleus in at most one pseudobulk.
 
-A hierarchical model adjusts for donor, sequencing depth and the cell type's main chromatin states and lets the peak–gene slope vary between donors. Its significant positive slopes nominate candidate links, and SuSiE prioritizes peaks for each linked gene. Links are hypotheses: they do not establish causal regulation, and the hierarchical tests are approximate and have not been broadly calibrated. [Method details](methods_peak_gene_correlation.md)
+A hierarchical model adjusts for donor, sequencing depth and the cell type's main chromatin states and lets the peak–gene slope vary between donors. Positive slopes that significantly exceed those of distant peaks of the same gene nominate candidate links, and SuSiE prioritizes peaks for each linked gene. Links are hypotheses: they do not establish causal regulation, and the distant-peak background cannot separate a specific enhancer from covariation within a local chromatin domain. [Method details](methods_peak_gene_correlation.md)
 
 ## Prerequisites
 

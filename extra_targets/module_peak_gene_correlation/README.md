@@ -25,10 +25,14 @@ within-donor peak information, failed fits or effective degrees of freedom below
 alone does not invalidate a fit. Finite-search and conditioning failures are
 recorded rather than silently accepted.
 
-BH correction is performed across the complete eligible pair family within
-each cell type, including promoters and counting unreliable tests in the family
-size; unreliable tests retain missing inferential p/FDR values. These Gaussian
-models and their approximate tests have not yet undergone broader calibration,
+Each gene is also fitted against up to 200 of its branch's candidate peaks more
+than 10 Mb from its TSS. `hierarchical_gene_z` standardizes signed normal scores
+by the gene's background mean and SD; finalization rescales them by the cell
+type's background SD within peak-detection quintiles and computes empirical
+p-values against the cell type's background. BH correction is performed across
+the complete eligible pair family within each cell type, including promoters and
+counting unreliable tests in the family size; unreliable tests retain missing
+inferential p/FDR values. These Gaussian models have not yet undergone broader
 power or influence validation and do not guarantee robustness to outliers.
 
 Top-link figures rank positive, estimable nonpromoter slopes by hierarchical
@@ -41,9 +45,9 @@ slope or promoter cutoff. Consensus peaks are shaded; the focal peak is red
 and the gene TSS is dashed. The genomic axis uses Mb.
 
 Compact gene-context data and focal coverage are cached separately from
-rendering. Candidate enhancer links are estimable positive slopes with
-hierarchical FDR < 0.05 outside self-promoter peaks; they drive the link table,
-SuSiE fine-mapping and the support summary plots.
+rendering. Candidate enhancer links are estimable positive slopes above the
+gene's background with hierarchical FDR < 0.05 outside self-promoter peaks; they
+drive the link table, SuSiE fine-mapping and the support summary plots.
 
 ## Measurement-support filtering
 
@@ -59,7 +63,7 @@ The filter removes hypotheses before hierarchical testing; all
 observations remain in retained regressions. Excluded hypotheses do not enter
 BH correction. Unreliable tests among retained hypotheses still count in the
 hierarchical family size. Filtering is based on measurement support, not on
-obtaining discoveries; null calibration remains a separate validation task.
+obtaining discoveries.
 
 `peak_gene_correlation_filter_records.WNN` caches selected candidates and
 retention diagnostics for all three presets. `filter_retention_plot` compares

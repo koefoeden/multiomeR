@@ -1,38 +1,31 @@
-#' Build compact FDR breakpoints for chromosome-level peak gene fine-mapping
+#' Keep the FDR of linked genes' pairs for chromosome-level peak gene fine-mapping
 #'
-#' BH-adjusted p-values are monotone in the p-value. Retaining the largest
-#' p-value for each distinct FDR reconstructs the tested values without sending
-#' the complete finalized result table to every worker.
+#' Fine-mapping uses only genes with a candidate link, so their pairs suffice to
+#' restore the within-cell-group FDR without sending the complete finalized
+#' result table to every worker.
 #'
 #' @param finalized_results_tibble Combined hierarchical association results.
-#' @return Tibble of FDR breakpoints per cell group.
+#' @return Tibble of the FDR of every pair of a linked gene.
 #' @keywords internal
 
 make_peak_gene_finemapping_reference <- function(finalized_results_tibble) {
+  linked <- finalized_results_tibble[which(is_peak_gene_link(finalized_results_tibble)), ]
   finalized_results_tibble |>
-    dplyr::select("cell_group", "hierarchical_pvalue", "hierarchical_FDR") |>
-    dplyr::filter(is.finite(.data$hierarchical_pvalue), is.finite(.data$hierarchical_FDR)) |>
-    dplyr::summarise(hierarchical_pvalue = max(.data$hierarchical_pvalue), .by = c("cell_group", "hierarchical_FDR")) |>
-    dplyr::arrange(.data$cell_group, .data$hierarchical_pvalue)
+    dplyr::semi_join(linked, by = c("cell_group", "TargetGeneID")) |>
+    dplyr::select("cell_group", "peak", "TargetGeneID", "hierarchical_FDR")
 }
 
 #' Restore within-cell-group FDR values on one chromosome result
 #'
 #' @param results_tibble Hierarchical result from one cell-group/chromosome branch.
-#' @param FDR_reference_tibble Breakpoints from `make_peak_gene_finemapping_reference()`.
-#' @return Input result with its within-cell-group `hierarchical_FDR` restored.
+#' @param FDR_reference_tibble Linked genes' FDR from `make_peak_gene_finemapping_reference()`.
+#' @return Input result without background rows and with the FDR of linked
+#'   genes' pairs restored.
 #' @keywords internal
 
 restore_peak_gene_correlation_FDR <- function(results_tibble, FDR_reference_tibble) {
-  results_tibble <- results_tibble[results_tibble$link_class != "background", ]
-  FDR <- rep(NA_real_, nrow(results_tibble))
-  if (nrow(results_tibble) > 0L) {
-    reference <- FDR_reference_tibble[FDR_reference_tibble$cell_group == results_tibble$cell_group[[1]], ]
-    valid <- is.finite(results_tibble$hierarchical_pvalue)
-    index <- findInterval(results_tibble$hierarchical_pvalue[valid], reference$hierarchical_pvalue, left.open = TRUE) + 1L
-    FDR[valid] <- reference$hierarchical_FDR[index]
-  }
-  dplyr::mutate(results_tibble, hierarchical_FDR = FDR)
+  results_tibble[results_tibble$link_class != "background", ] |>
+    dplyr::left_join(FDR_reference_tibble, by = c("cell_group", "peak", "TargetGeneID"))
 }
 
 #' Empty peak gene fine-mapping result

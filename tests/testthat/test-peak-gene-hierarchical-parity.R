@@ -86,12 +86,12 @@ make_hierarchical_scan_case <- function() {
       gene_detected_frac = stats::setNames(rep(1, nrow(genes)), rownames(genes)),
       peak_accessible_frac = stats::setNames(rep(1, nrow(peaks)), rownames(peaks)),
       mean_gene_expression = rowMeans(genes), mean_peak_accessibility = rowMeans(peaks)),
-    # Peaks and genes lie more than 10 Mb apart, so background pairs are sampled and scored too.
+    # Peaks and genes lie more than 10 Mb apart, so each gene's background pairs are sampled and scored too.
     pairs = tidyr::expand_grid(gene_matrix_feature = rownames(genes), peak = rownames(peaks)) |>
       dplyr::mutate(chr = "chr1", TargetGeneID = .data$gene_matrix_feature, TargetGene = .data$gene_matrix_feature,
         peak_center = 1e6 * match(.data$peak, rownames(peaks)), start = .data$peak_center - 250,
         end = .data$peak_center + 250, TargetGeneTSS = 5e7 + 1e6 * match(.data$gene_matrix_feature, rownames(genes)),
-        TargetGeneStart = .data$TargetGeneTSS, TargetGeneEnd = .data$TargetGeneTSS + 1e4)
+        TargetGeneStart = .data$TargetGeneTSS, TargetGeneEnd = .data$TargetGeneTSS + 1e4, link_class = "distal")
   )
 }
 
@@ -128,7 +128,8 @@ testthat::test_that("the hierarchical scan matches lme4 with pbkrtest Kenward-Ro
   case <- make_hierarchical_scan_case()
   observed <- score_peak_gene_hierarchical_associations(case$matrices, case$pairs,
     REML_source_file = file.path(multiomeR_project_root, "src/peak_gene_REML.cpp"),
-    KR_source_file = file.path(multiomeR_project_root, "src/peak_gene_KR.cpp"))
+    KR_source_file = file.path(multiomeR_project_root, "src/peak_gene_KR.cpp")) |>
+    dplyr::filter(.data$link_class != "background")
   reference <- dplyr::bind_rows(lapply(seq_len(nrow(observed)), function(i) fit_peak_gene_hierarchical_association(
     case$matrices$GEX_norm[observed$TargetGeneID[[i]], ], case$matrices$ATAC_norm[observed$peak[[i]], ],
     case$matrices$aggregate_depth_tibble)))

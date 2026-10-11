@@ -161,7 +161,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = peak_gene_correlation_finemapping_reference.WNN,
-    description = "Summarize within-cell-group FDR breakpoints for chromosome-level SuSiE inputs [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    description = "Keep the within-cell-group FDR of linked genes' pairs for chromosome-level SuSiE inputs [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = make_peak_gene_finemapping_reference(peak_gene_correlation_hierarchical_results_tibble.WNN),
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
@@ -313,7 +313,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = peak_gene_correlation_hierarchical_results_tibble.WNN,
-    description = "Combine full-scan hierarchical fits and adjust p-values within cell type [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    description = "Combine full-scan hierarchical fits, calibrate them against each gene's background and adjust within cell type [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = finalize_peak_gene_hierarchical_results(peak_gene_correlation_hierarchical_results_tibbles.WNN),
     resources = get_tar_resources(RAM_GB_req = 60)
   ),

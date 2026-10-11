@@ -9,24 +9,22 @@ load_peak_gene_kernel <- function(native_source_file, kernel_name) {
   environment[[kernel_name]]
 }
 
-#' Sample background peak-gene pairs from one branch's peaks and genes
+#' Sample each gene's background peaks from its branch
 #'
-#' Pairs on the same chromosome more than `min_distance` apart share the
-#' non-specific covariation of peaks and genes along chromatin states but no
-#' cis-regulatory relationship; their tests reproduce those of pairs on
-#' different chromosomes. Their number is `fraction` of the candidate pairs.
-add_peak_gene_background_pairs <- function(pairs, fraction = 2, min_distance = 1e7) {
+#' A gene that varies along a cell type's chromatin states correlates with many
+#' peaks regardless of distance. Up to `n_per_gene` of the branch's candidate
+#' peaks more than `min_distance` from the gene's TSS share this non-specific
+#' covariation but no cis-regulatory relationship, so they calibrate the gene's
+#' candidate pairs.
+add_peak_gene_background_pairs <- function(pairs, n_per_gene = 200L, min_distance = 1e7) {
   peaks <- dplyr::distinct(pairs, .data$peak, .data$chr, .data$start, .data$end, .data$peak_center)
   genes <- dplyr::distinct(pairs, .data$TargetGeneID, .data$TargetGene, .data$gene_matrix_feature,
     .data$TargetGeneTSS, .data$TargetGeneStart, .data$TargetGeneEnd)
-  n_background <- ceiling(fraction * nrow(pairs))
-  if (!n_background || !nrow(peaks) || !nrow(genes)) return(pairs)
-  draws <- tibble::tibble(peak_index = sample.int(nrow(peaks), 4L * n_background, replace = TRUE),
-    gene_index = sample.int(nrow(genes), 4L * n_background, replace = TRUE)) |>
-    dplyr::filter(abs(peaks$peak_center[.data$peak_index] - genes$TargetGeneTSS[.data$gene_index]) > min_distance) |>
-    dplyr::distinct() |>
-    dplyr::slice_head(n = n_background)
-  background <- dplyr::bind_cols(peaks[draws$peak_index, ], genes[draws$gene_index, ]) |>
+  draws <- lapply(genes$TargetGeneTSS, \(TSS) {
+    eligible <- which(abs(peaks$peak_center - TSS) > min_distance)
+    eligible[sample.int(length(eligible), min(n_per_gene, length(eligible)))]
+  })
+  background <- dplyr::bind_cols(peaks[unlist(draws), ], genes[rep(seq_len(nrow(genes)), lengths(draws)), ]) |>
     dplyr::mutate(distance = as.integer(.data$peak_center - .data$TargetGeneTSS), isSelfPromoter = FALSE,
       isTargetGeneBody = FALSE, link_class = "background")
   dplyr::bind_rows(pairs, background[names(pairs)])
@@ -38,10 +36,13 @@ add_peak_gene_background_pairs <- function(pairs, fraction = 2, min_distance = 1
 #' the branch preparation. No correlation, promoter or top-N screen is applied
 #' before fitting. Dense matrices and nuisance design are reused across peak
 #' batches. The descriptive `correlation` is the Pearson correlation of the
-#' nuisance-adjusted peak and gene values. Background pairs
-#' (`link_class == "background"`) are scored with the same model to calibrate the
-#' candidate pairs' significance; random slopes need `min_donors` donors with
-#' within-donor peak variation.
+#' nuisance-adjusted peak and gene values. Each gene's background pairs
+#' (`link_class == "background"`) are scored with the same model, and
+#' `hierarchical_gene_z` standardizes every pair's signed statistic by the mean
+#' and SD of its gene's background statistics (leave-one-out for background
+#' rows; missing with fewer than ten). Background rows keep only the columns the
+#' calibration needs. Random slopes need `min_donors` donors with within-donor
+#' peak variation.
 score_peak_gene_hierarchical_associations <- function(
   normalized_aggregate_matrices, candidate_pairs_tibble,
   REML_source_file, KR_source_file, min_donors = 8L
@@ -64,7 +65,7 @@ score_peak_gene_hierarchical_associations <- function(
     hierarchical_pvalue = rep(NA_real_, n_pairs), hierarchical_singular = rep(NA, n_pairs),
     hierarchical_status = rep("insufficient_donor_information", n_pairs),
     hierarchical_diagnostic = rep(paste("Within-donor peak variation in fewer than", min_donors, "donors"), n_pairs),
-    check.names = FALSE
+    hierarchical_gene_z = rep(NA_real_, n_pairs), check.names = FALSE
   )
   if (!nrow(pairs)) return(tibble::as_tibble(result))
   donor <- factor(matrices$aggregate_depth_tibble$donor_id)
@@ -121,36 +122,52 @@ score_peak_gene_hierarchical_associations <- function(
     estimates$hierarchical_diagnostic[indices] <- diagnostic
   }
   result[names(estimates)] <- estimates
-  tibble::as_tibble(result)
+  statistic <- sign(result$hierarchical_coefficient) *
+    stats::qnorm(pmax(result$hierarchical_pvalue, .Machine$double.xmin) / 2, lower.tail = FALSE)
+  is_background <- pairs$link_class == "background"
+  in_null <- is_background & is.finite(statistic)
+  null_statistic <- ifelse(in_null, statistic, 0)
+  gene_sum <- function(x) stats::ave(x, pairs$gene_matrix_feature, FUN = sum)
+  n <- gene_sum(as.numeric(in_null)) - in_null
+  gene_mean <- (gene_sum(null_statistic) - null_statistic) / n
+  gene_SD <- sqrt(pmax(gene_sum(null_statistic^2) - null_statistic^2 - n * gene_mean^2, 0) / (n - 1))
+  result$hierarchical_gene_z <- ifelse(n >= 10, (statistic - gene_mean) / gene_SD, NA_real_)
+  dplyr::bind_rows(tibble::as_tibble(result[!is_background, ]), tibble::as_tibble(result[is_background, c("cell_group", "chr",
+    "gene_matrix_feature", "link_class", "peak_accessible_frac", "hierarchical_coefficient", "hierarchical_pvalue",
+    "hierarchical_status", "hierarchical_gene_z")]))
 }
 
-#' Calibrate against the background pairs and adjust within each cell type
+#' Calibrate against each gene's background pairs and adjust within each cell type
 #'
-#' Peaks and genes that both vary along the chromatin-state axis correlate
-#' whether or not they interact, so the model P-values of cis pairs are compared
-#' with those of the cell type's background pairs: the empirical P-value is the
-#' share of background pairs with at least as small a model P-value. Unreliable
-#' tests retain NA p/FDR but count in the BH family size, so numerical
-#' exclusions do not make the correction less stringent. Direction and promoter
-#' filtering happen only after this adjustment; background rows are dropped.
+#' The gene-standardized statistics are rescaled by the cell type's background SD
+#' within quintiles of peak detection, because more accessible peaks have wider
+#' null distributions. A pair's empirical P-value is the share of the cell type's
+#' rescaled background statistics at least as extreme. Unreliable tests retain
+#' NA p/FDR but count in the BH family size, so numerical exclusions do not make
+#' the correction less stringent. Direction and promoter filtering happen only
+#' after this adjustment; background rows are dropped.
 finalize_peak_gene_hierarchical_results <- function(results_tibbles) {
-  result <- data.table::rbindlist(results_tibbles, use.names = TRUE)
-  result[, hierarchical_background_pvalue := {
-    background <- sort(hierarchical_pvalue[link_class == "background" & !is.na(hierarchical_pvalue)])
-    (findInterval(hierarchical_pvalue, background) + 1) / (length(background) + 1)
-  }, by = cell_group]
-  result[is.na(hierarchical_pvalue), hierarchical_background_pvalue := NA_real_]
-  result[, n_background_pairs := sum(link_class == "background" & !is.na(hierarchical_pvalue)), by = cell_group]
-  result <- result[link_class != "background"]
+  result <- data.table::rbindlist(results_tibbles, use.names = TRUE, fill = TRUE)
+  result[, is_background := link_class == "background" & !is.na(hierarchical_gene_z)]
+  result[, hierarchical_background_pvalue := if (any(is_background)) {
+    quintile <- findInterval(peak_accessible_frac, stats::quantile(peak_accessible_frac[is_background], 1:4 / 5))
+    scale <- tapply(hierarchical_gene_z[is_background], quintile[is_background], stats::sd)
+    z <- abs(hierarchical_gene_z / scale[as.character(quintile)])
+    background <- sort(z[is_background])
+    (length(background) - findInterval(z, background, left.open = TRUE) + 1) / (length(background) + 1)
+  } else NA_real_, by = cell_group]
+  result[, n_background_pairs := sum(is_background), by = cell_group]
+  result <- result[link_class != "background"][, is_background := NULL]
   result[, hierarchical_FDR := stats::p.adjust(hierarchical_background_pvalue, method = "BH", n = .N), by = cell_group]
   data.table::setDF(result)
   tibble::as_tibble(result)
 }
 
-#' Candidate enhancer links: positive, reliable, FDR-significant nonpromoter pairs.
+#' Candidate enhancer links: positive, reliable, FDR-significant nonpromoter
+#' pairs that exceed their gene's background.
 is_peak_gene_link <- function(results_tibble) {
   results_tibble$hierarchical_status == "estimable" & results_tibble$hierarchical_coefficient > 0 &
-    results_tibble$hierarchical_FDR < 0.05 & !results_tibble$isSelfPromoter
+    results_tibble$hierarchical_gene_z > 0 & results_tibble$hierarchical_FDR < 0.05 & !results_tibble$isSelfPromoter
 }
 
 make_peak_gene_correlation_links <- function(results_tibble) {

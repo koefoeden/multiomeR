@@ -38,19 +38,25 @@ figure_pipeline <- list(
     resources = get_tar_resources(RAM_GB_req = 4)
   ),
   targets::tar_target(
+    figure_1_traits.mixed_human_31x,
+    description = "Figure 1C-E traits: broadly supported cell-type enrichments (q < 0.05, top locus below half of the signal, at least 20 effective weighted peaks), one per study and per cell type and trait category",
+    command = select_figure_1_traits(chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x,
+      chromVAR_locus_contribution_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x,
+      GWAS_peak_weight_records.genetic_enrichment.mixed_human_31x),
+    resources = get_tar_resources(RAM_GB_req = 4)
+  ),
+  targets::tar_target(
     figure_1_panel_C.mixed_human_31x,
-    description = "Figure 1C: raw_deviation_unscaled data, up to six raw Z >= qnorm(0.95) traits, all assigned cell types, no metadata tracks",
-    command = local({
-      scores <- chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x
-      plot_figure_1_heatmap(scores, select_figure_1_traits(scores)) |> compact_figure_1_plot()
-    }),
+    description = "Figure 1C: raw_deviation_unscaled data of the selected traits, all assigned cell types, no metadata tracks",
+    command = plot_figure_1_heatmap(chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x,
+      figure_1_traits.mixed_human_31x) |> compact_figure_1_plot(),
     resources = get_tar_resources(RAM_GB_req = 4)
   ),
   targets::tar_target(
     figure_1_panel_D.mixed_human_31x,
-    description = "Figure 1D: variant-detail data for the top absolute-contribution locus in the two strongest raw Z combinations, left to right; protein-coding genes, focal coverage and PIP only",
+    description = "Figure 1D: variant-detail data for the top absolute-contribution locus of the two showcase traits, left to right; protein-coding genes, focal coverage and PIP only",
     command = local({
-      selections <- select_figure_1_combinations(chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x)
+      selections <- select_figure_1_showcase(figure_1_traits.mixed_human_31x)
       locus_records <- lapply(seq_len(nrow(selections)), function(i) {
         selection <- selections[i, ]
         locus <- chromVAR_locus_contribution_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x |>
@@ -78,7 +84,7 @@ figure_pipeline <- list(
     figure_1_panel_E.mixed_human_31x,
     description = "Figure 1E: rebuild TRS_UMAPs for the two traits in D, in matching order, with randomized cell draw order, cell-type centroids and a shared TRS scale",
     command = local({
-      selections <- select_figure_1_combinations(chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x)
+      selections <- select_figure_1_showcase(figure_1_traits.mixed_human_31x)
       selected_scores <- TRS_tibble.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.mixed_human_31x |>
         dplyr::filter(.data$GWAS_ID %in% selections$GWAS_ID)
       score_limits <- range(selected_scores$score, finite = TRUE)
@@ -128,24 +134,22 @@ figure_pipeline <- list(
   ),
   tarchetypes::tar_file(
     figure_1_data.mixed_human_31x,
-    description = "Figure 1 values that the manuscript quotes: the aggregation's retained nuclei and assigned cell types, the selected peak-gene link and, for each heatmap trait's strongest cell type, its raw Z, contributing loci and the largest locus share of their summed contribution",
+    description = "Figure 1 values that the manuscript quotes: the aggregation's retained nuclei and assigned cell types, its enriched (q < 0.05) cell type-study pairs, studies and cell types, the selected peak-gene link and, for each heatmap trait's selected cell type, its z, q, contributing loci and the largest locus share of their summed contribution",
     command = {
       paths <- file.path(fs::dir_create(file.path(output_dir, "data")),
         c("figure_1_aggregation.tsv", "figure_1_link.tsv", "figure_1_traits.tsv"))
       cell_types <- metadata_w_cell_types_tibble.WNN.mixed_human_31x$WNN_harmony_SNN_cluster_cell_type
+      enriched <- figure_1_enrichments(chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x)
       readr::write_tsv(tibble::tibble(retained_nuclei = length(cell_types),
-        assigned_cell_types = dplyr::n_distinct(cell_types[is_figure_1_cell_type(cell_types)])), paths[[1]])
+        assigned_cell_types = dplyr::n_distinct(cell_types[is_figure_1_cell_type(cell_types)]),
+        enriched_pairs = nrow(enriched), enriched_studies = dplyr::n_distinct(enriched$GWAS_ID),
+        enriched_cell_types = dplyr::n_distinct(enriched$cluster)), paths[[1]])
       select_figure_1_link(peak_gene_correlation_top_links_tibble.WNN.peak_gene_correlation.mixed_human_31x) |>
         dplyr::select("cell_group", "TargetGene", "peak", "distance", "n_donors", "n_aggregates",
           "correlation", "hierarchical_pvalue") |>
         readr::write_tsv(paths[[2]])
-      loci <- chromVAR_locus_contribution_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x |>
-        dplyr::summarise(n_loci = dplyr::n(),
-          top_locus_share = max(.data$relative_deviation_contribution) / sum(.data$relative_deviation_contribution),
-          .by = c("GWAS_ID", "cluster"))
-      select_figure_1_traits(chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x) |>
-        dplyr::select("GWAS_ID", "cluster", "z") |>
-        dplyr::left_join(loci, by = c("GWAS_ID", "cluster")) |>
+      figure_1_traits.mixed_human_31x |>
+        dplyr::select("GWAS_ID", "cluster", "z", "z_q", "n_loci", "top_locus_share") |>
         readr::write_tsv(paths[[3]])
       paths
     },

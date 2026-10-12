@@ -129,23 +129,46 @@ select_figure_1_link <- function(links) {
 # The figure shows assigned cell types; unassigned clusters stay in the module outputs.
 is_figure_1_cell_type <- function(x) !startsWith(as.character(x), "Unassigned")
 
-select_figure_1_combinations <- function(scores, n = 2L) {
-  selected <- scores |>
-    dplyr::filter(is_figure_1_cell_type(.data$cluster), is.finite(.data$z), .data$z >= stats::qnorm(.95)) |>
-    dplyr::arrange(dplyr::desc(.data$z), .data$GWAS_ID, .data$cluster) |>
-    dplyr::slice_head(n = n)
-  if (nrow(selected) < n) stop("Too few cell-type/GWAS combinations with raw Z >= qnorm(0.95).")
+# Assigned cell type-study pairs enriched at q < 0.05, strongest first.
+figure_1_enrichments <- function(scores) {
+  scores |>
+    dplyr::filter(is_figure_1_cell_type(.data$cluster), .data$z_q < .05) |>
+    dplyr::arrange(dplyr::desc(.data$z), .data$GWAS_ID)
+}
+
+# Figure 1C shows broadly supported enrichments: q < 0.05, a top locus below half
+# of the summed contribution and at least 20 effective weighted peaks of the study,
+# (sum w)^2 / sum w^2, which leaves out pairs driven by one or a few loci. In
+# decreasing z, a pair is shown unless its study is shown already or its cell type
+# shows a study of the same category.
+select_figure_1_traits <- function(scores, loci, peak_weight_records) {
+  loci <- dplyr::summarise(loci, n_loci = dplyr::n(),
+    top_locus_share = max(.data$relative_deviation_contribution) / sum(.data$relative_deviation_contribution),
+    .by = c("GWAS_ID", "cluster"))
+  peaks <- purrr::map_dfr(peak_weight_records, \(x) tibble::tibble(GWAS_ID = x$GWAS_ID,
+    effective_peaks = sum(x$peak_weights_vec)^2 / sum(x$peak_weights_vec^2)))
+  candidates <- figure_1_enrichments(scores) |>
+    dplyr::left_join(loci, by = c("GWAS_ID", "cluster")) |>
+    dplyr::left_join(peaks, by = "GWAS_ID") |>
+    dplyr::filter(.data$top_locus_share < .5, .data$effective_peaks >= 20)
+  if (!nrow(candidates)) stop("No broadly supported cell-type/GWAS enrichments.")
+  selected <- candidates[0, ]
+  for (i in seq_len(nrow(candidates))) {
+    pair <- candidates[i, ]
+    if (!pair$GWAS_ID %in% selected$GWAS_ID &&
+      !any(selected$cluster == pair$cluster & selected$Category == pair$Category)) {
+      selected <- dplyr::bind_rows(selected, pair)
+    }
+  }
   selected
 }
 
-select_figure_1_traits <- function(scores, n = 6L) {
-  selected <- scores |>
-    dplyr::filter(is_figure_1_cell_type(.data$cluster), is.finite(.data$z), .data$z >= stats::qnorm(.95)) |>
-    dplyr::arrange(dplyr::desc(.data$z), .data$GWAS_ID, .data$cluster) |>
-    dplyr::distinct(.data$GWAS_ID, .keep_all = TRUE) |>
-    dplyr::slice_head(n = n)
-  if (!nrow(selected)) stop("No GWAS traits meet raw Z >= qnorm(0.95).")
-  selected
+# D and E show two of them: the strongest, LDL cholesterol in hepatocytes, and the
+# strongest outside the liver in an epithelium, colorectal cancer in colonocytes.
+select_figure_1_showcase <- function(traits) {
+  showcase <- traits[match(c("LDL_Graham2021", "ColorectalCancer_Law2019"), traits$GWAS_ID), ]
+  stopifnot(!anyNA(showcase$GWAS_ID))
+  showcase
 }
 
 # Sentence case without author, year and ancestry, keeping acronyms such as LDL
@@ -235,13 +258,13 @@ plot_figure_1_scatter <- function(data) {
       x = "ATAC log1p CPM residual", y = "GEX log1p CPM residual")
 }
 
-# C: raw_deviation_unscaled inspiration; at most six traits passing the existing
-# raw Z >= qnorm(0.95), no metadata tracks or clustering. All assigned cell
-# types retained, common raw-deviation scale. Stars use unadjusted upper-tail normal P <= 0.05 and <= 0.01.
+# C: raw_deviation_unscaled inspiration; the selected traits, no metadata tracks or
+# clustering. All assigned cell types retained, common raw-deviation scale. Stars
+# mark enrichments at q < 0.05.
 plot_figure_1_heatmap <- function(data, traits) {
   data <- data |> dplyr::filter(.data$GWAS_ID %in% traits$GWAS_ID, is_figure_1_cell_type(.data$cluster)) |>
     dplyr::mutate(GWAS_ID = factor(.data$GWAS_ID, levels = rev(traits$GWAS_ID)),
-      label = chromVAR_Z_support_labels(.data$z))
+      label = dplyr::if_else(.data$z_q < .05, "*", ""))
   limit <- max(abs(data$deviation), na.rm = TRUE)
   ggplot2::ggplot(data, ggplot2::aes(.data$cluster, .data$GWAS_ID, fill = .data$deviation)) +
     ggplot2::geom_tile(colour = "white", linewidth = .3) +
@@ -378,7 +401,7 @@ compose_figure_1 <- function(A, B, C, D, E) {
         plot.title.position = "plot")
   })
   (patchwork::wrap_plots(plots, design = "AB\nCC\nDD\nEE",
-    heights = c(1.15, .85, 1.4, 2.75)) +
+    heights = c(1.1, 1.05, 1.35, 2.65)) +
     patchwork::plot_annotation(tag_levels = "A")) &
     ggplot2::theme(plot.tag = ggplot2::element_text(family = "NimbusSan", face = "bold",
         size = 12, hjust = 0, vjust = 1), plot.tag.position = c(0, 1))

@@ -50,13 +50,16 @@ Selections are deterministic but follow the data.
   bodies, focal-cell-type coverage and a schematic link with 25 kb flanks; B the
   aggregate residuals coloured by donor with a descriptive regression line. The
   ranking is not an FDR claim, and aggregates are not independent donors.
-- **C:** up to six traits with a raw chromVAR Z ≥ qnorm(0.95), ordered by their
-  strongest cell type, across all assigned cell types; stars mark unadjusted upper-tail
-  P ≤ 0.05 and P ≤ 0.01.
-- **D:** for the two strongest cell-type–trait combinations, the locus with the
-  largest absolute contribution to the deviation, as aligned facets of variant
-  contributions (point area: PIP), protein-coding genes, focal coverage and
-  consensus peaks.
+- **C:** broadly supported cell-type–study enrichments across all assigned
+  cell types: chromVAR q < 0.05, a top locus below half of the summed
+  contribution and at least 20 effective weighted peaks, (Σw)²/Σw², so that no
+  pair rests on one or a few loci. In decreasing z, a pair is shown unless its
+  study is shown already or its cell type shows a study of the same category.
+  Stars mark q < 0.05.
+- **D:** for two of these pairs, LDL cholesterol in hepatocytes and colorectal
+  cancer in colonocytes, the locus with the largest absolute contribution to the
+  deviation, as aligned facets of variant contributions (point area: PIP),
+  protein-coding genes, focal coverage and consensus peaks.
 - **E:** SCAVENGE trait-relevance scores of the same two traits on the WNN UMAP,
   with a shared colour scale, unclipped scores and cell-type labels.
 

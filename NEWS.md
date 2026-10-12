@@ -89,6 +89,10 @@ Each change alters results.
 
 ### Genetic enrichment
 
+- Sum the cell-type pseudobulks by the final WNN labels, as SCAVENGE, the
+  differential analyses and the peak–gene module do, instead of by the GEX
+  labels carried into the WNN metadata, so labels set only at the WNN level
+  reach the pseudobulk enrichment too.
 - Scale gchromVAR's background variance with squared peak weights, the
   variance of a weighted sum, in both the cell-type contributions and the
   single-nucleus z-scores. Summed weights deflated the z-scores by a

@@ -44,6 +44,22 @@ limited to 32 GiB, the demo's processes used at most 17 GiB.
   figure helpers, so their legends and labels are measured on the saving device
   and no longer overlap or clip.
 
+## Manuscript results
+
+- Show in Figure 1C the cell-type enrichments at q < 0.05 that rest on many
+  loci (top locus below half of the signal, at least 20 effective weighted
+  peaks), one per study and per cell type and trait category, with stars at
+  q < 0.05; panels D and E show LDL cholesterol in hepatocytes and colorectal
+  cancer in colonocytes. Trait names are in sentence case, and panel A names
+  its cell type as a plural noun.
+- Add Supplementary Figure S3, every tested study's cell-type deviations on
+  Figure 1C's scale, and generate Supplementary Table S3 from the stored GWAS
+  inputs of `mixed_human_31x`.
+- Compute Supplementary Figure S2's reserved CPU and RAM from the worker sizes
+  of the measured runs, recorded in `seurat_signac_comparison_allocations.tsv`,
+  so later request changes leave them unchanged.
+- Leave the compute node's name out of the Table S4 data.
+
 ## Development
 
 - Ask agents to start long pipeline drivers detached and follow their log,
@@ -59,6 +75,10 @@ limited to 32 GiB, the demo's processes used at most 17 GiB.
   and `TRS_cluster_summary_plot` rerun with new plots, and
   `UMAP_embeddings_tibble.GEX`, `.GEX_non_harmony` and `.ATAC` rerun and
   reproduce their values.
+- In `configuration_dev/`, only targets of `pipeline_manuscript_figures/targets.R`
+  rerun: Figure 1 panels A and C–E with its plot and data, and the Table S4
+  writer; `figure_1_traits`, `supplementary_table_S3` and
+  `supplementary_figure_S3` are new.
 - Omitted from the 1.2.0 notes: 1.2.0 renamed AMULET's fragment-count column
   from `nFrags` to `amulet_nFrags`, like the other AMULET columns. Update code
   that reads it.

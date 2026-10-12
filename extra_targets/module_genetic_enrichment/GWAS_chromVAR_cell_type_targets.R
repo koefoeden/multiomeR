@@ -15,7 +15,7 @@ rlang::list2(
       get_BPCells_group_pseudobulk_matrix(
         feature_matrix = peak_QC_filtered_BPCells_matrix.ATAC,
         metadata_tibble = metadata_w_cell_types_tibble.WNN,
-        group_col = "PCA_harmony_SNN_cluster_cell_type",
+        group_col = "WNN_harmony_SNN_cluster_cell_type",
         threads = 6
       ) |>
         methods::as("dgCMatrix") |>
@@ -36,7 +36,7 @@ rlang::list2(
       dplyr::left_join(
         get_group_cell_count_tibble(
           metadata_tibble = metadata_w_cell_types_tibble.WNN,
-          group_col = "PCA_harmony_SNN_cluster_cell_type"
+          group_col = "WNN_harmony_SNN_cluster_cell_type"
         ),
         by = "cluster"
       ) |>

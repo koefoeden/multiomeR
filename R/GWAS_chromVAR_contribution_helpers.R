@@ -627,7 +627,7 @@ prepare_GWAS_variant_contribution_detail_records <- function(
   min_z,
   n_top_loci = 3L,
   flank = 25000L,
-  group_cells_by_col = "PCA_harmony_SNN_cluster_cell_type"
+  group_cells_by_col = "WNN_harmony_SNN_cluster_cell_type"
 ) {
   selected_locus_tibble <- select_GWAS_detail_loci(locus_contribution_tibble,
     absolute_effect_locus_tibble,

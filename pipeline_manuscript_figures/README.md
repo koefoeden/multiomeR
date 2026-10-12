@@ -10,7 +10,10 @@ below `results/`:
   `data/figure_1_traits.tsv`, the values the manuscript quotes from it.
 - `S2.png` and `data/seurat_signac_comparison_resources.tsv`: Supplementary
   Figure S2, resource use of multiomeR and a conventional Seurat/Signac workflow
-  on `comparison_1x` to `comparison_31x`.
+  on `comparison_1x` to `comparison_31x`. Its input
+  `data/seurat_signac_comparison_allocations.tsv` holds the worker cores and RAM
+  of each target it counts, as multiomeR 1.2.0 requested them for the measured
+  runs.
 - `S4.md` and `data/algorithm_parity/`: Supplementary Table S4, the
   reimplemented algorithms against their references on `comparison_5x` objects.
 
@@ -90,9 +93,11 @@ branches treated as concurrent; the conventional chain's is the sum of its
 runtimes, as when a script runs its steps one after another; CPU time and RAM
 use multiply each target's runtime by its job's mean sampled CPU use and
 unreclaimable memory, which leaves out page cache, and jobs too short to be
-sampled get the median of the sampled jobs; disk space counts retained objects
-and files inside the store plus the Cell Ranger inputs that every workflow
-reads: filtered matrices, fragment files and their indexes.
+sampled get the median of the sampled jobs; reserved CPU and RAM multiply each
+target's runtime by the cores and RAM of its worker in the measured runs, which
+later changes to the requests leave unchanged; disk space counts retained
+objects and files inside the store plus the Cell Ranger inputs that every
+workflow reads: filtered matrices, fragment files and their indexes.
 
 ## Supplementary Table S4
 

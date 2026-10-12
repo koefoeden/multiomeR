@@ -411,6 +411,7 @@ compose_figure_1 <- function(A, B, C, D, E) {
 # targets keep their graph position with zero runtime and are left out of every
 # resource sum.
 SEURAT_SIGNAC_COMPARISON_SCRIPT <- "pipeline_manuscript_figures/targets.R"
+SEURAT_SIGNAC_COMPARISON_ALLOCATIONS <- "pipeline_manuscript_figures/results/data/seurat_signac_comparison_allocations.tsv"
 SEURAT_SIGNAC_COMPARISON_WORKFLOWS <- local({
   multiomeR_exclude <- c(
     # Cluster-fragment preparation is shared by both workflows.
@@ -477,19 +478,16 @@ add_measured_resources <- function(executions, samples) {
       used_cores = dplyr::coalesce(.data$used_cores, stats::median(.data$used_cores, na.rm = TRUE)))
 }
 
-# Recorded runtimes and bytes from tar_meta(); allocated cores and RAM from each
-# target's current controller tier; measured CPU and RAM from slurm_monitor.
+# Recorded runtimes and bytes from tar_meta(); allocated cores and RAM of each
+# static target from `allocations`; measured CPU and RAM from slurm_monitor.
 # Dynamic branches run concurrently in the critical path; a sequential workflow's
 # critical path is the sum of its runtimes. Disk use counts target
 # objects and file targets inside the store; the NA path of a disabled input
 # file is outside it.
-benchmark_resource_tibble <- function(workflows, aggregations, script = "_targets.R", store = targets::tar_config_get("store")) {
+benchmark_resource_tibble <- function(workflows, aggregations, allocations, script = "_targets.R",
+                                      store = targets::tar_config_get("store")) {
   network <- targets::tar_network(script = script, store = store,
     targets_only = TRUE, outdated = FALSE, reporter = "silent")
-  manifest <- targets::tar_manifest(script = script, fields = c("name", "resources"))
-  allocations <- tibble::tibble(static_target = manifest$name,
-    controller_name = purrr::map_chr(manifest$resources, \(x) x$crew$controller %||% NA_character_)) |>
-    dplyr::left_join(multiomeR_core_runtime_state_env$controller_resources_tibble, by = "controller_name")
   meta <- targets::tar_meta(store = store)
   store_prefix <- paste0(fs::path_abs(store), "/")
   aggregation_tibble <- benchmark_aggregation_tibble(aggregations)
@@ -533,11 +531,13 @@ benchmark_resource_tibble <- function(workflows, aggregations, script = "_target
 }
 
 # Every workflow also reads the same Cell Ranger outputs from outside the store,
-# which count towards its disk space.
+# which count towards its disk space. Reserved resources use the worker sizes of
+# the measured runs, which multiomeR 1.2.0 requested, not the current requests.
 seurat_signac_comparison_resource_tibble <- function(aggregations, store = targets::tar_config_get("store")) {
   input_GB <- purrr::map_dbl(aggregations, \(aggregation)
     sum(file.size(comparison_input_files(comparison_build_config(aggregation)))) / 1e9)
   benchmark_resource_tibble(SEURAT_SIGNAC_COMPARISON_WORKFLOWS, aggregations,
+    readr::read_tsv(SEURAT_SIGNAC_COMPARISON_ALLOCATIONS, show_col_types = FALSE),
     script = SEURAT_SIGNAC_COMPARISON_SCRIPT, store = store) |>
     dplyr::mutate(input_disk_space_GB = input_GB[match(.data$aggregation, aggregations)],
       disk_space_GB = .data$disk_space_GB + .data$input_disk_space_GB)

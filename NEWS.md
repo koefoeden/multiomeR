@@ -180,9 +180,10 @@ Each change alters results.
   instead of 0.05, which the T-cell clusters, inflated by the larger well's T
   cells, did not reach. The NK markers drop KLRD1, which effector CD8 T cells
   share, for SH2D1B, and a MAIT set (SLC4A10, ZBTB16, KLRB1, NCR3) labels the
-  MAIT cells, so every WNN cluster is labeled. The download grows from about 1.3 to 4.6 GB, the stored
-  results from about 3.3 to 6.6 GB and the run from about 20 to 30 minutes with
-  16 threads.
+  MAIT cells. With the revised methods, three small WNN clusters (725 of 7,838
+  nuclei) match no marker set above background and stay unassigned. The
+  download grows from about 1.3 to 4.6 GB, the stored results from about 3.3 to
+  6.6 GB and the run from about 20 to 30 minutes with 16 threads.
 
 ## Manuscript
 

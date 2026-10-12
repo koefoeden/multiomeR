@@ -241,18 +241,16 @@ rlang::list2(
   targets::tar_target(
     name = cluster_marker_groups.GEX,
     description = "Prepare accepted cells and ordered cluster IDs for each multicluster GEX cell type",
-    command = make_cluster_marker_groups(metadata_w_cell_types_tibble.GEX),
-    iteration = "vector"
+    command = make_cluster_marker_groups(metadata_w_cell_types_tibble.GEX)
   ),
   targets::tar_target(
     name = cluster_marker_tibbles.GEX,
-    description = "Test clusters against the remaining clusters within one cell type, with BH correction across genes per contrast",
-    command = get_cluster_markers_from_matrix(
+    description = "Test clusters against the remaining clusters within each multicluster cell type, with BH correction across genes per contrast",
+    # One target rather than branches: an aggregation can have no multicluster cell type.
+    command = purrr::map(seq_len(nrow(cluster_marker_groups.GEX)), \(i) get_cluster_markers_from_matrix(
       feature_matrix = aggregated_counts_BPCells_matrix.GEX,
-      group_record = cluster_marker_groups.GEX
-    ),
-    pattern = map(cluster_marker_groups.GEX),
-    iteration = "list",
+      group_record = cluster_marker_groups.GEX[i, ]
+    )),
     resources = get_tar_resources(RAM_GB_req = 8)
   ),
   targets::tar_target(
@@ -475,12 +473,9 @@ rlang::list2(
   tarchetypes::tar_file(
     name = cluster_marker_volcano_plots.3_GEX_QC,
     description = "One cluster-marker volcano file per multicluster cell type; two clusters share one directed comparison. [checkpoint:3_GEX-QC]",
-    command = plot_cluster_marker_volcano(cluster_marker_tibbles.GEX) |>
-      save_plots_structured(
-        dyn_suffix_in_subdir = TRUE,
-        override_suffix = cluster_marker_tibbles.GEX$cell_type
-      ),
-    pattern = map(cluster_marker_tibbles.GEX)
+    command = purrr::map(cluster_marker_tibbles.GEX, plot_cluster_marker_volcano) |>
+      purrr::set_names(cluster_marker_groups.GEX$cell_type) |>
+      save_plots_structured()
   ),
   tarchetypes::tar_file(
     name = cell_type_marker_volcano_plots.3_GEX_QC,

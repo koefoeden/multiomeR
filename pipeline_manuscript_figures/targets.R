@@ -1,8 +1,8 @@
 # Manuscript figures and tables from configuration_dev's public-data aggregations:
-# Figure 1 from mixed_human_31x, Supplementary Figure S2 comparing multiomeR with a
-# conventional Seurat/Signac workflow on comparison_1x to comparison_31x, and
-# Supplementary Table S4 comparing the algorithm reimplementations with their
-# references on comparison_5x. See README.md.
+# Figure 1 and Supplementary Table S3 from mixed_human_31x, Supplementary Figure S2
+# comparing multiomeR with a conventional Seurat/Signac workflow on comparison_1x
+# to comparison_31x, and Supplementary Table S4 comparing the algorithm
+# reimplementations with their references on comparison_5x. See README.md.
 source("pipeline_manuscript_figures/helpers.R")
 source("pipeline_manuscript_figures/algorithm_parity_helpers.R")
 source("pipeline_manuscript_figures/seurat_signac_helpers.R")
@@ -152,6 +152,18 @@ figure_pipeline <- list(
         dplyr::select("GWAS_ID", "cluster", "z", "z_q", "n_loci", "top_locus_share") |>
         readr::write_tsv(paths[[3]])
       paths
+    },
+    resources = get_tar_resources(RAM_GB_req = 4)
+  ),
+  tarchetypes::tar_file(
+    supplementary_table_S3.mixed_human_31x,
+    description = "Supplementary Table S3: Open Targets metadata and credible sets of each configured GWAS study, with the credible-set loci and variants that overlap consensus peaks and the peaks they weight",
+    command = {
+      path <- file.path(output_dir, "data", "table_S3.tsv")
+      GWAS_study_tibble(GWAS_inputs_tibble.genetic_enrichment.mixed_human_31x,
+        GWAS_peak_variant_weight_records.genetic_enrichment.mixed_human_31x, open_targets_study_dataset_path) |>
+        readr::write_tsv(path)
+      path
     },
     resources = get_tar_resources(RAM_GB_req = 4)
   ),

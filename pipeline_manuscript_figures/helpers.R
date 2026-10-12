@@ -384,6 +384,34 @@ plot_figure_1_TRS <- function(data, trait, score_limits) {
     ggplot2::labs(title = figure_1_trait_labels(trait), x = "UMAP 1", y = "UMAP 2")
 }
 
+# Supplementary Table S3: each configured study's Open Targets record and credible
+# sets, with the loci and variants overlapping consensus peaks and the peaks they weight.
+GWAS_study_tibble <- function(inputs, variant_weights, study_dataset_path) {
+  studies <- arrow::open_dataset(study_dataset_path) |>
+    dplyr::filter(studyId %in% inputs$studyId) |>
+    dplyr::select("studyId", "pubmedId", "traitFromSource", "initialSampleSize") |>
+    dplyr::collect()
+  ancestry <- inputs |>
+    tidyr::pivot_longer(tidyselect::starts_with("ancestry_"), names_to = "ancestry", names_prefix = "ancestry_") |>
+    dplyr::filter(.data$value > 0) |>
+    dplyr::arrange(dplyr::desc(.data$value)) |>
+    dplyr::summarise(ancestry = paste0(.data$ancestry, " ", round(100 * .data$value), "%", collapse = ", "),
+      .by = "GWAS_ID")
+  overlaps <- dplyr::bind_rows(variant_weights) |>
+    dplyr::summarise(overlapping_loci = dplyr::n_distinct(.data$studyLocusId),
+      overlapping_variants = dplyr::n_distinct(.data$variantId),
+      weighted_peaks = dplyr::n_distinct(.data$peak_name[.data$peak_weight > 0]), .by = "GWAS_ID")
+  inputs |>
+    dplyr::left_join(studies, by = "studyId", relationship = "one-to-one") |>
+    dplyr::left_join(ancestry, by = "GWAS_ID") |>
+    dplyr::left_join(overlaps, by = "GWAS_ID") |>
+    dplyr::transmute(.data$GWAS_ID, study_id = .data$studyId, pubmed_id = .data$pubmedId,
+      trait = .data$traitFromSource, category = .data$Category, source = .data$sourceType,
+      release = .data$sourceRelease, finemapping_method = .data$finemappingMethod, .data$ancestry,
+      discovery_sample = .data$initialSampleSize, .data$sample_size, credible_set_loci = .data$n_credible_set_loci,
+      .data$overlapping_loci, .data$overlapping_variants, .data$weighted_peaks)
+}
+
 # Wrapping every panel prevents one panel's long axis labels from shifting the
 # headings in other rows. Tags belong to the assembly, not the plot titles.
 compose_figure_1 <- function(A, B, C, D, E) {

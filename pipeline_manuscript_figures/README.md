@@ -8,6 +8,10 @@ below `results/`:
 - `1.png`: Figure 1, selected outputs of `mixed_human_31x`, and
   `data/figure_1_aggregation.tsv`, `data/figure_1_link.tsv` and
   `data/figure_1_traits.tsv`, the values the manuscript quotes from it.
+- `data/table_S3.tsv`: Supplementary Table S3, the GWAS studies of
+  `mixed_human_31x` with their Open Targets records and credible sets, and the
+  credible-set loci and variants that overlap consensus peaks and the peaks they
+  weight.
 - `S2.png` and `data/seurat_signac_comparison_resources.tsv`: Supplementary
   Figure S2, resource use of multiomeR and a conventional Seurat/Signac workflow
   on `comparison_1x` to `comparison_31x`. Its input
@@ -25,8 +29,8 @@ repository root inside a Slurm allocation (see the configuration's README):
 ```r
 targets::tar_make(
   script = "pipeline_manuscript_figures/targets.R",
-  names = tidyselect::any_of(c("figure_1.mixed_human_31x", "supplementary_figure_S2",
-    "supplementary_table_S4.comparison_5x"))
+  names = tidyselect::any_of(c("figure_1.mixed_human_31x", "supplementary_table_S3.mixed_human_31x",
+    "supplementary_figure_S2", "supplementary_table_S4.comparison_5x"))
 )
 ```
 

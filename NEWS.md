@@ -1,8 +1,9 @@
 # multiomeR 1.2.1 (unreleased)
 
-Lowers the memory requirement from 60 GB to 32 GB of RAM. Built from an empty
-store in a 16-CPU Slurm job limited to 32 GiB, the demo's processes used at most
-17 GiB.
+Lowers the memory requirement from 60 GB to 32 GB of RAM, labels the
+`brain_mouse` example with embryonic marker sets, and fixes the UMAP parameter
+sweeps on large aggregations. Built from an empty store in a 16-CPU Slurm job
+limited to 32 GiB, the demo's processes used at most 17 GiB.
 
 ## Resources
 
@@ -21,11 +22,45 @@ store in a 16-CPU Slurm job limited to 32 GiB, the demo's processes used at most
   `[resource_observation: ...]` tags in target descriptions. A target may carry
   several, and the manual suggests common keys.
 
+## Examples
+
+- Give the inactive `brain_mouse` example (10x Genomics' E18 mouse brain)
+  embryonic marker sets: radial glia, intermediate progenitors, upper- and
+  deep-layer and hippocampal excitatory neurons, and inhibitory neurons. The
+  adult glial sets left all seven WNN clusters unassigned; the new sets label
+  all of them, and its ATAC marker TFs follow.
+
+## Fixes
+
+- Sweep the GEX and ATAC cross-parameter UMAPs over the first n configured
+  UMAP components, so the ATAC sweep no longer includes the LSI depth component
+  and its largest setting matches the main UMAP. Initialize the sweeps with
+  spectral PCA (`init = "spca"`), because uwot's default spectral
+  initialization could crash on embeddings of several hundred thousand nuclei.
+- Draw the SCAVENGE TRS interval plot in at most four facet columns, fewer for
+  more than 30 groups, so its width stays within the 50,000-pixel image limit.
+- Wrap patchwork panels with `patchwork::wrap_elements()` in the manuscript
+  figure helpers, so their legends and labels are measured on the saving device
+  and no longer overlap or clip.
+
+## Development
+
+- Ask agents to start long pipeline drivers detached and follow their log,
+  since an agent tool's time limit stops the driver and its running targets.
+
 ## Migration
 
 - Resource requests, controllers and descriptions do not invalidate targets,
   so existing stores stay current. A custom `crew_controllers.R` needs a tier
   of at least 60 GB only for aggregations that use `Seurat_SCT`.
+- Target invalidation: `brain_mouse` rebuilds from its marker lists onward.
+  The GEX and ATAC UMAP sweeps (`cross.UMAPs.3_GEX_QC`, `cross.UMAPs.7_ATAC_QC`)
+  and `TRS_cluster_summary_plot` rerun with new plots, and
+  `UMAP_embeddings_tibble.GEX`, `.GEX_non_harmony` and `.ATAC` rerun and
+  reproduce their values.
+- Omitted from the 1.2.0 notes: 1.2.0 renamed AMULET's fragment-count column
+  from `nFrags` to `amulet_nFrags`, like the other AMULET columns. Update code
+  that reads it.
 
 # multiomeR 1.2.0 (2026-10-12)
 

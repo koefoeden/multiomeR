@@ -1,4 +1,4 @@
-# multiomeR 1.2.0 (unreleased)
+# multiomeR 1.2.0 (2026-10-12)
 
 Revises the statistical methods after an audit: GEX normalization, WNN modality
 weights, clustering, consensus peaks, doublet detection, and the differential,

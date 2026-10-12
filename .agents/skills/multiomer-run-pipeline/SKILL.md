@@ -53,6 +53,12 @@ Immediately before `tar_make()`, confirm that no live driver already owns the
 configured store. Do not infer ownership from a recorded PID without the process
 check above.
 
+Agent tool calls have time limits, including for background commands, and
+stopping the driver also stops its running targets. Start a driver that may
+run for hours detached (`setsid nohup <script> > /dev/null 2>&1 < /dev/null &`),
+have the script log `tar_make()` output and its exit status to a file, and
+follow that log.
+
 Preview a new or regex-based selection before running it. Fail if it matches no
 defined targets. Run a known exact target directly instead of constructing the
 graph once for preview and again for execution.

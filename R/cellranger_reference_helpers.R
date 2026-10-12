@@ -124,14 +124,16 @@ assert_cellranger_reference_matches_features <- function(
 }
 
 # Each GEM well's reference JSON is the unique match of its FASTA/GTF hashes,
-# so wells share a reference exactly when they resolve to the same JSON file.
+# so wells share a reference exactly when their JSON contents agree. The path
+# is left out: a stored reference keeps the path it was read from.
 resolve_aggregation_cellranger_reference <- function(
   cellranger_references,
   GEM_well_IDs,
   aggregation
 ) {
   reference_json_files <- purrr::map_chr(cellranger_references, "reference_json_file")
-  if (dplyr::n_distinct(reference_json_files) > 1L) {
+  contents <- purrr::map(cellranger_references, \(reference) reference[names(reference) != "reference_json_file"])
+  if (length(unique(contents)) > 1L) {
     stop(
       "Aggregation '",
       aggregation,

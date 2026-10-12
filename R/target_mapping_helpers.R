@@ -353,11 +353,11 @@ build_aggregation_tibble <- function(aggregation_tibble_all_from_yaml, GEM_well_
   project_categorical_vars <- purrr::map(
     aggregation_tibble$aggregation_categorical_vars,
     \(aggregation_categorical_vars) {
-      c(
+      unique(c(
         aggregation_categorical_vars,
         "GEM_well_ID",
         "donor_id"
-      )
+      ))
     }
   )
   non_peak_vars <- purrr::map(

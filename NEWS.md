@@ -27,8 +27,9 @@ limited to 32 GiB, the demo's processes used at most 17 GiB.
 - Give the inactive `brain_mouse` example (10x Genomics' E18 mouse brain)
   embryonic marker sets: radial glia, intermediate progenitors, upper- and
   deep-layer and hippocampal excitatory neurons, and inhibitory neurons. The
-  adult glial sets left all seven WNN clusters unassigned; the new sets label
-  all of them, and its ATAC marker TFs follow.
+  adult glial sets left every WNN cluster unassigned; the new sets label these
+  populations, leaving at most a small mixed cluster unassigned, and its ATAC
+  marker TFs follow.
 
 ## Fixes
 

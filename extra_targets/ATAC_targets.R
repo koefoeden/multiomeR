@@ -801,8 +801,8 @@ rlang::list2(
     ),
     targets::tar_target(
       name = UMAP_n_dims_seq.ATAC,
-      description = "Sequence of LSI dimension counts for cross-parameter UMAP sweep",
-      command = round(seq(5, length(aggregation_ATAC_data_PCs), length.out = 3))
+      description = "Sequence of counts of leading UMAP LSI dimensions for cross-parameter UMAP sweep",
+      command = round(seq(5, length(aggregation_UMAP_ATAC_PCs), length.out = 3))
     ),
     tarchetypes::tar_file(
       name = cross.UMAPs.7_ATAC_QC,
@@ -810,9 +810,10 @@ rlang::list2(
       command = {
         sweep_umap <- run_UMAP_from_embedding_matrix(
           embedding_matrix = harmony_embeddings_matrix.ATAC[metadata_w_cell_types_tibble.ATAC$barcode_w_prefix, , drop = FALSE],
-          dims = 1:UMAP_n_dims_seq.ATAC,
+          dims = aggregation_UMAP_ATAC_PCs[seq_len(UMAP_n_dims_seq.ATAC)],
           n_neighbors = UMAP_neighbors_seq,
           min_dist = aggregation_UMAP_min_dist,
+          init = "spca",
           threads = 6
         ) |>
           tibble::as_tibble(rownames = "barcode_w_prefix")
@@ -821,7 +822,7 @@ rlang::list2(
           dplyr::select(-dplyr::any_of(c("LSI_UMAP_1", "LSI_UMAP_2"))) |>
           dplyr::left_join(sweep_umap, by = "barcode_w_prefix") |>
           plot_UMAP_from_metadata(variable = "LSI_harmony_SNN_cluster_cell_type") +
-          ggplot2::labs(subtitle = sprintf("LSI dimensions: %s; neighbours: %s; min_dist: %s. Compare label stability across settings; labels are GEX-derived.",
+          ggplot2::labs(subtitle = sprintf("First %s UMAP LSI dimensions; neighbours: %s; min_dist: %s. Compare label stability across settings; labels are GEX-derived.",
             UMAP_n_dims_seq.ATAC, UMAP_neighbors_seq, aggregation_UMAP_min_dist))
 
         save_plots_structured(plot, dyn_suffix_in_subdir = TRUE, override_suffix = paste0(UMAP_n_dims_seq.ATAC, "_", UMAP_neighbors_seq))

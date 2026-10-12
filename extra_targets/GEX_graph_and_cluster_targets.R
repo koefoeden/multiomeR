@@ -265,8 +265,8 @@ rlang::list2(
   ),
   targets::tar_target(
     name = UMAP_n_dims_seq.GEX,
-    description = "Generate a sequence of PC counts for cross-parameter UMAP exploration",
-    command = round(seq(5, length(aggregation_GEX_data_PCs), length.out = 3))
+    description = "Generate a sequence of counts of leading UMAP PCs for cross-parameter UMAP exploration",
+    command = round(seq(5, length(aggregation_UMAP_GEX_PCs), length.out = 3))
   ),
   targets::tar_target(
     name = UMAP_neighbors_seq,
@@ -321,11 +321,12 @@ rlang::list2(
     command = {
       sweep_umap <- run_UMAP_from_embedding_matrix(
         embedding_matrix = harmony_embeddings_matrix.GEX,
-        dims = seq_len(UMAP_n_dims_seq.GEX),
+        dims = aggregation_UMAP_GEX_PCs[seq_len(UMAP_n_dims_seq.GEX)],
         n_neighbors = UMAP_neighbors_seq,
         min_dist = aggregation_UMAP_min_dist,
         dim_prefix = "PCA_",
         col_prefix = "GEX_UMAP",
+        init = "spca",
         threads = 6
       ) |>
         tibble::as_tibble(rownames = "barcode_w_prefix")
@@ -334,7 +335,7 @@ rlang::list2(
         dplyr::select(-dplyr::any_of(c("GEX_UMAP_1", "GEX_UMAP_2"))) |>
         dplyr::left_join(sweep_umap, by = "barcode_w_prefix") |>
         plot_UMAP_from_metadata(variable = "PCA_harmony_SNN_cluster_cell_type", umap_cols = c("GEX_UMAP_1", "GEX_UMAP_2")) +
-        ggplot2::labs(subtitle = sprintf("PCs: %s; neighbours: %s; min_dist: %s. Compare label stability across settings; island spacing is not biological distance.",
+        ggplot2::labs(subtitle = sprintf("First %s UMAP PCs; neighbours: %s; min_dist: %s. Compare label stability across settings; island spacing is not biological distance.",
           UMAP_n_dims_seq.GEX, UMAP_neighbors_seq, aggregation_UMAP_min_dist))
     } |>
       save_plots_structured(dyn_suffix_in_subdir = TRUE, override_suffix = paste0(UMAP_n_dims_seq.GEX, "_", UMAP_neighbors_seq)),

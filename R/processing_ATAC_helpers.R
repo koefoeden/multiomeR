@@ -779,6 +779,7 @@ run_ATAC_LSI_BPCells <- function(ATAC_peak_BPCells_matrix, n_components, scale_f
 #' @param dim_prefix Prefix used to translate `dims` into embedding column names, for example `PCA_`, `LSI_`, or `WNN_`.
 #' @param col_prefix Prefix assigned to generated coordinate columns, for example `LSI_UMAP` gives `LSI_UMAP_1` and `LSI_UMAP_2`.
 #' @param n_components Number of UMAP output dimensions to compute; use 2 for plotting panels and 3 for 3D widgets.
+#' @param init uwot initialization. The QC sweeps use `"spca"` because the default spectral initialization can segfault on large embeddings.
 #' @param threads Number of threads used for nearest-neighbor construction.
 #' @return A numeric UMAP matrix with preserved cell row names and `<col_prefix>_<dimension>` columns.
 #' @keywords internal
@@ -792,6 +793,7 @@ run_UMAP_from_embedding_matrix <- function(
   dim_prefix = "LSI_",
   col_prefix = "LSI_UMAP",
   n_components = 2,
+  init = "spectral",
   threads = 1
 ) {
   umap_input <- select_embedding_dimensions(
@@ -808,6 +810,7 @@ run_UMAP_from_embedding_matrix <- function(
     min_dist = min_dist,
     metric = "cosine",
     n_components = n_components,
+    init = init,
     n_threads = threads,
     n_sgd_threads = 0
   )

@@ -307,8 +307,7 @@ compare_SCAVENGE_parity <- function(native, reference) {
 }
 
 #' Combine measurements and parity checks into one row per algorithm
-summarize_algorithm_parity <- function(runs, parity) {
-  measurements <- dplyr::bind_rows(lapply(runs, `[[`, "measurement"))
+summarize_algorithm_parity <- function(measurements, parity) {
   native <- dplyr::filter(measurements, .data$implementation == "native")
   reference <- dplyr::filter(measurements, .data$implementation == "reference")
   dplyr::inner_join(native, reference, by = c("algorithm", "n_cells", "n_features", "cores"),

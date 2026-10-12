@@ -335,11 +335,13 @@ algorithm_parity_pipeline <- c(
           algorithm_parity_run_scavenge_reference.comparison_5x)
         checks <- algorithm_parity_checks.comparison_5x
         agreement <- algorithm_parity_scDblFinder_agreement.comparison_5x
-        summary <- summarize_algorithm_parity(runs, checks)
+        # The recorded host names an internal compute node.
+        measurements <- dplyr::bind_rows(lapply(runs, `[[`, "measurement")) |> dplyr::select(-"host")
+        summary <- summarize_algorithm_parity(measurements, checks)
         dir <- file.path(output_dir, "data", "algorithm_parity")
         fs::dir_create(dir)
         paths <- file.path(dir, c("measurements.tsv", "parity.tsv", "scdblfinder_atac_agreement.tsv", "summary.tsv"))
-        readr::write_tsv(dplyr::bind_rows(lapply(runs, `[[`, "measurement")), paths[[1]])
+        readr::write_tsv(measurements, paths[[1]])
         readr::write_tsv(checks, paths[[2]])
         readr::write_tsv(agreement, paths[[3]])
         readr::write_tsv(summary, paths[[4]])

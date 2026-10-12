@@ -1,13 +1,13 @@
-algorithm	implementation	version	n_cells	n_features	cores	elapsed_seconds	peak_process_tree_rss_gb	host
-ucell	native	BPCells 0.3.1	48922	38606	6	30.28673791885376	7.3920745849609375	esrumcmpn11fl.unicph.domain
-ucell	reference	UCell 2.14.0	48922	38606	6	76.43071126937866	36.75196838378906	esrumcmpn11fl.unicph.domain
-wnn	native	BPCells 0.3.1	48922	59	6	56.90507435798645	1.7564201354980469	esrumcmpn11fl.unicph.domain
-wnn	reference	Seurat 5.6.0	48922	59	6	62.49063968658447	2.3346328735351562	esrumcmpn11fl.unicph.domain
-scdblfinder_atac	native	BPCells 0.3.1 + scDblFinder 1.24.10	11152	159533	6	38.219865798950195	1.73370361328125	esrumcmpn11fl.unicph.domain
-scdblfinder_atac	reference	scDblFinder 1.24.10	11152	159533	6	103.70371794700623	10.520637512207031	esrumcmpn11fl.unicph.domain
-scdblfinder_atac_predoublet	native	BPCells 0.3.1 + scDblFinder 1.24.10	11152	159533	6	31.85201358795166	1.3113212585449219	esrumcmpn11fl.unicph.domain
-scdblfinder_atac_predoublet	reference	scDblFinder 1.24.10	11152	159533	6	113.86530470848083	10.59335708618164	esrumcmpn11fl.unicph.domain
-amulet	native	BPCells 0.3.1	12220	NA	6	25.46015739440918	0.8673820495605469	esrumcmpn11fl.unicph.domain
-amulet	reference	scDblFinder 1.24.10, full-memory AMULET	12220	NA	6	1815.4064185619354	29.690345764160156	esrumcmpn11fl.unicph.domain
-scavenge	native	multiomeR native	48922	8562366	6	6.748295068740845	0.66828155517578125	esrumcmpn11fl.unicph.domain
-scavenge	reference	SCAVENGE 1.0.2@8ee8b173d965	48922	8562366	6	7.774457931518555	0.6856422424316406	esrumcmpn11fl.unicph.domain
+algorithm	implementation	version	n_cells	n_features	cores	elapsed_seconds	peak_process_tree_rss_gb
+ucell	native	BPCells 0.3.1	48922	38606	6	30.28673791885376	7.3920745849609375
+ucell	reference	UCell 2.14.0	48922	38606	6	76.43071126937866	36.75196838378906
+wnn	native	BPCells 0.3.1	48922	59	6	56.90507435798645	1.7564201354980469
+wnn	reference	Seurat 5.6.0	48922	59	6	62.49063968658447	2.3346328735351562
+scdblfinder_atac	native	BPCells 0.3.1 + scDblFinder 1.24.10	11152	159533	6	38.219865798950195	1.73370361328125
+scdblfinder_atac	reference	scDblFinder 1.24.10	11152	159533	6	103.70371794700623	10.520637512207031
+scdblfinder_atac_predoublet	native	BPCells 0.3.1 + scDblFinder 1.24.10	11152	159533	6	31.85201358795166	1.3113212585449219
+scdblfinder_atac_predoublet	reference	scDblFinder 1.24.10	11152	159533	6	113.86530470848083	10.59335708618164
+amulet	native	BPCells 0.3.1	12220	NA	6	25.46015739440918	0.8673820495605469
+amulet	reference	scDblFinder 1.24.10, full-memory AMULET	12220	NA	6	1815.4064185619354	29.690345764160156
+scavenge	native	multiomeR native	48922	8562366	6	6.748295068740845	0.66828155517578125
+scavenge	reference	SCAVENGE 1.0.2@8ee8b173d965	48922	8562366	6	7.774457931518555	0.6856422424316406

@@ -728,7 +728,7 @@ items:
   section: null
   target: chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment
   description: Save aligned locus facets with variant effects, gene bodies, ATAC coverage, and peaks per GWAS and focal cell type.
-  source_file: genetic_enrichment/cell_type_pseudobulk/chromVAR_variant_contribution_detail_plots/AcutePancreatitis_Bourgault2023/01_Pancreatic-acinar.png
+  source_file: genetic_enrichment/cell_type_pseudobulk/chromVAR_variant_contribution_detail_plots/AcutePancreatitis_Bourgault2023/01_Alveolar-type-2.png
   asset: gallery_assets/genetic_enrichment/chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.webp
 - checkpoint: peak_gene_correlation
   group: Peak–gene correlation

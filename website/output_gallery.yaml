@@ -210,7 +210,7 @@ items:
   section: 3. GEX clusters and cell types
   target: cluster_marker_volcano_plots.3_GEX_QC
   description: One cluster-marker volcano file per multicluster cell type; two clusters share one directed comparison.
-  source_file: 3_GEX_QC/cluster_marker_volcano_plots/Cardiomyocyte.png
+  source_file: 3_GEX_QC/cluster_marker_volcano_plots/01_Alveolar_type_2.png
   asset: gallery_assets/3_GEX-QC/cluster_marker_volcano_plots.3_GEX_QC.webp
 - checkpoint: 4_peak-QC
   group: Primary module

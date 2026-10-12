@@ -1,8 +1,8 @@
 # Manuscript figures and tables from configuration_dev's public-data aggregations:
-# Figure 1 and Supplementary Table S3 from mixed_human_31x, Supplementary Figure S2
-# comparing multiomeR with a conventional Seurat/Signac workflow on comparison_1x
-# to comparison_31x, and Supplementary Table S4 comparing the algorithm
-# reimplementations with their references on comparison_5x. See README.md.
+# Figure 1, Supplementary Figure S3 and Supplementary Table S3 from mixed_human_31x,
+# Supplementary Figure S2 comparing multiomeR with a conventional Seurat/Signac
+# workflow on comparison_1x to comparison_31x, and Supplementary Table S4 comparing
+# the algorithm reimplementations with their references on comparison_5x. See README.md.
 source("pipeline_manuscript_figures/helpers.R")
 source("pipeline_manuscript_figures/algorithm_parity_helpers.R")
 source("pipeline_manuscript_figures/seurat_signac_helpers.R")
@@ -151,6 +151,20 @@ figure_pipeline <- list(
       figure_1_traits.mixed_human_31x |>
         dplyr::select("GWAS_ID", "cluster", "z", "z_q", "n_loci", "top_locus_share") |>
         readr::write_tsv(paths[[3]])
+      paths
+    },
+    resources = get_tar_resources(RAM_GB_req = 4)
+  ),
+  tarchetypes::tar_file(
+    supplementary_figure_S3.mixed_human_31x,
+    description = "Supplementary Figure S3: the module's unscaled cell-type deviation heatmap for every GWAS study and assigned cell type, on Figure 1C's colour scale with its q < 0.05 stars, and its values",
+    command = {
+      scores <- chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x |>
+        dplyr::filter(is_figure_1_cell_type(.data$cluster))
+      paths <- file.path(output_dir, c("S3.png", "data/cell_type_trait_enrichment.tsv"))
+      ggplot2::ggsave(paths[[1]], plot_figure_S3(scores, GWAS_metadata_tracks_plot.genetic_enrichment.mixed_human_31x,
+        figure_1_traits.mixed_human_31x), device = ragg::agg_png, width = 14.5, height = 9.5, dpi = 300)
+      readr::write_tsv(dplyr::select(scores, "GWAS_ID", "Category", "cluster", "deviation", "z", "z_q"), paths[[2]])
       paths
     },
     resources = get_tar_resources(RAM_GB_req = 4)

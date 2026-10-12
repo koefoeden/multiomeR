@@ -384,6 +384,21 @@ plot_figure_1_TRS <- function(data, trait, score_limits) {
     ggplot2::labs(title = figure_1_trait_labels(trait), x = "UMAP 1", y = "UMAP 2")
 }
 
+# Supplementary Figure S3: the module's unscaled deviation heatmap of every study
+# and assigned cell type, with Figure 1C's colour scale, cell-type labels and stars;
+# rows also name the study. Deviations beyond Figure 1C's range take its end colours.
+plot_figure_S3 <- function(scores, GWAS_metadata_tracks_plot, traits) {
+  limit <- max(abs(scores$deviation[scores$GWAS_ID %in% traits$GWAS_ID]))
+  GWAS_metadata_tracks_plot[[1]] <- GWAS_metadata_tracks_plot[[1]] +
+    ggplot2::scale_y_discrete(drop = FALSE, expand = c(0, 0),
+      labels = \(x) paste0(figure_1_trait_labels(x), " (", sub("^.*_([A-Za-z]+)([0-9]{4}).*$", "\\1 \\2", x), ")"))
+  scores |>
+    dplyr::mutate(cluster = figure_1_cell_type_labels(.data$cluster),
+      deviation = pmax(pmin(.data$deviation, limit), -limit), label = dplyr::if_else(.data$z_q < .05, "*", "")) |>
+    plot_GWAS_by_cluster_heatmap(GWAS_metadata_tracks_plot, fill_col = "deviation", fill_label = "Deviation",
+      fill_limits = c(-limit, limit), support_label_col = "label")
+}
+
 # Supplementary Table S3: each configured study's Open Targets record and credible
 # sets, with the loci and variants overlapping consensus peaks and the peaks they weight.
 GWAS_study_tibble <- function(inputs, variant_weights, study_dataset_path) {

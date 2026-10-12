@@ -8,6 +8,9 @@ below `results/`:
 - `1.png`: Figure 1, selected outputs of `mixed_human_31x`, and
   `data/figure_1_aggregation.tsv`, `data/figure_1_link.tsv` and
   `data/figure_1_traits.tsv`, the values the manuscript quotes from it.
+- `S3.png` and `data/cell_type_trait_enrichment.tsv`: Supplementary Figure S3,
+  the cell-type deviations of every GWAS study of `mixed_human_31x`, of which
+  Figure 1C shows a selection.
 - `data/table_S3.tsv`: Supplementary Table S3, the GWAS studies of
   `mixed_human_31x` with their Open Targets records and credible sets, and the
   credible-set loci and variants that overlap consensus peaks and the peaks they
@@ -29,8 +32,8 @@ repository root inside a Slurm allocation (see the configuration's README):
 ```r
 targets::tar_make(
   script = "pipeline_manuscript_figures/targets.R",
-  names = tidyselect::any_of(c("figure_1.mixed_human_31x", "supplementary_table_S3.mixed_human_31x",
-    "supplementary_figure_S2", "supplementary_table_S4.comparison_5x"))
+  names = tidyselect::any_of(c("figure_1.mixed_human_31x", "supplementary_figure_S3.mixed_human_31x",
+    "supplementary_table_S3.mixed_human_31x", "supplementary_figure_S2", "supplementary_table_S4.comparison_5x"))
 )
 ```
 
@@ -69,6 +72,10 @@ Selections are deterministic but follow the data.
   protein-coding genes, focal coverage and consensus peaks.
 - **E:** SCAVENGE trait-relevance scores of the same two traits on the WNN UMAP,
   with a shared colour scale, unclipped scores and cell-type labels.
+
+Supplementary Figure S3 shows every study across the assigned cell types with
+the module's unscaled deviation heatmap and GWAS metadata tracks, on Figure 1C's
+colour scale and with its stars; larger deviations take the scale's end colours.
 
 ## Supplementary Figure S2
 

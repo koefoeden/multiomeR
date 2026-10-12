@@ -1,4 +1,4 @@
-# multiomeR 1.2.1 (unreleased)
+# multiomeR 1.2.1 (2026-10-12)
 
 Lowers the memory requirement from 60 GB to 32 GB of RAM, labels the
 `brain_mouse` example with embryonic marker sets, and fixes the UMAP parameter

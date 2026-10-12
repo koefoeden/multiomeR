@@ -148,12 +148,22 @@ select_figure_1_traits <- function(scores, n = 6L) {
   selected
 }
 
+# Sentence case without author, year and ancestry, keeping acronyms such as LDL
+# and HbA1c: LungAdenocarcinoma_McKay2017 -> Lung adenocarcinoma.
 figure_1_trait_labels <- function(x) {
-  gsub("([a-z])([A-Z])", "\\1 \\2", sub("_[^_]+[0-9]{4}$", "", x))
+  x <- gsub("_", " ", sub("_[^_]+[0-9]{4}(_[A-Z]+)?$", "", x))
+  x <- gsub("([a-z])(?=[A-Z][A-Za-z])", "\\1 ", x, perl = TRUE)
+  gsub(" ([A-Z])(?=[a-z])", " \\L\\1", x, perl = TRUE)
 }
 
 # Deviation clusters use hyphens and metadata cell types underscores.
 figure_1_cell_type_labels <- function(x) gsub("[-_]", " ", x)
+
+# Cell types as the plural nouns of the manuscript's prose.
+figure_1_cell_type_nouns <- function(x) {
+  dplyr::coalesce(c(T = "T cells", B = "B cells", NK = "NK cells", Mono = "monocytes")[x],
+    paste0(tolower(figure_1_cell_type_labels(x)), "s"))
+}
 
 # Lanes from gene bodies widened to their labels' approximate extent, so labels in
 # one lane do not overlap; char_fraction is one character's share of the facet width.
@@ -205,7 +215,7 @@ plot_figure_1_link_tracks <- function(record, coverage) {
     ggplot2::labs(x = paste0(link$chr, " (Mb)"), y = "Link") + ggplot2::guides(y = "none")
   patchwork::wrap_plots(genes, accessibility, connection, ncol = 1,
     heights = c(1.4, 1, .5)) + patchwork::plot_annotation(
-      title = paste(link$TargetGene, "in", link$cell_group),
+      title = paste(link$TargetGene, "in", figure_1_cell_type_nouns(link$cell_group)),
       theme = figure_1_theme())
 }
 

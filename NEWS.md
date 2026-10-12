@@ -1,3 +1,32 @@
+# multiomeR 1.2.1 (unreleased)
+
+Lowers the memory requirement from 60 GB to 32 GB of RAM. Built from an empty
+store in a 16-CPU Slurm job limited to 32 GiB, the demo's processes used at most
+17 GiB.
+
+## Resources
+
+- Size each target's `get_tar_resources()` request at about 1.5 times the peak
+  memory it reached on aggregations of 213,000 and 713,000 nuclei, in 16- and
+  32-GB steps. With the default GEX backend, no target requests more than
+  32 GB, against 49 requests of 40 or 60 GB before; the largest targets need
+  about 7 GB plus 2.5 GB per 100,000 nuclei. Unmeasured targets request at most
+  32 GB.
+- Request 60 GB for GEX normalization and the two Seurat objects only when an
+  aggregation of the configuration uses the optional `Seurat_SCT` GEX backend,
+  whose GEX normalization needs about 0.25 GB per 1,000 nuclei.
+- Declare the default `local-heavy` controller with 32 GB and add a
+  `local-large` controller (6 cores, 60 GB, one worker) for those requests.
+- Record the measurements behind the requests as
+  `[resource_observation: ...]` tags in target descriptions. A target may carry
+  several, and the manual suggests common keys.
+
+## Migration
+
+- Resource requests, controllers and descriptions do not invalidate targets,
+  so existing stores stay current. A custom `crew_controllers.R` needs a tier
+  of at least 60 GB only for aggregations that use `Seurat_SCT`.
+
 # multiomeR 1.2.0 (2026-10-12)
 
 Revises the statistical methods after an audit: GEX normalization, WNN modality

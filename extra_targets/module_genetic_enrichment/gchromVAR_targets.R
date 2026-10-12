@@ -6,7 +6,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = GWAS_peak_variant_weight_records,
-    description = "Allocate capped peak posterior-probability weights to the overlapping credible-set variants of one GWAS",
+    description = "Allocate capped peak posterior-probability weights to the overlapping credible-set variants of one GWAS [resource_observation: peak_RAM_GiB=3.2; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10]",
     command = get_GWAS_chromVAR_peak_variant_weight_tibble(
       GWAS_ID = GWAS_input_records$GWAS_ID,
       variant_GRanges = S4Vectors::subset(
@@ -16,17 +16,17 @@ rlang::list2(
       peak_ranges = genetic_enrichment_peak_ranges
     ),
     pattern = map(GWAS_input_records),
-    resources = get_tar_resources(RAM_GB_req = 40)
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = GWAS_peak_weight_records,
-    description = "Build capped peak posterior-probability weights for one GWAS [part_of_graph:genetic_enrichment_single_nucleus]",
+    description = "Build capped peak posterior-probability weights for one GWAS [part_of_graph:genetic_enrichment_single_nucleus] [resource_observation: peak_RAM_GiB=3.3; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10]",
     command = get_GWAS_chromVAR_peak_weight_record(
       peak_variant_weight_tibble = GWAS_peak_variant_weight_records,
       peak_ranges = genetic_enrichment_peak_ranges
     ),
     pattern = map(GWAS_peak_variant_weight_records),
-    resources = get_tar_resources(RAM_GB_req = 40)
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
     name = GWAS_peak_weights_barplot,
@@ -52,7 +52,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = chromVAR_z_score_chunk_records.single_nucleus,
-    description = "Compute single-nucleus chromVAR z-scores for one GWAS and one reusable ATAC chunk",
+    description = "Compute single-nucleus chromVAR z-scores for one GWAS and one reusable ATAC chunk [resource_observation: peak_RAM_GiB=10.4; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=6.2; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
     command = get_GWAS_chromVAR_z_score_chunk_record(
       peak_weight_record = GWAS_peak_weight_records,
       RSE_ATAC = chromVAR_obj.ATAC,
@@ -60,7 +60,7 @@ rlang::list2(
     ),
     pattern = cross(GWAS_peak_weight_records, chromVAR_chunk_context_records.ATAC),
     iteration = "vector",
-    resources = get_tar_resources(RAM_GB_req = 60)
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = chromVAR_z_score_chunk_records_by_trait.single_nucleus,

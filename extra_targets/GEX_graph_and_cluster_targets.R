@@ -25,7 +25,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = PCA_clusters.GEX,
-    description = "Leiden clusters from a BPCells nearest-neighbour graph on Harmony-corrected GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:seurat_export]",
+    description = "Leiden clusters from a BPCells nearest-neighbour graph on Harmony-corrected GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=7.3; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
     command = cluster_embedding_matrix_BPCells(
       embedding_matrix = harmony_embeddings_matrix.GEX,
       dims = aggregation_GEX_data_PCs,
@@ -35,7 +35,7 @@ rlang::list2(
       threads = 6,
       min_barcodes = aggregation_cluster_min_barcodes
     ),
-    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = metadata_w_clusters_tibble.GEX,
@@ -86,13 +86,13 @@ rlang::list2(
   ),
   targets::tar_target(
     name = metadata_w_cell_types_unfiltered_tibble.GEX,
-    description = "Attach supported GEX cluster labels or explicit abstentions and per-cell UCell scores before doublet removal",
+    description = "Attach supported GEX cluster labels or explicit abstentions and per-cell UCell scores before doublet removal [resource_observation: peak_RAM_GiB=1.8; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10]",
     command = add_cluster_UCell_annotations(
       metadata_tibble = metadata_w_clusters_tibble.GEX,
       annotation = cluster_UCell_annotation.3_GEX_QC,
       cluster_column = "PCA_harmony_SNN_cluster"
     ),
-    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 23)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
     name = markers_by_cell_type_dot_plot.3_GEX_QC,
@@ -255,7 +255,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = cell_type_marker_tibbles.GEX,
-    description = "Compute BPCells marker genes for each GEX cell type against all other cell types",
+    description = "Compute BPCells marker genes for each GEX cell type against all other cell types [resource_observation: peak_RAM_GiB=5.4; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-09] [resource_observation: peak_RAM_GiB=14.2; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
     command = get_BPCells_markers_from_matrix(
       feature_matrix = aggregated_counts_BPCells_matrix.GEX,
       metadata_tibble = metadata_w_cell_types_tibble.GEX,
@@ -317,7 +317,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = cross.UMAPs.3_GEX_QC,
-    description = "Compute GEX UMAPs across a sweep of PC counts and neighbor counts. [checkpoint:3_GEX-QC]",
+    description = "Compute GEX UMAPs across a sweep of PC counts and neighbor counts. [checkpoint:3_GEX-QC] [resource_observation: peak_RAM_GiB=6.9; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-01]",
     command = {
       sweep_umap <- run_UMAP_from_embedding_matrix(
         embedding_matrix = harmony_embeddings_matrix.GEX,
@@ -339,7 +339,7 @@ rlang::list2(
     } |>
       save_plots_structured(dyn_suffix_in_subdir = TRUE, override_suffix = paste0(UMAP_n_dims_seq.GEX, "_", UMAP_neighbors_seq)),
     pattern = cross(UMAP_n_dims_seq.GEX, UMAP_neighbors_seq),
-    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
     name = harmony.categorical.UMAPs.3_GEX_QC,
@@ -489,7 +489,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = GEX_Seurat_object.3_GEX_QC,
-    description = "Build a GEX-only Seurat compatibility object for manual review before ATAC peak calling. [checkpoint:3_GEX-QC]",
+    description = "Build a GEX-only Seurat compatibility object for manual review before ATAC peak calling. [checkpoint:3_GEX-QC] [resource_observation: peak_RAM_GiB=6.5; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=9.3; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=45.8; n_nuclei=376k; aggregation=comparison_31x; backend=Seurat_SCT; method=slurm_monitor; date=2026-10-10]",
     command = build_seurat_signac_convenience_object(
       GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX,
       metadata_tibble = metadata_w_cell_types_tibble.GEX,
@@ -503,6 +503,7 @@ rlang::list2(
       data_nNNs = aggregation_data_nNNs,
       graph_threads = 15
     ),
+    resources = get_tar_resources(RAM_GB_req = if ("Seurat_SCT" %in% aggregation_tibble$aggregation_GEX_PCA_backend) 60 else 16),
     packages = w_def(c("Seurat", "SeuratObject", "BPCells"))
   ),
 )

@@ -23,7 +23,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = chromVAR_peak_contribution_tibble.cell_type_pseudobulk,
-    description = "Decompose each cell-type GWAS chromVAR heatmap value into exact peak contributions [part_of_graph:genetic_enrichment_cell_type_contributions]",
+    description = "Decompose each cell-type GWAS chromVAR heatmap value into exact peak contributions [part_of_graph:genetic_enrichment_cell_type_contributions] [resource_observation: peak_RAM_GiB=3.7; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
     command = get_GWAS_chromVAR_peak_contribution_tibble(
       chromVAR_background_record = chromVAR_background_record.cell_type_pseudobulk,
       pseudobulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
@@ -31,7 +31,7 @@ rlang::list2(
       annotation_matrix = GWAS_peak_weight_matrix,
       GWAS_inputs_tibble = GWAS_inputs_tibble
     ),
-    resources = get_tar_resources(RAM_GB_req = 40)
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = chromVAR_deviation_tibble.cell_type_pseudobulk,
@@ -48,7 +48,7 @@ rlang::list2(
       peak_contribution_tibble = chromVAR_peak_contribution_tibble.cell_type_pseudobulk,
       peak_variant_weight_tibble = GWAS_peak_variant_weight_tibble
     ),
-    resources = get_tar_resources(RAM_GB_req = 40)
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = chromVAR_locus_contribution_tibble.cell_type_pseudobulk,
@@ -89,7 +89,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk,
-    description = "Prepare plot-ready variant, accessibility, and peak-track data for one GWAS",
+    description = "Prepare plot-ready variant, accessibility, and peak-track data for one GWAS [resource_observation: peak_RAM_GiB=5.7; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=11.8; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
     command = prepare_GWAS_variant_contribution_detail_records(
       variant_contribution_tibble = chromVAR_variant_contribution_tibble.cell_type_pseudobulk,
       locus_contribution_tibble = chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk,
@@ -102,7 +102,7 @@ rlang::list2(
     ),
     pattern = map(chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk),
     iteration = "list",
-    resources = get_tar_resources(RAM_GB_req = 40)
+    resources = get_tar_resources(RAM_GB_req = 32)
   ),
   tarchetypes::tar_file(
     name = chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk,

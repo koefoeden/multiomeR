@@ -11,6 +11,6 @@ rlang::list2(
       allow_no_peaks = TRUE
     ),
     pattern = map(peak_calling_cluster_discovery_tibble.ATAC),
-    resources = get_tar_resources(RAM_GB_req = 60)
+    resources = get_tar_resources(RAM_GB_req = 32)
   )
 )

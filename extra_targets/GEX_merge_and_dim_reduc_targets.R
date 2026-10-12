@@ -1,7 +1,7 @@
 rlang::list2(
   tarchetypes::tar_file(
     name = aggregated_GEX_BPCells_matrix_dir.GEX,
-    description = "Write the combined GEX BPCells count matrix for all GEM wells in the dataset [part_of_graph:GEX] [part_of_graph:parallel] [part_of_graph:seurat_export]",
+    description = "Write the combined GEX BPCells count matrix for all GEM wells in the dataset [part_of_graph:GEX] [part_of_graph:parallel] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=8.5; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-01]",
     command = {
       matching_features <- vapply(
         aggregation_GEX_counts_BPCells_matrix_syms,
@@ -21,7 +21,7 @@ rlang::list2(
       BPCells::write_matrix_dir(combined_counts_matrix, out_dir, overwrite = TRUE)
       out_dir
     },
-    resources = get_tar_resources(RAM_GB_req = 32)
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = aggregated_counts_BPCells_matrix.GEX,
@@ -31,7 +31,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = GEX_normalization.GEX,
-    description = "Normalize BPCells-backed GEX counts with Pearson residuals, compute PCA, and keep the normalized data for the Seurat export [part_of_graph:GEX] [part_of_graph:seurat_export]",
+    description = "Normalize BPCells-backed GEX counts with Pearson residuals, compute PCA, and keep the normalized data for the Seurat export [part_of_graph:GEX] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=2.3; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-09] [resource_observation: peak_RAM_GiB=4.5; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-01] [resource_observation: peak_RAM_GiB=93.4; n_nuclei=376k; aggregation=comparison_31x; backend=Seurat_SCT; method=slurm_monitor; date=2026-10-09] [resource_observation: backend=Seurat_SCT; scaling=0.22-0.25 GiB per 1k nuclei; date=2026-10-09]",
     command = run_GEX_PCA_BPCells(
       GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX,
       metadata_tibble = GEX_cellranger_kept_metadata_tibble |>
@@ -43,7 +43,9 @@ rlang::list2(
       threads = 6,
       return_normalized = TRUE
     ),
-    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60) # temporary increase for large datasets using SCT_backend until we optimize this.
+    # Seurat_SCT holds the normalized data in memory.
+    resources = get_tar_resources(cores_req = 6,
+      RAM_GB_req = if ("Seurat_SCT" %in% aggregation_tibble$aggregation_GEX_PCA_backend) 60 else 16)
   ),
   targets::tar_target(
     name = PCA_BPCells.GEX,
@@ -97,7 +99,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = harmony_embeddings_matrix.GEX,
-    description = "Harmony-corrected SCTransform GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:WNN] [part_of_graph:seurat_export]",
+    description = "Harmony-corrected SCTransform GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:WNN] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=5.0; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-01]",
     command = run_harmony_on_embedding_matrix(
       embedding_matrix = PCA_BPCells.GEX$cell_embeddings,
       metadata_tibble = metadata_harmony_tibble.GEX,
@@ -106,11 +108,11 @@ rlang::list2(
       cores = 6,
       dim_prefix = "PCA_"
     ),
-    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = UMAP_embeddings_tibble.GEX,
-    description = "UMAP coordinates from BPCells-native Harmony-corrected GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:seurat_export]",
+    description = "UMAP coordinates from BPCells-native Harmony-corrected GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=5.3; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
     command = run_UMAP_from_embedding_matrix(
       embedding_matrix = harmony_embeddings_matrix.GEX,
       dims = aggregation_UMAP_GEX_PCs,
@@ -121,11 +123,11 @@ rlang::list2(
       threads = 6
     ) |>
       tibble::as_tibble(rownames = "barcode_w_prefix"),
-    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = UMAP_embeddings_tibble.GEX_non_harmony,
-    description = "UMAP coordinates from uncorrected BPCells-native GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:seurat_export]",
+    description = "UMAP coordinates from uncorrected BPCells-native GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=5.3; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
     command = run_UMAP_from_embedding_matrix(
       embedding_matrix = PCA_BPCells.GEX$cell_embeddings,
       dims = aggregation_UMAP_GEX_PCs,
@@ -136,7 +138,7 @@ rlang::list2(
       threads = 6
     ) |>
       tibble::as_tibble(rownames = "barcode_w_prefix"),
-    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
     name = VizDimLoadings_plots.2_GEX_PCA_QC,

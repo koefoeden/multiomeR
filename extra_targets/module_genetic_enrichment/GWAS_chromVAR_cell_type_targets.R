@@ -1,15 +1,15 @@
 rlang::list2(
   targets::tar_target(
     name = GWAS_peak_weight_matrix,
-    description = "Combine per-GWAS peak posterior-probability weights into one peak-by-GWAS annotation matrix [part_of_graph:genetic_enrichment_cell_type_contributions]",
+    description = "Combine per-GWAS peak posterior-probability weights into one peak-by-GWAS annotation matrix [part_of_graph:genetic_enrichment_cell_type_contributions] [resource_observation: peak_RAM_GiB=3.9; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10]",
     command = get_GWAS_chromVAR_peak_weight_matrix(
       peak_weight_records = GWAS_peak_weight_records
     ),
-    resources = get_tar_resources(RAM_GB_req = 40)
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
     name = cell_type_pseudobulk_counts_BPCells_matrix_dir.ATAC,
-    description = "Write ATAC counts summed per WNN cell type to BPCells for descriptive GWAS chromVAR plots [part_of_graph:genetic_enrichment_cell_type_contributions]",
+    description = "Write ATAC counts summed per WNN cell type to BPCells for descriptive GWAS chromVAR plots [part_of_graph:genetic_enrichment_cell_type_contributions] [resource_observation: peak_RAM_GiB=3.5; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-11]",
     command = {
       out_dir <- get_structured_file_path()
       get_BPCells_group_pseudobulk_matrix(
@@ -22,7 +22,7 @@ rlang::list2(
         BPCells::write_matrix_dir(out_dir, overwrite = TRUE)
       out_dir
     },
-    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = cell_type_pseudobulk_counts_matrix.ATAC,
@@ -44,13 +44,13 @@ rlang::list2(
   ),
   targets::tar_target(
     name = chromVAR_background_record.cell_type_pseudobulk,
-    description = "Fit the cell-type pseudobulk betterChromVAR background used by GWAS score contributions, weighting every cell type equally in the expected accessibility [part_of_graph:genetic_enrichment_cell_type_contributions]",
+    description = "Fit the cell-type pseudobulk betterChromVAR background used by GWAS score contributions, weighting every cell type equally in the expected accessibility [part_of_graph:genetic_enrichment_cell_type_contributions] [resource_observation: peak_RAM_GiB=2.1; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-12]",
     command = get_pseudobulk_chromVAR_background_record(
       pseudobulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
       chromVAR_obj = chromVAR_obj.ATAC,
       equal_column_weights = TRUE
     ),
-    resources = get_tar_resources(RAM_GB_req = 60)
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
     name = raw_deviation_unscaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk,

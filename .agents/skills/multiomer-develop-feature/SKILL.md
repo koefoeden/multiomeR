@@ -58,7 +58,10 @@ tar_target(
   discovery stays in the pipeline driver environment rather than a Crew worker.
 - Use `packages = w_def("PackageName")` only when a target needs to extend the default package set.
 - Add `get_tar_resources()` from measured needs or the closest comparable
-  target; do not copy a large CPU/RAM request as a generic default.
+  target; do not copy a large CPU/RAM request as a generic default. Request
+  about 1.5 times the measured peak RAM in 16- or 32-GB steps, keep the default
+  path within 32 GB, and record the measurement as a
+  `[resource_observation: ...]` description tag.
 - Avoid new cross-store reads for work that can live as a root aggregation module. Extracted workflows such as GWAS processing now live in sister repos.
 
 ## Validation

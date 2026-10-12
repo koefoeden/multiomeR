@@ -251,7 +251,7 @@ rlang::list2(
       cellranger_barcodes_tsv = cellranger_barcodes_tsv,
       cores = 4 # consider decreasing this if increasing memory from 60 > 120 GB doesn't fix the issue.
     ),
-    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = unfiltered_cells_n_vecs,
@@ -260,7 +260,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = full_metadata_tibble,
-    description = "Join GEX metadata with ATAC QC, vireo, per-barcode, and AMULET metrics into a comprehensive per-barcode metadata tibble [part_of_graph:parallel] [part_of_graph:seurat_export]",
+    description = "Join GEX metadata with ATAC QC, vireo, per-barcode, and AMULET metrics into a comprehensive per-barcode metadata tibble [part_of_graph:parallel] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=2.5; scope=largest GEM well of comparison_31x; method=slurm_monitor; date=2026-10-09]",
     command = GEX_basic_metadata_tibble |>
       dplyr::full_join(ATAC_qc_metrics_tibble, by = "barcode") |>
       dplyr::full_join(vireo_donor_ids_tibble, by = "barcode") |>
@@ -279,7 +279,7 @@ rlang::list2(
         ATAC_peak_region_cutsites_frac = atac_peak_region_cutsites / atac_fragments,
         GEX_exonic_to_intronic_umis_frac = gex_exonic_umis / gex_intronic_umis
       ),
-    resources = get_tar_resources(RAM_GB_req = 60)
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = excluded_barcodes_by_type_list,

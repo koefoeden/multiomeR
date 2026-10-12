@@ -52,7 +52,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = peak_gene_correlation_donor_state_records.WNN,
-    description = "Build mutually exclusive donor by ATAC-state pseudobulks within one broad cell type [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    description = "Build mutually exclusive donor by ATAC-state pseudobulks within one broad cell type [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation] [resource_observation: peak_RAM_GiB=5.3; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10]",
     command = make_peak_gene_correlation_donor_state_record(
       cell_group_tibble = peak_gene_correlation_cell_groups_tibble.WNN,
       metadata_tibble = metadata_w_cell_types_tibble.WNN,
@@ -60,7 +60,7 @@ rlang::list2(
     ),
     pattern = map(peak_gene_correlation_cell_groups_tibble.WNN),
     iteration = "list",
-    resources = get_tar_resources(RAM_GB_req = 32)
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = peak_gene_correlation_donor_state_aggregates_tibble.WNN,
@@ -100,9 +100,9 @@ rlang::list2(
   ),
   targets::tar_target(
     name = peak_gene_correlation_latent_factors.WNN,
-    description = "Compute each cell type's leading principal components of residual peak accessibility across chromosomes [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    description = "Compute each cell type's leading principal components of residual peak accessibility across chromosomes [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation] [resource_observation: peak_RAM_GiB=21.9; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-11]",
     command = make_peak_gene_correlation_latent_factors(peak_gene_correlation_aggregate_matrices.WNN),
-    resources = get_tar_resources(RAM_GB_req = 60)
+    resources = get_tar_resources(RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = peak_gene_correlation_normalized_aggregate_matrices.WNN,
@@ -232,12 +232,12 @@ rlang::list2(
   ),
   targets::tar_target(
     name = significant_pairs_technical_features_tibble.WNN,
-    description = "Summarize peak-gene discovery counts and technical features across WNN cell types [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    description = "Summarize peak-gene discovery counts and technical features across WNN cell types [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation] [resource_observation: peak_RAM_GiB=5.2; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10]",
     command = prepare_peak_gene_support_technical_features(
       results_tibble = peak_gene_correlation_hierarchical_results_tibble.WNN,
       donor_state_aggregates_tibble = peak_gene_correlation_donor_state_aggregates_tibble.WNN
     ),
-    resources = get_tar_resources(RAM_GB_req = 32)
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
     name = significant_pairs_vs_technical_features_plot,
@@ -313,9 +313,9 @@ rlang::list2(
   ),
   targets::tar_target(
     name = peak_gene_correlation_hierarchical_results_tibble.WNN,
-    description = "Combine full-scan hierarchical fits, calibrate them against each gene's background and adjust within cell type [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    description = "Combine full-scan hierarchical fits, calibrate them against each gene's background and adjust within cell type [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation] [resource_observation: peak_RAM_GiB=12.2; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-11] [resource_observation: peak_RAM_GiB=5.8; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-11]",
     command = finalize_peak_gene_hierarchical_results(peak_gene_correlation_hierarchical_results_tibbles.WNN),
-    resources = get_tar_resources(RAM_GB_req = 60)
+    resources = get_tar_resources(RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = peak_gene_correlation_top_links_tibble.WNN,
@@ -325,7 +325,7 @@ rlang::list2(
       n_per_cell_group = peak_gene_correlation_top_links_per_cell_group
     ),
     iteration = "vector",
-    resources = get_tar_resources(RAM_GB_req = 60)
+    resources = get_tar_resources(RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = peak_gene_correlation_top_link_aggregate_values_tibbles.WNN,
@@ -352,7 +352,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = peak_gene_correlation_top_link_aggregate_scatter_tibble.WNN,
-    description = "Build aggregate-level GEX and ATAC values for one top peak-gene link [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    description = "Build aggregate-level GEX and ATAC values for one top peak-gene link [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation] [resource_observation: peak_RAM_GiB=3.5; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
     command = {
       link_row <- peak_gene_correlation_top_links_tibble.WNN
       if (!isTRUE(link_row$is_analyzable_link[[1]])) {
@@ -367,7 +367,7 @@ rlang::list2(
     },
     pattern = map(peak_gene_correlation_top_links_tibble.WNN),
     iteration = "vector",
-    resources = get_tar_resources(RAM_GB_req = 32) # apparently 16 GB is not enough
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = peak_gene_correlation_top_gene_context_tibbles.WNN,
@@ -401,7 +401,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = peak_gene_correlation_top_link_focal_ATAC_coverage_tibble.WNN,
-    description = "Cache focal-cell-type insertion coverage over the full candidate window [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    description = "Cache focal-cell-type insertion coverage over the full candidate window [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation] [resource_observation: peak_RAM_GiB=6.7; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-11] [resource_observation: peak_RAM_GiB=11.5; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-11]",
     command = compute_peak_gene_focal_coverage(
       peak_gene_correlation_top_link_plot_data.WNN,
       metadata_w_cell_types_tibble.WNN, combined_BPCells_fragment_obj.ATAC

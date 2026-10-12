@@ -18,7 +18,7 @@ rlang::list2(
       min_sample_counts = if (identical(map_analysis_suffix, "motif_family_accessibility")) differential_analyses_motif_family_accessibility_min_ATAC_counts else NULL
     ),
     pattern = map(dynamic_tibble),
-    resources = get_tar_resources(RAM_GB_req = 60)
+    resources = get_tar_resources(RAM_GB_req = 32)
   ),
   tarchetypes::tar_file(
     name = cohort_tsv,
@@ -30,17 +30,14 @@ rlang::list2(
   ),
   targets::tar_target(
     name = feature_matrix_fit,
-    description = "Fit edgeR/limma models to pseudobulk feature matrices for each model [part_of_graph:differential_analyses]",
+    description = "Fit edgeR/limma models to pseudobulk feature matrices for each model [part_of_graph:differential_analyses] [resource_observation: peak_RAM_GiB=5.8; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=21.5; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
     command = fit_pseudobulk_feature_matrix_model(
       pseudobulk_feature_matrix = filtered_mat_per_model,
       extended_donor_id_metadata_tibble = donor_id_metadata_tibble.analysis,
       pseudobulk_feature_dynamic_tibble = dynamic_tibble
     ),
     pattern = map(filtered_mat_per_model, dynamic_tibble),
-    resources = get_tar_resources(
-      cores_req = 6,
-      RAM_GB_req = 60
-    )
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = results_tibble,

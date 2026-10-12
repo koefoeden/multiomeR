@@ -13,11 +13,11 @@ The demo analyzes two public 10x Genomics GEM wells of peripheral blood mononucl
 ## System requirements
 
 - 64-bit x86 Linux with `git` and `curl`.
-- At least 60 GB of RAM, enough for one memory-intensive target at a time.
+- At least 32 GB of RAM. The most memory-intensive targets need about 7 GB plus 2.5 GB per 100,000 nuclei: about 12 GB for 213,000 nuclei and 25 GB for 713,000. The optional `Seurat_SCT` GEX backend needs more, about 0.25 GB per 1,000 nuclei to normalize gene expression.
 - About 30 GB of free disk space. This covers 4.6 GB of demo inputs, about 6.6 GB of results and up to 15 GB for the Pixi environment and its package cache, which Pixi keeps in your home directory by default.
 - Multiple CPU cores. The run time in the next chapter was measured with 16 logical threads.
 
-The committed `configuration/crew_controllers.R` suits a 16-CPU, 256-GB workstation. On a machine near the 60-GB minimum, lower its worker counts before running the demo, starting with the heavy workers; see [Local execution](performance_distributed_computing.md#local-execution).
+The committed `configuration/crew_controllers.R` runs the demo on a 16-CPU, 32-GB machine. For larger aggregations on such a machine, lower its worker counts, starting with the heavy workers; see [Local execution](performance_distributed_computing.md#local-execution).
 
 ## Set up the demo
 

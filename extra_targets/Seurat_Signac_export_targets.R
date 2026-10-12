@@ -26,7 +26,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = multimodal_Seurat_object.8_multimodal_QC,
-    description = "Build a Seurat/Signac compatibility object backed by BPCells matrices where possible. [checkpoint:8_multimodal-QC]",
+    description = "Build a Seurat/Signac compatibility object backed by BPCells matrices where possible. [checkpoint:8_multimodal-QC] [resource_observation: peak_RAM_GiB=8.9; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=17.6; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02] [resource_observation: peak_RAM_GiB=47.3; n_nuclei=376k; aggregation=comparison_31x; backend=Seurat_SCT; method=slurm_monitor; date=2026-10-10]",
     command = build_seurat_signac_convenience_object(
       GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX,
       ATAC_peak_matrix = peak_QC_filtered_BPCells_matrix.ATAC,
@@ -52,7 +52,8 @@ rlang::list2(
       data_nNNs = aggregation_data_nNNs,
       graph_threads = 6
     ),
-    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60),
+    resources = get_tar_resources(cores_req = 6,
+      RAM_GB_req = if ("Seurat_SCT" %in% aggregation_tibble$aggregation_GEX_PCA_backend) 60 else 32),
     packages = w_def(c("Seurat", "SeuratObject", "Signac", "BPCells"))
   )
 )

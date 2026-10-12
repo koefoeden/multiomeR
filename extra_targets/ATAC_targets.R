@@ -216,7 +216,7 @@ rlang::list2(
   ATAC_peak_diff_accesibility_testing_targets = rlang::list2(
     targets::tar_target(
       name = diff_peak_acc_results_tibble.ATAC,
-      description = "Test differential peak accessibility across clusters with a Wilcoxon test",
+      description = "Test differential peak accessibility across clusters with a Wilcoxon test [resource_observation: peak_RAM_GiB=8.6; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10]",
       command = {
         groups <- metadata_w_cell_types_tibble.GEX[[aggregation_call_peaks_by_cluster_col]] |>
           as.character() |>
@@ -234,7 +234,7 @@ rlang::list2(
           tidyr::separate_wider_delim(cols = peak, names = c("chr", "start", "end"), delim = "-")
       },
       packages = w_def("BPCells"),
-      resources = get_tar_resources(RAM_GB_req = 60)
+      resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
       name = diff_acc_peaks_per_cluster_BEDs.peaks.ATAC,
@@ -374,13 +374,13 @@ rlang::list2(
     ),
     targets::tar_target(
       name = LSI_BPCells.ATAC,
-      description = "Run BPCells-native TF-IDF and SVD on the QC-filtered ATAC peak matrix [part_of_graph:ATAC] [part_of_graph:seurat_export]",
+      description = "Run BPCells-native TF-IDF and SVD on the QC-filtered ATAC peak matrix [part_of_graph:ATAC] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=8.5; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
       command = run_ATAC_LSI_BPCells(
         ATAC_peak_BPCells_matrix = peak_QC_filtered_BPCells_matrix.ATAC,
         n_components = aggregation_ATAC_LSI_n_components,
         threads = 6
       ),
-      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = LSI_embeddings_tibble.ATAC,
@@ -396,7 +396,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = harmony_embeddings_matrix.ATAC,
-      description = "Harmony-corrected BPCells-native ATAC LSI embeddings [part_of_graph:ATAC] [part_of_graph:WNN] [part_of_graph:seurat_export]",
+      description = "Harmony-corrected BPCells-native ATAC LSI embeddings [part_of_graph:ATAC] [part_of_graph:WNN] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=2.5; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
       command = run_harmony_on_embedding_matrix(
         embedding_matrix = LSI_BPCells.ATAC$cell_embeddings,
         metadata_tibble = metadata_harmony_tibble.ATAC,
@@ -404,11 +404,11 @@ rlang::list2(
         dims = aggregation_ATAC_data_PCs,
         cores = 6
       ),
-      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = UMAP_embeddings_tibble.ATAC,
-      description = "UMAP coordinates from BPCells-native Harmony-corrected ATAC LSI embeddings [part_of_graph:ATAC] [part_of_graph:seurat_export]",
+      description = "UMAP coordinates from BPCells-native Harmony-corrected ATAC LSI embeddings [part_of_graph:ATAC] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=3.8; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
       command = run_UMAP_from_embedding_matrix(
         embedding_matrix = harmony_embeddings_matrix.ATAC,
         dims = aggregation_UMAP_ATAC_PCs,
@@ -417,11 +417,11 @@ rlang::list2(
         threads = 6
       ) |>
         tibble::as_tibble(rownames = "barcode_w_prefix"),
-      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = LSI_clusters.ATAC,
-      description = "Leiden clusters from a BPCells nearest-neighbour graph on Harmony-corrected ATAC LSI embeddings [part_of_graph:ATAC] [part_of_graph:seurat_export]",
+      description = "Leiden clusters from a BPCells nearest-neighbour graph on Harmony-corrected ATAC LSI embeddings [part_of_graph:ATAC] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=6.3; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
       command = cluster_embedding_matrix_BPCells(
         embedding_matrix = harmony_embeddings_matrix.ATAC,
         dims = aggregation_ATAC_data_PCs,
@@ -430,7 +430,7 @@ rlang::list2(
         threads = 6,
         min_barcodes = aggregation_cluster_min_barcodes
       ),
-      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = metadata_w_clusters_tibble.ATAC,
@@ -604,24 +604,24 @@ rlang::list2(
     ),
     targets::tar_target(
       name = scDblFinder_feature_groups.ATAC,
-      description = "Cluster consensus ATAC peaks from global LSI loadings for memory-light scDblFinder input",
+      description = "Cluster consensus ATAC peaks from global LSI loadings for memory-light scDblFinder input [resource_observation: peak_RAM_GiB=4.6; n_nuclei=376k; aggregation=comparison_31x; method=slurm_monitor; date=2026-10-10]",
       command = get_feature_groups_from_LSI(
         LSI_results = LSI_BPCells.ATAC,
         dims = intersect(2:20, aggregation_ATAC_data_PCs),
         n_groups = 50,
         seed = 1
       ),
-      resources = get_tar_resources(RAM_GB_req = 60)
+      resources = get_tar_resources(RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = scDblFinder_feature_matrix.ATAC,
-      description = "Aggregate ATAC peak counts into global LSI-derived feature groups for scDblFinder",
+      description = "Aggregate ATAC peak counts into global LSI-derived feature groups for scDblFinder [resource_observation: peak_RAM_GiB=2.5; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
       command = aggregate_BPCells_rows_by_group(
         feature_matrix = peak_QC_filtered_BPCells_matrix.ATAC,
         feature_groups = scDblFinder_feature_groups.ATAC,
         threads = 6
       ),
-      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = scDblFinder_results_by_GEM_well_tibble.ATAC,
@@ -806,7 +806,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = cross.UMAPs.7_ATAC_QC,
-      description = "Compute ATAC UMAPs across a sweep of LSI dimension counts and neighbor counts. [checkpoint:7_ATAC-QC]",
+      description = "Compute ATAC UMAPs across a sweep of LSI dimension counts and neighbor counts. [checkpoint:7_ATAC-QC] [resource_observation: peak_RAM_GiB=12.3; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=9.9; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
       command = {
         sweep_umap <- run_UMAP_from_embedding_matrix(
           embedding_matrix = harmony_embeddings_matrix.ATAC[metadata_w_cell_types_tibble.ATAC$barcode_w_prefix, , drop = FALSE],
@@ -827,7 +827,7 @@ rlang::list2(
         save_plots_structured(plot, dyn_suffix_in_subdir = TRUE, override_suffix = paste0(UMAP_n_dims_seq.ATAC, "_", UMAP_neighbors_seq))
       },
       pattern = cross(UMAP_n_dims_seq.ATAC, UMAP_neighbors_seq),
-      resources = get_tar_resources(RAM_GB_req = 60)
+      resources = get_tar_resources(RAM_GB_req = 32)
     )
   ),
 
@@ -852,30 +852,30 @@ rlang::list2(
     ),
     targets::tar_target(
       name = peak_TF_motif_family_matrix.ATAC,
-      description = "Match JASPAR2026 familial root motifs directly to ATAC peaks [part_of_graph:ATAC] [part_of_graph:seurat_export] [part_of_graph:differential_analyses]",
+      description = "Match JASPAR2026 familial root motifs directly to ATAC peaks [part_of_graph:ATAC] [part_of_graph:seurat_export] [part_of_graph:differential_analyses] [resource_observation: peak_RAM_GiB=3.0; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
       command = get_motif_matrix_from_ATAC_peak_names(
         ATAC_peak_names = rownames(consensus_peak_BPCells_matrix.ATAC),
         ATAC_peak_GRanges = consensus_peak_GRanges.ATAC,
         motif_matrix_list = JASPAR_familial_root_motif_matrix_list,
         genome = aggregated_cellranger_ref_list$genomes[[1]]
       ),
-      resources = get_tar_resources(RAM_GB_req = 60)
+      resources = get_tar_resources(RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = chromVAR_obj.ATAC,
-      description = "Build the lightweight BPCells-backed chromVAR RSE for motif-family accessibility and genetic enrichment [part_of_graph:ATAC] [part_of_graph:seurat_export] [part_of_graph:genetic_enrichment_single_nucleus]",
+      description = "Build the lightweight BPCells-backed chromVAR RSE for motif-family accessibility and genetic enrichment [part_of_graph:ATAC] [part_of_graph:seurat_export] [part_of_graph:genetic_enrichment_single_nucleus] [resource_observation: peak_RAM_GiB=4.4; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-09]",
       command = get_chromVAR_obj_from_peak_matrix(
         ATAC_peak_matrix = consensus_peak_BPCells_matrix.ATAC[, metadata_w_cell_types_tibble.ATAC$barcode_w_prefix],
         ATAC_peak_GRanges = consensus_peak_GRanges.ATAC,
         genome = aggregated_cellranger_ref_list$genomes[[1]]
       ),
-      resources = get_tar_resources(RAM_GB_req = 32)
+      resources = get_tar_resources(RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = chromVAR_peak_expectation.ATAC,
-      description = "Compute shared peak-level accessibility expectations for chromVAR analyses [part_of_graph:genetic_enrichment_single_nucleus]",
+      description = "Compute shared peak-level accessibility expectations for chromVAR analyses [part_of_graph:genetic_enrichment_single_nucleus] [resource_observation: peak_RAM_GiB=1.5; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10]",
       command = get_chromVAR_peak_expectation(chromVAR_obj.ATAC),
-      resources = get_tar_resources(RAM_GB_req = 60)
+      resources = get_tar_resources(RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = chromVAR_background_bins.ATAC,
@@ -884,7 +884,7 @@ rlang::list2(
         chromVAR_obj = chromVAR_obj.ATAC,
         expectation = chromVAR_peak_expectation.ATAC
       ),
-      resources = get_tar_resources(RAM_GB_req = 60)
+      resources = get_tar_resources(RAM_GB_req = 32)
     ),
     targets::tar_target(
       name = chromVAR_cell_chunks.ATAC,
@@ -900,7 +900,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = chromVAR_chunk_context_records.ATAC,
-      description = "Materialize one ATAC cell chunk and compute its reusable betterChromVAR background",
+      description = "Materialize one ATAC cell chunk and compute its reusable betterChromVAR background [resource_observation: peak_RAM_GiB=9.8; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10]",
       command = get_chromVAR_chunk_context_record(
         chunk_record = chromVAR_cell_chunks.ATAC,
         chromVAR_obj = chromVAR_obj.ATAC,
@@ -908,7 +908,7 @@ rlang::list2(
         expectation = chromVAR_peak_expectation.ATAC
       ),
       pattern = map(chromVAR_cell_chunks.ATAC),
-      resources = get_tar_resources(RAM_GB_req = 60)
+      resources = get_tar_resources(RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = chromVAR_TF_motif_family_matrix.ATAC,
@@ -921,7 +921,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = motif_family_chromVAR_chunk_results.ATAC,
-      description = "Compute per-cell motif-family accessibility scores for one reusable ATAC chunk",
+      description = "Compute per-cell motif-family accessibility scores for one reusable ATAC chunk [resource_observation: peak_RAM_GiB=6.6; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10]",
       command = {
         compute_chromVAR_annotation_chunk_result(
           annotations = chromVAR_TF_motif_family_matrix.ATAC,
@@ -931,21 +931,21 @@ rlang::list2(
         )
       },
       pattern = map(chromVAR_chunk_context_records.ATAC),
-      resources = get_tar_resources(RAM_GB_req = 60)
+      resources = get_tar_resources(RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = motif_family_chromVAR_results.ATAC,
-      description = "Combine chunk-level motif-family accessibility scores into the standard chromVAR result object",
+      description = "Combine chunk-level motif-family accessibility scores into the standard chromVAR result object [resource_observation: peak_RAM_GiB=7.5; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
       command = combine_chromVAR_chunk_results(
         chunk_results = motif_family_chromVAR_chunk_results.ATAC,
         chromVAR_obj = chromVAR_obj.ATAC,
         annotations = chromVAR_TF_motif_family_matrix.ATAC
       ),
-      resources = get_tar_resources(RAM_GB_req = 60)
+      resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
       name = motif_family_accessibility_BPCells_matrix_dir.ATAC,
-      description = "Write betterChromVAR motif-family accessibility Z-scores to a BPCells matrix directory [part_of_graph:ATAC] [part_of_graph:seurat_export]",
+      description = "Write betterChromVAR motif-family accessibility Z-scores to a BPCells matrix directory [part_of_graph:ATAC] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=10.6; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
       command = {
         out_dir <- get_structured_file_path()
         column_major_dir <- tempfile(pattern = "motif_family_accessibility_column_major_", tmpdir = dirname(out_dir))
@@ -961,7 +961,7 @@ rlang::list2(
         BPCells::transpose_storage_order(BPCells::open_matrix_dir(column_major_dir), outdir = out_dir)
         out_dir
       },
-      resources = get_tar_resources(RAM_GB_req = 60)
+      resources = get_tar_resources(RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = motif_family_accessibility_BPCells_matrix.ATAC,
@@ -971,13 +971,13 @@ rlang::list2(
     ),
     targets::tar_target(
       name = motif_family_accessibility_markers.ATAC,
-      description = "Find marker motif-family accessibility scores per ATAC cell type",
+      description = "Find marker motif-family accessibility scores per ATAC cell type [resource_observation: peak_RAM_GiB=2.6; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
       command = get_marker_motif_family_accessibility_from_chromVAR_BPCells_z_scores(
         chromVAR_z_scores_BPCells_matrix = motif_family_accessibility_BPCells_matrix.ATAC,
         metadata_tibble = metadata_w_cell_types_analysis_tibble.ATAC,
         group_col = "LSI_harmony_SNN_cluster_cell_type"
       ),
-      resources = get_tar_resources(RAM_GB_req = 60)
+      resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
       name = motif_family_accessibility_marker_volcano_plots.7_ATAC_QC,
@@ -1060,7 +1060,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = continuous.UMAPs.7_ATAC_QC,
-      description = "UMAPs colored by continuous motif-family accessibility and peak accessibility metrics. [checkpoint:7_ATAC-QC]",
+      description = "UMAPs colored by continuous motif-family accessibility and peak accessibility metrics. [checkpoint:7_ATAC-QC] [resource_observation: peak_RAM_GiB=5.3; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
       command = plot_UMAP_from_metadata(
         metadata_tibble = metadata_w_cell_types_analysis_tibble.ATAC,
         variable = continuous_UMAP_spec.ATAC$variable,
@@ -1079,7 +1079,7 @@ rlang::list2(
           override_suffix = stringr::str_replace_all(continuous_UMAP_spec.ATAC$variable, "[/\\\\]", "_")
         ),
       pattern = map(continuous_UMAP_spec.ATAC),
-      resources = get_tar_resources(RAM_GB_req = 60)
+      resources = get_tar_resources(RAM_GB_req = 16)
     )
   ),
   ATAC_w_gene_activity_targets = rlang::list2(

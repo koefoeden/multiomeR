@@ -12,7 +12,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = peaks_per_cluster_narrowPeaks.peaks.ATAC,
-    description = "Call full-genome ATAC peaks in each half of a cluster's capped discovery cells [part_of_graph:ATAC] [part_of_graph:seurat_export]",
+    description = "Call full-genome ATAC peaks in each half of a cluster's capped discovery cells [part_of_graph:ATAC] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=6.4; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=13.6; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-01]",
     command = call_peaks_w_MACS3(
       ATAC_fragments_per_cluster = fragments_per_peak_calling_cluster_discovery.fragments.ATAC,
       ATAC_peak_calling_cluster_names = peak_calling_cluster_discovery_tibble.ATAC$replicate_name[[1]],

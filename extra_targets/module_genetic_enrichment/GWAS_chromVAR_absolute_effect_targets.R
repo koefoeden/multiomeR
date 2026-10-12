@@ -16,7 +16,7 @@ rlang::list2(
       peak_ranges = genetic_enrichment_peak_ranges,
       posterior_probability_cutoff = genetic_enrichment_posterior_probability_cutoff
     ),
-    resources = get_tar_resources(RAM_GB_req = 40)
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = GWAS_absolute_effect_peak_weight_records,
@@ -26,7 +26,7 @@ rlang::list2(
       get_GWAS_chromVAR_peak_weight_record,
       peak_ranges = genetic_enrichment_peak_ranges
     ),
-    resources = get_tar_resources(RAM_GB_req = 40)
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = GWAS_absolute_effect_inputs_tibble,
@@ -47,7 +47,7 @@ rlang::list2(
     command = get_GWAS_chromVAR_peak_weight_matrix(
       peak_weight_records = GWAS_absolute_effect_peak_weight_records
     ),
-    resources = get_tar_resources(RAM_GB_req = 40)
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = GWAS_absolute_effect_metadata_tracks_plot,
@@ -101,7 +101,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = chromVAR_absolute_effect_peak_contribution_tibble.cell_type_pseudobulk,
-    description = "Decompose the existing absolute-effect annotation matrix into exact peak contributions",
+    description = "Decompose the existing absolute-effect annotation matrix into exact peak contributions [resource_observation: peak_RAM_GiB=4.0; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
     command = if (nrow(GWAS_absolute_effect_inputs_tibble) == 0L) {
       chromVAR_peak_contribution_tibble.cell_type_pseudobulk[0, ]
     } else get_GWAS_chromVAR_peak_contribution_tibble(
@@ -110,17 +110,17 @@ rlang::list2(
       chromVAR_obj = chromVAR_obj.ATAC,
       annotation_matrix = GWAS_absolute_effect_peak_weight_matrix,
       GWAS_inputs_tibble = GWAS_absolute_effect_inputs_tibble),
-    resources = get_tar_resources(RAM_GB_req = 60)
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = chromVAR_absolute_effect_variant_contribution_tibble.cell_type_pseudobulk,
-    description = "Allocate exact absolute-effect peak contributions to credible-set variants",
+    description = "Allocate exact absolute-effect peak contributions to credible-set variants [resource_observation: peak_RAM_GiB=3.7; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
     command = if (nrow(chromVAR_absolute_effect_peak_contribution_tibble.cell_type_pseudobulk) == 0L) {
       chromVAR_variant_contribution_tibble.cell_type_pseudobulk[0, ]
     } else get_GWAS_chromVAR_variant_contribution_tibble(
       chromVAR_absolute_effect_peak_contribution_tibble.cell_type_pseudobulk,
       GWAS_absolute_effect_peak_variant_weight_tibble),
-    resources = get_tar_resources(RAM_GB_req = 40)
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = chromVAR_absolute_effect_locus_contribution_tibble.cell_type_pseudobulk,

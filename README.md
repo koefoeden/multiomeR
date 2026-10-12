@@ -27,7 +27,8 @@ The user manual is built from the Quarto book in `website/`. It includes a quick
 
 ## System requirements
 
-- Linux system with at least 60 GB of RAM, preferably equipped with a job-scheduler supported by the crew.cluster package: SLURM, PBS, SGE or LSf.
+- Linux system with at least 32 GB of RAM, preferably equipped with a job-scheduler supported by the crew.cluster package: SLURM, PBS, SGE or LSF.
+- The most memory-intensive targets need about 7 GB plus 2.5 GB per 100,000 nuclei. The optional `Seurat_SCT` GEX backend needs more, about 0.25 GB per 1,000 nuclei to normalize gene expression.
 
 ## Citation
 

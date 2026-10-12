@@ -72,7 +72,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = aggregation_excluded_barcodes_by_type_upset.1_pre_aggregation_QC,
-    description = "Plot an UpSet plot of aggregation-level QC exclusion overlaps across all GEM wells and save to file. [checkpoint:1_pre-aggregation-QC]",
+    description = "Plot an UpSet plot of aggregation-level QC exclusion overlaps across all GEM wells and save to file. [checkpoint:1_pre-aggregation-QC] [resource_observation: peak_RAM_GiB=3.9; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=15.7; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
     command = plot_upset_from_excluded_BCs_list(
       input_label = "barcodes in the full QC metadata across this aggregation",
       QC_excluded_BCs_list = aggregation_excluded_BCs_list,
@@ -80,7 +80,8 @@ rlang::list2(
     ) |>
       add_plot_parameters("cfg_aggregations.yaml", aggregation_GEM_well_IDs = aggregation_GEM_well_IDs) |>
       add_plot_parameters("cfg_GEM_wells.tsv", GEM_well_QC_exclude_list = aggregation_GEM_well_QC_exclude_list) |>
-      save_plots_structured(width = 20, height = 7)
+      save_plots_structured(width = 20, height = 7),
+    resources = get_tar_resources(RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = aggregation_excluded_cellranger_only_BCs_list,
@@ -103,7 +104,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = per_aggregation_GEM_well_QC_comparisons.1_pre_aggregation_QC,
-    description = "Compare pre-filter QC distributions and configured cutoffs across GEM wells in this aggregation. [checkpoint:1_pre-aggregation-QC]",
+    description = "Compare pre-filter QC distributions and configured cutoffs across GEM wells in this aggregation. [checkpoint:1_pre-aggregation-QC] [resource_observation: peak_RAM_GiB=3.3; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
     command = {
       metadata_tibble <- dplyr::bind_rows(
         aggregation_cellranger_kept_metadata_tibble_syms
@@ -130,7 +131,7 @@ rlang::list2(
           width = max(10, 4 + 0.35 * dplyr::n_distinct(metadata_tibble$GEM_well_ID))
         )
     },
-    resources = get_tar_resources(RAM_GB_req = 32)
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = UCell_GEX_marker_genes_list,
@@ -418,7 +419,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = pseudobulk_counts_BPCells_matrix_dir.GEX,
-    description = "Write pseudobulk GEX counts per WNN cell-type-donor combination to BPCells [part_of_graph:differential_analyses]",
+    description = "Write pseudobulk GEX counts per WNN cell-type-donor combination to BPCells [part_of_graph:differential_analyses] [resource_observation: peak_RAM_GiB=3.3; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
     command = {
       out_dir <- get_structured_file_path()
       get_BPCells_pseudobulk_matrix(
@@ -431,7 +432,7 @@ rlang::list2(
         BPCells::write_matrix_dir(out_dir, overwrite = TRUE)
       out_dir
     },
-    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = pseudobulk_counts_matrix.GEX,
@@ -446,7 +447,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = pseudobulk_counts_BPCells_matrix_dir.ATAC,
-    description = "Write pseudobulk ATAC counts per WNN cell-type-donor combination to BPCells [part_of_graph:differential_analyses]",
+    description = "Write pseudobulk ATAC counts per WNN cell-type-donor combination to BPCells [part_of_graph:differential_analyses] [resource_observation: peak_RAM_GiB=3.4; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=19.2; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
     command = {
       out_dir <- get_structured_file_path()
       get_BPCells_pseudobulk_matrix(
@@ -459,7 +460,7 @@ rlang::list2(
         BPCells::write_matrix_dir(out_dir, overwrite = TRUE)
       out_dir
     },
-    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = pseudobulk_counts_matrix.ATAC,
@@ -474,12 +475,12 @@ rlang::list2(
   ),
   targets::tar_target(
     name = pseudobulk_motif_family_accessibility_matrix.ATAC,
-    description = "Compute pseudobulk JASPAR motif-family accessibility scores from ATAC counts [part_of_graph:differential_analyses]",
+    description = "Compute pseudobulk JASPAR motif-family accessibility scores from ATAC counts [part_of_graph:differential_analyses] [resource_observation: peak_RAM_GiB=17.5; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
     command = get_pseudobulk_motif_family_accessibility_matrix(
       pseudobulk_ATAC_data_matrix = pseudobulk_counts_matrix.ATAC,
       chromVAR_obj = chromVAR_obj.ATAC,
       chromVAR_motif_family_matrix = chromVAR_TF_motif_family_matrix.ATAC
     ),
-    resources = get_tar_resources(RAM_GB_req = 60)
+    resources = get_tar_resources(RAM_GB_req = 32)
   )
 )

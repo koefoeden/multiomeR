@@ -28,7 +28,7 @@ rlang::list2(
     ),
     pattern = map(GWAS_analysis_inputs_config_tibble, GWAS_source_files),
     iteration = "list",
-    resources = get_tar_resources(RAM_GB_req = 40)
+    resources = get_tar_resources(RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = GWAS_inputs_tibble,

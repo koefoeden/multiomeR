@@ -44,7 +44,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = WNN_results_raw,
-      description = "Compute native weighted nearest-neighbour graph from aligned GEX and ATAC embeddings before small-cluster filtering",
+      description = "Compute native weighted nearest-neighbour graph from aligned GEX and ATAC embeddings before small-cluster filtering [resource_observation: peak_RAM_GiB=8.3; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=22.4; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10] [resource_observation: scaling=about 2.8 GiB more per 100k nuclei from 213k to 713k; date=2026-10-10]",
       command = weighted_nearest_neighbors_BPCells(
         embeddings_list = embedding_matrices.WNN,
         k = aggregation_data_nNNs,
@@ -52,11 +52,11 @@ rlang::list2(
         threads = 6,
         native_source_file = WNN_native_source_file
       ),
-      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
     ),
     targets::tar_target(
       name = clusters_tibble_raw.WNN,
-      description = "Cluster cells from the native WNN SNN graph before small-cluster filtering",
+      description = "Cluster cells from the native WNN SNN graph before small-cluster filtering [resource_observation: peak_RAM_GiB=10.8; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=5.8; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
       command = cluster_WNN_graph(
         WNN_results = WNN_results_raw,
         resolution = aggregation_WNN_cluster_res,
@@ -83,7 +83,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = WNN_results,
-      description = "Native weighted nearest-neighbour graph restricted to retained WNN cells [part_of_graph:WNN] [part_of_graph:seurat_export]",
+      description = "Native weighted nearest-neighbour graph restricted to retained WNN cells [part_of_graph:WNN] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=6.6; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=24.8; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10] [resource_observation: scaling=about 3.6 GiB more per 100k nuclei from 213k to 713k; date=2026-10-10]",
       command = {
         retained_barcodes <- rownames(WNN_results_raw$nn_idx)[
           rownames(WNN_results_raw$nn_idx) %in%
@@ -109,18 +109,18 @@ rlang::list2(
           )
         }
       },
-      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
     ),
     targets::tar_target(
       name = UMAP_embeddings_tibble.WNN,
-      description = "Compute WNN UMAP coordinates from the retained native weighted neighbour index [part_of_graph:WNN] [part_of_graph:seurat_export]",
+      description = "Compute WNN UMAP coordinates from the retained native weighted neighbour index [part_of_graph:WNN] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=7.8; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10]",
       command = run_WNN_UMAP(
         WNN_results = WNN_results,
         n_neighbors = aggregation_UMAP_nNNs,
         min_dist = aggregation_UMAP_min_dist,
         threads = 6
       ),
-      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = metadata_w_clusters_tibble.WNN,
@@ -419,7 +419,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = cross.UMAPs.8_multimodal_QC,
-      description = "Compute WNN UMAPs across a sweep of nNN counts. [checkpoint:8_multimodal-QC]",
+      description = "Compute WNN UMAPs across a sweep of nNN counts. [checkpoint:8_multimodal-QC] [resource_observation: peak_RAM_GiB=6.6; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10]",
       command = {
         sweep_umap_tibble <- run_WNN_UMAP(
           WNN_results = WNN_results,
@@ -441,7 +441,7 @@ rlang::list2(
           override_suffix = paste0(UMAP_neighbors_seq)
         ),
       pattern = map(UMAP_neighbors_seq),
-      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
     ),
   ),
 )

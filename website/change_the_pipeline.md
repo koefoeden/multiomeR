@@ -182,9 +182,9 @@ targets::tar_target(
 The tag families are:
 
 ``` text
-[checkpoint:<name>]             review or execution checkpoint
-[part_of_graph:<graph_id>]      curated membership in an implementation graph
-[resource_observation:<note>]   compact empirical resource note
+[checkpoint:<name>]                         review or execution checkpoint
+[part_of_graph:<graph_id>]                  curated membership in an implementation graph
+[resource_observation: <key>=<value>; ...]  approximate, dated resource observation
 ```
 
 `[checkpoint:<name>]` marks targets selectable with `targets::tar_described_as()`. The numbered primary-module groups are listed in `manifests/QC_checkpoint_manifest.tsv`; optional module groups remain unnumbered. Selection matches description substrings; include the closing `]` to match a complete checkpoint tag. Dependencies still come from the target commands. [Run your own analysis](main_running.md) explains each checkpoint.
@@ -202,7 +202,7 @@ description = paste(
 )
 ```
 
-`[resource_observation:<note>]` keeps a short, dated runtime or memory observation next to the target that produced it. It is documentation, not a resource-estimation system.
+`[resource_observation: <key>=<value>; ...]` keeps an approximate, dated runtime or memory observation next to the target that produced it, such as a measurement behind its `get_tar_resources()` request. Each tag holds one observation, so a target may carry several, for example one per aggregation and one for how memory scales with nuclei. Keys are free-form; common ones are `peak_RAM_GiB`, `walltime_s`, `n_nuclei`, `aggregation`, `backend`, `method`, `date` and `scaling`, where `method` names the measurement, such as `slurm_monitor` for a worker job's memory without page cache. The tags are documentation, not a resource-estimation system.
 
 Use tags only when they create a durable handle for readers, graph helpers, or checkpoint commands. Ordinary internal dependencies can stay untagged.
 
@@ -244,7 +244,7 @@ Controller loading is part of the runtime contract, not a later execution detail
 targets::tar_target(
   example_target,
   example_function(),
-  resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
+  resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
 )
 ```
 

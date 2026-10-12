@@ -15,11 +15,13 @@ The table shows two recorded runs to `multimodal_Seurat_object.8_multimodal_QC.m
 
 `immune_human_2x` is the demo aggregation. `PBMC_human_6x` combines the six PBMC GEM wells in `configuration_dev/cfg_GEM_wells.tsv`; no public `cfg_aggregations.yaml` defines it.
 
+Built from an empty store with the committed local controllers, in one 16-CPU Slurm job limited to 32 GiB, the demo took 24 minutes; its processes used at most 17 GiB of memory, or 28 GiB with the page cache that the kernel reclaims when memory runs short.
+
 The critical path is the longest chain of dependent targets: the shortest possible run time when enough workers are available. Fewer workers and scheduler queue time make real runs longer, as do more nuclei, peaks, plots, or modules. Treat the numbers as examples, not predictions for another machine or configuration, and time one representative aggregation before sizing a large run.
 
 ## Local execution
 
-The committed `configuration/crew_controllers.R` is sized for a 16-CPU, 256-GB workstation: four `local-light` workers (1 core, 16 GB each) and two `local-heavy` workers (6 cores, 60 GB each). On a machine near the 60-GB minimum, lower the two `workers` values so that only one heavy target runs at a time:
+The committed `configuration/crew_controllers.R` runs the demo on a 16-CPU, 32-GB machine: four `local-light` workers (1 core, 16 GB each), two `local-heavy` workers (6 cores, 32 GB each) and one `local-large` worker (6 cores, 60 GB) that only the optional `Seurat_SCT` GEX backend uses. The most memory-intensive targets need about 7 GB plus 2.5 GB per 100,000 nuclei, so for larger aggregations on a 32-GB machine, lower the `workers` values so that only one heavy target runs at a time:
 
 ```{.r filename="crew_controllers.R"}
 controller_list <- list(
@@ -29,6 +31,11 @@ controller_list <- list(
   ),
   crew::crew_controller_local(
     name = "local-heavy",
+    workers = 1,
+    crashes_max = 1
+  ),
+  crew::crew_controller_local(
+    name = "local-large",
     workers = 1,
     crashes_max = 1
   )

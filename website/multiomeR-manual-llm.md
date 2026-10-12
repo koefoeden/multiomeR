@@ -78,11 +78,11 @@ The demo analyzes two public 10x Genomics GEM wells of peripheral blood mononucl
 ## System requirements
 
 - 64-bit x86 Linux with `git` and `curl`.
-- At least 60 GB of RAM, enough for one memory-intensive target at a time.
+- At least 32 GB of RAM. The most memory-intensive targets need about 7 GB plus 2.5 GB per 100,000 nuclei: about 12 GB for 213,000 nuclei and 25 GB for 713,000. The optional `Seurat_SCT` GEX backend needs more, about 0.25 GB per 1,000 nuclei to normalize gene expression.
 - About 30 GB of free disk space. This covers 4.6 GB of demo inputs, about 6.6 GB of results and up to 15 GB for the Pixi environment and its package cache, which Pixi keeps in your home directory by default.
 - Multiple CPU cores. The run time in the next chapter was measured with 16 logical threads.
 
-The committed `configuration/crew_controllers.R` suits a 16-CPU, 256-GB workstation. On a machine near the 60-GB minimum, lower its worker counts before running the demo, starting with the heavy workers; see [Local execution](performance_distributed_computing.md#local-execution).
+The committed `configuration/crew_controllers.R` runs the demo on a 16-CPU, 32-GB machine. For larger aggregations on such a machine, lower its worker counts, starting with the heavy workers; see [Local execution](performance_distributed_computing.md#local-execution).
 
 ## Set up the demo
 
@@ -1073,11 +1073,13 @@ The table shows two recorded runs to `multimodal_Seurat_object.8_multimodal_QC.m
 
 `immune_human_2x` is the demo aggregation. `PBMC_human_6x` combines the six PBMC GEM wells in `configuration_dev/cfg_GEM_wells.tsv`; no public `cfg_aggregations.yaml` defines it.
 
+Built from an empty store with the committed local controllers, in one 16-CPU Slurm job limited to 32 GiB, the demo took 24 minutes; its processes used at most 17 GiB of memory, or 28 GiB with the page cache that the kernel reclaims when memory runs short.
+
 The critical path is the longest chain of dependent targets: the shortest possible run time when enough workers are available. Fewer workers and scheduler queue time make real runs longer, as do more nuclei, peaks, plots, or modules. Treat the numbers as examples, not predictions for another machine or configuration, and time one representative aggregation before sizing a large run.
 
 ## Local execution
 
-The committed `configuration/crew_controllers.R` is sized for a 16-CPU, 256-GB workstation: four `local-light` workers (1 core, 16 GB each) and two `local-heavy` workers (6 cores, 60 GB each). On a machine near the 60-GB minimum, lower the two `workers` values so that only one heavy target runs at a time:
+The committed `configuration/crew_controllers.R` runs the demo on a 16-CPU, 32-GB machine: four `local-light` workers (1 core, 16 GB each), two `local-heavy` workers (6 cores, 32 GB each) and one `local-large` worker (6 cores, 60 GB) that only the optional `Seurat_SCT` GEX backend uses. The most memory-intensive targets need about 7 GB plus 2.5 GB per 100,000 nuclei, so for larger aggregations on a 32-GB machine, lower the `workers` values so that only one heavy target runs at a time:
 
 ```{.r filename="crew_controllers.R"}
 controller_list <- list(
@@ -1087,6 +1089,11 @@ controller_list <- list(
   ),
   crew::crew_controller_local(
     name = "local-heavy",
+    workers = 1,
+    crashes_max = 1
+  ),
+  crew::crew_controller_local(
+    name = "local-large",
     workers = 1,
     crashes_max = 1
   )
@@ -2186,9 +2193,9 @@ targets::tar_target(
 The tag families are:
 
 ``` text
-[checkpoint:<name>]             review or execution checkpoint
-[part_of_graph:<graph_id>]      curated membership in an implementation graph
-[resource_observation:<note>]   compact empirical resource note
+[checkpoint:<name>]                         review or execution checkpoint
+[part_of_graph:<graph_id>]                  curated membership in an implementation graph
+[resource_observation: <key>=<value>; ...]  approximate, dated resource observation
 ```
 
 `[checkpoint:<name>]` marks targets selectable with `targets::tar_described_as()`. The numbered primary-module groups are listed in `manifests/QC_checkpoint_manifest.tsv`; optional module groups remain unnumbered. Selection matches description substrings; include the closing `]` to match a complete checkpoint tag. Dependencies still come from the target commands. [Run your own analysis](main_running.md) explains each checkpoint.
@@ -2206,7 +2213,7 @@ description = paste(
 )
 ```
 
-`[resource_observation:<note>]` keeps a short, dated runtime or memory observation next to the target that produced it. It is documentation, not a resource-estimation system.
+`[resource_observation: <key>=<value>; ...]` keeps an approximate, dated runtime or memory observation next to the target that produced it, such as a measurement behind its `get_tar_resources()` request. Each tag holds one observation, so a target may carry several, for example one per aggregation and one for how memory scales with nuclei. Keys are free-form; common ones are `peak_RAM_GiB`, `walltime_s`, `n_nuclei`, `aggregation`, `backend`, `method`, `date` and `scaling`, where `method` names the measurement, such as `slurm_monitor` for a worker job's memory without page cache. The tags are documentation, not a resource-estimation system.
 
 Use tags only when they create a durable handle for readers, graph helpers, or checkpoint commands. Ordinary internal dependencies can stay untagged.
 
@@ -2248,7 +2255,7 @@ Controller loading is part of the runtime contract, not a later execution detail
 targets::tar_target(
   example_target,
   example_function(),
-  resources = get_tar_resources(cores_req = 6, RAM_GB_req = 60)
+  resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
 )
 ```
 

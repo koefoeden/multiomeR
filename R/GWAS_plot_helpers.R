@@ -201,7 +201,8 @@ plot_SCAVENGE_summary_score_intervals <- function(summary_tibble) {
       ggplot2::ggplot(group_tibble, ggplot2::aes(x = group_reorder, fill = cluster)) +
         ggplot2::geom_linerange(ggplot2::aes(ymin = min_score, ymax = max_score), color = "grey35") +
         ggplot2::geom_crossbar(ggplot2::aes(y = median_score, ymin = q25_score, ymax = q75_score), width = 0.6) +
-        ggplot2::facet_wrap(~GWAS_ID, scales = "free") +
+        # The automatic width grows with groups per facet column; fewer columns for many groups keep it within ragg's limit.
+        ggplot2::facet_wrap(~GWAS_ID, scales = "free", ncol = max(1L, min(4L, 120L %/% dplyr::n_distinct(group_tibble$cluster)))) +
         tidytext::scale_x_reordered(labels = function(x) gsub("___.*$", "", x)) +
         ggplot2::labs(title = "SCAVENGE score distributions by group",
           subtitle = "Compare median scores and spread; wide ranges can indicate a subset of high-scoring cells.",

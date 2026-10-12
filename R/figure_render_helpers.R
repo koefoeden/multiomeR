@@ -1,3 +1,21 @@
+#' Wrap a plot as one figure panel
+#'
+#' Patchworks are wrapped rather than converted to grobs, which would measure
+#' text on whichever device is open instead of the one that saves the figure.
+#'
+#' @param plot Plot-like object coercible with `ggplotify::as.ggplot()`.
+#' @return A ggplot object.
+#' @keywords internal
+as_figure_panel <- function(plot) {
+  if (inherits(plot, "patchwork")) {
+    patchwork::wrap_elements(plot = plot)
+  } else if (inherits(plot, "ggplot")) {
+    plot
+  } else {
+    ggplotify::as.ggplot(plot)
+  }
+}
+
 #' Add outer panel tag
 #'
 #' Add a stable panel letter to a plot without relying on nested patchwork
@@ -8,13 +26,7 @@
 #' @return A ggplot object with the requested panel tag.
 #' @keywords internal
 tag_panel <- function(plot, tag) {
-  tagged_plot <- if (inherits(plot, "patchwork") || !inherits(plot, "ggplot")) {
-    ggplotify::as.ggplot(plot)
-  } else {
-    plot
-  }
-
-  tagged_plot +
+  as_figure_panel(plot) +
     ggplot2::labs(tag = tag) +
     ggplot2::theme(
       plot.tag = ggplot2::element_text(face = "bold", size = 16),
@@ -118,11 +130,7 @@ prepare_plot_panels <- function(
       plot <- plot_modifier(plot)
     }
 
-    if (show_tags) {
-      tag_panel(plot, tag)
-    } else {
-      ggplotify::as.ggplot(plot)
-    }
+    if (show_tags) tag_panel(plot, tag) else as_figure_panel(plot)
   }
 
   panel_plots <- purrr::pmap(

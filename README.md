@@ -21,6 +21,20 @@ multiomeR 1.0 is the first stable release. The manuscript describing it is under
 
 See [release notes and migration steps](NEWS.md) and the [release convention](dev/RELEASES.md).
 
+## Updating
+
+Releases tag stable, validated commits; `main` can carry development work that is not yet validated. Update your clone to a release tag rather than pulling `main`. Commit or stash local changes first; resolve any rebase conflicts as usual. With the newest [release](https://github.com/koefoeden/multiomeR/releases)'s tag in place of `vX.Y.Z`:
+
+```bash
+cd multiomeR  # your clone
+git fetch origin tag vX.Y.Z
+git rebase vX.Y.Z
+pixi install --locked --run-post-link-scripts
+pixi run --use-environment-activation-cache install-r-github-packages
+```
+
+Each release's notes repeat these commands with its tag and list any further steps.
+
 ## User manual
 
 The user manual is built from the Quarto book in `website/`. It includes a quickstart guide, an output gallery and full implementation details: <https://koefoeden.github.io/multiomeR/>

@@ -101,8 +101,9 @@ conclusions in a fresh `Rscript` process.
 
 ## Project Rules
 
-The repository is one root `targets` project. Do not set `TAR_PROJECT` or call
-legacy `activate_*()` helpers. Call `load_CFG("<dataset>")` only when an
+The repository is one root `targets` project. Set `TAR_PROJECT=dev` only with
+`configuration_dev/` selected, as its README describes; never call legacy
+`activate_*()` helpers. Call `load_CFG("<dataset>")` only when an
 interactive probe needs resolved dataset-level configuration. Use
 `multiomer-run-pipeline` for target execution.
 

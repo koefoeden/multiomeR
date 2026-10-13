@@ -20,8 +20,7 @@ Draft the notes from the commit messages and diff since the previous tag.
 Downstreams tag in their own namespace, not as public `vX.Y.Z`.
 
 Preserve running checkouts and their environments and stores. Review the final
-public diff for private material; merge accepted public work forward into the
-private destination and retain its own configuration and release record.
+public diff for private material.
 
 For code and graph changes use `multiomer-validation-workflow`; regenerate
 manifest diagrams and render the manual and the Markdown export when affected.

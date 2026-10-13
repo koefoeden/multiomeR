@@ -25,11 +25,9 @@ Optimizations`, and `Bug Fixes`. Always include:
 - `Validation`: commands or checks actually completed, plus anything not run.
 - `Pipeline Impact`: target invalidation after merge.
 
-Collect impact lines from every branch commit using
-`multiomer-impact-keyword-lines`. Deduplicate identical lines. If the same
-target is both contained and cascading, keep the cascading line. Do not collapse
-different targets without verifying their dependency relationship. If a commit
-lacks a valid impact line, inspect that commit before classifying it.
+Collect and deduplicate impact lines from every branch commit as
+`multiomer-git-commit-format` describes. If a commit lacks a valid impact line,
+inspect that commit before classifying it.
 
 If no existing target is invalidated, write exactly:
 

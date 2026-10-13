@@ -37,6 +37,11 @@ mixed_human_31x:
     Fibroblast: [COL1A1, DCN, COL3A1]
     Smooth_muscle: [ACTA2, TAGLN, MYH11]
     Pericyte: [RGS5, PDGFRB, CSPG4]
+  # The WNN islet cluster ties beta and acinar cells on ambient INS, so its labels score
+  # islet endocrine genes instead of the beta-cell set.
+  aggregation_WNN_marker_genes:
+    Pancreatic_beta: ~
+    Islet_endocrine: [INS, SLC30A8, PCSK2, ABCC8, KCNMB2]
   aggregation_ATAC_marker_TFs:
     B: [EBF1]
     T: [TCF7, LEF1]

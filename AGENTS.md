@@ -6,41 +6,12 @@ If `$HOME/AGENTS.md` exists, read it before working in this repository. It may
 add user- or environment-specific instructions that are intentionally not
 tracked here. A missing home-level file is normal.
 
-## Documentation entry points
+## Documentation
 
-- Start with `website/multiomeR-manual-llm.md` when compact, repository-wide
-  documentation context is useful. It combines the manual's pages in authored
-  order and retains source-file provenance comments.
-- The canonical documentation sources are the Markdown files under `website/`;
-  the LLM-oriented Markdown file is generated.
-- The `website/methods_*.md` pages include algorithm descriptions from
-  `website/_shared_methods/`, which the manuscript supplement also includes.
-  State only key hardcoded values there and keep the fragments free of links;
-  source links and graphs belong on the pages. Run
-  `pixi run --use-environment-activation-cache -e dev check-source-links`
-  after moving or renaming linked source files.
-- Use `.github/CONTRIBUTING.md` for contribution scope and validation guidance.
-
-After changing the documentation, render the manual and refresh the
-LLM-oriented export:
-
-```bash
-pixi run --use-environment-activation-cache -e dev render-website
-pixi run --use-environment-activation-cache -e dev export-website-llm-markdown
-```
-
-The complete `website/` tree and `dev/render_website.py`,
-`dev/export_website_llm_markdown.py`, `dev/refresh_website_inputs.py`,
-`dev/refresh_output_gallery.py`, `dev/refresh_demo_outputs.R`,
-`dev/check_website_links.py`, and `dev/render_parameter_overview.R` are shared
-public documentation and must remain identical in both repositories, as must
-`pipeline_manuscript_figures/`, whose results the private manuscript includes. Keep
-private setup and benchmark notes in repository-local guides outside `website/`.
-Use Configure → Run → Review with output-file trees; interpretation belongs in
-the plots. Render from the shared public-default snapshot and regenerate graphs
-from an isolated public configuration, never the selected personal analysis.
-See `website/data/README.md` for refresh commands. Check both trees for equality
-and validate both renders before publishing a shared documentation change.
+The manual's sources are the Markdown files under `website/`; the generated
+`website/multiomeR-manual-llm.md` gives compact, repository-wide context. Edit
+documentation with
+[multiomer-edit-documentation](.agents/skills/multiomer-edit-documentation/SKILL.md).
 
 ## Repository-specific agent workflows
 
@@ -50,6 +21,7 @@ repository skills should use the matching `SKILL.md`, especially for:
 - running R code or the targets pipeline;
 - debugging failed targets;
 - validating R helper or target-graph changes;
+- editing documentation;
 - creating commits, pull requests, releases, or pipeline diagrams.
 
 Always pass `--use-environment-activation-cache` when invoking `pixi run`. In a

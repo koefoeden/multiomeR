@@ -63,11 +63,9 @@ high-level; omit details reliably implied by the code or existing instructions.
 
 ## Configuration
 
-Use `configuration_path()` for settings reads. The public defaults live in
-`configuration/`; the ignored root `configuration.local` selects one alternate
-directory. Use flat `cfg_module_<module>.yaml` files, never mix directories,
-and resolve the selection during graph construction. Preserve data-path and
-targets-store semantics. Do not change the selection during a run.
+Configuration follows [configuration/README.md](configuration/README.md); read
+settings through `configuration_path()` and resolve the selection during graph
+construction.
 
 ## Reusable helper source
 

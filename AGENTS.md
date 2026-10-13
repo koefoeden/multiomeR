@@ -41,10 +41,8 @@ construction.
 
 ## Reusable helper source
 
-The generally reusable process, resource, and structured-output helpers live
-under `packages/multiomeRCore/R`. The multiomeR pipeline sources those files
-directly, so ordinary users can edit them as pipeline code without installing
-the nested package. Standalone repositories may install the same directory as
-the `multiomeRCore` package from a pinned multiomeR Git commit. Do not duplicate
-these implementations under the root `R/` directory or in downstream runtime
-packages.
+Generally reusable process, resource, and structured-output helpers live under
+`packages/multiomeRCore/R`; [its README](packages/multiomeRCore/README.md)
+describes how the pipeline and standalone repositories use them. Do not
+duplicate these implementations under the root `R/` directory or in downstream
+runtime packages.

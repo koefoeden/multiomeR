@@ -77,6 +77,4 @@ tar_target(
   pinned commit and add any required system or indirect dependencies to
   `pixi.toml`.
 - Do not create a root `DESCRIPTION`; the workflow itself is not maintained as
-  an R package. Generally reusable helpers belong in the existing nested
-  `packages/multiomeRCore` package, whose `R/` files the workflow sources
-  directly.
+  an R package.

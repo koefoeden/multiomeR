@@ -74,7 +74,7 @@ figure_pipeline <- list(
         gene_ranges <- marker_validated_Ensembl_annotations_GRanges_list.mixed_human_31x$genes
         genes <- prepare_genomic_gene_bodies(
           gene_ranges[gene_ranges$gene_biotype == "protein_coding"], record$region)
-        list(record = record, genes = genes, selection = selection)
+        list(record = record, genes = genes, selection = selection, locus = locus)
       })
       plot_figure_1_loci(locus_records) |> compact_figure_1_plot()
     }),

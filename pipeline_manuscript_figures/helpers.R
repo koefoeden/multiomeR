@@ -343,10 +343,14 @@ plot_figure_1_loci <- function(records) {
       expand = ggplot2::expansion(mult = c(.05, .35))) +
     ggplot2::labs(x = NULL, y = "Genetic\ncontribution") +
     ggplot2::theme(axis.text.x = ggplot2::element_blank())
+  # A window without protein-coding genes names the locus's Open Targets locus-to-gene prediction.
+  empty <- dplyr::summarise(bounds, position = mean(.data$position), .by = "locus") |>
+    dplyr::mutate(label = paste0("No protein-coding genes in this window\nLocus-to-gene prediction: ",
+      vapply(records, \(x) x$locus$likely_genes_label[[1]], character(1)))) |>
+    dplyr::filter(!.data$locus %in% genes$locus)
   gene_track <- base + genomic_gene_body_layers(genes) +
-    ggplot2::geom_text(data = bounds |> dplyr::filter(!.data$locus %in% genes$locus) |>
-      dplyr::summarise(position = mean(.data$position), .by = "locus"),
-      ggplot2::aes(.data$position, -1), label = "No annotated genes in this window", size = 2.5) +
+    ggplot2::geom_text(data = empty, ggplot2::aes(.data$position, -1, label = .data$label),
+      size = 2.5, lineheight = .9, vjust = 0) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(add = c(.3, .8))) +
     ggplot2::labs(x = NULL, y = "Genes") + ggplot2::guides(y = "none") +
     ggplot2::theme(axis.text.x = ggplot2::element_blank(), strip.text = ggplot2::element_blank())

@@ -86,7 +86,7 @@ local({
   result <- summary(expensive_object)
   print(result)
   assign("result", result, envir = .GlobalEnv)
-  cat("CODEX_R_DONE_<unique>\n")
+  cat("R_DONE_<unique>\n")
 })
 ```
 
@@ -104,7 +104,8 @@ conclusions in a fresh `Rscript` process.
 The repository is one root `targets` project. Set `TAR_PROJECT=dev` only with
 `configuration_dev/` selected, as its README describes; never call legacy
 `activate_*()` helpers. Call `load_CFG("<dataset>")` only when an
-interactive probe needs resolved dataset-level configuration. Use
+interactive probe needs resolved dataset-level configuration; for aggregation
+settings, filter `read_aggregation_config_tibble()` by `aggregation`. Use
 `multiomer-run-pipeline` for target execution.
 
 Do not use `targets::tar_config_set()` to redirect a scratch probe: it rewrites

@@ -87,7 +87,9 @@ Useful source examples, each with aspects to learn from rather than copy blindly
 Use the plotting system's native title, subtitle, and caption fields. For
 composite plots, share annotations when they apply to all panels and identify
 panel-specific differences clearly. Manuscript assemblies may move subtitle
-and caption content into the figure legend: preserve its meaning there. Check the assembled legend explicitly when panel annotations are hidden.
+and caption content into the figure legend: preserve its meaning there. The
+defaults in [R/figure_render_helpers.R](../../../R/figure_render_helpers.R)
+hide panel subtitles and captions, so check the assembled legend explicitly.
 
 When changing annotations, trace the owning helper and target to verify every
 claim. Render a representative output at its intended dimensions and check

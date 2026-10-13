@@ -53,6 +53,10 @@ helper on a stored branch's inputs and compare the result with that branch's
 stored value using `all.equal()`. `tar_read(branches = i)` of an
 `iteration = "group"` input returns every group, so filter `tar_group == i`.
 
+WNN results cannot be reproduced by rebuilding: `BPCells::knn_hnsw()` with more
+than one thread is nondeterministic. Validate code after the neighbour search on
+a shared kNN input, and expect an adopted WNN change to cascade.
+
 For a compiled kernel in `src/`, run its reference-parity test listed in
 `website/algorithm_validation.md`, compare it with the committed
 kernel on a stored branch's inputs, and try degenerate inputs such as collinear

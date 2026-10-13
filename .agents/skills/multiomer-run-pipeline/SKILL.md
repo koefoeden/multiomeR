@@ -11,7 +11,10 @@ this same graph. Run R through Pixi; see `multiomer-run-r-code`.
 
 With the default callr child process, keep `names` expressions self-contained:
 use literal names or patterns rather than a selection variable defined only in
-the calling R session.
+the calling R session. With `callr_function = NULL`, the session's globals
+become imports instead: a variable such as `names` enters the hash of every
+function that calls `names()`, so freshly built targets later look outdated.
+Define no variables before an in-process call.
 
 ## Read-only inspection
 

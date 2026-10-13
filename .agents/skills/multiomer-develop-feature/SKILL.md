@@ -24,6 +24,10 @@ Use this when adding or changing targets, helpers, or analysis steps.
 
 - For new or revised plots, follow [multiomer-annotate-plots](../multiomer-annotate-plots/SKILL.md): title identifies the subject, subtitle guides interpretation, and caption explains relevant methods.
 - Prefer BPCells, matrices, `GRanges`, tibbles, and `SummarizedExperiment` over Seurat/Signac objects for new ATAC/GEX processing.
+- Compute per-cell ATAC results from fragments by mapping over the per-GEM-well
+  fragment directories, not `combined_BPCells_fragment_obj.ATAC`: BPCells
+  filters cells only after merging every well, so even a one-cell selection on
+  the combined object takes minutes.
 - Keep Seurat compatibility only at explicit legacy boundaries. Do not create intermediate Seurat objects just to pass data between targets.
 - Use direct package APIs rather than compatibility wrappers when practical.
 - Prefer direct target commands and existing machinery. Add helpers only for

@@ -328,8 +328,8 @@ describe_algorithm_parity <- function(parity, agreement, algorithm) {
     scavenge = if (all(p$passed)) "Identical within floating-point precision" else "Differs",
     wnn = paste0(paste(sub("_weight_spearman$", "", p$metric[grepl("_weight_spearman$", p$metric)]), collapse = "/"),
       " weight Spearman ", paste(format_parity_number(p$observed[grepl("_weight_spearman$", p$metric)]),
-        collapse = " / "), "#linebreak() Mean neighbour overlap ", format_parity_number(value("neighbor_overlap_mean")),
-      "#linebreak() First-quartile neighbour overlap ", format_parity_number(value("neighbor_overlap_q25"))),
+        collapse = " / "), "#linebreak() Mean neighbor overlap ", format_parity_number(value("neighbor_overlap_mean")),
+      "#linebreak() First-quartile neighbor overlap ", format_parity_number(value("neighbor_overlap_q25"))),
     with(agreement[agreement$algorithm == algorithm, ], paste0("Score-rank Spearman ",
       format_parity_number(score_rank_spearman), "#linebreak() Doublet-call Jaccard ",
       format_parity_number(doublet_jaccard), "#linebreak() Class agreement ",
@@ -340,12 +340,12 @@ describe_algorithm_parity <- function(parity, agreement, algorithm) {
 format_algorithm_parity_table <- function(summary, parity, agreement) {
   rows <- tibble::tribble(
     ~algorithm, ~label, ~fixture,
-    "ucell", "UCell-compatible scoring", "{cells} cells#linebreak() {features}-feature GEX matrix",
-    "amulet", "AMULET", "{cells} cells#linebreak() Complete fragment input",
+    "ucell", "UCell scoring", "{cells} nuclei#linebreak() {features}-feature GEX matrix",
+    "amulet", "AMULET", "{cells} nuclei#linebreak() Complete fragment input",
     "scdblfinder_atac_predoublet", "ATAC scDblFinder feature aggregation",
-      "{cells} pre-doublet cells#linebreak() {features}-peak matrix",
-    "wnn", "Weighted nearest neighbours", "{cells} cells#linebreak() {features}-dimensional RNA/ATAC embeddings",
-    "scavenge", "SCAVENGE-style propagation", "{cells} cells#linebreak() WNN graph")
+      "{cells} pre-doublet nuclei#linebreak() {features}-peak matrix",
+    "wnn", "Weighted nearest neighbors", "{cells} nuclei#linebreak() {features}-dimensional RNA/ATAC embeddings",
+    "scavenge", "SCAVENGE propagation", "{cells} nuclei#linebreak() WNN graph")
   count <- \(x) formatC(x, format = "d", big.mark = ",")
   cells <- vapply(rows$algorithm, \(a) {
     s <- summary[summary$algorithm == a, ]
@@ -365,7 +365,7 @@ format_algorithm_parity_table <- function(summary, parity, agreement) {
     "  inset: (x: 4pt, y: 5pt),", "  align: (col, row) => if row == 0 {",
     "    if col >= 4 { right + horizon } else { left + horizon }", "  } else if col >= 4 {", "    right + top",
     "  } else {", "    left + top", "  },", "  table.header(", "    [#strong[Implementation]],",
-    "    [#strong[Production fixture]],", "    [#strong[Reference]],", "    [#strong[Result agreement]],",
+    "    [#strong[Input data]],", "    [#strong[Reference]],", "    [#strong[Result agreement]],",
     "    [#strong[Time,#linebreak() reimplementation / reference]],",
     "    [#strong[Peak RAM,#linebreak() reimplementation / reference]],", "  ),", "  table.hline(stroke: 1pt),",
     cells, ")", "```")

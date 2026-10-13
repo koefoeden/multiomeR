@@ -71,7 +71,7 @@ Selections are deterministic but follow the data.
   deviation, as aligned facets of variant contributions (point area: PIP),
   protein-coding genes, focal coverage and consensus peaks.
 - **E:** SCAVENGE trait-relevance scores of the same two traits on the WNN UMAP,
-  with a shared colour scale, unclipped scores and cell-type labels.
+  with a shared colour scale, unclipped scores and the WNN cell-type labels of C.
 
 Supplementary Figure S3 shows every study across the assigned cell types with
 the module's unscaled deviation heatmap and GWAS metadata tracks, on Figure 1C's

@@ -207,10 +207,16 @@ plot_figure_1_link_tracks <- function(record, coverage) {
   link <- record$link
   bounds <- c(max(1, min(link$start, link$TargetGeneTSS) - 25000),
     max(link$end, link$TargetGeneTSS) + 25000)
+  # Other genes whose centred labels would run past the window keep their arrows but
+  # lose their labels; half_label estimates a label's half-width as in figure_1_gene_lanes().
   genes <- record$genes |>
     dplyr::filter(.data$end >= bounds[[1]], .data$start <= bounds[[2]]) |>
     dplyr::mutate(start = pmax(.data$start, bounds[[1]]),
       end = pmin(.data$end, bounds[[2]]),
+      half_label = (nchar(.data$gene) + 2) * .018 * diff(bounds) / 2,
+      gene = dplyr::if_else(.data$gene != link$TargetGene[[1]] &
+        ((.data$start + .data$end) / 2 - .data$half_label < bounds[[1]] |
+          (.data$start + .data$end) / 2 + .data$half_label > bounds[[2]]), "", .data$gene),
       lane = IRanges::disjointBins(IRanges::IRanges(.data$start, .data$end))) |>
     dplyr::arrange(.data$gene != link$TargetGene[[1]])
   coverage <- dplyr::filter(coverage, .data$pos >= bounds[[1]], .data$pos <= bounds[[2]])
@@ -229,6 +235,7 @@ plot_figure_1_link_tracks <- function(record, coverage) {
       stats::quantile(.data$normalized_insertions, .999)))
   accessibility <- base + ggplot2::geom_area(data = coverage,
     ggplot2::aes(.data$pos, .data$normalized_insertions), fill = "#446B8C") +
+    ggplot2::scale_y_continuous(breaks = \(limits) c(0, floor(limits[[2]] / 10) * 10)) +
     ggplot2::labs(x = NULL, y = "ATAC") +
     ggplot2::theme(axis.text.x = ggplot2::element_blank())
   arc <- tibble::tibble(position = seq(link$peak_center, link$TargetGeneTSS, length.out = 101),
@@ -242,6 +249,13 @@ plot_figure_1_link_tracks <- function(record, coverage) {
       theme = figure_1_theme())
 }
 
+# The nominal P-value as a plotmath label, "Nominal P = 1.4 \u00d7 10^-4".
+figure_1_p_label <- function(p) {
+  exponent <- floor(log10(p))
+  if (exponent >= -2) return(sprintf("Nominal~italic(P)==%.2g", p))
+  sprintf("Nominal~italic(P)==%.1f%%*%%10^%d", p / 10^exponent, exponent)
+}
+
 # B: same residuals as the parent scatter, separate panel; donor colours without
 # a large legend. The line is descriptive, not the hierarchical model fit.
 plot_figure_1_scatter <- function(data) {
@@ -251,10 +265,10 @@ plot_figure_1_scatter <- function(data) {
     ggplot2::geom_smooth(method = "lm", formula = y ~ x, se = FALSE,
       colour = "black", linewidth = .4) + figure_1_theme() +
     ggplot2::annotate("text", x = -Inf, y = Inf, hjust = -.08, vjust = 1.3,
-      label = sprintf("Hierarchical P = %.2g", data$hierarchical_pvalue[[1]]),
+      label = figure_1_p_label(data$hierarchical_pvalue[[1]]), parse = TRUE,
       family = "NimbusSan", size = 2.5) +
     ggplot2::guides(colour = "none") +
-    ggplot2::labs(title = "Donor-state aggregates",
+    ggplot2::labs(title = "Donor\u2013state pseudobulks",
       x = "ATAC log1p CPM residual", y = "GEX log1p CPM residual")
 }
 
@@ -354,27 +368,27 @@ plot_figure_1_loci <- function(records) {
 }
 
 # E: TRS_UMAPs inspiration; rebuild WNN UMAP from coordinates and scores, with
-# cell-type centroids, no score clipping or serialized upstream plot mutation.
+# WNN cell-type centroids, as in C, no score clipping or serialized upstream plot mutation.
 plot_figure_1_TRS <- function(data, trait, score_limits) {
   labels <- data |> dplyr::summarise(x = stats::median(.data$WNN_UMAP_1),
-    y = stats::median(.data$WNN_UMAP_2), .by = "PCA_harmony_SNN_cluster_cell_type") |>
-    dplyr::filter(is_figure_1_cell_type(.data$PCA_harmony_SNN_cluster_cell_type)) |>
-    dplyr::mutate(PCA_harmony_SNN_cluster_cell_type =
-      figure_1_cell_type_labels(.data$PCA_harmony_SNN_cluster_cell_type))
+    y = stats::median(.data$WNN_UMAP_2), .by = "WNN_harmony_SNN_cluster_cell_type") |>
+    dplyr::filter(is_figure_1_cell_type(.data$WNN_harmony_SNN_cluster_cell_type)) |>
+    dplyr::mutate(WNN_harmony_SNN_cluster_cell_type =
+      figure_1_cell_type_labels(.data$WNN_harmony_SNN_cluster_cell_type))
   # Unlabelled sampled nuclei repel text away from the point clouds, not just
   # from other centroids. A fixed seed keeps placement matched between traits.
   obstacles <- withr::with_seed(1L, dplyr::slice_sample(data, n = min(2000L, nrow(data)))) |>
     dplyr::transmute(x = .data$WNN_UMAP_1, y = .data$WNN_UMAP_2,
-      PCA_harmony_SNN_cluster_cell_type = "")
+      WNN_harmony_SNN_cluster_cell_type = "")
   labels <- dplyr::bind_rows(labels, obstacles)
   ggplot2::ggplot(data, ggplot2::aes(.data$WNN_UMAP_1, .data$WNN_UMAP_2)) +
     ggplot2::geom_point(ggplot2::aes(colour = .data$score), size = .15) +
     ggrepel::geom_text_repel(data = labels, ggplot2::aes(.data$x, .data$y,
-      label = .data$PCA_harmony_SNN_cluster_cell_type), size = 2, seed = 1,
+      label = .data$WNN_harmony_SNN_cluster_cell_type), size = 2.4, seed = 1,
       max.overlaps = Inf, min.segment.length = 0,
-      point.padding = .1, box.padding = .25, force = 1, force_pull = 2,
+      point.padding = .1, box.padding = .3, force = 2, force_pull = 2,
       segment.size = .2, segment.color = "grey40",
-      max.iter = 3000, max.time = Inf) +
+      max.iter = 20000, max.time = Inf) +
     ggplot2::scale_colour_viridis_c(name = "TRS", limits = score_limits, na.value = "grey85") +
     ggplot2::coord_equal() + figure_1_theme() +
     ggplot2::theme(panel.grid = ggplot2::element_blank(), axis.text = ggplot2::element_blank(),
@@ -389,6 +403,12 @@ plot_figure_1_TRS <- function(data, trait, score_limits) {
 # rows also name the study. Deviations beyond Figure 1C's range take its end colours.
 plot_figure_S3 <- function(scores, GWAS_metadata_tracks_plot, traits) {
   limit <- max(abs(scores$deviation[scores$GWAS_ID %in% traits$GWAS_ID]))
+  # The module's "Samples" track gives each GWAS's sample size, not Epi Multiome samples.
+  bars <- which(vapply(seq_along(GWAS_metadata_tracks_plot), \(i) "track" %in% names(GWAS_metadata_tracks_plot[[i]]$data), logical(1)))
+  stopifnot(length(bars) == 1L)
+  GWAS_metadata_tracks_plot[[bars]] <- GWAS_metadata_tracks_plot[[bars]] + ggplot2::facet_grid(. ~ track, scales = "free_x",
+    switch = "x", labeller = ggplot2::as_labeller(c(Loci = "Loci", Samples = "GWAS N"))) +
+    ggplot2::theme(strip.text.x.bottom = ggplot2::element_text(margin = ggplot2::margin(t = 10)))
   GWAS_metadata_tracks_plot[[1]] <- GWAS_metadata_tracks_plot[[1]] +
     ggplot2::scale_y_discrete(drop = FALSE, expand = c(0, 0),
       labels = \(x) paste0(figure_1_trait_labels(x), " (", sub("^.*_([A-Za-z]+)([0-9]{4}).*$", "\\1 \\2", x), ")"))
@@ -588,8 +608,8 @@ seurat_signac_comparison_resource_tibble <- function(aggregations, store = targe
 
 plot_seurat_signac_comparison_resources <- function(data) {
   measures <- c(critical_path_hours = "Critical path (h)",
-    used_CPU_hours = "CPU time (h)",
-    used_RAM_GB_hours = "RAM use (GB \u00d7 h)",
+    used_CPU_hours = "CPU time (CPU-hours)",
+    used_RAM_GB_hours = "Memory (GB-hours)",
     disk_space_GB = "Disk space (GB)")
   colours <- c(multiomeR = "#2a78d6", "multiomeR + Seurat exports" = "#86b3e8", "Seurat/Signac" = "#eb6834")
   data <- data |>

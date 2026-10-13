@@ -67,7 +67,8 @@ pixi run --use-environment-activation-cache -e dev check-website-links  # after 
 ```
 
 Cloud CI runs only cheap checks that need no environment: documentation source
-links and, also weekly, the example-data download URLs. Run the
+links, that targets open BPCells directories through `open_BPCells_dir()` and,
+also weekly, the example-data download URLs. Run the
 reference-parity tests locally after changing tests, tested helpers, native
 sources, or the Pixi environment:
 

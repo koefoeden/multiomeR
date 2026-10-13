@@ -55,9 +55,9 @@ figure_pipeline <- list(
   ),
   targets::tar_target(
     figure_1_panel_D.mixed_human_31x,
-    description = "Figure 1D: raw_deviation_unscaled data of the selected traits, all assigned cell types, no metadata tracks",
+    description = "Figure 1D: raw_deviation_unscaled data of the selected traits, all assigned cell types in configured order, traits as a staircase, no metadata tracks",
     command = plot_figure_1_heatmap(chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x,
-      figure_1_traits.mixed_human_31x) |> compact_figure_1_plot(),
+      figure_1_traits.mixed_human_31x, names(UCell_WNN_marker_genes_list.mixed_human_31x)) |> compact_figure_1_plot(),
     resources = get_tar_resources(RAM_GB_req = 4)
   ),
   targets::tar_target(
@@ -90,7 +90,7 @@ figure_pipeline <- list(
   ),
   targets::tar_target(
     figure_1_panel_F.mixed_human_31x,
-    description = "Figure 1F: rebuild the TRS_UMAP of the trait in E, with randomized cell draw order and cell-type centroids",
+    description = "Figure 1F: rebuild the TRS_UMAP of the trait in E, with randomized cell draw order and the cell types enriched for it labelled",
     command = local({
       trait <- select_figure_1_showcase(figure_1_traits.mixed_human_31x)$GWAS_ID
       scores <- TRS_tibble.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.mixed_human_31x |>
@@ -103,7 +103,9 @@ figure_pipeline <- list(
         dplyr::filter(is.finite(.data$WNN_UMAP_1), is.finite(.data$WNN_UMAP_2))
       # Match production random drawing.
       data <- withr::with_seed(1L, dplyr::slice_sample(data, prop = 1))
-      plot_figure_1_TRS(data, trait) |> compact_figure_1_plot()
+      enriched <- chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x |>
+        dplyr::filter(.data$GWAS_ID == trait, .data$z_q < .05, is_figure_1_cell_type(.data$cluster))
+      plot_figure_1_TRS(data, trait, gsub("-", "_", enriched$cluster)) |> compact_figure_1_plot()
     }),
     resources = get_tar_resources(RAM_GB_req = 4)
   ),
@@ -156,13 +158,13 @@ figure_pipeline <- list(
   ),
   tarchetypes::tar_file(
     supplementary_figure_S3.mixed_human_31x,
-    description = "Supplementary Figure S3: the module's unscaled cell-type deviation heatmap for every GWAS study and assigned cell type, on Figure 1C's colour scale with its q < 0.05 stars, and its values",
+    description = "Supplementary Figure S3: the module's unscaled cell-type deviation heatmap for every GWAS study and assigned cell type, with trait-category and loci tracks, on Figure 1D's colour scale with its q < 0.05 stars, and its values",
     command = {
       scores <- chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x |>
         dplyr::filter(is_figure_1_cell_type(.data$cluster))
       paths <- file.path(output_dir, c("S3.png", "data/cell_type_trait_enrichment.tsv"))
       ggplot2::ggsave(paths[[1]], plot_figure_S3(scores, GWAS_metadata_tracks_plot.genetic_enrichment.mixed_human_31x,
-        figure_1_traits.mixed_human_31x), device = ragg::agg_png, width = 14.5, height = 9.5, dpi = 300)
+        figure_1_traits.mixed_human_31x), device = ragg::agg_png, width = 9, height = 10.5, dpi = 300)
       readr::write_tsv(dplyr::select(scores, "GWAS_ID", "Category", "cluster", "deviation", "z", "z_q"), paths[[2]])
       paths
     },

@@ -321,9 +321,15 @@ plot_figure_1_scatter <- function(data) {
 # D: raw_deviation_unscaled inspiration; the selected traits, no metadata tracks or
 # clustering. All assigned cell types retained, common raw-deviation scale. Stars
 # mark enrichments at q < 0.05.
-plot_figure_1_heatmap <- function(data, traits) {
-  data <- data |> dplyr::filter(.data$GWAS_ID %in% traits$GWAS_ID, is_figure_1_cell_type(.data$cluster)) |>
+# Columns follow the configured cell types, as in A, and rows the column of each
+# trait's selected cell type, so the selected pairs form a staircase.
+plot_figure_1_heatmap <- function(data, traits, cell_types) {
+  cell_types <- intersect(cell_types, gsub("-", "_", data$cluster))
+  traits <- traits[order(match(gsub("-", "_", traits$cluster), cell_types)), ]
+  data <- data |> dplyr::mutate(cluster = gsub("-", "_", .data$cluster)) |>
+    dplyr::filter(.data$GWAS_ID %in% traits$GWAS_ID, .data$cluster %in% cell_types) |>
     dplyr::mutate(GWAS_ID = factor(.data$GWAS_ID, levels = rev(traits$GWAS_ID)),
+      cluster = factor(.data$cluster, levels = cell_types),
       label = dplyr::if_else(.data$z_q < .05, "*", ""))
   limit <- max(abs(data$deviation), na.rm = TRUE)
   ggplot2::ggplot(data, ggplot2::aes(.data$cluster, .data$GWAS_ID, fill = .data$deviation)) +
@@ -425,27 +431,28 @@ plot_figure_1_loci <- function(records) {
 
 # F: TRS_UMAPs inspiration; rebuild WNN UMAP from coordinates and scores, with
 # WNN cell-type centroids, as in D, no score clipping or serialized upstream plot mutation.
-plot_figure_1_TRS <- function(data, trait) {
+# Only the cell types enriched for the trait are labelled, each placed outward from
+# the embedding's centre with a line to its nuclei's median position.
+plot_figure_1_TRS <- function(data, trait, cell_types) {
   labels <- data |> dplyr::summarise(x = stats::median(.data$WNN_UMAP_1),
     y = stats::median(.data$WNN_UMAP_2), .by = "WNN_harmony_SNN_cluster_cell_type") |>
-    dplyr::filter(is_figure_1_cell_type(.data$WNN_harmony_SNN_cluster_cell_type)) |>
-    dplyr::mutate(WNN_harmony_SNN_cluster_cell_type =
-      figure_1_cell_type_labels(.data$WNN_harmony_SNN_cluster_cell_type))
+    dplyr::filter(.data$WNN_harmony_SNN_cluster_cell_type %in% cell_types) |>
+    dplyr::mutate(label = figure_1_cell_type_labels(.data$WNN_harmony_SNN_cluster_cell_type),
+      label_x = .data$x + .15 * diff(range(data$WNN_UMAP_1)) * sign(.data$x - stats::median(data$WNN_UMAP_1)),
+      label_y = .data$y + .12 * diff(range(data$WNN_UMAP_2)) * sign(.data$y - stats::median(data$WNN_UMAP_2)))
   ggplot2::ggplot(data, ggplot2::aes(.data$WNN_UMAP_1, .data$WNN_UMAP_2)) +
     ggplot2::geom_point(ggplot2::aes(colour = .data$score), size = .15) +
-    # Labels on a translucent background repel only each other; a fixed seed keeps
-    # their placement matched between traits.
-    ggrepel::geom_label_repel(data = labels, ggplot2::aes(.data$x, .data$y,
-      label = .data$WNN_harmony_SNN_cluster_cell_type), size = 2.1, seed = 1,
-      fill = grDevices::adjustcolor("white", .75), label.size = 0, linewidth = 0, label.padding = grid::unit(.8, "pt"),
-      max.overlaps = Inf, min.segment.length = .2, box.padding = .1, force = 1,
-      segment.size = .2, segment.color = "grey40", max.iter = 20000, max.time = Inf) +
+    ggplot2::geom_segment(data = labels, ggplot2::aes(.data$x, .data$y, xend = .data$label_x, yend = .data$label_y),
+      linewidth = .3, colour = "grey20") +
+    ggplot2::geom_label(data = labels, ggplot2::aes(.data$label_x, .data$label_y, label = .data$label),
+      size = 2.8, label.size = .2, label.padding = grid::unit(1.5, "pt"), fill = "white") +
     ggplot2::scale_colour_viridis_c(name = "TRS", na.value = "grey85") +
-    ggplot2::coord_equal() + figure_1_theme() +
+    figure_1_theme() +
     ggplot2::theme(panel.grid = ggplot2::element_blank(), axis.text = ggplot2::element_blank(),
       legend.position = "right") +
     ggplot2::guides(colour = ggplot2::guide_colourbar(barwidth = grid::unit(2, "mm"),
       barheight = grid::unit(25, "mm"))) +
+    ggplot2::coord_equal(clip = "off") +
     ggplot2::labs(title = "SCAVENGE trait relevance", subtitle = figure_1_trait_labels(trait),
       x = "UMAP 1", y = "UMAP 2")
 }
@@ -455,20 +462,25 @@ plot_figure_1_TRS <- function(data, trait) {
 # rows also name the study. Deviations beyond Figure 1D's range take its end colours.
 plot_figure_S3 <- function(scores, GWAS_metadata_tracks_plot, traits) {
   limit <- max(abs(scores$deviation[scores$GWAS_ID %in% traits$GWAS_ID]))
-  # The module's "Samples" track gives each GWAS's sample size, not Epi Multiome samples.
+  # Of the module's metadata tracks, only trait category and credible-set loci are
+  # kept; Supplementary Table S3 gives each study's sample size, method and ancestry.
   bars <- which(vapply(seq_along(GWAS_metadata_tracks_plot), \(i) "track" %in% names(GWAS_metadata_tracks_plot[[i]]$data), logical(1)))
   stopifnot(length(bars) == 1L)
-  GWAS_metadata_tracks_plot[[bars]] <- GWAS_metadata_tracks_plot[[bars]] + ggplot2::facet_grid(. ~ track, scales = "free_x",
-    switch = "x", labeller = ggplot2::as_labeller(c(Loci = "Loci", Samples = "GWAS N"))) +
-    ggplot2::theme(strip.text.x.bottom = ggplot2::element_text(margin = ggplot2::margin(t = 10)))
-  GWAS_metadata_tracks_plot[[1]] <- GWAS_metadata_tracks_plot[[1]] +
+  loci <- GWAS_metadata_tracks_plot[[bars]]
+  loci$data <- dplyr::filter(loci$data, .data$track == "Loci")
+  category <- GWAS_metadata_tracks_plot[[1]] +
     ggplot2::scale_y_discrete(drop = FALSE, expand = c(0, 0),
       labels = \(x) paste0(figure_1_trait_labels(x), " (", sub("^.*_([A-Za-z]+)([0-9]{4}).*$", "\\1 \\2", x), ")"))
-  scores |>
+  ordered <- scores |>
     dplyr::mutate(cluster = figure_1_cell_type_labels(.data$cluster),
       deviation = pmax(pmin(.data$deviation, limit), -limit), label = dplyr::if_else(.data$z_q < .05, "*", "")) |>
-    plot_GWAS_by_cluster_heatmap(GWAS_metadata_tracks_plot, fill_col = "deviation", fill_label = "Deviation",
-      fill_limits = c(-limit, limit), support_label_col = "label")
+    get_ordered_GWAS_score_plot_data(NULL, score_col = "deviation")
+  heatmap <- plot_GWAS_feature_heatmap(ordered$scores, ordered$clusters, "cluster", "deviation", "Deviation",
+    fill_limits = c(-limit, limit), support_label_col = "label")
+  patchwork::wrap_plots(list(category, loci, heatmap, plot_GWAS_feature_support_tracks(ordered$clusters)),
+    design = "##D\nABC", widths = c(.35, 1.6, 9), heights = grid::unit(c(24, 1), c("mm", "null")),
+    guides = "collect") &
+    ggplot2::theme(legend.position = "bottom", legend.box = "horizontal", legend.justification = "left")
 }
 
 # Supplementary Table S3: each configured study's Open Targets record and credible

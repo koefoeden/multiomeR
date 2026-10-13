@@ -5,7 +5,7 @@ description: Prepare or publish multiomeR releases using the repository release 
 
 # multiomeR Create Release
 
-Read `dev/RELEASES.md`, `NEWS.md`, any downstream release notes, current remote refs,
+Read `dev/RELEASES.md`, any downstream release notes, current remote refs,
 tags and GitHub releases before selecting a boundary. The workflow is not a root
 R package; never add `DESCRIPTION` for versioning. When the user asks you to
 establish or revise the convention, document that choice and proceed within the
@@ -14,8 +14,9 @@ authorized scope instead of asking them to supply a version source.
 Distinguish preparation from publication. Preparation includes isolated topic
 branches, migration notes and destination validation. Publishing requires the
 user's authorization and a validated commit integrated into current `main`.
-Keep proposed notes marked unreleased until then. Follow the documented tag
-namespace; do not assume every downstream uses public `vX.Y.Z` tags.
+Draft the notes from the commit messages and diff since the previous tag. Follow
+the documented tag namespace; do not assume every downstream uses public
+`vX.Y.Z` tags.
 
 Preserve running checkouts and their environments and stores. Review the final
 public diff for private material; merge accepted public work forward into the
@@ -30,8 +31,7 @@ candidate with a clean working tree, once with `configuration/` and once with
 `configuration_dev/` selected. Retain the report and require all preflight
 and output checks to pass; cached target results may be reused.
 
-At publication, update the release date, verify the destination commit and
-validation, create an annotated immutable tag, push that tag explicitly and
-publish the matching GitHub notes, ordered as `multiomer-git-commit-format`
-describes. Verify the resulting tag and release URL.
-Do not automatically bump a post-release development version.
+At publication, verify the destination commit and validation, create an
+annotated immutable tag, push that tag explicitly and publish the drafted
+GitHub notes, ordered as `multiomer-git-commit-format` describes. Verify the
+resulting tag and release URL.

@@ -1,8 +1,9 @@
 # Releases
 
-multiomeR is a configurable analysis workflow, not a root R package. `NEWS.md`
-is the version and migration record; no root `DESCRIPTION` or independent
-version file is needed. The nested `multiomeRCore` package has its own version.
+multiomeR is a configurable analysis workflow, not a root R package. Its GitHub
+releases are the version and migration record; no root `DESCRIPTION`, version
+file or `NEWS.md` is needed. The nested `multiomeRCore` package has its own
+version.
 
 ## Versions and tags
 
@@ -14,21 +15,21 @@ compatible fixes. Before 1.0, the minor version marked incompatible changes.
 Target invalidation is reported separately: even a compatible fix can require
 recomputation.
 
-Use `MAJOR.MINOR.PATCH (unreleased)` at the top of `NEWS.md` while preparing a
-release. Replace `unreleased` with the release date only when publishing. Do not
-bump a development version automatically after release; start the next section
-when the next change needs it. Optional release candidates use `vX.Y.Z-rc.N`.
+Optional release candidates use `vX.Y.Z-rc.N`.
 
 Version 0.5.0 starts this convention after the untagged 0.4.1.9000 development
-series. Archive tags are historical preservation points, not software releases.
-Do not manufacture retrospective release tags for them.
+series; tags up to v1.2.1 also carry the notes in `NEWS.md`. Archive tags are
+historical preservation points, not software releases. Do not manufacture
+retrospective release tags for them.
 
 ## Preparation and publication
 
 Prepare coherent topic commits on a branch based on current public `main`.
 Review the final diff for private configuration, paths, outputs and credentials.
-Document user-visible changes, migration steps, scientific interpretation and
-precise target-invalidation boundaries in `NEWS.md`.
+Commit messages record each change's user-visible effect and target impact. At
+release time, draft the notes from them and the diff since the previous tag:
+user-visible changes, migration steps, scientific interpretation and precise
+target-invalidation boundaries.
 
 Validate the destination configuration, relevant numerical tests, generated
 manifest and dependency diagrams, and the manual. Record whether
@@ -39,7 +40,7 @@ that checkout's files, environment or targets store during release preparation.
 
 After review, merge the prepared branch into current `main`, verify the resulting
 commit and validation, create an annotated version tag and publish the GitHub
-release from the matching notes. Do not tag a preparation branch as a completed
+release with the drafted notes. Do not tag a preparation branch as a completed
 release. Publish only the intended tag explicitly, never all local tags.
 
 Downstreams merge the public release forward, then record their own overlays

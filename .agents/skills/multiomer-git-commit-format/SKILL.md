@@ -47,6 +47,22 @@ them with the final diff against the destination base or previous release.
 Drop effects from reverted or superseded changes, deduplicate surviving lines,
 and retain the cascading classification when it applies to the same target.
 
+## Release Notes
+
+Releases tag stable, validated commits, and users update to a tag rather than
+to `main`. Order the notes:
+
+1. A short intro: what the release does and whether results change.
+2. **What you need to do**, numbered. Step 1, "Update to this release", always
+   gives `cd` into the clone, `git fetch origin tag <tag>`, `git rebase <tag>`,
+   `pixi install --locked --run-post-link-scripts` and
+   `pixi run --use-environment-activation-cache install-r-github-packages`,
+   after one line asking to commit or stash local changes first; say when
+   nothing else is required. Each breaking change or migration is a step.
+3. **What happens to your aggregations**: what rebuilds and which results change.
+4. **What changed**, grouped by theme, keeping effect sizes.
+5. **Development** last.
+
 ## No Agent Attribution
 
 Public commits, pull requests and issues carry no agent co-author or task-ID

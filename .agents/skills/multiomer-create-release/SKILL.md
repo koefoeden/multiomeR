@@ -32,5 +32,6 @@ and output checks to pass; cached target results may be reused.
 
 At publication, update the release date, verify the destination commit and
 validation, create an annotated immutable tag, push that tag explicitly and
-publish the matching GitHub notes. Verify the resulting tag and release URL.
+publish the matching GitHub notes, ordered as `multiomer-git-commit-format`
+describes. Verify the resulting tag and release URL.
 Do not automatically bump a post-release development version.

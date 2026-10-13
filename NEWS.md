@@ -1,379 +1,445 @@
 # multiomeR 1.2.1 (2026-10-12)
 
-Lowers the memory requirement from 60 GB to 32 GB of RAM, labels the
-`brain_mouse` example with embryonic marker sets, and fixes the UMAP parameter
-sweeps on large aggregations. Built from an empty store in a 16-CPU Slurm job
-limited to 32 GiB, the demo's processes used at most 17 GiB.
+multiomeR 1.2.1 lowers the memory requirement from 60 GB to 32 GB of RAM, labels
+the `brain_mouse` example with embryonic marker sets, and fixes the UMAP
+parameter sweeps on large aggregations. The results of your aggregations do not
+change: existing stores stay current apart from a few plots.
 
-## Resources
+## What you need to do
 
-- Size each target's `get_tar_resources()` request at about 1.5 times the peak
-  memory it reached on aggregations of 213,000 and 713,000 nuclei, in 16- and
-  32-GB steps. With the default GEX backend, no target requests more than
-  32 GB, against 49 requests of 40 or 60 GB before; the largest targets need
-  about 7 GB plus 2.5 GB per 100,000 nuclei. Unmeasured targets request at most
-  32 GB.
-- Request 60 GB for GEX normalization and the two Seurat objects only when an
+1. **Update to this release.** Releases tag stable, validated commits, so update
+   to the tag rather than pulling `main`, which can carry development work that
+   is not yet validated. Commit or stash local changes first; resolve any rebase
+   conflicts as usual. While no other R process uses the environment, run:
+   ```bash
+   cd multiomeR  # your clone
+   git fetch origin tag v1.2.1
+   git rebase v1.2.1
+   pixi install --locked --run-post-link-scripts
+   pixi run --use-environment-activation-cache install-r-github-packages
+   ```
+   Nothing else is required: the environment and the parameter schema are
+   unchanged.
+
+2. **Coming from 1.1.0?** Also follow steps 2 to 6 of the [1.2.0
+   notes](https://github.com/koefoeden/multiomeR/releases/tag/v1.2.0). They now
+   include the rename of AMULET's fragment-count column from `nFrags` to
+   `amulet_nFrags`, which 1.2.0 made like the other AMULET columns but its notes
+   first omitted.
+
+## What happens to your aggregations
+
+- **Existing stores stay current.** Resource requests, controllers and target
+  descriptions do not invalidate targets.
+- **Only plots rebuild.** The GEX and ATAC UMAP sweeps (`cross.UMAPs.3_GEX_QC`,
+  `cross.UMAPs.7_ATAC_QC`) and `TRS_cluster_summary_plot` rerun with new plots.
+  `UMAP_embeddings_tibble.GEX`, `.GEX_non_harmony` and `.ATAC` rerun and
+  reproduce their values.
+- **`brain_mouse`** rebuilds from its marker lists onward.
+- **In `configuration_dev/`**, only targets of
+  `pipeline_manuscript_figures/targets.R` rerun: Figure 1 panels A and C–E with
+  its plot and data, and the Table S4 writer. `figure_1_traits`,
+  `supplementary_table_S3` and `supplementary_figure_S3` are new.
+
+## What changed
+
+### Memory requirement
+
+- Each target's `get_tar_resources()` request is about 1.5 times the peak memory
+  it reached on aggregations of 213,000 and 713,000 nuclei, in 16- and 32-GB
+  steps. With the default GEX backend, no target requests more than 32 GB,
+  against 49 requests of 40 or 60 GB before; the largest targets need about 7 GB
+  plus 2.5 GB per 100,000 nuclei. Unmeasured targets request at most 32 GB.
+- GEX normalization and the two Seurat objects request 60 GB only when an
   aggregation of the configuration uses the optional `Seurat_SCT` GEX backend,
   whose GEX normalization needs about 0.25 GB per 1,000 nuclei.
-- Declare the default `local-heavy` controller with 32 GB and add a
-  `local-large` controller (6 cores, 60 GB, one worker) for those requests.
-- Record the measurements behind the requests as
-  `[resource_observation: ...]` tags in target descriptions. A target may carry
-  several, and the manual suggests common keys.
+- The default `local-heavy` controller is declared with 32 GB, and a new
+  `local-large` controller (6 cores, 60 GB, one worker) takes those requests. A
+  custom `crew_controllers.R` needs a tier of at least 60 GB only for
+  aggregations that use `Seurat_SCT`.
+- Built from an empty store in a 16-CPU Slurm job limited to 32 GiB, the demo's
+  processes used at most 17 GiB.
+- Target descriptions record the measurements behind the requests as
+  `[resource_observation: ...]` tags. A target may carry several, and the manual
+  suggests common keys.
 
-## Examples
+### Examples
 
-- Give the inactive `brain_mouse` example (10x Genomics' E18 mouse brain)
+- The inactive `brain_mouse` example (10x Genomics' E18 mouse brain) has
   embryonic marker sets: radial glia, intermediate progenitors, upper- and
   deep-layer and hippocampal excitatory neurons, and inhibitory neurons. The
   adult glial sets left every WNN cluster unassigned; the new sets label these
   populations, leaving at most a small mixed cluster unassigned, and its ATAC
   marker TFs follow.
 
-## Fixes
+### Fixes
 
-- Sweep the GEX and ATAC cross-parameter UMAPs over the first n configured
+- The GEX and ATAC cross-parameter UMAP sweeps run over the first n configured
   UMAP components, so the ATAC sweep no longer includes the LSI depth component
-  and its largest setting matches the main UMAP. Initialize the sweeps with
-  spectral PCA (`init = "spca"`), because uwot's default spectral
-  initialization could crash on embeddings of several hundred thousand nuclei.
-- Draw the SCAVENGE TRS interval plot in at most four facet columns, fewer for
-  more than 30 groups, so its width stays within the 50,000-pixel image limit.
-- Wrap patchwork panels with `patchwork::wrap_elements()` in the manuscript
-  figure helpers, so their legends and labels are measured on the saving device
-  and no longer overlap or clip.
+  and its largest setting matches the main UMAP. They are initialized with
+  spectral PCA (`init = "spca"`), because uwot's default spectral initialization
+  could crash on embeddings of several hundred thousand nuclei.
+- The SCAVENGE TRS interval plot uses at most four facet columns, fewer for more
+  than 30 groups, so its width stays within the 50,000-pixel image limit.
 
-## Manuscript results
+### Manuscript results
 
-- Show in Figure 1C the cell-type enrichments at q < 0.05 that rest on many
-  loci (top locus below half of the signal, at least 20 effective weighted
-  peaks), one per study and per cell type and trait category, with stars at
-  q < 0.05; panels D and E show LDL cholesterol in hepatocytes and colorectal
-  cancer in colonocytes. Trait names are in sentence case, and panel A names
-  its cell type as a plural noun.
-- Add Supplementary Figure S3, every tested study's cell-type deviations on
-  Figure 1C's scale, and generate Supplementary Table S3 from the stored GWAS
-  inputs of `mixed_human_31x`.
-- Compute Supplementary Figure S2's reserved CPU and RAM from the worker sizes
-  of the measured runs, recorded in `seurat_signac_comparison_allocations.tsv`,
-  so later request changes leave them unchanged.
-- Leave the compute node's name out of the Table S4 data.
+- Figure 1C shows the cell-type enrichments at q < 0.05 that rest on many loci
+  (top locus below half of the signal, at least 20 effective weighted peaks),
+  one per study and per cell type and trait category, with stars at q < 0.05;
+  panels D and E show LDL cholesterol in hepatocytes and colorectal cancer in
+  colonocytes. Trait names are in sentence case, and panel A names its cell type
+  as a plural noun.
+- New Supplementary Figure S3 shows every tested study's cell-type deviations on
+  Figure 1C's scale, and Supplementary Table S3 is generated from the stored
+  GWAS inputs of `mixed_human_31x`.
+- Supplementary Figure S2's reserved CPU and RAM are computed from the worker
+  sizes of the measured runs, recorded in
+  `seurat_signac_comparison_allocations.tsv`, so later request changes leave
+  them unchanged.
+- The Table S4 data leave out the compute node's name.
+- The manuscript figure helpers wrap patchwork panels with
+  `patchwork::wrap_elements()`, so their legends and labels are measured on the
+  saving device and no longer overlap or clip.
 
 ## Development
 
-- Ask agents to start long pipeline drivers detached and follow their log,
-  since an agent tool's time limit stops the driver and its running targets.
-
-## Migration
-
-- Resource requests, controllers and descriptions do not invalidate targets,
-  so existing stores stay current. A custom `crew_controllers.R` needs a tier
-  of at least 60 GB only for aggregations that use `Seurat_SCT`.
-- Target invalidation: `brain_mouse` rebuilds from its marker lists onward.
-  The GEX and ATAC UMAP sweeps (`cross.UMAPs.3_GEX_QC`, `cross.UMAPs.7_ATAC_QC`)
-  and `TRS_cluster_summary_plot` rerun with new plots, and
-  `UMAP_embeddings_tibble.GEX`, `.GEX_non_harmony` and `.ATAC` rerun and
-  reproduce their values.
-- In `configuration_dev/`, only targets of `pipeline_manuscript_figures/targets.R`
-  rerun: Figure 1 panels A and C–E with its plot and data, and the Table S4
-  writer; `figure_1_traits`, `supplementary_table_S3` and
-  `supplementary_figure_S3` are new.
-- Omitted from the 1.2.0 notes: 1.2.0 renamed AMULET's fragment-count column
-  from `nFrags` to `amulet_nFrags`, like the other AMULET columns. Update code
-  that reads it.
+- Agents start long pipeline drivers detached and follow their log, since an
+  agent tool's time limit stops the driver and its running targets.
 
 # multiomeR 1.2.0 (2026-10-12)
 
-Revises the statistical methods after an audit: GEX normalization, WNN modality
-weights, clustering, consensus peaks, doublet detection, and the differential,
-gene-set, composition, genetic-enrichment and peak–gene tests. Also adds the
-public configuration, figures and results of the multiomeR manuscript, an
-optional WNN-specific marker list, per-cluster composition tables, lower memory
-use for CellBender input, and targets stores that can move between disks. Each
-configuration directory now carries its own crew controllers. Existing
-aggregations need a full rebuild (see Migration).
+multiomeR 1.2.0 revises the statistical methods after an audit: GEX
+normalization, WNN modality weights, clustering, consensus peaks, doublet
+detection, and the differential, gene-set, composition, genetic-enrichment and
+peak–gene tests. Every aggregation's results change, from QC and cell-type
+labels to all module results, so plan a full rebuild after updating. The release
+also adds an optional WNN-specific marker list, per-cluster composition tables,
+lower memory use for CellBender input, targets stores that can move between
+disks, and the public configuration, figures and results of the multiomeR
+manuscript.
 
-## Methods
+## What you need to do
 
-Each change alters results.
+1. **Update to this release.** Releases tag stable, validated commits, so update
+   to the tag rather than pulling `main`, which can carry development work that
+   is not yet validated. Commit or stash local changes first; resolve any rebase
+   conflicts as usual. While no other R process uses the environment, run:
+   ```bash
+   cd multiomeR  # your clone
+   git fetch origin tag v1.2.0
+   git rebase v1.2.0
+   pixi install --locked --run-post-link-scripts
+   pixi run --use-environment-activation-cache install-r-github-packages
+   ```
+   This installs Seurat 5.6.0 from GitHub, with its build dependencies
+   `r-pbapply` and `r-rcppthread` from the lock file.
+
+2. **Give your configuration directory its own `crew_controllers.R`.** The root
+   `crew_controllers.R` is gone: each configuration directory now carries
+   controllers that suit its aggregations, and the default moved to
+   `configuration/crew_controllers.R`. If you selected your own directory in
+   `configuration.local`, copy `configuration/crew_controllers.R` into it and
+   adapt it, moving in any changes you made to the former root file.
+
+3. **Update moved paths** in your configuration and scripts:
+   - `cfg_pipeline_parameters.tsv`, `QC_checkpoint_manifest.tsv`,
+     `QC_metric_manifest.tsv` and the demo download lists are in `manifests/`.
+   - `reference_metadata/` is `resources/reference_metadata/`; add new Cell
+     Ranger ARC references there.
+   - `module_<name>/` is `extra_targets/module_<name>/`.
+   - The example donor metadata tables formerly in `example_data/` are in
+     `configuration/` and `configuration_dev/`, and the download script is in
+     `scripts/`. `example_data/` now only receives downloads; three unused
+     tables were removed.
+   - `mixed_human_31x` and the nested `comparison_1x` to `comparison_20x`
+     aggregations moved to the new `configuration_dev/`, with their donor
+     metadata and GWAS selection; select it to rebuild them.
+     `manuscript_figures/` is replaced by `pipeline_manuscript_figures/`.
+
+4. **Check your configuration against the changed defaults and checks:**
+   - The cell-cycle score is no longer regressed out by default. Set
+     `aggregation_SCT_regress_vars: [CC.Difference]` to keep it.
+   - A differential-analysis formula that uses `cluster` without
+     `cell_type_formula` or `random_effect` now stops with an error: it treated
+     each donor's cell types as independent samples. Rewrite such formulas.
+   - CellBender counts are used whenever a GEM well gives a CellBender H5 file;
+     `GEM_well_add_cellbender` is no longer needed and a leftover column is
+     ignored. Set `GEM_well_cellbender_h5_file` to `NA` to keep Cell Ranger
+     counts.
+   - Marker symbols that several genes share now stop marker validation, as
+     missing symbols do, because they were scored on only one of the genes.
+     Replace them.
+   - The example configurations now exclude nuclei with more than 5% of their
+     peak counts in blacklisted regions (was 1%, which removed cell types
+     unevenly) and AMULET multiplets at the authors' q < 0.01 (was 0.05).
+     Configurations copied from the old examples keep the old limits; change
+     them to follow the examples.
+
+5. **Update code that reads pipeline outputs:**
+   - Each unassigned cluster is labeled `Unassigned_cluster_<id>` instead of one
+     merged `Unassigned`.
+   - AMULET's fragment-count column is `amulet_nFrags` instead of `nFrags`, like
+     the other AMULET columns.
+
+6. **Demo users:** run `pixi run --use-environment-activation-cache setup-demo`
+   again to download `controller_PBMC_human`.
+
+## What happens to your aggregations
+
+- **Everything after the per-GEM-well inputs rebuilds.** Every GEM well reruns
+  `amulet_metrics_tibble` and `full_metadata_tibble`, and every aggregation
+  target rebuilds. Cell Ranger, CellBender, cellsnp-lite, Vireo and the other
+  per-GEM-well inputs stay current. The first run downloads the AMULET
+  excluded-region list.
+- **Cell-type labels may change.** GEX normalization, WNN weights, clustering
+  and doublet calls all change, and each unassigned cluster keeps its own label.
+  Review the labels at checkpoints 3, 7 and 8 before the modules run; the new
+  `aggregation_WNN_marker_genes` lets you tune the final labels without
+  rebuilding the GEX and ATAC processing.
+- **Peaks change.** Each group's peaks must be called in both random halves of
+  its nuclei, so small groups lose their weakly supported peaks.
+- **Module results change:** differential expression and accessibility, gene-set
+  and composition tests, genetic enrichment, and peak–gene links, which are now
+  calibrated and fewer.
+- **Targets that rerun and keep their results.** Targets that open BPCells
+  matrices or fragments now record project-relative paths, so they rerun with
+  unchanged data and their consumers rerun with them:
+  `GEX_counts_BPCells_matrix`, `fragments_w_prefix_bpcells`,
+  `aggregated_counts_BPCells_matrix.GEX`, `consensus_peak_BPCells_matrix.ATAC`,
+  `motif_family_accessibility_BPCells_matrix.ATAC`,
+  `gene_score_archr_BPCells_matrix.ATAC` and the pseudobulk count matrices.
+  `GEM_well_config_tsv`, `GEM_well_metadata_tibble`,
+  `GEM_well_annotation_metadata_tibble`, `GEX_counts_BPcells_matrix_dir`,
+  `chromHMMs_list_proj.ATAC`, the five downloaded reference-file targets, the
+  file targets of the moved manifests, reference metadata and donor metadata,
+  and each GEM well's Cell Ranger reference lookup
+  (`cellranger_reference_json_file`) rerun and reproduce their results. The
+  exclusion lists (`excluded_barcodes_by_type_list`,
+  `excluded_cellranger_only_barcodes_by_type_list`) rerun for GEM wells whose QC
+  list lacks `not_found_in_GEX_matrix`, which includes every GEM well of the
+  public configurations; their changes stop at the checkpoint 1 plots and
+  retention tables. The new composition tables build without rerunning anything
+  else.
+- **Demo:** its aggregation targets rebuild with the new `controller_PBMC_human`
+  well.
+- **In `configuration_dev/`**, the Figure 1 targets rebuild. Supplementary
+  Figure S2 reads the recorded runtimes of the compared workflows from the
+  store, so rebuild its data before rerunning targets of the `comparison_`
+  aggregations.
+
+## What changed
+
+Every change under Processing, Quality control, Differential analyses, Genetic
+enrichment and Peak–gene links alters results.
 
 ### Processing
 
-- Compute the BPCells backend's Pearson residuals with one overdispersion,
-  theta = 100, for every gene and clip them at ±√N, the analytic Pearson
-  residuals of Lause et al. (2021). The per-gene method-of-moments theta
-  counted differences between cell types as overdispersion and, with the ±10
-  clip, flattened marker variation: on a multi-tissue test set, 24 of 27
-  canonical markers now enter the 3,000 variable genes, against 10.
-- Leave `aggregation_SCT_regress_vars` unset by default, so the cell-cycle
-  score, mostly noise in post-mitotic nuclei, is no longer regressed out;
+- The BPCells backend's Pearson residuals use one overdispersion, theta = 100,
+  for every gene and are clipped at ±√N, the analytic Pearson residuals of Lause
+  et al. (2021). The per-gene method-of-moments theta counted differences
+  between cell types as overdispersion and, with the ±10 clip, flattened marker
+  variation: on a multi-tissue test set, 24 of 27 canonical markers now enter
+  the 3,000 variable genes, against 10.
+- `aggregation_SCT_regress_vars` is unset by default, so the cell-cycle score,
+  mostly noise in post-mitotic nuclei, is no longer regressed out;
   `CC.Difference` remains an example value.
-- Estimate WNN modality weights within seeded random subsets of at most 10,000
-  nuclei, so they no longer drift towards 0 or 1 as an aggregation grows.
+- WNN modality weights are estimated within seeded random subsets of at most
+  10,000 nuclei, so they no longer drift towards 0 or 1 as an aggregation grows.
   Neighbours are still chosen among all nuclei, and smaller aggregations are
   unchanged. Each nucleus is now first in its own neighbour list.
-- Run Leiden clustering for ten iterations, as Seurat does, instead of
-  igraph's default two.
-- Build consensus peaks as ArchR does. Each group's discovery nuclei are split
-  into two random halves, MACS3 calls peaks in each half, and only peaks called
-  in both are kept; each group then keeps its strongest peaks up to 500 per
-  nucleus and 150,000 in all, and overlapping peaks across groups are ranked by
-  the quantile of their significance within their group. Deep groups no longer
-  dominate, and small groups lose their weakly supported tail (a 1,200-nucleus
-  group keeps 54% of its peaks). A half takes about half the time and memory of
-  a full call, so MACS3 workers request 16 GB. Consensus peaks keep their group
-  in `cluster`.
-- Trim flank columns with less than half of the largest column count from the
-  JASPAR familial root motifs; these low-support columns restricted the matches
-  of 56 of 233 families to a sub-family.
-- Label each unassigned cluster `Unassigned_cluster_<id>` instead of merging
-  all of them into one `Unassigned` group, which peak calling, pseudobulks,
+- Leiden clustering runs for ten iterations, as Seurat does, instead of igraph's
+  default two.
+- Consensus peaks are built as ArchR does. Each group's discovery nuclei are
+  split into two random halves, MACS3 calls peaks in each half, and only peaks
+  called in both are kept; each group then keeps its strongest peaks up to 500
+  per nucleus and 150,000 in all, and overlapping peaks across groups are ranked
+  by the quantile of their significance within their group. Deep groups no
+  longer dominate, and small groups lose their weakly supported tail (a
+  1,200-nucleus group keeps 54% of its peaks). A half takes about half the time
+  and memory of a full call, so MACS3 workers request 16 GB. Consensus peaks
+  keep their group in `cluster`.
+- The JASPAR familial root motifs lose flank columns with less than half of the
+  largest column count; these low-support columns restricted the matches of 56
+  of 233 families to a sub-family.
+- Each unassigned cluster is labeled `Unassigned_cluster_<id>` instead of all
+  being merged into one `Unassigned` group, which peak calling, pseudobulks,
   composition and genetic enrichment analysed as a real cell type.
 
 ### Quality control
 
-- Run AMULET with chrM, chrX and chrY excluded in full and, for GRCh38, the
+- AMULET runs with chrM, chrX and chrY excluded in full and, for GRCh38, the
   authors' list of repeats, segmental duplications and blacklisted regions,
   downloaded once into the store and checked against its SHA-256 checksum. The
   example configurations exclude nuclei at the authors' q < 0.01 instead of
   0.05.
-- Divide the peak fraction by twice the fragment count in insertions mode, so
-  `atac_peak_counts_frac` is a fraction and filters on it take effect.
-- Group peaks for ATAC scDblFinder on singular-value-scaled LSI loadings, as
+- In insertions mode, the peak fraction is divided by twice the fragment count,
+  so `atac_peak_counts_frac` is a fraction and filters on it take effect.
+- ATAC scDblFinder groups peaks on singular-value-scaled LSI loadings, as
   scDblFinder itself does.
-- Exclude nuclei with more than 5% of their peak counts in blacklisted regions
-  in the example configurations, instead of 1%, which removed cell types
+- The example configurations exclude nuclei with more than 5% of their peak
+  counts in blacklisted regions instead of 1%, which removed cell types
   unevenly.
-- Reject marker symbols that several genes share, which were scored on one of
-  them.
+- Marker symbols that several genes share are rejected; they were scored on one
+  of the genes.
 
 ### Differential analyses
 
-- Test GEX markers and ATAC differential peaks on counts per 10,000 instead of
-  raw counts, with Seurat-style fold changes, so they no longer follow each
-  group's sequencing depth.
-- Test motif-family pseudobulks on bias-corrected chromVAR deviations without
-  centring or quantile normalization, which collapsed cell-type-defining
+- GEX markers and ATAC differential peaks are tested on counts per 10,000
+  instead of raw counts, with Seurat-style fold changes, so they no longer
+  follow each group's sequencing depth.
+- Motif-family pseudobulks are tested on bias-corrected chromVAR deviations
+  without centring or quantile normalization, which collapsed cell-type-defining
   families and produced false positives.
-- Fit contrasts between annotation classes in the paired route on each donor's
-  combined response, weighted by its precision weights, instead of using one
-  residual correlation between classes for all features, which made
+- Contrasts between annotation classes in the paired route are fitted on each
+  donor's combined response, weighted by its precision weights, instead of using
+  one residual correlation between classes for all features, which made
   low-expression features anti-conservative.
-- Run the Hallmark and Reactome tests with camera, estimating each set's
-  inter-gene correlation, instead of cameraPR's default of 0.01; in
-  permutations of a donor covariate, the old test called 17% of sets at
-  P < 0.05. Sets need at least ten tested genes.
-- Use edgeR's `voomLmFit()` in the random-effect route, so precision weights
+- The Hallmark and Reactome tests run with camera, estimating each set's
+  inter-gene correlation, instead of cameraPR's default of 0.01; in permutations
+  of a donor covariate, the old test called 17% of sets at P < 0.05. Sets need
+  at least ten tested genes.
+- The random-effect route uses edgeR's `voomLmFit()`, so precision weights
   account for the correlation block.
-- Stop when a joint formula uses `cluster` without `cell_type_formula` or
-  `random_effect`: it treated each donor's cell types as independent samples.
-  The example formula now tests one annotation class.
-- Test only assigned cell types present in at least half of the donors in
-  composition models by default.
+- A joint formula that uses `cluster` without `cell_type_formula` or
+  `random_effect` stops with an error. The example formula now tests one
+  annotation class.
+- Composition models test by default only assigned cell types present in at
+  least half of the donors.
 
 ### Genetic enrichment
 
-- Sum the cell-type pseudobulks by the final WNN labels, as SCAVENGE, the
+- The cell-type pseudobulks are summed by the final WNN labels, as SCAVENGE, the
   differential analyses and the peak–gene module do, instead of by the GEX
   labels carried into the WNN metadata, so labels set only at the WNN level
   reach the pseudobulk enrichment too.
-- Scale gchromVAR's background variance with squared peak weights, the
+- gchromVAR's background variance is scaled with squared peak weights, the
   variance of a weighted sum, in both the cell-type contributions and the
   single-nucleus z-scores. Summed weights deflated the z-scores by a
   trait-dependent factor whenever fine-mapping probabilities were below one.
 
-### Peak–gene correlation
+### Peak–gene links
 
-- Add up to ten principal components of each cell type's residual peak
-  accessibility, one per ten residual degrees of freedom when fewer, to the
-  model, from the new target `peak_gene_correlation_latent_factors.WNN`, so
-  peaks and genes that vary along the same chromatin states no longer appear
-  linked.
-- Calibrate each candidate pair against its own gene, following the idea of
+- The model includes up to ten principal components of each cell type's residual
+  peak accessibility, one per ten residual degrees of freedom when fewer, from
+  the new target `peak_gene_correlation_latent_factors.WNN`, so peaks and genes
+  that vary along the same chromatin states no longer appear linked.
+- Each candidate pair is calibrated against its own gene, following the idea of
   Signac's LinkPeaks: up to 200 of the branch's candidate peaks more than 10 Mb
   from the gene's TSS are scored with the same model, the pair's statistic is
   standardized by this background (`hierarchical_gene_z`) and rescaled within
   peak-detection quintiles, and its empirical P-value against the cell type's
-  background is Benjamini–Hochberg-corrected. Links also need a positive gene
-  z. Before, the model P-values were corrected directly, and random pairs on
+  background is Benjamini–Hochberg-corrected. Links also need a positive gene z.
+  Before, the model P-values were corrected directly, and random pairs on
   different chromosomes passed the FDR cutoff almost as often as cis pairs. On
-  held-out background pairs, the new P-values fall below 0.05 and 0.01 within
-  5% of the nominal rates.
-- Require within-donor peak variation in at least eight donors for the
-  random-slope test, and leave unassigned clusters out.
-- Apply SuSiE's purity filter (minimum absolute correlation 0.5), so credible
-  sets no longer span most candidate peaks.
+  held-out background pairs, the new P-values fall below 0.05 and 0.01 within 5%
+  of the nominal rates.
+- The random-slope test requires within-donor peak variation in at least eight
+  donors and leaves unassigned clusters out.
+- SuSiE's purity filter (minimum absolute correlation 0.5) is applied, so
+  credible sets no longer span most candidate peaks.
 
-## Outputs
+### Options and outputs
 
-- Add the gene-standardized statistic `hierarchical_gene_z`, the calibrated
-  `hierarchical_background_pvalue` and each cell type's `n_background_pairs` to
-  the peak–gene results.
-- Write `cluster_composition_table.tsv` at checkpoints 3, 7 and 8: for each
+- The optional `aggregation_WNN_marker_genes` replaces, adds or, given as `~`,
+  drops marker sets for the WNN labels only, with their own matched controls.
+  The final cell types can then be tuned without rebuilding the GEX and ATAC
+  processing, whose doublet detection and peak calling use the GEX labels.
+- `cluster_composition_table.tsv` is written at checkpoints 3, 7 and 8: for each
   cluster and each categorical variable, `GEM_well_ID` and `donor_id`, the
-  cluster size, its most frequent category and that category's share, and
-  every category above 5%.
+  cluster size, its most frequent category and that category's share, and every
+  category above 5%.
+- The peak–gene results gain the gene-standardized statistic
+  `hierarchical_gene_z`, the calibrated `hierarchical_background_pvalue` and
+  each cell type's `n_background_pairs`.
+- `crew_controllers.R` is read from the selected configuration directory, and
+  CellBender counts follow the H5 file alone (see What you need to do).
+- The new `configuration_dev/` builds the manuscript's results in its own
+  targets store (`TAR_PROJECT=dev`, store `outputs_dev`), with Slurm workers on
+  one node. `configuration/` keeps the demo and the small examples, and
+  validation covers whichever validation aggregations the selected directory
+  defines.
 
-## Configuration
+### Performance and fixes
 
-- Add the optional `aggregation_WNN_marker_genes`, which replaces, adds or,
-  given as `~`, drops marker sets for the WNN labels only, with their own
-  matched controls. The final cell types can then be tuned without rebuilding
-  the GEX and ATAC processing, whose doublet detection and peak calling use the
-  GEX labels.
-- Read `crew_controllers.R` from the selected configuration directory, so each
-  directory carries controllers that suit its aggregations; the default file
-  moves to `configuration/crew_controllers.R`.
-- Use CellBender counts whenever a GEM well gives a CellBender H5 file. The
-  `GEM_well_add_cellbender` column is no longer needed; a leftover column is
-  ignored.
-- Move `mixed_human_31x` and the nested `comparison_1x` to `comparison_20x`
-  aggregations into the new `configuration_dev/`, which builds the manuscript's
-  results in its own targets store (`TAR_PROJECT=dev`, store `outputs_dev`),
-  with Slurm workers on one node. `configuration/` keeps the demo and the small
-  examples, and validation now covers whichever validation aggregations the
-  selected directory defines.
-
-## Fixes and performance
-
-- Draw all unassigned clusters as one track in the ATAC coverage plots.
-- Always exclude nuclei missing from the GEX count matrix at checkpoint 1, so
-  the checkpoint 1 plots and retention tables report them instead of the
-  checkpoint 3 retention table counting them as small GEX clusters.
-- Read CellBender matrices in blocks of 2,000 barcodes and keep only the gene
-  features, so a 34,498-nucleus GEM well peaks at 5.2 GB instead of 17.1 GB.
-  The written matrices are byte-identical.
-- Load Roadmap chromHMM annotations per aggregation, so activating another
+- CellBender matrices are read in blocks of 2,000 barcodes, keeping only the
+  gene features, so a 34,498-nucleus GEM well peaks at 5.2 GB instead of 17.1
+  GB. The written matrices are byte-identical.
+- Seurat 5.6.0, installed from GitHub, has threaded C++ kernels for
+  normalization, PCA, neighbour search and UMAP; they get the cores of each
+  Slurm worker through `Seurat.nthreads`.
+- Opened BPCells matrices and fragments and downloaded reference files are
+  recorded by unresolved, project-relative paths, so a targets store keeps
+  working after it moves, for example from node-local disk to shared storage.
+- Roadmap chromHMM annotations load per aggregation, so activating another
   aggregation or selecting another configuration directory no longer rebuilds
   them.
-- Record unresolved, project-relative paths for opened BPCells matrices and
-  fragments and for downloaded reference files, so a targets store keeps
-  working after it moves, for example from node-local disk to shared storage.
-- Install Seurat 5.6.0 from GitHub, whose C++ kernels for normalization, PCA,
-  neighbour search and UMAP are threaded, and give them the cores of each Slurm
-  worker through `Seurat.nthreads`.
+- Nuclei missing from the GEX count matrix are always excluded at checkpoint 1,
+  so the checkpoint 1 plots and retention tables report them instead of the
+  checkpoint 3 retention table counting them as small GEX clusters.
+- All unassigned clusters are drawn as one track in the ATAC coverage plots.
 
-## Demo
+### Demo
 
-- Replace `unsorted_PBMC_human` with `controller_PBMC_human`, 10x Genomics'
-  10k PBMC set from the Chromium Controller. The unsorted 3k well came from
-  the same donor as `healthy_PBMC_human`, so the demo's donors `pbmc1` and
-  `pbmc2` are now two people, and its categorical UMAPs and composition tables
-  show the donor. Harmony corrects for the GEM well, which now separates donors
-  and runs, and cell types need a 0.02 margin over the marker background
-  instead of 0.05, which the T-cell clusters, inflated by the larger well's T
-  cells, did not reach. The NK markers drop KLRD1, which effector CD8 T cells
-  share, for SH2D1B, and a MAIT set (SLC4A10, ZBTB16, KLRB1, NCR3) labels the
-  MAIT cells. With the revised methods, three small WNN clusters (725 of 7,838
-  nuclei) match no marker set above background and stay unassigned. The
-  download grows from about 1.3 to 4.6 GB, the stored results from about 3.3 to
-  6.6 GB and the run from about 20 to 30 minutes with 16 threads.
+- `controller_PBMC_human`, 10x Genomics' 10k PBMC set from the Chromium
+  Controller, replaces `unsorted_PBMC_human`. The unsorted 3k well came from the
+  same donor as `healthy_PBMC_human`, so the demo's donors `pbmc1` and `pbmc2`
+  are now two people, and its categorical UMAPs and composition tables show the
+  donor.
+- Harmony corrects for the GEM well, which now separates donors and runs, and
+  cell types need a 0.02 margin over the marker background instead of 0.05,
+  which the T-cell clusters, inflated by the larger well's T cells, did not
+  reach. The NK markers drop KLRD1, which effector CD8 T cells share, for
+  SH2D1B, and a MAIT set (SLC4A10, ZBTB16, KLRB1, NCR3) labels the MAIT cells.
+  With the revised methods, three small WNN clusters (725 of 7,838 nuclei) match
+  no marker set above background and stay unassigned.
+- The download grows from about 1.3 to 4.6 GB, the stored results from about 3.3
+  to 6.6 GB and the run from about 20 to 30 minutes with 16 threads.
 
-## Manuscript
+### Manuscript
 
-- Label the six 10x Genomics PBMC GEM wells of `mixed_human_31x` with their two
-  donors: `pbmc1` for the four from one woman and `pbmc2` for the two from one
-  man, as 10x Genomics' dataset descriptions, sex markers and mitochondrial
-  genotypes agree. They were six donors before. The `comparison_` copies keep
-  their labels, since those aggregations run no donor-level analyses.
-- Add `pipeline_manuscript_figures/`, which builds Figure 1, Supplementary
-  Figure S2 and Supplementary Table S4 of the manuscript from public data in
-  `configuration_dev/`, with the results and their data under `results/`. It
-  replaces `manuscript_figures/`.
-- Rebuild Figure 1, Supplementary Figure S2 and Supplementary Table S4 with
+- The six 10x Genomics PBMC GEM wells of `mixed_human_31x` are labeled with
+  their two donors: `pbmc1` for the four from one woman and `pbmc2` for the two
+  from one man, as 10x Genomics' dataset descriptions, sex markers and
+  mitochondrial genotypes agree. They were six donors before. The `comparison_`
+  copies keep their labels, since those aggregations run no donor-level
+  analyses.
+- `pipeline_manuscript_figures/` builds Figure 1, Supplementary Figure S2 and
+  Supplementary Table S4 of the manuscript from public data in
+  `configuration_dev/`, with the results and their data under `results/`.
+- Figure 1, Supplementary Figure S2 and Supplementary Table S4 are rebuilt with
   the revised methods. Figure 1A–B now shows a peak 72 kb from SGPL1 in NK
   cells, its trait panels show assigned cell types only, and `figure_1_data`
-  writes the values the manuscript quotes.
-- In Figure 1, spell cell types alike in panels C to E and show protein-coding
-  genes in panel D with labels that no longer overlap.
-- Compare multiomeR in Supplementary Figure S2 with a current Seurat v5/Signac
-  v2 workflow on BPCells-backed assays, counting only the analyses both
-  workflows perform. Its peak quantification uses fragtk, which
-  `pixi run install-fragtk` installs.
+  writes the values the manuscript quotes. Panels C to E spell cell types alike,
+  and panel D shows protein-coding genes with labels that no longer overlap.
+- Supplementary Figure S2 compares multiomeR with a current Seurat v5/Signac v2
+  workflow on BPCells-backed assays, counting only the analyses both workflows
+  perform. Its peak quantification uses fragtk, which `pixi run
+  --use-environment-activation-cache install-fragtk` installs.
 
-## Documentation
+### Documentation
 
-- Describe the revised methods on the In depth pages and in the shared methods
-  text, and mention the WNN marker list in the checkpoint 8 guidance.
-- Add guidance for aggregations that combine tissues, and show how to preview
-  the per-GEM-well targets of checkpoint 1 and leave the costly Seurat exports
+- The In depth pages and the shared methods text describe the revised methods,
+  and the checkpoint 8 guidance mentions the WNN marker list.
+- New guidance covers aggregations that combine tissues, previewing the
+  per-GEM-well targets of checkpoint 1, and leaving the costly Seurat exports
   out until the cell-type labels are accepted.
-- Describe the per-cluster composition tables.
-- Remove the dropped HC3 scan from the workflow overview figure.
-- Complete and case-protect bibliography entries.
-- Add `CITATION.cff`, which GitHub shows as "Cite this repository" and Zenodo
-  uses for the authors of archived releases.
-- Ask users, in the README and on the manual's home page, to cite multiomeR,
-  targets and BPCells, and the methods behind the results they report;
-  `CITATION.cff` lists targets and BPCells as references.
+- The manual describes the per-cluster composition tables.
+- The workflow overview figure no longer shows the dropped HC3 scan.
+- Bibliography entries are complete and case-protected.
+- `CITATION.cff` is added; GitHub shows it as "Cite this repository", and Zenodo
+  uses it for the authors of archived releases. The README and the manual's home
+  page ask users to cite multiomeR, targets and BPCells, and the methods behind
+  the results they report; `CITATION.cff` lists targets and BPCells as
+  references.
 
 ## Development
 
-- Require the pinned Seurat 5.6.0 in the WNN and cell-cycle reference tests,
-  and score background pairs in the peak–gene parity test.
-- Collect the parameter and QC manifests (`cfg_pipeline_parameters.tsv`,
-  `QC_checkpoint_manifest.tsv`, `QC_metric_manifest.tsv`) and the demo
-  download lists in `manifests/`, and move the Cell Ranger ARC reference
-  metadata to `resources/reference_metadata/`.
-- Empty the tracked part of `example_data/`, which now only receives
-  downloads: the example donor metadata tables move into `configuration/` and
-  `configuration_dev/`, the download script into `scripts/`, and three unused
-  tables are removed.
-- Move the optional modules' target definitions from `module_*/` at the root
-  to `extra_targets/module_*/`, beside those of the primary module, and the
-  donor metadata and GWAS selection of `mixed_human_31x` into
-  `configuration_dev/`.
-- Move `validation/` and `RELEASES.md` into `dev/`, keep release validation
-  reports in `dev/validation/reports/`, move the scripts that make Cell Ranger
-  ARC test subsets to `dev/`, and remove the unused `air.toml`.
-
-## Migration
-
-- Target invalidation for the revised methods: every GEM well reruns
-  `amulet_metrics_tibble` and `full_metadata_tibble`, and every aggregation
-  target rebuilds; Cell Ranger, CellBender, cellsnp-lite, Vireo and the other
-  per-GEM-well inputs stay current. The first run downloads the AMULET
-  excluded-region list.
-- Configurations that relied on the default now skip the cell-cycle
-  regression; set `aggregation_SCT_regress_vars: [CC.Difference]` to keep it.
-  Configurations copied from the old examples keep their blacklist (0.01) and
-  AMULET (q < 0.05) limits; change them to follow the examples.
-- Rewrite differential-analysis formulas that use `cluster` without
-  `cell_type_formula` or `random_effect`; they now stop.
-- Code that selects the `Unassigned` label must match the
-  `Unassigned_cluster_<id>` labels.
-- Run `pixi run install-r-github-packages` to install Seurat 5.6.0.
-- Run `pixi run setup-demo` again to download `controller_PBMC_human`; the
-  demo's aggregation targets rebuild.
-- A custom configuration directory needs its own `crew_controllers.R`: copy
-  `configuration/crew_controllers.R` and adapt it. Move any changes you made to
-  the former root `crew_controllers.R` into it.
-- Select `configuration_dev/` to rebuild `mixed_human_31x` or the comparison
-  aggregations. A configuration that points to files in `module_*/` or to the
-  example donor metadata in `example_data/` must use their new paths; add new
-  Cell Ranger ARC references under `resources/reference_metadata/`.
-- Target invalidation: targets that open BPCells matrices or fragments
-  (`GEX_counts_BPCells_matrix`, `fragments_w_prefix_bpcells`,
-  `aggregated_counts_BPCells_matrix.GEX`, `consensus_peak_BPCells_matrix.ATAC`,
-  `motif_family_accessibility_BPCells_matrix.ATAC`,
-  `gene_score_archr_BPCells_matrix.ATAC` and the pseudobulk count matrices)
-  rerun with unchanged data, and their consumers rerun with them. Smaller
-  reruns that reproduce their results: `GEM_well_config_tsv`,
-  `GEM_well_metadata_tibble`, `GEM_well_annotation_metadata_tibble`,
-  `GEX_counts_BPcells_matrix_dir`, `chromHMMs_list_proj.ATAC` and the five
-  downloaded reference-file targets. The per-GEM-well exclusion lists
-  (`excluded_barcodes_by_type_list`,
-  `excluded_cellranger_only_barcodes_by_type_list`) rerun for GEM wells whose
-  QC list lacks `not_found_in_GEX_matrix`, which includes every GEM well of the
-  public configurations; the changes stop at the checkpoint 1 plots and
-  retention tables. The new composition tables build without rerunning
-  anything else. The moved manifests, reference metadata and donor metadata
-  rerun only their file targets, and each GEM well reruns its Cell Ranger
-  reference lookup (`cellranger_reference_json_file`); all keep their results. The Figure 1 targets affect only `configuration_dev/`.
-- In `configuration_dev/`, Supplementary Figure S2 reads the recorded runtimes
-  of the compared workflows from the store, so rebuild its data before
-  rerunning targets of the `comparison_` aggregations.
+- The WNN and cell-cycle reference tests require the pinned Seurat 5.6.0, and
+  the peak–gene parity test scores background pairs.
+- `validation/` and `RELEASES.md` moved into `dev/`, release validation reports
+  are kept in `dev/validation/reports/`, the scripts that make Cell Ranger ARC
+  test subsets moved to `dev/`, and the unused `air.toml` was removed.
 
 # multiomeR 1.1.0 (2026-09-29)
 

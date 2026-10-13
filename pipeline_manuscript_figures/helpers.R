@@ -610,41 +610,52 @@ seurat_signac_comparison_resource_tibble <- function(aggregations, store = targe
       disk_space_GB = .data$disk_space_GB + .data$input_disk_space_GB)
 }
 
+# One panel per measure for multiomeR with its Seurat exports and the Seurat/Signac
+# baseline, with workflow names at the line ends. A dashed line and fold label mark each
+# size whose difference spans at least 20% of the panel's height, so that the label fits in the gap.
 plot_seurat_signac_comparison_resources <- function(data) {
   measures <- c(critical_path_hours = "Critical path (h)",
     used_CPU_hours = "CPU time (CPU-hours)",
     used_RAM_GB_hours = "Memory (GB-hours)",
     disk_space_GB = "Disk space (GB)")
-  colours <- c(multiomeR = "#2a78d6", "multiomeR + Seurat exports" = "#86b3e8", "Seurat/Signac" = "#eb6834")
+  colours <- c(multiomeR = "#2a78d6", "Seurat/Signac" = "#eb6834")
   data <- data |>
-    tidyr::pivot_longer(tidyselect::all_of(names(measures)), names_to = "measure") |>
-    dplyr::mutate(measure = factor(measures[.data$measure], measures),
-      workflow = factor(.data$workflow, names(colours)))
+    dplyr::filter(.data$workflow != "multiomeR") |>
+    dplyr::mutate(workflow = dplyr::recode(.data$workflow, "multiomeR + Seurat exports" = "multiomeR"))
   largest_nuclei <- max(data$cellranger_input_nuclei)
-  # A multiomeR line against the conventional one, as a fold change and direction.
-  compare <- function(multiomeR, conventional) {
-    ratio <- conventional / multiomeR
-    fold <- sprintf("%.1f\u00d7", pmax(ratio, 1 / ratio))
-    dplyr::case_when(fold == "1.0\u00d7" ~ "within 5%", ratio > 1 ~ paste(fold, "lower"),
-      .default = paste(fold, "higher"))
-  }
-  labels <- data |>
-    dplyr::filter(.data$cellranger_input_nuclei == largest_nuclei) |>
-    dplyr::select("measure", "workflow", "value") |>
-    tidyr::pivot_wider(names_from = "workflow", values_from = "value") |>
-    dplyr::transmute(.data$measure, label = sprintf("  multiomeR %s at %s nuclei\n  with Seurat exports: %s",
-      compare(.data$multiomeR, .data$`Seurat/Signac`), scales::comma(largest_nuclei),
-      compare(.data$`multiomeR + Seurat exports`, .data$`Seurat/Signac`)))
-  ggplot2::ggplot(data, ggplot2::aes(.data$cellranger_input_nuclei, .data$value, colour = .data$workflow)) +
-    ggplot2::geom_line(linewidth = .5) + ggplot2::geom_point(size = 1.5) +
-    ggplot2::geom_text(data = labels, ggplot2::aes(x = -Inf, y = Inf, label = .data$label),
-      inherit.aes = FALSE, hjust = 0, vjust = 1.2, size = 2.1, lineheight = .9) +
-    ggplot2::facet_wrap(ggplot2::vars(.data$measure), scales = "free_y", strip.position = "left") +
-    ggplot2::scale_x_continuous(labels = scales::label_comma()) +
-    ggplot2::scale_y_continuous(limits = c(0, NA), expand = ggplot2::expansion(mult = c(0, .22))) +
-    ggplot2::scale_colour_manual(values = colours) +
-    figure_1_theme() +
-    ggplot2::theme(strip.placement = "outside", legend.position = "bottom",
-      strip.text = ggplot2::element_text(size = 7), panel.spacing.y = grid::unit(12, "pt")) +
-    ggplot2::labs(x = "Input nuclei", y = NULL, colour = NULL)
+  panels <- lapply(names(measures), function(measure) {
+    values <- data |>
+      dplyr::transmute(.data$cellranger_input_nuclei, .data$workflow, value = .data[[measure]])
+    gaps <- values |>
+      tidyr::pivot_wider(names_from = "workflow", values_from = "value") |>
+      dplyr::filter(abs(.data$multiomeR - .data$`Seurat/Signac`) >= .2 * max(values$value)) |>
+      dplyr::mutate(ratio = .data$`Seurat/Signac` / .data$multiomeR,
+        label = sprintf("%.1f\u00d7\n%s", pmax(.data$ratio, 1 / .data$ratio),
+          dplyr::if_else(.data$ratio > 1, "lower", "higher")))
+    # Names closer than 8% of the panel's height move apart around their midpoint.
+    space <- .08 * max(values$value)
+    names <- dplyr::filter(values, .data$cellranger_input_nuclei == largest_nuclei) |>
+      dplyr::arrange(.data$value) |>
+      dplyr::mutate(x = 1.04 * largest_nuclei,
+        y = if (diff(.data$value) < space) mean(.data$value) + c(-.5, .5) * space else .data$value)
+    ggplot2::ggplot(values, ggplot2::aes(.data$cellranger_input_nuclei, .data$value, colour = .data$workflow)) +
+      ggplot2::geom_segment(data = gaps, ggplot2::aes(x = .data$cellranger_input_nuclei,
+        xend = .data$cellranger_input_nuclei, y = .data$multiomeR, yend = .data$`Seurat/Signac`),
+        inherit.aes = FALSE, linetype = "dashed", linewidth = .3, colour = "grey45") +
+      ggplot2::geom_line(linewidth = .5) + ggplot2::geom_point(size = 1.5) +
+      ggplot2::geom_label(data = gaps, ggplot2::aes(.data$cellranger_input_nuclei,
+        (.data$multiomeR + .data$`Seurat/Signac`) / 2, label = .data$label), inherit.aes = FALSE,
+        family = "NimbusSan", size = 2, lineheight = .85, colour = "grey25",
+        label.size = 0, label.padding = grid::unit(.6, "pt")) +
+      ggplot2::geom_text(data = names, ggplot2::aes(.data$x, .data$y, label = .data$workflow),
+        hjust = 0, family = "NimbusSan", size = 2.4) +
+      ggplot2::scale_x_continuous(labels = scales::label_comma(), expand = ggplot2::expansion(mult = c(.02, .04))) +
+      ggplot2::scale_y_continuous(limits = c(0, NA), expand = ggplot2::expansion(mult = c(0, .12))) +
+      ggplot2::scale_colour_manual(values = colours, guide = "none") +
+      ggplot2::coord_cartesian(clip = "off") + figure_1_theme() +
+      ggplot2::theme(plot.margin = ggplot2::margin(5.5, 48, 5.5, 5.5)) +
+      ggplot2::labs(x = "Input nuclei", y = measures[[measure]])
+  })
+  patchwork::wrap_plots(panels, ncol = 2) + patchwork::plot_annotation(tag_levels = "A") &
+    ggplot2::theme(plot.tag = ggplot2::element_text(family = "NimbusSan", face = "bold", size = 11))
 }

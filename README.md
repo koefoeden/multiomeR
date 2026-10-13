@@ -23,12 +23,12 @@ See [release notes and migration steps](NEWS.md) and the [release convention](de
 
 ## Updating
 
-Releases tag stable, validated commits; `main` can carry development work that is not yet validated. Update your clone to a release tag rather than pulling `main`. Commit or stash local changes first; resolve any rebase conflicts as usual. With the newest [release](https://github.com/koefoeden/multiomeR/releases)'s tag in place of `vX.Y.Z`:
+Releases tag stable, validated commits; `main` can carry development work that is not yet validated. Update your clone to a release tag rather than pulling `main`. Commit or stash local changes first; resolve any merge conflicts as usual. With the newest [release](https://github.com/koefoeden/multiomeR/releases)'s tag in place of `vX.Y.Z`:
 
 ```bash
 cd multiomeR  # your clone
 git fetch origin tag vX.Y.Z
-git rebase vX.Y.Z
+git merge --ff --no-edit vX.Y.Z
 pixi install --locked --run-post-link-scripts
 pixi run --use-environment-activation-cache install-r-github-packages
 ```

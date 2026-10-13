@@ -9,12 +9,12 @@ change: existing stores stay current apart from a few plots.
 
 1. **Update to this release.** Releases tag stable, validated commits, so update
    to the tag rather than pulling `main`, which can carry development work that
-   is not yet validated. Commit or stash local changes first; resolve any rebase
+   is not yet validated. Commit or stash local changes first; resolve any merge
    conflicts as usual. While no other R process uses the environment, run:
    ```bash
    cd multiomeR  # your clone
    git fetch origin tag v1.2.1
-   git rebase v1.2.1
+   git merge --ff --no-edit v1.2.1
    pixi install --locked --run-post-link-scripts
    pixi run --use-environment-activation-cache install-r-github-packages
    ```
@@ -123,12 +123,12 @@ manuscript.
 
 1. **Update to this release.** Releases tag stable, validated commits, so update
    to the tag rather than pulling `main`, which can carry development work that
-   is not yet validated. Commit or stash local changes first; resolve any rebase
+   is not yet validated. Commit or stash local changes first; resolve any merge
    conflicts as usual. While no other R process uses the environment, run:
    ```bash
    cd multiomeR  # your clone
    git fetch origin tag v1.2.0
-   git rebase v1.2.0
+   git merge --ff --no-edit v1.2.0
    pixi install --locked --run-post-link-scripts
    pixi run --use-environment-activation-cache install-r-github-packages
    ```

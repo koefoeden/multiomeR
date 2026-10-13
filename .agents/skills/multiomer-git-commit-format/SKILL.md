@@ -54,7 +54,8 @@ to `main`. Order the notes:
 
 1. A short intro: what the release does and whether results change.
 2. **What you need to do**, numbered. Step 1, "Update to this release", always
-   gives `cd` into the clone, `git fetch origin tag <tag>`, `git rebase <tag>`,
+   gives `cd` into the clone, `git fetch origin tag <tag>`,
+   `git merge --ff --no-edit <tag>` (not a rebase, which breaks pushed branches),
    `pixi install --locked --run-post-link-scripts` and
    `pixi run --use-environment-activation-cache install-r-github-packages`,
    after one line asking to commit or stash local changes first; say when

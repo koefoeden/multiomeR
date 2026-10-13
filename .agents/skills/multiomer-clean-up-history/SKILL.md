@@ -98,8 +98,8 @@ pipeline behavior, inspect the relevant target names first.
 Helpful checks:
 
 ```bash
-rg -n "tar_target\\(|tarchetypes::tar_" _targets.R extra_targets module_*
-rg -n "<target-or-helper-name>" _targets.R R extra_targets module_*
+rg -n "tar_target\\(|tarchetypes::tar_" _targets.R extra_targets
+rg -n "<target-or-helper-name>" _targets.R R extra_targets
 ```
 
 ## Verify The Rewrite

@@ -5,9 +5,8 @@ description: Execute R snippets and scripts in multiomeR through Pixi, using a o
 
 # multiomeR Run R Code
 
-Run R from the repository root through Pixi. Always pass
-`--use-environment-activation-cache` to `pixi run`. This skill does not
-authorize target execution.
+Run R from the repository root through Pixi. This skill does not authorize
+target execution.
 
 ## Choose a Mode
 
@@ -32,9 +31,8 @@ Use ordinary `Rscript` startup so the repository's `.Rprofile` initializes the
 project runtime. Do not suppress repository startup for `_targets.R` or project
 helpers that assume bootstrap has happened. Standalone documentation generators
 may disable `.Rprofile` when they load their own dependencies and read only the
-shared public documentation inputs, as the website builder does. Never use bare `R` or
-`Rscript` outside a verified Pixi shell. Confirm important REPL-derived
-conclusions in a fresh `Rscript` process.
+shared public documentation inputs, as the website builder does. Never use bare
+`R` or `Rscript` outside a verified Pixi shell.
 
 ## One-Off Check
 
@@ -68,8 +66,7 @@ command -v R Rscript
 
 Submit sequential `Rscript` commands and require each process to exit
 successfully. Fresh processes retain Pixi activation while isolating R state
-and failures. The same shell may launch independent background processes when
-their CPU, memory, output, and write targets do not conflict.
+and failures.
 
 ## Stateful Exploration
 
@@ -101,12 +98,10 @@ conclusions in a fresh `Rscript` process.
 
 ## Project Rules
 
-The repository is one root `targets` project. Set `TAR_PROJECT=dev` only with
-`configuration_dev/` selected, as its README describes; never call legacy
-`activate_*()` helpers. Call `load_CFG("<dataset>")` only when an
-interactive probe needs resolved dataset-level configuration; for aggregation
-settings, filter `read_aggregation_config_tibble()` by `aggregation`. Use
-`multiomer-run-pipeline` for target execution.
+The repository is one root `targets` project. Call `load_CFG("<dataset>")` only
+when an interactive probe needs resolved dataset-level configuration; for
+aggregation settings, filter `read_aggregation_config_tibble()` by
+`aggregation`. Use `multiomer-run-pipeline` for target execution.
 
 Do not use `targets::tar_config_set()` to redirect a scratch probe: it rewrites
 `_targets.yaml`. Create a disposable scratch project instead.

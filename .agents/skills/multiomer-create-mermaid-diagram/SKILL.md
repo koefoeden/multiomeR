@@ -1,6 +1,6 @@
 ---
 name: multiomer-create-mermaid-diagram
-description: Generate or revise Mermaid dependency diagrams for the active multiomeR targets graph. Use for implementation-book graph updates, new part_of_graph views, or explicitly requested hand-curated workflow overviews.
+description: Generate or revise Mermaid dependency diagrams for the active multiomeR targets graph. Use for updating the manual's graph views, adding part_of_graph views, or explicitly requested hand-curated workflow overviews.
 ---
 
 # multiomeR Create Mermaid Diagram
@@ -20,8 +20,9 @@ Keep analysis-specific graph exports outside `website/`.
 After changing membership, regenerate every tagged view and review the changed
 `*_v2.mmd` files. Edge order can differ between checkouts: compare sorted lines,
 discard reorder-only views, and keep a changed view's committed order so both
-repositories hold the same file. Follow the root `AGENTS.md` workflow to render the manual and
-refresh the Markdown export. Graph generation must not execute targets.
+repositories hold the same file. Render the manual and refresh the Markdown
+export with `multiomer-edit-documentation`. Graph generation must not execute
+targets.
 
 ## Hand-curated overviews
 

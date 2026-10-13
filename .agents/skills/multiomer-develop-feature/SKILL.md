@@ -10,14 +10,12 @@ Use this when adding or changing targets, helpers, or analysis steps.
 ## Core Workflow
 
 1. Inspect the owning target fragment, helper, and configuration contract.
-2. Put pipeline-specific or otherwise unreadable target logic in
-   `R/<domain>_helpers.R`. Put generally reusable cross-repository helpers in
-   `packages/multiomeRCore/R` instead.
-3. Add targets to the nearest `extra_targets/*.R` or `module_*/*.R` fragment;
-   reserve `_targets.R` for graph composition and mapping.
-4. Add or revise YAML parameters in `manifests/cfg_pipeline_parameters.tsv` before using
+2. Place helpers and target fragments as the code-change list in
+   `.github/CONTRIBUTING.md` describes; reserve `_targets.R` for graph
+   composition and mapping.
+3. Add or revise YAML parameters in `manifests/cfg_pipeline_parameters.tsv` before using
    them in config readers or targets.
-5. Run R through Pixi with `multiomer-run-r-code` and validate with
+4. Run R through Pixi with `multiomer-run-r-code` and validate with
    `multiomer-validation-workflow`.
 
 ## Current Design Preferences
@@ -42,7 +40,11 @@ Use this when adding or changing targets, helpers, or analysis steps.
   modality suffix, with hyphens replaced by underscores (e.g.
   `VizDimLoadings_plots.2_GEX_PCA_QC`). This places plots in stage folders;
   non-plot targets retain their existing names.
-- Add aggregation-level downstream analyses as optional modules when they consume aggregation outputs. Use `module_<module>/`, opt in with the `modules` field in `cfg_aggregations.yaml`, and read flat `cfg_module_<module>.yaml` files through `configuration_path()` from the selected configuration directory.
+- Add aggregation-level downstream analyses as optional modules when they
+  consume aggregation outputs: an `extra_targets/module_<module>/` fragment
+  maps over `build_module_tibble()`, which reads the module's
+  `cfg_module_<module>.yaml` only for aggregations that list the module under
+  `modules` in `cfg_aggregations.yaml`.
 
 ## Target Patterns
 

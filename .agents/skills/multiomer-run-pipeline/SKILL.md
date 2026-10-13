@@ -6,8 +6,9 @@ description: Inspect or run the active multiomeR root targets workflow through P
 # multiomeR Run Pipeline
 
 The active project is `_targets.R`; use the store resolved by `_targets.yaml`.
-Differential analyses and genetic enrichment are aggregation-level modules in
-this same graph. Run R through Pixi; see `multiomer-run-r-code`.
+Optional analyses are aggregation-level modules in this same graph.
+Configuration follows `configuration/README.md`; never change its selection
+during a run. Run R through Pixi; see `multiomer-run-r-code`.
 
 With the default callr child process, keep `names` expressions self-contained:
 use literal names or patterns rather than a selection variable defined only in

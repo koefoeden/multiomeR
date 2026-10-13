@@ -10,7 +10,7 @@ below `results/`:
   `data/figure_1_traits.tsv`, the values the manuscript quotes from it.
 - `S3.png` and `data/cell_type_trait_enrichment.tsv`: Supplementary Figure S3,
   the cell-type deviations of every GWAS study of `mixed_human_31x`, of which
-  Figure 1C shows a selection.
+  Figure 1D shows a selection.
 - `data/table_S3.tsv`: Supplementary Table S3, the GWAS studies of
   `mixed_human_31x` with their Open Targets records and credible sets, and the
   credible-set loci and variants that overlap consensus peaks and the peaks they
@@ -51,30 +51,32 @@ files (`<job>.v2.tsv`) with the columns `name`, `timestamp`, `target`,
 
 ## Figure 1
 
-Five panel targets read pipeline data, never saved pipeline plots; a sixth
-combines them and the file target exports an 8 × 11 inch page at 300 dpi.
+Six panel targets read pipeline data, never saved pipeline plots; a seventh
+combines them and the file target exports an 8 × 9.5 inch page at 300 dpi.
 Selections are deterministic but follow the data.
 
-- **A, B:** the eligible, estimable, non-promoter peak–gene link with the lowest
-  hierarchical P-value (ties: cell type, gene, peak). A shows the peak, gene
-  bodies, focal-cell-type coverage and a schematic link with 25 kb flanks; B the
+- **A:** for each WNN cell type, the configured marker gene whose expression
+  and promoter accessibility, in cell-type pseudobulks summed over donors and
+  scaled across cell types, are most specific to it.
+- **B, C:** the eligible, estimable, non-promoter peak–gene link with the lowest
+  hierarchical P-value (ties: cell type, gene, peak). B shows the peak, gene
+  bodies, focal-cell-type coverage and a schematic link with 25 kb flanks; C the
   aggregate residuals coloured by donor with a descriptive regression line. The
   ranking is not an FDR claim, and aggregates are not independent donors.
-- **C:** broadly supported cell-type–study enrichments across all assigned
-  cell types: chromVAR q < 0.05, a top locus below half of the summed
-  contribution and at least 20 effective weighted peaks, (Σw)²/Σw², so that no
-  pair rests on one or a few loci. In decreasing z, a pair is shown unless its
+- **D:** broadly supported cell-type–study enrichments across all assigned
+  cell types: chromVAR q < 0.05 and a top locus below half of the summed
+  contribution, so that no pair rests on one or a few loci; the configured
+  studies already have at least 20 effective peaks, (Σw)²/Σw². In decreasing z, a pair is shown unless its
   study is shown already or its cell type shows a study of the same category.
   Stars mark q < 0.05.
-- **D:** for two of these pairs, LDL cholesterol in hepatocytes and colorectal
-  cancer in colonocytes, the locus with the largest absolute contribution to the
-  deviation, as aligned facets of variant contributions (point area: PIP),
+- **E:** for one of these pairs, colorectal cancer in colonocytes, the locus
+  with the largest absolute contribution to the deviation, as aligned facets of variant contributions (point area: PIP),
   protein-coding genes, focal coverage and consensus peaks.
-- **E:** SCAVENGE trait-relevance scores of the same two traits on the WNN UMAP,
-  with a shared colour scale, unclipped scores and the WNN cell-type labels of C.
+- **F:** SCAVENGE trait-relevance scores of the same trait on the WNN UMAP,
+  with unclipped scores and the WNN cell-type labels of D.
 
 Supplementary Figure S3 shows every study across the assigned cell types with
-the module's unscaled deviation heatmap and GWAS metadata tracks, on Figure 1C's
+the module's unscaled deviation heatmap and GWAS metadata tracks, on Figure 1D's
 colour scale and with its stars; larger deviations take the scale's end colours.
 
 ## Supplementary Figure S2
@@ -94,7 +96,8 @@ peak calling and quantification run one `future` worker per core.
 GEM wells of `mixed_human_31x` without per-well QC filters, CellBender or
 doublet removal, so both workflows keep every called nucleus and yield identical
 consensus peaks. multiomeR is measured twice: up to its WNN cell metadata, and
-with the multimodal Seurat/Signac object it exports from it. Shared
+with the multimodal Seurat/Signac object it exports from it, which the figure
+shows because it matches the conventional chain's output. Shared
 cluster-fragment preparation is excluded from all workflows, and analyses that
 the conventional chain does not perform from both multiomeR measurements:
 cell-type annotation, doublet detection, QC metrics, gene and peak annotation,

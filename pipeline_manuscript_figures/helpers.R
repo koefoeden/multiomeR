@@ -136,21 +136,18 @@ figure_1_enrichments <- function(scores) {
     dplyr::arrange(dplyr::desc(.data$z), .data$GWAS_ID)
 }
 
-# Figure 1C shows broadly supported enrichments: q < 0.05, a top locus below half
-# of the summed contribution and at least 20 effective weighted peaks of the study,
-# (sum w)^2 / sum w^2, which leaves out pairs driven by one or a few loci. In
-# decreasing z, a pair is shown unless its study is shown already or its cell type
-# shows a study of the same category.
-select_figure_1_traits <- function(scores, loci, peak_weight_records) {
+# Figure 1D shows broadly supported enrichments: q < 0.05 and a top locus below half
+# of the summed contribution, which leaves out pairs driven by one or a few loci; the
+# configured studies already have at least 20 effective peaks. In decreasing z, a pair
+# is shown unless its study is shown already or its cell type shows a study of the
+# same category.
+select_figure_1_traits <- function(scores, loci) {
   loci <- dplyr::summarise(loci, n_loci = dplyr::n(),
     top_locus_share = max(.data$relative_deviation_contribution) / sum(.data$relative_deviation_contribution),
     .by = c("GWAS_ID", "cluster"))
-  peaks <- purrr::map_dfr(peak_weight_records, \(x) tibble::tibble(GWAS_ID = x$GWAS_ID,
-    effective_peaks = sum(x$peak_weights_vec)^2 / sum(x$peak_weights_vec^2)))
   candidates <- figure_1_enrichments(scores) |>
     dplyr::left_join(loci, by = c("GWAS_ID", "cluster")) |>
-    dplyr::left_join(peaks, by = "GWAS_ID") |>
-    dplyr::filter(.data$top_locus_share < .5, .data$effective_peaks >= 20)
+    dplyr::filter(.data$top_locus_share < .5)
   if (!nrow(candidates)) stop("No broadly supported cell-type/GWAS enrichments.")
   selected <- candidates[0, ]
   for (i in seq_len(nrow(candidates))) {
@@ -166,8 +163,8 @@ select_figure_1_traits <- function(scores, loci, peak_weight_records) {
 # D and E show two of them: the strongest, LDL cholesterol in hepatocytes, and the
 # strongest outside the liver in an epithelium, colorectal cancer in colonocytes.
 select_figure_1_showcase <- function(traits) {
-  showcase <- traits[match(c("LDL_Graham2021", "ColorectalCancer_Law2019"), traits$GWAS_ID), ]
-  stopifnot(!anyNA(showcase$GWAS_ID))
+  showcase <- traits[traits$GWAS_ID == "ColorectalCancer_Law2019", ]
+  stopifnot(nrow(showcase) == 1L)
   showcase
 }
 
@@ -200,7 +197,56 @@ figure_1_gene_lanes <- function(genes, window_width, char_fraction = .018) {
   dplyr::select(genes, -"label_start", -"label_end")
 }
 
-# A: inspired by top_link_aggregate_scatter_plots. Separate compact genomic
+# A: the configured WNN marker gene of each cell type whose expression and promoter
+# accessibility are most specific to it, from cell-type pseudobulks summed over
+# donors, as log1p counts per million scaled across cell types.
+figure_1_marker_profiles <- function(markers, pseudobulk_GEX, pseudobulk_ATAC, peaks) {
+  markers <- tibble::enframe(markers, name = "cell_type", value = "gene") |>
+    tidyr::unnest("gene") |>
+    dplyr::filter(!endsWith(.data$gene, "-"))
+  promoters <- tibble::as_tibble(as.data.frame(S4Vectors::mcols(peaks))) |>
+    dplyr::filter(.data$geneName %in% markers$gene, .data$txType %in% c("promoter", "TSS"),
+      .data$region_vec %in% rownames(pseudobulk_ATAC))
+  markers <- dplyr::filter(markers, .data$gene %in% intersect(rownames(pseudobulk_GEX), promoters$geneName))
+  # Pseudobulk columns are "<cell type, - for _>_<donor>".
+  cell_type_CPM <- function(pseudobulk, features) {
+    cell_type <- gsub("-", "_", sub("_[^_]+$", "", colnames(pseudobulk)))
+    keep <- cell_type %in% markers$cell_type
+    totals <- tapply(colSums(pseudobulk[, keep]), cell_type[keep], sum)
+    counts <- rowsum(t(as.matrix(pseudobulk[features, keep])), cell_type[keep])
+    counts / as.numeric(totals[rownames(counts)]) * 1e6
+  }
+  RNA <- cell_type_CPM(pseudobulk_GEX, unique(markers$gene))
+  ATAC <- t(rowsum(t(cell_type_CPM(pseudobulk_ATAC, promoters$region_vec)), promoters$geneName))
+  profiles <- dplyr::bind_rows(
+    tibble::as_tibble(RNA, rownames = "cell_type") |> dplyr::mutate(modality = "Gene expression"),
+    tibble::as_tibble(ATAC, rownames = "cell_type") |> dplyr::mutate(modality = "Promoter accessibility")) |>
+    tidyr::pivot_longer(-c("cell_type", "modality"), names_to = "gene", values_to = "CPM") |>
+    dplyr::mutate(z = as.numeric(scale(log1p(.data$CPM))), .by = c("modality", "gene"))
+  selected <- markers |>
+    dplyr::inner_join(profiles, by = c("cell_type", "gene")) |>
+    dplyr::summarise(specificity = sum(.data$z), .by = c("cell_type", "gene")) |>
+    dplyr::slice_max(.data$specificity, n = 1, with_ties = FALSE, by = "cell_type")
+  cell_types <- unique(markers$cell_type)
+  profiles |>
+    dplyr::filter(.data$gene %in% selected$gene, .data$cell_type %in% selected$cell_type) |>
+    dplyr::mutate(cell_type = factor(.data$cell_type, rev(cell_types)),
+      gene = factor(.data$gene, selected$gene[order(match(selected$cell_type, cell_types))]))
+}
+
+plot_figure_1_markers <- function(profiles) {
+  ggplot2::ggplot(profiles, ggplot2::aes(.data$gene, .data$cell_type, fill = .data$z)) +
+    ggplot2::geom_tile(colour = "white", linewidth = .3) +
+    ggplot2::facet_wrap(ggplot2::vars(.data$modality)) +
+    ggplot2::scale_fill_gradient2(low = "#3B4CC0", mid = "white", high = "#B40426", name = "Scaled\nlog CPM") +
+    ggplot2::scale_y_discrete(labels = figure_1_cell_type_labels) + figure_1_theme() +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(face = "italic", angle = 90, hjust = 1, vjust = .5, size = 6),
+      axis.text.y = ggplot2::element_text(size = 6),
+      panel.grid = ggplot2::element_blank(), strip.text = ggplot2::element_text(size = 8)) +
+    ggplot2::labs(title = "Cell-type markers in the same nuclei", x = NULL, y = NULL)
+}
+
+# B: inspired by top_link_aggregate_scatter_plots. Separate compact genomic
 # panel, focal cell type only, selected peak/TSS and link arc; omit the large
 # cross-cell-type evidence stack. Zoom to the peak and TSS with 25 kb flanks; retain cached coverage bins.
 plot_figure_1_link_tracks <- function(record, coverage) {
@@ -256,7 +302,7 @@ figure_1_p_label <- function(p) {
   sprintf("Nominal~italic(P)==%.1f%%*%%10^%d", p / 10^exponent, exponent)
 }
 
-# B: same residuals as the parent scatter, separate panel; donor colours without
+# C: same residuals as the parent scatter, separate panel; donor colours without
 # a large legend. The line is descriptive, not the hierarchical model fit.
 plot_figure_1_scatter <- function(data) {
   ggplot2::ggplot(data, ggplot2::aes(.data$peak_accessibility_residual,
@@ -269,10 +315,10 @@ plot_figure_1_scatter <- function(data) {
       family = "NimbusSan", size = 2.5) +
     ggplot2::guides(colour = "none") +
     ggplot2::labs(title = "Donor\u2013state pseudobulks",
-      x = "ATAC log1p CPM residual", y = "GEX log1p CPM residual")
+      x = "ATAC residual (log1p CPM)", y = "GEX residual\n(log1p CPM)")
 }
 
-# C: raw_deviation_unscaled inspiration; the selected traits, no metadata tracks or
+# D: raw_deviation_unscaled inspiration; the selected traits, no metadata tracks or
 # clustering. All assigned cell types retained, common raw-deviation scale. Stars
 # mark enrichments at q < 0.05.
 plot_figure_1_heatmap <- function(data, traits) {
@@ -292,7 +338,13 @@ plot_figure_1_heatmap <- function(data, traits) {
     ggplot2::labs(title = "Trait-associated accessibility", x = NULL, y = NULL)
 }
 
-# D: aligned locus facets with independent y scales and shared axis titles
+# Small tracks show 0 and the largest pretty break within the expanded range.
+figure_1_track_breaks <- function(limits) {
+  breaks <- scales::breaks_pretty(n = 2)(limits)
+  c(0, max(breaks[breaks <= limits[[2]]]))
+}
+
+# E: aligned locus facets with independent y scales and shared axis titles
 # and independent genomic x ranges. PIP retains the same scale in both columns.
 plot_figure_1_loci <- function(records) {
   labels <- vapply(records, function(x) paste0(
@@ -327,7 +379,7 @@ plot_figure_1_loci <- function(records) {
     ggplot2::facet_wrap(ggplot2::vars(locus), nrow = 1, scales = "free") +
     ggplot2::scale_x_continuous(expand = c(0, 0),
       labels = scales::label_number(scale = 1e-6, accuracy = .01)) +
-    ggplot2::theme(strip.text = ggplot2::element_text(size = 8),
+    ggplot2::theme(strip.text = ggplot2::element_text(size = 8), strip.clip = "off",
       axis.title.y = ggplot2::element_text(size = 6.5, angle = 0, hjust = 1, vjust = .5),
       axis.text.y = ggplot2::element_text(family = "mono"),
       panel.spacing.x = grid::unit(6, "mm"), legend.position = "right")
@@ -338,7 +390,7 @@ plot_figure_1_loci <- function(records) {
     ggplot2::geom_point(data = variants, ggplot2::aes(.data$position,
       .data$relative_deviation_contribution, size = .data$posteriorProbability), colour = "#B40426") +
     ggplot2::scale_size_area(max_size = 3, name = "PIP", limits = c(0, 1), breaks = c(.1, .5, 1)) +
-    ggplot2::scale_y_continuous(breaks = scales::breaks_pretty(n = 2),
+    ggplot2::scale_y_continuous(breaks = figure_1_track_breaks,
       labels = function(x) formatC(x, format = "f", digits = 1, width = 5),
       expand = ggplot2::expansion(mult = c(.05, .35))) +
     ggplot2::labs(x = NULL, y = "Genetic\ncontribution") +
@@ -360,51 +412,47 @@ plot_figure_1_loci <- function(records) {
       y = 0, yend = 0), linewidth = 1, colour = "#B40426") +
     ggplot2::facet_wrap(ggplot2::vars(locus), nrow = 1, scales = "free", strip.position = "bottom",
       labeller = ggplot2::labeller(locus = ggplot2::as_labeller(chromosomes))) +
-    ggplot2::scale_y_continuous(breaks = scales::breaks_pretty(n = 2),
+    ggplot2::scale_y_continuous(breaks = figure_1_track_breaks,
       labels = function(x) formatC(x, format = "f", digits = 1, width = 5)) +
     ggplot2::labs(x = "Genomic position (Mb)", y = "ATAC") +
     ggplot2::theme(strip.placement = "outside")
   # Keep each axis label beside its track while aligning the faceted panels.
   patchwork::wrap_plots(lapply(list(contribution, gene_track, accessibility),
     function(plot) patchwork::free(plot, type = "label", side = "l")),
-    ncol = 1, heights = c(.9, 2.1, .7), guides = "collect") +
-    patchwork::plot_annotation(title = "Leading GWAS loci", theme = figure_1_theme())
+    ncol = 1, heights = c(1, 1.2, 1), guides = "collect") +
+    patchwork::plot_annotation(title = "Leading GWAS locus", theme = figure_1_theme())
 }
 
-# E: TRS_UMAPs inspiration; rebuild WNN UMAP from coordinates and scores, with
-# WNN cell-type centroids, as in C, no score clipping or serialized upstream plot mutation.
-plot_figure_1_TRS <- function(data, trait, score_limits) {
+# F: TRS_UMAPs inspiration; rebuild WNN UMAP from coordinates and scores, with
+# WNN cell-type centroids, as in D, no score clipping or serialized upstream plot mutation.
+plot_figure_1_TRS <- function(data, trait) {
   labels <- data |> dplyr::summarise(x = stats::median(.data$WNN_UMAP_1),
     y = stats::median(.data$WNN_UMAP_2), .by = "WNN_harmony_SNN_cluster_cell_type") |>
     dplyr::filter(is_figure_1_cell_type(.data$WNN_harmony_SNN_cluster_cell_type)) |>
     dplyr::mutate(WNN_harmony_SNN_cluster_cell_type =
       figure_1_cell_type_labels(.data$WNN_harmony_SNN_cluster_cell_type))
-  # Unlabelled sampled nuclei repel text away from the point clouds, not just
-  # from other centroids. A fixed seed keeps placement matched between traits.
-  obstacles <- withr::with_seed(1L, dplyr::slice_sample(data, n = min(2000L, nrow(data)))) |>
-    dplyr::transmute(x = .data$WNN_UMAP_1, y = .data$WNN_UMAP_2,
-      WNN_harmony_SNN_cluster_cell_type = "")
-  labels <- dplyr::bind_rows(labels, obstacles)
   ggplot2::ggplot(data, ggplot2::aes(.data$WNN_UMAP_1, .data$WNN_UMAP_2)) +
     ggplot2::geom_point(ggplot2::aes(colour = .data$score), size = .15) +
-    ggrepel::geom_text_repel(data = labels, ggplot2::aes(.data$x, .data$y,
-      label = .data$WNN_harmony_SNN_cluster_cell_type), size = 2.4, seed = 1,
-      max.overlaps = Inf, min.segment.length = 0,
-      point.padding = .1, box.padding = .3, force = 2, force_pull = 2,
-      segment.size = .2, segment.color = "grey40",
-      max.iter = 20000, max.time = Inf) +
-    ggplot2::scale_colour_viridis_c(name = "TRS", limits = score_limits, na.value = "grey85") +
+    # Labels on a translucent background repel only each other; a fixed seed keeps
+    # their placement matched between traits.
+    ggrepel::geom_label_repel(data = labels, ggplot2::aes(.data$x, .data$y,
+      label = .data$WNN_harmony_SNN_cluster_cell_type), size = 2.1, seed = 1,
+      fill = grDevices::adjustcolor("white", .75), label.size = 0, linewidth = 0, label.padding = grid::unit(.8, "pt"),
+      max.overlaps = Inf, min.segment.length = .2, box.padding = .1, force = 1,
+      segment.size = .2, segment.color = "grey40", max.iter = 20000, max.time = Inf) +
+    ggplot2::scale_colour_viridis_c(name = "TRS", na.value = "grey85") +
     ggplot2::coord_equal() + figure_1_theme() +
     ggplot2::theme(panel.grid = ggplot2::element_blank(), axis.text = ggplot2::element_blank(),
-      legend.position = "bottom") +
-    ggplot2::guides(colour = ggplot2::guide_colourbar(direction = "horizontal",
-      barwidth = grid::unit(35, "mm"), barheight = grid::unit(2, "mm"))) +
-    ggplot2::labs(title = figure_1_trait_labels(trait), x = "UMAP 1", y = "UMAP 2")
+      legend.position = "right") +
+    ggplot2::guides(colour = ggplot2::guide_colourbar(barwidth = grid::unit(2, "mm"),
+      barheight = grid::unit(25, "mm"))) +
+    ggplot2::labs(title = "SCAVENGE trait relevance", subtitle = figure_1_trait_labels(trait),
+      x = "UMAP 1", y = "UMAP 2")
 }
 
 # Supplementary Figure S3: the module's unscaled deviation heatmap of every study
-# and assigned cell type, with Figure 1C's colour scale, cell-type labels and stars;
-# rows also name the study. Deviations beyond Figure 1C's range take its end colours.
+# and assigned cell type, with Figure 1D's colour scale, cell-type labels and stars;
+# rows also name the study. Deviations beyond Figure 1D's range take its end colours.
 plot_figure_S3 <- function(scores, GWAS_metadata_tracks_plot, traits) {
   limit <- max(abs(scores$deviation[scores$GWAS_ID %in% traits$GWAS_ID]))
   # The module's "Samples" track gives each GWAS's sample size, not Epi Multiome samples.
@@ -453,8 +501,8 @@ GWAS_study_tibble <- function(inputs, variant_weights, study_dataset_path) {
 
 # Wrapping every panel prevents one panel's long axis labels from shifting the
 # headings in other rows. Tags belong to the assembly, not the plot titles.
-compose_figure_1 <- function(A, B, C, D, E) {
-  plots <- lapply(list(A, B, C, D, E), function(plot) {
+compose_figure_1 <- function(A, B, C, D, E, F) {
+  plots <- lapply(list(A, B, C, D, E, F), function(plot) {
     if (inherits(plot, "patchwork")) {
       title <- plot$patches$annotation$title
       plot <- plot + patchwork::plot_annotation(title = NULL)
@@ -467,8 +515,8 @@ compose_figure_1 <- function(A, B, C, D, E) {
           hjust = .5, margin = ggplot2::margin(b = 5.5)),
         plot.title.position = "plot")
   })
-  (patchwork::wrap_plots(plots, design = "AB\nCC\nDD\nEE",
-    heights = c(1.1, 1.05, 1.35, 2.65)) +
+  (patchwork::wrap_plots(plots, design = "AA\nBC\nDD\nEF",
+    heights = c(2.3, 1.6, 1.5, 2.7)) +
     patchwork::plot_annotation(tag_levels = "A")) &
     ggplot2::theme(plot.tag = ggplot2::element_text(family = "NimbusSan", face = "bold",
         size = 12, hjust = 0, vjust = 1), plot.tag.position = c(0, 1))

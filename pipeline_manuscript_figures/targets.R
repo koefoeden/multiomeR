@@ -12,7 +12,16 @@ output_dir <- "pipeline_manuscript_figures/results"
 figure_pipeline <- list(
   targets::tar_target(
     figure_1_panel_A.mixed_human_31x,
-    description = "Figure 1A: strongest ranked hierarchical link; compact focal genomic tracks from top_link_aggregate_scatter_plots data",
+    description = "Figure 1A: per WNN cell type, the configured marker with the most specific expression and promoter accessibility in donor-summed cell-type pseudobulks",
+    command = figure_1_marker_profiles(UCell_WNN_marker_genes_list.mixed_human_31x,
+      pseudobulk_counts_matrix.GEX.mixed_human_31x, pseudobulk_counts_matrix.ATAC.mixed_human_31x,
+      consensus_peak_annotated_GRanges.ATAC.mixed_human_31x) |>
+      plot_figure_1_markers() |> compact_figure_1_plot(),
+    packages = w_def("BPCells"), resources = get_tar_resources(RAM_GB_req = 8)
+  ),
+  targets::tar_target(
+    figure_1_panel_B.mixed_human_31x,
+    description = "Figure 1B: strongest ranked hierarchical link; compact focal genomic tracks from top_link_aggregate_scatter_plots data",
     command = local({
       link <- select_figure_1_link(peak_gene_correlation_top_links_tibble.WNN.peak_gene_correlation.mixed_human_31x)
       records <- peak_gene_correlation_top_link_plot_data.WNN.peak_gene_correlation.mixed_human_31x
@@ -25,8 +34,8 @@ figure_pipeline <- list(
     packages = w_def("patchwork"), resources = get_tar_resources(RAM_GB_req = 4)
   ),
   targets::tar_target(
-    figure_1_panel_B.mixed_human_31x,
-    description = "Figure 1B: same aggregate residuals as top_link_aggregate_scatter_plots, with inset hierarchical P and compact donor colours",
+    figure_1_panel_C.mixed_human_31x,
+    description = "Figure 1C: same aggregate residuals as top_link_aggregate_scatter_plots, with inset hierarchical P and compact donor colours",
     command = local({
       link <- select_figure_1_link(peak_gene_correlation_top_links_tibble.WNN.peak_gene_correlation.mixed_human_31x)
       data <- peak_gene_correlation_top_link_aggregate_values_tibble.WNN.peak_gene_correlation.mixed_human_31x |>
@@ -39,22 +48,21 @@ figure_pipeline <- list(
   ),
   targets::tar_target(
     figure_1_traits.mixed_human_31x,
-    description = "Figure 1C-E traits: broadly supported cell-type enrichments (q < 0.05, top locus below half of the signal, at least 20 effective weighted peaks), one per study and per cell type and trait category",
+    description = "Figure 1D-F traits: broadly supported cell-type enrichments (q < 0.05, top locus below half of the signal), one per study and per cell type and trait category",
     command = select_figure_1_traits(chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x,
-      chromVAR_locus_contribution_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x,
-      GWAS_peak_weight_records.genetic_enrichment.mixed_human_31x),
+      chromVAR_locus_contribution_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x),
     resources = get_tar_resources(RAM_GB_req = 4)
   ),
   targets::tar_target(
-    figure_1_panel_C.mixed_human_31x,
-    description = "Figure 1C: raw_deviation_unscaled data of the selected traits, all assigned cell types, no metadata tracks",
+    figure_1_panel_D.mixed_human_31x,
+    description = "Figure 1D: raw_deviation_unscaled data of the selected traits, all assigned cell types, no metadata tracks",
     command = plot_figure_1_heatmap(chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x,
       figure_1_traits.mixed_human_31x) |> compact_figure_1_plot(),
     resources = get_tar_resources(RAM_GB_req = 4)
   ),
   targets::tar_target(
-    figure_1_panel_D.mixed_human_31x,
-    description = "Figure 1D: variant-detail data for the top absolute-contribution locus of the two showcase traits, left to right; protein-coding genes, focal coverage and PIP only",
+    figure_1_panel_E.mixed_human_31x,
+    description = "Figure 1E: variant-detail data for the top absolute-contribution locus of the showcase trait; protein-coding genes, focal coverage and PIP only",
     command = local({
       selections <- select_figure_1_showcase(figure_1_traits.mixed_human_31x)
       locus_records <- lapply(seq_len(nrow(selections)), function(i) {
@@ -81,43 +89,34 @@ figure_pipeline <- list(
     packages = w_def("patchwork"), resources = get_tar_resources(RAM_GB_req = 4)
   ),
   targets::tar_target(
-    figure_1_panel_E.mixed_human_31x,
-    description = "Figure 1E: rebuild TRS_UMAPs for the two traits in D, in matching order, with randomized cell draw order, cell-type centroids and a shared TRS scale",
+    figure_1_panel_F.mixed_human_31x,
+    description = "Figure 1F: rebuild the TRS_UMAP of the trait in E, with randomized cell draw order and cell-type centroids",
     command = local({
-      selections <- select_figure_1_showcase(figure_1_traits.mixed_human_31x)
-      selected_scores <- TRS_tibble.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.mixed_human_31x |>
-        dplyr::filter(.data$GWAS_ID %in% selections$GWAS_ID)
-      score_limits <- range(selected_scores$score, finite = TRUE)
-      plots <- lapply(selections$GWAS_ID, function(trait) {
-        scores <- selected_scores |>
-          dplyr::filter(.data$GWAS_ID == trait) |>
-          dplyr::select("barcode_w_prefix", "score")
-        stopifnot(nrow(scores) > 0L)
-        data <- metadata_w_cell_types_tibble.WNN.mixed_human_31x |>
-          dplyr::select("barcode_w_prefix", "WNN_UMAP_1", "WNN_UMAP_2", "WNN_harmony_SNN_cluster_cell_type") |>
-          dplyr::left_join(scores, by = "barcode_w_prefix", relationship = "one-to-one") |>
-          dplyr::filter(is.finite(.data$WNN_UMAP_1), is.finite(.data$WNN_UMAP_2))
-        # Match production random drawing; use the same permutation for both traits.
-        data <- withr::with_seed(1L, dplyr::slice_sample(data, prop = 1))
-        plot_figure_1_TRS(data, trait, score_limits) |> compact_figure_1_plot()
-      })
-      ((patchwork::wrap_plots(plots, nrow = 1, guides = "collect") +
-        patchwork::plot_annotation(title = "SCAVENGE trait relevance",
-          theme = figure_1_theme())) & ggplot2::theme(legend.position = "bottom")) |>
-        compact_figure_1_plot()
-
+      trait <- select_figure_1_showcase(figure_1_traits.mixed_human_31x)$GWAS_ID
+      scores <- TRS_tibble.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.mixed_human_31x |>
+        dplyr::filter(.data$GWAS_ID == trait) |>
+        dplyr::select("barcode_w_prefix", "score")
+      stopifnot(nrow(scores) > 0L)
+      data <- metadata_w_cell_types_tibble.WNN.mixed_human_31x |>
+        dplyr::select("barcode_w_prefix", "WNN_UMAP_1", "WNN_UMAP_2", "WNN_harmony_SNN_cluster_cell_type") |>
+        dplyr::left_join(scores, by = "barcode_w_prefix", relationship = "one-to-one") |>
+        dplyr::filter(is.finite(.data$WNN_UMAP_1), is.finite(.data$WNN_UMAP_2))
+      # Match production random drawing.
+      data <- withr::with_seed(1L, dplyr::slice_sample(data, prop = 1))
+      plot_figure_1_TRS(data, trait) |> compact_figure_1_plot()
     }),
-    packages = w_def("patchwork"), resources = get_tar_resources(RAM_GB_req = 4)
+    resources = get_tar_resources(RAM_GB_req = 4)
   ),
   targets::tar_target(
     figure_1_plot.mixed_human_31x,
-    description = "Combine manuscript Figure 1 ggplot panels in four rows: AB, C, D, E",
+    description = "Combine manuscript Figure 1 ggplot panels in four rows: A, BC, D, EF",
     command = compose_figure_1(
       figure_1_panel_A.mixed_human_31x,
       figure_1_panel_B.mixed_human_31x,
       figure_1_panel_C.mixed_human_31x,
       figure_1_panel_D.mixed_human_31x,
-      figure_1_panel_E.mixed_human_31x) |>
+      figure_1_panel_E.mixed_human_31x,
+      figure_1_panel_F.mixed_human_31x) |>
       compact_figure_1_plot(),
     packages = w_def("patchwork"), resources = get_tar_resources(RAM_GB_req = 4)
   ),
@@ -127,7 +126,7 @@ figure_pipeline <- list(
     command = {
       path <- file.path(output_dir, "1.png")
       ggplot2::ggsave(path, figure_1_plot.mixed_human_31x,
-        device = ragg::agg_png, width = 8, height = 11, dpi = 300, create.dir = TRUE)
+        device = ragg::agg_png, width = 8, height = 9.5, dpi = 300, create.dir = TRUE)
       path
     },
     resources = get_tar_resources(RAM_GB_req = 4)

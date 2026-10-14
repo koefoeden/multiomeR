@@ -161,10 +161,10 @@ get_WNN_modality_weights <- function(embeddings_norm, modality_nn, k) {
 #' Weighted nearest neighbors BPCells
 #'
 #' Compute Seurat-style weighted nearest neighbors from aligned, L2-normalized
-#' modality embeddings with Euclidean distances. Seurat's modality weights tend
-#' to 0 or 1 as the number of cells grows, because the kernel widths shrink with
-#' density, so they are estimated within random subsets of at most
-#' `weight_cells` cells; neighbours are selected among all cells.
+#' modality embeddings with Euclidean distances. In our tests, Seurat's modality
+#' weights approached 0 or 1 as the number of cells grew, because the kernel
+#' widths shrink with density, so they are estimated within random subsets of at
+#' most `weight_cells` cells; neighbours are selected among all cells.
 #' Adapted from Seurat WNN (Hao et al. 2021, doi:10.1016/j.cell.2021.04.048), without a Seurat object.
 #'
 #' @param embeddings_list Named list of modality embedding matrices with

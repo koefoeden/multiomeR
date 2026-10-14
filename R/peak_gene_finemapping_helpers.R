@@ -58,6 +58,8 @@ empty_peak_gene_correlation_finemapping_tibble <- function() {
 #' Fine-map detected cis peaks for genes that contain at least one candidate
 #' enhancer link. This is multipeak prioritization, not causal proof: the SuSiE
 #' likelihood does not itself model donor clustering.
+#' Neighbouring peaks are often co-accessible, so SuSiE asks which of a gene's correlated
+#' peaks jointly explain its expression. The gene and peak caps limit its runtime.
 #'
 #' @param normalized_aggregate_matrices Donor-state pseudobulk matrices.
 #' @param branch_results Hierarchical results of the same branch with

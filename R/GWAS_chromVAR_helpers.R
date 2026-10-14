@@ -3,6 +3,7 @@
 #' Sum the weights of the variants overlapping each peak, cap each peak weight
 #' at 1 for the betterChromVAR continuous-annotation contract, and allocate the
 #' capped weight back to the variants in proportion to their weights.
+#' Fine-mapping peak weights as in gchromVAR (Ulirsch et al. 2019, doi:10.1038/s41588-019-0362-6).
 #'
 #' @param GWAS_ID Configured GWAS label.
 #' @param variant_GRanges Retained credible-set variants.

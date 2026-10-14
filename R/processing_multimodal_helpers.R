@@ -165,6 +165,7 @@ get_WNN_modality_weights <- function(embeddings_norm, modality_nn, k) {
 #' to 0 or 1 as the number of cells grows, because the kernel widths shrink with
 #' density, so they are estimated within random subsets of at most
 #' `weight_cells` cells; neighbours are selected among all cells.
+#' Adapted from Seurat WNN (Hao et al. 2021, doi:10.1016/j.cell.2021.04.048), without a Seurat object.
 #'
 #' @param embeddings_list Named list of modality embedding matrices with
 #'   identical cell row names in the same order.

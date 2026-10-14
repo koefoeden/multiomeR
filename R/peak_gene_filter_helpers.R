@@ -13,6 +13,8 @@ peak_gene_filter_settings <- function() {
 #' Support is determined separately for RNA and ATAC. Supported donors must
 #' overlap, but qualifying aggregates need not coincide. All observations remain
 #' in each retained regression. No association statistic enters the filter.
+#' Like edgeR::filterByExpr() (Chen et al. 2025, doi:10.1093/nar/gkaf018), it drops pairs too
+#' sparse for reliable inference, which also cuts runtime and the multiple-testing burden.
 filter_peak_gene_candidate_pairs <- function(
   aggregate_matrices, normalized_aggregate_matrices, candidate_pairs_tibble, filter
 ) {

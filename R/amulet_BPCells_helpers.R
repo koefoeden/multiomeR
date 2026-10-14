@@ -41,6 +41,7 @@ remove_high_overlap_amulet_loci <- function(loci_GRanges, p_value_threshold = 0.
 #' Stream a BPCells `IterableFragments` object and reproduce the overlap counts
 #' returned by `scDblFinder::getFragmentOverlaps()` without materializing all
 #' fragments as `GRanges`.
+#' Adapted from AMULET (Thibodeau et al. 2021, doi:10.1186/s13059-021-02469-x).
 #'
 #' @param fragments A BPCells `IterableFragments` object with known chromosome
 #'   and cell names.
@@ -189,6 +190,9 @@ get_amulet_fragment_overlaps_BPCells <- function(
 
 #' Calculate BPCells-native AMULET metrics
 #'
+#' No q-value filter is applied: AMULET performs well only on deeply sequenced
+#' nuclei, so it is left to configured exclusions (its authors recommend q < 0.01).
+#'
 #' @inheritParams get_amulet_fragment_overlaps_BPCells
 #' @param ... Further arguments passed to `get_amulet_fragment_overlaps_BPCells()`.
 #'
@@ -211,7 +215,8 @@ calculate_amulet_metrics_BPCells <- function(fragments, ...) {
 #'
 #' Following the AMULET authors, the mitochondrial and sex chromosomes are
 #' excluded in full, and for GRCh38 also their list of repeats, segmental
-#' duplications and blacklisted regions; no such list exists for mouse.
+#' duplications and blacklisted regions, where multi-mapping reads cause spurious
+#' overlaps; no such list exists for mouse.
 #'
 #' @param repeat_list_zip The authors' `RestrictionRepeatLists.zip`.
 #' @return Named list of `GRanges`, one per genome.

@@ -180,9 +180,9 @@ run_GEX_PCA_BPCells <- function(
 
 #' Analytic Pearson residuals with one overdispersion for all genes
 #'
-#' A shared theta of 100 and clipping at the square root of the number of nuclei
-#' follow Lause et al. (2021): per-gene moment estimates absorb biological
-#' heterogeneity into theta, flattening the residual variance of marker genes.
+#' Shared theta = 100 and a sqrt(N) clip, as in Lause et al. 2021 (doi:10.1186/s13059-021-02451-7).
+#' Per-gene theta would absorb cell-type differences and flatten marker residuals;
+#' the clip keeps markers of rare populations.
 get_BPCells_native_GEX_residuals <- function(
   counts_matrix,
   cell_attr,
@@ -396,14 +396,16 @@ prepare_scDblFinder_GEM_well_tibble <- function(metadata_tibble,
 
 #' Run scDblFinder BPCells GEM well
 #'
-#' Run scDblFinder on one GEM well-specific slice of a BPCells feature matrix.
+#' Run scDblFinder on one GEM well-specific slice of a BPCells feature matrix,
+#' since doublets form only within a GEM well.
 #'
 #' @param feature_matrix Feature-by-cell matrix-like object with row names as feature IDs and column names as cell barcodes.
 #' @param scDblFinder_GEM_well_tibble One-row branch tibble with GEM well ID,
 #'   barcode vector, and named cluster vector.
 #' @param output_suffix Suffix appended to `scDblFinder.class_` and
 #'   `scDblFinder.score_` output columns.
-#' @param dbr.sd Doublet-rate uncertainty passed to `scDblFinder::scDblFinder()`.
+#' @param dbr.sd Doublet-rate uncertainty passed to `scDblFinder::scDblFinder()`;
+#'   1 sets the threshold from misclassification alone, not an expected doublet rate.
 #' @param sample_col Column containing the GEM well/sample identifier in the
 #'   branch tibble.
 #' @param ... Additional arguments passed to `scDblFinder::scDblFinder()`.
@@ -534,6 +536,8 @@ filter_metadata_by_scDblFinder <- function(
 #'
 #' As in scDblFinder's own feature aggregation, the coordinates are the
 #' loadings scaled by the singular values, so leading dimensions weigh more.
+#' Grouping once replaces scDblFinder's per-well aggregation, which transforms
+#' every peak in each well and can exhaust memory.
 #'
 #' @param LSI_results LSI result with `feature_loadings` and `singular_values`.
 #' @param dims LSI dimensions to cluster on.

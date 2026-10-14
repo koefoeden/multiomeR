@@ -130,6 +130,8 @@ drop_SCAVENGE_degree_zero_cells <- function(NN_graph) {
 #' Restrict the binary graph to cells with finite z scores and neighbors, select
 #' seed cells, and propagate their signal. Cells without propagated signal are
 #' then removed together with any cells this leaves without neighbors.
+#' Adapted from SCAVENGE (Yu et al. 2022, doi:10.1038/s41587-022-01341-y), whose
+#' package dependencies predate the pipeline's R environment.
 #'
 #' @param chromVAR_z_score_record List containing `GWAS_ID` and named cell-level
 #'   `z_score_vec`.

@@ -348,6 +348,8 @@ make_peak_gene_correlation_latent_factors <- function(aggregate_matrices, n_fact
 #' then pseudobulk cells within donor and state. The retained table requires
 #' repeated state observations within donor. States need not be shared across
 #' donors: candidate discovery is allowed even in a single donor.
+#' Unlike ArchR's overlapping nearest-neighbour aggregates (Granja et al. 2021,
+#' doi:10.1038/s41588-021-00790-6), these keep samples independent and donors identifiable.
 #'
 #' @param cell_group_tibble One-row tibble from
 #'   `make_peak_gene_correlation_cell_groups()`.

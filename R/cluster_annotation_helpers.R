@@ -83,6 +83,7 @@ score_UCell_controls <- function(rank_means, control, genes, max_rank = 1500L) {
 }
 
 #' Score labels against their own matched background, without assignment gates.
+#' Raw UCell scores are not comparable between signatures: some gene sets score highly by chance.
 score_UCell_group_evidence <- function(rank_means, control, detection, signed_means = list()) {
   markers <- control$markers
   dplyr::bind_rows(lapply(names(markers), function(label) {
@@ -106,6 +107,7 @@ score_UCell_group_evidence <- function(rank_means, control, detection, signed_me
 
 #' Assign the highest adjusted score only if it leads background and competitors.
 #' Exact ties and scores at/below background remain unassigned even at delta zero.
+#' Ambiguous clusters thus stay unassigned rather than being forced to a label.
 assign_UCell_cluster_evidence <- function(evidence, min_advantage) {
   stopifnot(length(min_advantage) == 1L, is.finite(min_advantage), min_advantage >= 0)
   dplyr::bind_rows(lapply(unique(evidence$cluster), function(cluster) {
@@ -179,6 +181,8 @@ score_signed_UCell_cells <- function(gap, control, genes) {
 }
 
 #' Aggregate cluster UCell statistics in bounded count chunks, clipping signed scores per cell.
+#' Adapted from UCell (Andreatta & Carmona 2021, doi:10.1016/j.csbj.2021.06.043); chunks avoid
+#' loading the whole matrix or building a Seurat object only for scoring.
 #' A native kernel ranks each cell from its nonzero counts, because zero counts
 #' tie below the rank cutoff, and keeps only marker/control genes. Chunks are
 #' added in the same order and worker split as the reference R implementation,

@@ -247,13 +247,14 @@ empty_peak_GRanges <- function() {
 #' Downsample each peak-calling cluster's barcodes and split them into two
 #' random halves, whose peaks are called separately so that only peaks called
 #' in both are kept (ArchR's pseudo-replicate reproducibility).
+#' Per-cluster calls keep the peaks of rare populations, which a pooled call would dilute.
 #'
 #' @param BCs_per_peak_cluster_list Named list of barcode vectors, one element
 #'   per peak-calling cluster.
 #' @param peak_calling_cluster_names Cluster names to include; defaults to the
 #'   names of `BCs_per_peak_cluster_list`.
 #' @param max_cells_per_cluster Maximum number of barcodes retained per cluster;
-#'   larger clusters are downsampled for peak calling.
+#'   larger clusters are downsampled to limit peak-calling runtime and memory.
 #' @param seed Random seed of the downsampling and the split.
 #' @return A tibble with two rows per cluster: `peak_calling_cluster_name`,
 #'   `replicate_name` and the half's `BCs_for_peak_discovery`.
@@ -523,6 +524,7 @@ get_peak_GRanges_w_fixed_width <- function(narrow_peak_path, extend_summits = 25
 #' Select the best-ranked peak in each connected overlap group, remove peaks
 #' overlapping those selections, and repeat on the remainder. Ignore strand
 #' during overlap comparisons.
+#' Iterative overlap removal of Corces et al. 2018 (doi:10.1126/science.aav1898), as in ArchR.
 #'
 #' @param GRanges_list List of peak `GRanges`; empty elements are discarded.
 #' @param by Metadata column used to prioritize overlapping GRanges while collapsing peaks.
@@ -563,6 +565,8 @@ combine_collapse_GRanges_ArchR <- function(GRanges_list, by, decreasing = TRUE) 
 #' `peaks_per_cell` peaks per discovery nucleus and `max_peaks` in all are then
 #' kept. Their `score_quantile`, the rank of summit significance within the
 #' group, ranks overlapping peaks across groups independently of group depth.
+#' Defaults follow ArchR (Granja et al. 2021, doi:10.1038/s41588-021-00790-6); the caps
+#' and quantiles keep large or deeply sequenced groups from dominating the consensus.
 #'
 #' @param replicate_peaks List of fixed-width, blacklist-filtered peaks, one
 #'   element per half of the group's discovery nuclei.
@@ -726,6 +730,7 @@ get_ATAC_QC_metadata_from_BPCells <- function(
 #' Run ATAC LSI BPCells
 #'
 #' Compute TF-IDF transformed ATAC LSI embeddings with BPCells SVD.
+#' The TF-IDF is Signac's method 1 (Stuart et al. 2021, doi:10.1038/s41592-021-01282-5).
 #'
 #' @param ATAC_peak_BPCells_matrix BPCells peak-by-cell ATAC matrix with peak names in rows and cell barcodes in columns.
 #' @param n_components Number of singular vectors/components to compute.

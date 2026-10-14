@@ -29,6 +29,7 @@ row_sums_for_peak_count_matrix <- function(counts_matrix) {
   }
 }
 
+#' Families are used because related TFs share near-identical motifs that cannot be told apart.
 read_JASPAR_familial_root_PFMatrixList <- function(path) {
   lines <- readLines(path, warn = FALSE)
   motif_ends <- which(trimws(lines) == "//")
@@ -47,8 +48,8 @@ read_JASPAR_familial_root_PFMatrixList <- function(path) {
     matrix_values <- do.call(rbind, strsplit(trimws(matrix_rows), "[[:space:]]+"))
     profile_matrix <- t(apply(matrix_values[, 2:5, drop = FALSE], 2, as.numeric))
     rownames(profile_matrix) <- c("A", "C", "G", "T")
-    # Flank columns aligned from a minority of the family's members carry
-    # sparse, spuriously specific counts; keep the core that most members cover.
+    # Flank columns aligned from a minority of the family's members carry sparse, spuriously
+    # specific counts that would restrict matches to that minority's sub-family.
     core <- range(which(colSums(profile_matrix) >= 0.5 * max(colSums(profile_matrix))))
     profile_matrix <- profile_matrix[, core[[1]]:core[[2]], drop = FALSE]
     colnames(profile_matrix) <- seq_len(ncol(profile_matrix))

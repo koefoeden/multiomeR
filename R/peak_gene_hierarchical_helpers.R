@@ -16,6 +16,7 @@ load_peak_gene_kernel <- function(native_source_file, kernel_name) {
 #' peaks more than `min_distance` from the gene's TSS share this non-specific
 #' covariation but no cis-regulatory relationship, so they calibrate the gene's
 #' candidate pairs.
+#' Like the background peaks of Signac's LinkPeaks() (Stuart et al. 2021, doi:10.1038/s41592-021-01282-5).
 add_peak_gene_background_pairs <- function(pairs, n_per_gene = 200L, min_distance = 1e7) {
   peaks <- dplyr::distinct(pairs, .data$peak, .data$chr, .data$start, .data$end, .data$peak_center)
   genes <- dplyr::distinct(pairs, .data$TargetGeneID, .data$TargetGene, .data$gene_matrix_feature,
@@ -102,6 +103,8 @@ score_peak_gene_hierarchical_associations <- function(
       estimates$hierarchical_diagnostic[indices] <- "No peak variation after nuisance adjustment"
       next
     }
+    # The donor-varying slope makes donors the units of inference; Kenward-Roger
+    # (Kenward & Roger 1997) adjusts its SE and df for the few donors.
     X <- cbind(design, x)
     Z <- donor_matrix * x
     fit <- fit_kernel(X, Z, t(GEX[genes, , drop = FALSE]))

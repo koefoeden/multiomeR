@@ -408,7 +408,7 @@ comparison_aggregation_tibble <- tibble::tibble(
   comparison_blacklist_GRanges = rlang::syms(paste0("blacklist_GRanges.ATAC.", aggregation))
 )
 
-comparison_seurat_signac_targets <- function(values, peak_resources) {
+comparison_seurat_signac_targets <- function(values, peak_resources, resources = comparison_resources) {
   tarchetypes::tar_map(
     values = values,
     names = aggregation,
@@ -419,23 +419,27 @@ comparison_seurat_signac_targets <- function(values, peak_resources) {
       {
         comparison_seurat_signac_config_files
         comparison_build_config(aggregation)
-      }
+      },
+      resources = resources
     ),
     targets::tar_target(
       comparison_seurat_signac_cellranger_input_files,
       comparison_input_files(comparison_seurat_signac_config),
-      format = "file"
+      format = "file",
+      resources = resources
     ),
     tarchetypes::tar_file(
       comparison_seurat_signac_RNA_BPCells_dirs,
       {
         comparison_seurat_signac_cellranger_input_files
         comparison_write_RNA_dirs(comparison_seurat_signac_config, get_structured_file_path())
-      }
+      },
+      resources = resources
     ),
     targets::tar_target(
       comparison_seurat_signac_RNA_object,
-      comparison_process_RNA(comparison_seurat_signac_RNA_BPCells_dirs, comparison_seurat_signac_config)
+      comparison_process_RNA(comparison_seurat_signac_RNA_BPCells_dirs, comparison_seurat_signac_config),
+      resources = resources
     ),
     targets::tar_target(
       comparison_seurat_signac_consensus_peak_GRanges,
@@ -454,7 +458,8 @@ comparison_seurat_signac_targets <- function(values, peak_resources) {
         comparison_seurat_signac_config,
         comparison_seurat_signac_consensus_peak_GRanges,
         get_structured_file_path()
-      )
+      ),
+      resources = resources
     ),
     targets::tar_target(
       comparison_seurat_signac_object,
@@ -462,7 +467,8 @@ comparison_seurat_signac_targets <- function(values, peak_resources) {
         comparison_seurat_signac_RNA_object,
         comparison_seurat_signac_ATAC_BPCells_dirs,
         comparison_seurat_signac_config
-      )
+      ),
+      resources = resources
     ),
     targets::tar_target(
       comparison_seurat_signac_summary,
@@ -470,7 +476,8 @@ comparison_seurat_signac_targets <- function(values, peak_resources) {
         comparison_seurat_signac_object,
         comparison_seurat_signac_config,
         comparison_seurat_signac_consensus_peak_GRanges
-      )
+      ),
+      resources = resources
     )
   )
 }
@@ -498,6 +505,12 @@ comparison_seurat_signac_pipeline <- rlang::list2(
     values = dplyr::filter(comparison_aggregation_tibble,
       .data$aggregation %in% c("comparison_10x", "comparison_20x", "comparison_31x")),
     peak_resources = get_tar_resources(cores_req = 6, RAM_GB_req = 500)
+  ),
+  # At about a million nuclei, SCTransform's dense residuals outgrow the 60 GB tier in every step.
+  comparison_seurat_signac_targets(
+    values = dplyr::filter(comparison_aggregation_tibble, .data$aggregation == "comparison_91x"),
+    peak_resources = get_tar_resources(cores_req = 6, RAM_GB_req = 500),
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 500)
   )
 )
 

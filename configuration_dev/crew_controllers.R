@@ -6,7 +6,8 @@
 # Slurm log carries crew's resource metrics with the target it runs. Targets are
 # routed by RAM_GB, but each worker's Slurm memory limit, limit_GB, leaves
 # headroom: the pipeline sizes its requests for local workers, which have no
-# memory limit, and the large aggregations here exceed several of them. The
+# memory limit, and the large aggregations here exceed several of them: at about a
+# million nuclei (comparison_91x), SCTransform in the 60 GB steps needs roughly 300 GB. The
 # worker counts fit a 128-CPU, 2-TB node; adjust them and the wall time for your
 # cluster.
 
@@ -19,7 +20,7 @@ log_file <- file.path(fs::dir_create(file.path(getwd(), "logs", "scheduler")), "
 tiers <- tibble::tribble(
   ~controller_name, ~cores, ~RAM_GB, ~gpus, ~limit_GB, ~workers,
   "slurm-light",         1,      16,     0,        48,       16,
-  "slurm-heavy",         6,      60,     0,       120,        6,
+  "slurm-heavy",         6,      60,     0,       400,        4,
   "slurm-large",         6,     200,     0,       200,        1,
   "slurm-huge",          6,     500,     0,       500,        1
 )

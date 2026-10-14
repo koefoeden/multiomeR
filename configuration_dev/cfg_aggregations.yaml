@@ -91,7 +91,9 @@ mixed_human_31x:
       atac_peak_counts_blacklist_frac > 0.05]
 
 # Nested aggregations of the first 1, 2, 5, 10, 20 and all 31 GEM wells of mixed_human_31x, which the
-# manuscript's Seurat/Signac resource comparison and algorithm comparisons use. Their
+# manuscript's Seurat/Signac resource comparison and algorithm comparisons use. comparison_91x adds
+# 60 further ENCODE multiome series (heart, liver, adrenal gland, psoas muscle, ovary, lung and other
+# tissues) for about a million nuclei; their donors are listed in comparison_91x_donor_id_metadata.tsv. Their
 # comparison_ GEM wells reuse the same Cell Ranger ARC outputs without per-well QC filters or
 # CellBender, and doublet removal is disabled, so both workflows keep every called nucleus.
 comparison_1x:
@@ -149,3 +151,31 @@ comparison_31x:
       comparison_ENCSR568QKW, comparison_ENCSR613LBN, comparison_ENCSR793DNM, comparison_ENCSR923FKN,
       comparison_ENCSR956ZER, comparison_ENCSR987VTJ, comparison_ENCSR636WIB, comparison_ENCSR925IHI,
       comparison_ENCSR128ZLB, comparison_ENCSR264JIX]
+comparison_91x:
+  inherits: comparison_31x
+  is_active: true
+  aggregation_donor_id_metadata_tsv: configuration_dev/comparison_91x_donor_id_metadata.tsv
+  aggregation_GEM_well_IDs: [comparison_healthy_PBMC_human, comparison_pbmc_10k_chromium_controller,
+      comparison_pbmc_10k_chromium_x, comparison_pbmc_granulocyte_sorted_10k, comparison_pbmc_unsorted_10k,
+      comparison_pbmc_unsorted_3k, comparison_healthy_brain_human, comparison_ENCSR033MDU, comparison_ENCSR158DQA,
+      comparison_ENCSR233SQG, comparison_ENCSR316WAS, comparison_ENCSR618WVK, comparison_ENCSR788DZO,
+      comparison_ENCSR079UEO, comparison_ENCSR201BHG, comparison_ENCSR245BNT, comparison_ENCSR320RLS,
+      comparison_ENCSR351CSQ, comparison_ENCSR508WRP, comparison_ENCSR511RDV, comparison_ENCSR534YJW,
+      comparison_ENCSR568QKW, comparison_ENCSR613LBN, comparison_ENCSR793DNM, comparison_ENCSR923FKN,
+      comparison_ENCSR956ZER, comparison_ENCSR987VTJ, comparison_ENCSR636WIB, comparison_ENCSR925IHI,
+      comparison_ENCSR128ZLB, comparison_ENCSR264JIX, comparison_ENCSR212VKB, comparison_ENCSR449VCG,
+      comparison_ENCSR662XCU, comparison_ENCSR871JTA, comparison_ENCSR420IUS, comparison_ENCSR980AFI,
+      comparison_ENCSR222ZFD, comparison_ENCSR232HQU, comparison_ENCSR255POA, comparison_ENCSR775AZP,
+      comparison_ENCSR851GBP, comparison_ENCSR068ZQV, comparison_ENCSR002WBD, comparison_ENCSR218RZE,
+      comparison_ENCSR488VFJ, comparison_ENCSR051TIA, comparison_ENCSR499ZLY, comparison_ENCSR527TJQ,
+      comparison_ENCSR570CLE, comparison_ENCSR650UPV, comparison_ENCSR728OVE, comparison_ENCSR788RCF,
+      comparison_ENCSR853JMV, comparison_ENCSR549KDX, comparison_ENCSR808RAT, comparison_ENCSR433QBG,
+      comparison_ENCSR727WGO, comparison_ENCSR823KSL, comparison_ENCSR909EGE, comparison_ENCSR975IXL,
+      comparison_ENCSR196FPL, comparison_ENCSR579NBU, comparison_ENCSR060VMC, comparison_ENCSR137EAT,
+      comparison_ENCSR487MGY, comparison_ENCSR523NMC, comparison_ENCSR535LSU, comparison_ENCSR673CAA,
+      comparison_ENCSR703OZJ, comparison_ENCSR716XVF, comparison_ENCSR730AXV, comparison_ENCSR889JIE,
+      comparison_ENCSR891TJB, comparison_ENCSR983ILQ, comparison_ENCSR822CXI, comparison_ENCSR623PHF,
+      comparison_ENCSR664QSO, comparison_ENCSR573DJW, comparison_ENCSR488WYF, comparison_ENCSR304NKV,
+      comparison_ENCSR870POU, comparison_ENCSR100UGC, comparison_ENCSR316UWS, comparison_ENCSR305JVN,
+      comparison_ENCSR966RKP, comparison_ENCSR000ULP, comparison_ENCSR418BIA, comparison_ENCSR793XGJ,
+      comparison_ENCSR629CZM, comparison_ENCSR882CKY]

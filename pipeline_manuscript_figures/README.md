@@ -41,7 +41,10 @@ The conventional Seurat/Signac chain needs fragtk; install it into the
 environment with `pixi run install-fragtk`. The graph builds only the
 dependencies of the selected results. S2 reads the recorded metadata of both
 workflows rather than depending on their targets, so build it after they have
-finished; before that it stops with missing runtimes. Its measurements come
+finished; before that it stops with missing runtimes. `targets` allows a target
+to read its own store's metadata only as a local `format = "file"` target, and
+the measured aggregations must be active, because inactive ones are absent from
+`tar_network()` even while their metadata remain. Its measurements come
 from the run that builds the workflows, so build the results afterwards from a
 copy of that store if needed. S2 also needs the per-job resource history of
 [slurm-monitor](https://github.com/koefoeden/slurm-monitor), read from

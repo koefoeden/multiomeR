@@ -25,10 +25,15 @@ cat("manifest ok\n")
 EOF
 ```
 
+The full manifest takes about a minute, so build it once per batch of edits and
+save it with `saveRDS()` when several queries need it.
+
 For configuration-directory changes, compare resolved settings and manifest
 names before/after, check the default and selected directories independently,
 and exercise invalid selections and disabled modules without changing the live
-selector or store. Shared documentation examples use `configuration/`.
+selector or store: give a worktree its own `configuration.local`, or pass
+`configuration_path()` the `project_root` of a scratch copy. Shared
+documentation examples use `configuration/`.
 
 Finish code edits with:
 
@@ -41,7 +46,7 @@ git diff --check
 For checkpoint-tag changes, validate the selected targets' transitive
 dependencies: a description tag does not prevent a downstream dependency from
 crossing the intended review boundary. Keep `manifests/QC_checkpoint_manifest.tsv` and the
-review guide consistent.
+checkpoint sections of `website/main_running.md` consistent.
 
 Run targets only when the changed behavior needs runtime proof, using the
 preview-and-run patterns in `multiomer-run-pipeline`. Run the smallest target

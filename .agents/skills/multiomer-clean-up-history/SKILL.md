@@ -5,132 +5,39 @@ description: Clean up and rewrite feature branch history in the multiomeR reposi
 
 # multiomeR Clean Up History
 
-## Workflow
+Rewrite only an unpublished feature branch, and only to improve its history:
+the final tree must not change. Never rewrite `main` or commits another
+repository's trailers name.
 
-Use this skill when the goal is to improve branch history, not to change the final branch content.
+## Safety
 
-Before rewriting:
-- Ensure the worktree is clean with `git status --short --branch`.
-- If there are unrelated tracked changes, stop and ask the user how to proceed.
-- Identify untracked artifacts separately; do not let them influence commit
-  grouping unless the branch intentionally adds them.
+- Start from a clean worktree; ask the user about unrelated tracked changes.
+  Keep untracked artifacts out of the grouping unless the branch adds them.
+- Before rewriting, save a backup ref:
+  `git branch backup/<branch>-pre-rewrite-<yyyymmdd> HEAD`.
+- Afterwards, `git diff --stat backup/<branch>-pre-rewrite-<yyyymmdd>..HEAD`
+  must be empty. Keep the backup until the user is satisfied, and suggest
+  `git push --force-with-lease origin <branch>` only after this check.
+- Agent shells cannot run interactive commands. For fixups and rewords, use
+  `git commit --fixup` and `GIT_SEQUENCE_EDITOR=true git rebase -i --autosquash <base>`.
+  For entangled branches, reset to the merge base and rebuild commits with
+  `git restore --source=<backup> --staged --worktree -- <paths>`, restoring an
+  intermediate revision for a file shared by an earlier commit.
 
-## Inspect The Branch
+## Grouping
 
-Start from the merge-base against the intended target branch, usually `origin/main`:
-
-```bash
-git merge-base HEAD origin/main
-git log --oneline --reverse <base>..HEAD
-git log --reverse --format='COMMIT %h%nSUBJECT %s%n' <base>..HEAD --name-only
-git diff --stat <base>..HEAD
-```
-
-Use that survey to identify:
-- coherent topics that should become separate commits
-- files touched by multiple topics
-- derived outputs that should be dropped or regenerated
-- whether the branch is simple enough for `git rebase -i`
-
-## Choose A Rewrite Strategy
-
-Use interactive rebase only when:
-- the existing commits are already mostly atomic
-- the task is mostly `reword`, `fixup`, `squash`, or small reordering
-- the same files are not heavily entangled across unrelated commits
-
-Prefer rebuild-from-base when:
-- the branch mixes unrelated topics
-- many commits are tiny fixups
-- a few files span several topics
-- generated docs or outputs were committed and later removed
-
-Choose from the branch evidence; do not rebuild a branch that only needs a few
-fixups or rewords.
-
-## Rebuild From Base
-
-Only after the user has requested a rewrite, the worktree is clean, and the
-rebuild strategy is selected, create a safety ref before resetting:
-
-```bash
-git branch backup/<branch>-pre-rewrite-<yyyymmdd> HEAD
-git reset --hard <base>
-```
-
-Then reconstruct a smaller commit stack from the saved branch state:
-
-```bash
-git restore --source=backup/<branch>-pre-rewrite-<yyyymmdd> --staged --worktree -- <paths...>
-git commit -F- <<'EOF'
-<message>
-EOF
-```
-
-Guidelines:
-- Group by user-facing change or durable topic, not by original commit order.
-- Keep workflow/skill/docs metadata separate from pipeline behavior changes.
+- Group by user-facing change or durable topic, not by original commit order;
+  prefer the smallest stack that still separates durable topics.
+- Keep pipeline behavior, documentation, deployment tooling and skill or
+  workflow changes in separate commits unless they are inseparable.
 - Keep `website/multiomeR-manual-llm.md` with the documentation source changes
   that regenerate it. Do not commit ignored `docs/` render output.
-- Keep deployment helpers separate from the content they deploy.
-- Keep plot-only targets as `contained_target_breaking` commits when possible.
+- Keep plot-only target changes as `contained_target_breaking` commits when
+  possible.
 
-If a file belongs to more than one new commit:
-- Restore an intermediate revision for the earlier commit.
-- Restore the final branch revision for the later commit.
+Write every rebuilt commit with `multiomer-git-commit-format`, plus any
+classification the repository's AGENTS.md requires. Classify the impact of
+commits that change pipeline behavior with `multiomer-estimate-rebuild-impact`.
 
-Example:
-
-```bash
-git restore --source=<intermediate-commit> --staged --worktree -- R/general_helpers.R
-git commit ...
-git restore --source=<backup-branch> --staged --worktree -- R/general_helpers.R
-git commit ...
-```
-
-## Write Correct Commit Messages
-
-Write every rebuilt commit with `multiomer-git-commit-format`, including its
-impact keyword lines, plus any commit classification that the repository's
-AGENTS.md requires. Do not guess impact lines lazily: if the commit changes
-pipeline behavior, inspect the relevant target names first.
-
-Helpful checks:
-
-```bash
-rg -n "tar_target\\(|tarchetypes::tar_" _targets.R extra_targets
-rg -n "<target-or-helper-name>" _targets.R R extra_targets
-```
-
-## Verify The Rewrite
-
-After rebuilding the branch:
-
-```bash
-git diff --stat backup/<branch>-pre-rewrite-<yyyymmdd>..HEAD
-git log --oneline --decorate --graph <base>..HEAD
-git status --short --branch
-```
-
-The diff against the backup branch should be empty. If it is not empty, the rewrite changed content rather than just history.
-
-## Finish
-
-Report:
-- the new commit stack
-- whether the final tree matches the original branch
-- whether tests were run
-- the backup branch name
-
-Only suggest force-pushing after verification:
-
-```bash
-git push --force-with-lease origin <branch>
-```
-
-## Heuristics
-
-- Prefer the smallest commit stack that still separates durable topics.
-- Separate pipeline code, docs cleanup, deployment tooling, and skill/workflow docs unless they are inseparable.
-- Prefer a slightly larger coherent commit over a misleadingly narrow one.
-- Never delete the backup branch until the user is satisfied with the rewritten history.
+Report the new commit stack, whether the final tree matches the backup, which
+tests ran, and the backup branch name.

@@ -1,6 +1,6 @@
 ---
 name: multiomer-edit-documentation
-description: Edit the multiomeR manual, including its methods pages, documentation figures, or generated documentation inputs. Use for changes under website/, the output gallery, the parameter browser, or the public-defaults snapshot.
+description: Edit the multiomeR manual, including its methods pages, documentation figures, Mermaid graph views, or generated documentation inputs. Use for changes under website/, the output gallery, the parameter browser, the public-defaults snapshot, or the part_of_graph views of the targets graph.
 ---
 
 # multiomeR Edit Documentation
@@ -29,29 +29,34 @@ description: Edit the multiomeR manual, including its methods pages, documentati
   citing `website/references.bib` and stating only key values that are not
   configurable; configurable settings belong to the parameter browser. Keep
   fragments free of links: source links and graphs belong on the
-  `website/methods_*.md` pages that include them. Run
-  `pixi run --use-environment-activation-cache -e dev check-source-links`
-  after moving or renaming linked source files.
+  `website/methods_*.md` pages that include them.
 - The manuscript supplement groups the fragments differently from the methods
   pages, so split or regroup them only at paragraph boundaries.
 
 ## Regenerate
 
-- Render from the shared public-default snapshot and regenerate graphs from an
-  isolated public configuration, never a selected personal analysis.
+- Render from the shared public-default snapshot, never a selected personal
+  analysis.
 - Follow `website/data/README.md` for the defaults snapshot, output gallery,
   demo outputs and parameter browser.
-- Generate graph diagrams with `multiomer-create-mermaid-diagram`.
+- Generate graph views as `website/figures/human_curated/README.md` describes,
+  in an isolated public configuration. Keep their membership focused on
+  reader-relevant inputs, transformations, checkpoints and outputs, and keep
+  analysis-specific graph exports outside `website/`. Edge order can differ
+  between checkouts: compare sorted lines, discard reorder-only views, and keep
+  a changed view's committed order so both repositories hold the same file.
 - `website/figures/*.drawio.svg` embed their draw.io model. Edit them in draw.io
   and export SVG with the diagram included; a hand edit must change the model
   and the rendered SVG together.
 
 ## Validate and commit
 
-1. Render the manual with the builder, never `quarto render website` directly,
-   so executable R chunks still generate galleries and diagrams; then check its
-   links:
+1. Check source links, render the manual with the builder, never
+   `quarto render website` directly, so executable R chunks still generate
+   galleries and diagrams, then check its links. In a worktree, run these
+   through `pixi run --as-is`, not an activated shell hook.
    ```bash
+   pixi run --use-environment-activation-cache -e dev check-source-links
    pixi run --use-environment-activation-cache -e dev render-website
    pixi run --use-environment-activation-cache -e dev check-website-links
    ```

@@ -22,8 +22,8 @@ links for Claude Code. Use the matching `SKILL.md`, especially for:
 - debugging failed targets;
 - validating R helper or target-graph changes;
 - estimating which targets a change or run will rebuild;
-- editing documentation;
-- creating commits, pull requests, releases, or pipeline diagrams.
+- editing documentation, including pipeline diagrams;
+- creating commits, pull requests or releases.
 
 Always pass `--use-environment-activation-cache` when invoking `pixi run`. In a
 worktree whose `.pixi` links another checkout's environment, also pass

@@ -40,7 +40,7 @@ changes. Code that only constructs the graph, such as `tar_map()` values, affect
 only commands that reference it; descriptions and checkpoint tags invalidate
 nothing. A rerun that reproduces its hash stops the cascade: when consumers of
 a changed output all reproduce theirs, report them as contained.
-`tar_outdated()` cannot see this; confirm with `multiomer-validation-workflow`.
+`tar_outdated()` cannot see this; confirm with `multiomer-estimate-rebuild-impact`.
 
 For PR and release summaries, use commit impact lines as evidence and reconcile
 them with the final diff against the destination base or previous release.

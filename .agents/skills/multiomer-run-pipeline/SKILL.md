@@ -51,6 +51,10 @@ targets::tar_outdated(
 EOF
 ```
 
+An outdated count is not the cost of a run. Before running after code,
+configuration or input changes, estimate the cost with
+`multiomer-estimate-rebuild-impact`.
+
 ## Run patterns
 
 Immediately before `tar_make()`, confirm that no live driver already owns the

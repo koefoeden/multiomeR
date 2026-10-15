@@ -21,6 +21,7 @@ repository skills should use the matching `SKILL.md`, especially for:
 - running R code or the targets pipeline;
 - debugging failed targets;
 - validating R helper or target-graph changes;
+- estimating which targets a change or run will rebuild;
 - editing documentation;
 - creating commits, pull requests, releases, or pipeline diagrams.
 

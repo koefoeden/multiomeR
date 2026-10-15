@@ -58,14 +58,22 @@ Each entry under [`genetic_enrichment_GWAS_studies`](parameters.html#genetic_enr
 Any other `sourceId` is the path of a local Parquet file, relative to the repository root. Omit `finemappingMethod` for local files: the method, like the study ID, genome build and provenance, is read from the file.
 
 <details>
-<summary>Required columns of a local fine-mapped GWAS file</summary>
+<summary>Columns of a local fine-mapped GWAS file</summary>
 
-The file holds one GWAS with one row per credible-set variant on GRCh38.
+The file holds one GWAS on GRCh38, with one row per credible-set variant. Its columns follow the [Open Targets credible-set dataset](https://platform.opentargets.org/downloads/credible_set/metadata), with the `locus` array flattened into one row per variant, and that dataset documents their meaning. multiomeR uses these columns:
 
-- **One value in every row:** `schemaVersion` (`1`), `studyId`, `studyType` (`gwas`), `finemappingMethod`, `confidence`, `credibleSetProbability` (greater than 0, at most 1), `genomeBuild` (`GRCh38`), `sampleSize`, `sourceUrl`, `sourceSha256` (lowercase SHA-256), `sourcePublication` and `sourceRelease`.
-- **Per variant:** `studyLocusId`, `credibleSetIndex`, `variantId`, `chromosome` (without `chr`), `position`, `variantRepresentation`, `posteriorProbability` (0 to 1), `logBF`, `pValueMantissa`, `pValueExponent`, `beta`, `standardError`, `r2Overall`, `is95CredibleSet`, `is99CredibleSet`, `locusStart` and `locusEnd`.
+| Column | Content | Used for |
+|---|---|---|
+| `studyId`, `finemappingMethod`, `confidence`, `sampleSize`, `sourceRelease` | One value per file | Study labels and metadata |
+| `credibleSetProbability` | One value, greater than 0 and at most 1 | Study metadata |
+| `studyLocusId`, `credibleSetIndex` | Credible-set identifiers | Grouping variants into loci |
+| `variantId` | `chromosome_position_REF_ALT` | Matching variants between studies |
+| `chromosome`, `position` | GRCh38 coordinates, chromosome without `chr` | Overlap with peaks |
+| `posteriorProbability` | 0 to 1 | Peak weights |
+| `beta` | Effect size, or missing | Effect-weighted enrichment |
+| `locusStart`, `locusEnd` | Bounds that contain each variant's `position` | Locus plots |
 
-Each `studyId`, `studyLocusId` and `variantId` combination must be unique, and each `position` must lie within its locus bounds. A file with `credibleSetProbability` 0.95 or 0.99 may contain only variants in that set.
+The file must also contain `schemaVersion` (`1`), `studyType` (`gwas`), `genomeBuild` (`GRCh38`), `sourceUrl`, `sourceSha256` (lowercase SHA-256) and `sourcePublication`, each with one value, and the columns `variantRepresentation`, `logBF`, `pValueMantissa`, `pValueExponent`, `standardError`, `r2Overall`, `is95CredibleSet` and `is99CredibleSet`. Each `studyId`, `studyLocusId` and `variantId` combination must be unique. A file with `credibleSetProbability` 0.95 or 0.99 may contain only variants in that set.
 
 </details>
 

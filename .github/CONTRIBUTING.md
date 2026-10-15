@@ -44,7 +44,7 @@ For code changes:
 - add pipeline-specific helper code under `R/` when target code would otherwise become hard to read or duplicated
 - add generally reusable cross-repository helpers under `packages/multiomeRCore/R`, as [its README](../packages/multiomeRCore/README.md) describes
 - add core target fragments under `extra_targets/`
-- add optional downstream analyses under a `module_*` directory
+- add optional downstream analyses under `extra_targets/module_<module>/`
 - avoid compatibility layers for retired workflow shapes unless there is a clear public need
 - prefer BPCells-native matrices, `GRanges`, tibbles, and file targets over creating large in-memory objects as intermediate state
 - open BPCells directories in target commands with `open_BPCells_dir()`, so dependents rerun when a directory's content changes

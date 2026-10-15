@@ -29,10 +29,11 @@ Always pass `--use-environment-activation-cache` when invoking `pixi run`. In a
 worktree whose `.pixi` links another checkout's environment, also pass
 `--as-is` so Pixi never installs into that shared environment.
 
-Treat repository-local skills as living workflow documentation. Unless a task
-is explicitly read-only, revise the relevant skill when its use reveals
-materially stale, ambiguous, or missing guidance. Keep revisions succinct and
-high-level; omit details reliably implied by the code or existing instructions.
+Treat repository-local skills as living instructions. Unless a task is
+explicitly read-only, update the skill you are using in the same task whenever
+its use reveals stale, changed, ambiguous or missing guidance. Keep revisions
+succinct and high-level; omit details reliably implied by the code or existing
+instructions.
 
 ## Configuration
 

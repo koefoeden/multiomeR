@@ -15,8 +15,8 @@ documentation with
 
 ## Repository-specific agent workflows
 
-Task-specific instructions live under `.agents/skills/`. Agents that support
-repository skills should use the matching `SKILL.md`, especially for:
+Task-specific instructions live under `.agents/skills/`, which `.claude/skills`
+links for Claude Code. Use the matching `SKILL.md`, especially for:
 
 - running R code or the targets pipeline;
 - debugging failed targets;

@@ -64,7 +64,10 @@ configuration or input changes, estimate the cost with
 ## Run patterns
 
 Immediately before `tar_make()`, run the active-run check: `targets` itself
-refuses a second driver only on the same node.
+refuses a second driver only on the same node. Use one driver per store.
+Workers start in the checkout and rerun `.Rprofile`, so while a run is active,
+leave no broken `R/` file, changed package pin or changed Pixi environment in
+the checkout: new workers would fail to start.
 
 Agent tool calls have time limits, including for background commands, and
 stopping the driver also stops its running targets. Start a driver that may
@@ -114,15 +117,17 @@ EOF
 ```
 
 For mapped targets, select the defined target stem and configured suffix rather
-than a dynamic branch hash. Use names from `tar_manifest()` or `tar_meta()` and
-prefer checkpoint description tags when they express the requested endpoint.
+than a dynamic branch hash. Use names from `tar_manifest()` or `tar_meta()`, or
+a checkpoint description tag when it expresses the requested endpoint:
 
-For a narrow selection whose upstream targets are known to be current, consider
-`shortcut = TRUE` in `tar_outdated()` or `tar_make()`. This can avoid expensive
-upstream file-metadata checks, especially on network filesystems, by trusting
-stored upstream metadata. Do not use it when upstream code, configuration, data,
-or file freshness may have changed: the shortcut can incorrectly skip work
-because it assumes those dependencies are already up to date. Keep the default
-`shortcut = FALSE` for production validation and whenever freshness is uncertain.
+```r
+names = targets::tar_described_as(tidyselect::contains("checkpoint:<tag>]")) &
+  tidyselect::ends_with(".<aggregation>")
+```
+
+`shortcut = TRUE` in `tar_outdated()` or `tar_make()` trusts stored upstream
+metadata instead of checking it. Use it only for a narrow selection whose
+upstream is known to be current, such as iterating on a figure, never after
+upstream code, configuration, data or files may have changed.
 
 If targets error, switch to `multiomer-fix-errors`.

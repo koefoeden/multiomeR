@@ -17,27 +17,33 @@ become imports instead: a variable such as `names` enters the hash of every
 function that calls `names()`, so freshly built targets later look outdated.
 Define no variables before an in-process call.
 
-## Read-only inspection
+## Check for an active run
 
-Use the live configuration instead of a hardcoded store. `tar_pid()` can retain
-the PID of a completed run, so verify it with `ps` before reporting that a run is
-active. `ps` sees only the current node; also check that the store's
-`meta/progress` file has not changed recently.
+Run this before starting, stopping or relabelling a run, and before reporting
+one as active. `tar_pid()` keeps the PID of a finished run, and a process is
+visible only on its own node, so the check also reads the progress file. It
+needs only `targets`, so it skips the project bootstrap:
 
 ```bash
-pixi run --use-environment-activation-cache Rscript - <<'EOF'
-cat("store:", targets::tar_config_get("store"), "\n")
-pid <- targets::tar_pid()
-cat("recorded pid:", pid, "\n")
-process <- if (length(pid) == 1L && !is.na(pid)) {
-  system2("ps", c("-p", pid, "-o", "pid=,stat=,cmd="), stdout = TRUE, stderr = TRUE)
-} else {
-  character()
-}
-cat("live process:", if (length(process)) process else "<none>", "\n")
-print(targets::tar_progress_summary())
+pixi run --use-environment-activation-cache Rscript --no-init-file - <<'EOF'
+store <- targets::tar_config_get("store")
+pid <- targets::tar_pid(store = store)
+progress <- file.path(store, "meta", "progress")
+cat(
+  "store:", store,
+  "\npid", pid, "working directory on this node:", Sys.readlink(file.path("/proc", pid, "cwd")),
+  "\nprogress written", format(difftime(Sys.time(), file.mtime(progress), units = "mins"), digits = 2), "ago;",
+  sum(targets::tar_progress(store = store)$progress == "dispatched"), "targets dispatched\n"
+)
 EOF
 ```
+
+A run owns the store when the PID's working directory is this checkout, or when
+progress was written within the last few minutes with targets dispatched: the
+driver then runs on another node. `NA` with older progress means no active run.
+`tar_progress_summary()` reports the run's counts.
+
+## Outdatedness
 
 Keep outdatedness checks narrow for a target family. A full-graph check takes
 minutes and suits an impact baseline:
@@ -57,9 +63,8 @@ configuration or input changes, estimate the cost with
 
 ## Run patterns
 
-Immediately before `tar_make()`, confirm that no live driver already owns the
-configured store. Do not infer ownership from a recorded PID without the process
-check above.
+Immediately before `tar_make()`, run the active-run check: `targets` itself
+refuses a second driver only on the same node.
 
 Agent tool calls have time limits, including for background commands, and
 stopping the driver also stops its running targets. Start a driver that may

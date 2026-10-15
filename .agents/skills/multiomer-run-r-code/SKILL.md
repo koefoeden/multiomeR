@@ -1,38 +1,32 @@
 ---
 name: multiomer-run-r-code
-description: Execute R snippets and scripts in multiomeR through Pixi, using a one-off Rscript, a retained Pixi shell for repeated processes, or an optional stateful R REPL. Use whenever a task requires evaluating R code. This skill does not itself authorize running targets; use multiomer-run-pipeline when target execution is requested.
+description: Execute R snippets and scripts in multiomeR through Pixi, using one-off Rscript calls or scratch scripts. Use whenever a task requires evaluating R code. This skill does not itself authorize running targets; use multiomer-run-pipeline when target execution is requested.
 ---
 
 # multiomeR Run R Code
 
-Run R from the repository root through Pixi. This skill does not authorize
-target execution.
+Run R from the repository root through Pixi; never use bare `R` or `Rscript`.
+This skill does not authorize target execution.
 
 ## Choose a Mode
 
 - **One invocation:** use
   `pixi run --use-environment-activation-cache Rscript`.
-- **Repeated work:** retain one verified Pixi shell and start a fresh `Rscript`
-  process for each check.
-- **Expensive reusable state:** use an R REPL inside the verified Pixi shell
-  only when repeatedly reconstructing or loading objects is materially costly.
+- **Substantial multi-step work:** write a scratch `.R` script outside tracked
+  paths and run it with `Rscript`.
+- **Expensive reusable state:** use an interactive R session only when
+  reloading objects is materially costly. Send one complete expression at a
+  time, and confirm conclusions in a fresh `Rscript` process.
 
-For substantial multi-step exploration, stage a scratch `.R` script and run it
-with `Rscript`. Source it into a retained REPL only when its objects need to
-persist. Keep temporary scripts outside tracked paths unless they are intended
-deliverables.
+For parallel work, use separate cached `pixi run` commands. Track each PID and
+exit status, separate their output, and avoid concurrent writes to the same
+files or targets store.
 
-For parallel work, either use separate cached `pixi run` commands or launch
-independent R processes from one verified Pixi shell. Track each PID and exit
-status, separate their output, and avoid concurrent writes to the same files or
-targets store.
-
-Use ordinary `Rscript` startup so the repository's `.Rprofile` initializes the
-project runtime. Do not suppress repository startup for `_targets.R` or project
-helpers that assume bootstrap has happened. Standalone documentation generators
-may disable `.Rprofile` when they load their own dependencies and read only the
-shared public documentation inputs, as the website builder does. Never use bare
-`R` or `Rscript` outside a verified Pixi shell.
+Ordinary `Rscript` startup runs the repository's `.Rprofile`, which loads the
+project runtime in about five seconds. Keep it for `_targets.R`, project
+helpers and anything else that assumes the bootstrap. A probe that needs only
+packages, such as a function signature or `targets` metadata, can skip it with
+`Rscript --no-init-file`.
 
 ## One-Off Check
 
@@ -48,60 +42,15 @@ For a parse check:
 pixi run --use-environment-activation-cache Rscript -e 'invisible(parse(file = "path/to/file.R"))'
 ```
 
-## Retain Pixi Activation
-
-Start a PTY-backed session and retain its session ID:
-
-```bash
-pixi shell --change-ps1 false --no-completions
-```
-
-Verify the environment once inside that session:
-
-```bash
-test "${PIXI_IN_SHELL:-}" = "1"
-test "$(realpath -- "$PIXI_PROJECT_ROOT")" = "$(realpath -- "$PWD")"
-command -v R Rscript
-```
-
-Submit sequential `Rscript` commands and require each process to exit
-successfully. Fresh processes retain Pixi activation while isolating R state
-and failures.
-
-## Stateful Exploration
-
-```bash
-R --quiet --no-save --no-restore
-```
-
-Retain only deliberately reusable objects. Wrap transient work in `local()`,
-send one complete expression at a time, and print a unique completion marker
-inside the successful expression:
-
-```r
-local({
-  result <- summary(expensive_object)
-  print(result)
-  assign("result", result, envir = .GlobalEnv)
-  cat("R_DONE_<unique>\n")
-})
-```
-
-Absence of the marker means failure or incomplete work; a prompt alone is not a
-success signal. Avoid large chunks of independent top-level expressions because
-R can continue after an error and leave partial global state.
-
-Treat REPL results as exploratory. Restart after environment, package,
-configuration, `.Rprofile`, or bootstrap changes. Reload edited functions and
-data explicitly. End with `q("no")`, close the Pixi shell, and confirm important
-conclusions in a fresh `Rscript` process.
 
 ## Project Rules
 
 The repository is one root `targets` project. Call `load_CFG("<dataset>")` only
-when an interactive probe needs resolved dataset-level configuration; for
-aggregation settings, filter `read_aggregation_config_tibble()` by
-`aggregation`. Use `multiomer-run-pipeline` for target execution.
+when an interactive probe needs resolved dataset-level configuration. It
+assigns into the global environment, so never follow it with an in-process
+(`callr_function = NULL`) targets call in the same session. For aggregation
+settings, filter `read_aggregation_config_tibble()` by `aggregation`. Use
+`multiomer-run-pipeline` for target execution.
 
 Do not use `targets::tar_config_set()` to redirect a scratch probe: it rewrites
 `_targets.yaml`. Create a disposable scratch project instead.

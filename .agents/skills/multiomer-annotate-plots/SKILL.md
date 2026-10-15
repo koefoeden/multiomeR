@@ -21,7 +21,6 @@ complete adoption.
 
 Titles should usually be a short phrase; subtitles one or two short sentences.
 Captions can be longer, but should remain readable at the exported figure size.
-Keep captions left-aligned, including shared annotations on composite plots.
 Use `add_plot_parameters()` for compact configuration summaries; retain its
 short default value limit unless a longer value is needed to interpret the plot.
 These are writing targets, not fixed word limits. Avoid repeating the same
@@ -40,19 +39,10 @@ information at all three levels or filling a level with boilerplate.
   encoding when their absence would make the main reading misleading. The
   caption can explain them further. For example, marker-derived labels are not
   independent validation of the same markers.
-- Keep units and basic encoding labels on axes and legends. Use annotation text
-  for non-obvious meaning, such as what zero represents, whether scaling permits
-  comparisons across rows, or which population supplies a percentage denominator.
 - In captions, distinguish cells from independent samples, raw from adjusted
   p-values, and descriptive scores from probabilities. State the multiple-testing
   family, weighting, or reference population when relevant. Derive changing
   thresholds and counts from the values used by the plot.
-- Prefer meaningful method names over internal object names, target IDs, file
-  paths, or configuration keys. Include software/version provenance only when
-  it helps explain the output; leave execution logs and exhaustive provenance
-  to accompanying reports.
-- Use explicit empty-result text when a plot has no eligible data. Distinguish
-  insufficient data from an analysis that ran and found no qualifying result.
 
 ## Example and existing implementations
 
@@ -86,15 +76,50 @@ Useful source examples, each with aspects to learn from rather than copy blindly
 
 Use the plotting system's native title, subtitle, and caption fields. For
 composite plots, share annotations when they apply to all panels and identify
-panel-specific differences clearly. Manuscript assemblies may move subtitle
-and caption content into the figure legend: preserve its meaning there. The
+panel-specific differences clearly. In manuscript assemblies the figure legend
+takes over the subtitle's reading guidance and says what each panel shows;
+caption method details belong in the Methods. The
 defaults in [R/figure_render_helpers.R](../../../R/figure_render_helpers.R)
 hide panel subtitles and captions, so check the assembled legend explicitly.
 
 When changing annotations, trace the owning helper and target to verify every
 claim. Render a representative output at its intended dimensions and check
 wrapping, clipping, text size, and agreement with axes and legends. Include an
-empty or alternative branch when wording depends on it. Use the repository's
+empty or alternative branch when wording depends on it.
+
+To preview a plot target without `tar_make()`, for example while a run owns the
+store, evaluate its command against stored inputs. `save_plots_structured()`
+writes into the store, so replace it with a version that sizes plots the same
+way but saves into an ignored folder. Pass `script =` to `tar_manifest()` for a
+target defined in another graph.
+
+```r
+command <- targets::tar_manifest(
+  names = "<plot_target>", fields = command, callr_function = NULL
+)$command |> str2lang()
+out_dir <- "tmp/claude/<topic>"
+env <- new.env()
+for (dependency in intersect(all.vars(command), targets::tar_meta(fields = name)$name)) {
+  assign(dependency, targets::tar_read_raw(dependency), envir = env)
+}
+env$save_plots_structured <- function(plots, filetype = "png", width = NULL, height = NULL, ...) {
+  if (!identical(class(plots), "list")) plots <- list(plots)
+  fs::dir_create(out_dir)
+  purrr::map2_chr(plots, seq_along(plots), \(plot, index) {
+    plot <- align_plot_captions(plot)
+    size <- if (inherits(plot, "ggplot")) {
+      get_ggplot_auto_save_dimensions(ggplot2::ggplot_build(plot))
+    } else list(width = 10, height = 10)
+    path <- file.path(out_dir, paste0(index, ".", filetype))
+    ggplot2::ggsave(path, plot, device = get_plot_device(filetype), dpi = 300, limitsize = FALSE,
+      width = width %||% size$width, height = height %||% size$height)
+    path
+  })
+}
+eval(command, env)
+```
+
+Use the repository's
 R execution and validation skills for code changes; a specification-only edit
 does not require a pipeline run or new tests. Review existing plots as they are
 touched unless a broader annotation audit is requested.

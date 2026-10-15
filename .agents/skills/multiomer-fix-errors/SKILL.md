@@ -11,23 +11,11 @@ root `_targets.R` graph and configured store. Run R through Pixi; see
 
 ## Triage
 
-Start with the narrowest stored error query that fits the request:
+Start with the stored errors, which `tar_meta()` reads without building the
+graph:
 
 ```r
 list_errored_targets(target_name_pattern = "<target_or_dataset>")
-```
-
-Use the distinct summary only when several targets repeat the same failure:
-
-```r
-list_distinct_errored_targets()
-```
-
-Use the traceback summary only when several failures need batch comparison. It
-builds the full manifest to attach commands, so do not use it as the default:
-
-```r
-list_distinct_errored_targets_w_tracebacks(target_name_pattern = "<target_or_dataset>")
 ```
 
 Use the full target name, including mapped or dynamic suffixes. If an external
@@ -36,15 +24,16 @@ failing helper expression to recover complete output.
 
 ## Inspect The Workspace
 
-Inspect the saved workspace when the stored error and traceback do not identify
-the cause:
+Inspect the saved workspace when the stored error does not identify the cause:
 
 ```r
 inspect_target_workspace("<full_target_name>")
 ```
 
-Use the compact dependency summaries before reading large inputs. Probe upstream
-objects only when their dimensions, names, or configuration look suspicious.
+It prints the stored error, traceback and command, and builds the full manifest
+to find the command, which takes about a minute. Use the compact dependency
+summaries before reading large inputs. Probe upstream objects only when their
+dimensions, names, or configuration look suspicious.
 
 For deeper probes, read upstream objects by the full target or dynamic branch
 name:
@@ -52,9 +41,6 @@ name:
 ```r
 targets::tar_read_raw("<target_or_branch_name>")
 ```
-
-Do not wrap `targets::tar_workspace(name)` when `name` is a character variable;
-its non-standard evaluation looks for a target literally called `name`.
 
 ## Fixing
 

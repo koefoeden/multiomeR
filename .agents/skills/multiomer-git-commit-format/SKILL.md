@@ -17,6 +17,8 @@ git commit -F - <<'EOF'
 [optional body: what changed and why]
 
 <mandatory impact keyword line(s)>
+
+[trailers the repository requires, as one final block without blank lines]
 EOF
 ```
 
@@ -34,38 +36,24 @@ pull requests and release notes.
 List multiple earliest affected targets when no single upstream target captures
 the invalidation boundary. Do not replace target names with vague families.
 
-Trace the boundary rather than assuming a cascade. A target reruns when its
-command, a function or global object it calls, or an upstream data hash
-changes. Code that only constructs the graph, such as `tar_map()` values, affects
-only commands that reference it; descriptions and checkpoint tags invalidate
-nothing. A rerun that reproduces its hash stops the cascade: when consumers of
-a changed output all reproduce theirs, report them as contained.
-`tar_outdated()` cannot see this; confirm with `multiomer-estimate-rebuild-impact`.
+Trace the boundary rather than assuming a cascade. Code that only constructs
+the graph, such as `tar_map()` values, affects only commands that reference it;
+descriptions and checkpoint tags invalidate nothing. When consumers of a
+changed output all reproduce theirs, report them as contained.
+`multiomer-estimate-rebuild-impact` gives the rerun rules and how to confirm
+them.
 
 For PR and release summaries, use commit impact lines as evidence and reconcile
 them with the final diff against the destination base or previous release.
 Drop effects from reverted or superseded changes, deduplicate surviving lines,
 and retain the cascading classification when it applies to the same target.
 
-## Release Notes
-
-Releases tag stable, validated commits, and users update to a tag rather than
-to `main`. Order the notes:
-
-1. A short intro: what the release does and whether results change.
-2. **What you need to do**, numbered. Step 1, "Update to this release", repeats
-   the README's update instructions and commands with the release's tag; they
-   merge the tag, since a rebase breaks pushed branches. Say when nothing else
-   is required. Each breaking change or migration is a step.
-3. **What happens to your aggregations**: what rebuilds and which results change.
-4. **What changed**, grouped by theme, keeping effect sizes.
-5. **Development** last.
-
 ## No Agent Attribution
 
-Public commits, pull requests and issues carry no agent co-author or task-ID
-trailers. GitHub lists co-authors with an account, such as Claude's, among the
-repository's contributors, and removing them requires a history rewrite.
+Public multiomeR commits, pull requests and issues carry no agent co-author or
+task-ID trailers. GitHub lists co-authors with an account, such as Claude's,
+among the repository's contributors, and removing them requires a history
+rewrite.
 
 ## Examples
 

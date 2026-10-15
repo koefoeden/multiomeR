@@ -1,6 +1,7 @@
 #' Classify a configured GWAS source
 #'
-#' @param sourceId Open Targets study accession or local Parquet filename.
+#' @param sourceId Local Parquet filename or Open Targets GWAS study ID, such
+#'   as a GWAS Catalog accession or a FinnGen study.
 #' @return One of `open_targets` or `local_file`.
 #' @keywords internal
 
@@ -8,13 +9,7 @@ classify_GWAS_source <- function(sourceId) {
   if (length(sourceId) != 1L || is.na(sourceId) || !nzchar(sourceId)) {
     stop("sourceId must be one non-empty value.")
   }
-  if (stringr::str_starts(sourceId, "GCST")) {
-    if (!stringr::str_detect(sourceId, "^GCST[0-9]+$")) {
-      stop("Malformed Open Targets sourceId: ", sourceId)
-    }
-    return("open_targets")
-  }
-  "local_file"
+  if (stringr::str_ends(sourceId, stringr::fixed(".parquet"))) "local_file" else "open_targets"
 }
 
 #' Resolve a local GWAS source file

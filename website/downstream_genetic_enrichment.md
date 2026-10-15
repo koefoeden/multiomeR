@@ -53,9 +53,9 @@ my_aggregation:
 
 Each entry under [`genetic_enrichment_GWAS_studies`](parameters.html#genetic_enrichment_GWAS_studies) is one study. Its name labels the results, and `Category` groups studies in the plots.
 
-`sourceId` values beginning with `GCST` are GWAS Catalog accessions, read from the Open Targets release `26.03` pinned by the workflow. `finemappingMethod: auto`, the default, selects the first available method in the order `SuSie`, `SuSiE-inf`, `PICS`. Name a method instead when the method is part of the analysis; the run then fails if that method is unavailable for the study.
+A `sourceId` names an Open Targets GWAS study with credible sets, read from the Open Targets release `26.03` pinned by the workflow: a GWAS Catalog accession such as `GCST90002388`, or a FinnGen study such as `FINNGEN_R12_T2D`. The run fails if the release has no credible sets for the study. `finemappingMethod: auto`, the default, selects the first available method in the order `SuSie`, `SuSiE-inf`, `PICS`. Name a method instead when the method is part of the analysis; the run then fails if that method is unavailable for the study.
 
-Any other `sourceId` is the path of a local Parquet file, relative to the repository root. Omit `finemappingMethod` for local files: the method, like the study ID, genome build and provenance, is read from the file.
+A `sourceId` ending in `.parquet` is instead the path of a local file, relative to the repository root. Omit `finemappingMethod` for local files: the method, like the study ID, genome build and provenance, is read from the file.
 
 <details>
 <summary>Columns of a local fine-mapped GWAS file</summary>

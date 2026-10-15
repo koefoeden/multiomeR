@@ -10,72 +10,51 @@ Use this when adding or changing targets, helpers, or analysis steps.
 ## Core Workflow
 
 1. Inspect the owning target fragment, helper, and configuration contract.
+   [Change the pipeline](../../../website/change_the_pipeline.md) documents the
+   contracts to preserve: the parameter manifest, mapping tibbles, target names
+   and description tags.
 2. Place helpers and target fragments as the code-change list in
    `.github/CONTRIBUTING.md` describes; reserve `_targets.R` for graph
    composition and mapping.
 3. Add or revise YAML parameters in `manifests/cfg_pipeline_parameters.tsv` before using
-   them in config readers or targets.
+   them in config readers or targets. A changed public parameter also needs the
+   documentation snapshot that `multiomer-edit-documentation` describes.
 4. Run R through Pixi with `multiomer-run-r-code` and validate with
-   `multiomer-validation-workflow`.
+   `multiomer-validation-workflow`. If a target errors, use `multiomer-fix-errors`.
 
-## Current Design Preferences
+## Design Rules
 
 - For new or revised plots, follow [multiomer-annotate-plots](../multiomer-annotate-plots/SKILL.md): title identifies the subject, subtitle guides interpretation, and caption explains relevant methods.
-- Prefer BPCells, matrices, `GRanges`, tibbles, and `SummarizedExperiment` over Seurat/Signac objects for new ATAC/GEX processing.
 - Compute per-cell ATAC results from fragments by mapping over the per-GEM-well
   fragment directories, not `combined_BPCells_fragment_obj.ATAC`: BPCells
   filters cells only after merging every well, so even a one-cell selection on
   the combined object takes minutes.
-- Keep Seurat compatibility only at explicit legacy boundaries. Do not create intermediate Seurat objects just to pass data between targets.
-- Use direct package APIs rather than compatibility wrappers when practical.
-- Prefer direct target commands and existing machinery. Add helpers only for
-  reused or otherwise unreadable logic, and targets only for meaningful
-  computation, output, or cache/invalidation boundaries—not to rename, forward,
-  or organize other targets.
-- Defer expensive compatibility artifacts until their consumer needs them.
-- Keep target names specific and modality-suffixed where relevant, e.g.
-  `consensus_peak_BPCells_matrix.ATAC` and
-  `metadata_w_cell_types_tibble.ATAC`.
-- Numbered checkpoint plot targets use the checkpoint suffix instead of a
-  modality suffix, with hyphens replaced by underscores (e.g.
-  `VizDimLoadings_plots.2_GEX_PCA_QC`). This places plots in stage folders;
-  non-plot targets retain their existing names.
+- Add helpers only for reused or otherwise unreadable logic, and targets only
+  for meaningful computation, output, or cache/invalidation boundaries—not to
+  rename, forward, or organize other targets.
 - Add aggregation-level downstream analyses as optional modules when they
   consume aggregation outputs: an `extra_targets/module_<module>/` fragment
   maps over `build_module_tibble()`, which reads the module's
   `cfg_module_<module>.yaml` only for aggregations that list the module under
   `modules` in `cfg_aggregations.yaml`.
-
-## Target Patterns
-
-```r
-tar_target(
-  name = result_name.ATAC,
-  description = "Short user-facing description [part_of_graph:<graph_id>]",
-  command = helper_function(upstream_target, cfg_value)
-)
-```
-
-- Use `tarchetypes::tar_file()` for paths written to disk.
 - Tag every user-facing output of a checkpoint or module, file exports as well
   as plots, with its `[checkpoint:<name>]` so documented selections build it.
-- Use `tarchetypes::tar_map()` for per-dataset or per-parameter expansion.
-- Always set `deployment = "main"` on `tarchetypes::tar_files()` so file
-  discovery stays in the pipeline driver environment rather than a Crew worker.
 - Use `packages = w_def("PackageName")` only when a target needs to extend the default package set.
 - Add `get_tar_resources()` from measured needs or the closest comparable
   target; do not copy a large CPU/RAM request as a generic default. Request
-  about 1.5 times the measured peak RAM in 16- or 32-GB steps, keep the default
+  about 1.5 times the measured peak RAM; the request selects the smallest
+  controller in the selected `crew_controllers.R` that fits. Keep the default
   path within 32 GB, and record the measurement as a
   `[resource_observation: ...]` description tag.
-- Avoid new cross-store reads for work that can live as a root aggregation module. Extracted workflows such as GWAS processing now live in sister repos.
-
-## Validation
-
-- Use `multiomer-validation-workflow` after changing helpers, target files, `_targets.R`, target names, or mapping tibbles.
-- If a target errors, use `multiomer-fix-errors`.
+- Avoid new cross-store reads for work that can live as a root aggregation module.
 
 ## Dependency Changes
+
+The checkout's Pixi environment is shared by other sessions and by the workers
+of a running pipeline, also on other nodes. Replacing a package that another R
+process has loaded breaks its lazy-load database there, so install or update
+packages only while no driver (see `multiomer-run-pipeline`) and none of its
+scheduler workers are running.
 
 - Add conda-forge or Bioconda dependencies to `pixi.toml` using the existing
   constraint style and refresh `pixi.lock`.

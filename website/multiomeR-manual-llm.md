@@ -1087,7 +1087,7 @@ The critical path is the longest chain of dependent targets: the shortest possib
 
 ## Local execution
 
-The committed `configuration/crew_controllers.R` runs the demo on a 16-CPU, 32-GB machine: four `local-light` workers (1 core, 16 GB each), two `local-heavy` workers (6 cores, 32 GB each) and one `local-large` worker (6 cores, 60 GB) that only the optional `Seurat_SCT` GEX backend uses. The most memory-intensive targets need about 7 GB plus 2.5 GB per 100,000 nuclei, so for larger aggregations on a 32-GB machine, lower the `workers` values so that only one heavy target runs at a time:
+The committed `configuration/crew_controllers.R` runs the demo on a 16-CPU, 32-GB machine: four `local-light` workers (1 core, 16 GB each), two `local-heavy` workers (6 cores, 32 GB each) and one `local-large` worker (6 cores, 200 GB) that only the optional `Seurat_SCT` GEX backend uses. The most memory-intensive targets need about 7 GB plus 2.5 GB per 100,000 nuclei, so for larger aggregations on a 32-GB machine, lower the `workers` values so that only one heavy target runs at a time:
 
 ```{.r filename="crew_controllers.R"}
 controller_list <- list(

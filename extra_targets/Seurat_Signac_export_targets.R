@@ -53,7 +53,7 @@ rlang::list2(
       graph_threads = 6
     ),
     resources = get_tar_resources(cores_req = 6,
-      RAM_GB_req = if ("Seurat_SCT" %in% aggregation_tibble$aggregation_GEX_PCA_backend) 60 else 32),
+      RAM_GB_req = if ("Seurat_SCT" %in% aggregation_tibble$aggregation_GEX_PCA_backend) 200 else 32),
     packages = w_def(c("Seurat", "SeuratObject", "Signac", "BPCells"))
   )
 )

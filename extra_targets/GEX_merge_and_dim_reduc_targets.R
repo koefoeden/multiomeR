@@ -45,7 +45,7 @@ rlang::list2(
     ),
     # Seurat_SCT holds the normalized data in memory.
     resources = get_tar_resources(cores_req = 6,
-      RAM_GB_req = if ("Seurat_SCT" %in% aggregation_tibble$aggregation_GEX_PCA_backend) 60 else 16)
+      RAM_GB_req = if ("Seurat_SCT" %in% aggregation_tibble$aggregation_GEX_PCA_backend) 200 else 16)
   ),
   targets::tar_target(
     name = PCA_BPCells.GEX,

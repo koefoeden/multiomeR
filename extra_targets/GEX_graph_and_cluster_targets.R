@@ -504,7 +504,7 @@ rlang::list2(
       data_nNNs = aggregation_data_nNNs,
       graph_threads = 15
     ),
-    resources = get_tar_resources(RAM_GB_req = if ("Seurat_SCT" %in% aggregation_tibble$aggregation_GEX_PCA_backend) 60 else 16),
+    resources = get_tar_resources(RAM_GB_req = if ("Seurat_SCT" %in% aggregation_tibble$aggregation_GEX_PCA_backend) 200 else 16),
     packages = w_def(c("Seurat", "SeuratObject", "BPCells"))
   ),
 )

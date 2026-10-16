@@ -91,11 +91,9 @@ mixed_human_31x:
       atac_peak_counts_blacklist_frac > 0.05]
 
 # Nested aggregations of the first 1, 2, 5, 10, 20 and all 31 GEM wells of mixed_human_31x, which the
-# manuscript's Seurat/Signac resource comparison and algorithm comparisons use. comparison_91x adds
-# 60 further ENCODE multiome series (heart, liver, adrenal gland, psoas muscle, ovary, lung and other
-# tissues) for about a million nuclei; their donors are listed in comparison_91x_donor_id_metadata.tsv. Their
-# comparison_ GEM wells reuse the same Cell Ranger ARC outputs without per-well QC filters or
-# CellBender, and doublet removal is disabled, so both workflows keep every called nucleus.
+# manuscript's Seurat/Signac resource comparison and algorithm comparisons use. Their comparison_ GEM
+# wells reuse the same Cell Ranger ARC outputs without per-well QC filters or CellBender, and doublet
+# removal is disabled, so both workflows keep every called nucleus.
 comparison_1x:
   inherits: mixed_human_31x
   is_active: true
@@ -151,10 +149,33 @@ comparison_31x:
       comparison_ENCSR568QKW, comparison_ENCSR613LBN, comparison_ENCSR793DNM, comparison_ENCSR923FKN,
       comparison_ENCSR956ZER, comparison_ENCSR987VTJ, comparison_ENCSR636WIB, comparison_ENCSR925IHI,
       comparison_ENCSR128ZLB, comparison_ENCSR264JIX]
-comparison_91x:
+# The sizing_ aggregations measure multiomeR with its default on-disk GEX backend on the nuclei of
+# comparison_1x to comparison_31x and, in sizing_91x, 60 further ENCODE multiome series (1.16 million
+# nuclei). SCTransform cannot run at that size in either workflow: Seurat converts the joined count
+# matrix to a dgCMatrix, which holds at most 2^31 non-zero entries. sizing_31x and sizing_91x also run
+# the genetic-enrichment and peak-gene modules.
+sizing_1x:
+  inherits: comparison_1x
+  aggregation_GEX_PCA_backend: BPCells_native
+sizing_2x:
+  inherits: comparison_2x
+  aggregation_GEX_PCA_backend: BPCells_native
+sizing_5x:
+  inherits: comparison_5x
+  aggregation_GEX_PCA_backend: BPCells_native
+sizing_10x:
+  inherits: comparison_10x
+  aggregation_GEX_PCA_backend: BPCells_native
+sizing_20x:
+  inherits: comparison_20x
+  aggregation_GEX_PCA_backend: BPCells_native
+sizing_31x:
   inherits: comparison_31x
-  is_active: true
-  aggregation_donor_id_metadata_tsv: configuration_dev/comparison_91x_donor_id_metadata.tsv
+  modules: [genetic_enrichment, peak_gene_correlation]
+  aggregation_GEX_PCA_backend: BPCells_native
+sizing_91x:
+  inherits: sizing_31x
+  aggregation_donor_id_metadata_tsv: configuration_dev/sizing_91x_donor_id_metadata.tsv
   aggregation_GEM_well_IDs: [comparison_healthy_PBMC_human, comparison_pbmc_10k_chromium_controller,
       comparison_pbmc_10k_chromium_x, comparison_pbmc_granulocyte_sorted_10k, comparison_pbmc_unsorted_10k,
       comparison_pbmc_unsorted_3k, comparison_healthy_brain_human, comparison_ENCSR033MDU, comparison_ENCSR158DQA,
@@ -179,3 +200,7 @@ comparison_91x:
       comparison_ENCSR870POU, comparison_ENCSR100UGC, comparison_ENCSR316UWS, comparison_ENCSR305JVN,
       comparison_ENCSR966RKP, comparison_ENCSR000ULP, comparison_ENCSR418BIA, comparison_ENCSR793XGJ,
       comparison_ENCSR629CZM, comparison_ENCSR882CKY]
+# A copy of mixed_human_31x for the revision benchmark; pipeline_manuscript_figures/README.md lists the
+# changes applied to it one at a time, each built and measured on its own.
+revision_31x:
+  inherits: mixed_human_31x

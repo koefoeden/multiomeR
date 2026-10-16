@@ -26,7 +26,7 @@ controller_resources_tibble <- tibble::tribble(
   ~controller_name , ~cores , ~RAM_GB , ~gpus ,
   "local-light"    ,      1 ,      16 ,     0 ,
   "local-heavy"    ,      6 ,      32 ,     0 ,
-  "local-large"    ,      6 ,     200 ,     0
+  "local-large"    ,      6 ,      60 ,     0
 )
 
 list(

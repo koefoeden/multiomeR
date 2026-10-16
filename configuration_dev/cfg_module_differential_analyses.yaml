@@ -15,3 +15,5 @@ mixed_human_31x:
       plot_phenotype_vars: sexMale
       color_by: sex
       # Test all observed cell-type labels; keep all nuclei in the denominator.
+revision_31x:
+  inherits: mixed_human_31x

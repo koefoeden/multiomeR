@@ -115,3 +115,9 @@ mixed_human_31x:
     FastingGlucose_Jee2025:
       Category: pancreatic_endocrine
       sourceId: GCST90662896
+sizing_31x:
+  inherits: mixed_human_31x
+sizing_91x:
+  inherits: mixed_human_31x
+revision_31x:
+  inherits: mixed_human_31x

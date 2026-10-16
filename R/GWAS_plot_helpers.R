@@ -809,7 +809,9 @@ plot_GWAS_chromVAR_deviation_heatmap <- function(deviation_tibble, top_set_tibbl
       "Deviation: weighted accessibility of the GWAS peaks minus that of background peaks matched on GC content and expected accessibility, divided by the depth-adjusted expected accessibility (chromVAR's bias-corrected deviation).",
       if (standardize) "Colour: deviation centred and divided by its SD across cell types within each GWAS."
       else "Colour: deviation, without centring or SD scaling across cell types.",
-      "Stars: * one-sided P < 0.05 for the z-score against the background; ** also Benjamini-Hochberg q < 0.05 over all GWAS and cell types.",
+      "Stars: * one-sided P < 0.05, the share of 10,000 copies of the GWAS whose background z-score is at least as high;",
+      "** also Benjamini-Hochberg q < 0.05 over all GWAS and cell types. Each copy moves the credible sets 0.5-2 Mb along their chromosomes, which keeps the clustering of real loci.",
+      "The background z-score divides the deviation by its SD under independently drawn matched background peaks.",
       "Outlines: in GWAS with a cell type at q < 0.05, the one of these with the largest deviation and every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types",
       "(Bonferroni, so the set holds the cell type with the largest true deviation with at least 95% probability).",
       "Shortfall standard errors come from 1,000 bootstrap samples of the GWAS loci (credible sets with lead variants within 500 kb grouped), which re-sum their exact contributions with the background fixed; GWAS with fewer than 10 loci get no top set.",

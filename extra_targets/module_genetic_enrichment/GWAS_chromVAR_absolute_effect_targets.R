@@ -59,9 +59,10 @@ rlang::list2(
   ),
   targets::tar_target(
     name = chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk,
-    description = "Summarize absolute-effect peak contributions into the cell-type heatmap table [part_of_graph:genetic_enrichment_cell_type_absolute_effect]",
+    description = "Summarize absolute-effect peak contributions into the cell-type heatmap table and test them against the locus-shift null [part_of_graph:genetic_enrichment_cell_type_absolute_effect]",
     command = summarize_GWAS_chromVAR_peak_contributions(
       peak_contribution_tibble = chromVAR_absolute_effect_peak_contribution_tibble.cell_type_pseudobulk,
+      null_tibble = dplyr::filter(chromVAR_locus_shift_null_tibble.cell_type_pseudobulk, weighting == "absolute_effect"),
       cell_type_support_tibble = cell_type_pseudobulk_support_tibble.ATAC
     ) |>
       dplyr::left_join(

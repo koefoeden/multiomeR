@@ -34,10 +34,26 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
+    name = chromVAR_locus_shift_null_tibble.cell_type_pseudobulk,
+    description = "Test one GWAS's cell-type chromVAR background z-scores against 10,000 copies with its credible sets moved 0.5-2 Mb along their chromosomes, in both weightings [resource_observation: peak_RAM_GiB=2.7; n_nuclei=740k; aggregation=unpublished; method=slurm_monitor; date=2026-10-16]",
+    command = get_GWAS_chromVAR_locus_shift_null_tibble(
+      GWAS_input_record = GWAS_input_records,
+      absolute_effect_weighting_status_tibble = GWAS_absolute_effect_weighting_status_tibble,
+      posterior_probability_cutoff = genetic_enrichment_posterior_probability_cutoff,
+      chromVAR_background_record = chromVAR_background_record.cell_type_pseudobulk,
+      pseudobulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
+      peak_ranges = genetic_enrichment_peak_ranges
+    ),
+    pattern = map(GWAS_input_records),
+    iteration = "vector",
+    resources = get_tar_resources(RAM_GB_req = 4)
+  ),
+  targets::tar_target(
     name = chromVAR_deviation_tibble.cell_type_pseudobulk,
-    description = "Sum peak contributions into the cell-type GWAS chromVAR heatmap table with z-score support labels [part_of_graph:genetic_enrichment_cell_type_contributions]",
+    description = "Sum peak contributions into the cell-type GWAS chromVAR heatmap table and test them against the locus-shift null [part_of_graph:genetic_enrichment_cell_type_contributions]",
     command = summarize_GWAS_chromVAR_peak_contributions(
       peak_contribution_tibble = chromVAR_peak_contribution_tibble.cell_type_pseudobulk,
+      null_tibble = dplyr::filter(chromVAR_locus_shift_null_tibble.cell_type_pseudobulk, weighting == "ordinary"),
       cell_type_support_tibble = cell_type_pseudobulk_support_tibble.ATAC
     )
   ),
@@ -105,7 +121,8 @@ rlang::list2(
     command = prepare_GWAS_variant_contribution_detail_records(
       variant_contribution_tibble = chromVAR_variant_contribution_tibble.cell_type_pseudobulk,
       locus_contribution_tibble = chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk,
-      absolute_effect_locus_tibble = chromVAR_absolute_effect_locus_contribution_tibble.cell_type_pseudobulk,
+      deviation_tibble = dplyr::bind_rows(chromVAR_deviation_tibble.cell_type_pseudobulk,
+        chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk),
       GWAS_input_records = GWAS_input_records,
       consensus_peak_GRanges = consensus_peak_GRanges.ATAC,
       fragments = combined_BPCells_fragment_obj.ATAC,

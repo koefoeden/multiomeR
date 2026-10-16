@@ -39,7 +39,7 @@ get_GWAS_chromVAR_peak_contribution_tibble <- function(
     counts_matrix <- methods::as(counts_matrix, "dgCMatrix")
   }
   annotation_matrix <- annotation_matrix[peak_names, , drop = FALSE]
-  background <- chromVAR_background_record$background
+  background <- correct_chromVAR_background_variance(chromVAR_background_record$background, counts_matrix)
   peak_ranges <- SummarizedExperiment::rowRanges(chromVAR_obj)
   peak_ranges <- peak_ranges[match(peak_names, get_peak_names_from_GRanges(peak_ranges))]
   peak_metadata_tibble <- GenomicRanges::as.data.frame(peak_ranges) |>

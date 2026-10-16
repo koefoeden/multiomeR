@@ -119,6 +119,10 @@ env$save_plots_structured <- function(plots, filetype = "png", width = NULL, hei
 eval(command, env)
 ```
 
+Save wrappers such as `save_GWAS_heatmap()` call the global
+`save_plots_structured()` and so still write into the store; replace them in
+`env` as well.
+
 Use the repository's
 R execution and validation skills for code changes; a specification-only edit
 does not require a pipeline run or new tests. Review existing plots as they are

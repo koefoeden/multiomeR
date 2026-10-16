@@ -153,7 +153,7 @@ comparison_31x:
 # comparison_1x to comparison_31x and, in sizing_91x, 60 further ENCODE multiome series (1.16 million
 # nuclei). SCTransform cannot run at that size in either workflow: Seurat converts the joined count
 # matrix to a dgCMatrix, which holds at most 2^31 non-zero entries. sizing_31x and sizing_91x also run
-# the genetic-enrichment and peak-gene modules.
+# the three optional modules.
 sizing_1x:
   inherits: comparison_1x
   aggregation_GEX_PCA_backend: BPCells_native
@@ -171,7 +171,7 @@ sizing_20x:
   aggregation_GEX_PCA_backend: BPCells_native
 sizing_31x:
   inherits: comparison_31x
-  modules: [genetic_enrichment, peak_gene_correlation]
+  modules: [genetic_enrichment, differential_analyses, peak_gene_correlation]
   aggregation_GEX_PCA_backend: BPCells_native
 sizing_91x:
   inherits: sizing_31x

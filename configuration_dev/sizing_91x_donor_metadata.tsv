@@ -1,0 +1,56 @@
+donor_id	condition	sex	sexMale	age	health_status	source_url
+pbmc1	healthy	NA	NA	NA	NA	NA
+pbmc2	healthy	NA	NA	NA	NA	NA
+pbmc3	healthy	NA	NA	NA	NA	NA
+pbmc4	healthy	NA	NA	NA	NA	NA
+pbmc5	healthy	NA	NA	NA	NA	NA
+pbmc6	healthy	NA	NA	NA	NA	NA
+brain1	healthy	NA	NA	NA	NA	NA
+ENCDO186XRB	healthy	NA	NA	NA	NA	NA
+ENCDO221IPH	healthy	NA	NA	NA	NA	NA
+ENCDO392CRK	healthy	NA	NA	NA	NA	NA
+ENCDO411EVD	healthy	female	0	46	DM: no; HTN: no; CAD: no	https://www.encodeproject.org/human-donors/ENCDO411EVD/
+ENCDO520EJG	healthy	male	1	60	DM: no; HTN: yes; CAD: no; lungs with severe emphysema	https://www.encodeproject.org/human-donors/ENCDO520EJG/
+ENCDO528BHB	healthy	female	0	47	DM: yes; HTN: yes; CAD: no	https://www.encodeproject.org/human-donors/ENCDO528BHB/
+ENCDO529CYH	healthy	male	1	66	ischemic	https://www.encodeproject.org/human-donors/ENCDO529CYH/
+ENCDO575EGL	healthy	NA	NA	NA	NA	NA
+ENCDO575WHY	healthy	female	0	41	DM: no; HTN: no; CAD: no	https://www.encodeproject.org/human-donors/ENCDO575WHY/
+ENCDO757VPQ	healthy	NA	NA	NA	NA	NA
+ENCDO856ZOJ	healthy	female	0	59	DM: yes; HTN: yes; CAD: no	https://www.encodeproject.org/human-donors/ENCDO856ZOJ/
+ENCDO912EIY	healthy	NA	NA	NA	NA	NA
+ENCDO182VFD	NA	male	1	41	healthy	https://www.encodeproject.org/human-donors/ENCDO182VFD/
+ENCDO551WAV	NA	female	0	33	healthy	https://www.encodeproject.org/human-donors/ENCDO551WAV/
+ENCDO068KYD	NA	female	0	51	healthy	https://www.encodeproject.org/human-donors/ENCDO068KYD/
+ENCDO664OWL	NA	male	1	18	healthy	https://www.encodeproject.org/human-donors/ENCDO664OWL/
+ENCDO656FJX	NA	male	1	31	healthy	https://www.encodeproject.org/human-donors/ENCDO656FJX/
+ENCDO209WPZ	NA	female	0	39	healthy	https://www.encodeproject.org/human-donors/ENCDO209WPZ/
+ENCDO340SOB	NA	male	1	45	healthy	https://www.encodeproject.org/human-donors/ENCDO340SOB/
+ENCDO483GOL	NA	male	1	35	healthy	https://www.encodeproject.org/human-donors/ENCDO483GOL/
+ENCDO195VEA	NA	male	1	33	NA	https://www.encodeproject.org/human-donors/ENCDO195VEA/
+ENCDO435KUZ	NA	female	0	68	ischemic	https://www.encodeproject.org/human-donors/ENCDO435KUZ/
+ENCDO695LFW	NA	female	0	69	sarcoid (EF 24%, LVEDD 6.9, PWd 0.6)	https://www.encodeproject.org/human-donors/ENCDO695LFW/
+ENCDO423HZU	NA	female	0	42	nonischemic (EF 29%, LVEDD 7.2)	https://www.encodeproject.org/human-donors/ENCDO423HZU/
+ENCDO280SCV	NA	female	0	47	healthy	https://www.encodeproject.org/human-donors/ENCDO280SCV/
+ENCDO750LVJ	NA	female	0	53	ischemic (EF 29%, LVEDD 6.5)	https://www.encodeproject.org/human-donors/ENCDO750LVJ/
+ENCDO817MDD	NA	female	0	48	healthy	https://www.encodeproject.org/human-donors/ENCDO817MDD/
+ENCDO650FUH	NA	female	0	61	nonischemic (EF 18%, LVEDD 6.8)	https://www.encodeproject.org/human-donors/ENCDO650FUH/
+ENCDO166SII	NA	female	0	50	healthy	https://www.encodeproject.org/human-donors/ENCDO166SII/
+ENCDO739PAW	NA	female	0	32	nonischemic (EF 14%, LVEDD 8.8)	https://www.encodeproject.org/human-donors/ENCDO739PAW/
+ENCDO522PCG	NA	female	0	59	non ischemic (EF 33%, LVEDD 6.8), familial	https://www.encodeproject.org/human-donors/ENCDO522PCG/
+ENCDO607DMC	NA	female	0	25	healthy	https://www.encodeproject.org/human-donors/ENCDO607DMC/
+ENCDO061UFT	NA	male	1	20	nonischemic	https://www.encodeproject.org/human-donors/ENCDO061UFT/
+ENCDO266KDE	NA	male	1	39	healthy	https://www.encodeproject.org/human-donors/ENCDO266KDE/
+ENCDO098ZMW	NA	male	1	51	LMNA-related dilated cardiomyopathy (EF 27.9%, LVEDD 6.1, LVPWd 1.3)	https://www.encodeproject.org/human-donors/ENCDO098ZMW/
+ENCDO639HZG	NA	male	1	57	nonischemic	https://www.encodeproject.org/human-donors/ENCDO639HZG/
+ENCDO240MDH	NA	male	1	65	sarcoid and CAD (EF 22%, LVEDD 6.4, LVPWd 0.81)	https://www.encodeproject.org/human-donors/ENCDO240MDH/
+ENCDO737TEG	NA	male	1	69	ischemic	https://www.encodeproject.org/human-donors/ENCDO737TEG/
+ENCDO377SFB	NA	male	1	30	healthy	https://www.encodeproject.org/human-donors/ENCDO377SFB/
+ENCDO107KXS	NA	male	1	44	healthy	https://www.encodeproject.org/human-donors/ENCDO107KXS/
+ENCDO768WUT	NA	male	1	62	viral->sarcoid (EF 15%, LVEDD 5.8, LVPWd 0.79)	https://www.encodeproject.org/human-donors/ENCDO768WUT/
+ENCDO038QFX	NA	male	1	68	nonischemic (EF 21%, LVEDD 7.5)	https://www.encodeproject.org/human-donors/ENCDO038QFX/
+ENCDO934DRK	NA	male	1	21	healthy	https://www.encodeproject.org/human-donors/ENCDO934DRK/
+ENCDO123GXG	NA	male	1	37	healthy	https://www.encodeproject.org/human-donors/ENCDO123GXG/
+ENCDO602PYC	NA	male	1	50	ischemic (EF 49%, LVEDD 4.7) w/ Impella	https://www.encodeproject.org/human-donors/ENCDO602PYC/
+ENCDO545EJY	NA	male	1	58	ischemic (EF 30%, LVEDD 5.8)	https://www.encodeproject.org/human-donors/ENCDO545EJY/
+ENCDO187SDN	NA	male	1	65	ischemic (EF 5%)	https://www.encodeproject.org/human-donors/ENCDO187SDN/
+ENCDO184BIH	NA	male	1	68	ischemic	https://www.encodeproject.org/human-donors/ENCDO184BIH/

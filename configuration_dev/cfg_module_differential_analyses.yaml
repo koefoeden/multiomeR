@@ -15,5 +15,35 @@ mixed_human_31x:
       plot_phenotype_vars: sexMale
       color_by: sex
       # Test all observed cell-type labels; keep all nuclei in the denominator.
+sizing_31x:
+  inherits: mixed_human_31x
+  differential_analyses_cell_type_composition_models:
+    left_ventricle_sex:
+      GEM_well_IDs: [comparison_ENCSR245BNT, comparison_ENCSR508WRP, comparison_ENCSR568QKW,
+          comparison_ENCSR793DNM, comparison_ENCSR956ZER, comparison_ENCSR987VTJ]
+      formula: ~ sexMale
+      contrast_specs_vec:
+        male_vs_female: sexMale
+      plot_phenotype_vars: sexMale
+      color_by: sex
+sizing_91x:
+  inherits: sizing_31x
+  differential_analyses_extended_donor_id_metadata_tsv: configuration_dev/sizing_91x_donor_metadata.tsv
+  differential_analyses_cell_type_composition_models:
+    left_ventricle_sex:
+      GEM_well_IDs: [comparison_ENCSR245BNT, comparison_ENCSR508WRP, comparison_ENCSR568QKW,
+          comparison_ENCSR793DNM, comparison_ENCSR956ZER, comparison_ENCSR987VTJ, comparison_ENCSR060VMC,
+          comparison_ENCSR137EAT, comparison_ENCSR487MGY, comparison_ENCSR523NMC, comparison_ENCSR535LSU,
+          comparison_ENCSR673CAA, comparison_ENCSR703OZJ, comparison_ENCSR716XVF, comparison_ENCSR730AXV,
+          comparison_ENCSR889JIE, comparison_ENCSR891TJB, comparison_ENCSR983ILQ, comparison_ENCSR822CXI,
+          comparison_ENCSR623PHF, comparison_ENCSR664QSO, comparison_ENCSR573DJW, comparison_ENCSR488WYF,
+          comparison_ENCSR304NKV, comparison_ENCSR870POU, comparison_ENCSR100UGC, comparison_ENCSR316UWS,
+          comparison_ENCSR305JVN, comparison_ENCSR966RKP, comparison_ENCSR000ULP, comparison_ENCSR418BIA,
+          comparison_ENCSR793XGJ, comparison_ENCSR629CZM, comparison_ENCSR882CKY]
+      formula: ~ sexMale
+      contrast_specs_vec:
+        male_vs_female: sexMale
+      plot_phenotype_vars: sexMale
+      color_by: sex
 revision_31x:
   inherits: mixed_human_31x

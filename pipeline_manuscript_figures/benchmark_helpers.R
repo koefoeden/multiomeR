@@ -15,6 +15,9 @@ BENCHMARK_ALLOCATIONS <- file.path(BENCHMARK_DATA_DIR, "benchmark_allocations.ts
 BENCHMARK_MODULES <- c("genetic_enrichment", "differential_analyses", "peak_gene_correlation")
 BENCHMARK_STAGES <- c("setup", "per-well", "aggregation", BENCHMARK_MODULES)
 BENCHMARK_SIZING_AGGREGATIONS <- paste0("sizing_", c(1, 2, 5, 10, 20, 31, 91), "x")
+# Seconds the simulated wall time adds to each target for dispatching, loading and saving;
+# benchmark_simulation_check() reports the median measured in each recorded run.
+BENCHMARK_TASK_OVERHEAD_SECONDS <- 0
 # Each revision run changes revision_31x one step further, in this order.
 BENCHMARK_REVISIONS <- c(
   revision_1 = "WNN clustering resolution 0.4 to 0.6",
@@ -131,13 +134,14 @@ read_slurm_monitor_samples <- function(since) {
   # and are left out.
   cmd <- paste("slurm_monitor history samples --schema 2 --name '^crew-worker-' --since",
     shQuote(format(since, "%Y-%m-%d %H:%M:%S", tz = "Europe/Copenhagen")),
-    "--columns timestamp,raw_job_id,elapsed,target,ram_cur_gib,cpu_cur,scope")
+    "--columns timestamp,raw_job_id,name,elapsed,target,ram_cur_gib,cpu_cur,ram_lim_gib,cpus_alloc,scope")
   samples <- data.table::fread(cmd = cmd, sep = "\t", na.strings = "NA",
     colClasses = list(character = c("timestamp", "raw_job_id", "elapsed"))) |>
     dplyr::filter(!is.na(.data$ram_cur_gib), !.data$scope %in% "sstat")
-  tibble::tibble(job = samples$raw_job_id, target = samples$target,
+  tibble::tibble(job = samples$raw_job_id, worker = samples$name, target = samples$target,
     time = .POSIXct(as.POSIXct(samples$timestamp, tz = "Europe/Copenhagen"), tz = "UTC"), elapsed = samples$elapsed,
-    RAM_GB = samples$ram_cur_gib * 2^30 / 1e9, cpu_cores = samples$cpu_cur)
+    RAM_GB = samples$ram_cur_gib * 2^30 / 1e9, cpu_cores = samples$cpu_cur,
+    booked_RAM_GB = samples$ram_lim_gib * 2^30 / 1e9, booked_cores = samples$cpus_alloc)
 }
 
 # Seconds of a Slurm elapsed time, [D-][HH:]MM:SS.
@@ -148,8 +152,8 @@ slurm_elapsed_seconds <- function(elapsed) {
   days * 86400 + as.vector(matrix(as.numeric(unlist(strsplit(clock, ":"))), ncol = 3, byrow = TRUE) %*% c(3600, 60, 1))
 }
 
-# Mean measured RAM and CPU of each execution within its recorded runtime, and the worker job
-# that ran it. Executions too short to be sampled get the median use of the sampled ones.
+# Mean measured RAM and CPU of each execution within its recorded runtime. Executions too
+# short to be sampled get the median use of the sampled ones.
 add_measured_resources <- function(executions, samples) {
   matched <- executions |>
     dplyr::select("name", "seconds", "completed_utc") |>
@@ -157,41 +161,68 @@ add_measured_resources <- function(executions, samples) {
     dplyr::filter(.data$time >= .data$completed_utc - .data$seconds - 20, .data$time <= .data$completed_utc + 20)
   measured <- dplyr::summarise(matched, used_RAM_GB = mean(.data$RAM_GB), peak_RAM_GB = max(.data$RAM_GB),
     used_cores = mean(.data$cpu_cores, na.rm = TRUE), .by = "name")
-  jobs <- dplyr::summarise(matched, samples = dplyr::n(), .by = c("name", "job")) |>
-    dplyr::slice_max(.data$samples, n = 1, with_ties = FALSE, by = "name")
   executions |>
     dplyr::left_join(measured, by = "name") |>
-    dplyr::left_join(jobs[c("name", "job")], by = "name") |>
     dplyr::mutate(sampled = !is.na(.data$used_RAM_GB),
       used_RAM_GB = dplyr::coalesce(.data$used_RAM_GB, stats::median(.data$used_RAM_GB, na.rm = TRUE)),
       used_cores = dplyr::coalesce(.data$used_cores, stats::median(.data$used_cores, na.rm = TRUE)))
 }
 
-# Reserved resources include each worker's idle time: the lifetime of its Slurm job, from the
-# start that its first sample's elapsed time gives to its last sample, less the runtimes of the
-# targets it ran, is shared among those targets in proportion to their runtimes, or equally if
-# they all took no measurable time. A target belongs to the job whose samples name it within its
-# runtime; a target that no execution matches, such as a build that a later one replaced, counts
-# with the span of its samples. Idle workers name no target, "default" or "-".
-benchmark_worker_jobs <- function(all_executions, samples) {
-  labelled <- dplyr::filter(samples, !.data$target %in% c(NA, "default", "-", "__AUTOMETRIC__"))
-  ran <- all_executions |>
+# The crew worker jobs of the configured tiers: each job's tier from its name, its lifetime from
+# the start that its first sample's elapsed time gives to its last sample, and the cores and
+# memory that Slurm booked for it. crew.cluster books memory in MiB, 1024 per configured GB.
+benchmark_worker_jobs <- function(samples, tiers) {
+  samples |>
+    dplyr::arrange(.data$time) |>
+    dplyr::summarise(worker = dplyr::first(.data$worker), first_sample = dplyr::first(.data$time),
+      first_elapsed = dplyr::first(.data$elapsed), ended = dplyr::last(.data$time),
+      booked_cores = max(.data$booked_cores), booked_RAM_GB = max(.data$booked_RAM_GB), .by = "job") |>
+    dplyr::mutate(tier = sub("^crew-worker-(.*)-[0-9a-f]+$", "\\1", .data$worker),
+      started = .data$first_sample - slurm_elapsed_seconds(.data$first_elapsed)) |>
+    dplyr::filter(.data$tier %in% tiers) |>
+    dplyr::select("job", "tier", "started", "ended", "booked_cores", "booked_RAM_GB")
+}
+
+# Each execution's worker job: the job whose samples name it within its runtime, or else, for
+# executions too short to be sampled, a job of its tier that was alive and free throughout its
+# runtime. Unnamed jobs are preferred, then the latest started, as a newly started worker takes
+# the target that was waiting for it. Idle workers name no target, "default" or "-".
+benchmark_assign_workers <- function(executions, samples, jobs) {
+  labelled <- dplyr::filter(samples, !.data$target %in% c(NA, "default", "-", "__AUTOMETRIC__"), .data$job %in% jobs$job)
+  named <- executions |>
+    dplyr::select("name", "seconds", "completed_utc") |>
     dplyr::inner_join(labelled[c("job", "target", "time")], by = c(name = "target"), relationship = "many-to-many") |>
     dplyr::filter(.data$time >= .data$completed_utc - .data$seconds - 20, .data$time <= .data$completed_utc + 20) |>
-    dplyr::select("job", "name", "completed_utc", "seconds") |>
-    dplyr::distinct()
+    dplyr::summarise(samples = dplyr::n(), .by = c("name", "completed_utc", "job")) |>
+    dplyr::slice_max(.data$samples, n = 1, with_ties = FALSE, by = c("name", "completed_utc"))
+  executions <- executions |>
+    dplyr::left_join(named[c("name", "completed_utc", "job")], by = c("name", "completed_utc")) |>
+    dplyr::mutate(start = .data$completed_utc - .data$seconds)
+  busy <- split(executions[!is.na(executions$job), c("start", "completed_utc")], executions$job[!is.na(executions$job)])
+  named_jobs <- unique(named$job)
+  waiting <- which(is.na(executions$job) & !is.na(executions$tier))
+  for (i in waiting[order(executions$start[waiting])]) {
+    candidates <- jobs$job[jobs$tier == executions$tier[[i]] & jobs$started <= executions$start[[i]] &
+      jobs$ended + 30 >= executions$completed_utc[[i]]]
+    free <- candidates[vapply(candidates, \(job) {
+      intervals <- busy[[job]]
+      is.null(intervals) || !any(intervals$start < executions$completed_utc[[i]] & intervals$completed_utc > executions$start[[i]])
+    }, logical(1))]
+    if (!length(free)) next
+    job <- free[order(free %in% named_jobs, -as.numeric(jobs$started[match(free, jobs$job)]))][[1]]
+    executions$job[[i]] <- job
+    busy[[job]] <- rbind(busy[[job]], executions[i, c("start", "completed_utc")])
+  }
+  # A job's samples can name a target that no execution matches, such as a build that a later
+  # one replaced; that target counts with the span of its samples.
   unmatched <- labelled |>
-    dplyr::anti_join(ran, by = c("job", target = "name")) |>
+    dplyr::anti_join(named, by = c("job", target = "name")) |>
     dplyr::summarise(seconds = as.numeric(max(.data$time) - min(.data$time), units = "secs"), .by = c("job", "target"))
-  busy <- dplyr::bind_rows(ran, unmatched) |>
-    dplyr::summarise(busy_seconds = sum(.data$seconds), targets_run = dplyr::n(), .by = "job")
-  samples |>
-    dplyr::slice_min(.data$time, n = 1, with_ties = FALSE, by = "job") |>
-    dplyr::transmute(.data$job, started = .data$time - slurm_elapsed_seconds(.data$elapsed)) |>
-    dplyr::left_join(dplyr::summarise(samples, ended = max(.data$time), .by = "job"), by = "job") |>
-    dplyr::inner_join(busy, by = "job") |>
-    dplyr::transmute(.data$job, idle_seconds = as.numeric(.data$ended - .data$started, units = "secs") - .data$busy_seconds,
-      .data$busy_seconds, .data$targets_run)
+  list(executions = dplyr::select(executions, "name", "completed_second", "job"),
+    jobs = dplyr::bind_rows(dplyr::filter(executions, !is.na(.data$job)), unmatched) |>
+      dplyr::summarise(busy_seconds = sum(.data$seconds), targets_run = dplyr::n(), .by = "job") |>
+      dplyr::right_join(jobs, by = "job") |>
+      dplyr::mutate(idle_seconds = as.numeric(.data$ended - .data$started, units = "secs") - .data$busy_seconds))
 }
 
 upstream_targets <- function(graph, names) {
@@ -240,13 +271,13 @@ critical_path_seconds <- function(graph, weights) {
 
 # Wall time on a worker budget by list scheduling: a target is ready once its upstream targets
 # have finished, and the workers of its tier take ready executions in the order they became
-# ready, each for its recorded runtime. Worker start-up, loading and saving data, and the main
-# process's dispatching are left out; benchmark_simulation_check() compares it with measured runs.
-simulate_wall_time_seconds <- function(graph, executions, workers) {
+# ready, each for its recorded runtime plus `overhead_seconds`, which can stand for dispatching,
+# loading and saving. benchmark_simulation_check() compares it with measured runs.
+simulate_wall_time_seconds <- function(graph, executions, workers, overhead_seconds = 0) {
   order <- igraph::as_ids(igraph::topo_sort(graph))
   children <- stats::setNames(lapply(igraph::adjacent_vertices(graph, order, mode = "out"), igraph::as_ids), order)
   waiting <- igraph::degree(graph, order, mode = "in")
-  seconds <- split(executions$seconds, factor(executions$static_target, levels = order))
+  seconds <- split(executions$seconds + overhead_seconds, factor(executions$static_target, levels = order))
   tier <- stats::setNames(executions$tier[match(order, executions$static_target)], order)
   unfinished <- lengths(seconds)
   queued_targets <- stats::setNames(rep(list(character()), length(workers)), names(workers))
@@ -294,66 +325,120 @@ simulate_wall_time_seconds <- function(graph, executions, workers) {
   now
 }
 
-# Everything the measures share: the graph, worker tiers with their configured worker counts,
-# each counted target's allocation and tier, whether its outputs are inside the store, every
-# known execution and the monitor's samples since the earliest of them.
+# Everything the measures share: the graph; worker tiers with their configured worker counts,
+# requests and Slurm bookings; each counted target's request and tier; whether its outputs are
+# inside the store; the monitor's samples; and every known execution's worker job.
 benchmark_context <- function(store = targets::tar_config_get("store")) {
   network <- targets::tar_network(script = BENCHMARK_SCRIPT, store = store,
     targets_only = TRUE, outdated = FALSE, reporter = "silent")
-  meta <- targets::tar_meta(store = store, fields = c("type", "time", "seconds", "format", "path")) |>
+  meta <- targets::tar_meta(store = store, fields = c("type", "parent", "time", "seconds", "format", "path")) |>
     dplyr::filter(.data$type %in% c("stem", "branch"))
   controllers <- source(configuration_path("crew_controllers.R"))$value
   tiers <- tibble::tibble(tier = vapply(controllers$controller_list, \(x) x$launcher$name, character(1)),
-    workers = vapply(controllers$controller_list, \(x) x$launcher$workers, numeric(1))) |>
+    workers = vapply(controllers$controller_list, \(x) x$launcher$workers, numeric(1)),
+    tier_booked_cores = vapply(controllers$controller_list, \(x) x$launcher$options_cluster$cpus_per_task, numeric(1)),
+    tier_booked_RAM_GB = vapply(controllers$controller_list,
+      \(x) x$launcher$options_cluster$memory_gigabytes_required, numeric(1)) * 2^30 / 1e9) |>
     dplyr::inner_join(controllers$controller_resources_tibble, by = c(tier = "controller_name"))
+  allocations <- readr::read_tsv(BENCHMARK_ALLOCATIONS, show_col_types = FALSE) |>
+    dplyr::left_join(tiers[c("tier", "cores", "RAM_GB")], by = c("cores", "RAM_GB"))
   store_prefix <- paste0(fs::path_abs(store), "/")
   runs <- tools::file_path_sans_ext(basename(fs::dir_ls(BENCHMARK_RUNS_DIR)), compression = TRUE)
   # Every known execution, so that each worker's busy time counts the targets of other runs.
   all_executions <- dplyr::bind_rows(read_benchmark_runs(runs),
-    dplyr::transmute(meta, .data$name, .data$seconds, completed_utc = .data$time)) |>
-    dplyr::select("name", "seconds", "completed_utc") |>
-    dplyr::mutate(completed_second = floor(as.numeric(.data$completed_utc))) |>
-    dplyr::distinct(dplyr::pick("name", "completed_second"), .keep_all = TRUE)
-  samples <- read_slurm_monitor_samples(since = min(
-    all_executions$completed_utc[all_executions$seconds >= 1] - all_executions$seconds[all_executions$seconds >= 1]) - 3600)
+    dplyr::transmute(meta, .data$name, parent = dplyr::na_if(.data$parent, ""), .data$seconds, completed_utc = .data$time)) |>
+    dplyr::mutate(static_target = dplyr::coalesce(.data$parent, .data$name),
+      completed_second = floor(as.numeric(.data$completed_utc))) |>
+    dplyr::distinct(dplyr::pick("name", "completed_second"), .keep_all = TRUE) |>
+    dplyr::select("name", "static_target", "seconds", "completed_utc", "completed_second") |>
+    dplyr::left_join(allocations[c("static_target", "tier")], by = "static_target")
+  timed <- all_executions$seconds >= 1
+  samples <- read_slurm_monitor_samples(since = min(all_executions$completed_utc[timed] - all_executions$seconds[timed]) - 3600)
+  workers <- benchmark_assign_workers(all_executions, samples, benchmark_worker_jobs(samples, tiers$tier))
   list(graph = igraph::graph_from_data_frame(network$edges, vertices = network$vertices["name"]),
-    workers = stats::setNames(tiers$workers, tiers$tier),
-    allocations = readr::read_tsv(BENCHMARK_ALLOCATIONS, show_col_types = FALSE) |>
-      dplyr::left_join(tiers[c("tier", "cores", "RAM_GB")], by = c("cores", "RAM_GB")),
+    workers = stats::setNames(tiers$workers, tiers$tier), tiers = tiers, allocations = allocations,
     in_store = dplyr::transmute(meta, .data$name, in_store = .data$format != "file" |
       purrr::map_lgl(.data$path, \(path) isTRUE(all(startsWith(fs::path_abs(path), store_prefix))))),
     samples = samples,
-    worker_jobs = benchmark_worker_jobs(all_executions, samples))
+    execution_jobs = workers$executions, worker_jobs = workers$jobs)
 }
 
-# Measured CPU and memory, reserved time with the worker's idle share, allocation and tier, and
-# whether the outputs are inside the store, for each execution. Executions too short to be
-# sampled take the median use of the others passed with them.
+# Measured CPU and memory; reserved time, the runtime plus a share of the worker job's idle time
+# in proportion to runtime, or equal if no target of the job took measurable time; the cores and
+# memory that Slurm booked for the job, or for the tier where no job is known; the request and
+# tier; and whether the outputs are inside the store. Executions too short to be sampled take the
+# median use of the others passed with them.
 enrich_executions <- function(context, executions) {
   executions |>
     add_measured_resources(context$samples) |>
-    dplyr::left_join(context$worker_jobs, by = "job") |>
-    dplyr::mutate(reserved_seconds = .data$seconds + dplyr::coalesce(.data$idle_seconds *
-      dplyr::if_else(.data$busy_seconds > 0, .data$seconds / .data$busy_seconds, 1 / .data$targets_run), 0)) |>
+    dplyr::mutate(completed_second = floor(as.numeric(.data$completed_utc))) |>
+    dplyr::left_join(context$execution_jobs, by = c("name", "completed_second")) |>
+    dplyr::left_join(context$worker_jobs[c("job", "idle_seconds", "busy_seconds", "targets_run", "booked_cores", "booked_RAM_GB")],
+      by = "job") |>
     dplyr::left_join(context$allocations, by = "static_target") |>
+    dplyr::left_join(context$tiers[c("tier", "tier_booked_cores", "tier_booked_RAM_GB")], by = "tier") |>
+    dplyr::mutate(reserved_seconds = .data$seconds + dplyr::coalesce(.data$idle_seconds *
+        dplyr::if_else(.data$busy_seconds > 0, .data$seconds / .data$busy_seconds, 1 / .data$targets_run), 0),
+      booked_cores = dplyr::coalesce(.data$booked_cores, .data$tier_booked_cores),
+      booked_RAM_GB = dplyr::coalesce(.data$booked_RAM_GB, .data$tier_booked_RAM_GB)) |>
     dplyr::left_join(context$in_store, by = "name")
 }
 
-# Sums over enriched executions. Disk space counts objects and files inside the store.
+# Sums over enriched executions. Reserved resources are what Slurm booked; requested ones what
+# the targets asked for, with and without idle time. Disk space counts objects and files inside
+# the store.
 summarise_executions <- function(executions) {
   peak <- dplyr::slice_max(executions, .data$peak_RAM_GB, n = 1, with_ties = FALSE, na_rm = FALSE)
   tibble::tibble(
     runtime_hours = sum(executions$seconds) / 3600,
-    allocated_CPU_hours = sum(executions$reserved_seconds * executions$cores) / 3600,
-    allocated_RAM_GB_hours = sum(executions$reserved_seconds * executions$RAM_GB) / 3600,
-    allocated_runtime_CPU_hours = sum(executions$seconds * executions$cores) / 3600,
-    allocated_runtime_RAM_GB_hours = sum(executions$seconds * executions$RAM_GB) / 3600,
+    reserved_CPU_hours = sum(executions$reserved_seconds * executions$booked_cores) / 3600,
+    reserved_RAM_GB_hours = sum(executions$reserved_seconds * executions$booked_RAM_GB) / 3600,
+    requested_CPU_hours = sum(executions$reserved_seconds * executions$cores) / 3600,
+    requested_RAM_GB_hours = sum(executions$reserved_seconds * executions$RAM_GB) / 3600,
+    requested_runtime_CPU_hours = sum(executions$seconds * executions$cores) / 3600,
+    requested_runtime_RAM_GB_hours = sum(executions$seconds * executions$RAM_GB) / 3600,
     used_CPU_hours = sum(executions$seconds * executions$used_cores) / 3600,
     used_RAM_GB_hours = sum(executions$seconds * executions$used_RAM_GB) / 3600,
     peak_RAM_GB = peak$peak_RAM_GB, peak_RAM_target = peak$static_target,
     sampled_runtime_fraction = sum(executions$seconds[executions$sampled]) / sum(executions$seconds),
+    worker_assigned_runtime_fraction = sum(executions$seconds[!is.na(executions$job)]) / sum(executions$seconds),
     disk_space_GB = sum(executions$bytes[executions$in_store]) / 1e9,
     targets = dplyr::n_distinct(executions$static_target), executions = nrow(executions))
+}
+
+# The share of worker time that no target claims, for the jobs of the configured tiers that ran
+# while a set of executions ran: during periods of the executions' runtimes, joined across gaps
+# of up to ten minutes. Shares are of job lifetimes and of the CPU-hours that Slurm booked.
+benchmark_worker_attribution <- function(context, executions) {
+  executions <- dplyr::arrange(executions, .data$completed_utc - .data$seconds)
+  start <- as.numeric(executions$completed_utc - executions$seconds)
+  end <- cummax(as.numeric(executions$completed_utc))
+  period <- cumsum(c(TRUE, start[-1] > end[-length(end)] + 600))
+  periods <- tibble::tibble(from = tapply(start, period, min), to = tapply(end, period, max))
+  jobs <- context$worker_jobs |>
+    dplyr::filter(purrr::map2_lgl(as.numeric(.data$started), as.numeric(.data$ended),
+      \(started, ended) any(started < periods$to & ended > periods$from))) |>
+    dplyr::mutate(lifetime_hours = as.numeric(.data$ended - .data$started, units = "hours"))
+  unattributed <- is.na(jobs$targets_run)
+  tibble::tibble(worker_jobs = nrow(jobs), worker_hours = sum(jobs$lifetime_hours),
+    unattributed_worker_hours = sum(jobs$lifetime_hours[unattributed]),
+    unattributed_share = sum(jobs$lifetime_hours[unattributed]) / sum(jobs$lifetime_hours),
+    unattributed_booked_CPU_share = sum((jobs$lifetime_hours * jobs$booked_cores)[unattributed]) /
+      sum(jobs$lifetime_hours * jobs$booked_cores))
+}
+
+# Worker attribution while the like-for-like executions and each recorded run ran.
+benchmark_worker_attribution_tibble <- function(context) {
+  executions <- read_benchmark_executions("store_before_runs")
+  counted <- unique(unlist(purrr::pmap(tidyr::expand_grid(workflow = names(SEURAT_SIGNAC_COMPARISON_WORKFLOWS),
+    aggregation = comparison_aggregation_names()), \(workflow, aggregation) {
+      workflow_scope <- benchmark_workflow_scope(context$graph, workflow, aggregation)
+      workflow_scope$scope[workflow_scope$counted]
+    })))
+  runs <- c(setdiff(BENCHMARK_RUNS, "store_before_runs"), names(BENCHMARK_REVISIONS))
+  c(list("like for like" = dplyr::filter(executions, .data$static_target %in% counted)),
+    stats::setNames(lapply(runs, read_benchmark_executions), runs)) |>
+    purrr::map_dfr(\(executions) benchmark_worker_attribution(context, executions), .id = "measurement")
 }
 
 # Resource measures of the counted targets among `scope`, the static targets that a result
@@ -377,7 +462,8 @@ benchmark_measures <- function(context, executions, scope, counted = rep(TRUE, l
   weights[names(slowest)] <- slowest
   tibble::tibble(
     critical_path_hours = if (sequential) sum(executions$seconds) / 3600 else critical_path_seconds(graph, weights) / 3600,
-    simulated_wall_time_hours = if (sequential) NA_real_ else simulate_wall_time_seconds(graph, executions, context$workers) / 3600,
+    simulated_wall_time_hours = if (sequential) NA_real_ else
+      simulate_wall_time_seconds(graph, executions, context$workers, BENCHMARK_TASK_OVERHEAD_SECONDS) / 3600,
     summarise_executions(executions))
 }
 
@@ -492,21 +578,41 @@ benchmark_revision_tibble <- function(context) {
       wall_time_share = .data$simulated_wall_time_hours / full$simulated_wall_time_hours)
 }
 
+# The gap between each recorded target's start and the last completion of its upstream targets
+# built in the same run: the main process's dispatching, loading data and any wait for a worker.
+benchmark_start_gaps <- function(graph, executions) {
+  edges <- igraph::as_data_frame(graph)
+  edges <- edges[edges$from %in% executions$static_target & edges$to %in% executions$static_target, ]
+  ready <- dplyr::summarise(executions, done = max(.data$completed_utc), .by = "static_target") |>
+    dplyr::inner_join(edges, by = c(static_target = "from")) |>
+    dplyr::summarise(ready = max(.data$done), .by = "to")
+  executions |>
+    dplyr::inner_join(ready, by = c(static_target = "to")) |>
+    dplyr::transmute(gap = as.numeric(.data$completed_utc - .data$seconds - .data$ready, units = "secs")) |>
+    dplyr::pull("gap")
+}
+
 # Each recorded run's measured elapsed time against the wall time simulated for its executions on
-# the configured workers, with the targets it did not build counted as finished. sizing_small is
-# left out: a second driver run rebuilt the targets that a download failure had stopped.
+# the configured workers, with the targets it did not build counted as finished, without and with
+# the run's median start gap added to every target. sizing_small is left out: a second driver run
+# rebuilt the targets that a download failure had stopped.
 benchmark_simulation_check <- function(context) {
   reference_GEM_well <- benchmark_aggregation_tibble("revision_31x")$aggregation_GEM_well_IDs[[1]][[1]]
   purrr::map_dfr(c(setdiff(BENCHMARK_RUNS, c("store_before_runs", "sizing_small")), names(BENCHMARK_REVISIONS)), \(label) {
     executions <- read_benchmark_executions(label)
     graph <- benchmark_run_graph(context$graph, unique(executions$static_target), reference_GEM_well)
     scope <- upstream_targets(graph, unique(executions$static_target))
-    measures <- benchmark_measures(context, enrich_executions(context, executions), scope,
-      scope %in% executions$static_target, graph = graph)
+    enriched <- enrich_executions(context, executions)
+    measures <- benchmark_measures(context, enriched, scope, scope %in% executions$static_target, graph = graph)
+    overhead <- max(0, stats::median(benchmark_start_gaps(graph, executions)))
     tibble::tibble(run = label, measured_elapsed_hours = benchmark_elapsed_hours(executions),
-      measures[c("simulated_wall_time_hours", "critical_path_hours", "runtime_hours", "targets", "executions")])
+      measures[c("simulated_wall_time_hours", "critical_path_hours", "runtime_hours", "targets", "executions")],
+      median_start_gap_seconds = overhead,
+      simulated_with_start_gap_hours = simulate_wall_time_seconds(igraph::induced_subgraph(graph, scope),
+        dplyr::filter(enriched, .data$static_target %in% scope), context$workers, overhead) / 3600)
   }) |>
-    dplyr::mutate(simulated_to_measured = .data$simulated_wall_time_hours / .data$measured_elapsed_hours)
+    dplyr::mutate(simulated_to_measured = .data$simulated_wall_time_hours / .data$measured_elapsed_hours,
+      simulated_with_start_gap_to_measured = .data$simulated_with_start_gap_hours / .data$measured_elapsed_hours)
 }
 
 # Supplementary Figure S2. Rows A-F: like for like, multiomeR with its Seurat exports on

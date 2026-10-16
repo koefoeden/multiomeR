@@ -193,7 +193,8 @@ figure_pipeline <- list(
       tables <- list(seurat_signac_comparison_resources = seurat_signac_comparison_resource_tibble(context),
         benchmark_sizing = sizing$sizing, benchmark_sizing_stages = sizing$stages,
         benchmark_revisions = benchmark_revision_tibble(context),
-        benchmark_simulation_check = benchmark_simulation_check(context))
+        benchmark_simulation_check = benchmark_simulation_check(context),
+        benchmark_worker_attribution = benchmark_worker_attribution_tibble(context))
       paths <- file.path(fs::dir_create(file.path(output_dir, "data")), paste0(names(tables), ".tsv"))
       purrr::walk2(tables, paths, readr::write_tsv)
       paths

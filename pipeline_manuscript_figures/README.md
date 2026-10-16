@@ -21,8 +21,9 @@ below `results/`:
   `data/benchmark_sizing.tsv` and `data/benchmark_sizing_stages.tsv` measure
   multiomeR with its defaults on `sizing_1x` to `sizing_91x`;
   `data/benchmark_revisions.tsv` measures what five revisions of `revision_31x`
-  rerun; and `data/benchmark_simulation_check.tsv` compares the simulated wall
-  time with measured runs. Its inputs are `data/benchmark_runs/`, the targets
+  rerun; `data/benchmark_simulation_check.tsv` compares the simulated wall
+  time with measured runs; and `data/benchmark_worker_attribution.tsv` gives the
+  worker time that no target claims while each measurement ran. Its inputs are `data/benchmark_runs/`, the targets
   each measured run built, and `data/benchmark_allocations.tsv`, the worker
   cores and RAM that each counted target requested in the run that measured it.
 - `S4.md` and `data/algorithm_parity/`: Supplementary Table S4, the
@@ -54,8 +55,8 @@ aggregations must be active, because inactive ones are absent from
 [slurm-monitor](https://github.com/koefoeden/slurm-monitor) in
 `SLURM_MONITOR_HISTORY_DIR` (default `~/slurm_monitor_history`), which it reads
 with `slurm_monitor history samples`: the schema 2 `timestamp`, `raw_job_id`,
-`elapsed`, `target`, `ram_cur_gib`, `cpu_cur` and `scope` of each sample of a
-crew worker job.
+`name`, `elapsed`, `target`, `ram_cur_gib`, `cpu_cur`, `ram_lim_gib`,
+`cpus_alloc` and `scope` of each sample of a crew worker job.
 
 Each benchmark run builds its targets alone on one node, from a clean checkout
 with the store on node-local disk. `record_run.py` then records the targets the
@@ -184,9 +185,12 @@ everything, and careful manual checkpointing narrows that gap.
   saving data, and the main process's scheduling are left out, so the
   simulation tends to be shorter than a measured run.
   `benchmark_simulation_check.tsv` compares it with each recorded run's elapsed
-  time, from its first recorded start to its last completion. `sizing_small` is
-  left out of the check, because a second driver run rebuilt the targets that a
-  failed download had stopped.
+  time, from its first recorded start to its last completion, without and with
+  the run's median start gap added to every target: the time from the last
+  completion of a target's upstream targets in the run to its start.
+  `BENCHMARK_TASK_OVERHEAD_SECONDS` sets the overhead the reported wall times
+  add, currently none. `sizing_small` is left out of the check, because a
+  second driver run rebuilt the targets that a failed download had stopped.
 - **CPU time and memory:** each target's runtime times its job's mean sampled
   CPU use and unreclaimable memory, which leaves out page cache. Jobs too short
   to be sampled get the median of the sampled jobs measured with them. Memory
@@ -195,17 +199,23 @@ everything, and careful manual checkpointing narrows that gap.
 - **Peak memory:** the largest sampled memory of any one step, which sets the
   machine size, and the step that reached it.
 - **Reserved CPU and RAM:** each target's runtime plus its share of its
-  worker's idle time, times the cores and RAM that its worker tier requested in
-  the measured run (`benchmark_allocations.tsv`). A worker's idle time is the
-  lifetime of its Slurm job, from its start to its last sample, less the
-  runtimes of the targets it ran: start-up, loading and saving data, waiting for
-  work, and the two idle minutes before it exits. It is shared among those
-  targets in proportion to their runtimes. A target belongs to the job whose
-  samples name it within its runtime. Targets too short to be sampled keep their
-  runtime alone, and their time counts as idle time of their worker. Workers'
-  memory limits, which leave headroom above the requests, are not counted.
-  `allocated_runtime_*` columns give the reservations without idle time, the
-  previous definition.
+  worker's idle time, times the cores and memory that Slurm booked for that
+  worker: the tier's `cpus_per_task` and `memory_gigabytes_required`, which
+  crew.cluster books in MiB, so a 48 GB limit is 48 GiB or 51.5 GB. A worker's
+  idle time is the lifetime of its Slurm job, from its start to its last
+  sample, less the runtimes of the targets it ran: start-up, loading and saving
+  data, waiting for work, and the two idle minutes before it exits. It is shared
+  among those targets in proportion to their runtimes. A target belongs to the
+  job whose samples name it within its runtime. A target too short to be
+  sampled is assigned to a worker of its tier that was alive and free
+  throughout its runtime, preferring workers that no sample names, then the
+  latest started, as a new worker takes the target that was waiting for it.
+  `requested_*` columns multiply the same times by the cores and RAM that the
+  targets requested in the measured runs (`benchmark_allocations.tsv`), and
+  `requested_runtime_*` the runtimes alone, the definition before idle time
+  was counted. Memory limits leave headroom above the requests, so reserved
+  RAM exceeds requested RAM. The figure shows the measured CPU time and memory,
+  not reservations.
 - **Disk space:** retained objects and files inside the store plus the Cell
   Ranger inputs that every workflow reads: filtered matrices, fragment files
   and their indexes.
@@ -221,9 +231,10 @@ everything, and careful manual checkpointing narrows that gap.
   calling, for its whole run.
 - Charging worker idle time weighs on multiomeR, whose many short steps leave
   workers idle between them, while the conventional chain's long steps keep its
-  workers busy. Worker jobs whose steps were all too short to be sampled cannot
-  be attributed, so their time is charged to no workflow, which favours
-  multiomeR.
+  workers busy. Worker jobs that ran no assignable target are charged to no
+  workflow, which favours multiomeR, whose short steps are the ones that cannot
+  be sampled. `benchmark_worker_attribution.tsv` gives that unattributed share
+  while each measurement ran.
 - Leaving out the analyses that only multiomeR performs keeps its
   like-for-like measures to the shared result; the sizing measures include them.
 

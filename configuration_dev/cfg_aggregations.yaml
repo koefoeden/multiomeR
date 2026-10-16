@@ -203,3 +203,4 @@ sizing_91x:
 # changes applied to it one at a time, each built and measured on its own.
 revision_31x:
   inherits: mixed_human_31x
+  aggregation_WNN_cluster_res: 0.6

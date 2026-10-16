@@ -597,10 +597,11 @@ plot_benchmark_figure <- function(tables) {
     figure_1_theme() + ggplot2::theme(panel.grid.major.x = ggplot2::element_blank()) +
     ggplot2::labs(x = "GEM wells (CPU-hours above)", y = "Share of CPU time")
 
-  # Revisions: each rebuild as shares of the full build, with the targets it reran.
+  # Revisions: each rebuild as shares of the full build, with the targets it reran and its measured elapsed time.
   revisions <- tables$benchmark_revisions |>
     dplyr::filter(.data$revision != "full build") |>
-    dplyr::mutate(label = sprintf("%s (%s of %s targets)", .data$change, .data$targets, .data$targets_total),
+    dplyr::mutate(label = sprintf("%s (%s of %s targets, %.0f min)", .data$change, .data$targets, .data$targets_total,
+      60 * .data$measured_elapsed_hours),
       label = factor(.data$label, rev(.data$label))) |>
     tidyr::pivot_longer(c("critical_path_share", "CPU_share", "wall_time_share"), names_to = "measure", values_to = "share") |>
     dplyr::mutate(measure = factor(dplyr::recode(.data$measure, critical_path_share = "Critical path",

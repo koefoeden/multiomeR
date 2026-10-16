@@ -220,8 +220,10 @@ everything, and careful manual checkpointing narrows that gap.
   it: a single script would hold its largest allocation, up to 500 GB for peak
   calling, for its whole run.
 - Charging worker idle time weighs on multiomeR, whose many short steps leave
-  workers idle between them; the conventional chain's long steps keep its
-  workers busy.
+  workers idle between them, while the conventional chain's long steps keep its
+  workers busy. Worker jobs whose steps were all too short to be sampled cannot
+  be attributed, so their time is charged to no workflow, which favours
+  multiomeR.
 - Leaving out the analyses that only multiomeR performs keeps its
   like-for-like measures to the shared result; the sizing measures include them.
 

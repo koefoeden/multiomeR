@@ -1,11 +1,13 @@
 # Manuscript figures and tables from configuration_dev's public-data aggregations:
 # Figure 1, Supplementary Figure S3 and Supplementary Table S3 from mixed_human_31x,
-# Supplementary Figure S2 comparing multiomeR with a conventional Seurat/Signac
-# workflow on comparison_1x to comparison_31x, and Supplementary Table S4 comparing
+# Supplementary Figure S2 and Table S6 on what multiomeR costs and saves: against a
+# conventional Seurat/Signac workflow on comparison_1x to comparison_31x, with its defaults
+# on sizing_1x to sizing_91x and for revisions of revision_31x, and Supplementary Table S4 comparing
 # the algorithm reimplementations with their references on comparison_5x. See README.md.
 source("pipeline_manuscript_figures/helpers.R")
 source("pipeline_manuscript_figures/algorithm_parity_helpers.R")
 source("pipeline_manuscript_figures/seurat_signac_helpers.R")
+source("pipeline_manuscript_figures/benchmark_helpers.R")
 base_pipeline <- source("_targets.R")$value
 output_dir <- "pipeline_manuscript_figures/results"
 
@@ -183,32 +185,38 @@ figure_pipeline <- list(
     resources = get_tar_resources(RAM_GB_req = 4)
   ),
   tarchetypes::tar_file(
-    seurat_signac_comparison_resources,
-    description = "Supplementary Figure S2 data: multiomeR and Seurat/Signac resource use from recorded targets metadata and Slurm job monitoring, one row per aggregation and workflow",
+    supplementary_table_S6,
+    description = "Supplementary Table S6, the data of Figure S2: multiomeR against Seurat/Signac like for like, sizing with defaults by scope and stage, revisions, and the simulated wall time against measured runs, from recorded runs, the targets graph and Slurm job monitoring",
     command = {
-      path <- file.path(output_dir, "data", "seurat_signac_comparison_resources.tsv")
-      fs::dir_create(dirname(path))
-      readr::write_tsv(seurat_signac_comparison_resource_tibble(comparison_aggregation_names()), path)
-      path
+      context <- benchmark_context()
+      sizing <- benchmark_sizing_tibbles(context)
+      tables <- list(seurat_signac_comparison_resources = seurat_signac_comparison_resource_tibble(context),
+        benchmark_sizing = sizing$sizing, benchmark_sizing_stages = sizing$stages,
+        benchmark_revisions = benchmark_revision_tibble(context),
+        benchmark_simulation_check = benchmark_simulation_check(context))
+      paths <- file.path(fs::dir_create(file.path(output_dir, "data")), paste0(names(tables), ".tsv"))
+      purrr::walk2(tables, paths, readr::write_tsv)
+      paths
     },
     # targets lets only file targets read the store metadata, which no upstream dependency tracks.
     # A worker rebuilds the graph and reads the monitor history, so dispatching continues meanwhile.
     cue = targets::tar_cue(mode = "always"), resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    seurat_signac_comparison_resource_plot,
-    description = "Supplementary Figure S2: input nuclei against each resource measure, faceted, coloured by workflow",
-    command = readr::read_tsv(seurat_signac_comparison_resources, show_col_types = FALSE) |>
-      plot_seurat_signac_comparison_resources() |> compact_figure_1_plot(),
-    resources = get_tar_resources(RAM_GB_req = 1)
+    supplementary_figure_S2_plot,
+    description = "Supplementary Figure S2: like for like, sizing with defaults and revisions from the Table S6 data",
+    command = stats::setNames(supplementary_table_S6, tools::file_path_sans_ext(basename(supplementary_table_S6))) |>
+      lapply(readr::read_tsv, show_col_types = FALSE) |>
+      plot_benchmark_figure() |> compact_figure_1_plot(),
+    packages = w_def("patchwork"), resources = get_tar_resources(RAM_GB_req = 1)
   ),
   tarchetypes::tar_file(
     supplementary_figure_S2,
     description = "Export Supplementary Figure S2 from its ggplot object",
     command = {
       path <- file.path(output_dir, "S2.png")
-      ggplot2::ggsave(path, seurat_signac_comparison_resource_plot,
-        device = ragg::agg_png, width = 6.5, height = 4.5, dpi = 300, create.dir = TRUE)
+      ggplot2::ggsave(path, supplementary_figure_S2_plot,
+        device = ragg::agg_png, width = 8, height = 10.5, dpi = 300, create.dir = TRUE)
       path
     },
     resources = get_tar_resources(RAM_GB_req = 1)

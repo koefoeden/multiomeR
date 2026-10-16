@@ -27,7 +27,7 @@ Before enabling the module, confirm that:
 | Question | Output |
 |---|---|
 | Which variants and peaks carry each study's evidence? | Peak-weight summaries and study and variant-to-peak tables |
-| Which cell types are enriched? | Cell-type chromVAR deviation heatmaps |
+| Which cell types are enriched, and which matters most? | Cell-type chromVAR deviation heatmaps, which outline each study's top set of cell types |
 | Which loci and variants drive a cell type's enrichment? | Locus-contribution heatmaps and bars, and variant detail plots |
 | Which nuclei are trait-relevant? | SCAVENGE trait-relevance scores on the WNN graph, summarized by cell type and cluster |
 

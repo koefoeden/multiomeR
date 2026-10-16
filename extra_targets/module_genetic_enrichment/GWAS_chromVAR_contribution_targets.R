@@ -59,6 +59,11 @@ rlang::list2(
     ),
     resources = get_tar_resources(RAM_GB_req = 60)
   ),
+  targets::tar_target(
+    name = chromVAR_top_set_tibble.cell_type_pseudobulk,
+    description = "Find each GWAS's cell types not significantly below its top one by bootstrapping its loci",
+    command = get_GWAS_chromVAR_top_set_tibble(chromVAR_locus_contribution_tibble.cell_type_pseudobulk)
+  ),
   tarchetypes::tar_file(
     name = chromVAR_locus_contribution_per_GWAS_heatmaps.cell_type_pseudobulk,
     description = "Save one cell-type-by-locus contribution heatmap per enabled GWAS. [checkpoint:genetic_enrichment]",

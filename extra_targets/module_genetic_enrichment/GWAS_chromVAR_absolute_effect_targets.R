@@ -75,6 +75,7 @@ rlang::list2(
     description = "Save absolute-effect-weighted GWAS deviations without within-GWAS scaling. [checkpoint:genetic_enrichment]",
     command = plot_GWAS_chromVAR_deviation_heatmap(
       chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk,
+      chromVAR_absolute_effect_top_set_tibble.cell_type_pseudobulk,
       GWAS_metadata_tracks_plot = GWAS_absolute_effect_metadata_tracks_plot,
       compartments_patterns = genetic_enrichment_compartment_patterns,
       standardize = FALSE,
@@ -87,6 +88,7 @@ rlang::list2(
     description = "Save absolute-effect-weighted GWAS deviations standardized within each GWAS. [checkpoint:genetic_enrichment]",
     command = plot_GWAS_chromVAR_deviation_heatmap(
       chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk,
+      chromVAR_absolute_effect_top_set_tibble.cell_type_pseudobulk,
       GWAS_metadata_tracks_plot = GWAS_absolute_effect_metadata_tracks_plot,
       compartments_patterns = genetic_enrichment_compartment_patterns,
       standardize = TRUE,
@@ -131,6 +133,11 @@ rlang::list2(
       chromVAR_absolute_effect_variant_contribution_tibble.cell_type_pseudobulk,
       GWAS_locus_to_gene_tibble),
     resources = get_tar_resources(RAM_GB_req = 16)
+  ),
+  targets::tar_target(
+    name = chromVAR_absolute_effect_top_set_tibble.cell_type_pseudobulk,
+    description = "Find each eligible GWAS's cell types not significantly below its top one by absolute-effect-weighted deviation, bootstrapping its loci",
+    command = get_GWAS_chromVAR_top_set_tibble(chromVAR_absolute_effect_locus_contribution_tibble.cell_type_pseudobulk)
   ),
   tarchetypes::tar_file(
     name = chromVAR_absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots.cell_type_pseudobulk,

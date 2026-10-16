@@ -185,6 +185,81 @@ summarize_GWAS_chromVAR_peak_contributions <- function(
     )
 }
 
+#' Find the cell types not significantly below the top one
+#'
+#' The top set holds the cell type with the largest estimate and every other
+#' cell type whose shortfall from it is not significant in a one-sided normal
+#' test at level `alpha` divided by the number of comparisons. By the Bonferroni
+#' inequality it contains the cell type with the largest true value with
+#' probability at least 1 - `alpha`.
+#'
+#' @param estimate Estimate per cell type; missing values take no part.
+#' @param replicate_matrix Cell-type-by-replicate matrix of bootstrap
+#'   estimates, or of delete-one-block jackknife estimates.
+#' @param jackknife Whether the replicates are jackknife estimates, whose
+#'   spread is scaled up to the jackknife standard error.
+#' @param alpha Probability of leaving out the cell type with the largest true
+#'   value.
+#' @return A tibble with each cell type's top-set membership and the z-score
+#'   of its shortfall from the top cell type.
+#' @keywords internal
+
+get_top_set_tibble <- function(estimate, replicate_matrix, jackknife = FALSE, alpha = 0.05) {
+  top <- which.max(estimate)
+  if (length(top) == 0L) {
+    return(tibble::tibble(in_top_set = NA, z_below_top = NA_real_))
+  }
+  n_replicates <- ncol(replicate_matrix)
+  shortfall_se <- matrixStats::rowSds(sweep(replicate_matrix, 2, replicate_matrix[top, ]), useNames = FALSE) *
+    if (jackknife) (n_replicates - 1) / sqrt(n_replicates) else 1
+  z_below_top <- dplyr::if_else(seq_along(estimate) == top, 0, (estimate[[top]] - estimate) / shortfall_se)
+  tibble::tibble(
+    in_top_set = z_below_top < stats::qnorm(alpha / (sum(!is.na(estimate)) - 1), lower.tail = FALSE),
+    z_below_top = z_below_top
+  )
+}
+
+#' Find each GWAS's top set of cell types by bootstrapping its loci
+#'
+#' Bootstrap samples of loci re-sum their exact deviation contributions per
+#' cell type. Each cell type's background expectation and denominator stay
+#' those of all loci, so the samples approximate the sampling of loci rather
+#' than refitting chromVAR. Loci are the credible sets whose lead variants in
+#' peaks lie within 500 kb of each other, so that credible sets sharing peaks
+#' are resampled together.
+#'
+#' @param locus_contribution_tibble Exact credible-set contributions from
+#'   `get_GWAS_chromVAR_locus_contribution_tibble()`.
+#' @param n_bootstraps Bootstrap samples of loci.
+#' @param min_loci Fewest loci whose bootstrap defines a top set.
+#' @return One row per GWAS and cell type with its top-set membership by
+#'   deviation and the z-score of its shortfall from the top cell type, both
+#'   missing for a GWAS with fewer than `min_loci` loci.
+#' @keywords internal
+
+get_GWAS_chromVAR_top_set_tibble <- function(locus_contribution_tibble, n_bootstraps = 1000L, min_loci = 10L) {
+  purrr::map_dfr(split(locus_contribution_tibble, locus_contribution_tibble$GWAS_ID), \(GWAS_tibble) {
+    leads <- GenomicRanges::GRanges(GWAS_tibble$chromosome, IRanges::IRanges(GWAS_tibble$lead_variant_position, width = 1L))
+    loci <- GenomicRanges::reduce(GenomicRanges::resize(leads, 500001L, fix = "center"))
+    contribution_matrix <- tapply(
+      GWAS_tibble$deviation_contribution,
+      list(GenomicRanges::findOverlaps(leads, loci, select = "first"), GWAS_tibble$cluster),
+      sum,
+      default = 0
+    )
+    deviation <- unname(colSums(contribution_matrix))
+    # A bootstrap of a handful of loci gives no usable standard errors.
+    if (nrow(contribution_matrix) < min_loci) deviation[] <- NA
+    withr::local_seed(1L)
+    bootstrap_weights <- t(stats::rmultinom(n_bootstraps, nrow(contribution_matrix), rep(1, nrow(contribution_matrix))))
+    tibble::tibble(
+      GWAS_ID = GWAS_tibble$GWAS_ID[[1]],
+      cluster = colnames(contribution_matrix),
+      get_top_set_tibble(deviation, t(bootstrap_weights %*% contribution_matrix))
+    )
+  })
+}
+
 #' Allocate peak contributions to credible-set variants
 #'
 #' Consensus peaks do not overlap and variants are single positions, so each

@@ -572,21 +572,17 @@ SEURAT_SIGNAC_COMPARISON_WORKFLOWS <- local({
 # crew worker's cgroup every 10-15 s together with its running target. RAM is the
 # memory the kernel cannot reclaim, so page cache from reading and writing files is
 # left out; shared pages count once and child processes are included.
-read_slurm_monitor_samples <- function(since,
-  history_dir = Sys.getenv("SLURM_MONITOR_HISTORY_DIR", "~/slurm_monitor_history")) {
-  # Only schema 2 files (<job>.v2.tsv) hold unreclaimable RAM in ram_cur_gib; their
-  # columns are found by header name. Rows from sstat hold RSS and are left out.
-  awk_program <- paste(
-    "FNR == 1 {delete col; for (i = 1; i <= NF; i++) col[$i] = i; next}",
-    "$col[\"name\"] ~ /^crew-worker-/ && $col[\"ram_cur_gib\"] != \"NA\" && $col[\"scope\"] != \"sstat\"",
-    "{print $col[\"timestamp\"] \"\\t\" $col[\"target\"] \"\\t\" $col[\"ram_cur_gib\"] \"\\t\" $col[\"cpu_cur\"]}")
-  cmd <- sprintf("find %s -name '*.v2.tsv' -newermt '%s' -print0 | xargs -0 awk -F'\\t' %s",
-    shQuote(path.expand(history_dir)), format(since, "%Y-%m-%d %H:%M:%S"), shQuote(awk_program))
-  samples <- data.table::fread(cmd = cmd, sep = "\t", header = FALSE, na.strings = "NA",
-    col.names = c("timestamp", "target", "RAM_GiB", "cpu_cores"), colClasses = list(character = 1))
+read_slurm_monitor_samples <- function(since) {
+  # The command reads the compacted history and the files of jobs not yet folded
+  # into it. Only schema 2 holds unreclaimable RAM in ram_cur_gib; rows from sstat
+  # hold RSS and are left out.
+  cmd <- paste("slurm_monitor history samples --schema 2 --name '^crew-worker-' --since",
+    shQuote(format(since, "%Y-%m-%d %H:%M:%S")), "--columns timestamp,target,ram_cur_gib,cpu_cur,scope")
+  samples <- data.table::fread(cmd = cmd, sep = "\t", na.strings = "NA", colClasses = list(character = "timestamp")) |>
+    dplyr::filter(!is.na(.data$ram_cur_gib), !.data$scope %in% "sstat")
   tibble::tibble(target = samples$target,
     time = as.POSIXct(samples$timestamp, tz = "Europe/Copenhagen"),
-    RAM_GB = samples$RAM_GiB * 2^30 / 1e9, cpu_cores = samples$cpu_cores)
+    RAM_GB = samples$ram_cur_gib * 2^30 / 1e9, cpu_cores = samples$cpu_cur)
 }
 
 # Mean measured RAM and CPU of each execution within its recorded build window.

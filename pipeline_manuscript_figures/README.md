@@ -47,10 +47,12 @@ the measured aggregations must be active, because inactive ones are absent from
 `tar_network()` even while their metadata remain. Its measurements come
 from the run that builds the workflows, so build the results afterwards from a
 copy of that store if needed. S2 also needs the per-job resource history of
-[slurm-monitor](https://github.com/koefoeden/slurm-monitor), read from
-`SLURM_MONITOR_HISTORY_DIR` (default `~/slurm_monitor_history`): schema 2
-files (`<job>.v2.tsv`) with the columns `name`, `timestamp`, `target`,
-`ram_cur_gib`, `cpu_cur` and `scope`, one row per sample of a crew worker job.
+[slurm-monitor](https://github.com/koefoeden/slurm-monitor) in
+`SLURM_MONITOR_HISTORY_DIR` (default `~/slurm_monitor_history`), which it reads
+with `slurm_monitor history samples`: the schema 2 `timestamp`, `target`,
+`ram_cur_gib`, `cpu_cur` and `scope` of each sample of a crew worker job. The
+command covers both the compacted history and jobs not yet folded into it, so
+S2 can be built as soon as the measured runs finish.
 
 ## Figure 1
 

@@ -118,6 +118,12 @@ later changes to the requests leave unchanged; disk space counts retained
 objects and files inside the store plus the Cell Ranger inputs that every
 workflow reads: filtered matrices, fragment files and their indexes.
 
+Memory counts what the processes held, including memory a worker kept from its
+earlier targets, as in any run of either workflow. Worker startup, waiting and
+idle time before exit belong to no target and are left out of every measure.
+Reserved resources credit the conventional chain with a separate allocation per
+step, which a single script could not change during its run.
+
 ## Supplementary Table S4
 
 Each native and reference implementation runs as its own six-core target in a

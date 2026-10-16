@@ -121,3 +121,4 @@ comparison_ENCSR418BIA	comparison	ENCDO602PYC	1	example_data/encode/ENCSR418BIA	
 comparison_ENCSR793XGJ	comparison	ENCDO545EJY	1	example_data/encode/ENCSR793XGJ	NA	NA	NA	TRUE	NA	NA	heart	nuclear_fraction	NA	NA	NA
 comparison_ENCSR629CZM	comparison	ENCDO187SDN	1	example_data/encode/ENCSR629CZM	NA	NA	NA	TRUE	NA	NA	heart	nuclear_fraction	NA	NA	NA
 comparison_ENCSR882CKY	comparison	ENCDO184BIH	1	example_data/encode/ENCSR882CKY	NA	NA	NA	TRUE	NA	NA	heart	nuclear_fraction	NA	NA	NA
+ENCSR527TJQ	ENCODE_human_multiome	ENCDO068KYD	1	example_data/encode/ENCSR527TJQ	example_data/encode/ENCSR527TJQ/outs/cellbender-output_gex_bent_only_filtered.h5	NA	TSS.enrichment < 4 ;; nucleosome_signal > 4 ;; nCount_RNA < 250 ;; RNA_mito_percent > 10 ;; amulet_q.value < 0.01	TRUE	NA	NA	liver	nuclear_fraction	NA	NA	NA

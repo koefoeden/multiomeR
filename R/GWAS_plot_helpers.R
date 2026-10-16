@@ -759,10 +759,15 @@ plot_WNN_TRS_heatmap <- function(heatmap_data, GWAS_metadata_tracks_plot,
   )
 }
 
+# One star marks nominal significance and two mark FDR significance.
+get_significance_stars <- function(p, q) {
+  dplyr::case_when(q < 0.05 ~ "**", p < 0.05 ~ "*", .default = "")
+}
+
 #' Plot ordinary or absolute-effect chromVAR deviations from cached summaries
-#' @param deviation_tibble Cached scores containing deviation, relative_deviation and z_q.
+#' @param deviation_tibble Cached scores containing deviation, relative_deviation, z_p and z_q.
 #' @param top_set_tibble Top-set membership of the same GWAS and cell types from
-#'   `get_GWAS_chromVAR_top_set_tibble()`.
+#'   `get_GWAS_chromVAR_top_set_tibble()`, missing where there is no top set.
 #' @param GWAS_metadata_tracks_plot Metadata tracks for the same GWAS collection.
 #' @param compartments_patterns Optional cell-type compartment patterns.
 #' @param standardize Use the precomputed within-GWAS standardized deviation column.
@@ -778,12 +783,7 @@ plot_GWAS_chromVAR_deviation_heatmap <- function(deviation_tibble, top_set_tibbl
   quantity <- if (standardize) "Standardized deviation" else "Deviation"
   heatmap_data <- deviation_tibble |>
     dplyr::left_join(top_set_tibble, by = c("GWAS_ID", "cluster"), relationship = "one-to-one") |>
-    dplyr::mutate(
-      significance_label = dplyr::if_else(z_q < 0.05, "*", ""),
-      # A top set answers which cell type matters most only for an enriched trait.
-      top_set_shown = in_top_set & any(z_q[which.max(deviation)] < 0.05),
-      .by = GWAS_ID
-    )
+    dplyr::mutate(significance_label = get_significance_stars(z_p, z_q))
   plot_GWAS_by_cluster_heatmap(
     heatmap_data,
     GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
@@ -791,25 +791,26 @@ plot_GWAS_chromVAR_deviation_heatmap <- function(deviation_tibble, top_set_tibbl
     fill_col = if (standardize) "relative_deviation" else "deviation",
     fill_label = paste(if (beta_weighted) "PIP × |β|" else "Ordinary", quantity),
     support_label_col = "significance_label",
-    top_set_col = "top_set_shown"
+    top_set_col = "in_top_set"
   ) + patchwork::plot_annotation(
     title = paste(if (beta_weighted) "Effect-magnitude-weighted" else "Ordinary",
       "GWAS-linked accessibility by cell type", if (standardize) "— standardized" else "— unscaled"),
     subtitle = paste(
       if (standardize) "Compare cell types within each trait; red indicates above-average deviation."
       else "Positive values indicate accessibility above that expected from matched background peaks.",
-      "Stars mark significant enrichment; outlines mark the cell types not significantly below the top one, which contain the most relevant cell type.",
+      "Stars mark nominal (*) and FDR-significant (**) enrichment; outlines mark the cell types not significantly below the top significant one, which contain the most relevant cell type.",
       sep = "\n"),
     caption = stringr::str_wrap(paste(
       "ATAC counts are summed by WNN cell type. The expected accessibility averages the depth-normalized cell-type profiles, so abundant cell types do not dominate the reference.",
+      "Each GWAS's deviations therefore average about zero across cell types, and a cell type's mean over many GWAS reflects the trait panel.",
       if (beta_weighted) paste(
         "PIP × |β| weighting uses variant effects when complete, otherwise the highest-PIP available effect per locus; only eligible GWAS are included.",
         "Genetic effect direction is discarded. Weights preserve retained PIP mass before peak weights are capped at one."),
-      "Deviation: weighted accessibility of the GWAS peaks minus that of background peaks matched on GC content, fragment length and expected accessibility, divided by the depth-adjusted expected accessibility (chromVAR's bias-corrected deviation).",
+      "Deviation: weighted accessibility of the GWAS peaks minus that of background peaks matched on GC content and expected accessibility, divided by the depth-adjusted expected accessibility (chromVAR's bias-corrected deviation).",
       if (standardize) "Colour: deviation centred and divided by its SD across cell types within each GWAS."
       else "Colour: deviation, without centring or SD scaling across cell types.",
-      "Stars: Benjamini-Hochberg q < 0.05 for the one-sided z-score against the background, over all GWAS and cell types.",
-      "Outlines: in GWAS whose top cell type by deviation has q < 0.05, it and every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types",
+      "Stars: * one-sided P < 0.05 for the z-score against the background; ** also Benjamini-Hochberg q < 0.05 over all GWAS and cell types.",
+      "Outlines: in GWAS with a cell type at q < 0.05, the one of these with the largest deviation and every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types",
       "(Bonferroni, so the set holds the cell type with the largest true deviation with at least 95% probability).",
       "Shortfall standard errors come from 1,000 bootstrap samples of the GWAS loci (credible sets with lead variants within 500 kb grouped), which re-sum their exact contributions with the background fixed; GWAS with fewer than 10 loci get no top set.",
       "Nuclei counts describe input support; cell types are pooled, so donors are not independent replicates."

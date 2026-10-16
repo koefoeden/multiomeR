@@ -185,37 +185,41 @@ summarize_GWAS_chromVAR_peak_contributions <- function(
     )
 }
 
-#' Find the cell types not significantly below the top one
+#' Find the cell types not significantly below the top significant one
 #'
-#' The top set holds the cell type with the largest estimate and every other
-#' cell type whose shortfall from it is not significant in a one-sided normal
-#' test at level `alpha` divided by the number of comparisons. By the Bonferroni
+#' The top set is anchored on the significant cell type with the largest
+#' estimate. It holds the anchor and every other cell type whose shortfall from
+#' it is not significant in a one-sided normal test at level `alpha` divided by
+#' the number of comparisons, so cell types with larger but nonsignificant
+#' estimates join it. Whichever cell type anchors it, by the Bonferroni
 #' inequality it contains the cell type with the largest true value with
 #' probability at least 1 - `alpha`.
 #'
 #' @param estimate Estimate per cell type; missing values take no part.
 #' @param replicate_matrix Cell-type-by-replicate matrix of bootstrap
 #'   estimates, or of delete-one-block jackknife estimates.
+#' @param significant Whether each cell type is significant; without any,
+#'   there is no top set.
 #' @param jackknife Whether the replicates are jackknife estimates, whose
 #'   spread is scaled up to the jackknife standard error.
 #' @param alpha Probability of leaving out the cell type with the largest true
 #'   value.
 #' @return A tibble with each cell type's top-set membership and the z-score
-#'   of its shortfall from the top cell type.
+#'   of its shortfall from the anchor.
 #' @keywords internal
 
-get_top_set_tibble <- function(estimate, replicate_matrix, jackknife = FALSE, alpha = 0.05) {
-  top <- which.max(estimate)
-  if (length(top) == 0L) {
-    return(tibble::tibble(in_top_set = NA, z_below_top = NA_real_))
+get_top_set_tibble <- function(estimate, replicate_matrix, significant, jackknife = FALSE, alpha = 0.05) {
+  anchor <- which.max(dplyr::if_else(significant, estimate, NA))
+  if (length(anchor) == 0L) {
+    return(tibble::tibble(in_top_set = NA, z_below_anchor = NA_real_))
   }
   n_replicates <- ncol(replicate_matrix)
-  shortfall_se <- matrixStats::rowSds(sweep(replicate_matrix, 2, replicate_matrix[top, ]), useNames = FALSE) *
+  shortfall_se <- matrixStats::rowSds(sweep(replicate_matrix, 2, replicate_matrix[anchor, ]), useNames = FALSE) *
     if (jackknife) (n_replicates - 1) / sqrt(n_replicates) else 1
-  z_below_top <- dplyr::if_else(seq_along(estimate) == top, 0, (estimate[[top]] - estimate) / shortfall_se)
+  z_below_anchor <- dplyr::if_else(seq_along(estimate) == anchor, 0, (estimate[[anchor]] - estimate) / shortfall_se)
   tibble::tibble(
-    in_top_set = z_below_top < stats::qnorm(alpha / (sum(!is.na(estimate)) - 1), lower.tail = FALSE),
-    z_below_top = z_below_top
+    in_top_set = z_below_anchor < stats::qnorm(alpha / (sum(!is.na(estimate)) - 1), lower.tail = FALSE),
+    z_below_anchor = z_below_anchor
   )
 }
 
@@ -230,14 +234,16 @@ get_top_set_tibble <- function(estimate, replicate_matrix, jackknife = FALSE, al
 #'
 #' @param locus_contribution_tibble Exact credible-set contributions from
 #'   `get_GWAS_chromVAR_locus_contribution_tibble()`.
+#' @param deviation_tibble The same GWAS and cell types with their z-score
+#'   q-values `z_q`, which mark the significant cell types at q < 0.05.
 #' @param n_bootstraps Bootstrap samples of loci.
 #' @param min_loci Fewest loci whose bootstrap defines a top set.
 #' @return One row per GWAS and cell type with its top-set membership by
-#'   deviation and the z-score of its shortfall from the top cell type, both
-#'   missing for a GWAS with fewer than `min_loci` loci.
+#'   deviation and the z-score of its shortfall from the anchor, both missing
+#'   for a GWAS with fewer than `min_loci` loci or no significant cell type.
 #' @keywords internal
 
-get_GWAS_chromVAR_top_set_tibble <- function(locus_contribution_tibble, n_bootstraps = 1000L, min_loci = 10L) {
+get_GWAS_chromVAR_top_set_tibble <- function(locus_contribution_tibble, deviation_tibble, n_bootstraps = 1000L, min_loci = 10L) {
   purrr::map_dfr(split(locus_contribution_tibble, locus_contribution_tibble$GWAS_ID), \(GWAS_tibble) {
     leads <- GenomicRanges::GRanges(GWAS_tibble$chromosome, IRanges::IRanges(GWAS_tibble$lead_variant_position, width = 1L))
     loci <- GenomicRanges::reduce(GenomicRanges::resize(leads, 500001L, fix = "center"))
@@ -250,12 +256,14 @@ get_GWAS_chromVAR_top_set_tibble <- function(locus_contribution_tibble, n_bootst
     deviation <- unname(colSums(contribution_matrix))
     # A bootstrap of a handful of loci gives no usable standard errors.
     if (nrow(contribution_matrix) < min_loci) deviation[] <- NA
+    GWAS_deviation_tibble <- dplyr::filter(deviation_tibble, .data$GWAS_ID == GWAS_tibble$GWAS_ID[[1]])
+    significant <- GWAS_deviation_tibble$z_q[match(colnames(contribution_matrix), GWAS_deviation_tibble$cluster)] < 0.05
     withr::local_seed(1L)
     bootstrap_weights <- t(stats::rmultinom(n_bootstraps, nrow(contribution_matrix), rep(1, nrow(contribution_matrix))))
     tibble::tibble(
       GWAS_ID = GWAS_tibble$GWAS_ID[[1]],
       cluster = colnames(contribution_matrix),
-      get_top_set_tibble(deviation, t(bootstrap_weights %*% contribution_matrix))
+      get_top_set_tibble(deviation, t(bootstrap_weights %*% contribution_matrix), significant)
     )
   })
 }

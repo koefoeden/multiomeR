@@ -136,8 +136,8 @@ rlang::list2(
   ),
   targets::tar_target(
     name = chromVAR_absolute_effect_top_set_tibble.cell_type_pseudobulk,
-    description = "Find each eligible GWAS's cell types not significantly below its top one by absolute-effect-weighted deviation, bootstrapping its loci",
-    command = get_GWAS_chromVAR_top_set_tibble(chromVAR_absolute_effect_locus_contribution_tibble.cell_type_pseudobulk)
+    description = "Find each eligible GWAS's cell types not significantly below its top significant one by absolute-effect-weighted deviation, bootstrapping its loci",
+    command = get_GWAS_chromVAR_top_set_tibble(chromVAR_absolute_effect_locus_contribution_tibble.cell_type_pseudobulk, chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk)
   ),
   tarchetypes::tar_file(
     name = chromVAR_absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots.cell_type_pseudobulk,

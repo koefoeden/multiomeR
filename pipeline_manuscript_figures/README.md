@@ -144,8 +144,9 @@ metrics. They equal the count in Seurat's error.
 ### Sizing
 
 The sizing measures cover multiomeR's full analysis of each `sizing_`
-aggregation: its own targets and every upstream target, including shared setup
-such as reference downloads, which a first run builds once. Rows of
+aggregation: its own targets, every target of its GEM wells, such as their QC
+plots, and every upstream target, including shared setup such as reference
+downloads, which a first run builds once. Rows of
 `benchmark_sizing.tsv` give the like-for-like subsets of both multiomeR
 workflows, the primary module and, for `sizing_31x` and `sizing_91x`, the
 primary module with the genetic-enrichment, differential-analysis and peak-gene
@@ -167,7 +168,9 @@ cardiomyopathy GWAS, age added to the cardiomyocyte sex model, and an added
 liver GEM well with its donor. The analysed configuration lacks that well, so
 its recorded targets take the dependencies of the same targets of another well.
 Each run's targets, critical path, CPU time and simulated wall time are
-compared with the full build's. A script without saved intermediates reruns
+compared with the full build's. The revision runs and `sizing_91x` ran on
+node-local copies of the store that were not copied back, so their records hold
+their only measurements. A script without saved intermediates reruns
 everything, and careful manual checkpointing narrows that gap.
 
 ### Measures
@@ -175,22 +178,27 @@ everything, and careful manual checkpointing narrows that gap.
 - **Critical path:** the longest chain of recorded runtimes through the
   dependency graph, as with unlimited workers. Dynamic branches run
   concurrently, and excluded or unchanged targets keep their place with no
-  runtime. The conventional chain's critical path is the sum of its runtimes, as
+  runtime. So do input files outside the store, such as configuration tables:
+  `targets` records a file's modification time as its completion time, so a run
+  that finds the file unchanged records no build of it. The conventional chain's critical path is the sum of its runtimes, as
   when a script runs its steps one after another.
 - **Simulated wall time:** the same runtimes scheduled on the workers of
   `configuration_dev/crew_controllers.R`: 16 light, 6 heavy, one large and one
   huge worker, each target routed to the tier its RAM request selects. A target
   is ready once its upstream targets have finished, and each tier's workers take
-  ready targets in the order they became ready. Worker start-up, loading and
-  saving data, and the main process's scheduling are left out, so the
-  simulation tends to be shorter than a measured run.
-  `benchmark_simulation_check.tsv` compares it with each recorded run's elapsed
-  time, from its first recorded start to its last completion, without and with
-  the run's median start gap added to every target: the time from the last
-  completion of a target's upstream targets in the run to its start.
-  `BENCHMARK_TASK_OVERHEAD_SECONDS` sets the overhead the reported wall times
-  add, currently none. `sizing_small` is left out of the check, because a
-  second driver run rebuilt the targets that a failed download had stopped.
+  ready targets in the order they became ready. Each target also takes 2 s
+  for dispatching, loading and saving (`BENCHMARK_TASK_OVERHEAD_SECONDS`), fitted
+  to the single-run records, which it brings within 10% of their measured
+  elapsed times, against 9-16% short without it.
+  `benchmark_simulation_check.tsv` compares the simulation, with and without
+  that overhead, with each recorded run's elapsed time: the periods in which its
+  targets ran, from the first recorded start to the last completion, joined
+  across gaps of up to ten minutes. It also gives each run's median start gap,
+  the time from the last completion of a target's upstream targets in the run to
+  its start, which in large runs includes waiting for a busy worker.
+  `sizing_small` and `revision_5` are left out of the check, because each spans
+  several driver runs: after a failed download and a rebuild of a truncated
+  annotation, and after a fix to the marker tests.
 - **CPU time and memory:** each target's runtime times its job's mean sampled
   CPU use and unreclaimable memory, which leaves out page cache. Jobs too short
   to be sampled get the median of the sampled jobs measured with them. Memory
@@ -241,7 +249,12 @@ everything, and careful manual checkpointing narrows that gap.
 `data/benchmark_runs/store_before_runs.tsv.gz` holds the stems and current
 branches of every target upstream of the comparison, sizing and revision
 aggregations' targets, as `tar_meta()` recorded them on 16 October 2026 before
-the benchmark runs. `benchmark_allocations.tsv` records the requests of
+the benchmark runs. The sizing and revision measures read the store's stems
+first, for targets that no run rebuilt and the snapshot predates, such as the
+comparison GEM wells' QC plots, then the snapshot and the records. Targets built
+only on node-local store copies are absent from the store's metadata and take
+the location, inside or outside the store, of their family's targets in other
+aggregations or GEM wells. `benchmark_allocations.tsv` records the requests of
 multiomeR 1.2.0 for the comparison runs' targets, and those at commit 2e8cbe9f
 for the other targets the benchmark counts, which the sizing and revision runs
 requested.

@@ -1,0 +1,60 @@
+name	parent	seconds	completed_utc	bytes	error
+models.differential_analyses.revision_31x		0.039	2026-10-17T00:21:37+00:00	232	
+dynamic_tibble.gene_expression.differential_analyses.revision_31x		0.01	2026-10-17T00:21:37+00:00	309	
+dynamic_tibble.chromatin_accessibility.differential_analyses.revision_31x		0.003	2026-10-17T00:21:38+00:00	309	
+dynamic_tibble.motif_family_accessibility.differential_analyses.revision_31x		0.004	2026-10-17T00:21:38+00:00	309	
+dynamic_tibble.transcription_factor_activity.differential_analyses.revision_31x		0.003	2026-10-17T00:21:38+00:00	309	
+donor_id_metadata_tibble.analysis.differential_analyses.revision_31x		0.031	2026-10-17T00:21:43+00:00	419	
+model_data.cell_type_composition.differential_analyses.revision_31x_06152a3fd74009a8	model_data.cell_type_composition.differential_analyses.revision_31x	0.138	2026-10-17T00:21:46+00:00	1709	
+cohort_tsv.cell_type_composition.differential_analyses.revision_31x_38d9453013830350	cohort_tsv.cell_type_composition.differential_analyses.revision_31x	0.127	2026-10-17T00:21:46+00:00	1111	
+counts_tsv.cell_type_composition.differential_analyses.revision_31x_38d9453013830350	counts_tsv.cell_type_composition.differential_analyses.revision_31x	0.169	2026-10-17T00:21:46+00:00	6205	
+model_results.cell_type_composition.differential_analyses.revision_31x_38d9453013830350	model_results.cell_type_composition.differential_analyses.revision_31x	1.08	2026-10-17T00:21:47+00:00	908	
+filtered_mat_per_model.motif_family_accessibility.differential_analyses.revision_31x_3a5711607cb777e8	filtered_mat_per_model.motif_family_accessibility.differential_analyses.revision_31x	0.061	2026-10-17T00:21:48+00:00	11878	
+feature_matrix_fit.motif_family_accessibility.differential_analyses.revision_31x_46620ef22a04553d	feature_matrix_fit.motif_family_accessibility.differential_analyses.revision_31x	0.172	2026-10-17T00:21:48+00:00	21955	
+filtered_mat_per_model.transcription_factor_activity.differential_analyses.revision_31x_43e0663b11dd7739	filtered_mat_per_model.transcription_factor_activity.differential_analyses.revision_31x	0.105	2026-10-17T00:21:48+00:00	37816	
+results_tibble.motif_family_accessibility.differential_analyses.revision_31x_d23796e4643ffe22	results_tibble.motif_family_accessibility.differential_analyses.revision_31x	0.066	2026-10-17T00:21:49+00:00	10366	
+feature_matrix_fit.transcription_factor_activity.differential_analyses.revision_31x_4e6774cd172ab734	feature_matrix_fit.transcription_factor_activity.differential_analyses.revision_31x	0.05	2026-10-17T00:21:49+00:00	66296	
+top_features_tibble.motif_family_accessibility.differential_analyses.revision_31x_35b79f071c7b27c4	top_features_tibble.motif_family_accessibility.differential_analyses.revision_31x	0.011	2026-10-17T00:21:49+00:00	2226	
+results_tibble.transcription_factor_activity.differential_analyses.revision_31x_7d46f19590db03f0	results_tibble.transcription_factor_activity.differential_analyses.revision_31x	0.056	2026-10-17T00:21:50+00:00	32451	
+filtered_mat_per_model.gene_expression.differential_analyses.revision_31x_29488d0a9cc55d53	filtered_mat_per_model.gene_expression.differential_analyses.revision_31x	2.14	2026-10-17T00:21:50+00:00	664159	
+model_plots.cell_type_composition.differential_analyses.revision_31x_4bb797051fe0410d	model_plots.cell_type_composition.differential_analyses.revision_31x	2.762	2026-10-17T00:21:51+00:00	494428	
+significant_elements_tibble.motif_family_accessibility.differential_analyses.revision_31x		0.027	2026-10-17T00:21:51+00:00	271	
+p_value_distribution_plot.motif_family_accessibility.differential_analyses.revision_31x		0.923	2026-10-17T00:21:51+00:00	186427	
+top_feature_open_targets_evidence_tibble.motif_family_accessibility.differential_analyses.revision_31x_176d8eafee3924ef	top_feature_open_targets_evidence_tibble.motif_family_accessibility.differential_analyses.revision_31x	0.003	2026-10-17T00:21:51+00:00	365	
+top_features_tibble.transcription_factor_activity.differential_analyses.revision_31x_fe8a46695c265878	top_features_tibble.transcription_factor_activity.differential_analyses.revision_31x	0.007	2026-10-17T00:21:51+00:00	2319	
+significant_elements_tibble.transcription_factor_activity.differential_analyses.revision_31x		0.029	2026-10-17T00:21:52+00:00	271	
+filtered_mat_per_model.chromatin_accessibility.differential_analyses.revision_31x_d52e1fbcc400b97b	filtered_mat_per_model.chromatin_accessibility.differential_analyses.revision_31x	3.52	2026-10-17T00:21:52+00:00	7628586	
+p_value_distribution_plot.transcription_factor_activity.differential_analyses.revision_31x		0.677	2026-10-17T00:21:52+00:00	193069	
+top_feature_open_targets_evidence_tibble.transcription_factor_activity.differential_analyses.revision_31x_41b84128c6135e89	top_feature_open_targets_evidence_tibble.transcription_factor_activity.differential_analyses.revision_31x	0.002	2026-10-17T00:21:52+00:00	462	
+cohort_tsv.motif_family_accessibility.differential_analyses.revision_31x_693563df69d707b5	cohort_tsv.motif_family_accessibility.differential_analyses.revision_31x	0.365	2026-10-17T00:21:54+00:00	1278	
+volcano_plots.transcription_factor_activity.differential_analyses.revision_31x_ff3572c81cefb169	volcano_plots.transcription_factor_activity.differential_analyses.revision_31x	1.061	2026-10-17T00:21:54+00:00	512277	
+volcano_plots.motif_family_accessibility.differential_analyses.revision_31x_db7abe88595f8122	volcano_plots.motif_family_accessibility.differential_analyses.revision_31x	1.147	2026-10-17T00:21:54+00:00	288202	
+cohort_tsv.transcription_factor_activity.differential_analyses.revision_31x_1bba55eb349b0375	cohort_tsv.transcription_factor_activity.differential_analyses.revision_31x	0.485	2026-10-17T00:21:55+00:00	1278	
+feature_matrix_fit.gene_expression.differential_analyses.revision_31x_c74d0df574309643	feature_matrix_fit.gene_expression.differential_analyses.revision_31x	5.216	2026-10-17T00:21:56+00:00	4529222	
+results_tibble.gene_expression.differential_analyses.revision_31x_7adebf926b6c6458	results_tibble.gene_expression.differential_analyses.revision_31x	0.274	2026-10-17T00:21:57+00:00	687702	
+top_features_tibble.gene_expression.differential_analyses.revision_31x_895f63f8b639a2fd	top_features_tibble.gene_expression.differential_analyses.revision_31x	0.014	2026-10-17T00:21:57+00:00	2186	
+results.Hallmark.gene_set_enrichment.gene_expression.differential_analyses.revision_31x_7adebf926b6c6458	results.Hallmark.gene_set_enrichment.gene_expression.differential_analyses.revision_31x	1.111	2026-10-17T00:21:57+00:00	2593	
+activity_accessibility_source_comparison_tibble.CollecTRI_JASPAR.differential_analyses.revision_31x		0.084	2026-10-17T00:21:57+00:00	37201	
+significant_elements_tibble.gene_expression.differential_analyses.revision_31x		0.065	2026-10-17T00:21:57+00:00	276	
+top_feature_open_targets_evidence_tibble.gene_expression.differential_analyses.revision_31x_0ec4c6f427b5a0a1	top_feature_open_targets_evidence_tibble.gene_expression.differential_analyses.revision_31x	0.02	2026-10-17T00:21:58+00:00	652	
+activity_accessibility_family_comparison_tibble.CollecTRI_JASPAR.differential_analyses.revision_31x		0.04	2026-10-17T00:21:58+00:00	4746	
+activity_accessibility_concordance_tibble.CollecTRI_JASPAR.differential_analyses.revision_31x		0.006	2026-10-17T00:21:58+00:00	378	
+p_value_distribution_plot.gene_expression.differential_analyses.revision_31x		1.174	2026-10-17T00:21:58+00:00	184903	
+results.Reactome.gene_set_enrichment.gene_expression.differential_analyses.revision_31x_7adebf926b6c6458	results.Reactome.gene_set_enrichment.gene_expression.differential_analyses.revision_31x	1.899	2026-10-17T00:21:58+00:00	57030	
+enrichment_plots.Hallmark.gene_set_enrichment.gene_expression.differential_analyses.revision_31x_e114a378cd29b5f7	enrichment_plots.Hallmark.gene_set_enrichment.gene_expression.differential_analyses.revision_31x	1.076	2026-10-17T00:21:59+00:00	270944	
+significant_elements_plot.gene_expression.differential_analyses.revision_31x		1.018	2026-10-17T00:21:59+00:00	126110	
+activity_accessibility_concordance_plots.CollecTRI_JASPAR.differential_analyses.revision_31x		1.095	2026-10-17T00:21:59+00:00	112211	
+enrichment_plots.Reactome.gene_set_enrichment.gene_expression.differential_analyses.revision_31x_b610f8f081999f60	enrichment_plots.Reactome.gene_set_enrichment.gene_expression.differential_analyses.revision_31x	0.912	2026-10-17T00:22:00+00:00	321380	
+volcano_plots.gene_expression.differential_analyses.revision_31x_5b80067a7019de61	volcano_plots.gene_expression.differential_analyses.revision_31x	1.621	2026-10-17T00:22:00+00:00	621199	
+cohort_tsv.gene_expression.differential_analyses.revision_31x_4a6559d99f94b95c	cohort_tsv.gene_expression.differential_analyses.revision_31x	2.623	2026-10-17T00:22:03+00:00	1278	
+feature_matrix_fit.chromatin_accessibility.differential_analyses.revision_31x_3c5b05004c365cb0	feature_matrix_fit.chromatin_accessibility.differential_analyses.revision_31x	83.913	2026-10-17T00:23:18+00:00	75517108	
+results_tibble.chromatin_accessibility.differential_analyses.revision_31x_2e8f867e3505a8d1	results_tibble.chromatin_accessibility.differential_analyses.revision_31x	1.982	2026-10-17T00:23:22+00:00	12233969	
+top_features_tibble.chromatin_accessibility.differential_analyses.revision_31x_b1d5b44c2048d85c	top_features_tibble.chromatin_accessibility.differential_analyses.revision_31x	0.061	2026-10-17T00:23:23+00:00	2333	
+significant_elements_tibble.chromatin_accessibility.differential_analyses.revision_31x		0.069	2026-10-17T00:23:23+00:00	278	
+top_feature_open_targets_evidence_tibble.chromatin_accessibility.differential_analyses.revision_31x_ab5674f13284cbb5	top_feature_open_targets_evidence_tibble.chromatin_accessibility.differential_analyses.revision_31x	0.002	2026-10-17T00:23:23+00:00	667	
+significant_elements_modality_distribution_tibble.differential_analyses.revision_31x		0.009	2026-10-17T00:23:23+00:00	369	
+p_value_distribution_plot.chromatin_accessibility.differential_analyses.revision_31x		1.303	2026-10-17T00:23:24+00:00	181396	
+significant_elements_plot.chromatin_accessibility.differential_analyses.revision_31x		0.987	2026-10-17T00:23:24+00:00	126065	
+significant_elements_modality_distribution_plots.differential_analyses.revision_31x		0.939	2026-10-17T00:23:25+00:00	132804	
+cohort_tsv.chromatin_accessibility.differential_analyses.revision_31x_be743547c50784dd	cohort_tsv.chromatin_accessibility.differential_analyses.revision_31x	1.779	2026-10-17T00:23:26+00:00	1278	
+volcano_plots.chromatin_accessibility.differential_analyses.revision_31x_3be5faa9429c31c5	volcano_plots.chromatin_accessibility.differential_analyses.revision_31x	6.505	2026-10-17T00:23:31+00:00	660519	

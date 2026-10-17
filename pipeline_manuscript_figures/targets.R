@@ -191,6 +191,7 @@ figure_pipeline <- list(
       context <- benchmark_context()
       sizing <- benchmark_sizing_tibbles(context)
       tables <- list(seurat_signac_comparison_resources = seurat_signac_comparison_resource_tibble(context),
+        benchmark_sizes = benchmark_cellranger_inputs(BENCHMARK_SIZING_AGGREGATIONS),
         benchmark_sizing = sizing$sizing, benchmark_sizing_stages = sizing$stages,
         benchmark_revisions = benchmark_revision_tibble(context),
         benchmark_simulation_check = benchmark_simulation_check(context),

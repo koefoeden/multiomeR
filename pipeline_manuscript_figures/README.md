@@ -19,7 +19,9 @@ below `results/`:
   saves: `data/seurat_signac_comparison_resources.tsv` compares multiomeR with a
   conventional Seurat/Signac workflow on `comparison_1x` to `comparison_31x`;
   `data/benchmark_sizing.tsv` and `data/benchmark_sizing_stages.tsv` measure
-  multiomeR with its defaults on `sizing_1x` to `sizing_91x`;
+  multiomeR with its defaults on `sizing_1x` to `sizing_91x`, whose nuclei, RNA
+  non-zero entries, ATAC fragments and input files `data/benchmark_sizes.tsv`
+  gives;
   `data/benchmark_revisions.tsv` measures what five revisions of `revision_31x`
   rerun; `data/benchmark_simulation_check.tsv` compares the simulated wall
   time with measured runs; and `data/benchmark_worker_attribution.tsv` gives the
@@ -130,8 +132,8 @@ RNA embeddings. These measurements come from the store's executions before the
 benchmark runs (`store_before_runs.tsv.gz`), so later rebuilds of shared
 targets leave them unchanged.
 
-A third line measures the same multiomeR result with its default backend,
-BPCells_native, which computes Pearson residuals on disk: `sizing_1x` to
+A third line measures the same multiomeR result with its default normalization,
+the BPCells_native backend, which computes Pearson residuals on disk: `sizing_1x` to
 `sizing_31x` repeat the comparison aggregations with only that setting changed,
 and `sizing_91x` adds 60 ENCODE multiome series, for 1.16 million nuclei. Its
 per-well steps are those of the comparison aggregations. SCTransform cannot run
@@ -159,7 +161,13 @@ column states: the ATAC motif-family marker volcano plot, which facets by ATAC
 cell type with up to 20 repelled labels per direction and facet, does not scale
 to about a hundred cell types. Its worker crashed three times and a retry ran
 3.9 h without finishing, against 62 s at 31 wells. This known limit of one QC
-plot is left out of the totals rather than counted as zero.
+plot is left out of the totals rather than counted as zero. At this size, 14 QC
+plots also exceeded ragg's 50,000-pixel limit, and a later driver run rebuilt
+the 17 failed targets with plot sizes clamped in `save_plots_structured()`. That
+clamp is a benchmark-only change, not on the main branch. Two genetic-enrichment
+steps, `chromVAR_locus_contribution_tibble` and
+`chromVAR_variant_contribution_detail_plots`, exceeded the light workers' 48 GB
+limit and were rebuilt with 60 GB requests, which their allocations record.
 
 ### Revisions
 
@@ -175,10 +183,7 @@ its recorded targets take the dependencies of the same targets of another well.
 Each run's targets, critical path, CPU time and simulated wall time are
 compared with the full build's. The revision runs and `sizing_91x` ran on
 node-local copies of the store that were not copied back, so their records hold
-their only measurements. At 1.16 million nuclei, 14 QC plots exceeded ragg's
-50,000-pixel limit, so the last `sizing_91x` driver run rebuilt the 17 failed
-targets with plot sizes clamped in `save_plots_structured()`; that clamp is a
-benchmark-only change, not on the main branch. A script without saved intermediates reruns
+their only measurements. A script without saved intermediates reruns
 everything, and careful manual checkpointing narrows that gap.
 
 ### Measures
@@ -191,8 +196,8 @@ everything, and careful manual checkpointing narrows that gap.
   that finds the file unchanged records no build of it. The conventional chain's critical path is the sum of its runtimes, as
   when a script runs its steps one after another.
 - **Simulated wall time:** the same runtimes scheduled on the workers of
-  `configuration_dev/crew_controllers.R`: 16 light, 6 heavy, one large and one
-  huge worker, each target routed to the tier its RAM request selects. A target
+  `configuration_dev/crew_controllers.R`, which fit one 128-core server: 16
+  light, 6 heavy, one large and one huge worker, each target routed to the tier its RAM request selects. A target
   is ready once its upstream targets have finished, and each tier's workers take
   ready targets in the order they became ready. Each target also takes 2 s
   for dispatching, loading and saving (`BENCHMARK_TASK_OVERHEAD_SECONDS`), fitted
@@ -207,8 +212,8 @@ everything, and careful manual checkpointing narrows that gap.
   `sizing_small`, `sizing_91x` and `revision_5` are left out of the check,
   because each spans several driver runs: after a failed download and a rebuild
   of a truncated annotation, after fixes for empty marker levels, nuclei without
-  counts and nuclei without chromVAR scores, and after the fix for empty marker
-  levels.
+  counts and nuclei without chromVAR scores and after raising two steps' memory
+  requests, and after the fix for empty marker levels.
 - **CPU time and memory:** each target's runtime times its job's mean sampled
   CPU use and unreclaimable memory, which leaves out page cache. Jobs too short
   to be sampled get the median of the sampled jobs measured with them. Memory

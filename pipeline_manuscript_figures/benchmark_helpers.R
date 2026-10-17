@@ -663,11 +663,11 @@ benchmark_simulation_check <- function(context) {
 }
 
 # Supplementary Figure S2. Rows A-F: like for like, multiomeR with its Seurat exports on
-# SCTransform and on its default backend against the Seurat/Signac chain, and the RNA non-zero
+# SCTransform and on its default normalization against the Seurat/Signac chain, and the RNA non-zero
 # entries against the dgCMatrix limit that stops SCTransform. G-H: sizing with defaults. I:
 # revisions. Axes of sizes and resources are logarithmic, so equal gaps are equal ratios.
 BENCHMARK_WORKFLOW_COLOURS <- c("multiomeR, SCTransform" = "#2a78d6", "Seurat/Signac" = "#eb6834",
-  "multiomeR, default backend" = "#1baf7a")
+  "multiomeR, default normalization" = "#1baf7a")
 BENCHMARK_STAGE_COLOURS <- c(setup = "#6250d6", "per-well" = "#eda100", aggregation = "#1baf7a",
   genetic_enrichment = "#e34948", differential_analyses = "#008300", peak_gene_correlation = "#e87ba4")
 
@@ -683,7 +683,7 @@ plot_benchmark_figure <- function(tables) {
       dplyr::mutate(workflow = dplyr::recode(.data$workflow, "multiomeR + Seurat exports" = "multiomeR, SCTransform")),
     tables$benchmark_sizing |>
       dplyr::filter(.data$scope == "like for like: multiomeR + Seurat exports") |>
-      dplyr::mutate(workflow = "multiomeR, default backend")) |>
+      dplyr::mutate(workflow = "multiomeR, default normalization")) |>
     dplyr::mutate(workflow = factor(.data$workflow, names(BENCHMARK_WORKFLOW_COLOURS)))
   measures <- c(critical_path_hours = "Critical path (h)", used_CPU_hours = "CPU time (CPU-hours)",
     used_RAM_GB_hours = "Memory (GB-hours)", peak_RAM_GB = "Peak memory of a worker (GB)", disk_space_GB = "Disk space (GB)")
@@ -710,17 +710,19 @@ plot_benchmark_figure <- function(tables) {
       figure_1_theme() + ggplot2::labs(x = "Input nuclei", y = measures[[measure]])
   })
   # The joined RNA count matrix that SCTransform converts holds at most 2^31 - 1 non-zero entries.
-  sizes <- dplyr::distinct(tables$benchmark_sizing, .data$cellranger_input_nuclei, .data$RNA_nonzero_entries)
+  sizes <- tables$benchmark_sizes
   ceiling <- ggplot2::ggplot(sizes, ggplot2::aes(.data$cellranger_input_nuclei, .data$RNA_nonzero_entries)) +
     ggplot2::geom_hline(yintercept = 2^31 - 1, linetype = "dashed", linewidth = .3, colour = "#e34948") +
-    ggplot2::annotate("text", x = min(sizes$cellranger_input_nuclei), y = 2^31 - 1, vjust = 1.5, hjust = 0,
-      label = "dgCMatrix limit:\nSCTransform stops", family = "NimbusSan", size = 2.2, lineheight = .9, colour = "grey25") +
+    ggplot2::annotate("text", x = min(sizes$cellranger_input_nuclei), y = 2^31 - 1, hjust = 0, vjust = -.4,
+      label = sprintf("Most values an in-memory\nmatrix holds, %.2f billion\n(SCTransform fails above)", (2^31 - 1) / 1e9), family = "NimbusSan", size = 2.2,
+      lineheight = .9, colour = "grey25") +
     ggplot2::geom_line(linewidth = .5, colour = "grey30") + ggplot2::geom_point(size = 1.2, colour = "grey30") +
     ggplot2::geom_text(data = dplyr::slice_max(sizes, .data$RNA_nonzero_entries, n = 1),
       ggplot2::aes(label = sprintf("%.2f billion", .data$RNA_nonzero_entries / 1e9)),
       hjust = 1.15, vjust = 1.6, family = "NimbusSan", size = 2.2, colour = "grey25") +
     benchmark_nuclei_scale() +
-    ggplot2::scale_y_log10(labels = scales::label_number(scale_cut = scales::cut_short_scale())) +
+    ggplot2::scale_y_log10(labels = scales::label_number(scale_cut = scales::cut_short_scale()),
+      expand = ggplot2::expansion(mult = c(.05, .45))) +
     figure_1_theme() + ggplot2::labs(x = "Input nuclei", y = "RNA non-zero entries")
 
   # Sizing: wall time of the full analysis on unlimited workers and on the configured workers.
@@ -729,12 +731,12 @@ plot_benchmark_figure <- function(tables) {
     dplyr::slice_tail(n = 1, by = "aggregation") |>
     tidyr::pivot_longer(c("critical_path_hours", "simulated_wall_time_hours"), names_to = "measure") |>
     dplyr::mutate(measure = dplyr::recode(.data$measure, critical_path_hours = "Unlimited workers",
-      simulated_wall_time_hours = "Configured workers (simulated)"))
+      simulated_wall_time_hours = "One 128-core server (estimated)"))
   wall_time <- ggplot2::ggplot(full, ggplot2::aes(.data$cellranger_input_nuclei, .data$value, linetype = .data$measure)) +
-    ggplot2::geom_line(linewidth = .5, colour = BENCHMARK_WORKFLOW_COLOURS[["multiomeR, default backend"]]) +
-    ggplot2::geom_point(ggplot2::aes(shape = .data$scope), size = 1.4, colour = BENCHMARK_WORKFLOW_COLOURS[["multiomeR, default backend"]]) +
+    ggplot2::geom_line(linewidth = .5, colour = BENCHMARK_WORKFLOW_COLOURS[["multiomeR, default normalization"]]) +
+    ggplot2::geom_point(ggplot2::aes(shape = .data$scope), size = 1.4, colour = BENCHMARK_WORKFLOW_COLOURS[["multiomeR, default normalization"]]) +
     ggplot2::scale_shape_manual(values = c("primary module" = 16, "primary and optional modules" = 17), name = NULL) +
-    ggplot2::scale_linetype_manual(values = c("Unlimited workers" = "dashed", "Configured workers (simulated)" = "solid"), name = NULL) +
+    ggplot2::scale_linetype_manual(values = c("Unlimited workers" = "dashed", "One 128-core server (estimated)" = "solid"), name = NULL) +
     benchmark_nuclei_scale() + ggplot2::scale_y_log10(labels = scales::label_number(drop0trailing = TRUE)) +
     figure_1_theme() + ggplot2::theme(legend.position = "inside", legend.position.inside = c(.02, .98),
       legend.justification = c(0, 1), legend.box.just = "left", legend.spacing.y = grid::unit(0, "pt"),
@@ -749,22 +751,23 @@ plot_benchmark_figure <- function(tables) {
     ggplot2::geom_text(data = totals, ggplot2::aes(.data$GEM_wells, 1, label = scales::label_number(accuracy = .1)(.data$CPU_hours)),
       inherit.aes = FALSE, vjust = -.4, family = "NimbusSan", size = 2) +
     ggplot2::scale_fill_manual(values = BENCHMARK_STAGE_COLOURS, name = NULL, breaks = names(BENCHMARK_STAGE_COLOURS),
-      labels = \(x) gsub("_", " ", x)) +
+      labels = c(setup = "setup", "per-well" = "per-well", aggregation = "aggregation", genetic_enrichment = "genetic enrichment",
+        differential_analyses = "differential analyses", peak_gene_correlation = "peak\u2013gene correlation")) +
     ggplot2::scale_y_continuous(labels = scales::label_percent(), expand = ggplot2::expansion(mult = c(0, .1))) +
     figure_1_theme() + ggplot2::theme(panel.grid.major.x = ggplot2::element_blank()) +
-    ggplot2::labs(x = "GEM wells (CPU-hours above)", y = "Share of CPU time")
+    ggplot2::labs(x = "Samples (CPU-hours above)", y = "Share of CPU time")
 
   # Revisions: each rebuild as shares of the full build, with the targets it reran and its measured elapsed time.
   revisions <- tables$benchmark_revisions |>
     dplyr::filter(.data$revision != "full build") |>
-    dplyr::mutate(label = sprintf("%s (%s of %s targets, %.0f min)", .data$change, .data$targets, .data$targets_total,
-      60 * .data$measured_elapsed_hours),
+    dplyr::mutate(label = sprintf("%s (%s of %s steps, %.0f min)", .data$change, scales::comma(.data$targets),
+      scales::comma(.data$targets_total), 60 * .data$measured_elapsed_hours),
       label = factor(.data$label, rev(.data$label))) |>
     tidyr::pivot_longer(c("critical_path_share", "CPU_share", "wall_time_share"), names_to = "measure", values_to = "share") |>
     dplyr::mutate(measure = factor(dplyr::recode(.data$measure, critical_path_share = "Critical path",
       CPU_share = "CPU time", wall_time_share = "Wall time"), c("Critical path", "CPU time", "Wall time")))
   revision_plot <- ggplot2::ggplot(revisions, ggplot2::aes(.data$share, .data$label)) +
-    ggplot2::geom_col(width = .6, fill = BENCHMARK_WORKFLOW_COLOURS[["multiomeR, default backend"]]) +
+    ggplot2::geom_col(width = .6, fill = BENCHMARK_WORKFLOW_COLOURS[["multiomeR, default normalization"]]) +
     ggplot2::geom_text(ggplot2::aes(label = dplyr::if_else(.data$share < .01, "<1%", scales::label_percent(accuracy = 1)(.data$share))),
       hjust = -.15, family = "NimbusSan", size = 2) +
     ggplot2::facet_wrap(ggplot2::vars(.data$measure), nrow = 1) +

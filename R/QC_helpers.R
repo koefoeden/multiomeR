@@ -852,7 +852,8 @@ order_accessibility_profiles <- function(profiles) {
 plot_motif_family_accessibility_heatmap <- function(feature_matrix, ATAC_metadata, GEX_metadata,
                                                      family_labels, group_by = c("ATAC_cluster", "GEX_cluster", "GEX_cell_type")) {
   group_by <- match.arg(group_by)
-  barcodes <- colnames(feature_matrix)
+  # chromVAR leaves a few nuclei without finite scores, which would make their group's mean undefined.
+  barcodes <- colnames(feature_matrix)[is.finite(BPCells::colSums(feature_matrix))]
   stopifnot(!anyDuplicated(ATAC_metadata$barcode_w_prefix), !anyDuplicated(GEX_metadata$barcode_w_prefix),
     all(barcodes %in% ATAC_metadata$barcode_w_prefix), all(barcodes %in% GEX_metadata$barcode_w_prefix))
   ATAC_metadata <- ATAC_metadata[match(barcodes, ATAC_metadata$barcode_w_prefix), ]

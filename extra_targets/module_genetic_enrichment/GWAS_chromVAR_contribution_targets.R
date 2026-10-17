@@ -52,11 +52,12 @@ rlang::list2(
   ),
   targets::tar_target(
     name = chromVAR_locus_contribution_tibble.cell_type_pseudobulk,
-    description = "Sum exact credible-set variant contributions into cell-type-by-GWAS locus contribution [part_of_graph:genetic_enrichment_cell_type_contributions]",
+    description = "Sum exact credible-set variant contributions into cell-type-by-GWAS locus contribution [part_of_graph:genetic_enrichment_cell_type_contributions] [resource_observation: peak_RAM_GiB=4.1; n_nuclei=376k; aggregation=sizing_31x; method=slurm_monitor; date=2026-10-17] [resource_observation: peak_RAM_GiB>47.9 (out of memory at 48); n_nuclei=1159k; aggregation=sizing_91x; method=slurm_monitor; date=2026-10-17]",
     command = get_GWAS_chromVAR_locus_contribution_tibble(
       variant_contribution_tibble = chromVAR_variant_contribution_tibble.cell_type_pseudobulk,
       locus_to_gene_tibble = GWAS_locus_to_gene_tibble
-    )
+    ),
+    resources = get_tar_resources(RAM_GB_req = 60)
   ),
   tarchetypes::tar_file(
     name = chromVAR_locus_contribution_per_GWAS_heatmaps.cell_type_pseudobulk,

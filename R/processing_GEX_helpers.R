@@ -434,7 +434,10 @@ run_scDblFinder_BPCells_GEM_well <- function(feature_matrix,
   # and avoid MulticoreParam forked copies inside the branch.
   counts_matrix <- feature_matrix[, barcode_vec, drop = FALSE] |>
     methods::as("dgCMatrix")
-  clusters <- clusters[barcode_vec]
+  # scDblFinder needs positive size factors, so nuclei without counts in these
+  # features, as in unfiltered low-quality wells, stay unscored and are kept.
+  counts_matrix <- counts_matrix[, Matrix::colSums(counts_matrix) > 0, drop = FALSE]
+  clusters <- clusters[colnames(counts_matrix)]
 
   scDblFinder::scDblFinder(
     counts_matrix,

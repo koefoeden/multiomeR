@@ -107,7 +107,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk,
-    description = "Save aligned locus facets with variant effects, gene bodies, ATAC coverage, and peaks per GWAS and focal cell type. [checkpoint:genetic_enrichment]",
+    description = "Save aligned locus facets with variant effects, gene bodies, ATAC coverage, and peaks per GWAS and focal cell type. [checkpoint:genetic_enrichment] [resource_observation: peak_RAM_GiB=4.3; n_nuclei=376k; aggregation=sizing_31x; method=slurm_monitor; date=2026-10-17] [resource_observation: peak_RAM_GiB>47.9 (out of memory at 48); n_nuclei=1159k; aggregation=sizing_91x; method=slurm_monitor; date=2026-10-17]",
     command = chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk |>
       plot_GWAS_variant_contribution_details(
         GWAS_input_records = GWAS_input_records,
@@ -126,6 +126,6 @@ rlang::list2(
     pattern = map(chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk,
       chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk),
     iteration = "list",
-    resources = get_tar_resources(RAM_GB_req = 8)
+    resources = get_tar_resources(RAM_GB_req = 60)
   )
 )

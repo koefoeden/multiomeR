@@ -426,7 +426,8 @@ get_marker_motif_family_accessibility_from_chromVAR_BPCells_z_scores <- function
 
   keep_barcodes <- intersect(colnames(chromVAR_z_scores_BPCells_matrix), metadata_tibble$barcode_w_prefix)
   marker_mat <- chromVAR_z_scores_BPCells_matrix[, keep_barcodes, drop = FALSE]
-  groups <- stats::setNames(metadata_tibble[[group_col]], metadata_tibble$barcode_w_prefix)[keep_barcodes]
+  # A label level can lose all its nuclei to later filters; BPCells gives an empty level means but no p-values.
+  groups <- droplevels(as.factor(stats::setNames(metadata_tibble[[group_col]], metadata_tibble$barcode_w_prefix)[keep_barcodes]))
 
   BPCells::marker_features(marker_mat, groups, method = "wilcoxon") |>
     dplyr::mutate(

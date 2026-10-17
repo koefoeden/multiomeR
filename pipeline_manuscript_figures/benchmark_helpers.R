@@ -18,6 +18,11 @@ BENCHMARK_ALLOCATIONS <- file.path(BENCHMARK_DATA_DIR, "benchmark_allocations.ts
 BENCHMARK_MODULES <- c("genetic_enrichment", "differential_analyses", "peak_gene_correlation")
 BENCHMARK_STAGES <- c("setup", "per-well", "aggregation", BENCHMARK_MODULES)
 BENCHMARK_SIZING_AGGREGATIONS <- paste0("sizing_", c(1, 2, 5, 10, 20, 31, 91), "x")
+# Targets left out of the sizing measures, with the reason that benchmark_sizing.tsv records.
+BENCHMARK_EXCLUDED_TARGETS <- c(
+  "motif_family_accessibility_marker_volcano_plots.7_ATAC_QC.sizing_91x" = paste(
+    "QC plot that does not scale to about a hundred ATAC cell types, faceted with up to 20 repelled labels",
+    "per direction and facet: its worker crashed three times and a retry ran 3.9 h unfinished (62 s at 31 wells)"))
 # Seconds the simulated wall time adds to each target for dispatching, loading and saving, fitted
 # to the single-run records: it brings each within 10% of its measured elapsed time.
 BENCHMARK_TASK_OVERHEAD_SECONDS <- 2
@@ -532,15 +537,19 @@ benchmark_sizing_tibbles <- function(context) {
   inputs <- benchmark_cellranger_inputs(BENCHMARK_SIZING_AGGREGATIONS)
   results <- purrr::map2(aggregation_tibble$aggregation, aggregation_tibble$aggregation_GEM_well_IDs, \(aggregation, GEM_well_IDs) {
     stages <- benchmark_stages(context$graph, aggregation, GEM_well_IDs)
+    excluded <- intersect(names(BENCHMARK_EXCLUDED_TARGETS), stages$name)
+    stages <- dplyr::filter(stages, !.data$name %in% excluded)
     analysis <- enrich_executions(context, dplyr::filter(executions, .data$static_target %in% stages$name)) |>
       dplyr::left_join(stages, by = c(static_target = "name"))
     primary <- stages$name[stages$stage %in% BENCHMARK_STAGES[1:3]]
     sizing <- dplyr::bind_rows(
       purrr::map_dfr(c("multiomeR", "multiomeR + Seurat exports"), \(workflow) tibble::tibble(
         scope = paste("like for like:", workflow), benchmark_workflow_measures(context, executions, workflow, aggregation))),
-      tibble::tibble(scope = "primary module", benchmark_measures(context, analysis, primary)),
+      tibble::tibble(scope = "primary module", benchmark_measures(context, analysis, primary),
+        excluded_targets = stringr::str_c(excluded, ": ", BENCHMARK_EXCLUDED_TARGETS[excluded], collapse = "; ")),
       if (length(primary) < nrow(stages)) {
-        tibble::tibble(scope = "primary and optional modules", benchmark_measures(context, analysis, stages$name))
+        tibble::tibble(scope = "primary and optional modules", benchmark_measures(context, analysis, stages$name),
+          excluded_targets = stringr::str_c(excluded, ": ", BENCHMARK_EXCLUDED_TARGETS[excluded], collapse = "; "))
       })
     list(sizing = dplyr::mutate(sizing, aggregation = aggregation, .before = 1),
       stages = purrr::map_dfr(split(analysis, factor(analysis$stage, BENCHMARK_STAGES), drop = TRUE),

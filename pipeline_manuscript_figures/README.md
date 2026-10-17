@@ -154,7 +154,12 @@ modules. `benchmark_sizing_stages.tsv` splits the full analysis into setup,
 per-well steps, the primary module's aggregation steps and each optional module,
 which takes the upstream targets that only it needs, such as the Open Targets
 datasets. CellBender runs upstream of the pipeline, in cellranger-wrapper, and
-is left out.
+is left out. One target is left out of `sizing_91x`, as its `excluded_targets`
+column states: the ATAC motif-family marker volcano plot, which facets by ATAC
+cell type with up to 20 repelled labels per direction and facet, does not scale
+to about a hundred cell types. Its worker crashed three times and a retry ran
+3.9 h without finishing, against 62 s at 31 wells. This known limit of one QC
+plot is left out of the totals rather than counted as zero.
 
 ### Revisions
 

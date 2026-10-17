@@ -156,12 +156,15 @@ modules. `benchmark_sizing_stages.tsv` splits the full analysis into setup,
 per-well steps, the primary module's aggregation steps and each optional module,
 which takes the upstream targets that only it needs, such as the Open Targets
 datasets. CellBender runs upstream of the pipeline, in cellranger-wrapper, and
-is left out. One target is left out of `sizing_91x`, as its `excluded_targets`
-column states: the ATAC motif-family marker volcano plot, which facets by ATAC
-cell type with up to 20 repelled labels per direction and facet, does not scale
-to about a hundred cell types. Its worker crashed three times and a retry ran
-3.9 h without finishing, against 62 s at 31 wells. This known limit of one QC
-plot is left out of the totals rather than counted as zero. At this size, 14 QC
+is left out. Two plot targets of `sizing_91x`, with nothing downstream of them,
+are left out of its totals rather than counted as zero, as its `excluded_targets`
+column states. The ATAC motif-family marker volcano plot facets by ATAC cell
+type with up to 20 repelled labels per direction and facet, which does not scale
+to about a hundred cell types: its worker crashed three times and a retry ran
+3.9 h without finishing, against 62 s at 31 wells. The genetic-enrichment
+variant detail plots ran over 1.5 h and up to 110 GB per GWAS without finishing,
+against at most 16 min per GWAS at 31 wells. The plot records they draw from
+finished and are counted. At this size, 14 QC
 plots also exceeded ragg's 50,000-pixel limit, and a later driver run rebuilt
 the 17 failed targets with plot sizes clamped in `save_plots_structured()`. That
 clamp is a benchmark-only change, not on the main branch. Two genetic-enrichment

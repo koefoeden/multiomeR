@@ -22,7 +22,9 @@ BENCHMARK_SIZING_AGGREGATIONS <- paste0("sizing_", c(1, 2, 5, 10, 20, 31, 91), "
 BENCHMARK_EXCLUDED_TARGETS <- c(
   "motif_family_accessibility_marker_volcano_plots.7_ATAC_QC.sizing_91x" = paste(
     "QC plot that does not scale to about a hundred ATAC cell types, faceted with up to 20 repelled labels",
-    "per direction and facet: its worker crashed three times and a retry ran 3.9 h unfinished (62 s at 31 wells)"))
+    "per direction and facet: its worker crashed three times and a retry ran 3.9 h unfinished (62 s at 31 wells)"),
+  "chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.sizing_91x" = paste(
+    "over 1.5 h and up to 110 GB per GWAS at 91 samples, not finished (at most 16 min per GWAS at 31 wells)"))
 # Seconds the simulated wall time adds to each target for dispatching, loading and saving, fitted
 # to the single-run records: it brings each within 10% of its measured elapsed time.
 BENCHMARK_TASK_OVERHEAD_SECONDS <- 2
@@ -725,22 +727,23 @@ plot_benchmark_figure <- function(tables) {
       expand = ggplot2::expansion(mult = c(.05, .45))) +
     figure_1_theme() + ggplot2::labs(x = "Input nuclei", y = "RNA non-zero entries")
 
-  # Sizing: wall time of the full analysis on unlimited workers and on the configured workers.
+  # Sizing: wall time on unlimited workers and on the configured workers. Lines follow the primary
+  # module at every size; triangles add the optional modules where the aggregation runs them.
   full <- tables$benchmark_sizing |>
     dplyr::filter(!startsWith(.data$scope, "like for like")) |>
-    dplyr::slice_tail(n = 1, by = "aggregation") |>
     tidyr::pivot_longer(c("critical_path_hours", "simulated_wall_time_hours"), names_to = "measure") |>
     dplyr::mutate(measure = dplyr::recode(.data$measure, critical_path_hours = "Unlimited workers",
       simulated_wall_time_hours = "One 128-core server (estimated)"))
   wall_time <- ggplot2::ggplot(full, ggplot2::aes(.data$cellranger_input_nuclei, .data$value, linetype = .data$measure)) +
-    ggplot2::geom_line(linewidth = .5, colour = BENCHMARK_WORKFLOW_COLOURS[["multiomeR, default normalization"]]) +
+    ggplot2::geom_line(data = dplyr::filter(full, .data$scope == "primary module"), linewidth = .5,
+      colour = BENCHMARK_WORKFLOW_COLOURS[["multiomeR, default normalization"]]) +
     ggplot2::geom_point(ggplot2::aes(shape = .data$scope), size = 1.4, colour = BENCHMARK_WORKFLOW_COLOURS[["multiomeR, default normalization"]]) +
     ggplot2::scale_shape_manual(values = c("primary module" = 16, "primary and optional modules" = 17), name = NULL) +
     ggplot2::scale_linetype_manual(values = c("Unlimited workers" = "dashed", "One 128-core server (estimated)" = "solid"), name = NULL) +
     benchmark_nuclei_scale() + ggplot2::scale_y_log10(labels = scales::label_number(drop0trailing = TRUE)) +
     figure_1_theme() + ggplot2::theme(legend.position = "inside", legend.position.inside = c(.02, .98),
       legend.justification = c(0, 1), legend.box.just = "left", legend.spacing.y = grid::unit(0, "pt"),
-      legend.key.height = grid::unit(8, "pt"), legend.background = ggplot2::element_rect(fill = "white", colour = NA)) +
+      legend.key.height = grid::unit(8, "pt"), legend.background = ggplot2::element_blank()) +
     ggplot2::labs(x = "Input nuclei", y = "Wall time (h)")
   stages <- tables$benchmark_sizing_stages |>
     dplyr::mutate(stage = factor(.data$stage, rev(names(BENCHMARK_STAGE_COLOURS))),

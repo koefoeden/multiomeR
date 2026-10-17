@@ -7,13 +7,14 @@ its driver log), and writes their runtimes and completion times to a TSV. The re
 revision benchmarks read these files, because later runs overwrite the store's metadata.
 
 A target that errors after an earlier successful build keeps its old completion time in
-the metadata, so errors are also read from the driver log; each must have been rebuilt
-without error since, as by a later rerun that this record spans.
+the metadata, so errors and worker crashes are also read from the driver log; each must
+have been rebuilt without error since, as by a later rerun that this record spans.
 
 Usage: record_run.py <driver_log> <store_meta> <output_tsv>
 """
 import csv
 import datetime
+import re
 import sys
 import zoneinfo
 
@@ -24,6 +25,8 @@ with open(driver_log) as log:
     lines = log.readlines()
 started = next(line for line in lines if " Building script " in line)[:19]
 logged_errors = {line.split()[4] for line in lines if line.split()[2:4] in (["errored", "target"], ["errored", "branch"])}
+# A task whose worker crashed more often than crew allows gets no "errored" line.
+logged_errors |= set(re.findall(r"crew worker of task '([^']+)' crashed", "".join(lines)))
 start_days = (datetime.datetime.fromisoformat(started).replace(tzinfo=zoneinfo.ZoneInfo("Europe/Copenhagen"))
               .timestamp() / 86400)
 

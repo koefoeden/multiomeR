@@ -445,8 +445,9 @@ get_BPCells_markers_from_matrix <- function(feature_matrix, metadata_tibble, gro
   # expression rather than sequencing depth.
   marker_mat <- normalize_BPCells_counts(feature_matrix[, keep_barcodes, drop = FALSE])[features, , drop = FALSE]
 
-  # A label level can lose all its nuclei to later filters; BPCells gives an empty level means but no p-values.
-  groups <- droplevels(as.factor(stats::setNames(metadata_tibble[[group_col]], metadata_tibble$barcode_w_prefix)[keep_barcodes]))
+  # factor() drops levels without nuclei, such as marker sets that label no
+  # cluster, on which BPCells::marker_features() fails.
+  groups <- factor(stats::setNames(metadata_tibble[[group_col]], metadata_tibble$barcode_w_prefix)[keep_barcodes])
   BPCells::marker_features(marker_mat, groups, method = "wilcoxon") |>
     dplyr::mutate(
       p_val = p_val_raw,

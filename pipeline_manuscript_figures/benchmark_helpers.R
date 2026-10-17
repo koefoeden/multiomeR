@@ -12,7 +12,7 @@ BENCHMARK_RUNS_DIR <- file.path(BENCHMARK_DATA_DIR, "benchmark_runs")
 BENCHMARK_SIZING_RUNS <- c("store_before_runs", "sizing_small", "sizing_31x", "sizing_91x")
 BENCHMARK_RUNS <- c(BENCHMARK_SIZING_RUNS, "revision_base")
 # Records that span several driver runs, after failures, have no single elapsed time.
-BENCHMARK_MULTIPLE_DRIVER_RUNS <- c("sizing_small", "revision_5")
+BENCHMARK_MULTIPLE_DRIVER_RUNS <- c("sizing_small", "sizing_91x", "revision_5")
 # The worker cores and RAM that each counted target requested in the run that measured it.
 BENCHMARK_ALLOCATIONS <- file.path(BENCHMARK_DATA_DIR, "benchmark_allocations.tsv")
 BENCHMARK_MODULES <- c("genetic_enrichment", "differential_analyses", "peak_gene_correlation")
@@ -677,7 +677,7 @@ plot_benchmark_figure <- function(tables) {
       dplyr::mutate(workflow = "multiomeR, default backend")) |>
     dplyr::mutate(workflow = factor(.data$workflow, names(BENCHMARK_WORKFLOW_COLOURS)))
   measures <- c(critical_path_hours = "Critical path (h)", used_CPU_hours = "CPU time (CPU-hours)",
-    used_RAM_GB_hours = "Memory (GB-hours)", peak_RAM_GB = "Peak memory of a step (GB)", disk_space_GB = "Disk space (GB)")
+    used_RAM_GB_hours = "Memory (GB-hours)", peak_RAM_GB = "Peak memory of a worker (GB)", disk_space_GB = "Disk space (GB)")
   # Fold change of the Seurat/Signac chain over multiomeR on SCTransform at the largest shared size.
   largest_shared <- max(tables$seurat_signac_comparison_resources$cellranger_input_nuclei)
   like_panels <- lapply(names(measures), \(measure) {
@@ -707,6 +707,9 @@ plot_benchmark_figure <- function(tables) {
     ggplot2::annotate("text", x = min(sizes$cellranger_input_nuclei), y = 2^31 - 1, vjust = 1.5, hjust = 0,
       label = "dgCMatrix limit:\nSCTransform stops", family = "NimbusSan", size = 2.2, lineheight = .9, colour = "grey25") +
     ggplot2::geom_line(linewidth = .5, colour = "grey30") + ggplot2::geom_point(size = 1.2, colour = "grey30") +
+    ggplot2::geom_text(data = dplyr::slice_max(sizes, .data$RNA_nonzero_entries, n = 1),
+      ggplot2::aes(label = sprintf("%.2f billion", .data$RNA_nonzero_entries / 1e9)),
+      hjust = 1.15, vjust = 1.6, family = "NimbusSan", size = 2.2, colour = "grey25") +
     benchmark_nuclei_scale() +
     ggplot2::scale_y_log10(labels = scales::label_number(scale_cut = scales::cut_short_scale())) +
     figure_1_theme() + ggplot2::labs(x = "Input nuclei", y = "RNA non-zero entries")

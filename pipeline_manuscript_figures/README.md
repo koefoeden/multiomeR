@@ -170,7 +170,10 @@ its recorded targets take the dependencies of the same targets of another well.
 Each run's targets, critical path, CPU time and simulated wall time are
 compared with the full build's. The revision runs and `sizing_91x` ran on
 node-local copies of the store that were not copied back, so their records hold
-their only measurements. A script without saved intermediates reruns
+their only measurements. At 1.16 million nuclei, 14 QC plots exceeded ragg's
+50,000-pixel limit, so the last `sizing_91x` driver run rebuilt the 17 failed
+targets with plot sizes clamped in `save_plots_structured()`; that clamp is a
+benchmark-only change, not on the main branch. A script without saved intermediates reruns
 everything, and careful manual checkpointing narrows that gap.
 
 ### Measures
@@ -196,16 +199,20 @@ everything, and careful manual checkpointing narrows that gap.
   across gaps of up to ten minutes. It also gives each run's median start gap,
   the time from the last completion of a target's upstream targets in the run to
   its start, which in large runs includes waiting for a busy worker.
-  `sizing_small` and `revision_5` are left out of the check, because each spans
-  several driver runs: after a failed download and a rebuild of a truncated
-  annotation, and after a fix to the marker tests.
+  `sizing_small`, `sizing_91x` and `revision_5` are left out of the check,
+  because each spans several driver runs: after a failed download and a rebuild
+  of a truncated annotation, after fixes for empty marker levels, nuclei without
+  counts and nuclei without chromVAR scores, and after the fix for empty marker
+  levels.
 - **CPU time and memory:** each target's runtime times its job's mean sampled
   CPU use and unreclaimable memory, which leaves out page cache. Jobs too short
   to be sampled get the median of the sampled jobs measured with them. Memory
   counts what the processes held, including memory a worker kept from its
   earlier targets, as in any run of either workflow.
-- **Peak memory:** the largest sampled memory of any one step, which sets the
-  machine size, and the step that reached it.
+- **Peak memory of a worker:** the largest sampled memory of a worker while
+  it ran a counted step, which sets the machine size, and that step. It
+  includes memory the worker kept from its earlier steps, so the step that
+  reached it need not be the one that needed it.
 - **Reserved CPU and RAM:** each target's runtime plus its share of its
   worker's idle time, times the cores and memory that Slurm booked for that
   worker: the tier's `cpus_per_task` and `memory_gigabytes_required`, which

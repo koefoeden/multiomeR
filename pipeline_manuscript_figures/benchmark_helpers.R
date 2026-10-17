@@ -34,7 +34,7 @@ BENCHMARK_REVISIONS <- c(
   revision_2 = "Mast-cell marker set added",
   revision_3 = "Dilated cardiomyopathy GWAS added",
   revision_4 = "Age added to the cardiomyocyte sex model",
-  revision_5 = "Liver GEM well added")
+  revision_5 = "Liver sample added")
 
 # Like for like: excluded targets keep their graph position with no runtime and are left out
 # of every resource sum.

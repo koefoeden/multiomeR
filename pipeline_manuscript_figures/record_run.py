@@ -33,7 +33,7 @@ completed = [row for row in rows.values()
              if row["type"] in ("stem", "branch") and float(row["time"][1:-1]) >= start_days]
 
 with open(output_file, "w", newline="") as output:
-    writer = csv.writer(output, delimiter="\t")
+    writer = csv.writer(output, delimiter="\t", lineterminator="\n")
     writer.writerow(["name", "parent", "seconds", "completed_utc", "bytes", "error"])
     for row in sorted(completed, key=lambda row: row["time"]):
         days = float(row["time"][1:-1])

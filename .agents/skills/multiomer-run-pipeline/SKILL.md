@@ -57,9 +57,12 @@ targets::tar_outdated(
 EOF
 ```
 
-A full-graph check fails with "unequal lengths of vars in map(...)" when an
-aggregation's GWAS list changed after its `GWAS_input_records` were built;
-restrict `names` to the aggregations in question.
+A check fails with "unequal lengths of vars in map(...)" or "index is out of
+bounds in pattern = slice()" when a pattern's number of branches changed since
+it was built, as after a change to an aggregation's GWAS list: the check
+expands downstream patterns from the stale stored branches. `tar_make()`
+rebuilds the upstream pattern first and is unaffected. Leave the downstream
+patterns out of `names` until then; they are outdated anyway.
 
 An outdated count is not the cost of a run. Before running after code,
 configuration or input changes, estimate the cost with

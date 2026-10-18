@@ -20,7 +20,8 @@ This skill does not authorize target execution.
 
 For parallel work, use separate cached `pixi run` commands. Track each PID and
 exit status, separate their output, and avoid concurrent writes to the same
-files or targets store.
+files or targets store. Forked workers such as `parallel::mclapply()` hang on
+OpenBLAS's thread pool unless the process starts with `OPENBLAS_NUM_THREADS=1`.
 
 Ordinary `Rscript` startup runs the repository's `.Rprofile`, which loads the
 project runtime in about five seconds. Keep it for `_targets.R`, project

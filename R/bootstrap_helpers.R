@@ -24,6 +24,29 @@ assert_genome_packages_installed <- function() {
   invisible(TRUE)
 }
 
+#' Stop when R's build configuration is empty
+#'
+#' r-base's Conda activation script reruns `R CMD javareconf` at every uncached
+#' Pixi activation, and a failed run can leave `Makeconf` and `ldpaths` empty.
+#' R still starts, but it cannot compile the native kernels that targets build
+#' at run time, so stop at startup with the repair instead.
+#'
+#' @return Invisibly returns `TRUE`.
+#' @keywords internal
+assert_R_build_configuration <- function() {
+  config_files <- file.path(R.home("etc"), c("Makeconf", "ldpaths"))
+  empty_files <- config_files[file.size(config_files) %in% 0]
+  if (length(empty_files)) {
+    stop(
+      paste(empty_files, collapse = ", "),
+      " is empty, so R cannot compile native code. Run `pixi reinstall r-base` from the repository root, ",
+      "and pass `--use-environment-activation-cache` to `pixi run` so activation scripts do not run again.",
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
 #' Load the project runtime
 #'
 #' Attach the core packages and conflict preferences, source the project
@@ -34,6 +57,7 @@ assert_genome_packages_installed <- function() {
 #' @return Invisibly returns `TRUE`.
 #' @keywords internal
 load_project_runtime <- function() {
+  assert_R_build_configuration()
   suppressPackageStartupMessages({
     library(Matrix)
     library(purrr)

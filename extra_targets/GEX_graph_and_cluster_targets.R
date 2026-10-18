@@ -79,7 +79,7 @@ rlang::list2(
     name = cluster_UCell_advantage_plots.3_GEX_QC,
     description = "Faceted GEX adjusted-score bars with matched background and the minimum-advantage competition cutoff. [checkpoint:3_GEX-QC]",
     command = plot_cluster_UCell_advantages(cluster_UCell_annotation.3_GEX_QC) |>
-      save_plots_structured(width = 22, height = 15)
+      save_plots_structured(width = 22, height = 15, dpi = 150)
   ),
   targets::tar_target(
     name = metadata_w_cell_types_unfiltered_tibble.GEX,

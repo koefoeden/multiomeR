@@ -293,7 +293,10 @@ save_plots_structured <- function(
     plot_save_args$width <- dplyr::coalesce(plot_save_args$width, auto_dimensions$width)
     plot_save_args$height <- dplyr::coalesce(plot_save_args$height, auto_dimensions$height)
     if (identical(filetype, "png")) {
-      plot_save_args$res <- dplyr::coalesce(plot_save_args$res, plot_save_args$dpi, 300)
+      # ggsave() sets the device resolution from dpi. ragg refuses sides above 50,000 px, so plots
+      # sized for very many groups lose resolution instead of failing.
+      plot_save_args$dpi <- min(plot_save_args$dpi %||% 300,
+        floor(50000 / max(plot_save_args$width, plot_save_args$height)))
     }
     do.call(
       ggplot2::ggsave,

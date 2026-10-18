@@ -473,7 +473,7 @@ rlang::list2(
       name = cluster_UCell_advantage_plots.7_ATAC_QC,
       description = "Faceted ATAC cluster adjusted GEX scores with matched background and the competition cutoff. [checkpoint:7_ATAC-QC]",
       command = plot_cluster_UCell_advantages(cluster_UCell_annotation.7_ATAC_QC) |>
-        save_plots_structured(width = 22, height = 15)
+        save_plots_structured(width = 22, height = 15, dpi = 150)
     ),
     targets::tar_target(
       name = metadata_w_cell_types_unfiltered_tibble.ATAC,

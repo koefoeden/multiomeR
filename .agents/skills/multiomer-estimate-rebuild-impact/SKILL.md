@@ -45,7 +45,10 @@ after a configuration, merge or graph-construction change and compare the rows
 by name: identical rows rule out reruns from changed commands. They cannot show
 an edited function body, which reruns every target that calls it directly or
 through other functions; list the roots as above for that. Also check the
-content of changed file targets, such as manifests.
+content of changed file targets, such as manifests. If no manifest was saved
+before the edit, build it with `tar_manifest(script = ...)` from a temporary
+copy of `_targets.R` in the repository root whose `source()` calls read
+`git show HEAD:` copies of the edited target files.
 
 Dynamic branches take their names from their upstream branches, and those of
 an `iteration = "vector"` stem from each element's value, never from the

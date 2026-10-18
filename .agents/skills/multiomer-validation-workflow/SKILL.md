@@ -57,6 +57,9 @@ To show that a performance change reproduces its outputs, call the changed
 helper on a stored branch's inputs and compare the result with that branch's
 stored value using `all.equal()`. `tar_read(branches = i)` of an
 `iteration = "group"` input returns every group, so filter `tar_group == i`.
+For a bit-identical comparison, set the BLAS threads the worker had
+(`RhpcBLASctl::blas_set_num_threads()`): OpenBLAS sums matrix products in
+another order with another thread count, or when a matrix gains columns.
 
 WNN results cannot be reproduced by rebuilding: `BPCells::knn_hnsw()` with more
 than one thread is nondeterministic. Validate code after the neighbour search on

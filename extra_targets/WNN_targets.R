@@ -211,6 +211,13 @@ rlang::list2(
       },
       iteration = "vector"
     ),
+    targets::tar_target(
+      name = continuous_UMAP_inputs.WNN,
+      description = "Coordinates, metadata variables and gene counts plotted on continuous WNN UMAPs, with genes read in one pass",
+      command = prepare_continuous_UMAP_inputs(metadata_w_cell_types_analysis_tibble.WNN, continuous_UMAP_spec.WNN,
+        aggregated_counts_BPCells_matrix.GEX, umap_cols = c("WNN_UMAP_1", "WNN_UMAP_2")),
+      resources = get_tar_resources(RAM_GB_req = 16)
+    ),
     tarchetypes::tar_file(
       name = categorical.UMAPs.8_multimodal_QC,
       description = "UMAPs colored by categorical metadata variables on the WNN embedding. [checkpoint:8_multimodal-QC]",
@@ -230,18 +237,17 @@ rlang::list2(
       name = continuous.UMAPs.8_multimodal_QC,
       description = "UMAPs colored by continuous QC and gene expression features on the WNN embedding. [checkpoint:8_multimodal-QC]",
       command = plot_UMAP_from_metadata(
-        metadata_tibble = metadata_w_cell_types_analysis_tibble.WNN,
+        metadata_tibble = continuous_UMAP_inputs.WNN$metadata_tibble,
         variable = continuous_UMAP_spec.WNN$variable,
         value_source = continuous_UMAP_spec.WNN$value_source,
-        feature_matrix = aggregated_counts_BPCells_matrix.GEX,
+        feature_matrix = continuous_UMAP_inputs.WNN$feature_matrix,
         umap_cols = c("WNN_UMAP_1", "WNN_UMAP_2")
       ) |>
         save_plots_structured(
           dyn_suffix_in_subdir = TRUE,
           override_suffix = stringr::str_replace_all(continuous_UMAP_spec.WNN$variable, "[/\\\\]", "_")
         ),
-      pattern = map(continuous_UMAP_spec.WNN),
-      resources = get_tar_resources(RAM_GB_req = 16)
+      pattern = map(continuous_UMAP_spec.WNN)
     ),
     tarchetypes::tar_file(
       name = continuous_by_cell_type_violin_plot.8_multimodal_QC,

@@ -351,22 +351,30 @@ rlang::list2(
     pattern = map(categorical_UMAP_var.GEX),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
+  targets::tar_target(
+    name = continuous_UMAP_inputs.GEX,
+    description = "Coordinates, metadata variables and gene counts plotted on continuous Harmony and non-Harmony GEX UMAPs, with genes read in one pass",
+    command = prepare_continuous_UMAP_inputs(metadata_w_cell_types_analysis_tibble.GEX,
+      dplyr::bind_rows(harmony_continuous_UMAP_spec.GEX, non_harmony_continuous_UMAP_spec.GEX),
+      aggregated_counts_BPCells_matrix.GEX,
+      umap_cols = c("GEX_UMAP_1", "GEX_UMAP_2", "GEX_non_harmony_UMAP_1", "GEX_non_harmony_UMAP_2")),
+    resources = get_tar_resources(RAM_GB_req = 16)
+  ),
   tarchetypes::tar_file(
     name = harmony.continuous.UMAPs.3_GEX_QC,
     description = "UMAPs colored by continuous QC and gene expression features. [checkpoint:3_GEX-QC]",
     command = plot_UMAP_from_metadata(
-      metadata_tibble = metadata_w_cell_types_analysis_tibble.GEX,
+      metadata_tibble = continuous_UMAP_inputs.GEX$metadata_tibble,
       variable = harmony_continuous_UMAP_spec.GEX$variable,
       value_source = harmony_continuous_UMAP_spec.GEX$value_source,
-      feature_matrix = aggregated_counts_BPCells_matrix.GEX,
+      feature_matrix = continuous_UMAP_inputs.GEX$feature_matrix,
       umap_cols = c("GEX_UMAP_1", "GEX_UMAP_2")
     ) |>
       save_plots_structured(
         dyn_suffix_in_subdir = TRUE,
         override_suffix = stringr::str_replace_all(harmony_continuous_UMAP_spec.GEX$variable, "[/\\\\]", "_")
       ),
-    pattern = map(harmony_continuous_UMAP_spec.GEX),
-    resources = get_tar_resources(RAM_GB_req = 16)
+    pattern = map(harmony_continuous_UMAP_spec.GEX)
   ),
   tarchetypes::tar_file(
     name = non_harmony.categorical.UMAPs.3_GEX_QC,
@@ -384,18 +392,17 @@ rlang::list2(
     name = non_harmony.continuous.UMAPs.3_GEX_QC,
     description = "UMAPs colored by continuous features on the uncorrected PCA embedding. [checkpoint:3_GEX-QC]",
     command = plot_UMAP_from_metadata(
-      metadata_tibble = metadata_w_cell_types_analysis_tibble.GEX,
+      metadata_tibble = continuous_UMAP_inputs.GEX$metadata_tibble,
       variable = non_harmony_continuous_UMAP_spec.GEX$variable,
       value_source = non_harmony_continuous_UMAP_spec.GEX$value_source,
-      feature_matrix = aggregated_counts_BPCells_matrix.GEX,
+      feature_matrix = continuous_UMAP_inputs.GEX$feature_matrix,
       umap_cols = c("GEX_non_harmony_UMAP_1", "GEX_non_harmony_UMAP_2")
     ) |>
       save_plots_structured(
         dyn_suffix_in_subdir = TRUE,
         override_suffix = stringr::str_replace_all(non_harmony_continuous_UMAP_spec.GEX$variable, "[/\\\\]", "_")
       ),
-    pattern = map(non_harmony_continuous_UMAP_spec.GEX),
-    resources = get_tar_resources(RAM_GB_req = 16)
+    pattern = map(non_harmony_continuous_UMAP_spec.GEX)
   ),
   targets::tar_target(
     name = metadata_w_cell_types_unfiltered_analysis_tibble.GEX,

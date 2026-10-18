@@ -154,6 +154,28 @@ plot_UMAP_from_metadata <- function(
       if (value_source == "feature") "Feature values come directly from the supplied matrix without normalization in this plotting helper."), width = 110))
 }
 
+#' Prepare continuous UMAP inputs
+#'
+#' Keep only the columns that continuous UMAP branches plot and read every
+#' plotted feature in one pass, so branches neither load the full metadata nor
+#' scan an on-disk matrix once per feature.
+#'
+#' @param metadata_tibble Tibble with one row per cell, including `barcode_w_prefix` and `umap_cols`.
+#' @param spec_tibble Tibble with `variable` and `value_source` columns, as used by `plot_UMAP_from_metadata()`.
+#' @param feature_matrix Feature-by-cell matrix-like object with feature row names and barcode column names.
+#' @param umap_cols Embedding coordinate columns to keep.
+#' @return List with `metadata_tibble` (barcodes, coordinates and metadata variables)
+#'   and `feature_matrix` (in-memory `dgCMatrix` of the plotted features over those barcodes).
+#' @keywords internal
+
+prepare_continuous_UMAP_inputs <- function(metadata_tibble, spec_tibble, feature_matrix, umap_cols) {
+  is_feature <- spec_tibble$value_source == "feature"
+  list(
+    metadata_tibble = metadata_tibble[unique(c("barcode_w_prefix", umap_cols, spec_tibble$variable[!is_feature]))],
+    feature_matrix = as(feature_matrix[unique(spec_tibble$variable[is_feature]), metadata_tibble$barcode_w_prefix], "dgCMatrix")
+  )
+}
+
 #' Plot 3 by 3 clusters and reduction UMAPs from metadata
 #'
 #' Compare RNA, WNN, and ATAC cluster labels across their UMAP reductions.

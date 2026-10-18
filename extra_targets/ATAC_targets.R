@@ -1067,14 +1067,21 @@ rlang::list2(
       },
       iteration = "vector"
     ),
+    targets::tar_target(
+      name = continuous_UMAP_inputs.ATAC,
+      description = "Coordinates, metadata variables and motif-family scores plotted on continuous ATAC UMAPs, with scores read in one pass",
+      command = prepare_continuous_UMAP_inputs(metadata_w_cell_types_analysis_tibble.ATAC, continuous_UMAP_spec.ATAC,
+        motif_family_accessibility_BPCells_matrix.ATAC, umap_cols = c("LSI_UMAP_1", "LSI_UMAP_2")),
+      resources = get_tar_resources(RAM_GB_req = 16)
+    ),
     tarchetypes::tar_file(
       name = continuous.UMAPs.7_ATAC_QC,
       description = "UMAPs colored by continuous motif-family accessibility and peak accessibility metrics. [checkpoint:7_ATAC-QC] [resource_observation: peak_RAM_GiB=5.3; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
       command = plot_UMAP_from_metadata(
-        metadata_tibble = metadata_w_cell_types_analysis_tibble.ATAC,
+        metadata_tibble = continuous_UMAP_inputs.ATAC$metadata_tibble,
         variable = continuous_UMAP_spec.ATAC$variable,
         value_source = continuous_UMAP_spec.ATAC$value_source,
-        feature_matrix = motif_family_accessibility_BPCells_matrix.ATAC
+        feature_matrix = continuous_UMAP_inputs.ATAC$feature_matrix
       ) |>
         (\(plot) plot + ggplot2::labs(
           title = paste(if (continuous_UMAP_spec.ATAC$value_source == "feature")
@@ -1087,8 +1094,7 @@ rlang::list2(
           dyn_suffix_in_subdir = TRUE,
           override_suffix = stringr::str_replace_all(continuous_UMAP_spec.ATAC$variable, "[/\\\\]", "_")
         ),
-      pattern = map(continuous_UMAP_spec.ATAC),
-      resources = get_tar_resources(RAM_GB_req = 16)
+      pattern = map(continuous_UMAP_spec.ATAC)
     )
   ),
   ATAC_w_gene_activity_targets = rlang::list2(

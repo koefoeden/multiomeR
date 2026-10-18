@@ -9,12 +9,12 @@ the residualized peak and gene values.
 The model includes donor fixed intercepts, log-depth covariates, up to ten
 principal components of the cell type's residual peak accessibility
 (`peak_gene_correlation_latent_factors.WNN`) and a Gaussian random peak slope by
-donor. `src/peak_gene_REML.cpp` profiles residual variance
-and independently searches the slope/residual variance ratio, including zero.
-`src/peak_gene_KR.cpp` supplies batched Kenward–Roger inference. Because each
-aggregate belongs to one donor, both kernels work in donor space without
-aggregate-by-aggregate matrices; genes sharing a peak reuse one donor-space
-eigendecomposition. Both kernels compile once
+donor. `src/peak_gene_REML.cpp` profiles residual variance,
+independently searches the slope/residual variance ratio, including zero, and
+applies batched Kenward–Roger inference. Because each aggregate belongs to one
+donor, the kernel works in donor space without aggregate-by-aggregate or
+per-gene fixed-effect matrices; genes sharing a peak reuse one donor-space
+eigendecomposition. The kernel compiles once
 per source revision into the user's native-library cache; file targets track source changes.
 The fresh lme4/pbkrtest helper remains a numerical reference.
 

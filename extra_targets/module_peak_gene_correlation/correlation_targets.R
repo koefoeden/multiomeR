@@ -318,14 +318,8 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
-    name = peak_gene_KR_native_source_file,
-    description = "Track the batched Kenward-Roger C++ source [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
-    command = "src/peak_gene_KR.cpp",
-    deployment = "main"
-  ),
-  tarchetypes::tar_file(
     name = peak_gene_REML_native_source_file,
-    description = "Track the profiled donor-slope REML C++ source [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    description = "Track the profiled donor-slope REML and Kenward-Roger C++ source [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = "src/peak_gene_REML.cpp",
     deployment = "main"
   ),
@@ -335,8 +329,7 @@ rlang::list2(
     command = score_peak_gene_hierarchical_associations(
       normalized_aggregate_matrices = peak_gene_correlation_normalized_aggregate_matrices.WNN,
       candidate_pairs_tibble = peak_gene_correlation_filter_records.WNN$candidate_pairs,
-      REML_source_file = peak_gene_REML_native_source_file,
-      KR_source_file = peak_gene_KR_native_source_file
+      native_source_file = peak_gene_REML_native_source_file
     ),
     pattern = map(peak_gene_correlation_normalized_aggregate_matrices.WNN,
       peak_gene_correlation_filter_records.WNN),

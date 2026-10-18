@@ -98,7 +98,7 @@ make_hierarchical_scan_case <- function() {
 
 testthat::test_that("the compiled REML kernel matches multi-start lme4 fits", {
   require_reference_version("lme4", "2.0.6")
-  kernel <- load_peak_gene_kernel(file.path(multiomeR_project_root, "src/peak_gene_REML.cpp"), "peak_gene_REML_batch_cpp")
+  kernel <- load_peak_gene_kernel(file.path(multiomeR_project_root, "src/peak_gene_REML.cpp"), "peak_gene_REML_KR_batch_cpp")
   set.seed(1702)
   donor <- factor(rep(seq_len(6), each = 8))
   x <- stats::rnorm(length(donor))
@@ -115,11 +115,9 @@ testthat::test_that("the compiled REML kernel matches multi-start lme4 fits", {
       REML = TRUE, start = list(theta = start),
       control = lme4::lmerControl(optimizer = "bobyqa", optCtrl = list(rhoend = 1e-10)))))
     reference <- fits[[which.max(vapply(fits, function(fit) as.numeric(stats::logLik(fit)), numeric(1)))]]
-    testthat::expect_equal(result$REML_deviance[[i]], -2 * as.numeric(stats::logLik(reference)), tolerance = 1e-8)
-    testthat::expect_equal(result$beta[, i], unname(lme4::fixef(reference)), tolerance = 1e-6)
+    testthat::expect_equal(result$coefficient[[i]], unname(lme4::fixef(reference)[["x"]]), tolerance = 1e-6)
     testthat::expect_equal(result$residual_variance[[i]], stats::sigma(reference)^2, tolerance = 1e-6)
     testthat::expect_equal(result$slope_variance[[i]], as.numeric(lme4::VarCorr(reference)[[1]]), tolerance = 1e-6)
-    testthat::expect_equal(result$covariance[[i]], unname(as.matrix(stats::vcov(reference))), tolerance = 1e-6)
   }
 })
 
@@ -128,8 +126,7 @@ testthat::test_that("the hierarchical scan matches lme4 with pbkrtest Kenward-Ro
   require_reference_version("pbkrtest", "0.5.5")
   case <- make_hierarchical_scan_case()
   observed <- score_peak_gene_hierarchical_associations(case$matrices, case$pairs,
-    REML_source_file = file.path(multiomeR_project_root, "src/peak_gene_REML.cpp"),
-    KR_source_file = file.path(multiomeR_project_root, "src/peak_gene_KR.cpp")) |>
+    native_source_file = file.path(multiomeR_project_root, "src/peak_gene_REML.cpp")) |>
     dplyr::filter(.data$link_class != "background")
   reference <- dplyr::bind_rows(lapply(seq_len(nrow(observed)), function(i) fit_peak_gene_hierarchical_association(
     case$matrices$GEX_norm[observed$TargetGeneID[[i]], ], case$matrices$ATAC_norm[observed$peak[[i]], ],

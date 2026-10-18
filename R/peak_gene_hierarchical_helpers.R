@@ -44,8 +44,7 @@ add_peak_gene_background_pairs <- function(pairs, n_per_gene = 200L, min_distanc
 #' calibration needs. Random slopes need `min_donors` donors with within-donor
 #' peak variation.
 score_peak_gene_hierarchical_associations <- function(
-  normalized_aggregate_matrices, candidate_pairs_tibble,
-  REML_source_file, KR_source_file, min_donors = 8L
+  normalized_aggregate_matrices, candidate_pairs_tibble, native_source_file, min_donors = 8L
 ) {
   matrices <- normalized_aggregate_matrices
   branch <- prepare_peak_gene_correlation_branch(matrices, candidate_pairs_tibble)
@@ -70,8 +69,7 @@ score_peak_gene_hierarchical_associations <- function(
   if (!nrow(pairs)) return(tibble::as_tibble(result))
   donor <- factor(matrices$aggregate_depth_tibble$donor_id)
   if (nlevels(donor) < min_donors) return(tibble::as_tibble(result))
-  fit_kernel <- load_peak_gene_kernel(REML_source_file, "peak_gene_REML_batch_cpp")
-  correction_kernel <- load_peak_gene_kernel(KR_source_file, "peak_gene_KR_batch_cpp")
+  fit_kernel <- load_peak_gene_kernel(native_source_file, "peak_gene_REML_KR_batch_cpp")
   donor_index <- as.integer(donor)
   donor_counts <- tabulate(donor_index, nlevels(donor))
   donor_matrix <- stats::model.matrix(~ 0 + donor)
@@ -107,21 +105,16 @@ score_peak_gene_hierarchical_associations <- function(
     X <- cbind(design, x)
     Z <- donor_matrix * x
     fit <- fit_kernel(X, Z, t(GEX[genes, , drop = FALSE]))
-    correction <- correction_kernel(X, Z, fit$covariance, fit$beta[ncol(X), ],
-      fit$slope_variance, fit$residual_variance)
-    diagnostic <- ifelse(nzchar(fit$diagnostic), fit$diagnostic, correction$diagnostic)
-    status <- ifelse(nzchar(diagnostic) | !is.finite(correction$p) |
-      correction$p < 0 | correction$p > 1, "numerical_failure",
-      ifelse(!is.finite(correction$df) | correction$df < 1,
-        "insufficient_donor_information", "estimable"))
-    estimates$hierarchical_coefficient[indices] <- fit$beta[ncol(X), ]
+    status <- ifelse(nzchar(fit$diagnostic) | !is.finite(fit$p) | fit$p < 0 | fit$p > 1, "numerical_failure",
+      ifelse(!is.finite(fit$df) | fit$df < 1, "insufficient_donor_information", "estimable"))
+    estimates$hierarchical_coefficient[indices] <- fit$coefficient
     estimates$hierarchical_slope_SD[indices] <- sqrt(fit$slope_variance)
     estimates$hierarchical_singular[indices] <- sqrt(fit$variance_ratio) < 1e-4
-    estimates$hierarchical_df[indices] <- correction$df
-    estimates$hierarchical_raw_pvalue[indices] <- correction$p
-    estimates$hierarchical_pvalue[indices] <- ifelse(status == "estimable", correction$p, NA_real_)
+    estimates$hierarchical_df[indices] <- fit$df
+    estimates$hierarchical_raw_pvalue[indices] <- fit$p
+    estimates$hierarchical_pvalue[indices] <- ifelse(status == "estimable", fit$p, NA_real_)
     estimates$hierarchical_status[indices] <- status
-    estimates$hierarchical_diagnostic[indices] <- diagnostic
+    estimates$hierarchical_diagnostic[indices] <- fit$diagnostic
   }
   result[names(estimates)] <- estimates
   statistic <- sign(result$hierarchical_coefficient) *

@@ -78,23 +78,16 @@ comparison_process_RNA <- function(RNA_dirs, config) {
 }
 
 comparison_call_consensus_peaks <- function(
-  fragment_files,
+  cut_site_dirs,
   discovery_tibble,
   config,
   blacklist_GRanges
 ) {
-  fragment_files <- unlist(fragment_files, use.names = FALSE)
-  replicate_names <- discovery_tibble$replicate_name
-  if (length(fragment_files) != length(replicate_names)) {
-    stop("Peak-calling fragment files and replicate names must have equal lengths.", call. = FALSE)
-  }
-
   replicate_peaks <- comparison_with_workers(future.apply::future_lapply(
-    seq_along(fragment_files),
-    \(replicate_index) {
-      replicate_name <- replicate_names[[replicate_index]]
+    discovery_tibble$replicate_name,
+    \(replicate_name) {
       narrow_peak_file <- call_peaks_w_MACS3(
-        ATAC_fragments_per_cluster = fragment_files[[replicate_index]],
+        ATAC_cut_site_files = get_cut_site_files(cut_site_dirs, replicate_name),
         ATAC_peak_calling_cluster_names = replicate_name,
         genome = config$genome,
         output_suffix = replicate_name,

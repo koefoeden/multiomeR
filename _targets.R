@@ -15,6 +15,7 @@ aggregation_tibble <- build_aggregation_tibble(
 peak_calling_aggregation_tibble <- aggregation_tibble |>
   add_aggregation_target_syms(c(
     "combined_BPCells_fragment_obj.ATAC",
+    "GEX_cells_per_GEM_well_tibble.ATAC",
     "peak_calling_cluster_discovery_tibble.ATAC",
     "aggregated_cellranger_ref_list"
   ))

@@ -411,8 +411,8 @@ targets::tar_option_set(
 
 comparison_aggregation_tibble <- tibble::tibble(
   aggregation = comparison_aggregation_names(),
-  comparison_peak_calling_fragment_files = rlang::syms(
-    paste0("fragments_per_peak_calling_cluster_discovery.fragments.ATAC.", aggregation)
+  comparison_peak_calling_cut_site_dirs = rlang::syms(
+    paste0("peak_calling_cut_sites_per_GEM_well.fragments.ATAC.", aggregation)
   ),
   comparison_peak_calling_discovery_tibble = rlang::syms(paste0("peak_calling_cluster_discovery_tibble.ATAC.", aggregation)),
   comparison_blacklist_GRanges = rlang::syms(paste0("blacklist_GRanges.ATAC.", aggregation))
@@ -450,7 +450,7 @@ comparison_seurat_signac_targets <- function(values, peak_resources) {
     targets::tar_target(
       comparison_seurat_signac_consensus_peak_GRanges,
       comparison_call_consensus_peaks(
-        comparison_peak_calling_fragment_files,
+        comparison_peak_calling_cut_site_dirs,
         comparison_peak_calling_discovery_tibble,
         comparison_seurat_signac_config,
         comparison_blacklist_GRanges

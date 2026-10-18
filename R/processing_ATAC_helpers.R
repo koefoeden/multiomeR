@@ -279,63 +279,59 @@ build_peak_calling_cluster_discovery_tibble <- function(
   })
 }
 
-#' Write ATAC fragments for peak calling cluster
+#' Write peak-calling cut sites for one GEM well
 #'
-#' Write a per-cluster fragment BED from BPCells fragments and barcode groups.
+#' Write the left cut site of each fragment of the well's discovery nuclei, one
+#' BED file per half, in a single pass over the well's fragments. MACS3 reads a
+#' fragment as one read at its left end, so these are the tags it would read
+#' from the halves' fragment files.
 #'
-#' @param ATAC_combined_BPCells_fragment_obj Combined BPCells fragment object for one aggregation, with prefixed cell names.
-#' @param BCs_per_peak_cluster Character vector of barcodes assigned to one peak-calling cluster.
-#' @param peak_calling_cluster_name Cluster label used in output filenames and peak names.
-#' @param output_suffix Suffix appended to command outputs so dynamic branches do not overwrite each other.
-#' @param allow_empty Logical; when TRUE, write an empty fragments output instead of failing on zero selected cells/fragments.
-#' @return The created file path, submitted job ID, or command result needed by the caller.
+#' @param GEM_well_cells One row of `split_cells_by_GEM_well()`.
+#' @param discovery_tibble Output of `build_peak_calling_cluster_discovery_tibble()`.
+#' @param genome Genome build key used to select the standard chromosomes.
+#' @return Directory holding one `<replicate_name>.bed.gz` per half with nuclei in the well.
 #' @keywords internal
 
-write_ATAC_fragments_for_peak_calling_cluster <- function(
-  ATAC_combined_BPCells_fragment_obj,
-  BCs_per_peak_cluster,
-  peak_calling_cluster_name,
-  output_suffix = peak_calling_cluster_name,
-  allow_empty = FALSE
-) {
-  fragment_obj <- BPCells::select_cells(ATAC_combined_BPCells_fragment_obj, BCs_per_peak_cluster)
-
-  Sys.setenv(LC_ALL = "C")
-  zipped_frag_file_out_path <- get_structured_file_path(
-    filetype = "tsv.gz",
-    override_suffix = output_suffix
+write_peak_calling_cut_sites_for_GEM_well <- function(GEM_well_cells, discovery_tibble, genome) {
+  out_dir <- get_structured_file_path(override_suffix = GEM_well_cells$GEM_well_ID)
+  fs::file_delete(fs::dir_ls(out_dir))
+  halves <- rlang::set_names(
+    rep(discovery_tibble$replicate_name, lengths(discovery_tibble$BCs_for_peak_discovery)),
+    unlist(discovery_tibble$BCs_for_peak_discovery)
   )
-  tmp_frag_path <- tempfile(fileext = ".tsv")
-  on.exit(fs::file_delete(tmp_frag_path), add = TRUE)
+  cells <- intersect(GEM_well_cells$barcodes[[1]], names(halves))
+  cut_sites <- open_GEM_well_fragments(GEM_well_cells, genome) |>
+    BPCells::select_cells(cells) |>
+    BPCells::merge_cells(halves[cells]) |>
+    as.data.frame() |>
+    data.table::as.data.table()
+  cut_sites[, data.table::fwrite(list(chr, start, start + 1L), file.path(out_dir, paste0(.BY$cell_id, ".bed.gz")),
+    sep = "\t", col.names = FALSE, compress = "gzip", compressLevel = 1L, nThread = 1L), by = cell_id]
+  out_dir
+}
 
-  BPCells::write_fragments_10x(fragments = fragment_obj, path = tmp_frag_path, append_5th_column = TRUE)
+#' Get cut-site files
+#'
+#' @param cut_site_dirs Directories written by `write_peak_calling_cut_sites_for_GEM_well()`.
+#' @param replicate_name Half whose files to return.
+#' @return Paths of the half's cut-site files, one per GEM well with its nuclei.
+#' @keywords internal
 
-  run_w_error_check(
-    command_string = "bgzip",
-    arguments_chr = c("-f", "-o", zipped_frag_file_out_path, "--threads", "1", tmp_frag_path)
-  )
-
-  if (length(readr::read_lines(zipped_frag_file_out_path, n_max = 1)) == 0) {
-    if (!allow_empty) {
-      stop("No fragments produced for cluster ", peak_calling_cluster_name)
-    }
-    return(zipped_frag_file_out_path)
-  }
-
-  run_w_error_check(
-    command_string = "tabix",
-    arguments_chr = c("-f", "-p", "bed", zipped_frag_file_out_path)
-  )
-
-  zipped_frag_file_out_path
+get_cut_site_files <- function(cut_site_dirs, replicate_name) {
+  files <- file.path(cut_site_dirs, paste0(replicate_name, ".bed.gz"))
+  files <- files[file.exists(files)]
+  if (length(files) == 0) stop("No cut sites written for ", replicate_name)
+  files
 }
 
 #' Call peaks w MACS3
 #'
-#' Run MACS3 peak calling for one cluster-specific fragment file.
+#' Run MACS3 peak calling on the cut sites of one half of a cluster. The
+#' maximum gap is fixed: by default MACS3 sets it to the mean length of the
+#' first ten lines, so peaks would depend on line order.
 #'
-#' @param ATAC_fragments_per_cluster Path to a BED-like fragment file containing
-#'   only the cells for one peak-calling cluster.
+#' @param ATAC_cut_site_files Paths of BED files of the half's cut sites, as
+#'   returned by `get_cut_site_files()`.
 #' @param ATAC_peak_calling_cluster_names Cluster label used in errors and, by
 #'   default, the output filename suffix.
 #' @param genome Genome build key used to choose chromosome sizes, blacklist resources, and external-tool parameters.
@@ -347,7 +343,7 @@ write_ATAC_fragments_for_peak_calling_cluster <- function(
 #'   files are deleted because downstream code only consumes narrowPeak output.
 #' @keywords internal
 
-call_peaks_w_MACS3 <- function(ATAC_fragments_per_cluster,
+call_peaks_w_MACS3 <- function(ATAC_cut_site_files,
                                ATAC_peak_calling_cluster_names,
                                genome,
                                output_suffix = ATAC_peak_calling_cluster_names,
@@ -360,12 +356,13 @@ call_peaks_w_MACS3 <- function(ATAC_fragments_per_cluster,
     command_string = "macs3",
     arguments_chr = c(
       "callpeak",
-      c("-t", ATAC_fragments_per_cluster),
+      c("-t", ATAC_cut_site_files),
       c("-g", genome_size),
       c("-f", "BED"),
       c("--nomodel"),
       c("--shift", "-75"),
       c("--extsize", "150"),
+      c("--max-gap", "150"),
       c("--call-summits"),
       c("--name", output_suffix),
       c("--outdir", out_dir),

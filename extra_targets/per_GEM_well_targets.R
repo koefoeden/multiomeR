@@ -226,7 +226,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = cellsnp_dir,
-    description = "Run cellsnp-lite to genotype each barcode at SNP positions, or return no files if no VCF is configured [part_of_graph:parallel] [part_of_graph:seurat_export]",
+    description = "Run cellsnp-lite to genotype each barcode at SNP positions, or return no files if no VCF is configured [part_of_graph:parallel] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=2.0; cpu_mean=5.4 of 6; scope=382 runs with -R; method=slurm_monitor schema 2; date=2026-10-17]",
     command = if (!is.na(GEM_well_donors_VCF_file)) {
       ATAC_bam_file <- file.path(dirname(cellranger_summary_file), "atac_possorted_bam.bam")
       get_cellsnp_dir(
@@ -244,16 +244,16 @@ rlang::list2(
   ),
   targets::tar_target(
     name = vireo_donor_ids_tibble,
-    description = "Run vireo to demultiplex donors from cellsnp-lite genotypes and return per-barcode donor assignments [part_of_graph:parallel] [part_of_graph:seurat_export]",
+    description = "Run vireo to demultiplex donors from cellsnp-lite genotypes and return per-barcode donor assignments [part_of_graph:parallel] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=23.1; cpu_median=1.0; scope=360 wells; method=slurm_monitor schema 2; date=2026-10-17]",
     command = get_vireo_donor_ids_tibble(
       cellsnp_dir,
       GEM_well_donors_VCF_file = GEM_well_donors_VCF_file,
       GEM_well_n_donors = GEM_well_n_donors,
       GEM_well_donor_id = GEM_well_donor_id,
       cellranger_barcodes_tsv = cellranger_barcodes_tsv,
-      cores = 4 # consider decreasing this if increasing memory from 60 > 120 GB doesn't fix the issue.
+      cores = 1
     ),
-    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
+    resources = get_tar_resources(RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = unfiltered_cells_n_vecs,
@@ -281,8 +281,7 @@ rlang::list2(
         ATAC_peak_region_frac = atac_peak_region_fragments / atac_fragments,
         ATAC_peak_region_cutsites_frac = atac_peak_region_cutsites / atac_fragments,
         GEX_exonic_to_intronic_umis_frac = gex_exonic_umis / gex_intronic_umis
-      ),
-    resources = get_tar_resources(RAM_GB_req = 16)
+      )
   ),
   targets::tar_target(
     name = excluded_barcodes_by_type_list,

@@ -105,7 +105,11 @@ load_project_runtime <- function() {
     return(invisible(TRUE))
   }
 
-  targets::tar_source(c("packages/multiomeRCore/R", "R"))
+  # targets sends every helper with each task. Outside interactive sessions,
+  # source() drops the srcrefs that would make this payload four times larger.
+  for (file in list.files(c("packages/multiomeRCore/R", "R"), pattern = "[.]R$", full.names = TRUE)) {
+    source(file)
+  }
   targets::tar_option_set(
     error = "trim",
     iteration = "list",

@@ -380,7 +380,8 @@ plot_cluster_UCell_advantages <- function(annotation, clusters_per_page = 6L) {
     current$facet <- factor(current$facet, levels = facet_order)
     cutoffs <- unique(current[, c("facet", "competition_cutoff")])
     ggplot2::ggplot(current, ggplot2::aes(x = label, y = plot_score, fill = role)) +
-      ggplot2::geom_col(width = 0.8) +
+      # Draw every role's key, also on pages where a role has no bars.
+      ggplot2::geom_col(width = 0.8, show.legend = TRUE) +
       ggplot2::geom_hline(yintercept = 0, color = "grey25", linewidth = 0.5) +
       ggplot2::geom_hline(data = cutoffs, ggplot2::aes(yintercept = competition_cutoff),
         linetype = "dashed", color = "grey25", linewidth = 0.5) +

@@ -13,7 +13,9 @@ time, so it takes the time at which a driver log reports it completed.
 
 A target that errors after an earlier successful build keeps its old completion time in
 the metadata, so errors and worker crashes are also read from the driver logs; each must
-have been rebuilt without error since, as by a later rerun that this record spans.
+have been rebuilt without error since, as by a later rerun that this record spans. A branch
+that a later complete build of its pattern no longer lists, with every listed branch built
+after it, was replaced, as when a fix changes a pattern's branches, and is left out.
 
 Usage: record_run.py <store_meta> <output_tsv> <driver_log>...  (the record's driver logs in order)
 """
@@ -53,7 +55,16 @@ for row in rows.values():
         os.path.realpath(path).startswith(store) for path in row["path"].split("*") if path)
     if row["time"] == "t0s" and row["name"] in completed_days:
         row["time"] = f"t{completed_days[row['name']]}s"
-completed = [row for row in rows.values() if row["type"] in ("stem", "branch")
+children = {row["name"]: row["children"].split("*") for row in rows.values() if row["type"] == "pattern" and row["children"]}
+
+
+def replaced(row):
+    listed = children.get(row["parent"], [])
+    times = [float(rows[name]["time"][1:-1]) for name in listed if name in rows]
+    return row["type"] == "branch" and row["name"] not in listed and bool(times) and min(times) > float(row["time"][1:-1])
+
+
+completed = [row for row in rows.values() if row["type"] in ("stem", "branch") and not replaced(row)
              and (float(row["time"][1:-1]) >= start_days or not row["in_store"])]
 
 with open(output_file, "w", newline="") as output:
@@ -66,8 +77,8 @@ with open(output_file, "w", newline="") as output:
                          row["bytes"], row["error"], node, str(row["in_store"]).upper()])
 
 errored = [row["name"] for row in completed if row["error"]]
-errored += sorted(name for name in logged_errors - set(errored)
-                  if rows.get(name, {}).get("error") or float(rows.get(name, {"time": "t0s"})["time"][1:-1]) < start_days)
+errored += sorted(name for name in logged_errors - set(errored) if not (name in rows and replaced(rows[name]))
+                  and (rows.get(name, {}).get("error") or float(rows.get(name, {"time": "t0s"})["time"][1:-1]) < start_days))
 built = sum(row["in_store"] for row in completed)
 print(f"{built} targets completed since {started} on {node}, and {len(completed) - built} input files; {len(errored)} errored.")
 if errored or not built:

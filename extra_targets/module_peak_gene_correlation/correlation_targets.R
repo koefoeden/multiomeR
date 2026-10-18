@@ -23,6 +23,8 @@ rlang::list2(
     command = make_peak_gene_correlation_chromosome_tibble(
       peak_gene_correlation_candidate_pairs_tibble.WNN
     ),
+    # One branch per chromosome row downstream; list iteration would branch over the tibble's one column.
+    iteration = "vector",
     resources = get_tar_resources(RAM_GB_req = 8)
   ),
   targets::tar_target(

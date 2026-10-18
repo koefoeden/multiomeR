@@ -18,14 +18,16 @@ w_def <- function(packages) {
 #' it still open after the store moves.
 #'
 #' @param path BPCells matrix or fragments directory.
-#' @param open BPCells function that opens `path`.
+#' @param open Function that opens `path`, such as a BPCells opener or
+#'   `open_BPCells_counts_as_double()`.
 #' @return The opened object with a `file_signature` attribute.
 #' @keywords internal
 open_BPCells_dir <- function(path, open = BPCells::open_matrix_dir) {
   files <- sort(list.files(path, recursive = TRUE, all.files = TRUE, no.. = TRUE))
   info <- file.info(file.path(path, files))
   object <- open(path)
-  object@dir <- path
+  # A converting opener, such as open_BPCells_counts_as_double(), wraps the directory object.
+  if (methods::.hasSlot(object, "dir")) object@dir <- path else object@matrix@dir <- path
   attr(object, "file_signature") <- digest::digest(
     paste(files, info$size, format(as.numeric(info$mtime), digits = 15), sep = ":", collapse = ";"),
     algo = "xxhash64", serialize = FALSE

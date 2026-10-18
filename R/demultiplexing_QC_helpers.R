@@ -1,9 +1,11 @@
-#' Count assignments against the complete Cell Ranger-called barcode set.
-summarize_demultiplexing_assignments <- function(vireo_results, barcode_files, GEM_well_IDs) {
-  stopifnot(length(vireo_results) == length(GEM_well_IDs),
-    length(barcode_files) == length(GEM_well_IDs), !anyDuplicated(GEM_well_IDs))
-  purrr::pmap_dfr(list(vireo_results, barcode_files, GEM_well_IDs),
-    function(result, barcode_file, GEM_well_ID) {
+#' Count assignments against the complete Cell Ranger-called barcode set, with
+#' each genotyped well's donor-VCF SNPs that passed cellsnp-lite's filters and
+#' the median number of them covered per nucleus.
+summarize_demultiplexing_assignments <- function(vireo_results, barcode_files, cellsnp_dirs, GEM_well_IDs) {
+  stopifnot(length(vireo_results) == length(GEM_well_IDs), length(barcode_files) == length(GEM_well_IDs),
+    length(cellsnp_dirs) == length(GEM_well_IDs), !anyDuplicated(GEM_well_IDs))
+  purrr::pmap_dfr(list(vireo_results, barcode_files, cellsnp_dirs, GEM_well_IDs),
+    function(result, barcode_file, cellsnp_dir, GEM_well_ID) {
       barcodes <- readLines(barcode_file)
       if (anyDuplicated(barcodes) || anyDuplicated(result$barcode) ||
           !setequal(barcodes, result$barcode)) {
@@ -26,7 +28,11 @@ summarize_demultiplexing_assignments <- function(vireo_results, barcode_files, G
         dplyr::count(.data$assignment_class, .data$donor_id, name = "n_nuclei") |>
         dplyr::mutate(GEM_well_ID = GEM_well_ID, n_called = length(barcodes),
           fraction = .data$n_nuclei / .data$n_called,
-          not_demultiplexed = all(result$vireo_type == "not_demultiplexed"))
+          not_demultiplexed = all(result$vireo_type == "not_demultiplexed"),
+          # The SNP-by-barcode matrix header gives the number of SNPs cellsnp-lite kept.
+          n_passing_SNPs = if (cellsnp_dir == "NULL.txt") NA_integer_ else scan(file.path(cellsnp_dir, "cellSNP.tag.AD.mtx"),
+            what = integer(), comment.char = "%", nmax = 1L, quiet = TRUE),
+          median_SNPs_per_nucleus = stats::median(result$vireo_n_vars))
     }) |>
     dplyr::mutate(
       GEM_well_ID = factor(.data$GEM_well_ID, levels = GEM_well_IDs),
@@ -42,6 +48,10 @@ summarize_demultiplexing_assignments <- function(vireo_results, barcode_files, G
 
 #' Plot donor-specific singlet segments with three assignment-class colors.
 plot_demultiplexing_assignment_bars <- function(counts) {
+  well_labels <- dplyr::distinct(counts, .data$GEM_well_ID, .data$n_passing_SNPs, .data$median_SNPs_per_nucleus) |>
+    dplyr::mutate(label = dplyr::if_else(is.na(.data$n_passing_SNPs), as.character(.data$GEM_well_ID),
+      sprintf("%s (%s SNPs; median %s per nucleus)", .data$GEM_well_ID,
+        scales::comma(.data$n_passing_SNPs), scales::comma(round(.data$median_SNPs_per_nucleus)))))
   counts |>
     ggplot2::ggplot() +
     ggplot2::geom_rect(ggplot2::aes(xmin = xmin, xmax = xmax,
@@ -55,11 +65,13 @@ plot_demultiplexing_assignment_bars <- function(counts) {
     ggplot2::scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25),
       labels = scales::label_percent(), expand = ggplot2::expansion(mult = 0)) +
     ggplot2::scale_y_continuous(breaks = seq_along(levels(counts$GEM_well_ID)),
-      labels = levels(counts$GEM_well_ID)) +
+      labels = unname(rlang::set_names(well_labels$label, well_labels$GEM_well_ID)[levels(counts$GEM_well_ID)])) +
     ggplot2::scale_fill_manual(values = c(unassigned = "#999999", doublet = "#D55E00", singlet = "#009E73"), drop = FALSE) +
     ggplot2::labs(title = "Donor assignments per GEM well before QC",
-      subtitle = "Look for excess doublet or unassigned calls and uneven donor representation before pooling wells.",
+      subtitle = "Look for excess doublet or unassigned calls, uneven donor representation and wells with few SNPs per nucleus before pooling wells.",
       x = "Fraction of all Cell Ranger-called nuclei", y = NULL, fill = "Assignment",
-      caption = "Singlet segments are labelled by donor ID. Single-donor wells use their configured donor and are shown as singlets; genotype doublets were not assessed in those wells.") +
+      caption = stringr::str_wrap(width = 160, paste(
+        "Singlet segments are labelled by donor ID. Single-donor wells use their configured donor and are shown as singlets; genotype doublets were not assessed in those wells.",
+        "Labels of genotyped wells give the donor-VCF SNPs that passed cellsnp-lite's filters and the median number of them covered per nucleus (vireo n_vars); fewer SNPs per nucleus give less certain donor calls."))) +
     ggplot2::theme(legend.position = "top", panel.grid.major.y = ggplot2::element_blank())
 }

@@ -399,6 +399,7 @@ build_aggregation_tibble <- function(aggregation_tibble_all_from_yaml, GEM_well_
     add_GEM_well_target_syms(c(
       "GEX_counts_BPCells_matrix",
       "vireo_donor_ids_tibble",
+      "cellsnp_dir",
       "cellranger_barcodes_tsv",
       "fragments_w_prefix_bpcells",
       "fragments_w_prefix_bpcells_dir",

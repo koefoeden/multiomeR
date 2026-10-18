@@ -1,10 +1,11 @@
 rlang::list2(
   targets::tar_target(
     name = demultiplexing_counts_tibble,
-    description = "Count pre-QC donor assignments per GEM well and verify coverage of every Cell Ranger-called barcode. [checkpoint:1_pre-aggregation-QC]",
+    description = "Count pre-QC donor assignments per GEM well, verify coverage of every Cell Ranger-called barcode, and add each well's passing SNPs and median SNPs per nucleus. [checkpoint:1_pre-aggregation-QC]",
     command = summarize_demultiplexing_assignments(
       aggregation_vireo_donor_ids_tibble_syms,
       aggregation_cellranger_barcodes_tsv_syms,
+      aggregation_cellsnp_dir_syms,
       aggregation_GEM_well_IDs
     ),
     resources = get_tar_resources(cores_req = 1, RAM_GB_req = 16)

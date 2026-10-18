@@ -22,26 +22,96 @@ get_cellsnp_dir <- function(
 ) {
   cellsnp_out_dir <- get_structured_file_path(filetype = NULL)
 
-  run_w_error_check(
-    command_string = "cellsnp-lite",
-    arguments_chr = c(
-      c("-s", bam_file),
-      c("-b", cellranger_barcodes_tsv),
-      c("-O", cellsnp_out_dir),
-      c("-R", GEM_well_donors_VCF_file),
-      c("-p", cores),
-      c("--minMAF", minMAF),
-      c("--minCOUNT", minCOUNT),
-      c("--UMItag", "None"),
-      c("--gzip")
+  # -T streams each chromosome once instead of seeking to every SNP (-R), with identical counts, but at a
+  # position the VCF lists more than once, such as a split multi-allelic site, it genotypes only the first
+  # record. So -T genotypes the positions listed once and -R the others, merged back into VCF order.
+  # The awk program writes the two site lists and prints the contigs in VCF order.
+  split_program <- '
+    /^#/ { print > once; print > repeated; next }
+    $1 != contig { contig = $1; print contig }
+    $1 FS $2 != position { flush(); position = $1 FS $2 }
+    { records[++n] = $0 }
+    END { flush() }
+    function flush(  i) { for (i = 1; i <= n; i++) print records[i] > (n > 1 ? repeated : once); n = 0 }'
+  VCF_files <- c(once = tempfile(fileext = ".vcf"), repeated = tempfile(fileext = ".vcf"))
+  repeated_out_dir <- tempfile()
+  on.exit(unlink(c(VCF_files, repeated_out_dir), recursive = TRUE))
+  VCF_contigs <- processx::run(
+    "bash",
+    c("-o", "pipefail", "-c", "gzip -cdf \"$1\" | cut -f 1-8 | awk -F '\t' -v once=\"$2\" -v repeated=\"$3\" \"$4\"",
+      "bash", GEM_well_donors_VCF_file, VCF_files[["once"]], VCF_files[["repeated"]], split_program)
+  )$stdout |>
+    strsplit("\n") |>
+    unlist()
+
+  run_cellsnp <- function(VCF_args, out_dir, threads) {
+    run_w_error_check(
+      command_string = "cellsnp-lite",
+      arguments_chr = c(
+        c("-s", bam_file),
+        c("-b", cellranger_barcodes_tsv),
+        c("-O", out_dir),
+        VCF_args,
+        c("-p", threads),
+        c("--minMAF", minMAF),
+        c("--minCOUNT", minCOUNT),
+        c("--UMItag", "None"),
+        c("--gzip")
+      )
     )
-  )
+  }
+  run_cellsnp(c("-T", VCF_files[["once"]], "--chrom", paste(VCF_contigs, collapse = ",")), cellsnp_out_dir, cores)
+  if (!all(startsWith(readLines(VCF_files[["repeated"]]), "#"))) {
+    run_cellsnp(c("-R", VCF_files[["repeated"]]), repeated_out_dir, 1)
+    merge_cellsnp_dirs(cellsnp_out_dir, repeated_out_dir, VCF_contigs)
+  }
 
   if (all(startsWith(readLines(file.path(cellsnp_out_dir, "cellSNP.base.vcf.gz")), "#"))) {
     stop("cellsnp-lite found no donor VCF SNP passing its filters in ", bam_file,
       "; check that the VCF and BAM share contig names and genome build.", call. = FALSE)
   }
   return(cellsnp_out_dir)
+}
+
+
+#' Merge cellsnp dirs
+#'
+#' Merge the SNPs of a second cellsnp-lite output for the same barcodes into a first, ordering them by VCF
+#' contig and position as one cellsnp-lite -R run over both SNP lists would. The two outputs must cover
+#' different positions.
+#'
+#' @param cellsnp_dir cellsnp-lite output directory, overwritten with the merged output.
+#' @param other_cellsnp_dir cellsnp-lite output directory for other positions and the same barcodes.
+#' @param VCF_contigs Contigs in input VCF order.
+#' @return `cellsnp_dir`, invisibly.
+#' @keywords internal
+
+merge_cellsnp_dirs <- function(cellsnp_dir, other_cellsnp_dir, VCF_contigs) {
+  base_VCF_lines <- readLines(file.path(cellsnp_dir, "cellSNP.base.vcf.gz"))
+  is_header <- startsWith(base_VCF_lines, "#")
+  other_records <- grep("^#", readLines(file.path(other_cellsnp_dir, "cellSNP.base.vcf.gz")), value = TRUE, invert = TRUE)
+  records <- c(base_VCF_lines[!is_header], other_records)
+  merged_order <- order(match(sub("\t.*", "", records), VCF_contigs), as.integer(sub("^[^\t]*\t([^\t]*).*", "\\1", records)))
+  new_SNP_index <- order(merged_order)
+  base_VCF_connection <- gzfile(file.path(cellsnp_dir, "cellSNP.base.vcf.gz"), "w")
+  writeLines(c(base_VCF_lines[is_header], records[merged_order]), base_VCF_connection)
+  close(base_VCF_connection)
+
+  n_barcodes <- length(readLines(file.path(cellsnp_dir, "cellSNP.samples.tsv")))
+  read_entries <- function(dir, tag) {
+    matrix(scan(file.path(dir, paste0("cellSNP.tag.", tag, ".mtx")), what = integer(), skip = 3, quiet = TRUE), ncol = 3, byrow = TRUE)
+  }
+  for (tag in c("AD", "DP", "OTH")) {
+    other_entries <- read_entries(other_cellsnp_dir, tag)
+    other_entries[, 1] <- other_entries[, 1] + sum(!is_header)
+    entries <- rbind(read_entries(cellsnp_dir, tag), other_entries)
+    entries[, 1] <- new_SNP_index[entries[, 1]]
+    entries <- entries[order(entries[, 1], entries[, 2]), , drop = FALSE]
+    mtx_file <- file.path(cellsnp_dir, paste0("cellSNP.tag.", tag, ".mtx"))
+    writeLines(c("%%MatrixMarket matrix coordinate integer general", "%", paste(length(records), n_barcodes, nrow(entries), sep = "\t")), mtx_file)
+    data.table::fwrite(as.data.frame(entries), mtx_file, append = TRUE, sep = "\t", col.names = FALSE)
+  }
+  invisible(cellsnp_dir)
 }
 
 

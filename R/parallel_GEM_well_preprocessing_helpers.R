@@ -124,3 +124,23 @@ get_vireo_donor_ids_tibble <- function(
       vireo_doublet_logLikRatio = doublet_logLikRatio
     )
 }
+
+
+#' Map donors to samples
+#'
+#' Replace each nucleus's donor with that donor's sample in this GEM well, so
+#' that a donor who gives several samples, such as one per condition, enters the
+#' aggregation as separate biological replicates.
+#'
+#' @param vireo_donor_ids_tibble Per-barcode donor assignments from `get_vireo_donor_ids_tibble()`.
+#' @param sample_ids Named character vector giving each donor's sample in this GEM well.
+#' @return `vireo_donor_ids_tibble` with each `donor_id` replaced by its sample.
+#' @keywords internal
+
+map_donors_to_samples <- function(vireo_donor_ids_tibble, sample_ids) {
+  unmapped_donor_ids <- setdiff(stats::na.omit(vireo_donor_ids_tibble$donor_id), names(sample_ids))
+  if (length(unmapped_donor_ids) > 0L) {
+    stop("cfg_GEM_well_samples.tsv gives no sample for donor(s): ", paste(unmapped_donor_ids, collapse = ", "), call. = FALSE)
+  }
+  dplyr::mutate(vireo_donor_ids_tibble, donor_id = unname(sample_ids[.data$donor_id]))
+}

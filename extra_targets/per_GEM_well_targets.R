@@ -265,7 +265,8 @@ rlang::list2(
     description = "Join GEX metadata with ATAC QC, vireo, per-barcode, and AMULET metrics into a comprehensive per-barcode metadata tibble [part_of_graph:parallel] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=2.5; scope=largest GEM well of comparison_31x; method=slurm_monitor; date=2026-10-09]",
     command = GEX_basic_metadata_tibble |>
       dplyr::full_join(ATAC_qc_metrics_tibble, by = "barcode") |>
-      dplyr::full_join(vireo_donor_ids_tibble, by = "barcode") |>
+      # vireo_donor_ids_tibble, with donors mapped to samples where cfg_GEM_well_samples.tsv sets them
+      dplyr::full_join(GEM_well_donor_assignments, by = "barcode") |>
       dplyr::full_join(per_barcode_metrics_tibble, by = "barcode") |>
       dplyr::full_join(amulet_metrics_tibble, by = "barcode") |>
       dplyr::mutate(

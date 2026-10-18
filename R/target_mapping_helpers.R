@@ -209,10 +209,57 @@ assert_donor_GEM_well_metadata_column_ownership <- function(donor_id_metadata_ti
 #' thresholds `GEM_well_cellsnp_min_count` and `GEM_well_cellsnp_min_MAF`
 #' default to 20 reads and 0.1 when absent or empty; lowering both helps
 #' demultiplexing in GEM wells whose weak ATAC signal leaves few SNPs at 20 reads.
+#' For donors who give several samples, such as one per condition, the optional
+#' `cfg_GEM_well_samples.tsv` maps each donor of a GEM well to a sample; see
+#' `get_GEM_well_donor_assignments()`.
 #'
 #' @param GEM_well_config_file Path to the GEM well TSV config.
+#' @param GEM_well_samples_file Path to the optional GEM well sample TSV config.
 #' @return A tibble with one row per GEM well and normalized config columns.
 #' @keywords internal
+
+#' Get GEM well donor assignments
+#'
+#' Read the optional sample table, with one row per GEM well and donor giving
+#' `GEM_well_ID`, `donor_id` and `sample_id`, and return per GEM well the donor
+#' assignments its metadata joins. A GEM well with samples gets a call mapping
+#' its Vireo donors to them, so that `donor_id` downstream holds the sample, the
+#' biological replicate, and the donor metadata table has one row per sample.
+#' Other GEM wells get their Vireo target itself, which keeps their commands and
+#' hashes unchanged.
+#'
+#' @param GEM_well_IDs Configured GEM well identifiers.
+#' @param GEM_well_samples_file Path to the optional sample table.
+#' @return A list of symbols or calls spliced into the `full_metadata_tibble` commands.
+#' @keywords internal
+
+get_GEM_well_donor_assignments <- function(GEM_well_IDs, GEM_well_samples_file) {
+  key_columns <- c("GEM_well_ID", "donor_id", "sample_id")
+  samples <- if (file.exists(GEM_well_samples_file)) {
+    readr::read_tsv(GEM_well_samples_file, col_types = readr::cols(.default = readr::col_character()))
+  } else {
+    tibble::tibble(GEM_well_ID = character(), donor_id = character(), sample_id = character())
+  }
+  # Pseudobulk names join cell type and replicate with "_".
+  if (!all(key_columns %in% names(samples)) || anyNA(samples[key_columns]) ||
+    anyDuplicated(samples[c("GEM_well_ID", "donor_id")]) || anyDuplicated(samples[c("GEM_well_ID", "sample_id")]) ||
+    any(grepl("_", samples$sample_id)) || !all(samples$GEM_well_ID %in% GEM_well_IDs)) {
+    stop(
+      GEM_well_samples_file, " must give GEM_well_ID, donor_id and sample_id for each donor of a configured ",
+      "GEM well, with distinct sample IDs without underscores within a GEM well.",
+      call. = FALSE
+    )
+  }
+
+  purrr::map(GEM_well_IDs, \(GEM_well_ID) {
+    vireo_donor_ids <- rlang::sym(paste0("vireo_donor_ids_tibble.", GEM_well_ID))
+    GEM_well_samples <- samples[samples$GEM_well_ID == GEM_well_ID, ]
+    if (nrow(GEM_well_samples) == 0L) {
+      return(vireo_donor_ids)
+    }
+    rlang::call2("map_donors_to_samples", vireo_donor_ids, stats::setNames(GEM_well_samples$sample_id, GEM_well_samples$donor_id))
+  })
+}
 
 parse_GEM_well_QC_exclude_list <- function(value, GEM_well_ID) {
   if (length(value) != 1L || is.na(value) || !nzchar(value)) {
@@ -237,7 +284,8 @@ parse_GEM_well_QC_exclude_list <- function(value, GEM_well_ID) {
   parsed
 }
 
-build_GEM_well_tibble <- function(GEM_well_config_file = configuration_path("cfg_GEM_wells.tsv")) {
+build_GEM_well_tibble <- function(GEM_well_config_file = configuration_path("cfg_GEM_wells.tsv"),
+                                  GEM_well_samples_file = configuration_path("cfg_GEM_well_samples.tsv", must_exist = FALSE)) {
   required_columns <- c(
     "GEM_well_ID",
     "GEM_well_dataset",
@@ -278,6 +326,7 @@ build_GEM_well_tibble <- function(GEM_well_config_file = configuration_path("cfg
   for (column in names(cellsnp_defaults)) {
     GEM_well_tibble[[column]] <- dplyr::coalesce(as.numeric(GEM_well_tibble[[column]] %||% NA), cellsnp_defaults[[column]])
   }
+  GEM_well_tibble$GEM_well_donor_assignments <- get_GEM_well_donor_assignments(GEM_well_tibble$GEM_well_ID, GEM_well_samples_file)
 
   if (length(validation_aggregations())) {
     config <- read_aggregation_config_tibble()
@@ -308,6 +357,7 @@ build_GEM_well_tibble <- function(GEM_well_config_file = configuration_path("cfg
         "GEM_well_donors_VCF_file",
         "GEM_well_cellsnp_min_count",
         "GEM_well_cellsnp_min_MAF",
+        "GEM_well_donor_assignments",
         "GEM_well_QC_exclude_list",
         "is_active"
       ))

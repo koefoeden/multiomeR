@@ -89,6 +89,12 @@ rlang::list2(
     iteration = "group"
   ),
   targets::tar_target(
+    name = variant_detail_cell_groups_tibble,
+    description = "Keep each nucleus's cell type and ATAC depth, so variant-detail branches load a small table",
+    command = dplyr::select(metadata_w_cell_types_tibble.WNN, "barcode_w_prefix", "WNN_harmony_SNN_cluster_cell_type",
+      dplyr::any_of(c("atac_fragments", "nCount_ATAC")))
+  ),
+  targets::tar_target(
     name = chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk,
     description = "Prepare plot-ready variant, accessibility, and peak-track data for one GWAS [resource_observation: peak_RAM_GiB=5.7; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=11.8; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
     command = prepare_GWAS_variant_contribution_detail_records(
@@ -98,7 +104,7 @@ rlang::list2(
       GWAS_input_records = GWAS_input_records,
       consensus_peak_GRanges = consensus_peak_GRanges.ATAC,
       fragments = combined_BPCells_fragment_obj.ATAC,
-      metadata_tibble = metadata_w_cell_types_tibble.WNN,
+      metadata_tibble = variant_detail_cell_groups_tibble,
       min_z = genetic_enrichment_variant_detail_min_z
     ),
     pattern = map(chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk),

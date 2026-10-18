@@ -645,17 +645,15 @@ prepare_GWAS_variant_contribution_detail_records <- function(
       \(record) record$GWAS_ID %in% locus_contribution_tibble$GWAS_ID)),
     min_z = min_z, n_top_loci = n_top_loci)
   if (nrow(selected_locus_tibble) == 0L) return(list())
+  variant_contribution_tibble <- dplyr::semi_join(variant_contribution_tibble, selected_locus_tibble, by = c("GWAS_ID", "cluster", "studyLocusId"))
 
-  fragments <- BPCells::select_cells(fragments, metadata_tibble$barcode_w_prefix)
-  fragment_cell_names <- BPCells::cellNames(fragments)
   metadata <- metadata_tibble |>
-    dplyr::distinct(.data$barcode_w_prefix, .keep_all = TRUE) |>
-    dplyr::filter(
-      .data$barcode_w_prefix %in% fragment_cell_names,
-      !is.na(.data[[group_cells_by_col]])
-    ) |>
-    dplyr::arrange(match(.data$barcode_w_prefix, fragment_cell_names))
-  fragments <- BPCells::select_cells(fragments, metadata$barcode_w_prefix)
+    dplyr::select("barcode_w_prefix", dplyr::all_of(group_cells_by_col), dplyr::any_of(c("atac_fragments", "nCount_ATAC"))) |>
+    dplyr::filter(!is.na(.data[[group_cells_by_col]]))
+  # BPCells matches selected cell names against every barcode of the merged
+  # fragment files whenever it reads them; matching once here and selecting by
+  # index avoids that.
+  fragments <- BPCells::select_cells(fragments, match(metadata$barcode_w_prefix, BPCells::cellNames(fragments)))
   cell_read_counts <- if ("atac_fragments" %in% colnames(metadata)) metadata$atac_fragments else metadata$nCount_ATAC
   group_values <- stringr::str_replace_all(as.character(metadata[[group_cells_by_col]]), "_", "-")
 

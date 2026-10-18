@@ -169,7 +169,9 @@ get_BPCells_coverage_tibbles <- function(fragments, regions, groups, cell_read_c
     dplyr::mutate(tile_width = pmax((.data$end - .data$start) %/% as.integer(bins), 1L)) |>
     dplyr::arrange(match(.data$chr, BPCells::chrNames(fragments)), .data$start)
 
+  # Pooling cells into their groups first keeps the copy and tile counts small.
   fragments <- BPCells::select_regions(fragments, GenomicRanges::reduce(regions)) |>
+    BPCells::merge_cells(groups) |>
     BPCells::write_fragments_memory()
 
   # tile_matrix() rejects overlapping or touching ranges, which go to later passes.
@@ -186,8 +188,7 @@ get_BPCells_coverage_tibbles <- function(fragments, regions, groups, cell_read_c
   coverage <- split(ranges, ranges$pass) |>
     unname() |>
     purrr::map(\(batch) {
-      counts <- BPCells::tile_matrix(fragments, batch[c("chr", "start", "end", "tile_width")], zero_based_coords = TRUE) %*%
-        membership
+      counts <- BPCells::tile_matrix(fragments, batch[c("chr", "start", "end", "tile_width")], zero_based_coords = TRUE)
       counts <- as.matrix(methods::as(counts, "dgCMatrix"))
       n_tiles <- as.integer(ceiling((batch$end - batch$start) / batch$tile_width))
       stopifnot(nrow(counts) == sum(n_tiles))

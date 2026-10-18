@@ -117,10 +117,24 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
+    name = peak_gene_correlation_latent_factor_grams.WNN,
+    description = "Sum one chromosome's residual peak-accessibility cross products by broad cell type [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = make_peak_gene_correlation_latent_factor_grams(
+      peak_gene_correlation_ATAC_aggregate_matrices.WNN,
+      peak_gene_correlation_donor_state_aggregates_tibble.WNN
+    ),
+    pattern = map(peak_gene_correlation_ATAC_aggregate_matrices.WNN),
+    iteration = "list",
+    resources = get_tar_resources(RAM_GB_req = 16)
+  ),
+  targets::tar_target(
     name = peak_gene_correlation_latent_factors.WNN,
-    description = "Compute each cell type's leading principal components of residual peak accessibility across chromosomes [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation] [resource_observation: peak_RAM_GiB=21.9; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-11]",
-    command = make_peak_gene_correlation_latent_factors(peak_gene_correlation_aggregate_matrices.WNN),
-    resources = get_tar_resources(RAM_GB_req = 32)
+    description = "Compute each cell type's leading principal components of residual peak accessibility across chromosomes [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = make_peak_gene_correlation_latent_factors(
+      peak_gene_correlation_latent_factor_grams.WNN,
+      peak_gene_correlation_donor_state_aggregates_tibble.WNN
+    ),
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = peak_gene_correlation_normalized_aggregate_matrices.WNN,

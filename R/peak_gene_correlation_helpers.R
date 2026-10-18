@@ -306,35 +306,50 @@ residualize_peak_gene_correlation_matrix <- function(feature_matrix, design) {
   t(qr.resid(qr(design), t(feature_matrix)))
 }
 
+#' Gram matrices of one chromosome's residual peak accessibility by cell type
+#'
+#' For each cell type, the donor- and depth-residualized, standardized log1p CPM
+#' of the chromosome's peaks accessible in at least 5% of its aggregates.
+#'
+#' @param ATAC_aggregate_matrix One chromosome's result of
+#'   `make_peak_gene_correlation_ATAC_aggregate_matrix()`.
+#' @param donor_state_aggregates_tibble All retained donor-state aggregates.
+#' @return A list named by cell group of aggregate-by-aggregate matrices.
+#' @keywords internal
+
+make_peak_gene_correlation_latent_factor_grams <- function(ATAC_aggregate_matrix, donor_state_aggregates_tibble) {
+  purrr::map(split(donor_state_aggregates_tibble, donor_state_aggregates_tibble$cell_group), \(depth) {
+    counts <- ATAC_aggregate_matrix$ATAC_counts[, depth$aggregate_id, drop = FALSE]
+    counts <- counts[Matrix::rowMeans(counts > 0) >= 0.05, , drop = FALSE]
+    residual <- residualize_peak_gene_correlation_matrix(
+      normalize_peak_gene_correlation_counts(counts, depth = depth$ATAC_depth),
+      make_peak_gene_correlation_design_matrix(depth)
+    )
+    residual <- residual[rowSums(residual^2) > 1e-12, , drop = FALSE]
+    crossprod(residual / sqrt(rowSums(residual^2)))
+  })
+}
+
 #' Principal components of each cell type's residual peak accessibility
 #'
 #' Peaks and genes that both vary along shared chromatin states correlate
 #' regardless of distance. The leading principal components of the donor- and
 #' depth-residualized, standardized log1p CPM of all peaks accessible in at
-#' least 5% of a cell type's aggregates, pooled across its chromosome branches,
-#' capture these states for the nuisance design. At most one component per ten
+#' least 5% of a cell type's aggregates, pooled across chromosomes, capture
+#' these states for the nuisance design. At most one component per ten
 #' residual degrees of freedom is kept.
 #'
-#' @param aggregate_matrices All branches from
-#'   `make_peak_gene_correlation_aggregate_matrices()`.
+#' @param latent_factor_grams All chromosomes' results of
+#'   `make_peak_gene_correlation_latent_factor_grams()`.
+#' @param donor_state_aggregates_tibble All retained donor-state aggregates.
 #' @param n_factors Maximum number of components per cell type.
 #' @return A list named by cell group of aggregate-by-component matrices.
 #' @keywords internal
 
-make_peak_gene_correlation_latent_factors <- function(aggregate_matrices, n_factors = 10L) {
-  aggregate_matrices <- purrr::keep(aggregate_matrices, \(branch) nrow(branch$aggregate_depth_tibble) > 0L)
-  groups <- split(aggregate_matrices, purrr::map_chr(aggregate_matrices, "cell_group"))
-  purrr::map(groups, \(branches) {
-    depth <- branches[[1]]$aggregate_depth_tibble
+make_peak_gene_correlation_latent_factors <- function(latent_factor_grams, donor_state_aggregates_tibble, n_factors = 10L) {
+  purrr::imap(split(donor_state_aggregates_tibble, donor_state_aggregates_tibble$cell_group), \(depth, cell_group) {
     design <- make_peak_gene_correlation_design_matrix(depth)
-    gram <- Reduce(`+`, purrr::map(branches, \(branch) {
-      counts <- branch$ATAC_counts[Matrix::rowMeans(branch$ATAC_counts > 0) >= 0.05, , drop = FALSE]
-      residual <- residualize_peak_gene_correlation_matrix(
-        normalize_peak_gene_correlation_counts(counts, depth = depth$ATAC_depth), design
-      )
-      residual <- residual[rowSums(residual^2) > 1e-12, , drop = FALSE]
-      crossprod(residual / sqrt(rowSums(residual^2)))
-    }))
+    gram <- Reduce(`+`, purrr::map(latent_factor_grams, cell_group))
     n_kept <- max(0L, min(n_factors, (nrow(depth) - ncol(design) - 1L) %/% 10L))
     factors <- eigen(gram, symmetric = TRUE)$vectors[, seq_len(n_kept), drop = FALSE] * sqrt(nrow(depth))
     dimnames(factors) <- list(depth$aggregate_id, sprintf("ATAC_PC_%d", seq_len(n_kept)))

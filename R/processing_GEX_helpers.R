@@ -120,7 +120,7 @@ run_GEX_PCA_BPCells <- function(
   }
 
   if (identical(GEX_PCA_backend, "BPCells_native")) {
-    svd <- BPCells::svds(pearson_residuals, k = n_components, threads = threads)
+    svd <- BPCells::svds(residuals$PCA_input, k = n_components, threads = threads)
     singular_values <- svd$d
     feature_loadings <- svd$u
     cell_embeddings <- sweep(svd$v, 2, svd$d, FUN = "*")
@@ -194,22 +194,25 @@ get_BPCells_native_GEX_residuals <- function(
   cell_read_counts <- BPCells::colSums(counts_matrix)
   gene_beta <- pmax(BPCells::rowSums(counts_matrix) / sum(cell_read_counts), .Machine$double.eps)
   clip <- sqrt(ncol(counts_matrix))
-
-  pearson_residuals <- BPCells::sctransform_pearson(
-    mat = counts_matrix,
-    gene_theta = rep(theta, nrow(counts_matrix)),
-    gene_beta = gene_beta,
-    cell_read_counts = cell_read_counts,
-    min_var = 0,
-    clip_range = c(-clip, clip)
-  )
-  if (length(SCT_regress_vars) > 0) {
-    pearson_residuals <- BPCells::regress_out(
-      mat = pearson_residuals,
-      latent_data = cell_attr[, SCT_regress_vars, drop = FALSE],
-      prediction_axis = "row"
+  get_residuals <- function(counts) {
+    residuals <- BPCells::sctransform_pearson(
+      mat = counts,
+      gene_theta = rep(theta, nrow(counts)),
+      gene_beta = gene_beta[rownames(counts)],
+      cell_read_counts = cell_read_counts,
+      min_var = 0,
+      clip_range = c(-clip, clip)
     )
+    if (length(SCT_regress_vars) > 0) {
+      residuals <- BPCells::regress_out(
+        mat = residuals,
+        latent_data = cell_attr[, SCT_regress_vars, drop = FALSE],
+        prediction_axis = "row"
+      )
+    }
+    residuals
   }
+  pearson_residuals <- get_residuals(counts_matrix)
 
   residual_stats <- BPCells::matrix_stats(pearson_residuals, row_stats = "variance", threads = threads)$row_stats
   residual_variance <- residual_stats["variance", ]
@@ -219,6 +222,9 @@ get_BPCells_native_GEX_residuals <- function(
     names()
   list(
     pearson_residuals = pearson_residuals[variable_features, , drop = FALSE],
+    # svds() streams its input ~300 times; residuals of the variable genes' counts held in memory save
+    # decompressing every gene on each pass. The export keeps the disk-backed residuals above.
+    PCA_input = get_residuals(BPCells::write_matrix_memory(counts_matrix[variable_features, , drop = FALSE], compress = TRUE)),
     residual_variance = residual_variance
   )
 }

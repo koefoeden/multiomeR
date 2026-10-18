@@ -733,26 +733,37 @@ get_ATAC_QC_metadata_from_BPCells <- function(
 #' @param n_components Number of singular vectors/components to compute.
 #' @param scale_factor Multiplier applied before `log1p()` after column-depth
 #'   and inverse-document-frequency scaling.
-#' @param threads Number of threads passed to `BPCells::svds()`.
+#' @param threads Number of threads for the sums and `BPCells::svds()`; the
+#'   result does not depend on it.
 #' @return A list with cell embeddings (`cell_embeddings`), peak loadings
 #'   (`feature_loadings`), and singular values (`singular_values`).
 #' @keywords internal
 
 run_ATAC_LSI_BPCells <- function(ATAC_peak_BPCells_matrix, n_components, scale_factor = 10000, threads = 1) {
   peak_matrix <- ATAC_peak_BPCells_matrix
+  # 24 chunks along the storage axis are read in parallel. A fixed number keeps the floating-point
+  # result independent of `threads`; parallel_split() leaves the matrix whole for one thread.
+  split_in_chunks <- function(matrix) BPCells:::parallel_split(matrix, max(threads, 2L), 24L)
+  counts <- split_in_chunks(BPCells::convert_matrix_type(peak_matrix, "double"))
 
-  col_sums <- BPCells::colSums(peak_matrix)
+  col_sums <- BPCells::colSums(counts)
   col_scaling <- ifelse(col_sums > 0, 1 / col_sums, 0)
 
-  row_sums <- BPCells::rowSums(peak_matrix)
+  row_sums <- BPCells::rowSums(counts)
   idf <- ifelse(row_sums > 0, ncol(peak_matrix) / row_sums, 0)
 
   mat_lsi <- peak_matrix |>
     BPCells::multiply_cols(col_scaling) |>
     BPCells::multiply_rows(idf)
-  mat_lsi <- log1p(scale_factor * mat_lsi)
+  mat_lsi <- split_in_chunks(log1p(scale_factor * mat_lsi))
+  # svds() streams its input a few hundred times. Holding the transformed chunks in memory as float
+  # (about 5.7 bytes per non-zero) saves decompressing, cell-filtering and log-transforming the counts each time.
+  mat_lsi@matrix_list <- lapply(mat_lsi@matrix_list, \(chunk) chunk |>
+    BPCells::convert_matrix_type("float") |>
+    BPCells::write_matrix_memory(compress = TRUE) |>
+    BPCells::convert_matrix_type("double"))
 
-  svd <- BPCells::svds(mat_lsi, k = n_components, threads = threads)
+  svd <- BPCells::svds(mat_lsi, k = n_components, threads = 0)
 
   cell_embeddings <- sweep(svd$v, 2, svd$d, FUN = "*")
   rownames(cell_embeddings) <- colnames(peak_matrix)

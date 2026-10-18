@@ -374,7 +374,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = LSI_BPCells.ATAC,
-      description = "Run BPCells-native TF-IDF and SVD on the QC-filtered ATAC peak matrix [part_of_graph:ATAC] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=8.5; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
+      description = "Run BPCells-native TF-IDF and SVD on the QC-filtered ATAC peak matrix [part_of_graph:ATAC] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=37; n_nuclei=786k; aggregation=unpublished; method=VmHWM; date=2026-10-17]",
       command = run_ATAC_LSI_BPCells(
         ATAC_peak_BPCells_matrix = peak_QC_filtered_BPCells_matrix.ATAC,
         n_components = aggregation_ATAC_LSI_n_components,

@@ -6,12 +6,11 @@ normalize_embedding_rows <- function(embedding_matrix) {
 }
 
 #' Average each cell's neighbours, given as index columns after the cell itself.
+#' colMeans() over the neighbour dimension of a (neighbours x cells x dimensions)
+#' array sums the same rows in the same order as colMeans() of one cell's rows.
 impute_embedding_from_neighbor_indices <- function(embedding_matrix, neighbor_indices) {
-  t(apply(
-    neighbor_indices[, -1, drop = FALSE],
-    1,
-    \(idx) colMeans(embedding_matrix[idx, , drop = FALSE])
-  ))
+  idx <- t(neighbor_indices[, -1, drop = FALSE])
+  colMeans(array(embedding_matrix[idx, , drop = FALSE], c(nrow(idx), ncol(idx), ncol(embedding_matrix))), dims = 1)
 }
 
 row_euclidean_distance <- function(x, y) {
@@ -31,6 +30,27 @@ select_embedding_dimensions <- function(embedding_matrix, dims, dim_prefix = NUL
   }
 
   stop("Requested embedding dimensions are not available.")
+}
+
+#' Find nearest neighbours with HNSW
+#'
+#' Search each cell's `k` nearest neighbours, the cell itself usually first. The
+#' HNSW index is built on one thread, so the neighbours, and the clusters and
+#' layouts built on them, are the same in every run; the search is threaded and
+#' gives the same result for any thread count.
+#'
+#' @param data Numeric matrix with cells in rows; row names are kept.
+#' @param k Number of neighbours per cell, including the cell itself.
+#' @param metric `"cosine"` or `"euclidean"`.
+#' @param threads Number of search threads.
+#' @param ef HNSW search breadth; larger values improve recall at higher run time.
+#' @return List with `idx` (one-based) and `dist` matrices.
+#' @keywords internal
+find_hnsw_neighbors <- function(data, k, metric = "cosine", threads = 1, ef = 500) {
+  index <- RcppHNSW::hnsw_build(data, distance = metric, n_threads = 1, verbose = FALSE)
+  knn <- RcppHNSW::hnsw_search(data, index, k = min(as.integer(k), nrow(data)), ef = ef, n_threads = threads, verbose = FALSE)
+  rownames(knn$idx) <- rownames(knn$dist) <- rownames(data)
+  knn
 }
 
 embedding_matrix_to_tibble <- function(embedding_matrix, cols = colnames(embedding_matrix)) {
@@ -92,6 +112,7 @@ get_WNN_embedding_matrices <- function(
 #'   low-similarity cells.
 #' @param nearest_dist Distance to each cell's nearest non-self neighbour.
 #' @param native_source_file Path to the tracked native C++ implementation.
+#' @param threads Number of OpenMP threads; results do not depend on it.
 #' @return Numeric bandwidth vector with one value per cell.
 #' @keywords internal
 
@@ -104,7 +125,8 @@ calculate_small_SNN_bandwidth <- function(
     get_project_root(),
     "src",
     "wnn_snn_bandwidth.cpp"
-  )
+  ),
+  threads = 1
 ) {
   embedding_matrix <- as.matrix(embedding_matrix)
   storage.mode(embedding_matrix) <- "double"
@@ -117,8 +139,17 @@ calculate_small_SNN_bandwidth <- function(
     knn_idx,
     as.integer(k),
     as.numeric(nearest_dist),
-    PACKAGE = load_native_library(native_source_file, "multiomeR_wnn")
+    as.integer(threads),
+    PACKAGE = load_WNN_native_library(native_source_file)
   )
+}
+
+# Floating-point contraction stays off so that the kernels reproduce R's rounding exactly.
+load_WNN_native_library <- function(native_source_file) {
+  load_native_library(native_source_file, "multiomeR_wnn", env = c(
+    PKG_CXXFLAGS = "$(SHLIB_OPENMP_CXXFLAGS) -ffp-contract=off",
+    PKG_LIBS = "$(SHLIB_OPENMP_CXXFLAGS)"
+  ))
 }
 
 #' Find each modality's neighbours with the cell itself first
@@ -128,14 +159,13 @@ calculate_small_SNN_bandwidth <- function(
 #' the first `k` columns.
 find_WNN_modality_neighbors <- function(embeddings_norm, knn_k, k, threads, ef, native_source_file) {
   purrr::map(embeddings_norm, \(embedding) {
-    nn <- BPCells::knn_hnsw(data = embedding, k = knn_k, metric = "euclidean", verbose = FALSE,
-      threads = threads, ef = ef)
+    nn <- find_hnsw_neighbors(embedding, k = knn_k, metric = "euclidean", threads = threads, ef = ef)
     for (cell in which(nn$idx[, 1] != seq_len(nrow(nn$idx)))) {
       keep <- nn$idx[cell, ] != cell
       nn$idx[cell, ] <- c(cell, nn$idx[cell, keep])[seq_len(knn_k)]
       nn$dist[cell, ] <- c(0, nn$dist[cell, keep])[seq_len(knn_k)]
     }
-    nn$sigma <- pmax(calculate_small_SNN_bandwidth(embedding, nn$idx, k, nn$dist[, 2], native_source_file),
+    nn$sigma <- pmax(calculate_small_SNN_bandwidth(embedding, nn$idx, k, nn$dist[, 2], native_source_file, threads),
       .Machine$double.eps)
     nn
   })
@@ -177,6 +207,8 @@ get_WNN_modality_weights <- function(embeddings_norm, modality_nn, k) {
 #' @param weight_cells Largest subset in which modality weights are estimated;
 #'   `Inf` estimates them among all cells, as Seurat does.
 #' @param seed Seed of the random assignment of cells to weight subsets.
+#' @param extra_neighbors Neighbours returned beyond `k`, in score order, so that
+#'   [restrict_WNN_results()] can later drop cells without a new search.
 #' @param native_source_file Path to the tracked C++ implementation of the
 #'   small-SNN kernel bandwidth.
 #' @return A list containing modality weights per barcode and the weighted
@@ -191,6 +223,7 @@ weighted_nearest_neighbors_BPCells <- function(
   ef = 500,
   weight_cells = 1e4,
   seed = 1,
+  extra_neighbors = 0,
   native_source_file = file.path(get_project_root(), "src", "wnn_snn_bandwidth.cpp")
 ) {
   cell_names <- rownames(embeddings_list[[1]])
@@ -217,49 +250,25 @@ weighted_nearest_neighbors_BPCells <- function(
       \(modality) stats::setNames(unsplit(purrr::map(subset_weights, modality), subset), cell_names))
   }
 
-  candidate_indices <- lapply(seq_len(n_cells), \(cell_idx) {
-    Reduce(
-      union,
-      purrr::map(modality_knn, \(nn) nn$idx[cell_idx, seq_len(candidate_k + 1L)][-1])
-    )
-  })
-
-  candidate_distances <- purrr::imap(embeddings_norm, \(embedding, modality) {
-    lapply(seq_len(n_cells), \(cell_idx) {
-      neighbors <- candidate_indices[[cell_idx]]
-      query <- matrix(embedding[cell_idx, ], nrow = length(neighbors), ncol = ncol(embedding), byrow = TRUE)
-      pmax(row_euclidean_distance(query, embedding[neighbors, , drop = FALSE]) - nearest_dist[[modality]][[cell_idx]], 0)
-    })
-  })
-
-  weighted_scores <- lapply(seq_len(n_cells), \(cell_idx) {
-    Reduce(
-      `+`,
-      purrr::map(names(embeddings_norm), \(modality) {
-        exp(-1 * (candidate_distances[[modality]][[cell_idx]] / sigma_list[[modality]][[cell_idx]])) *
-          modality_weights[[modality]][[cell_idx]]
-      })
-    )
-  })
-
-  selected_order <- purrr::map(weighted_scores, \(score) order(score, decreasing = TRUE))
-  nn_idx <- t(vapply(
-    seq_len(n_cells),
-    \(cell_idx) {
-      candidate_indices[[cell_idx]][selected_order[[cell_idx]][seq_len(k)]]
-    },
-    integer(k)
-  ))
-  nn_dist <- t(vapply(
-    seq_len(n_cells),
-    \(cell_idx) {
-      score <- weighted_scores[[cell_idx]][selected_order[[cell_idx]][seq_len(k)]]
-      sqrt(pmin(pmax((1 - score) / 2, 0), 1))
-    },
-    numeric(k)
-  ))
-
-  rownames(nn_idx) <- rownames(nn_dist) <- cell_names
+  # Candidates are each modality's neighbours 2..candidate_k + 1 (first occurrence), scored by the
+  # weighted kernel of every modality; the top k are kept in stable decreasing score order.
+  selected <- .Call(
+    "multiomeR_wnn_select",
+    unname(purrr::map(embeddings_norm, base::t)),
+    unname(purrr::map(modality_knn, "idx")),
+    unname(nearest_dist),
+    unname(sigma_list),
+    unname(purrr::map(modality_weights, unname)),
+    as.integer(candidate_k),
+    as.integer(k + extra_neighbors),
+    as.integer(threads),
+    PACKAGE = load_WNN_native_library(native_source_file)
+  )
+  nn_idx <- selected[[1]]
+  nn_dist <- selected[[2]]
+  # The column names reproduce those of the former per-cell implementation.
+  dimnames(nn_idx) <- list(cell_names, NULL)
+  dimnames(nn_dist) <- list(cell_names, cell_names[nn_idx[1, ]])
 
   modality_weights_tibble <- tibble::tibble(barcode_w_prefix = cell_names)
   for (modality in names(modality_weights)) {
@@ -273,6 +282,35 @@ weighted_nearest_neighbors_BPCells <- function(
   )
 }
 
+#' Restrict WNN results to a subset of cells
+#'
+#' Keep each retained cell's first `k` neighbours among the retained cells, in
+#' the original score order: the neighbours a selection among only the retained
+#' candidates would give, with the same modality weights and kernel widths.
+#'
+#' @param WNN_results List returned by [weighted_nearest_neighbors_BPCells()],
+#'   with at least `k` neighbours per cell.
+#' @param barcodes Cells to keep.
+#' @param k Number of neighbours to keep per cell.
+#' @return WNN results for the retained cells with `k` neighbours each.
+#' @keywords internal
+restrict_WNN_results <- function(WNN_results, barcodes = rownames(WNN_results$nn_idx), k) {
+  keep <- rownames(WNN_results$nn_idx) %in% barcodes
+  new_index <- ifelse(keep, cumsum(keep), NA_integer_)
+  idx <- matrix(new_index[WNN_results$nn_idx[keep, , drop = FALSE]], nrow = sum(keep))
+  columns <- t(apply(!is.na(idx), 1, \(retained) which(retained)[seq_len(k)]))
+  if (anyNA(columns)) {
+    stop(sum(rowSums(is.na(columns)) > 0), " cells have fewer than ", k, " retained neighbours.")
+  }
+  positions <- cbind(rep(seq_len(nrow(idx)), k), as.vector(columns))
+  list(
+    modality_weights = WNN_results$modality_weights[keep, ],
+    nn_idx = matrix(idx[positions], ncol = k, dimnames = list(rownames(WNN_results$nn_idx)[keep], NULL)),
+    nn_dist = matrix(WNN_results$nn_dist[keep, , drop = FALSE][positions], ncol = k,
+      dimnames = list(rownames(WNN_results$nn_idx)[keep], NULL))
+  )
+}
+
 #' Run WNN UMAP
 #'
 #' Run UMAP from a precomputed weighted-nearest-neighbor graph.
@@ -283,31 +321,22 @@ weighted_nearest_neighbors_BPCells <- function(
 #' @param seed Random seed passed to stochastic clustering, sampling, or embedding code for reproducibility.
 #' @param col_prefix Prefix assigned to generated coordinate columns, for example `LSI_UMAP` gives `LSI_UMAP_1` and `LSI_UMAP_2`.
 #' @param n_components Number of UMAP output dimensions to compute.
-#' @param threads Number of threads used for nearest-neighbor processing.
+#' @param threads Number of threads for the fuzzy graph and the optimization.
 #' @return A tibble with `barcode_w_prefix` and generated UMAP coordinate
 #'   columns named from `col_prefix`.
 #' @keywords internal
 
 run_WNN_UMAP <- function(WNN_results, n_neighbors, min_dist, seed = 1, col_prefix = "WNN_UMAP", n_components = 2, threads = 1) {
-  n_neighbors <- min(as.integer(n_neighbors), ncol(WNN_results$nn_idx))
-  set.seed(seed)
-  umap <- uwot::umap(
-    X = NULL,
-    nn_method = list(
-      idx = WNN_results$nn_idx[, seq_len(n_neighbors), drop = FALSE],
-      dist = WNN_results$nn_dist[, seq_len(n_neighbors), drop = FALSE]
-    ),
+  run_UMAP_from_neighbors(
+    knn = list(idx = WNN_results$nn_idx, dist = WNN_results$nn_dist),
     n_neighbors = n_neighbors,
     min_dist = min_dist,
+    seed = seed,
+    col_prefix = col_prefix,
     n_components = n_components,
-    n_threads = threads,
-    n_sgd_threads = 0,
-    verbose = TRUE
-  )
-
-  rownames(umap) <- rownames(WNN_results$nn_idx)
-  colnames(umap) <- paste0(col_prefix, "_", seq_len(ncol(umap)))
-  embedding_matrix_to_tibble(umap)
+    threads = threads
+  ) |>
+    embedding_matrix_to_tibble()
 }
 
 #' Cluster WNN graph
@@ -324,13 +353,13 @@ run_WNN_UMAP <- function(WNN_results, n_neighbors, min_dist, seed = 1, col_prefi
 #' @keywords internal
 
 cluster_WNN_graph <- function(WNN_results, resolution, cluster_col = "WNN_harmony_SNN_cluster", seed = 1, min_barcodes = 100) {
-  clusters <- cluster_knn_snn_leiden(
+  clusters <- cluster_neighbors(
     knn = list(idx = WNN_results$nn_idx, dist = WNN_results$nn_dist),
+    k = ncol(WNN_results$nn_idx),
     resolution = resolution,
-    seed = seed
+    seed = seed,
+    min_barcodes = min_barcodes
   )
-  names(clusters) <- rownames(WNN_results$nn_idx)
-  clusters <- filter_clusters_by_min_barcodes(clusters, min_barcodes = min_barcodes)
 
   tibble::tibble(
     barcode_w_prefix = names(clusters),

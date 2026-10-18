@@ -407,13 +407,24 @@ rlang::list2(
       resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
     ),
     targets::tar_target(
+      name = knn.ATAC,
+      description = "Reproducible HNSW cosine nearest neighbours of the Harmony-corrected ATAC LSI embeddings, shared by clustering and UMAP [part_of_graph:ATAC] [part_of_graph:seurat_export]",
+      command = find_hnsw_neighbors(
+        select_embedding_dimensions(harmony_embeddings_matrix.ATAC, dims = aggregation_ATAC_data_PCs, dim_prefix = "LSI_"),
+        k = max(aggregation_data_nNNs, aggregation_UMAP_nNNs),
+        threads = 6
+      ),
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
+    ),
+    targets::tar_target(
       name = UMAP_embeddings_tibble.ATAC,
-      description = "UMAP coordinates from BPCells-native Harmony-corrected ATAC LSI embeddings [part_of_graph:ATAC] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=3.8; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
-      command = run_UMAP_from_embedding_matrix(
-        embedding_matrix = harmony_embeddings_matrix.ATAC,
-        dims = aggregation_UMAP_ATAC_PCs,
+      description = "UMAP coordinates from the nearest neighbours of the Harmony-corrected ATAC LSI embeddings [part_of_graph:ATAC] [part_of_graph:seurat_export]",
+      command = run_UMAP_from_neighbors(
+        knn = knn.ATAC,
         n_neighbors = aggregation_UMAP_nNNs,
         min_dist = aggregation_UMAP_min_dist,
+        init = "spca",
+        embedding_matrix = select_embedding_dimensions(harmony_embeddings_matrix.ATAC, dims = aggregation_ATAC_data_PCs, dim_prefix = "LSI_"),
         threads = 6
       ) |>
         tibble::as_tibble(rownames = "barcode_w_prefix"),
@@ -421,16 +432,14 @@ rlang::list2(
     ),
     targets::tar_target(
       name = LSI_clusters.ATAC,
-      description = "Leiden clusters from a BPCells nearest-neighbour graph on Harmony-corrected ATAC LSI embeddings [part_of_graph:ATAC] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=6.3; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
-      command = cluster_embedding_matrix_BPCells(
-        embedding_matrix = harmony_embeddings_matrix.ATAC,
-        dims = aggregation_ATAC_data_PCs,
+      description = "Leiden clusters from the SNN graph of the Harmony-corrected ATAC LSI nearest neighbours [part_of_graph:ATAC] [part_of_graph:seurat_export]",
+      command = cluster_neighbors(
+        knn = knn.ATAC,
         k = aggregation_data_nNNs,
         resolution = aggregation_ATAC_cluster_res,
-        threads = 6,
         min_barcodes = aggregation_cluster_min_barcodes
       ),
-      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
+      resources = get_tar_resources(RAM_GB_req = 16)
     ),
     targets::tar_target(
       name = metadata_w_clusters_tibble.ATAC,
@@ -802,33 +811,32 @@ rlang::list2(
     targets::tar_target(
       name = UMAP_n_dims_seq.ATAC,
       description = "Sequence of counts of leading UMAP LSI dimensions for cross-parameter UMAP sweep",
-      command = round(seq(5, length(aggregation_UMAP_ATAC_PCs), length.out = 3))
+      command = round(seq(5, length(aggregation_ATAC_data_PCs), length.out = 3))
     ),
     tarchetypes::tar_file(
       name = cross.UMAPs.7_ATAC_QC,
-      description = "Compute ATAC UMAPs across a sweep of LSI dimension counts and neighbor counts. [checkpoint:7_ATAC-QC] [resource_observation: peak_RAM_GiB=12.3; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=9.9; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
+      description = "Compute ATAC UMAPs across a sweep of LSI dimension counts and neighbor counts, with one neighbour search per dimension count. [checkpoint:7_ATAC-QC]",
       command = {
-        sweep_umap <- run_UMAP_from_embedding_matrix(
-          embedding_matrix = harmony_embeddings_matrix.ATAC[metadata_w_cell_types_tibble.ATAC$barcode_w_prefix, , drop = FALSE],
-          dims = aggregation_UMAP_ATAC_PCs[seq_len(UMAP_n_dims_seq.ATAC)],
-          n_neighbors = UMAP_neighbors_seq,
-          min_dist = aggregation_UMAP_min_dist,
-          init = "spca",
-          threads = 6
-        ) |>
-          tibble::as_tibble(rownames = "barcode_w_prefix")
-
-        plot <- metadata_w_cell_types_tibble.ATAC |>
-          dplyr::select(-dplyr::any_of(c("LSI_UMAP_1", "LSI_UMAP_2"))) |>
-          dplyr::left_join(sweep_umap, by = "barcode_w_prefix") |>
-          plot_UMAP_from_metadata(variable = "LSI_harmony_SNN_cluster_cell_type") +
-          ggplot2::labs(subtitle = sprintf("First %s UMAP LSI dimensions; neighbours: %s; min_dist: %s. Compare label stability across settings; labels are GEX-derived.",
-            UMAP_n_dims_seq.ATAC, UMAP_neighbors_seq, aggregation_UMAP_min_dist))
-
-        save_plots_structured(plot, dyn_suffix_in_subdir = TRUE, override_suffix = paste0(UMAP_n_dims_seq.ATAC, "_", UMAP_neighbors_seq))
+        embedding_matrix <- select_embedding_dimensions(harmony_embeddings_matrix.ATAC[metadata_w_cell_types_tibble.ATAC$barcode_w_prefix, , drop = FALSE],
+          dims = aggregation_ATAC_data_PCs[seq_len(UMAP_n_dims_seq.ATAC)], dim_prefix = "LSI_")
+        knn <- find_hnsw_neighbors(embedding_matrix, k = max(UMAP_neighbors_seq), threads = 6)
+        metadata <- metadata_w_cell_types_tibble.ATAC |>
+          dplyr::select(-dplyr::any_of(c("LSI_UMAP_1", "LSI_UMAP_2")))
+        UMAP_neighbors_seq |>
+          purrr::set_names(\(n_neighbors) paste0(UMAP_n_dims_seq.ATAC, "_", n_neighbors)) |>
+          purrr::map(\(n_neighbors) {
+            sweep_umap <- run_UMAP_from_neighbors(knn, n_neighbors = n_neighbors, min_dist = aggregation_UMAP_min_dist,
+              init = "spca", embedding_matrix = embedding_matrix, threads = 6) |>
+              tibble::as_tibble(rownames = "barcode_w_prefix")
+            dplyr::left_join(metadata, sweep_umap, by = "barcode_w_prefix") |>
+              plot_UMAP_from_metadata(variable = "LSI_harmony_SNN_cluster_cell_type") +
+              ggplot2::labs(subtitle = sprintf("First %s UMAP LSI dimensions; neighbours: %s; min_dist: %s. Compare label stability across settings; labels are GEX-derived.",
+                UMAP_n_dims_seq.ATAC, n_neighbors, aggregation_UMAP_min_dist))
+          }) |>
+          save_plots_structured(dyn_suffix_in_subdir = TRUE, override_suffix = UMAP_n_dims_seq.ATAC)
       },
-      pattern = cross(UMAP_n_dims_seq.ATAC, UMAP_neighbors_seq),
-      resources = get_tar_resources(RAM_GB_req = 32)
+      pattern = map(UMAP_n_dims_seq.ATAC),
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
     )
   ),
 

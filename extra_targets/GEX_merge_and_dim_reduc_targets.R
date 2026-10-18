@@ -111,15 +111,25 @@ rlang::list2(
     resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
   ),
   targets::tar_target(
+    name = knn.GEX,
+    description = "Reproducible HNSW cosine nearest neighbours of the Harmony-corrected GEX PCA embeddings, shared by clustering and UMAP [part_of_graph:GEX] [part_of_graph:seurat_export]",
+    command = find_hnsw_neighbors(
+      select_embedding_dimensions(harmony_embeddings_matrix.GEX, dims = aggregation_GEX_data_PCs, dim_prefix = "PCA_"),
+      k = max(aggregation_data_nNNs, aggregation_UMAP_nNNs),
+      threads = 6
+    ),
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
+  ),
+  targets::tar_target(
     name = UMAP_embeddings_tibble.GEX,
-    description = "UMAP coordinates from BPCells-native Harmony-corrected GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=5.3; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
-    command = run_UMAP_from_embedding_matrix(
-      embedding_matrix = harmony_embeddings_matrix.GEX,
-      dims = aggregation_UMAP_GEX_PCs,
+    description = "UMAP coordinates from the nearest neighbours of the Harmony-corrected GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:seurat_export]",
+    command = run_UMAP_from_neighbors(
+      knn = knn.GEX,
       n_neighbors = aggregation_UMAP_nNNs,
       min_dist = aggregation_UMAP_min_dist,
-      dim_prefix = "PCA_",
       col_prefix = "GEX_UMAP",
+      init = "spca",
+      embedding_matrix = select_embedding_dimensions(harmony_embeddings_matrix.GEX, dims = aggregation_GEX_data_PCs, dim_prefix = "PCA_"),
       threads = 6
     ) |>
       tibble::as_tibble(rownames = "barcode_w_prefix"),
@@ -127,17 +137,20 @@ rlang::list2(
   ),
   targets::tar_target(
     name = UMAP_embeddings_tibble.GEX_non_harmony,
-    description = "UMAP coordinates from uncorrected BPCells-native GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=5.3; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
-    command = run_UMAP_from_embedding_matrix(
-      embedding_matrix = PCA_BPCells.GEX$cell_embeddings,
-      dims = aggregation_UMAP_GEX_PCs,
-      n_neighbors = aggregation_UMAP_nNNs,
-      min_dist = aggregation_UMAP_min_dist,
-      dim_prefix = "PCA_",
-      col_prefix = "GEX_non_harmony_UMAP",
-      threads = 6
-    ) |>
-      tibble::as_tibble(rownames = "barcode_w_prefix"),
+    description = "UMAP coordinates from the nearest neighbours of the uncorrected GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:seurat_export]",
+    command = {
+      embedding_matrix <- select_embedding_dimensions(PCA_BPCells.GEX$cell_embeddings, dims = aggregation_GEX_data_PCs, dim_prefix = "PCA_")
+      find_hnsw_neighbors(embedding_matrix, k = aggregation_UMAP_nNNs, threads = 6) |>
+        run_UMAP_from_neighbors(
+          n_neighbors = aggregation_UMAP_nNNs,
+          min_dist = aggregation_UMAP_min_dist,
+          col_prefix = "GEX_non_harmony_UMAP",
+          init = "spca",
+          embedding_matrix = embedding_matrix,
+          threads = 6
+        ) |>
+        tibble::as_tibble(rownames = "barcode_w_prefix")
+    },
     resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(

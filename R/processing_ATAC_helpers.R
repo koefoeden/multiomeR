@@ -780,56 +780,49 @@ run_ATAC_LSI_BPCells <- function(ATAC_peak_BPCells_matrix, n_components, scale_f
   )
 }
 
-#' Run UMAP from embedding matrix
+#' Run UMAP from nearest neighbours
 #'
-#' Run cosine UMAP on selected embedding dimensions, preserving input cell row names in the output matrix.
+#' Run UMAP on a precomputed nearest-neighbour index. uwot's batch optimisation
+#' runs on all threads and gives the same coordinates for any thread count.
 #'
-#' @param embedding_matrix Numeric matrix with cells/barcodes in rows and embedding dimensions in columns; row names are carried into downstream coordinates.
-#' @param dims Integer dimension indices to use; combined with `dim_prefix` to select columns such as `PCA_1` or `LSI_2`.
-#' @param n_neighbors UMAP neighbor count; clipped below the number of input cells where the helper does that internally.
+#' @param knn List with `idx` and `dist` matrices, one row per cell in neighbour
+#'   order; row names are carried into the output.
+#' @param n_neighbors UMAP neighbor count; the first `n_neighbors` columns of `knn` are used.
 #' @param min_dist UMAP minimum-distance parameter controlling how tightly local neighborhoods are packed.
 #' @param seed Random seed passed to stochastic clustering, sampling, or embedding code for reproducibility.
-#' @param dim_prefix Prefix used to translate `dims` into embedding column names, for example `PCA_`, `LSI_`, or `WNN_`.
 #' @param col_prefix Prefix assigned to generated coordinate columns, for example `LSI_UMAP` gives `LSI_UMAP_1` and `LSI_UMAP_2`.
 #' @param n_components Number of UMAP output dimensions to compute; use 2 for plotting panels and 3 for 3D widgets.
-#' @param init uwot initialization. The QC sweeps use `"spca"` because the default spectral initialization can segfault on large embeddings.
-#' @param threads Number of threads used for nearest-neighbor construction.
-#' @return A numeric UMAP matrix with preserved cell row names and `<col_prefix>_<dimension>` columns.
+#' @param init uwot initialization. `"spca"` needs `embedding_matrix`.
+#' @param embedding_matrix Optional cell coordinates in `knn` row order, used only by PCA initializations.
+#' @param threads Number of threads for the fuzzy graph and the optimization.
+#' @return A numeric UMAP matrix with `knn` row names and `<col_prefix>_<dimension>` columns.
 #' @keywords internal
 
-run_UMAP_from_embedding_matrix <- function(
-  embedding_matrix,
-  dims,
+run_UMAP_from_neighbors <- function(
+  knn,
   n_neighbors,
   min_dist,
   seed = 1,
-  dim_prefix = "LSI_",
   col_prefix = "LSI_UMAP",
   n_components = 2,
   init = "spectral",
+  embedding_matrix = NULL,
   threads = 1
 ) {
-  umap_input <- select_embedding_dimensions(
-    embedding_matrix = embedding_matrix,
-    dims = dims,
-    dim_prefix = dim_prefix
-  )
-  n_neighbors <- min(as.integer(n_neighbors), nrow(umap_input) - 1L)
-
+  neighbors <- seq_len(min(as.integer(n_neighbors), ncol(knn$idx)))
   set.seed(seed)
   umap <- uwot::umap(
-    X = umap_input,
-    n_neighbors = n_neighbors,
+    X = embedding_matrix,
+    nn_method = list(idx = knn$idx[, neighbors, drop = FALSE], dist = knn$dist[, neighbors, drop = FALSE]),
+    n_neighbors = length(neighbors),
     min_dist = min_dist,
-    metric = "cosine",
     n_components = n_components,
     init = init,
     n_threads = threads,
-    n_sgd_threads = 0
+    n_sgd_threads = threads,
+    batch = TRUE
   )
-
-  colnames(umap) <- paste0(col_prefix, "_", seq_len(ncol(umap)))
-  rownames(umap) <- rownames(umap_input)
+  dimnames(umap) <- list(rownames(knn$idx), paste0(col_prefix, "_", seq_len(ncol(umap))))
   umap
 }
 
@@ -932,15 +925,8 @@ cluster_knn_snn_leiden <- function(knn, resolution, seed = 1) {
   # BPCells::cluster_graph_leiden() first converts a sparse SNN matrix with
   # igraph::graph_from_adjacency_matrix(), which can spike RAM on large datasets.
   snn <- BPCells::knn_to_snn_graph(knn, return_type = "list")
-  snn_graph <- igraph::graph_from_data_frame(
-    data.frame(
-      from = snn$i + 1L,
-      to = snn$j + 1L,
-      weight = snn$weight
-    ),
-    directed = FALSE,
-    vertices = data.frame(name = seq_len(snn$dim))
-  )
+  snn_graph <- igraph::make_graph(rbind(snn$i + 1L, snn$j + 1L), n = snn$dim, directed = FALSE)
+  igraph::E(snn_graph)$weight <- snn$weight
 
   withr::with_seed(
     seed,
@@ -993,34 +979,26 @@ filter_clusters_by_min_barcodes <- function(clusters, min_barcodes = 100) {
   get_mixsorted_factor(as.character(retained_clusters)) |> purrr::set_names(names(retained_clusters))
 }
 
-#' Cluster embedding matrix BPCells
+#' Cluster nearest neighbours
 #'
-#' Cluster selected embedding dimensions with BPCells KNN/SNN and Leiden.
+#' Cluster cells from the SNN graph of their first `k` nearest neighbours with Leiden.
 #'
-#' @param embedding_matrix Numeric matrix with cells/barcodes in rows and embedding dimensions in columns; row names are carried into downstream coordinates.
-#' @param dims Integer dimension indices to use; combined with `dim_prefix` to select columns such as `PCA_1` or `LSI_2`.
-#' @param k Number of nearest neighbors to use for KNN/SNN construction.
+#' @param knn List with `idx` and `dist` matrices, one row per cell in neighbour order, such as from [find_hnsw_neighbors()].
+#' @param k Number of nearest neighbors to use for SNN construction.
 #' @param resolution Leiden clustering resolution; higher values generally split clusters more finely.
-#' @param threads Number of threads passed to BPCells, HNSW, or matrix-stat routines.
 #' @param seed Random seed passed to stochastic clustering, sampling, or embedding code for reproducibility.
-#' @param dim_prefix Prefix used to translate `dims` into embedding column names, for example `PCA_`, `LSI_`, or `WNN_`.
 #' @param min_barcodes Minimum number of barcodes required for a cluster/group to be retained; smaller groups are dropped.
 #' @return A named factor of cluster assignments for retained cells.
 #' @keywords internal
 
-cluster_embedding_matrix_BPCells <- function(embedding_matrix, dims, k, resolution, threads = 1, seed = 1, dim_prefix = "LSI_", min_barcodes = 100) {
-  cluster_input <- select_embedding_dimensions(
-    embedding_matrix = embedding_matrix,
-    dims = dims,
-    dim_prefix = dim_prefix
+cluster_neighbors <- function(knn, k, resolution, seed = 1, min_barcodes = 100) {
+  neighbors <- seq_len(min(as.integer(k), ncol(knn$idx)))
+  clusters <- cluster_knn_snn_leiden(
+    knn = list(idx = knn$idx[, neighbors, drop = FALSE], dist = knn$dist[, neighbors, drop = FALSE]),
+    resolution = resolution,
+    seed = seed
   )
-  k <- min(as.integer(k), nrow(cluster_input) - 1L)
-  clusters <- cluster_input |>
-    BPCells::knn_hnsw(k = k, metric = "cosine", threads = threads, ef = 500) |>
-    cluster_knn_snn_leiden(resolution = resolution, seed = seed)
-
-  cluster_names <- rownames(cluster_input)
-  names(clusters) <- cluster_names
+  names(clusters) <- rownames(knn$idx)
   filter_clusters_by_min_barcodes(clusters, min_barcodes = min_barcodes)
 }
 

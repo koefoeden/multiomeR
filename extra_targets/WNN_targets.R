@@ -84,11 +84,12 @@ rlang::list2(
     ),
     targets::tar_target(
       name = WNN_results,
-      description = "Native weighted nearest-neighbour graph restricted to retained WNN cells: each keeps its first neighbours among them [part_of_graph:WNN] [part_of_graph:seurat_export]",
+      description = "Native weighted nearest-neighbour graph restricted to retained WNN cells: each keeps its first neighbours among them, and cells left with too few are reselected among them [part_of_graph:WNN] [part_of_graph:seurat_export]",
       command = restrict_WNN_results(
         WNN_results_raw,
         barcodes = clusters_tibble.WNN$barcode_w_prefix,
-        k = aggregation_data_nNNs
+        k = aggregation_data_nNNs,
+        embeddings_list = embedding_matrices.WNN
       ),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),

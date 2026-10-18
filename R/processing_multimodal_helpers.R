@@ -211,8 +211,10 @@ get_WNN_modality_weights <- function(embeddings_norm, modality_nn, k) {
 #'   [restrict_WNN_results()] can later drop cells without a new search.
 #' @param native_source_file Path to the tracked C++ implementation of the
 #'   small-SNN kernel bandwidth.
-#' @return A list containing modality weights per barcode and the weighted
-#'   neighbor index and distance matrices.
+#' @return A list containing modality weights per barcode, the weighted
+#'   neighbor index and distance matrices, and the selection inputs that
+#'   [restrict_WNN_results()] reuses: each modality's kernel widths and
+#'   nearest-neighbour distances, and `candidate_k`.
 #' @keywords internal
 
 weighted_nearest_neighbors_BPCells <- function(
@@ -278,7 +280,10 @@ weighted_nearest_neighbors_BPCells <- function(
   list(
     modality_weights = modality_weights_tibble,
     nn_idx = nn_idx,
-    nn_dist = nn_dist
+    nn_dist = nn_dist,
+    kernel_width = sigma_list,
+    nearest_dist = nearest_dist,
+    candidate_k = candidate_k
   )
 }
 
@@ -287,28 +292,90 @@ weighted_nearest_neighbors_BPCells <- function(
 #' Keep each retained cell's first `k` neighbours among the retained cells, in
 #' the original score order: the neighbours a selection among only the retained
 #' candidates would give, with the same modality weights and kernel widths.
+#' Cells with fewer than `k` retained neighbours, which occur where many
+#' neighbouring cells were removed, are reselected among all retained cells by
+#' [reselect_WNN_neighbors()].
 #'
 #' @param WNN_results List returned by [weighted_nearest_neighbors_BPCells()],
 #'   with at least `k` neighbours per cell.
 #' @param barcodes Cells to keep.
 #' @param k Number of neighbours to keep per cell.
+#' @param embeddings_list The embeddings `WNN_results` was computed from,
+#'   needed only when a cell must be reselected.
 #' @return WNN results for the retained cells with `k` neighbours each.
 #' @keywords internal
-restrict_WNN_results <- function(WNN_results, barcodes = rownames(WNN_results$nn_idx), k) {
+restrict_WNN_results <- function(WNN_results, barcodes = rownames(WNN_results$nn_idx), k, embeddings_list = NULL) {
   keep <- rownames(WNN_results$nn_idx) %in% barcodes
   new_index <- ifelse(keep, cumsum(keep), NA_integer_)
   idx <- matrix(new_index[WNN_results$nn_idx[keep, , drop = FALSE]], nrow = sum(keep))
   columns <- t(apply(!is.na(idx), 1, \(retained) which(retained)[seq_len(k)]))
-  if (anyNA(columns)) {
-    stop(sum(rowSums(is.na(columns)) > 0), " cells have fewer than ", k, " retained neighbours.")
-  }
+  deficient <- which(rowSums(is.na(columns)) > 0)
+  columns[deficient, ] <- rep(seq_len(k), each = length(deficient))
   positions <- cbind(rep(seq_len(nrow(idx)), k), as.vector(columns))
-  list(
-    modality_weights = WNN_results$modality_weights[keep, ],
-    nn_idx = matrix(idx[positions], ncol = k, dimnames = list(rownames(WNN_results$nn_idx)[keep], NULL)),
-    nn_dist = matrix(WNN_results$nn_dist[keep, , drop = FALSE][positions], ncol = k,
-      dimnames = list(rownames(WNN_results$nn_idx)[keep], NULL))
-  )
+  cells <- rownames(WNN_results$nn_idx)[keep]
+  nn_idx <- matrix(idx[positions], ncol = k, dimnames = list(cells, NULL))
+  nn_dist <- matrix(WNN_results$nn_dist[keep, , drop = FALSE][positions], ncol = k, dimnames = list(cells, NULL))
+  if (length(deficient) > 0) {
+    if (is.null(embeddings_list)) {
+      stop(length(deficient), " cells have fewer than ", k, " retained neighbours; pass embeddings_list to reselect them.")
+    }
+    message("Reselecting the neighbours of ", length(deficient), " cells with fewer than ", k, " retained neighbours")
+    reselected <- reselect_WNN_neighbors(WNN_results, embeddings_list, which(keep), which(keep)[deficient], k)
+    nn_idx[deficient, ] <- reselected$nn_idx
+    nn_dist[deficient, ] <- reselected$nn_dist
+  }
+  list(modality_weights = WNN_results$modality_weights[keep, ], nn_idx = nn_idx, nn_dist = nn_dist)
+}
+
+#' Reselect WNN neighbours among a subset of cells
+#'
+#' Select query cells' weighted nearest neighbours among the retained cells as
+#' the native selection does, with the cells' original modality weights,
+#' kernel widths and nearest-neighbour distances: each modality's
+#' `candidate_k` nearest retained cells, found by exact search, are scored
+#' with every modality's kernel, and the top `k` are kept in stable decreasing
+#' score order.
+#'
+#' @param WNN_results List returned by [weighted_nearest_neighbors_BPCells()].
+#' @param embeddings_list The embeddings `WNN_results` was computed from.
+#' @param retained Rows of `WNN_results` to select among.
+#' @param queries Rows of `WNN_results` to reselect, all among `retained`.
+#' @param k Number of neighbours per query.
+#' @return List of `nn_idx`, as positions in `retained`, and `nn_dist`, one row per query.
+#' @keywords internal
+reselect_WNN_neighbors <- function(WNN_results, embeddings_list, retained, queries, k) {
+  cells <- rownames(WNN_results$nn_idx)
+  embeddings <- purrr::map(embeddings_list, \(embedding) normalize_embedding_rows(embedding[cells[retained], , drop = FALSE]))
+  query_rows <- match(queries, retained)
+  candidate_k <- min(WNN_results$candidate_k, length(retained) - 1L)
+  # Each modality's candidate_k nearest retained cells, excluding the query: shortlisted by the squared-distance
+  # identity in blocks of queries, then ordered by the exact distance.
+  shortlist_size <- min(candidate_k + 50L, length(retained))
+  modality_candidates <- purrr::map(embeddings, \(embedding) {
+    squared_norms <- rowSums(embedding^2)
+    do.call(rbind, lapply(split(query_rows, ceiling(seq_along(query_rows) / 64)), \(block) {
+      squared_distances <- outer(squared_norms[block], squared_norms, "+") - 2 * tcrossprod(embedding[block, , drop = FALSE], embedding)
+      t(vapply(seq_along(block), \(i) {
+        row <- squared_distances[i, ]
+        shortlist <- setdiff(which(row <= sort.int(row, partial = shortlist_size)[[shortlist_size]]), block[[i]])
+        distance <- sqrt(colSums((t(embedding[shortlist, , drop = FALSE]) - embedding[block[[i]], ])^2))
+        shortlist[order(distance, shortlist)][seq_len(candidate_k)]
+      }, integer(candidate_k)))
+    }))
+  })
+  selected <- lapply(seq_along(query_rows), \(i) {
+    query <- query_rows[[i]]
+    candidates <- unique(unlist(purrr::map(modality_candidates, \(candidate_matrix) candidate_matrix[i, ])))
+    score <- Reduce(`+`, purrr::imap(embeddings, \(embedding, modality) {
+      distance <- sqrt(colSums((t(embedding[candidates, , drop = FALSE]) - embedding[query, ])^2)) -
+        WNN_results$nearest_dist[[modality]][[queries[[i]]]]
+      exp(-1 * (pmax(distance, 0) / WNN_results$kernel_width[[modality]][[queries[[i]]]])) *
+        WNN_results$modality_weights[[modality]][[queries[[i]]]]
+    }))
+    top <- order(-score, seq_along(score))[seq_len(k)]
+    list(idx = candidates[top], dist = sqrt(pmin(pmax((1 - score[top]) / 2, 0), 1)))
+  })
+  list(nn_idx = do.call(rbind, purrr::map(selected, "idx")), nn_dist = do.call(rbind, purrr::map(selected, "dist")))
 }
 
 #' Run WNN UMAP

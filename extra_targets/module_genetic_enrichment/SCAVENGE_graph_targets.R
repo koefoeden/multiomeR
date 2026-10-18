@@ -6,6 +6,12 @@ rlang::list2(
     resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
   ),
   targets::tar_target(
+    name = SCAVENGE_cell_metadata_tibble,
+    description = "Keep each nucleus's graph embedding and cluster labels, so per-GWAS SCAVENGE targets load a small table",
+    command = dplyr::select(metadata_w_cell_types_tibble.WNN, "barcode_w_prefix", dplyr::all_of(unlist(map_SCAVENGE_umap_cols)),
+      dplyr::all_of(paste0(map_SCAVENGE_graph_name, c("_cluster_named", "_cluster_cell_type"))))
+  ),
+  targets::tar_target(
     name = TRS_tibbles,
     description = "Compute cell-level SCAVENGE TRS for one GWAS [part_of_graph:genetic_enrichment_single_nucleus] [resource_observation: peak_RAM_GiB=4.1; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10]",
     command = get_SCAVENGE_TRS_tibble(
@@ -28,7 +34,7 @@ rlang::list2(
     command = {
       plot <- get_SCAVENGE_TRS_UMAP_plots(
         TRS_tibble = TRS_tibbles,
-        metadata_tibble = metadata_w_cell_types_tibble.WNN,
+        metadata_tibble = SCAVENGE_cell_metadata_tibble,
         umap_cols = map_SCAVENGE_umap_cols,
         label_col = paste0(map_SCAVENGE_graph_name, "_cluster_named")
       )

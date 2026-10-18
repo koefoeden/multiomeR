@@ -4,7 +4,7 @@ rlang::list2(
     description = "Summarize SCAVENGE TRS per GWAS across named and cell-type graph clusters [part_of_graph:genetic_enrichment_single_nucleus] [resource_observation: peak_RAM_GiB=7.7; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
     command = summarize_SCAVENGE_TRS_by_groups(
       TRS_tibble = TRS_tibble,
-      metadata_tibble = metadata_w_cell_types_tibble.WNN,
+      metadata_tibble = SCAVENGE_cell_metadata_tibble,
       graph_name = map_SCAVENGE_graph_name
     ),
     resources = get_tar_resources(RAM_GB_req = 16)

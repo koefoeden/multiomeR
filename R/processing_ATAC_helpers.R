@@ -348,7 +348,8 @@ build_peak_calling_cluster_discovery_tibble <- function(
 #' Write the left cut site of each fragment of the well's discovery nuclei, one
 #' BED file per half, in a single pass over the well's fragments. MACS3 reads a
 #' fragment as one read at its left end, so these are the tags it would read
-#' from the halves' fragment files.
+#' from the halves' fragment files. Chromosomes are read one at a time, so memory
+#' follows the largest chromosome rather than the well's depth.
 #'
 #' @param GEM_well_cells One row of `split_cells_by_GEM_well()`.
 #' @param discovery_tibble Output of `build_peak_calling_cluster_discovery_tibble()`.
@@ -364,13 +365,21 @@ write_peak_calling_cut_sites_for_GEM_well <- function(GEM_well_cells, discovery_
     unlist(discovery_tibble$BCs_for_peak_discovery)
   )
   cells <- intersect(GEM_well_cells$barcodes[[1]], names(halves))
-  cut_sites <- open_GEM_well_fragments(GEM_well_cells, genome) |>
+  fragments <- open_GEM_well_fragments(GEM_well_cells, genome) |>
     BPCells::select_cells(cells) |>
-    BPCells::merge_cells(halves[cells]) |>
-    as.data.frame() |>
-    data.table::as.data.table()
-  cut_sites[, data.table::fwrite(list(chr, start, start + 1L), file.path(out_dir, paste0(.BY$cell_id, ".bed.gz")),
-    sep = "\t", col.names = FALSE, compress = "gzip", compressLevel = 1L, nThread = 1L), by = cell_id]
+    BPCells::merge_cells(halves[cells])
+  groups <- BPCells::cellNames(fragments)
+  for (chromosome in BPCells::chrNames(fragments)) {
+    chromosome_fragments <- BPCells::select_chromosomes(fragments, chromosome) |>
+      BPCells::write_fragments_memory(compress = FALSE)
+    starts <- split(chromosome_fragments@start, factor(groups[chromosome_fragments@cell + 1L], groups))
+    # Each chromosome appends a gzip member, which decompresses as one file.
+    for (group in names(starts)[lengths(starts) > 0L]) {
+      data.table::fwrite(list(rep_len(chromosome, length(starts[[group]])), starts[[group]], starts[[group]] + 1L),
+        file.path(out_dir, paste0(group, ".bed.gz")),
+        sep = "\t", col.names = FALSE, compress = "gzip", compressLevel = 1L, nThread = 1L, append = TRUE)
+    }
+  }
   out_dir
 }
 

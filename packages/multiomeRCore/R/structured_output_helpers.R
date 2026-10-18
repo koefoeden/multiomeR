@@ -278,8 +278,17 @@ save_plots_structured <- function(
     auto_dimensions <- list(width = 10, height = 10)
     if (inherits(plot, "ggplot")) {
       plot_build <- ggplot2::ggplot_build(plot)
-      plot <- cull_dense_discrete_legends(plot, discrete_legend_n_distinct_max, plot_build)
+      culled_plot <- cull_dense_discrete_legends(plot, discrete_legend_n_distinct_max, plot_build)
       auto_dimensions <- get_ggplot_auto_save_dimensions(plot_build)
+      # Draw the existing build unless culling changed the plot: building large plots takes seconds.
+      # The gtable is made at draw time, inside the device, so text is measured as ggsave() would.
+      if (identical(culled_plot, plot)) {
+        plot_save_args$bg <- plot_save_args$bg %||%
+          ggplot2::calc_element("plot.background", ggplot2::complete_theme(plot$theme))$fill
+        plot <- grid::delayGrob(ggplot2::ggplot_gtable(plot_build), list(plot_build = plot_build))
+      } else {
+        plot <- culled_plot
+      }
     }
     plot_save_args$width <- dplyr::coalesce(plot_save_args$width, auto_dimensions$width)
     plot_save_args$height <- dplyr::coalesce(plot_save_args$height, auto_dimensions$height)

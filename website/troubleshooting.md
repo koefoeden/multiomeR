@@ -111,7 +111,7 @@ Changes to code, configuration, input files, or any upstream target make downstr
 
 ## Results change slightly after a rebuild
 
-Multithreaded approximate nearest-neighbor search is not bit-deterministic. When a neighbor graph is rebuilt, for example because an upstream change invalidated it, a small fraction of nuclei can get different neighbors, and clusters, UMAP coordinates and downstream statistics shift with them. This is expected; compare cluster composition and marker results rather than exact labels, and keep the store when results must stay unchanged.
+Neighbor searches build their index on one thread, so rebuilding a target from unchanged inputs gives the same neighbors, clusters and UMAP layouts. A small upstream change can still move results: removing a few nuclei, for example, redraws the random subsets in which WNN modality weights are estimated, and clusters, UMAP coordinates and downstream statistics shift with them. This is expected; compare cluster composition and marker results rather than exact labels, and keep the store when results must stay unchanged.
 
 ## Rerun safely
 

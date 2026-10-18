@@ -50,6 +50,12 @@ before the edit, build it with `tar_manifest(script = ...)` from a temporary
 copy of `_targets.R` in the repository root whose `source()` calls read
 `git show HEAD:` copies of the edited target files.
 
+Adding or activating GEM well rows changes only the `GEM_well_config_tsv` file
+target. Each aggregation's `GEM_well_metadata_tibble` reruns and reproduces its
+value unless the aggregation lists a changed well; compare its new value with
+`tar_read()` before calling the change contained. Rebuilding both keeps the
+aggregation current.
+
 Dynamic branches take their names from their upstream branches, and those of
 an `iteration = "vector"` stem from each element's value, never from the
 pattern: a shifted `slice()` index or a key added beside existing ones reruns

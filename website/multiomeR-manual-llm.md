@@ -174,7 +174,7 @@ cell_metadata
 <!-- begin include: website/data/demo_outputs/cell_metadata.md -->
 
 ```{.default filename="Output"}
-# A tibble: 7,838 x 100
+# A tibble: 7,631 x 92
    orig.ident         barcode nCount_RNA nFeature_RNA log10_nCount_RNA
    <chr>              <chr>        <dbl>        <dbl>            <dbl>
  1 healthy_PBMC_human AAACAG~      4747          2272             3.68
@@ -187,8 +187,8 @@ cell_metadata
  8 healthy_PBMC_human AAAGGA~      2731          1397             3.44
  9 healthy_PBMC_human AAAGGA~      4103.         1861             3.61
 10 healthy_PBMC_human AAAGGA~      3940.         1986             3.60
-# i 7,828 more rows
-# i 95 more variables: RNA_mito_percent <dbl>, novelty <dbl>,
+# i 7,621 more rows
+# i 87 more variables: RNA_mito_percent <dbl>, novelty <dbl>,
 #   TSS.enrichment <dbl>, nucleosome_signal <dbl>, donor_id <chr>,
 #   vireo_max_prob_singlet <lgl>, vireo_max_prob_doublet <lgl>,
 #   vireo_n_vars <lgl>, vireo_best_doublet <lgl>,
@@ -199,7 +199,7 @@ cell_metadata
 <!-- end include: website/data/demo_outputs/cell_metadata.md -->
 
 
-The table has one row per retained nucleus, with its QC metrics, GEX, ATAC and WNN clusters, cell-type labels and UMAP coordinates. The multimodal Seurat/Signac object is a convenience export for exploring the results with Seurat and Signac:
+The table has one row per retained nucleus, with its QC metrics, GEX, ATAC and WNN clusters and cell-type labels. UMAP coordinates are kept apart, in `UMAP_embeddings_tibble.WNN.immune_human_2x` and its GEX and ATAC counterparts, so that UMAPs do not hold up cell typing and the optional modules. The multimodal Seurat/Signac object is a convenience export for exploring the results with Seurat and Signac:
 
 ```{.r filename="R"}
 demo_object <- targets::tar_read(
@@ -213,7 +213,7 @@ demo_object
 
 ```{.default filename="Output"}
 An object of class Seurat
-136808 features across 7838 samples within 3 assays
+137349 features across 7631 samples within 3 assays
 Active assay: RNA (36601 features, 3000 variable features)
  3 layers present: counts, data, scale.data
  2 other assays present: ATAC, motif_family_accessibility
@@ -292,7 +292,6 @@ unlist(
 [2] "outputs/plots/immune_human_2x/8_multimodal_QC/UMAPs/categorical/WNN_harmony_SNN_cluster_cell_type.png"
 [3] "outputs/plots/immune_human_2x/8_multimodal_QC/UMAPs/categorical/donor_id.png"
 [4] "outputs/plots/immune_human_2x/8_multimodal_QC/UMAPs/categorical/GEM_well_ID.png"
-[5] "outputs/plots/immune_human_2x/8_multimodal_QC/UMAPs/categorical/donor_id.png"
 ```
 
 <!-- end include: website/data/demo_outputs/UMAP_paths.md -->
@@ -465,7 +464,7 @@ targets::tar_make(
 └── PCA_metadata_association_barplots.png
 ```
 
-**Revise:** choose the PCs used for clustering with [`aggregation_GEX_data_PCs`](parameters.html#aggregation_GEX_data_PCs) and for the UMAP with [`aggregation_UMAP_GEX_PCs`](parameters.html#aggregation_UMAP_GEX_PCs). When components track a batch variable such as `GEM_well_ID`, list it in [`aggregation_harmony_correction_metadata_col_names`](parameters.html#aggregation_harmony_correction_metadata_col_names); Harmony then corrects both modalities, and the embedding and association plots add Harmony panels. Do not correct for `GEM_well_ID` when the GEM wells hold different tissues; see [Combine several tissues](reference_aggregations.md#multi-tissue).
+**Revise:** choose the PCs used for clustering and the UMAP with [`aggregation_GEX_data_PCs`](parameters.html#aggregation_GEX_data_PCs). The PCA computes at least 50 components, so the plots show components beyond your choice, and a choice within them does not recompute the PCA. When components track a batch variable such as `GEM_well_ID`, list it in [`aggregation_harmony_correction_metadata_col_names`](parameters.html#aggregation_harmony_correction_metadata_col_names); Harmony then corrects both modalities, and the embedding and association plots add Harmony panels. Do not correct for `GEM_well_ID` when the GEM wells hold different tissues; see [Combine several tissues](reference_aggregations.md#multi-tissue).
 
 ## Checkpoint 3: GEX clusters and cell types {#checkpoint-3}
 
@@ -493,7 +492,7 @@ targets::tar_make(
 ```text
 <store>/plots/my_aggregation/3_GEX_QC/
 ├── UMAPs/
-│   ├── categorical/{harmony,non_harmony}/
+│   ├── categorical/{harmony,non_harmony}/   # non_harmony only with Harmony covariates
 │   ├── continuous/{harmony,non_harmony}/
 │   └── cross/
 ├── markers_by_cluster_dot_plot.png
@@ -507,16 +506,18 @@ targets::tar_make(
 ├── categorical_by_cell_type_bars_plots/
 ├── continuous_by_cluster_violin_plot/
 ├── continuous_by_cell_type_violin_plot/
+├── resolution_sweep_plot.png
 └── cell_retention_flow_plot.png
 <store>/files/my_aggregation/3_GEX_QC/
-└── cluster_composition_table.tsv
+├── cluster_composition_table.tsv
+└── resolution_sweep_table.tsv
 ```
 
 **Revise:**
 
-- [`aggregation_GEX_cluster_res`](parameters.html#aggregation_GEX_cluster_res) sets how finely the nuclei are clustered; judge it by marker consistency and cluster sizes. By default, the GEX clusters are also the peak-calling groups of checkpoint 4.
+- [`aggregation_GEX_cluster_res`](parameters.html#aggregation_GEX_cluster_res) sets how finely the nuclei are clustered; judge it by marker consistency and cluster sizes. `resolution_sweep_plot.png` and its table show the cluster counts and sizes at half and twice the resolution. A resolution change reruns only the clustering and later steps, not the neighbor search. By default, the GEX clusters are also the peak-calling groups of checkpoint 4.
 - [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes) and [`aggregation_GEX_cluster_annotation_min_advantage`](parameters.html#aggregation_GEX_cluster_annotation_min_advantage) determine the cell-type labels; see [Cluster annotation](review_outputs.md#cluster-annotation).
-- `UMAPs/cross/` compares layouts across PC and neighbor counts, for choosing [`aggregation_UMAP_GEX_PCs`](parameters.html#aggregation_UMAP_GEX_PCs) and [`aggregation_UMAP_nNNs`](parameters.html#aggregation_UMAP_nNNs).
+- `UMAPs/cross/` compares layouts across PC and neighbor counts, for choosing [`aggregation_GEX_data_PCs`](parameters.html#aggregation_GEX_data_PCs) and [`aggregation_UMAP_nNNs`](parameters.html#aggregation_UMAP_nNNs).
 
 ## Checkpoint 4: Peak QC {#checkpoint-4}
 
@@ -584,13 +585,13 @@ targets::tar_make(
 └── LSI_metadata_association_barplots.png
 ```
 
-**Revise:** choose the LSI components used for clustering with [`aggregation_ATAC_data_PCs`](parameters.html#aggregation_ATAC_data_PCs) and for the UMAP with [`aggregation_UMAP_ATAC_PCs`](parameters.html#aggregation_UMAP_ATAC_PCs). Both start at component 2 by default; check the association plots for components that track sequencing depth or other technical metrics. Add ATAC-only Harmony covariates with [`aggregation_extra_harmony_covars_ATAC`](parameters.html#aggregation_extra_harmony_covars_ATAC).
+**Revise:** choose the LSI components used for clustering and the UMAP with [`aggregation_ATAC_data_PCs`](parameters.html#aggregation_ATAC_data_PCs). As for the PCA, at least 50 are computed, and a choice within them does not recompute the LSI. They start at component 2 by default; check the association plots for components that track sequencing depth or other technical metrics. Add ATAC-only Harmony covariates with [`aggregation_extra_harmony_covars_ATAC`](parameters.html#aggregation_extra_harmony_covars_ATAC).
 
 ## Checkpoint 7: ATAC clusters and motifs {#checkpoint-7}
 
-Clusters the ATAC data, names the clusters from GEX marker scores, removes ATAC doublets, and computes gene activity and motif accessibility. [Method details](methods_primary_module.md#atac-filtering)
+Clusters the ATAC data, names the clusters from GEX marker scores, removes ATAC doublets, and computes motif accessibility. [Method details](methods_primary_module.md#atac-filtering)
 
-**Configure:** optionally, list expected transcription factors per cell type in [`aggregation_ATAC_marker_TFs`](parameters.html#aggregation_ATAC_marker_TFs) to organize the motif-accessibility plots.
+**Configure:** optionally, list expected transcription factors per cell type in [`aggregation_ATAC_marker_TFs`](parameters.html#aggregation_ATAC_marker_TFs) to organize the motif-accessibility plots. Set [`aggregation_ATAC_gene_activity_scores`](parameters.html#aggregation_ATAC_gene_activity_scores) to `true` to also compute gene activity scores and `marker_gene_activity_dot_plot.png`; they are off by default because they take hours of worker time in large aggregations.
 
 **Run pipeline:**
 
@@ -617,12 +618,14 @@ targets::tar_make(
 ├── categorical_by_cell_type_bars_plots/
 ├── continuous_by_cluster_violin_plot/
 ├── continuous_by_cell_type_violin_plot/
+├── resolution_sweep_plot.png
 └── cell_retention_flow_plot.png
 <store>/files/my_aggregation/7_ATAC_QC/
-└── cluster_composition_table.tsv
+├── cluster_composition_table.tsv
+└── resolution_sweep_table.tsv
 ```
 
-**Revise:** choose [`aggregation_ATAC_cluster_res`](parameters.html#aggregation_ATAC_cluster_res) from the motif patterns and the agreement with GEX labels in `confusion_matrices_plots.png`. [`aggregation_ATAC_cluster_annotation_min_advantage`](parameters.html#aggregation_ATAC_cluster_annotation_min_advantage) sets the assignment margin of the ATAC labels.
+**Revise:** choose [`aggregation_ATAC_cluster_res`](parameters.html#aggregation_ATAC_cluster_res) from the motif patterns, the agreement with GEX labels in `confusion_matrices_plots.png` and the cluster counts at half and twice the resolution in `resolution_sweep_plot.png`. [`aggregation_ATAC_cluster_annotation_min_advantage`](parameters.html#aggregation_ATAC_cluster_annotation_min_advantage) sets the assignment margin of the ATAC labels.
 
 ## Checkpoint 8: WNN integration {#checkpoint-8}
 
@@ -1124,6 +1127,8 @@ For SLURM, PBS, SGE, or LSF, replace the local controllers with the matching `cr
 2. Set the queue, account, wall time, modules, and worker start-up commands your cluster requires.
 3. Give GPUs their own tier: only targets that request GPUs are routed to it.
 
+MACS3 peak calling writes several gigabytes of temporary pileups per peak-calling group to the worker's R temporary folder, which follows `TMPDIR`. Point `TMPDIR` at node-local scratch in the worker start-up commands where `/tmp` is small.
+
 Test a small target selection before increasing worker counts. For start-up and routing errors, see [Troubleshooting](troubleshooting.md#controller-and-scheduler-failures).
 
 ## Rules for `crew_controllers.R` {#controller-rules}
@@ -1252,7 +1257,18 @@ Changes to code, configuration, input files, or any upstream target make downstr
 
 ## Results change slightly after a rebuild
 
-Multithreaded approximate nearest-neighbor search is not bit-deterministic. When a neighbor graph is rebuilt, for example because an upstream change invalidated it, a small fraction of nuclei can get different neighbors, and clusters, UMAP coordinates and downstream statistics shift with them. This is expected; compare cluster composition and marker results rather than exact labels, and keep the store when results must stay unchanged.
+Neighbor searches build their index on one thread, so rebuilding a target from unchanged inputs gives the same neighbors, clusters and UMAP layouts. A small upstream change can still move results: removing a few nuclei, for example, redraws the random subsets in which WNN modality weights are estimated, and clusters, UMAP coordinates and downstream statistics shift with them. This is expected; compare cluster composition and marker results rather than exact labels, and keep the store when results must stay unchanged.
+
+## Old plots remain in the store
+
+Plots of removed targets, of aggregations no longer configured and of branches that an upstream change renamed stay in `<store>/plots/`. List the images that no current target owns, check the list, and only then delete them:
+
+```{.r filename="R"}
+orphaned <- prune_orphaned_plots()
+prune_orphaned_plots(delete = TRUE)
+```
+
+Pass every target script that writes plots to the store as `scripts`, since images owned by any of their graphs are kept. An aggregation removed from the configuration counts as gone, so its plots are listed too.
 
 ## Rerun safely
 
@@ -1344,7 +1360,7 @@ The table below shows the two public demo wells with the required columns in bol
 
 
 
-The donor metadata table is a TSV with one row per donor, keyed by `donor_id`. You prepare it at [step 2 of Configure your data](main_running.md#steps), and each aggregation points to its file with [`aggregation_donor_id_metadata_tsv`](parameters.html#aggregation_donor_id_metadata_tsv).
+The donor metadata table is a TSV with one row per donor, keyed by `donor_id`. You prepare it at [step 2 of Configure your data](main_running.md#steps), and each aggregation points to its file, or files, with [`aggregation_donor_id_metadata_tsv`](parameters.html#aggregation_donor_id_metadata_tsv).
 
 ## Minimal table
 
@@ -1364,11 +1380,23 @@ Put library-, run- or batch-specific variables in the [GEM well table](reference
 
 Every nucleus receives a `donor_id` from its GEM well: `GEM_well_donor_id` for a single-donor well, or the VCF sample name that Vireo assigns in a [pooled well](reference_GEM_wells.md#pooled-wells). Give each of those IDs one row, with identical spelling; the nuclei-per-donor plot at [checkpoint 1](main_running.md#checkpoint-1) shows the IDs the nuclei received. Nuclei whose donor is missing from the table get `NA` donor variables, and rows for donors without nuclei are ignored.
 
+## Several tables {#several-tables}
+
+When an aggregation combines cohorts that each have their own donor table, list the files instead of merging them by hand:
+
+``` {.yaml filename="cfg_aggregations.yaml"}
+my_aggregation:
+  aggregation_donor_id_metadata_tsv: [/path/to/cohort_donor_metadata.tsv, /path/to/reference_donor_metadata.tsv]
+```
+
+The pipeline joins the files into one donor table. A column that only some files have is left empty for the donors of the others. A donor may appear in more than one file only if those files agree on every column they share.
+
 ## Rules checked {#rules}
 
 When the targets that read the table run, they check that:
 
-- `donor_id` values are unique; and
+- `donor_id` values are unique within each file;
+- a donor listed in several files has no conflicting values, and columns shared by several files have compatible types; and
 - apart from `donor_id` and `GEM_well_ID`, no column name appears both here and in the [GEM well table](reference_GEM_wells.md).
 
 ## Extended table for differential analyses
@@ -1418,7 +1446,7 @@ my_aggregation:
 ## Keys
 
 - [`aggregation_GEM_well_IDs`](parameters.html#aggregation_GEM_well_IDs): the `GEM_well_ID` values to combine, from the [GEM well table](reference_GEM_wells.md).
-- [`aggregation_donor_id_metadata_tsv`](parameters.html#aggregation_donor_id_metadata_tsv): the [donor metadata table](reference_donor_metadata.md) for these GEM wells.
+- [`aggregation_donor_id_metadata_tsv`](parameters.html#aggregation_donor_id_metadata_tsv): the [donor metadata table](reference_donor_metadata.md) for these GEM wells, or a list of tables, for example one per cohort, which are [joined into one](reference_donor_metadata.md#several-tables).
 - [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes): marker genes per expected cell type, used for cluster annotation and marker plots.
 - [`is_active`](parameters.html#is_active) (default `true`): whether targets are constructed for the aggregation. Set it to `false` for aggregations you are not ready to run before an unqualified `targets::tar_make()`; this does not delete existing results.
 
@@ -1544,6 +1572,8 @@ Each row is one GEM well and one exclusion action (`discard_action`, in `action_
 
 Leiden clusters are numbered by size, starting with 1 for the largest, before clusters smaller than [`aggregation_cluster_min_barcodes`](parameters.html#aggregation_cluster_min_barcodes) are removed. The remaining clusters keep their numbers, so IDs can have gaps.
 
+In practice, this size filter mainly removes outlier nuclei. Most removed clusters hold a single nucleus or a few nuclei that share too few neighbors with any larger cluster. In one aggregation of 750,000 nuclei clustered at WNN resolution 3.0, 7,282 of the 7,693 removed clusters held one nucleus, and all removed clusters together held 1.1% of the nuclei. A population smaller than the threshold is removed too, so lower the threshold when a rare cell type matters.
+
 ## Cluster annotation {#cluster-annotation}
 
 GEX, ATAC and WNN clusters are all labeled from GEX data. Each cluster is scored against every marker set in [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes), relative to random control genes matched for expression level and detection rate. WNN clusters use these sets as modified by [`aggregation_WNN_marker_genes`](parameters.html#aggregation_WNN_marker_genes), which can replace, add or drop sets for the final labels only. A cluster is `Assigned` its best-scoring label when that label leads both the control background and the next-best label by at least the threshold of its clustering; otherwise it is unassigned and labeled `Unassigned_cluster_<id>`. [`aggregation_GEX_cluster_annotation_min_advantage`](parameters.html#aggregation_GEX_cluster_annotation_min_advantage), [`aggregation_ATAC_cluster_annotation_min_advantage`](parameters.html#aggregation_ATAC_cluster_annotation_min_advantage) and [`aggregation_WNN_cluster_annotation_min_advantage`](parameters.html#aggregation_WNN_cluster_annotation_min_advantage) set the thresholds separately, so the final WNN labels can be tuned without rebuilding the GEX and ATAC processing. Raising the threshold can only withdraw assignments, and unassigned clusters keep their nuclei and their own labels. The scores are cached separately, so changing the threshold does not recompute them. The scoring rule, control construction and fixed constants are described in [Cell-type annotation](methods_primary_module.md#cell-type-annotation).
@@ -1629,7 +1659,7 @@ This view covers per-GEM-well processing and QC, including optional ambient RNA 
 
 <!-- begin include: website/_shared_methods/GEX_normalization.md -->
 
-For each aggregation, the quality-controlled gene-expression matrices are combined with their GEM-well-prefixed barcodes. Genes with 50 or fewer total counts are excluded before dimensional reduction. Normalization and dimensional reduction use either the disk-backed BPCells Pearson-residual workflow or Seurat `SCTransform` [@parks2025_bpcells; @hafemeister2019_sctransform]. With the BPCells backend, analytic Pearson residuals are computed with one overdispersion parameter (θ = 100) for all genes and clipped to ±√*N* for *N* nuclei [@lause2021_pearson_residuals]. Per-gene estimates of θ would absorb differences between cell types and flatten marker-gene residuals, and the √*N* clip keeps markers of rare populations [@lause2021_pearson_residuals]. Configured cell-level covariates can be regressed out. The 3,000 genes with the highest residual variance are kept, and a truncated singular-value decomposition gives the principal components. The Seurat backend applies SCTransform with its v2 regularization to the same cells and genes [@choudhary2022_sctransform_v2]. It keeps the same number of variable features and computes the principal components from the residual matrix. A cell-cycle difference score can be regressed out but is not by default. Its S and G2M scores are computed from log-normalized counts with the 2019 Seurat cell-cycle gene sets [@tirosh2016_melanoma].
+For each aggregation, the quality-controlled gene-expression matrices are combined with their GEM-well-prefixed barcodes. Genes with 50 or fewer total counts are excluded before dimensional reduction. Normalization and dimensional reduction use either the disk-backed BPCells Pearson-residual workflow or Seurat `SCTransform` [@parks2025_bpcells; @hafemeister2019_sctransform]. With the BPCells backend, analytic Pearson residuals are computed with one overdispersion parameter (θ = 100) for all genes and clipped to ±√*N* for *N* nuclei [@lause2021_pearson_residuals]. Per-gene estimates of θ would absorb differences between cell types and flatten marker-gene residuals, and the √*N* clip keeps markers of rare populations [@lause2021_pearson_residuals]. Configured cell-level covariates can be regressed out. The 3,000 genes with the highest residual variance are kept, and a truncated singular-value decomposition gives at least 50 principal components, of which the configured ones are used downstream. It reads these genes' counts from memory in a fixed number of blocks, so its result does not depend on the number of threads. The Seurat backend applies SCTransform with its v2 regularization to the same cells and genes [@choudhary2022_sctransform_v2]. It keeps the same number of variable features and computes the principal components from the residual matrix. A cell-cycle difference score can be regressed out but is not by default. Its S and G2M scores are computed from log-normalized counts with the 2019 Seurat cell-cycle gene sets [@tirosh2016_melanoma].
 
 <!-- end include: website/_shared_methods/GEX_normalization.md -->
 
@@ -1641,7 +1671,9 @@ For each aggregation, the quality-controlled gene-expression matrices are combin
 
 Harmony correction can be applied separately to the selected GEX principal components and ATAC LSI dimensions, with at most 25 iterations and `lambda = 1` [@korsunsky2019_harmony; @patikas2026_harmony2]. It is off by default, since correcting a variable can also remove biology confounded with it [@luecken2022_integration_benchmark]. The configured metadata columns are combined into one interaction batch factor, and the ATAC correction can add its own columns. Nuclei with missing covariate values are removed with a warning.
 
-For each modality, approximate nearest neighbors are found on the selected dimensions with BPCells hierarchical navigable small world (HNSW) search [@malkov2020_hnsw], using cosine distance. The neighbors are converted to a shared-nearest-neighbor (SNN) graph with Jaccard weights, removing edges with weights below 1/15. The graph is clustered with the modularity objective of the Leiden algorithm in ten iterations [@parks2025_bpcells; @traag2019_leiden]. Clusters are renumbered by size, and clusters of fewer than 100 nuclei by default are removed from the GEX, ATAC and WNN clusterings. UMAP embeddings are computed with uwot using cosine distance on separately configurable dimensions, by default the clustering dimensions [@mcinnes2018_umap; @melville2026_uwot].
+For each modality, the nearest neighbors of every nucleus are found once on the selected dimensions, by hierarchical navigable small world (HNSW) search with cosine distance [@malkov2020_hnsw; @melville2024_rcpphnsw]. The search index is built on one thread, so a rebuild finds the same neighbors, while the search itself runs in parallel. Clustering and UMAP share these neighbors. They are converted to a shared-nearest-neighbor (SNN) graph with Jaccard weights, removing edges with weights below 1/15. The graph is clustered with the modularity objective of the Leiden algorithm in ten iterations [@parks2025_bpcells; @traag2019_leiden]. Clusters are renumbered by size, and clusters of fewer than 100 nuclei by default are removed from the GEX, ATAC and WNN clusterings. UMAP embeddings are computed with uwot from the same neighbors [@mcinnes2018_umap; @melville2026_uwot]. GEX and ATAC layouts start from the first two principal components of the clustering dimensions, and WNN layouts from a spectral embedding of the neighbor graph. uwot's batch optimization gives the same layout for any number of threads.
+
+Most clusters below the size threshold hold a single nucleus or a few nuclei that share too few neighbors with any larger cluster, so the filter mainly removes such outlier nuclei. Rare populations smaller than the threshold are removed as well.
 
 <!-- end include: website/_shared_methods/batch_correction_and_clustering.md -->
 
@@ -1689,9 +1721,9 @@ This view runs from the aggregated counts through PCA, Harmony correction, clust
 
 <!-- begin include: website/_shared_methods/ATAC_peaks_and_LSI.md -->
 
-Fragments on the standard chromosomes are used for peak calling. Peak-calling groups are defined by a configurable metadata column of the nuclei kept after GEX processing, by default their GEX clusters. GEX clusters serve because ATAC clustering needs the peak matrix. Calling peaks per group keeps those of rare populations, which a pooled call would dilute [@stuart2021_signac; @granja2021_archr]. Groups larger than 50,000 nuclei are randomly downsampled for peak discovery, which limits the runtime and memory of peak calling. Each group's discovery nuclei are split into two random halves. Peaks are called in each half with either MACS3 or the BPCells tile-based caller [@zhang2008_macs; @parks2025_bpcells]. MACS3 runs on exported group fragments with a −75-bp shift, a 150-bp extension and summit calling. The tile-based caller runs on the stored fragments, using 500-bp tiles and an FDR of 0.01. MACS3 reads each exported fragment as a single read at its left end, so only one of its two insertions enters the pileup. Consensus peaks follow the ArchR strategy of iterative fixed-width peak construction [@granja2021_archr]. Summits are extended by 250 bp to 500-bp peaks, and peaks overlapping any blacklisted region of the reference genome are removed [@amemiya2019_encode_blacklist; @ogata2023_excluderanges]. Overlapping peaks are collapsed by summit significance, first within each half and then across the two halves. Only peaks called in both halves are kept. Like ArchR's pseudo-replicate rule [@granja2021_archr], this removes weak peaks called in only one half. Each group keeps its strongest peaks, up to 500 per discovery nucleus and 150,000 in all, as ArchR does by default [@granja2021_archr]. The group-level sets are then combined into one non-overlapping consensus set. Here, overlapping peaks are ranked by the quantile of their summit significance within their group. The caps and within-group quantiles keep large or deeply sequenced groups from dominating the consensus [@corces2018_cancer_atac]. BPCells counts fragment insertions (by default) or overlaps within these peaks for all nuclei kept after GEX processing. Insertions, which ArchR also counts, measure Tn5 cuts inside each peak, whereas overlaps also count fragments that merely span it.
+Fragments on the standard chromosomes are used for peak calling. Peak-calling groups are defined by a configurable metadata column of the nuclei kept after GEX processing, by default their GEX clusters. GEX clusters serve because ATAC clustering needs the peak matrix. Calling peaks per group keeps those of rare populations, which a pooled call would dilute [@stuart2021_signac; @granja2021_archr]. Groups larger than 50,000 nuclei are randomly downsampled for peak discovery, which limits the runtime and memory of peak calling. Each group's discovery nuclei are split into two random halves. Both draws are seeded by the group's name, so a group's halves do not change when other groups are added or removed. Peaks are called in each half with either MACS3 or the BPCells tile-based caller [@zhang2008_macs; @parks2025_bpcells]. MACS3 runs on each half's fragment left ends, written in one pass per GEM well, with a −75-bp shift, a 150-bp extension, a 150-bp maximum gap and summit calling. Only one of each fragment's two insertions thus enters the pileup, as when MACS3 reads a fragment file. The fixed gap keeps peaks independent of fragment order, which MACS3's default, the mean length of the first ten input lines, does not. The tile-based caller runs on the stored fragments, using 500-bp tiles and an FDR of 0.01. Consensus peaks follow the ArchR strategy of iterative fixed-width peak construction [@granja2021_archr]. Summits are extended by 250 bp to 500-bp peaks, and peaks overlapping any blacklisted region of the reference genome are removed [@amemiya2019_encode_blacklist; @ogata2023_excluderanges]. Overlapping peaks are collapsed by summit significance, first within each half and then across the two halves. Only peaks called in both halves are kept. Like ArchR's pseudo-replicate rule [@granja2021_archr], this removes weak peaks called in only one half. Each group keeps its strongest peaks, up to 500 per discovery nucleus and 150,000 in all, as ArchR does by default [@granja2021_archr]. The group-level sets are then combined into one non-overlapping consensus set. Here, overlapping peaks are ranked by the quantile of their summit significance within their group. The caps and within-group quantiles keep large or deeply sequenced groups from dominating the consensus [@corces2018_cancer_atac]. BPCells counts fragment insertions (by default) or overlaps within these peaks for all nuclei kept after GEX processing. Insertions, which ArchR also counts, measure Tn5 cuts inside each peak, whereas overlaps also count fragments that merely span it.
 
-ATAC dimensional reduction starts from the consensus peak matrix of the nuclei that pass the aggregation-level ATAC exclusions. Signac's TF-IDF method 1, with a scale factor of 10,000, normalizes this matrix [@stuart2021_signac]. A BPCells singular-value decomposition of the result gives the latent semantic indexing (LSI) embeddings [@parks2025_bpcells]. The pipeline keeps all LSI components and does not test them for correlation with sequencing depth. Instead, the default dimension settings leave out the first component, which often reflects depth [@stuart2021_signac].
+ATAC dimensional reduction starts from the consensus peak matrix of the nuclei that pass the aggregation-level ATAC exclusions. Signac's TF-IDF method 1, with a scale factor of 10,000, normalizes this matrix [@stuart2021_signac]. A BPCells singular-value decomposition of the result gives the latent semantic indexing (LSI) embeddings [@parks2025_bpcells]. It reads the matrix in a fixed number of blocks, so its result does not depend on the number of threads. When memory allows, the transformed matrix or its counts are held in memory during the decomposition. At least 50 components are computed, of which the configured ones are used downstream. The pipeline does not test them for correlation with sequencing depth. Instead, the default dimension settings leave out the first component, which often reflects depth [@stuart2021_signac].
 
 <!-- end include: website/_shared_methods/ATAC_peaks_and_LSI.md -->
 
@@ -1737,7 +1769,7 @@ This view runs from the combined fragments and the GEX-annotated nuclei through 
 
 <!-- begin include: website/_shared_methods/WNN_integration.md -->
 
-GEX and ATAC representations are combined with a BPCells-based implementation of the Seurat weighted-nearest-neighbor (WNN) strategy [@hao2021_multimodal; @parks2025_bpcells]. The native implementation returns neighbor indices, distances and modality weights that clustering, UMAP and SCAVENGE reuse, without building a Seurat object. The GEX and ATAC embeddings, after optional Harmony correction, are aligned by barcode and L2-normalized. For each modality separately, 200 candidate neighbors are then found with hierarchical navigable small world (HNSW) search [@malkov2020_hnsw]. multiomeR sets each cell's kernel width in each modality from the configured neighbor count, following Seurat's small-SNN bandwidth strategy. Per-cell modality weights are computed from these kernels by comparing within-modality with cross-modality predictions. The candidates of both modalities are then pooled, and those with the highest weighted kernel scores become the final neighbors. In our tests, Seurat's weights approached 0 or 1 as the number of nuclei grew, because the kernel widths shrink with density. The weights are therefore estimated within random subsets of at most 10,000 nuclei, whereas the neighbors are selected among all nuclei. BPCells builds an SNN graph from the joint neighbors for Leiden clustering, and UMAP uses the joint neighbor lists directly. The implementation does not use `Seurat::FindMultiModalNeighbors()`. Because HNSW replaces Seurat's Annoy search, exact equality is not expected. Its validation instead requires the modality weights to correlate with Seurat's, and the neighbors to overlap with Seurat's, above preset thresholds.
+GEX and ATAC representations are combined with a BPCells-based implementation of the Seurat weighted-nearest-neighbor (WNN) strategy [@hao2021_multimodal; @parks2025_bpcells]. The native implementation returns neighbor indices, distances and modality weights that clustering, UMAP and SCAVENGE reuse, without building a Seurat object. The GEX and ATAC embeddings, after optional Harmony correction, are aligned by barcode and L2-normalized. For each modality separately, 200 candidate neighbors are then found with the same reproducible hierarchical navigable small world (HNSW) search as for clustering [@malkov2020_hnsw]. multiomeR sets each cell's kernel width in each modality from the configured neighbor count, following Seurat's small-SNN bandwidth strategy. Per-cell modality weights are computed from these kernels by comparing within-modality with cross-modality predictions. The candidates of both modalities are then pooled, and those with the highest weighted kernel scores become the final neighbors. In our tests, Seurat's weights approached 0 or 1 as the number of nuclei grew, because the kernel widths shrink with density. The weights are therefore estimated within random subsets of at most 10,000 nuclei, whereas the neighbors are selected among all nuclei. BPCells builds an SNN graph from the joint neighbors for Leiden clustering, and UMAP uses the joint neighbor lists directly. The joint lists first keep twice the configured number of neighbors. After nuclei in small WNN clusters are removed, each remaining nucleus keeps its highest-scoring remaining neighbors, so no second search or weight estimate is needed. Nuclei left with too few are reselected among the remaining nuclei by exact search, with their original weights and kernel widths. The implementation does not use `Seurat::FindMultiModalNeighbors()`. Because HNSW replaces Seurat's Annoy search, exact equality is not expected. Its validation instead requires the modality weights to correlate with Seurat's, and the neighbors to overlap with Seurat's, above preset thresholds.
 
 <!-- end include: website/_shared_methods/WNN_integration.md -->
 
@@ -1795,7 +1827,7 @@ For molecular analyses, GEX and ATAC counts of the final WNN nuclei are summed w
 
 For each model, donors that miss a model variable or fall outside an optional donor list are removed. Samples outside an optional annotation-class subset are also removed, and the DTFA analysis by default removes samples with fewer than 5,000 ATAC counts. For count matrices, zero-depth samples are removed, features are filtered with the design-aware `edgeR::filterByExpr()` [@chen2025_edger_v4], and library sizes are TMM-normalized with `edgeR::normLibSizes()` [@robinson2009_edger; @robinson2010_tmm].
 
-Model matrices are built from a configured formula or custom design function, and contrasts from named linear expressions or custom contrast functions. A configured random effect selects `limma::duplicateCorrelation()` with the random effect as block [@smyth2005_duplicatecorrelation; @ritchie2015_limma]. For counts, voom precision weights [@law2014_voom] are re-estimated for the block and correlation (`edgeR::voomLmFit()`). Wherever an intra-block correlation is estimated, the consensus is taken from at most 50,000 evenly spaced features, enough to estimate this one value pooled across all features [@smyth2005_duplicatecorrelation] at a fraction of the runtime. The models are still fitted to all features. Without a random effect, count designs with more than one coefficient are fitted with edgeR quasi-likelihood models and tested with quasi-likelihood F-tests [@lund2012_quasi_likelihood; @chen2025_edger_v4]. These models use robust empirical Bayes moderation of the dispersions [@phipson2016_robust_eb]. Continuous matrices and single-coefficient designs use limma. A single-coefficient count design is fitted on the raw counts, without the filtering and normalization above. An optional paired-cell-type route fits each annotation class separately with voom–limma, or limma for continuous matrices. It allows at most one pseudobulk per pairing unit and class. A cross-class contrast is tested on a combined response, restricted to the donors present in every class involved. This response is the contrast-weighted sum of the classes' log-expression. It is weighted by the inverse of its variance, which is computed from the classes' precision weights. The combined response is fitted with the same donor-level design and correlation block, so each feature has its own covariance between classes.
+Model matrices are built from a configured formula or custom design function, and contrasts from named linear expressions or custom contrast functions. A configured random effect selects `limma::duplicateCorrelation()` with the random effect as block [@smyth2005_duplicatecorrelation; @ritchie2015_limma]. For counts, voom precision weights [@law2014_voom] are re-estimated for the block and correlation (`edgeR::voomLmFit()`). Weighted fits with a block use a closed-form solution of limma's generalized least squares, computed for all features at once, which agrees with `limma::lmFit()` to floating-point error. Wherever an intra-block correlation is estimated, the consensus is taken from at most 50,000 evenly spaced features, enough to estimate this one value pooled across all features [@smyth2005_duplicatecorrelation] at a fraction of the runtime. The models are still fitted to all features. Without a random effect, count designs with more than one coefficient are fitted with edgeR quasi-likelihood models and tested with quasi-likelihood F-tests [@lund2012_quasi_likelihood; @chen2025_edger_v4]. These models use robust empirical Bayes moderation of the dispersions [@phipson2016_robust_eb]. Continuous matrices and single-coefficient designs use limma. A single-coefficient count design is fitted on the raw counts, without the filtering and normalization above. An optional paired-cell-type route fits each annotation class separately with voom–limma, or limma for continuous matrices. It allows at most one pseudobulk per pairing unit and class. A cross-class contrast is tested on a combined response, restricted to the donors present in every class involved. This response is the contrast-weighted sum of the classes' log-expression. It is weighted by the inverse of its variance, which is computed from the classes' precision weights. The combined response is fitted with the same donor-level design and correlation block, so each feature has its own covariance between classes.
 
 For each model and contrast, Benjamini–Hochberg FDR is calculated across the tested features, and features with an FDR below 0.05 are significant. DGE contrasts are also tested against the MSigDB Hallmark and Reactome collections [@liberzon2015_hallmark; @milacic2024_reactome] with competitive `camera` tests [@wu2012_camera; @dolgalev2026_msigdbr]. These tests use the contrast's expression, precision weights and design, or the combined response for cross-class contrasts. Each set's inter-gene correlation is estimated from the residuals, and each set needs at least ten tested genes. FDR is calculated within each contrast and collection. A cross-modality comparison maps CollecTRI regulators to JASPAR families. It compares the model *t*-statistics, rather than the raw scales, of transcription-factor activity and motif-family accessibility. Where gene expression is fitted with limma, it also compares TF expression (edgeR tests report no *t*-statistic). Family-level summaries use the median regulator *t*-statistic. An analysis stops with an error rather than returning a model when no samples or testable features remain or residual degrees of freedom are below one. It also fails when a correlation block or contrast is invalid, or when too few shared donors remain for a requested paired-cell-type comparison.
 
@@ -1916,7 +1948,7 @@ The model fits are compared with `lme4`, `pbkrtest` and `stats::p.adjust()` in [
 
 `extra_targets/module_peak_gene_correlation/targets.R` maps only opted-in aggregations and binds the primary-module inputs they consume. Parameters use the `peak_gene_correlation` manifest scope, targets end in `.peak_gene_correlation.<aggregation>`, and plot checkpoint tags use `peak_gene_correlation`, outside the numbered QC selections.
 
-**Source:** [`extra_targets/module_peak_gene_correlation/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_peak_gene_correlation), [`R/peak_gene_correlation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_correlation_helpers.R), [`R/peak_gene_filter_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_filter_helpers.R), [`R/peak_gene_hierarchical_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_hierarchical_helpers.R), [`R/peak_gene_finemapping_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_finemapping_helpers.R), [`src/peak_gene_REML.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/peak_gene_REML.cpp), [`src/peak_gene_KR.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/peak_gene_KR.cpp).
+**Source:** [`extra_targets/module_peak_gene_correlation/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_peak_gene_correlation), [`R/peak_gene_correlation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_correlation_helpers.R), [`R/peak_gene_filter_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_filter_helpers.R), [`R/peak_gene_hierarchical_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_hierarchical_helpers.R), [`R/peak_gene_finemapping_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_finemapping_helpers.R), [`src/peak_gene_REML.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/peak_gene_REML.cpp).
 
 This view covers the TSS table, candidate peak–gene pairs, the WNN cell groups, donor–state pseudobulk construction, measurement-support filtering, the per-chromosome analysis branches and the diagnostic and top-link outputs.
 
@@ -1999,7 +2031,7 @@ pixi run --use-environment-activation-cache test-amulet-parity
 
 **Reason for reimplementation.** The pipeline already holds aligned RNA and ATAC embeddings and needs reusable neighbor indices, distances, and modality weights without creating a Seurat object. Native graph state also feeds UMAP, Leiden clustering, SCAVENGE, and the Seurat/Signac export.
 
-**Deliberate deviations and consequences.** BPCells HNSW replaces Seurat's Annoy search, so candidate sets need not be identical. The helper does not expose Seurat's optional smoothing or cross-constant list, and BPCells builds the downstream SNN graph rather than Seurat `Neighbor` and `Graph` objects. Modality weights are estimated within random subsets of at most 10,000 cells, whose assignment the `seed` argument fixes, because Seurat's weights become nearly binary in large datasets; the validation fixtures are smaller, so this deviation is not tested. The `seed` does not control neighbor-search randomness. These choices can change weights, selected neighbors, SNN edges, clusters, and UMAP coordinates, so correlation and overlap, not exact equality, are the validation contract.
+**Deliberate deviations and consequences.** HNSW search with RcppHNSW replaces Seurat's Annoy search, so candidate sets need not be identical. The helper does not expose Seurat's optional smoothing or cross-constant list, and BPCells builds the downstream SNN graph rather than Seurat `Neighbor` and `Graph` objects. Modality weights are estimated within random subsets of at most 10,000 cells, whose assignment the `seed` argument fixes, because Seurat's weights become nearly binary in large datasets; the validation fixtures are smaller, so this deviation is not tested. The `seed` does not control neighbor-search randomness. These choices can change weights, selected neighbors, SNN edges, clusters, and UMAP coordinates, so correlation and overlap, not exact equality, are the validation contract.
 
 **Implementation.** `weighted_nearest_neighbors_BPCells()` in `R/processing_multimodal_helpers.R` with the small-SNN bandwidth kernel in `src/wnn_snn_bandwidth.cpp`; `extra_targets/WNN_targets.R` aligns the embeddings and wires the result into clustering, UMAP and metadata targets.
 
@@ -2260,7 +2292,11 @@ multiomeR assumes that the repository runtime is bootstrapped before the target 
 4.  applying global plotting and `{targets}` options,
 5.  sourcing `crew_controllers.R` from the selected configuration directory and installing controller resources.
 
-The nested `multiomeRCore` directory is both ordinary editable pipeline source and an installable package boundary for standalone repositories. multiomeR does not install or attach that package itself: `targets::tar_source()` loads the same implementation files before the root helpers. Keep domain-specific code under `R/`, but do not duplicate the generally reusable implementations there.
+A `crew` worker stops after the packages, conflict preferences and plot options. `{targets}` sends the driver's helpers and options with every task, so workers do not source the helpers or build controllers themselves. They therefore run exactly the helper versions the driver hashed, and a helper file added during a run reaches no worker until the driver reloads.
+
+The nested `multiomeRCore` directory is both ordinary editable pipeline source and an installable package boundary for standalone repositories. multiomeR does not install or attach that package itself: the bootstrap sources the same implementation files before the root helpers. Keep domain-specific code under `R/`, but do not duplicate the generally reusable implementations there.
+
+The bootstrap sources the helper files with `source()` rather than `targets::tar_source()`. `source()` follows `getOption("keep.source")`, so non-interactive sessions drop the source references that would make every task's payload about four times larger. Interactive sessions keep them for debugging. `{targets}` hashes functions without source references, so the choice invalidates no target.
 
 For commands that intentionally bypass startup side effects, source the bootstrap helper directly and then load the runtime:
 

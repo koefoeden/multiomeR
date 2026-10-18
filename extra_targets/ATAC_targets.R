@@ -49,7 +49,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = combined_BPCells_fragment_obj.ATAC,
-      description = "Merge per GEM well BPCells fragment objects and filter to standard chromosomes [part_of_graph:ATAC] [part_of_graph:parallel] [part_of_graph:seurat_export]",
+      description = "Merge per GEM well BPCells fragment objects and filter to standard chromosomes [part_of_graph:parallel]",
       command = BPCells::select_chromosomes(
         purrr::reduce(aggregation_fragments_w_prefix_bpcells_syms, c),
         get_standard_chroms(aggregated_cellranger_ref_list$genomes[[1]])

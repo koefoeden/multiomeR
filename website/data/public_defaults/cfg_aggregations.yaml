@@ -36,21 +36,23 @@ brain_mouse:
   is_active: false
   aggregation_donor_id_metadata_tsv: configuration/brain_mouse_donor_id_metadata.tsv
   aggregation_GEM_well_IDs: [embryonic_brain_mouse]
+  # E18 brain holds progenitors and immature neurons but no mature glia, so the
+  # marker sets are embryonic; microglia and vascular cells are too few to cluster.
   aggregation_GEX_marker_genes:
-    Neuron: [Rbfox3, Snap25, Syt1, Tubb3]
-    Astrocyte: [Gfap, Aqp4, Aldh1l1, S100b]
-    Oligodendrocyte: [Mbp, Plp1, Mog, Mag]
-    OPC: [Pdgfra, Cspg4, Olig1, Olig2]
-    Microglia: [Cx3cr1, P2ry12, Tmem119, Hexb]
-    Endothelial: [Pecam1, Cldn5, Flt1, Vwf]
+    Radial_glia: [Pax6, Slc1a3, Fabp7, Vim, Hes5]
+    Intermediate_progenitor: [Eomes, Neurog2, Btg2, Sstr2]
+    Upper_layer_neuron: [Satb2, Mef2c, Dok5]
+    Deep_layer_neuron: [Fezf2, Tle4, Zfpm2, Sox5, Tbr1]
+    Hippocampal_neuron: [Prox1, Nrp2, Grik4, Emx2]
+    Inhibitory_neuron: [Gad2, Gad1, Dlx6os1, Dlx1, Dlx5]
   aggregation_QC_exclude_list_combined_object: [nCount_ATAC < 1000, atac_peak_counts_frac < 0.1, atac_peak_counts_blacklist_frac > 0.05]
   aggregation_ATAC_marker_TFs:
-    Neuron: [Tbr1, Bcl11b]
-    Astrocyte: [Sox9, Nfia, Nfib]
-    Oligodendrocyte: [Sox10, Nkx2-2, OLIG2__MA1997.2]
-    OPC: [OLIG2__MA1997.2, Sox10, Nkx2-2, ASCL1__MA1631.2]
-    Microglia: [Spi1, Irf8, Mef2c, Mafb]
-    Endothelial: [Erg, Fli1, Klf2, Sox17]
+    Radial_glia: [Pax6, Sox2, Hes5, Nfib]
+    Intermediate_progenitor: [Eomes, Neurod1]
+    Upper_layer_neuron: [Pou3f2, Mef2c, Cux2]
+    Deep_layer_neuron: [Tbr1, Fezf2, Bcl11b, Sox5]
+    Hippocampal_neuron: [Prox1, Lef1]
+    Inhibitory_neuron: [Dlx2, Lhx6]
 
 ENCODE_heart_LV_6x:
   is_active: false

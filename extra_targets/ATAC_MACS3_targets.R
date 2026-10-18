@@ -1,7 +1,7 @@
 rlang::list2(
   tarchetypes::tar_file(
     name = peak_calling_cut_sites_per_GEM_well.fragments.ATAC,
-    description = "Write one GEM well's ATAC cut sites of each half of the clusters' peak-discovery nuclei in one pass",
+    description = "Write one GEM well's ATAC cut sites of each half of the clusters' peak-discovery nuclei in one pass [part_of_graph:ATAC] [part_of_graph:seurat_export]",
     command = write_peak_calling_cut_sites_for_GEM_well(
       GEM_well_cells = GEX_cells_per_GEM_well_tibble.ATAC,
       discovery_tibble = peak_calling_cluster_discovery_tibble.ATAC,

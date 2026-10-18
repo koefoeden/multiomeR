@@ -201,7 +201,7 @@ figure_pipeline <- list(
       purrr::walk2(tables, paths, readr::write_tsv)
       paths
     },
-    # targets lets only file targets read the store metadata, which no upstream dependency tracks.
+    # No upstream dependency tracks the run records or the monitor history, so it always reruns.
     # A worker rebuilds the graph and reads the monitor history, so dispatching continues meanwhile.
     cue = targets::tar_cue(mode = "always"), resources = get_tar_resources(RAM_GB_req = 16)
   ),

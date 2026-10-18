@@ -25,7 +25,7 @@ below `results/`:
   `data/benchmark_revisions.tsv` measures what five revisions of `revision_31x`
   rerun; `data/benchmark_simulation_check.tsv` compares the simulated wall
   time with measured runs; and `data/benchmark_worker_attribution.tsv` gives the
-  worker time that no target claims while each measurement ran. Its inputs are `data/benchmark_runs/`, the targets
+  worker time that no target claims while each run ran. Its inputs are `data/benchmark_runs/`, the targets
   each measured run built, and `data/benchmark_allocations.tsv`, the worker
   cores and RAM that each counted target requested in the run that measured it.
 - `S4.md` and `data/algorithm_parity/`: Supplementary Table S4, the
@@ -48,24 +48,25 @@ The conventional Seurat/Signac chain needs fragtk; install it into the
 environment with `pixi run install-fragtk`. The graph builds only the
 dependencies of the selected results.
 
-S2 and Table S6 read recorded runtimes, not the targets they measure, so build
-them after the benchmark runs have finished. Before that they stop with a
-missing run or runtime. `targets` allows a target to read its own store's
-metadata only as a local `format = "file"` target, and the measured
-aggregations must be active, because inactive ones are absent from
-`tar_network()`. S2 also needs the per-job resource history of
+S2 and Table S6 read recorded runtimes, not the targets they measure or any
+store, so build them after the benchmark runs have finished. Before that they
+stop with a missing run or runtime. The measured aggregations must be active,
+because inactive ones are absent from `tar_network()`. S2 also needs the per-job
+resource history of
 [slurm-monitor](https://github.com/koefoeden/slurm-monitor) in
 `SLURM_MONITOR_HISTORY_DIR` (default `~/slurm_monitor_history`), which it reads
 with `slurm_monitor history samples`: the schema 2 `timestamp`, `raw_job_id`,
-`name`, `elapsed`, `target`, `ram_cur_gib`, `cpu_cur`, `ram_lim_gib`,
+`node`, `name`, `elapsed`, `target`, `ram_cur_gib`, `cpu_cur`, `ram_lim_gib`,
 `cpus_alloc` and `scope` of each sample of a crew worker job.
 
-Each benchmark run builds its targets alone on one node, from a clean checkout
-with the store on node-local disk. `record_run.py` then records the targets the
-run built, with their runtimes, completion times, bytes and errors, in
-`data/benchmark_runs/<run>.tsv`. A later run's
-record of a target replaces an earlier one. Later runs overwrite the store's
-metadata, so the records, not the store, hold the measurements.
+The benchmark runs form four series, each on its own node, from a clean
+checkout with its own store on node-local disk; a series' first run starts from
+an empty store. After each run, `record_run.py` records the targets it built,
+with their runtimes, completion times, bytes, errors and node, and the input
+files outside the store that it tracked, in `data/benchmark_runs/<run>.tsv`.
+The records, not the stores, hold the measurements. Monitor samples and worker
+jobs are matched to a recorded target by its name and node, as the series ran
+at the same time and built targets of the same names.
 
 ## Figure 1
 
@@ -111,7 +112,8 @@ Seurat v5/Signac v2 analysis on BPCells-backed assays, in the same graph, store
 and controllers as multiomeR: it writes each GEM well's gene-expression counts
 to a BPCells directory and runs SCTransform, PCA and RNA clustering on their
 joined matrix, repeats the same MACS3, fixed-width, blacklist and consensus-peak
-algorithm in one target, quantifies the peaks per GEM well with
+algorithm in one target on the cut sites that multiomeR writes for its
+peak-calling clusters, quantifies the peaks per GEM well with
 `Signac::FeatureMatrix()` and its default fragtk backend into BPCells
 directories, and runs Signac's TF-IDF/LSI on them before building the WNN graph,
 UMAP and clusters. Seurat's kernels use the cores of their Slurm worker, and
@@ -120,17 +122,17 @@ peak calling and quantification run one `future` worker per core.
 `comparison_1x` to `comparison_31x` take the first 1, 2, 5, 10, 20 and all 31
 GEM wells of `mixed_human_31x` without per-well QC filters, CellBender or
 doublet removal, so both workflows keep every called nucleus and yield identical
-consensus peaks. multiomeR runs its Seurat SCTransform backend there, so both
-workflows use the same algorithms. It is measured twice: up to its WNN cell
-metadata, and with the multimodal Seurat/Signac object it exports from it,
-which the figure shows because it matches the conventional chain's output.
-Shared cluster-fragment preparation is excluded from all workflows, and analyses
-that the conventional chain does not perform from both multiomeR measurements:
-cell-type annotation, doublet detection, QC metrics, gene and peak annotation,
-chromatin-state projection, motif analysis, and the ATAC-only and uncorrected
-RNA embeddings. These measurements come from the store's executions before the
-benchmark runs (`store_before_runs.tsv.gz`), so later rebuilds of shared
-targets leave them unchanged.
+consensus peaks. multiomeR runs its Seurat SCTransform backend there and, like
+Signac, counts each fragment once per peak, so both workflows use the same
+algorithms. It is measured twice: up to its WNN cell metadata, and with the
+multimodal Seurat/Signac object it exports from it, which the figure shows
+because it matches the conventional chain's output. The shared preparation of
+peak-calling clusters and their cut sites is excluded from all workflows, and
+analyses that the conventional chain does not perform from both multiomeR
+measurements: cell-type annotation, doublet detection, QC metrics, gene and peak
+annotation, chromatin-state projection, motif analysis, and the ATAC-only and
+uncorrected RNA embeddings. Both workflows are measured in one run, the
+`comparison` series, which builds all six aggregations from an empty store.
 
 A third line measures the same multiomeR result with its default normalization,
 the BPCells_native backend, which computes Pearson residuals on disk: `sizing_1x` to
@@ -176,17 +178,15 @@ limit and were rebuilt with 60 GB requests, which their allocations record.
 
 `revision_31x` copies `mixed_human_31x`, the configured study with QC,
 CellBender, doublet removal, tuned markers and all three optional modules. Its
-full build is the `revision_base` run plus the setup and per-well targets it
-reused from the store. Five runs then change it one step further each, so each
+full build is the `revision_base` run, from an empty store. Five runs on the
+same store then change it one step further each, so each
 run measures one change on top of the previous ones: the WNN clustering
 resolution from 0.4 to 0.6, an added mast-cell marker set, an added dilated
 cardiomyopathy GWAS, age added to the cardiomyocyte sex model, and an added
 liver GEM well with its donor. The analysed configuration lacks that well, so
 its recorded targets take the dependencies of the same targets of another well.
 Each run's targets, critical path, CPU time and simulated wall time are
-compared with the full build's. The revision runs and `sizing_91x` ran on
-node-local copies of the store that were not copied back, so their records hold
-their only measurements. A script without saved intermediates reruns
+compared with the full build's. A script without saved intermediates reruns
 everything, and careful manual checkpointing narrows that gap.
 
 ### Measures
@@ -262,22 +262,19 @@ everything, and careful manual checkpointing narrows that gap.
   workers busy. Worker jobs that ran no assignable target are charged to no
   workflow, which favours multiomeR, whose short steps are the ones that cannot
   be sampled. `benchmark_worker_attribution.tsv` gives that unattributed share
-  while each measurement ran.
+  while each run ran.
 - Leaving out the analyses that only multiomeR performs keeps its
   like-for-like measures to the shared result; the sizing measures include them.
 
-`data/benchmark_runs/store_before_runs.tsv.gz` holds the stems and current
-branches of every target upstream of the comparison, sizing and revision
-aggregations' targets, as `tar_meta()` recorded them on 16 October 2026 before
-the benchmark runs. The sizing and revision measures read the store's stems
-first, for targets that no run rebuilt and the snapshot predates, such as the
-comparison GEM wells' QC plots, then the snapshot and the records. Targets built
-only on node-local store copies are absent from the store's metadata and take
-the location, inside or outside the store, of their family's targets in other
-aggregations or GEM wells. `benchmark_allocations.tsv` records the requests of
-multiomeR 1.2.0 for the comparison runs' targets, and those at commit 2e8cbe9f
-for the other targets the benchmark counts, which the sizing and revision runs
-requested.
+The four series ran at the same time, from 18 October 2026 at commit f9a109d5,
+each on its own node of one model (AMD EPYC 7543, 128 cores, 2 TB RAM):
+`comparison`; `sizing_small`, which builds `sizing_1x` to `sizing_20x`, then
+`sizing_31x` on its store; `sizing_91x`; and `revision_base`, then `revision_1`
+to `revision_5` on its store. Each series' first run builds the setup, such as
+reference downloads, and the per-well steps itself, and compiles the native
+kernels into its own cache, so every measured aggregation is a first build.
+`benchmark_allocations.tsv` records the requests of every recorded target at
+the commit that built it.
 
 ## Supplementary Table S4
 

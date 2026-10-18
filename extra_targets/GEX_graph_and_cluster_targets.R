@@ -467,6 +467,7 @@ rlang::list2(
       GEX_UMAP_embeddings_tibble = UMAP_embeddings_tibble.GEX,
       GEX_non_harmony_UMAP_embeddings_tibble = UMAP_embeddings_tibble.GEX_non_harmony,
       gene_features_df = gene_features_df,
+      cell_cycle_tibble = cell_cycle_scores_tibble.GEX,
       GEX_dims = aggregation_GEX_data_PCs,
       data_nNNs = aggregation_data_nNNs,
       graph_threads = 15

@@ -62,8 +62,7 @@ read_cellbender_h5_matrix <- function(cellbender_h5_file, feature_type = "Gene E
 #'   backend's result does not depend on it.
 #' @param return_normalized Whether to also return the normalized data for the
 #'   Seurat export: the lazy BPCells residuals of the variable genes, or the
-#'   Seurat `SCTAssay`, which then includes UMI-corrected counts, and the
-#'   Seurat cell-cycle scores.
+#'   Seurat `SCTAssay`, which then includes UMI-corrected counts.
 #' @return A list with cell embeddings, gene loadings, singular values, and
 #'   variable-feature diagnostics from the residual PCA workflow. With
 #'   `return_normalized`, a list of these `PCA_results` and `normalized`.
@@ -82,17 +81,8 @@ run_GEX_PCA_BPCells <- function(
 ) {
   GEX_PCA_backend <- match.arg(GEX_PCA_backend)
   metadata_tibble <- dplyr::distinct(metadata_tibble, .data$barcode_w_prefix, .keep_all = TRUE)
-  barcodes <- intersect(metadata_tibble$barcode_w_prefix, colnames(GEX_counts_matrix))
-  if (length(barcodes) == 0) {
-    stop("No requested barcodes were found in the GEX count matrix.")
-  }
-  counts_matrix <- GEX_counts_matrix[, barcodes, drop = FALSE]
-  feature_counts <- BPCells::rowSums(counts_matrix)
-  keep_features <- names(feature_counts)[feature_counts > min_feature_count]
-  if (length(keep_features) < 2) {
-    stop("Too few expressed GEX features remain for PCA.")
-  }
-  counts_matrix <- counts_matrix[keep_features, , drop = FALSE]
+  counts_matrix <- select_GEX_PCA_counts(GEX_counts_matrix, metadata_tibble$barcode_w_prefix, min_feature_count)
+  barcodes <- colnames(counts_matrix)
 
   SCT_regress_vars <- setdiff(as.character(unlist(SCT_regress_vars)), c(NA, "", "NULL"))
   cell_attr <- as.data.frame(metadata_tibble[match(barcodes, metadata_tibble$barcode_w_prefix), ])
@@ -156,26 +146,59 @@ run_GEX_PCA_BPCells <- function(
   if (!return_normalized) {
     return(PCA_results)
   }
-  # Scored after the PCA so that it cannot change its value; regression may
-  # already have added the scores.
-  cell_cycle_cols <- c("S.Score", "G2M.Score", "Phase", "CC.Difference")
-  if (!all(cell_cycle_cols %in% colnames(cell_attr))) {
-    cell_attr <- tryCatch(add_cell_cycle_scores_to_cell_attr(counts_matrix, cell_attr), error = function(error) {
-      warning("Cell-cycle scores are not exported: ", conditionMessage(error), call. = FALSE)
-      cell_attr
-    })
-  }
   list(
     PCA_results = PCA_results,
     normalized = list(
       backend = GEX_PCA_backend,
       regressed_vars = SCT_regress_vars,
       scale_data = if (identical(GEX_PCA_backend, "BPCells_native")) pearson_residuals,
-      SCT_assay = residuals$SCT_assay,
-      cell_cycle_tibble = if (all(cell_cycle_cols %in% colnames(cell_attr))) {
-        tibble::tibble(barcode_w_prefix = rownames(cell_attr), cell_attr[cell_cycle_cols])
-      }
+      SCT_assay = residuals$SCT_assay
     )
+  )
+}
+
+#' Select the GEX PCA counts
+#'
+#' @param GEX_counts_matrix Gene-by-cell count matrix.
+#' @param barcodes Cells to keep, where present in the matrix.
+#' @param min_feature_count Minimum total counts for a gene to be kept.
+#' @return The counts of the kept cells and genes.
+#' @keywords internal
+
+select_GEX_PCA_counts <- function(GEX_counts_matrix, barcodes, min_feature_count) {
+  barcodes <- intersect(barcodes, colnames(GEX_counts_matrix))
+  if (length(barcodes) == 0) {
+    stop("No requested barcodes were found in the GEX count matrix.")
+  }
+  counts_matrix <- GEX_counts_matrix[, barcodes, drop = FALSE]
+  feature_counts <- BPCells::rowSums(counts_matrix)
+  keep_features <- names(feature_counts)[feature_counts > min_feature_count]
+  if (length(keep_features) < 2) {
+    stop("Too few expressed GEX features remain for PCA.")
+  }
+  counts_matrix[keep_features, , drop = FALSE]
+}
+
+#' Get GEX cell-cycle scores
+#'
+#' Seurat-compatible cell-cycle scores of the cells and genes the GEX PCA
+#' uses, for the Seurat exports.
+#'
+#' @inheritParams select_GEX_PCA_counts
+#' @return A tibble of `barcode_w_prefix`, `S.Score`, `G2M.Score`, `Phase` and
+#'   `CC.Difference`, or `NULL` with a warning when too few cell-cycle genes
+#'   are found.
+#' @keywords internal
+
+get_GEX_cell_cycle_tibble <- function(GEX_counts_matrix, barcodes, min_feature_count = 50) {
+  counts_matrix <- select_GEX_PCA_counts(GEX_counts_matrix, barcodes, min_feature_count)
+  tryCatch(
+    add_cell_cycle_scores_to_cell_attr(counts_matrix, data.frame(row.names = colnames(counts_matrix))) |>
+      tibble::as_tibble(rownames = "barcode_w_prefix"),
+    error = function(error) {
+      warning("Cell-cycle scores are not exported: ", conditionMessage(error), call. = FALSE)
+      NULL
+    }
   )
 }
 

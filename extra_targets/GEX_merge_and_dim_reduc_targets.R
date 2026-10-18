@@ -48,6 +48,11 @@ rlang::list2(
       RAM_GB_req = if ("Seurat_SCT" %in% aggregation_tibble$aggregation_GEX_PCA_backend) 60 else 16)
   ),
   targets::tar_target(
+    name = cell_cycle_scores_tibble.GEX,
+    description = "Score Seurat cell-cycle phases on the GEX PCA's cells and genes for the Seurat exports [part_of_graph:seurat_export]",
+    command = get_GEX_cell_cycle_tibble(aggregated_counts_BPCells_matrix.GEX, GEX_cellranger_kept_metadata_tibble$barcode_w_prefix)
+  ),
+  targets::tar_target(
     name = PCA_BPCells.GEX,
     description = "Select the GEX PCA results, which are unchanged by keeping the normalized data [part_of_graph:GEX] [part_of_graph:seurat_export]",
     command = GEX_normalization.GEX$PCA_results

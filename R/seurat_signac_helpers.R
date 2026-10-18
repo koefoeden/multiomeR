@@ -410,6 +410,7 @@ align_WNN_knn_to_cells <- function(WNN_results, cells) {
 #' @param motif_family_accessibility_matrix Optional motif-family-by-cell chromVAR accessibility score matrix.
 #' @param signac_annotation_GRanges Optional GRanges object containing signac annotation GRanges coordinates and metadata.
 #' @param fragment_objects Optional prebuilt list of Signac Fragment objects.
+#' @param cell_cycle_tibble Optional cell-cycle scores keyed by `barcode_w_prefix`, from [get_GEX_cell_cycle_tibble()].
 #' @param ATAC_dims Optional ATAC dimensions used when reconstructing reductions and neighbors in the export object.
 #' @param graph_threads Thread count used for KNN graph reconstruction during export.
 #' @return A Seurat/Signac object or component with metadata, assays, reductions, and graphs aligned by cell barcode.
@@ -437,6 +438,7 @@ build_seurat_signac_convenience_object <- function(
   motif_family_accessibility_matrix = NULL,
   signac_annotation_GRanges = NULL,
   fragment_objects = NULL,
+  cell_cycle_tibble = NULL,
   ATAC_dims = NULL,
   graph_threads = 1
 ) {
@@ -458,9 +460,8 @@ build_seurat_signac_convenience_object <- function(
   normalized <- GEX_normalization$normalized
   GEX_assay <- if (identical(normalized$backend, "Seurat_SCT")) "SCT" else "RNA"
   metadata_df <- prepare_seurat_export_metadata(metadata_tibble, WNN_results, GEX_assay)
-  cell_cycle <- normalized$cell_cycle_tibble
-  for (col in setdiff(names(cell_cycle), c("barcode_w_prefix", colnames(metadata_df)))) {
-    metadata_df[[col]] <- cell_cycle[[col]][match(rownames(metadata_df), cell_cycle$barcode_w_prefix)]
+  for (col in setdiff(names(cell_cycle_tibble), c("barcode_w_prefix", colnames(metadata_df)))) {
+    metadata_df[[col]] <- cell_cycle_tibble[[col]][match(rownames(metadata_df), cell_cycle_tibble$barcode_w_prefix)]
   }
   RNA_counts <- GEX_counts_matrix[, cells, drop = FALSE]
 

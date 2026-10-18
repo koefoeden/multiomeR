@@ -28,6 +28,7 @@ rlang::list2(
       gene_features_df = gene_features_df,
       signac_annotation_GRanges = signac_annotation_GRanges,
       fragment_objects = aggregation_signac_fragment_object_syms,
+      cell_cycle_tibble = cell_cycle_scores_tibble.GEX,
       GEX_dims = aggregation_GEX_data_PCs,
       ATAC_dims = aggregation_ATAC_data_PCs,
       data_nNNs = aggregation_data_nNNs,

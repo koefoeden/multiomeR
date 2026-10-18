@@ -470,10 +470,10 @@ build_aggregation_tibble <- function(aggregation_tibble_all_from_yaml, GEM_well_
 
   aggregation_tibble |>
     dplyr::mutate(
-      # Scalar component counts keep PCA and LSI commands unchanged when only
-      # the downstream dimension selection changes.
-      aggregation_GEX_PCA_n_components = purrr::map_dbl(aggregation_GEX_data_PCs, max),
-      aggregation_ATAC_LSI_n_components = purrr::map_dbl(aggregation_ATAC_data_PCs, max),
+      # PCA and LSI compute at least 50 components, so the elbow and loading plots show components beyond
+      # the configured dimensions, and choosing other dimensions within them reruns neither decomposition.
+      aggregation_GEX_PCA_n_components = purrr::map_dbl(aggregation_GEX_data_PCs, \(dims) max(50, dims)),
+      aggregation_ATAC_LSI_n_components = purrr::map_dbl(aggregation_ATAC_data_PCs, \(dims) max(50, dims)),
       aggregation_GEM_well_QC_exclude_list = purrr::map(
         aggregation_GEM_well_IDs,
         \(ids) {

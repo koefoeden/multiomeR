@@ -85,7 +85,7 @@ targets::tar_make(
 └── PCA_metadata_association_barplots.png
 ```
 
-**Revise:** choose the PCs used for clustering and the UMAP with [`aggregation_GEX_data_PCs`](parameters.html#aggregation_GEX_data_PCs). When components track a batch variable such as `GEM_well_ID`, list it in [`aggregation_harmony_correction_metadata_col_names`](parameters.html#aggregation_harmony_correction_metadata_col_names); Harmony then corrects both modalities, and the embedding and association plots add Harmony panels. Do not correct for `GEM_well_ID` when the GEM wells hold different tissues; see [Combine several tissues](reference_aggregations.md#multi-tissue).
+**Revise:** choose the PCs used for clustering and the UMAP with [`aggregation_GEX_data_PCs`](parameters.html#aggregation_GEX_data_PCs). The PCA computes at least 50 components, so the plots show components beyond your choice, and a choice within them does not recompute the PCA. When components track a batch variable such as `GEM_well_ID`, list it in [`aggregation_harmony_correction_metadata_col_names`](parameters.html#aggregation_harmony_correction_metadata_col_names); Harmony then corrects both modalities, and the embedding and association plots add Harmony panels. Do not correct for `GEM_well_ID` when the GEM wells hold different tissues; see [Combine several tissues](reference_aggregations.md#multi-tissue).
 
 ## Checkpoint 3: GEX clusters and cell types {#checkpoint-3}
 
@@ -204,7 +204,7 @@ targets::tar_make(
 └── LSI_metadata_association_barplots.png
 ```
 
-**Revise:** choose the LSI components used for clustering and the UMAP with [`aggregation_ATAC_data_PCs`](parameters.html#aggregation_ATAC_data_PCs). They start at component 2 by default; check the association plots for components that track sequencing depth or other technical metrics. Add ATAC-only Harmony covariates with [`aggregation_extra_harmony_covars_ATAC`](parameters.html#aggregation_extra_harmony_covars_ATAC).
+**Revise:** choose the LSI components used for clustering and the UMAP with [`aggregation_ATAC_data_PCs`](parameters.html#aggregation_ATAC_data_PCs). As for the PCA, at least 50 are computed, and a choice within them does not recompute the LSI. They start at component 2 by default; check the association plots for components that track sequencing depth or other technical metrics. Add ATAC-only Harmony covariates with [`aggregation_extra_harmony_covars_ATAC`](parameters.html#aggregation_extra_harmony_covars_ATAC).
 
 ## Checkpoint 7: ATAC clusters and motifs {#checkpoint-7}
 

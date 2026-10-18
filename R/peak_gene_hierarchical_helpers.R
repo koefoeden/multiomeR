@@ -1,12 +1,11 @@
-#' Load a peak-gene Rcpp kernel once per source revision in each worker
-#'
-#' Each worker compiles into its own temporary cache, avoiding concurrent writes
-#' to shared build artifacts.
+#' Load a peak-gene RcppEigen kernel, compiled once per source revision and store
 load_peak_gene_kernel <- function(native_source_file, kernel_name) {
-  environment <- new.env(parent = baseenv())
-  Rcpp::sourceCpp(native_source_file, env = environment,
-    cacheDir = file.path(tempdir(), kernel_name), showOutput = FALSE)
-  environment[[kernel_name]]
+  # The kernels call routines that Rcpp registers when its namespace loads.
+  loadNamespace("Rcpp")
+  library_name <- load_native_library(native_source_file, kernel_name, env = c(PKG_CPPFLAGS = paste0(
+    "-I", c(system.file("include", package = "Rcpp"), system.file("include", package = "RcppEigen")), collapse = " "
+  )))
+  function(...) .Call(kernel_name, ..., PACKAGE = library_name)
 }
 
 #' Sample each gene's background peaks from its branch

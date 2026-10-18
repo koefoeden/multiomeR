@@ -5,14 +5,12 @@
 // Using Phi^-1 = X' Sigma^-1 X = (X'X - B' diag(a) B) / sigma2 with B = Z'X, every
 // trace reduces to M = B Phi B' (q by q), and the one-dimensional contrast needs only
 // quadratic forms in phi = Phi e_last.
-// [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::ArrayXd;
 
-// [[Rcpp::export]]
-Rcpp::DataFrame peak_gene_KR_batch_cpp(
+static Rcpp::DataFrame correct_KR_batch(
     const Eigen::Map<MatrixXd> X, const Eigen::Map<MatrixXd> Z,
     Rcpp::List covariance, Rcpp::NumericVector coefficient,
     Rcpp::NumericVector slope_variance, Rcpp::NumericVector residual_variance) {
@@ -123,4 +121,12 @@ Rcpp::DataFrame peak_gene_KR_batch_cpp(
   }
   return Rcpp::DataFrame::create(Rcpp::Named("p")=pv, Rcpp::Named("df")=df,
     Rcpp::Named("adjusted_variance")=variance, Rcpp::Named("diagnostic")=diagnostic);
+}
+
+extern "C" SEXP peak_gene_KR_batch_cpp(SEXP X, SEXP Z, SEXP covariance, SEXP coefficient,
+    SEXP slope_variance, SEXP residual_variance) {
+  BEGIN_RCPP
+  return correct_KR_batch(Rcpp::as<Eigen::Map<MatrixXd>>(X), Rcpp::as<Eigen::Map<MatrixXd>>(Z), covariance,
+    coefficient, slope_variance, residual_variance);
+  END_RCPP
 }

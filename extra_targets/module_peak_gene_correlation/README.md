@@ -14,8 +14,8 @@ and independently searches the slope/residual variance ratio, including zero.
 `src/peak_gene_KR.cpp` supplies batched Kenward–Roger inference. Because each
 aggregate belongs to one donor, both kernels work in donor space without
 aggregate-by-aggregate matrices; genes sharing a peak reuse one donor-space
-eigendecomposition. Workers compile
-both kernels into private temporary caches; file targets track source changes.
+eigendecomposition. Both kernels compile once
+per source revision into the user's native-library cache; file targets track source changes.
 The fresh lme4/pbkrtest helper remains a numerical reference.
 
 Results retain slope estimates, donor-slope SD, degrees of freedom, raw p-values

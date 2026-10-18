@@ -3,15 +3,13 @@
 // and Z'X, Z'Y are donor sums. The residualized random-effect design W = (I - H)Z
 // enters only through its q-by-q Gram matrix W'W = Z'Z - Z'X (X'X)^-1 X'Z, whose
 // eigenvalues are the nonzero eigenvalues of the residual covariance K'ZZ'K.
-// [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
 #include <cmath>
 #include <limits>
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-// [[Rcpp::export]]
-Rcpp::List peak_gene_REML_batch_cpp(const Eigen::Map<MatrixXd> X,
+static Rcpp::List fit_REML_batch(const Eigen::Map<MatrixXd> X,
     const Eigen::Map<MatrixXd> Z, const Eigen::Map<MatrixXd> Y) {
   const int n=X.rows(), p=X.cols(), q=Z.cols(), d=n-p, m=Y.cols();
   if (d<1 || p<1 || Z.rows()!=n || Y.rows()!=n || !X.allFinite() || !Z.allFinite() || !Y.allFinite())
@@ -131,4 +129,11 @@ Rcpp::List peak_gene_REML_batch_cpp(const Eigen::Map<MatrixXd> X,
     for(int i=0;i<p;++i)beta(i,j)=estimate[i];
   }
   return result();
+}
+
+extern "C" SEXP peak_gene_REML_batch_cpp(SEXP X, SEXP Z, SEXP Y) {
+  BEGIN_RCPP
+  return fit_REML_batch(Rcpp::as<Eigen::Map<MatrixXd>>(X), Rcpp::as<Eigen::Map<MatrixXd>>(Z),
+    Rcpp::as<Eigen::Map<MatrixXd>>(Y));
+  END_RCPP
 }

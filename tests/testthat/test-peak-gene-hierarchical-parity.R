@@ -1,3 +1,4 @@
+source_project_file("R/native_code_helpers.R")
 source_project_file("R/peak_gene_correlation_helpers.R")
 source_project_file("R/peak_gene_hierarchical_helpers.R")
 

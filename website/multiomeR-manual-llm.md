@@ -1391,6 +1391,12 @@ my_aggregation:
 
 The pipeline joins the files into one donor table. A column that only some files have is left empty for the donors of the others. A donor may appear in more than one file only if those files agree on every column they share.
 
+## Several samples per donor {#several-samples}
+
+A donor sampled more than once, for example in two tissues or conditions, can enter one aggregation with each sample as its own replicate. `cfg_GEM_well_samples.tsv` in the configuration directory maps each donor of a GEM well to a sample, with columns `GEM_well_ID`, `donor_id` and `sample_id`; sample IDs may not contain underscores. The nuclei then carry the sample ID as their `donor_id`, so pseudobulks and differential analyses treat samples as replicates.
+
+Each sample inherits its donor's row of the donor table. Add rows for samples only for variables that differ between a donor's samples, such as a condition; a value given for a sample overrides its donor's.
+
 ## Rules checked {#rules}
 
 When the targets that read the table run, they check that:

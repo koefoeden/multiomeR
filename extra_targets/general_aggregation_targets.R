@@ -236,7 +236,7 @@ rlang::list2(
   targets::tar_target(
     name = donor_id_metadata_tibble,
     description = "Read and join the donor ID metadata TSVs into a tibble with donor_id coerced to character [part_of_graph:GEX] [part_of_graph:parallel] [part_of_graph:seurat_export]",
-    command = read_donor_metadata_tibble(donor_id_metadata_tsv)
+    command = read_donor_metadata_tibble(donor_id_metadata_tsv, aggregation_sample_donor_ids)
   ),
   targets::tar_target(
     name = GEM_well_metadata_tibble,

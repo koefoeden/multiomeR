@@ -93,35 +93,47 @@ read_keyed_metadata_tibble <- function(metadata_tsv, key_col) {
 #' Read one or more donor metadata files, each keyed by `donor_id`, into one
 #' table. Columns that only some files have are missing for the other files'
 #' donors. A donor listed in several files must not have conflicting values in
-#' the columns those files share; its rows are combined into one.
+#' the columns those files share; its rows are combined into one. Each sample of
+#' `cfg_GEM_well_samples.tsv` gets a row whose missing values come from its
+#' donor's row, so the tables need sample rows only for sample-level columns.
 #'
 #' @param metadata_tsvs Paths of the donor metadata TSV files.
-#' @return One tibble with a row per donor; a single file is read unchanged.
+#' @param sample_donor_ids Donor of each sample, named by sample ID.
+#' @return One tibble with a row per donor and sample; a single file without
+#'   samples is read unchanged.
 #' @keywords internal
 
-read_donor_metadata_tibble <- function(metadata_tsvs) {
+read_donor_metadata_tibble <- function(metadata_tsvs, sample_donor_ids = character()) {
   tables <- purrr::map(metadata_tsvs, read_keyed_metadata_tibble, key_col = "donor_id")
-  if (length(tables) == 1L) {
-    return(tables[[1]])
-  }
-  files <- paste(metadata_tsvs, collapse = ", ")
-  combined <- tryCatch(
-    dplyr::bind_rows(tables),
-    error = \(err) stop("Donor metadata files ", files, " give a shared column different types: ", conditionMessage(err), call. = FALSE)
-  )
-  conflicts <- combined |>
-    dplyr::filter(duplicated(.data$donor_id) | duplicated(.data$donor_id, fromLast = TRUE)) |>
-    dplyr::summarise(dplyr::across(dplyr::everything(), \(x) dplyr::n_distinct(x, na.rm = TRUE) > 1L), .by = "donor_id") |>
-    tidyr::pivot_longer(-"donor_id", names_to = "column", values_to = "conflicting") |>
-    dplyr::filter(.data$conflicting)
-  if (nrow(conflicts) > 0L) {
-    stop(
-      "Donor metadata files ", files, " give different values for donors listed in more than one of them: ",
-      paste0(conflicts$donor_id, " (", conflicts$column, ")", collapse = ", "),
-      call. = FALSE
+  first_value <- \(x) if (all(is.na(x))) x[1] else x[!is.na(x)][1]
+  donors <- tables[[1]]
+  if (length(tables) > 1L) {
+    files <- paste(metadata_tsvs, collapse = ", ")
+    combined <- tryCatch(
+      dplyr::bind_rows(tables),
+      error = \(err) stop("Donor metadata files ", files, " give a shared column different types: ", conditionMessage(err), call. = FALSE)
     )
+    conflicts <- combined |>
+      dplyr::filter(duplicated(.data$donor_id) | duplicated(.data$donor_id, fromLast = TRUE)) |>
+      dplyr::summarise(dplyr::across(dplyr::everything(), \(x) dplyr::n_distinct(x, na.rm = TRUE) > 1L), .by = "donor_id") |>
+      tidyr::pivot_longer(-"donor_id", names_to = "column", values_to = "conflicting") |>
+      dplyr::filter(.data$conflicting)
+    if (nrow(conflicts) > 0L) {
+      stop(
+        "Donor metadata files ", files, " give different values for donors listed in more than one of them: ",
+        paste0(conflicts$donor_id, " (", conflicts$column, ")", collapse = ", "),
+        call. = FALSE
+      )
+    }
+    donors <- dplyr::summarise(combined, dplyr::across(dplyr::everything(), first_value), .by = "donor_id")
   }
-  dplyr::summarise(combined, dplyr::across(dplyr::everything(), \(x) if (all(is.na(x))) x[1] else x[!is.na(x)][1]), .by = "donor_id")
+  known <- sample_donor_ids %in% donors$donor_id
+  if (!any(known)) {
+    return(donors)
+  }
+  # A sample's own row, if any, comes first, so its values win over its donor's.
+  inherited <- dplyr::mutate(donors[match(sample_donor_ids[known], donors$donor_id), ], donor_id = names(sample_donor_ids)[known])
+  dplyr::summarise(dplyr::bind_rows(donors, inherited), dplyr::across(dplyr::everything(), first_value), .by = "donor_id")
 }
 
 subset_keyed_metadata_tibble <- function(metadata_tibble, key_col, keys, source_label) {
@@ -265,11 +277,31 @@ assert_donor_GEM_well_metadata_column_ownership <- function(donor_id_metadata_ti
 #' hashes unchanged.
 #'
 #' @param GEM_well_IDs Configured GEM well identifiers.
-#' @param GEM_well_samples_file Path to the optional sample table.
+#' @param samples Output of `read_GEM_well_samples()`.
 #' @return A list of symbols or calls spliced into the `full_metadata_tibble` commands.
 #' @keywords internal
 
-get_GEM_well_donor_assignments <- function(GEM_well_IDs, GEM_well_samples_file) {
+get_GEM_well_donor_assignments <- function(GEM_well_IDs, samples) {
+  purrr::map(GEM_well_IDs, \(GEM_well_ID) {
+    vireo_donor_ids <- rlang::sym(paste0("vireo_donor_ids_tibble.", GEM_well_ID))
+    GEM_well_samples <- samples[samples$GEM_well_ID == GEM_well_ID, ]
+    if (nrow(GEM_well_samples) == 0L) {
+      return(vireo_donor_ids)
+    }
+    rlang::call2("map_donors_to_samples", vireo_donor_ids, stats::setNames(GEM_well_samples$sample_id, GEM_well_samples$donor_id))
+  })
+}
+
+#' Read GEM well samples
+#'
+#' Read and check the optional `cfg_GEM_well_samples.tsv`.
+#'
+#' @param GEM_well_samples_file Path to the optional sample table.
+#' @param GEM_well_IDs Configured GEM well identifiers.
+#' @return A tibble with `GEM_well_ID`, `donor_id` and `sample_id`, empty without the file.
+#' @keywords internal
+
+read_GEM_well_samples <- function(GEM_well_samples_file, GEM_well_IDs) {
   key_columns <- c("GEM_well_ID", "donor_id", "sample_id")
   samples <- if (file.exists(GEM_well_samples_file)) {
     readr::read_tsv(GEM_well_samples_file, col_types = readr::cols(.default = readr::col_character()))
@@ -286,15 +318,7 @@ get_GEM_well_donor_assignments <- function(GEM_well_IDs, GEM_well_samples_file) 
       call. = FALSE
     )
   }
-
-  purrr::map(GEM_well_IDs, \(GEM_well_ID) {
-    vireo_donor_ids <- rlang::sym(paste0("vireo_donor_ids_tibble.", GEM_well_ID))
-    GEM_well_samples <- samples[samples$GEM_well_ID == GEM_well_ID, ]
-    if (nrow(GEM_well_samples) == 0L) {
-      return(vireo_donor_ids)
-    }
-    rlang::call2("map_donors_to_samples", vireo_donor_ids, stats::setNames(GEM_well_samples$sample_id, GEM_well_samples$donor_id))
-  })
+  samples
 }
 
 parse_GEM_well_QC_exclude_list <- function(value, GEM_well_ID) {
@@ -362,7 +386,11 @@ build_GEM_well_tibble <- function(GEM_well_config_file = configuration_path("cfg
   for (column in names(cellsnp_defaults)) {
     GEM_well_tibble[[column]] <- dplyr::coalesce(as.numeric(GEM_well_tibble[[column]] %||% NA), cellsnp_defaults[[column]])
   }
-  GEM_well_tibble$GEM_well_donor_assignments <- get_GEM_well_donor_assignments(GEM_well_tibble$GEM_well_ID, GEM_well_samples_file)
+  samples <- read_GEM_well_samples(GEM_well_samples_file, GEM_well_tibble$GEM_well_ID)
+  GEM_well_tibble$GEM_well_donor_assignments <- get_GEM_well_donor_assignments(GEM_well_tibble$GEM_well_ID, samples)
+  GEM_well_tibble$GEM_well_sample_donor_ids <- purrr::map(GEM_well_tibble$GEM_well_ID, \(GEM_well_ID) {
+    with(samples[samples$GEM_well_ID == GEM_well_ID, ], stats::setNames(donor_id, sample_id))
+  })
 
   if (length(validation_aggregations())) {
     config <- read_aggregation_config_tibble()
@@ -394,6 +422,7 @@ build_GEM_well_tibble <- function(GEM_well_config_file = configuration_path("cfg
         "GEM_well_cellsnp_min_count",
         "GEM_well_cellsnp_min_MAF",
         "GEM_well_donor_assignments",
+        "GEM_well_sample_donor_ids",
         "GEM_well_QC_exclude_list",
         "is_active"
       ))
@@ -510,6 +539,11 @@ build_aggregation_tibble <- function(aggregation_tibble_all_from_yaml, GEM_well_
       # the configured dimensions, and choosing other dimensions within them reruns neither decomposition.
       aggregation_GEX_PCA_n_components = purrr::map_dbl(aggregation_GEX_data_PCs, \(dims) max(50, dims)),
       aggregation_ATAC_LSI_n_components = purrr::map_dbl(aggregation_ATAC_data_PCs, \(dims) max(50, dims)),
+      # Donors of the aggregation's samples, named by sample ID, so that sample rows inherit donor metadata.
+      aggregation_sample_donor_ids = purrr::map(aggregation_GEM_well_IDs, \(ids) {
+        sample_donor_ids <- unlist(unname(GEM_well_tibble$GEM_well_sample_donor_ids[match(ids, GEM_well_tibble$GEM_well_ID)]))
+        c(character(), sample_donor_ids[!duplicated(names(sample_donor_ids))])
+      }),
       aggregation_GEM_well_QC_exclude_list = purrr::map(
         aggregation_GEM_well_IDs,
         \(ids) {

@@ -37,6 +37,14 @@ Use this when adding or changing targets, helpers, or analysis steps.
   maps over `build_module_tibble()`, which reads the module's
   `cfg_module_<module>.yaml` only for aggregations that list the module under
   `modules` in `cfg_aggregations.yaml`.
+- Compute aggregation-independent work, such as a reference's annotations,
+  once: branch over an `iteration = "vector"` stem of the distinct keys of all
+  aggregations, and let each aggregation select its branches with
+  `slice(<target>, index = ...)`, the index built with the graph. `targets`
+  cannot branch over an empty stem, so when no aggregation may have a key, or
+  the per-key results are small, one shared target over all keys that
+  aggregations index by name is simpler, as the hub-derived references and
+  Roadmap chromatin states do.
 - The project's default `iteration` is `"list"`, so a pattern whose consumers
   read its branches as one table needs `iteration = "vector"`, and a pattern
   that maps over a data frame branches over its columns unless that data frame

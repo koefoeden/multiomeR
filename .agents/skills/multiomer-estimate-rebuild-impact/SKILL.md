@@ -55,6 +55,15 @@ before the edit, build it with `tar_manifest(script = ...)` from a temporary
 copy of `_targets.R` in the repository root whose `source()` calls read
 `git show HEAD:` copies of the edited target files.
 
+The manuscript-figure graph, `pipeline_manuscript_figures/targets.R`, shares
+the store. It tracks `cfg_aggregations.yaml`, `cfg_GEM_wells.tsv` and
+`manifests/cfg_pipeline_parameters.tsv` as file inputs of
+`comparison_seurat_signac_config`, and its benchmark helpers call
+`build_aggregation_tibble()`. Edits to these files or that function rerun the
+config target, which usually reproduces its value, and
+`supplementary_table_S6`, which recomputes its stages from the current targets
+graph, so a changed graph changes the table.
+
 Adding or activating GEM well rows changes only the `GEM_well_config_tsv` file
 target. Each aggregation's `GEM_well_metadata_tibble` reruns and reproduces its
 value unless the aggregation lists a changed well; compare its new value with

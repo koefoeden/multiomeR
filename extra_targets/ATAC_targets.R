@@ -802,17 +802,14 @@ rlang::list2(
       command = round(seq(5, length(aggregation_ATAC_data_PCs), length.out = 3))
     ),
     targets::tar_target(
-      name = cross_UMAP_barcodes.ATAC,
-      description = "ATAC barcodes in the UMAP sweep, so that label changes do not recompute the sweep",
-      command = metadata_w_cell_types_tibble.ATAC$barcode_w_prefix
-    ),
-    targets::tar_target(
       name = cross_UMAP_embeddings_tibbles.ATAC,
-      description = "Compute ATAC UMAPs across a sweep of LSI dimension counts and neighbor counts, with one neighbour search per dimension count",
+      description = "Compute ATAC UMAPs of all nuclei, as the primary ATAC UMAP does, across a sweep of LSI dimension counts and neighbor counts, with one neighbour search per dimension count",
       command = {
-        embedding_matrix <- select_embedding_dimensions(harmony_embeddings_matrix.ATAC[cross_UMAP_barcodes.ATAC, , drop = FALSE],
+        embedding_matrix <- select_embedding_dimensions(harmony_embeddings_matrix.ATAC,
           dims = aggregation_ATAC_data_PCs[seq_len(UMAP_n_dims_seq.ATAC)], dim_prefix = "LSI_")
-        knn <- find_hnsw_neighbors(embedding_matrix, k = max(UMAP_neighbors_seq), threads = 6)
+        # The full dimension count is the shared search's own; UMAP_neighbors_seq never exceeds its neighbour count.
+        knn <- if (UMAP_n_dims_seq.ATAC == length(aggregation_ATAC_data_PCs)) knn.ATAC else
+          find_hnsw_neighbors(embedding_matrix, k = max(UMAP_neighbors_seq), threads = 6)
         purrr::map(purrr::set_names(UMAP_neighbors_seq), \(n_neighbors) {
           run_UMAP_from_neighbors(knn, n_neighbors = n_neighbors, min_dist = aggregation_UMAP_min_dist,
             init = "spca", embedding_matrix = embedding_matrix, threads = 6) |>
@@ -824,7 +821,7 @@ rlang::list2(
     ),
     tarchetypes::tar_file(
       name = cross.UMAPs.7_ATAC_QC,
-      description = "Plot ATAC cell types on UMAPs across a sweep of LSI dimension counts and neighbor counts. [checkpoint:7_ATAC-QC]",
+      description = "Plot the retained ATAC nuclei's cell types on UMAPs across a sweep of LSI dimension counts and neighbor counts. [checkpoint:7_ATAC-QC]",
       command = {
         cross_UMAP_embeddings_tibbles.ATAC |>
           purrr::imap(\(sweep_umap, n_neighbors) {

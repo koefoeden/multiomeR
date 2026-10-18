@@ -5,7 +5,7 @@ pipeline_name <- "processing_and_aggregation"
 source("helpers/_setup.R")
 ```
 
-The donor metadata table is a TSV with one row per donor, keyed by `donor_id`. You prepare it at [step 2 of Configure your data](main_running.md#steps), and each aggregation points to its file with [`aggregation_donor_id_metadata_tsv`](parameters.html#aggregation_donor_id_metadata_tsv).
+The donor metadata table is a TSV with one row per donor, keyed by `donor_id`. You prepare it at [step 2 of Configure your data](main_running.md#steps), and each aggregation points to its file, or files, with [`aggregation_donor_id_metadata_tsv`](parameters.html#aggregation_donor_id_metadata_tsv).
 
 ## Minimal table
 
@@ -25,11 +25,23 @@ Put library-, run- or batch-specific variables in the [GEM well table](reference
 
 Every nucleus receives a `donor_id` from its GEM well: `GEM_well_donor_id` for a single-donor well, or the VCF sample name that Vireo assigns in a [pooled well](reference_GEM_wells.md#pooled-wells). Give each of those IDs one row, with identical spelling; the nuclei-per-donor plot at [checkpoint 1](main_running.md#checkpoint-1) shows the IDs the nuclei received. Nuclei whose donor is missing from the table get `NA` donor variables, and rows for donors without nuclei are ignored.
 
+## Several tables {#several-tables}
+
+When an aggregation combines cohorts that each have their own donor table, list the files instead of merging them by hand:
+
+``` {.yaml filename="cfg_aggregations.yaml"}
+my_aggregation:
+  aggregation_donor_id_metadata_tsv: [/path/to/cohort_donor_metadata.tsv, /path/to/reference_donor_metadata.tsv]
+```
+
+The pipeline joins the files into one donor table. A column that only some files have is left empty for the donors of the others. A donor may appear in more than one file only if those files agree on every column they share.
+
 ## Rules checked {#rules}
 
 When the targets that read the table run, they check that:
 
-- `donor_id` values are unique; and
+- `donor_id` values are unique within each file;
+- a donor listed in several files has no conflicting values, and columns shared by several files have compatible types; and
 - apart from `donor_id` and `GEM_well_ID`, no column name appears both here and in the [GEM well table](reference_GEM_wells.md).
 
 ## Extended table for differential analyses

@@ -8,7 +8,7 @@ rlang::list2(
   targets::tar_target(
     name = donor_id_metadata_tibble.extended,
     description = "Read keyed differential-analysis donor metadata [part_of_graph:differential_analyses]",
-    command = read_keyed_metadata_tibble(donor_id_metadata_tsv.extended, "donor_id")
+    command = read_donor_metadata_tibble(donor_id_metadata_tsv.extended)
   ),
   targets::tar_target(
     name = models,

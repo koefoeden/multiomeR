@@ -88,6 +88,42 @@ read_keyed_metadata_tibble <- function(metadata_tsv, key_col) {
     dplyr::mutate(dplyr::across(dplyr::all_of(key_col), as.character))
 }
 
+#' Read donor metadata tables
+#'
+#' Read one or more donor metadata files, each keyed by `donor_id`, into one
+#' table. Columns that only some files have are missing for the other files'
+#' donors. A donor listed in several files must not have conflicting values in
+#' the columns those files share; its rows are combined into one.
+#'
+#' @param metadata_tsvs Paths of the donor metadata TSV files.
+#' @return One tibble with a row per donor; a single file is read unchanged.
+#' @keywords internal
+
+read_donor_metadata_tibble <- function(metadata_tsvs) {
+  tables <- purrr::map(metadata_tsvs, read_keyed_metadata_tibble, key_col = "donor_id")
+  if (length(tables) == 1L) {
+    return(tables[[1]])
+  }
+  files <- paste(metadata_tsvs, collapse = ", ")
+  combined <- tryCatch(
+    dplyr::bind_rows(tables),
+    error = \(err) stop("Donor metadata files ", files, " give a shared column different types: ", conditionMessage(err), call. = FALSE)
+  )
+  conflicts <- combined |>
+    dplyr::filter(duplicated(.data$donor_id) | duplicated(.data$donor_id, fromLast = TRUE)) |>
+    dplyr::summarise(dplyr::across(dplyr::everything(), \(x) dplyr::n_distinct(x, na.rm = TRUE) > 1L), .by = "donor_id") |>
+    tidyr::pivot_longer(-"donor_id", names_to = "column", values_to = "conflicting") |>
+    dplyr::filter(.data$conflicting)
+  if (nrow(conflicts) > 0L) {
+    stop(
+      "Donor metadata files ", files, " give different values for donors listed in more than one of them: ",
+      paste0(conflicts$donor_id, " (", conflicts$column, ")", collapse = ", "),
+      call. = FALSE
+    )
+  }
+  dplyr::summarise(combined, dplyr::across(dplyr::everything(), \(x) if (all(is.na(x))) x[1] else x[!is.na(x)][1]), .by = "donor_id")
+}
+
 subset_keyed_metadata_tibble <- function(metadata_tibble, key_col, keys, source_label) {
   keys <- as.character(keys)
   missing_keys <- setdiff(keys, metadata_tibble[[key_col]])

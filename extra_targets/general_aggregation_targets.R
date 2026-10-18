@@ -229,14 +229,14 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = donor_id_metadata_tsv,
-    description = "Track the donor ID metadata TSV file for change detection",
+    description = "Track the donor ID metadata TSV files for change detection",
     command = aggregation_donor_id_metadata_tsv,
     deployment = "main"
   ),
   targets::tar_target(
     name = donor_id_metadata_tibble,
-    description = "Read the donor ID metadata TSV into a tibble with donor_id coerced to character [part_of_graph:GEX] [part_of_graph:parallel] [part_of_graph:seurat_export]",
-    command = read_keyed_metadata_tibble(donor_id_metadata_tsv, "donor_id")
+    description = "Read and join the donor ID metadata TSVs into a tibble with donor_id coerced to character [part_of_graph:GEX] [part_of_graph:parallel] [part_of_graph:seurat_export]",
+    command = read_donor_metadata_tibble(donor_id_metadata_tsv)
   ),
   targets::tar_target(
     name = GEM_well_metadata_tibble,

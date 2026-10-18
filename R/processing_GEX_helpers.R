@@ -58,7 +58,8 @@ read_cellbender_h5_matrix <- function(cellbender_h5_file, feature_type = "Gene E
 #' @param n_components Number of output dimensions/components to compute.
 #' @param n_variable_features Number of high-residual-variance genes kept before PCA.
 #' @param min_feature_count Minimum total counts required for a gene to be considered in GEX PCA.
-#' @param threads Number of threads used for the PCA step.
+#' @param threads Number of threads used for the PCA step; the BPCells
+#'   backend's result does not depend on it.
 #' @param return_normalized Whether to also return the normalized data for the
 #'   Seurat export: the lazy BPCells residuals of the variable genes, or the
 #'   Seurat `SCTAssay`, which then includes UMI-corrected counts, and the
@@ -120,7 +121,7 @@ run_GEX_PCA_BPCells <- function(
   }
 
   if (identical(GEX_PCA_backend, "BPCells_native")) {
-    svd <- BPCells::svds(residuals$PCA_input, k = n_components, threads = threads)
+    svd <- BPCells::svds(residuals$PCA_input, k = n_components, threads = 0)
     singular_values <- svd$d
     feature_loadings <- svd$u
     cell_embeddings <- sweep(svd$v, 2, svd$d, FUN = "*")
@@ -213,8 +214,11 @@ get_BPCells_native_GEX_residuals <- function(
     residuals
   }
   pearson_residuals <- get_residuals(counts_matrix)
+  # 24 fixed chunks, read in parallel as in run_ATAC_LSI_BPCells(), keep the variances and the PCA
+  # independent of `threads`; parallel_split() leaves the matrix whole for one thread.
+  split_in_chunks <- function(matrix) BPCells:::parallel_split(matrix, max(threads, 2L), 24L)
 
-  residual_stats <- BPCells::matrix_stats(pearson_residuals, row_stats = "variance", threads = threads)$row_stats
+  residual_stats <- BPCells::matrix_stats(split_in_chunks(pearson_residuals), row_stats = "variance", threads = 0)$row_stats
   residual_variance <- residual_stats["variance", ]
   variable_features <- residual_variance |>
     sort(decreasing = TRUE) |>
@@ -224,7 +228,7 @@ get_BPCells_native_GEX_residuals <- function(
     pearson_residuals = pearson_residuals[variable_features, , drop = FALSE],
     # svds() streams its input ~300 times; residuals of the variable genes' counts held in memory save
     # decompressing every gene on each pass. The export keeps the disk-backed residuals above.
-    PCA_input = get_residuals(BPCells::write_matrix_memory(counts_matrix[variable_features, , drop = FALSE], compress = TRUE)),
+    PCA_input = split_in_chunks(get_residuals(BPCells::write_matrix_memory(counts_matrix[variable_features, , drop = FALSE], compress = TRUE))),
     residual_variance = residual_variance
   )
 }

@@ -384,24 +384,34 @@ get_GWAS_chromVAR_locus_contribution_tibble <- function(variant_contribution_tib
       .by = c(GWAS_ID, studyLocusId)
     )
 
-  variant_contribution_tibble |>
-    dplyr::summarise(
-      Category = dplyr::first(.data$Category),
-      chromosome = dplyr::first(.data$chromosome),
-      locus_start = min(c(.data$locusStart, .data$peak_start, .data$position), na.rm = TRUE),
-      locus_end = max(c(.data$locusEnd, .data$peak_end, .data$position), na.rm = TRUE),
-      n_variants = dplyr::n_distinct(.data$variantId),
-      n_peaks = dplyr::n_distinct(.data$peak_name),
-      posterior_probability_sum = sum(.data$posteriorProbability),
-      deviation_numerator_contribution = sum(.data$deviation_numerator_contribution),
-      deviation_contribution = sum(.data$deviation_contribution),
-      relative_deviation_contribution = sum(.data$relative_deviation_contribution),
-      z_contribution = sum(.data$z_contribution),
-      deviation = dplyr::first(.data$deviation),
-      relative_deviation = dplyr::first(.data$relative_deviation),
-      z = dplyr::first(.data$z),
-      .by = c(GWAS_ID, cluster, studyLocusId)
-    ) |>
+  # A dplyr summary runs once per GWAS, cell type and locus, which takes minutes
+  # for hundreds of thousands of groups; data.table takes seconds. base::sum()
+  # keeps R's long-double sums, which data.table's optimized sum() rounds differently.
+  keys <- c("GWAS_ID", "cluster", "studyLocusId")
+  variants <- data.table::as.data.table(variant_contribution_tibble)
+  variants[, `:=`(
+    new_variant = !duplicated(variants, by = c(keys, "variantId")),
+    new_peak = !duplicated(variants, by = c(keys, "peak_name")),
+    bound_start = pmin(locusStart, peak_start, position, na.rm = TRUE),
+    bound_end = pmax(locusEnd, peak_end, position, na.rm = TRUE)
+  )]
+  variants[, .(
+    Category = Category[1L],
+    chromosome = chromosome[1L],
+    locus_start = min(bound_start, na.rm = TRUE),
+    locus_end = max(bound_end, na.rm = TRUE),
+    n_variants = base::sum(new_variant),
+    n_peaks = base::sum(new_peak),
+    posterior_probability_sum = base::sum(posteriorProbability),
+    deviation_numerator_contribution = base::sum(deviation_numerator_contribution),
+    deviation_contribution = base::sum(deviation_contribution),
+    relative_deviation_contribution = base::sum(relative_deviation_contribution),
+    z_contribution = base::sum(z_contribution),
+    deviation = deviation[1L],
+    relative_deviation = relative_deviation[1L],
+    z = z[1L]
+  ), by = keys] |>
+    tibble::as_tibble() |>
     dplyr::left_join(lead_variant_tibble, by = c("GWAS_ID", "studyLocusId")) |>
     dplyr::left_join(locus_gene_summary_tibble, by = c("GWAS_ID", "studyLocusId"), relationship = "many-to-one") |>
     dplyr::mutate(

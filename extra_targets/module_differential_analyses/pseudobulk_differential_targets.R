@@ -44,9 +44,11 @@ rlang::list2(
     description = "Extract differential testing results tibble from each fitted model [part_of_graph:differential_analyses]",
     command = get_pseudobulk_feature_model_results(
       pseudobulk_feature_matrix_fit = feature_matrix_fit,
-      pseudobulk_feature_dynamic_tibble = dynamic_tibble
+      pseudobulk_feature_dynamic_tibble = dynamic_tibble,
+      workers = 6
     ),
-    pattern = map(feature_matrix_fit, dynamic_tibble)
+    pattern = map(feature_matrix_fit, dynamic_tibble),
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = top_features_tibble,

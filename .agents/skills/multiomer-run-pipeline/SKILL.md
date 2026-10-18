@@ -87,9 +87,10 @@ Immediately before `tar_make()`, run the active-run check: `targets` itself
 refuses a second driver only on the same node. Use one driver per store, and
 while it runs use only read-only queries: `tar_invalidate()`, `tar_delete()`,
 `tar_prune()`, `tar_destroy()` and a second `tar_make()` rewrite the metadata
-file the driver appends to, or remove objects it needs. Workers start in the checkout and rerun `.Rprofile`, so while a run is active,
-leave no broken `R/` file, changed package pin or changed Pixi environment in
-the checkout: new workers would fail to start.
+file the driver appends to, or remove objects it needs. Workers start in the
+checkout and rerun `.Rprofile`, so while a run is active, leave no broken `R/`
+file, changed package pin or changed Pixi environment in the checkout: new
+workers would fail to start.
 
 Agent tool calls have time limits, including for background commands, and
 stopping the driver also stops its running targets. Start a driver that may
@@ -135,14 +136,15 @@ neither do the "errored" lines of its log:
 
 A target is done when its metadata row has no error and `tar_progress()`, which
 covers only the store's latest run, reports it "completed" or "skipped". Gate
-chained jobs on the same check:
+chained jobs on the same check, which lists the unfinished targets of the
+selected names:
 
 ```r
 done <- intersect(
-  subset(targets::tar_meta(names = tidyselect::any_of(selection), fields = error), is.na(error))$name,
-  subset(targets::tar_progress(names = tidyselect::any_of(selection)), progress %in% c("completed", "skipped"))$name
+  subset(targets::tar_meta(names = tidyselect::any_of(selected_names), fields = error), is.na(error))$name,
+  subset(targets::tar_progress(names = tidyselect::any_of(selected_names)), progress %in% c("completed", "skipped"))$name
 )
-setdiff(selection, done)
+setdiff(selected_names, done)
 ```
 
 To verify dynamic branches, read metadata with `complete_only = FALSE` and

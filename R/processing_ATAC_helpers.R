@@ -364,6 +364,9 @@ write_peak_calling_cut_sites_for_GEM_well <- function(GEM_well_cells, discovery_
     rep(discovery_tibble$replicate_name, lengths(discovery_tibble$BCs_for_peak_discovery)),
     unlist(discovery_tibble$BCs_for_peak_discovery)
   )
+  # A one-nucleus cluster lists its nucleus in both halves: it is written to the first, whose file is copied.
+  copies <- halves[duplicated(names(halves))]
+  halves <- halves[!duplicated(names(halves))]
   cells <- intersect(GEM_well_cells$barcodes[[1]], names(halves))
   fragments <- open_GEM_well_fragments(GEM_well_cells, genome) |>
     BPCells::select_cells(cells) |>
@@ -379,6 +382,10 @@ write_peak_calling_cut_sites_for_GEM_well <- function(GEM_well_cells, discovery_
         file.path(out_dir, paste0(group, ".bed.gz")),
         sep = "\t", col.names = FALSE, compress = "gzip", compressLevel = 1L, nThread = 1L, append = TRUE)
     }
+  }
+  for (barcode in intersect(names(copies), cells)) {
+    written <- file.path(out_dir, paste0(halves[[barcode]], ".bed.gz"))
+    if (fs::file_exists(written)) fs::file_copy(written, file.path(out_dir, paste0(copies[[barcode]], ".bed.gz")))
   }
   out_dir
 }

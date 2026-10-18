@@ -75,27 +75,45 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 8)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_group_chromosome_tibble.WNN,
-    description = "Split peak-gene correlation work by broad cell type and chromosome [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
-    command = make_peak_gene_correlation_group_chromosome_tibble(
-      donor_state_aggregates_tibble = peak_gene_correlation_donor_state_aggregates_tibble.WNN,
-      chromosome_tibble = peak_gene_correlation_chromosome_tibble.WNN,
-      candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.WNN
-    ),
+    name = peak_gene_correlation_aggregate_groups_tibble.WNN,
+    description = "Group donor-state pseudobulks by broad cell type for single-pass aggregation [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = make_peak_gene_correlation_aggregate_groups_tibble(peak_gene_correlation_donor_state_aggregates_tibble.WNN),
     iteration = "group",
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_aggregate_matrices.WNN,
-    description = "Aggregate chromosome-specific GEX and ATAC counts over donor-state pseudobulks [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
-    command = make_peak_gene_correlation_aggregate_matrices(
-      group_chromosome_tibble = peak_gene_correlation_group_chromosome_tibble.WNN,
+    name = peak_gene_correlation_GEX_aggregate_matrices.WNN,
+    description = "Sum one broad cell type's candidate-gene GEX counts over its donor-state pseudobulks in one pass [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = make_peak_gene_correlation_GEX_aggregate_matrix(
+      aggregates_tibble = peak_gene_correlation_aggregate_groups_tibble.WNN,
+      candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.WNN,
+      GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX
+    ),
+    pattern = map(peak_gene_correlation_aggregate_groups_tibble.WNN),
+    iteration = "list",
+    resources = get_tar_resources(RAM_GB_req = 16)
+  ),
+  targets::tar_target(
+    name = peak_gene_correlation_ATAC_aggregate_matrices.WNN,
+    description = "Sum one chromosome's candidate-peak ATAC counts over all donor-state pseudobulks in one pass [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = make_peak_gene_correlation_ATAC_aggregate_matrix(
+      chromosome_tibble = peak_gene_correlation_chromosome_tibble.WNN,
       donor_state_aggregates_tibble = peak_gene_correlation_donor_state_aggregates_tibble.WNN,
       candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.WNN,
-      GEX_counts_matrix = aggregated_counts_BPCells_matrix.GEX,
       ATAC_counts_matrix = consensus_peak_BPCells_matrix.ATAC
     ),
-    pattern = map(peak_gene_correlation_group_chromosome_tibble.WNN),
+    pattern = map(peak_gene_correlation_chromosome_tibble.WNN),
+    iteration = "list",
+    resources = get_tar_resources(RAM_GB_req = 16)
+  ),
+  targets::tar_target(
+    name = peak_gene_correlation_aggregate_matrices.WNN,
+    description = "Slice one broad cell type and chromosome from the GEX and ATAC donor-state pseudobulks [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = make_peak_gene_correlation_aggregate_matrices(
+      GEX_aggregate_matrix = peak_gene_correlation_GEX_aggregate_matrices.WNN,
+      ATAC_aggregate_matrix = peak_gene_correlation_ATAC_aggregate_matrices.WNN
+    ),
+    pattern = cross(peak_gene_correlation_GEX_aggregate_matrices.WNN, peak_gene_correlation_ATAC_aggregate_matrices.WNN),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(

@@ -173,7 +173,7 @@ make_peak_gene_correlation_candidate_pairs <- function(
 make_peak_gene_correlation_chromosome_tibble <- function(candidate_pairs_tibble) {
   candidate_pairs_tibble |>
     dplyr::distinct(.data$chr) |>
-    dplyr::arrange(gtools::mixedorder(.data$chr))
+    dplyr::arrange(.data$chr)
 }
 
 #' Make peak gene correlation cell groups
@@ -589,146 +589,124 @@ make_peak_gene_correlation_donor_state_record <- function(
   )
 }
 
-make_peak_gene_correlation_group_chromosome_tibble <- function(
-  donor_state_aggregates_tibble,
-  chromosome_tibble,
-  candidate_pairs_tibble
-) {
-  cell_groups <- donor_state_aggregates_tibble |>
-    dplyr::distinct(.data$cell_group)
+#' Group donor-state pseudobulks by cell type for single-pass aggregation
+#'
+#' Patterns cannot branch over an empty target, so without any retained
+#' aggregates one placeholder group yields skipped branches.
+#'
+#' @param donor_state_aggregates_tibble Aggregate membership tibble from
+#'   `make_peak_gene_correlation_donor_state_record()`.
+#' @return The aggregates grouped by `cell_group` with `targets::tar_group()`.
+#' @keywords internal
 
-  if (nrow(cell_groups) == 0L) {
-    return(tibble::tibble(
-      cell_group = "__no_analyzable_cell_group__",
-      chr = NA_character_,
-      n_candidate_pairs = 0L,
-      branch_id = "__no_analyzable_branch__",
-      analyzable = FALSE
-    ) |>
-      dplyr::group_by(.data$branch_id) |>
-      targets::tar_group())
+make_peak_gene_correlation_aggregate_groups_tibble <- function(donor_state_aggregates_tibble) {
+  if (nrow(donor_state_aggregates_tibble) == 0L) {
+    donor_state_aggregates_tibble <- tibble::add_row(donor_state_aggregates_tibble, cell_group = "__no_analyzable_cell_group__")
   }
-
-  tidyr::crossing(cell_groups, chromosome_tibble) |>
-    dplyr::inner_join(
-      candidate_pairs_tibble |> dplyr::count(.data$chr, name = "n_candidate_pairs"),
-      by = "chr"
-    ) |>
-    dplyr::mutate(
-      branch_id = paste(.data$cell_group, .data$chr, sep = "__"),
-      analyzable = TRUE
-    ) |>
-    dplyr::group_by(branch_id) |>
+  donor_state_aggregates_tibble |>
+    dplyr::group_by(.data$cell_group) |>
     targets::tar_group()
 }
 
-make_aggregate_membership_matrix <- function(aggregates_tibble) {
-  aggregate_ids <- aggregates_tibble$aggregate_id
-  aggregate_barcodes <- aggregates_tibble$barcodes
-  cell_barcodes <- unique(unlist(aggregate_barcodes, use.names = FALSE))
+#' Sum BPCells counts over mutually exclusive aggregates in one pass
+#'
+#' @param feature_matrix Feature-by-cell BPCells count matrix.
+#' @param features Features to keep, in output order.
+#' @param aggregates_tibble Aggregates with `aggregate_id` and a `barcodes`
+#'   list column; rows without an `aggregate_id` are ignored.
+#' @return A sparse feature-by-aggregate count matrix.
+#' @keywords internal
 
-  Matrix::sparseMatrix(
-    i = match(unlist(aggregate_barcodes, use.names = FALSE), cell_barcodes),
-    j = rep(seq_along(aggregate_barcodes), lengths(aggregate_barcodes)),
-    x = 1,
-    dims = c(length(cell_barcodes), length(aggregate_ids)),
-    dimnames = list(cell_barcodes, aggregate_ids)
+sum_BPCells_matrix_by_aggregate <- function(feature_matrix, features, aggregates_tibble) {
+  features <- intersect(features, rownames(feature_matrix))
+  aggregates_tibble <- aggregates_tibble[!is.na(aggregates_tibble$aggregate_id), ]
+  if (nrow(aggregates_tibble) == 0L) {
+    return(Matrix::sparseMatrix(i = integer(), j = integer(), x = numeric(),
+      dims = c(length(features), 0L), dimnames = list(features, character())))
+  }
+  aggregate <- factor(rep(aggregates_tibble$aggregate_id, lengths(aggregates_tibble$barcodes)),
+    levels = aggregates_tibble$aggregate_id)
+  BPCells::pseudobulk_matrix(
+    feature_matrix[features, unlist(aggregates_tibble$barcodes, use.names = FALSE)], aggregate, method = "sum"
+  ) |>
+    methods::as("dgCMatrix")
+}
+
+#' Sum one cell type's GEX counts over its donor-state pseudobulks
+#'
+#' GEX counts are stored by cell, so one pass over the cell type's nuclei
+#' serves all of its chromosome branches.
+#'
+#' @param aggregates_tibble One cell type's rows of the donor-state aggregates.
+#' @param candidate_pairs_tibble Candidate peak-gene pairs; their genes are summed.
+#' @param GEX_counts_matrix Gene-by-cell count matrix.
+#' @return A list with `cell_group`, gene-by-aggregate `GEX_counts` and the
+#'   aggregate depth summary tibble.
+#' @keywords internal
+
+make_peak_gene_correlation_GEX_aggregate_matrix <- function(aggregates_tibble, candidate_pairs_tibble, GEX_counts_matrix) {
+  list(
+    cell_group = aggregates_tibble$cell_group[[1]],
+    GEX_counts = sum_BPCells_matrix_by_aggregate(
+      GEX_counts_matrix, unique(candidate_pairs_tibble$gene_matrix_feature), aggregates_tibble
+    ),
+    aggregate_depth_tibble = aggregates_tibble[!is.na(aggregates_tibble$aggregate_id), ] |>
+      dplyr::ungroup() |>
+      dplyr::select("cell_group", "aggregate_id", "donor_id", "state_bin", "n_cells", "GEX_depth", "ATAC_depth")
   )
 }
 
-aggregate_BPCells_matrix_by_membership <- function(feature_matrix, features, membership_matrix) {
-  features <- intersect(features, rownames(feature_matrix))
-  cells <- intersect(rownames(membership_matrix), colnames(feature_matrix))
-  membership_matrix <- membership_matrix[cells, , drop = FALSE]
-  feature_matrix <- feature_matrix[features, cells, drop = FALSE]
+#' Sum one chromosome's ATAC counts over all donor-state pseudobulks
+#'
+#' ATAC counts are stored by peak, so one pass over the chromosome's candidate
+#' peaks serves all of its cell-type branches.
+#'
+#' @param chromosome_tibble One-row tibble with the branch `chr`.
+#' @param donor_state_aggregates_tibble All retained donor-state aggregates.
+#' @param candidate_pairs_tibble Candidate peak-gene pairs.
+#' @param ATAC_counts_matrix Peak-by-cell count matrix.
+#' @return A list with `chr`, the chromosome's candidate genes in pair order
+#'   and its peak-by-aggregate `ATAC_counts`.
+#' @keywords internal
 
-  methods::as(feature_matrix %*% membership_matrix, "dgCMatrix")
+make_peak_gene_correlation_ATAC_aggregate_matrix <- function(
+  chromosome_tibble,
+  donor_state_aggregates_tibble,
+  candidate_pairs_tibble,
+  ATAC_counts_matrix
+) {
+  chr <- chromosome_tibble$chr[[1]]
+  chromosome_pairs <- candidate_pairs_tibble[candidate_pairs_tibble$chr == chr, ]
+  list(
+    chr = chr,
+    genes = unique(chromosome_pairs$gene_matrix_feature),
+    ATAC_counts = sum_BPCells_matrix_by_aggregate(ATAC_counts_matrix, unique(chromosome_pairs$peak), donor_state_aggregates_tibble)
+  )
 }
 
 #' Make peak gene correlation aggregate matrices
 #'
-#' Aggregate GEX and ATAC count matrices over donor-state pseudobulk groups.
+#' Slice one cell type and chromosome from the single-pass GEX and ATAC
+#' donor-state pseudobulks.
 #'
-#' @param group_chromosome_tibble One-row branch tibble with `cell_group` and
-#'   `chr` selecting the correlation branch.
-#' @param donor_state_aggregates_tibble Aggregate membership tibble from
-#'   `make_peak_gene_correlation_donor_state_record()`.
-#' @param candidate_pairs_tibble Candidate peak-gene pairs; only pairs on the
-#'   branch chromosome are used to select features.
-#' @param GEX_counts_matrix Gene-by-cell count matrix; row names are gene IDs/names and column names are cell barcodes.
-#' @param ATAC_counts_matrix Peak-by-cell count matrix; row names are peak IDs and column names are cell barcodes.
+#' @param GEX_aggregate_matrix One cell type's result of
+#'   `make_peak_gene_correlation_GEX_aggregate_matrix()`.
+#' @param ATAC_aggregate_matrix One chromosome's result of
+#'   `make_peak_gene_correlation_ATAC_aggregate_matrix()`.
 #' @return A list with branch identifiers, aggregate-level GEX and ATAC count
 #'   matrices, and an aggregate depth summary tibble.
 #' @keywords internal
 
-make_peak_gene_correlation_aggregate_matrices <- function(
-  group_chromosome_tibble,
-  donor_state_aggregates_tibble,
-  candidate_pairs_tibble,
-  GEX_counts_matrix,
-  ATAC_counts_matrix
-) {
-  cell_group <- group_chromosome_tibble$cell_group[[1]]
-  chr <- group_chromosome_tibble$chr[[1]]
-  if (!isTRUE(group_chromosome_tibble$analyzable[[1]])) {
-    empty_matrix <- Matrix::Matrix(
-      matrix(numeric(), nrow = 0L, ncol = 0L),
-      sparse = TRUE
-    )
-    return(list(
-      cell_group = cell_group,
-      chr = chr,
-      GEX_counts = empty_matrix,
-      ATAC_counts = empty_matrix,
-      aggregate_depth_tibble = tibble::tibble(
-        cell_group = character(),
-        chr = character(),
-        aggregate_id = character(),
-        donor_id = character(),
-        state_bin = character(),
-        n_cells = integer(),
-        GEX_depth = numeric(),
-        ATAC_depth = numeric()
-      )
-    ))
-  }
-  branch_pairs <- candidate_pairs_tibble |>
-    dplyr::filter(.data$chr == !!chr)
-
-  branch_aggregates <- donor_state_aggregates_tibble |>
-    dplyr::filter(.data$cell_group == !!cell_group)
-  membership_matrix <- make_aggregate_membership_matrix(branch_aggregates)
-
-  GEX_counts <- aggregate_BPCells_matrix_by_membership(
-    feature_matrix = GEX_counts_matrix,
-    features = unique(branch_pairs$gene_matrix_feature),
-    membership_matrix = membership_matrix
-  )
-  ATAC_counts <- aggregate_BPCells_matrix_by_membership(
-    feature_matrix = ATAC_counts_matrix,
-    features = unique(branch_pairs$peak),
-    membership_matrix = membership_matrix
-  )
-
-  aggregate_depth_tibble <- branch_aggregates |>
-    dplyr::arrange(match(.data$aggregate_id, colnames(membership_matrix))) |>
-    dplyr::select(
-      "cell_group",
-      "aggregate_id",
-      "donor_id",
-      "state_bin",
-      "n_cells",
-      "GEX_depth",
-      "ATAC_depth"
-    ) |>
-    dplyr::mutate(chr = chr, .after = "cell_group")
-
+make_peak_gene_correlation_aggregate_matrices <- function(GEX_aggregate_matrix, ATAC_aggregate_matrix) {
+  aggregate_ids <- GEX_aggregate_matrix$aggregate_depth_tibble$aggregate_id
+  GEX_counts <- GEX_aggregate_matrix$GEX_counts
   list(
-    cell_group = cell_group,
-    chr = chr,
-    GEX_counts = GEX_counts,
-    ATAC_counts = ATAC_counts,
-    aggregate_depth_tibble = aggregate_depth_tibble
+    cell_group = GEX_aggregate_matrix$cell_group,
+    chr = ATAC_aggregate_matrix$chr,
+    GEX_counts = GEX_counts[intersect(ATAC_aggregate_matrix$genes, rownames(GEX_counts)), aggregate_ids, drop = FALSE],
+    ATAC_counts = ATAC_aggregate_matrix$ATAC_counts[, aggregate_ids, drop = FALSE],
+    aggregate_depth_tibble = GEX_aggregate_matrix$aggregate_depth_tibble |>
+      dplyr::mutate(chr = ATAC_aggregate_matrix$chr, .after = "cell_group")
   )
 }
 

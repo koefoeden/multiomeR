@@ -813,30 +813,45 @@ rlang::list2(
       description = "Sequence of counts of leading UMAP LSI dimensions for cross-parameter UMAP sweep",
       command = round(seq(5, length(aggregation_ATAC_data_PCs), length.out = 3))
     ),
-    tarchetypes::tar_file(
-      name = cross.UMAPs.7_ATAC_QC,
-      description = "Compute ATAC UMAPs across a sweep of LSI dimension counts and neighbor counts, with one neighbour search per dimension count. [checkpoint:7_ATAC-QC]",
+    targets::tar_target(
+      name = cross_UMAP_barcodes.ATAC,
+      description = "ATAC barcodes in the UMAP sweep, so that label changes do not recompute the sweep",
+      command = metadata_w_cell_types_tibble.ATAC$barcode_w_prefix
+    ),
+    targets::tar_target(
+      name = cross_UMAP_embeddings_tibbles.ATAC,
+      description = "Compute ATAC UMAPs across a sweep of LSI dimension counts and neighbor counts, with one neighbour search per dimension count",
       command = {
-        embedding_matrix <- select_embedding_dimensions(harmony_embeddings_matrix.ATAC[metadata_w_cell_types_tibble.ATAC$barcode_w_prefix, , drop = FALSE],
+        embedding_matrix <- select_embedding_dimensions(harmony_embeddings_matrix.ATAC[cross_UMAP_barcodes.ATAC, , drop = FALSE],
           dims = aggregation_ATAC_data_PCs[seq_len(UMAP_n_dims_seq.ATAC)], dim_prefix = "LSI_")
         knn <- find_hnsw_neighbors(embedding_matrix, k = max(UMAP_neighbors_seq), threads = 6)
+        purrr::map(purrr::set_names(UMAP_neighbors_seq), \(n_neighbors) {
+          run_UMAP_from_neighbors(knn, n_neighbors = n_neighbors, min_dist = aggregation_UMAP_min_dist,
+            init = "spca", embedding_matrix = embedding_matrix, threads = 6) |>
+            tibble::as_tibble(rownames = "barcode_w_prefix")
+        })
+      },
+      pattern = map(UMAP_n_dims_seq.ATAC),
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
+    ),
+    tarchetypes::tar_file(
+      name = cross.UMAPs.7_ATAC_QC,
+      description = "Plot ATAC cell types on UMAPs across a sweep of LSI dimension counts and neighbor counts. [checkpoint:7_ATAC-QC]",
+      command = {
         metadata <- metadata_w_cell_types_tibble.ATAC |>
           dplyr::select(-dplyr::any_of(c("LSI_UMAP_1", "LSI_UMAP_2")))
-        UMAP_neighbors_seq |>
-          purrr::set_names(\(n_neighbors) paste0(UMAP_n_dims_seq.ATAC, "_", n_neighbors)) |>
-          purrr::map(\(n_neighbors) {
-            sweep_umap <- run_UMAP_from_neighbors(knn, n_neighbors = n_neighbors, min_dist = aggregation_UMAP_min_dist,
-              init = "spca", embedding_matrix = embedding_matrix, threads = 6) |>
-              tibble::as_tibble(rownames = "barcode_w_prefix")
+        cross_UMAP_embeddings_tibbles.ATAC |>
+          purrr::imap(\(sweep_umap, n_neighbors) {
             dplyr::left_join(metadata, sweep_umap, by = "barcode_w_prefix") |>
               plot_UMAP_from_metadata(variable = "LSI_harmony_SNN_cluster_cell_type") +
               ggplot2::labs(subtitle = sprintf("First %s UMAP LSI dimensions; neighbours: %s; min_dist: %s. Compare label stability across settings; labels are GEX-derived.",
                 UMAP_n_dims_seq.ATAC, n_neighbors, aggregation_UMAP_min_dist))
           }) |>
+          purrr::set_names(\(n_neighbors) paste0(UMAP_n_dims_seq.ATAC, "_", n_neighbors)) |>
           save_plots_structured(dyn_suffix_in_subdir = TRUE, override_suffix = UMAP_n_dims_seq.ATAC)
       },
-      pattern = map(UMAP_n_dims_seq.ATAC),
-      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
+      pattern = map(cross_UMAP_embeddings_tibbles.ATAC, UMAP_n_dims_seq.ATAC),
+      resources = get_tar_resources(RAM_GB_req = 16)
     )
   ),
 

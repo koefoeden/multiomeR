@@ -295,49 +295,41 @@ rlang::list2(
     iteration = "vector"
   ),
   targets::tar_target(
-    name = non_harmony_continuous_UMAP_spec.GEX,
-    description = "Continuous non-Harmony GEX UMAP variables to plot one at a time",
-    command = {
-      feature_vars <- intersect(
-        unique(c(GEX_marker_genes_vec, interesting_genes)),
-        rownames(aggregated_counts_BPCells_matrix.GEX)
-      )
-      tibble::tibble(
-        variable = c(aggregation_non_peak_based_continuous_vars, feature_vars),
-        value_source = c(
-          rep("metadata", length(aggregation_non_peak_based_continuous_vars)),
-          rep("feature", length(feature_vars))
-        )
-      )
-    },
-    iteration = "vector"
-  ),
-  tarchetypes::tar_file(
-    name = cross.UMAPs.3_GEX_QC,
-    description = "Compute GEX UMAPs across a sweep of PC counts and neighbor counts, with one neighbour search per PC count. [checkpoint:3_GEX-QC]",
+    name = cross_UMAP_embeddings_tibbles.GEX,
+    description = "Compute GEX UMAPs across a sweep of PC counts and neighbor counts, with one neighbour search per PC count",
     command = {
       embedding_matrix <- select_embedding_dimensions(harmony_embeddings_matrix.GEX,
         dims = aggregation_GEX_data_PCs[seq_len(UMAP_n_dims_seq.GEX)], dim_prefix = "PCA_")
       # The full PC count is the shared search's own; UMAP_neighbors_seq never exceeds its neighbour count.
       knn <- if (UMAP_n_dims_seq.GEX == length(aggregation_GEX_data_PCs)) knn.GEX else
         find_hnsw_neighbors(embedding_matrix, k = max(UMAP_neighbors_seq), threads = 6)
+      purrr::map(purrr::set_names(UMAP_neighbors_seq), \(n_neighbors) {
+        run_UMAP_from_neighbors(knn, n_neighbors = n_neighbors, min_dist = aggregation_UMAP_min_dist,
+          col_prefix = "GEX_UMAP", init = "spca", embedding_matrix = embedding_matrix, threads = 6) |>
+          tibble::as_tibble(rownames = "barcode_w_prefix")
+      })
+    },
+    pattern = map(UMAP_n_dims_seq.GEX),
+    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
+  ),
+  tarchetypes::tar_file(
+    name = cross.UMAPs.3_GEX_QC,
+    description = "Plot GEX cell types on UMAPs across a sweep of PC counts and neighbor counts. [checkpoint:3_GEX-QC]",
+    command = {
       metadata <- metadata_w_cell_types_tibble.GEX |>
         dplyr::select(-dplyr::any_of(c("GEX_UMAP_1", "GEX_UMAP_2")))
-      UMAP_neighbors_seq |>
-        purrr::set_names(\(n_neighbors) paste0(UMAP_n_dims_seq.GEX, "_", n_neighbors)) |>
-        purrr::map(\(n_neighbors) {
-          sweep_umap <- run_UMAP_from_neighbors(knn, n_neighbors = n_neighbors, min_dist = aggregation_UMAP_min_dist,
-            col_prefix = "GEX_UMAP", init = "spca", embedding_matrix = embedding_matrix, threads = 6) |>
-            tibble::as_tibble(rownames = "barcode_w_prefix")
+      cross_UMAP_embeddings_tibbles.GEX |>
+        purrr::imap(\(sweep_umap, n_neighbors) {
           dplyr::left_join(metadata, sweep_umap, by = "barcode_w_prefix") |>
             plot_UMAP_from_metadata(variable = "PCA_harmony_SNN_cluster_cell_type", umap_cols = c("GEX_UMAP_1", "GEX_UMAP_2")) +
             ggplot2::labs(subtitle = sprintf("First %s UMAP PCs; neighbours: %s; min_dist: %s. Compare label stability across settings; island spacing is not biological distance.",
               UMAP_n_dims_seq.GEX, n_neighbors, aggregation_UMAP_min_dist))
         }) |>
+        purrr::set_names(\(n_neighbors) paste0(UMAP_n_dims_seq.GEX, "_", n_neighbors)) |>
         save_plots_structured(dyn_suffix_in_subdir = TRUE, override_suffix = UMAP_n_dims_seq.GEX)
     },
-    pattern = map(UMAP_n_dims_seq.GEX),
-    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
+    pattern = map(cross_UMAP_embeddings_tibbles.GEX, UMAP_n_dims_seq.GEX),
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
     name = harmony.categorical.UMAPs.3_GEX_QC,
@@ -355,7 +347,8 @@ rlang::list2(
     name = continuous_UMAP_inputs.GEX,
     description = "Coordinates, metadata variables and gene counts plotted on continuous Harmony and non-Harmony GEX UMAPs, with genes read in one pass",
     command = prepare_continuous_UMAP_inputs(metadata_w_cell_types_analysis_tibble.GEX,
-      dplyr::bind_rows(harmony_continuous_UMAP_spec.GEX, non_harmony_continuous_UMAP_spec.GEX),
+      # The non-Harmony plots show a subset of these variables.
+      harmony_continuous_UMAP_spec.GEX,
       aggregated_counts_BPCells_matrix.GEX,
       umap_cols = c("GEX_UMAP_1", "GEX_UMAP_2", "GEX_non_harmony_UMAP_1", "GEX_non_harmony_UMAP_2")),
     resources = get_tar_resources(RAM_GB_req = 16)
@@ -375,34 +368,6 @@ rlang::list2(
         override_suffix = stringr::str_replace_all(harmony_continuous_UMAP_spec.GEX$variable, "[/\\\\]", "_")
       ),
     pattern = map(harmony_continuous_UMAP_spec.GEX)
-  ),
-  tarchetypes::tar_file(
-    name = non_harmony.categorical.UMAPs.3_GEX_QC,
-    description = "UMAPs colored by categorical metadata variables on the uncorrected PCA embedding. [checkpoint:3_GEX-QC]",
-    command = metadata_w_cell_types_analysis_tibble.GEX |>
-      plot_UMAP_from_metadata(variable = categorical_UMAP_var.GEX, umap_cols = c("GEX_non_harmony_UMAP_1", "GEX_non_harmony_UMAP_2")) |>
-      save_plots_structured(
-        dyn_suffix_in_subdir = TRUE,
-        override_suffix = stringr::str_replace_all(categorical_UMAP_var.GEX, "[/\\\\]", "_")
-      ),
-    pattern = map(categorical_UMAP_var.GEX),
-    resources = get_tar_resources(RAM_GB_req = 16)
-  ),
-  tarchetypes::tar_file(
-    name = non_harmony.continuous.UMAPs.3_GEX_QC,
-    description = "UMAPs colored by continuous features on the uncorrected PCA embedding. [checkpoint:3_GEX-QC]",
-    command = plot_UMAP_from_metadata(
-      metadata_tibble = continuous_UMAP_inputs.GEX$metadata_tibble,
-      variable = non_harmony_continuous_UMAP_spec.GEX$variable,
-      value_source = non_harmony_continuous_UMAP_spec.GEX$value_source,
-      feature_matrix = continuous_UMAP_inputs.GEX$feature_matrix,
-      umap_cols = c("GEX_non_harmony_UMAP_1", "GEX_non_harmony_UMAP_2")
-    ) |>
-      save_plots_structured(
-        dyn_suffix_in_subdir = TRUE,
-        override_suffix = stringr::str_replace_all(non_harmony_continuous_UMAP_spec.GEX$variable, "[/\\\\]", "_")
-      ),
-    pattern = map(non_harmony_continuous_UMAP_spec.GEX)
   ),
   targets::tar_target(
     name = metadata_w_cell_types_unfiltered_analysis_tibble.GEX,

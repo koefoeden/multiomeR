@@ -113,7 +113,7 @@ targets::tar_make(
 ```text
 <store>/plots/my_aggregation/3_GEX_QC/
 ├── UMAPs/
-│   ├── categorical/{harmony,non_harmony}/
+│   ├── categorical/{harmony,non_harmony}/   # non_harmony only with Harmony covariates
 │   ├── continuous/{harmony,non_harmony}/
 │   └── cross/
 ├── markers_by_cluster_dot_plot.png

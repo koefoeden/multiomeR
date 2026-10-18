@@ -404,20 +404,25 @@ rlang::list2(
         save_plots_structured(width = 18, height = 18),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
+    targets::tar_target(
+      name = cross_UMAP_embeddings_tibble.WNN,
+      description = "Compute WNN UMAPs across a sweep of nNN counts [resource_observation: peak_RAM_GiB=6.6; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10]",
+      command = run_WNN_UMAP(
+        WNN_results = WNN_results,
+        n_neighbors = UMAP_neighbors_seq,
+        min_dist = aggregation_UMAP_min_dist,
+        threads = 6
+      ),
+      pattern = map(UMAP_neighbors_seq),
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
+    ),
     tarchetypes::tar_file(
       name = cross.UMAPs.8_multimodal_QC,
-      description = "Compute WNN UMAPs across a sweep of nNN counts. [checkpoint:8_multimodal-QC] [resource_observation: peak_RAM_GiB=6.6; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10]",
+      description = "Plot WNN cell types on UMAPs across a sweep of nNN counts. [checkpoint:8_multimodal-QC]",
       command = {
-        sweep_umap_tibble <- run_WNN_UMAP(
-          WNN_results = WNN_results,
-          n_neighbors = UMAP_neighbors_seq,
-          min_dist = aggregation_UMAP_min_dist,
-          threads = 6
-        )
-
         metadata_w_cell_types_tibble.WNN |>
           dplyr::select(-dplyr::any_of(c("WNN_UMAP_1", "WNN_UMAP_2"))) |>
-          dplyr::left_join(sweep_umap_tibble, by = "barcode_w_prefix") |>
+          dplyr::left_join(cross_UMAP_embeddings_tibble.WNN, by = "barcode_w_prefix") |>
           plot_UMAP_from_metadata(
             variable = "WNN_harmony_SNN_cluster_cell_type",
             umap_cols = c("WNN_UMAP_1", "WNN_UMAP_2")
@@ -427,8 +432,8 @@ rlang::list2(
           dyn_suffix_in_subdir = TRUE,
           override_suffix = paste0(UMAP_neighbors_seq)
         ),
-      pattern = map(UMAP_neighbors_seq),
-      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
+      pattern = map(cross_UMAP_embeddings_tibble.WNN, UMAP_neighbors_seq),
+      resources = get_tar_resources(RAM_GB_req = 16)
     ),
   ),
 )

@@ -138,7 +138,10 @@ rlang::list2(
   targets::tar_target(
     name = UMAP_embeddings_tibble.GEX_non_harmony,
     description = "UMAP coordinates from the nearest neighbours of the uncorrected GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:seurat_export]",
-    command = {
+    command = if (length(aggregation_harmony_correction_metadata_col_names %||% character()) == 0) {
+      # Without Harmony covariates both UMAPs start from the same PCA, so reuse the identical layout.
+      dplyr::rename_with(UMAP_embeddings_tibble.GEX, \(column) sub("^GEX_UMAP", "GEX_non_harmony_UMAP", column))
+    } else {
       embedding_matrix <- select_embedding_dimensions(PCA_BPCells.GEX$cell_embeddings, dims = aggregation_GEX_data_PCs, dim_prefix = "PCA_")
       find_hnsw_neighbors(embedding_matrix, k = aggregation_UMAP_nNNs, threads = 6) |>
         run_UMAP_from_neighbors(

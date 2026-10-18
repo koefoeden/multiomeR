@@ -43,6 +43,18 @@ pipeline <- rlang::list2(
     source("extra_targets/Seurat_Signac_export_targets.R")$value
   ),
   tarchetypes::tar_map(
+    values = aggregation_tibble |>
+      dplyr::filter(lengths(aggregation_harmony_correction_metadata_col_names) > 0) |>
+      add_aggregation_target_syms(c(
+        "GEX_marker_genes_vec", "interesting_genes", "aggregated_counts_BPCells_matrix.GEX",
+        "metadata_w_cell_types_analysis_tibble.GEX", "categorical_UMAP_var.GEX", "continuous_UMAP_inputs.GEX"
+      )),
+    names = aggregation,
+    descriptions = NULL,
+    delimiter = ".",
+    source("extra_targets/GEX_non_harmony_plot_targets.R")$value
+  ),
+  tarchetypes::tar_map(
     values = dplyr::filter(peak_calling_aggregation_tibble, aggregation_ATAC_peak_calling_method == "macs3"),
     names = aggregation,
     descriptions = NULL,

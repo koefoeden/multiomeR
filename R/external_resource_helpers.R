@@ -21,5 +21,5 @@ parse_open_targets_listing <- function(dataset_index) {
 }
 
 annotation_hub_ensembl_ids <- function() {
-  c('AH113665', 'AH113713', 'AH75011', 'AH75036')
+  names(ENSEMBL_ANNOTATION_HUB_MD5)
 }

@@ -7,6 +7,57 @@ get_gene_annotation_GRanges_from_EnsDb <- function(ensdb) {
   genes
 }
 
+#' Get Ensembl annotations GRanges list
+#'
+#' Build the gene and transcript-region annotations that validate marker genes
+#' and annotate consensus peaks.
+#'
+#' @param ensdb `EnsDb` object, for example from `load_verified_EnsDb()`.
+#' @return List with `genes`, the kept gene biotypes on standard chromosomes named
+#'   by their first gene name, and `transcripts`, a `SimpleList` of TSS, promoter,
+#'   UTR, CDS, intron, proximal and distal ranges.
+#' @keywords internal
+
+get_Ensembl_annotations_GRanges_list <- function(ensdb) {
+  ensembl_db_interface <- ensdb |>
+    GenomeInfoDb::`seqlevelsStyle<-`("UCSC")
+
+  tx_grangeslist <- S4Vectors::SimpleList(
+    TSS = ensembl_db_interface |> ensembldb::promoters(upstream = 100, downstream = 100) |> GenomicRanges::trim(),
+    promoter = ensembl_db_interface |> ensembldb::promoters(upstream = 1500, downstream = 500) |> GenomicRanges::trim(),
+    fiveUTR = ensembl_db_interface |> ensembldb::fiveUTRsByTranscript() |> unlist(),
+    threeUTR = ensembl_db_interface |> ensembldb::threeUTRsByTranscript() |> unlist(),
+    CDS = ensembl_db_interface |> ensembldb::cdsBy() |> unlist(),
+    intron = ensembl_db_interface |> ensembldb::intronsByTranscript() |> unlist(),
+    proximal = ensembl_db_interface |> ensembldb::promoters(upstream = 1E4L, downstream = 1E4L) |> GenomicRanges::trim(),
+    distal = ensembl_db_interface |> ensembldb::promoters(upstream = 1E5L, downstream = 1E5L) |> GenomicRanges::trim()
+  ) |>
+    S4Vectors::endoapply(GenomicRanges::granges)
+
+  gene_biotypes_to_keep <- c(
+    "protein_coding",
+    "lncRNA",
+    "processed_pseudogene",
+    "IG_C_gene",
+    "IG_D_gene",
+    "IG_J_gene",
+    "IG_V_gene",
+    "TR_C_gene",
+    "TR_D_gene",
+    "TR_J_gene",
+    "TR_V_gene"
+  )
+
+  genes_granges <- ensembl_db_interface |>
+    ensembldb::genes() |>
+    GenomeInfoDb::keepStandardChromosomes(pruning.mode = "coarse") |>
+    subset(gene_biotype %in% gene_biotypes_to_keep)
+  genes_granges <- genes_granges[!duplicated(genes_granges$gene_name)]
+  names(genes_granges) <- genes_granges$gene_name
+
+  list(genes = genes_granges, transcripts = tx_grangeslist)
+}
+
 #' Get blacklist GRanges
 #'
 #' Load genome-specific ENCODE/excluderanges blacklist intervals as GRanges.
@@ -139,6 +190,22 @@ order_genes_for_BPCells_gene_score_archr <- function(
   genes[c(setdiff(seq_along(genes), scored_gene_idx), scored_gene_idx)]
 }
 
+#' Normalize Roadmap EDACC names
+#'
+#' @param roadmap_EDACC_names Character vector/list of Roadmap EDACC tissue IDs,
+#'   possibly `NULL`, empty or with missing entries.
+#' @return Unique, non-empty EDACC names in their configured order.
+#' @keywords internal
+
+normalize_roadmap_EDACC_names <- function(roadmap_EDACC_names) {
+  roadmap_EDACC_names |>
+    unlist(use.names = FALSE) |>
+    as.character() |>
+    purrr::discard(is.na) |>
+    purrr::discard(\(x) x == "") |>
+    unique()
+}
+
 #' Get roadmap chromHMMs from annotation hub
 #'
 #' Fetch Roadmap ChromHMM annotation resources from AnnotationHub by EDACC name.
@@ -151,12 +218,7 @@ order_genes_for_BPCells_gene_score_archr <- function(
 #' @keywords internal
 
 get_roadmap_chromHMMs_from_annotation_hub <- function(annot_hub_interface, roadmap_EDACC_names) {
-  roadmap_EDACC_names <- roadmap_EDACC_names |>
-    unlist(use.names = FALSE) |>
-    as.character() |>
-    purrr::discard(is.na) |>
-    purrr::discard(\(x) x == "") |>
-    unique()
+  roadmap_EDACC_names <- normalize_roadmap_EDACC_names(roadmap_EDACC_names)
   if (length(roadmap_EDACC_names) == 0) {
     return(list())
   }

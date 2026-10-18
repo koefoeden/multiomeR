@@ -169,55 +169,10 @@ rlang::list2(
     }
   ),
   targets::tar_target(
-    name = reference_Ensembl_annotations_GRanges_list,
-    description = "Download Ensembl gene and transcript annotations for this aggregation reference",
-    command = with_annotation_hub_cache_lock({
-      AnnotationHub::setAnnotationHubOption("CACHE", file.path(targets::tar_config_get("store"), "files", "AnnotationHub"))
-      annot_hub_interface <- AnnotationHub::AnnotationHub(ask = FALSE)
-      ensembl_db_interface <- annot_hub_interface[[aggregated_cellranger_ref_list$annot_hub_code]] |>
-        GenomeInfoDb::`seqlevelsStyle<-`("UCSC")
-
-      tx_grangeslist <- S4Vectors::SimpleList(
-        TSS = ensembl_db_interface |> ensembldb::promoters(upstream = 100, downstream = 100) |> GenomicRanges::trim(),
-        promoter = ensembl_db_interface |> ensembldb::promoters(upstream = 1500, downstream = 500) |> GenomicRanges::trim(),
-        fiveUTR = ensembl_db_interface |> ensembldb::fiveUTRsByTranscript() |> unlist(),
-        threeUTR = ensembl_db_interface |> ensembldb::threeUTRsByTranscript() |> unlist(),
-        CDS = ensembl_db_interface |> ensembldb::cdsBy() |> unlist(),
-        intron = ensembl_db_interface |> ensembldb::intronsByTranscript() |> unlist(),
-        proximal = ensembl_db_interface |> ensembldb::promoters(upstream = 1E4L, downstream = 1E4L) |> GenomicRanges::trim(),
-        distal = ensembl_db_interface |> ensembldb::promoters(upstream = 1E5L, downstream = 1E5L) |> GenomicRanges::trim()
-      ) |>
-        S4Vectors::endoapply(GenomicRanges::granges)
-
-      gene_biotypes_to_keep <- c(
-        "protein_coding",
-        "lncRNA",
-        "processed_pseudogene",
-        "IG_C_gene",
-        "IG_D_gene",
-        "IG_J_gene",
-        "IG_V_gene",
-        "TR_C_gene",
-        "TR_D_gene",
-        "TR_J_gene",
-        "TR_V_gene"
-      )
-
-      genes_granges <- ensembl_db_interface |>
-        ensembldb::genes() |>
-        GenomeInfoDb::keepStandardChromosomes(pruning.mode = "coarse") |>
-        subset(gene_biotype %in% gene_biotypes_to_keep)
-      genes_granges <- genes_granges[!duplicated(genes_granges$gene_name)]
-      names(genes_granges) <- genes_granges$gene_name
-
-      list(genes = genes_granges, transcripts = tx_grangeslist)
-    }),
-    resources = get_tar_resources(cores_req = 1, RAM_GB_req = 16)
-  ),
-  targets::tar_target(
     name = marker_validated_Ensembl_annotations_GRanges_list,
-    description = "Validate configured marker genes against Ensembl annotation names",
+    description = "Select the Ensembl gene and transcript annotations of this aggregation's reference and validate configured marker genes against their gene names",
     command = {
+      reference_Ensembl_annotations_GRanges_list <- Ensembl_annotations_by_hub_ID[[aggregated_cellranger_ref_list$annot_hub_code]]
       gene_names <- reference_Ensembl_annotations_GRanges_list$genes$gene_name
       # Count matrices keep only the first gene of a duplicated symbol under that name.
       invalid_marker_genes <- c(setdiff(GEX_marker_genes_vec, gene_names),

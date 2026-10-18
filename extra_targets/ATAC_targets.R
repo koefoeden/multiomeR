@@ -44,15 +44,8 @@ rlang::list2(
   ATAC_cluster_specific_fragment_file_generation = rlang::list2(
     targets::tar_target(
       name = blacklist_GRanges.ATAC,
-      description = "Load genome blacklist regions for the configured genome",
-      command = with_annotation_hub_cache_lock({
-        AnnotationHub::setAnnotationHubOption("CACHE", file.path(targets::tar_config_get("store"), "files", "AnnotationHub"))
-        get_blacklist_GRanges(
-          genome = aggregated_cellranger_ref_list$genomes[[1]],
-          annot_hub_interface = AnnotationHub::AnnotationHub(ask = FALSE)
-        )
-      }),
-      resources = get_tar_resources(RAM_GB_req = 16)
+      description = "Select the blacklist regions of this aggregation's genome",
+      command = blacklist_GRanges_by_genome[[aggregated_cellranger_ref_list$genomes[[1]]]]
     ),
     targets::tar_target(
       name = combined_BPCells_fragment_obj.ATAC,
@@ -92,17 +85,11 @@ rlang::list2(
   ATAC_peak_calling_per_cluster_w_iterative_collapsing_targets = rlang::list2(
     targets::tar_target(
       name = chromHMMs_list_proj.ATAC,
-      description = "Load and liftover Roadmap Epigenomics chromHMM state annotations for the configured EDACC names",
-      command = with_annotation_hub_cache_lock({
-        AnnotationHub::setAnnotationHubOption("CACHE", file.path(targets::tar_config_get("store"), "files", "AnnotationHub"))
-        annot_hub_interface <- AnnotationHub::AnnotationHub(ask = FALSE)
-        get_roadmap_chromHMMs_from_annotation_hub(
-          annot_hub_interface = annot_hub_interface,
-          roadmap_EDACC_names = aggregation_roadmap_EDACC_names
-        )
-      }),
-      packages = w_def("AnnotationHub"),
-      resources = get_tar_resources(cores_req = 1, RAM_GB_req = 16)
+      description = "Select the lifted-over Roadmap Epigenomics chromHMM states of the configured EDACC names",
+      command = {
+        EDACC_names <- normalize_roadmap_EDACC_names(aggregation_roadmap_EDACC_names)
+        if (length(EDACC_names) == 0) list() else roadmap_chromHMMs_by_EDACC_name[EDACC_names]
+      }
     ),
     targets::tar_target(
       name = within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC,

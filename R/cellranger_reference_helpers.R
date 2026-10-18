@@ -5,6 +5,37 @@ CELLRANGER_REFERENCE_ANNOTATION_HUB_IDS <- c(
   "gencode.vM23" = "AH75036"
 )
 
+# MD5 checksums of the EnsDb SQLite files that AnnotationHub serves for these IDs.
+ENSEMBL_ANNOTATION_HUB_MD5 <- c(
+  AH113665 = "e9be5c731b59f0815e7c8a453a83c9d3",
+  AH113713 = "08a71f471e2655ae2766c3e5f0243ba5",
+  AH75011 = "e98a3c88a5122e4b229ae1a0e8364ef0",
+  AH75036 = "8a77488d4139a9e82d82ceecfa6d2ea9"
+)
+
+#' Load a verified EnsDb
+#'
+#' Load a supported Ensembl annotation from AnnotationHub after checking the
+#' MD5 checksum of its cached SQLite file. An interrupted download can leave a
+#' truncated file that still opens and silently returns fewer genes.
+#'
+#' @param annot_hub_interface `AnnotationHub::AnnotationHub()` object to load from.
+#' @param annotation_hub_id One of `names(ENSEMBL_ANNOTATION_HUB_MD5)`.
+#' @return The `EnsDb` object.
+#' @keywords internal
+
+load_verified_EnsDb <- function(annot_hub_interface, annotation_hub_id) {
+  cached_file <- AnnotationHub::cache(annot_hub_interface[annotation_hub_id])
+  if (!identical(unname(tools::md5sum(cached_file)), ENSEMBL_ANNOTATION_HUB_MD5[[annotation_hub_id]])) {
+    stop(
+      "The cached AnnotationHub resource ", annotation_hub_id, " is incomplete or corrupt: ", cached_file,
+      " does not have the expected MD5 checksum. Remove it with AnnotationHub::removeResources() and rerun to download it again.",
+      call. = FALSE
+    )
+  }
+  annot_hub_interface[[annotation_hub_id]]
+}
+
 resolve_cellranger_reference_json <- function(fragment_file, reference_json_files) {
   connection <- gzfile(fragment_file, open = "rt")
   on.exit(close(connection))

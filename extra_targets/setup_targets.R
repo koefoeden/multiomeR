@@ -112,12 +112,56 @@ rlang::list2(
       AnnotationHub::setAnnotationHubOption("CACHE", file.path(targets::tar_config_get("store"), "files", "AnnotationHub"))
       annot_hub_interface <- AnnotationHub::AnnotationHub(ask = FALSE)
 
-      annotation_hub_ensembl_ids() |>
+      names(ENSEMBL_ANNOTATION_HUB_MD5) |>
         purrr::set_names() |>
         purrr::map(\(annotation_hub_id) {
-          get_gene_annotation_GRanges_from_EnsDb(annot_hub_interface[[annotation_hub_id]])
+          get_gene_annotation_GRanges_from_EnsDb(load_verified_EnsDb(annot_hub_interface, annotation_hub_id))
         })
     }),
+    resources = get_tar_resources(cores_req = 1, RAM_GB_req = 16)
+  ),
+  targets::tar_target(
+    name = Ensembl_annotations_by_hub_ID,
+    description = "Build the gene and transcript-region annotations of every supported Ensembl reference once; aggregations select their own",
+    command = with_annotation_hub_cache_lock({
+      AnnotationHub::setAnnotationHubOption("CACHE", file.path(targets::tar_config_get("store"), "files", "AnnotationHub"))
+      annot_hub_interface <- AnnotationHub::AnnotationHub(ask = FALSE)
+
+      names(ENSEMBL_ANNOTATION_HUB_MD5) |>
+        purrr::set_names() |>
+        purrr::map(\(annotation_hub_id) {
+          get_Ensembl_annotations_GRanges_list(load_verified_EnsDb(annot_hub_interface, annotation_hub_id))
+        })
+    }),
+    resources = get_tar_resources(cores_req = 1, RAM_GB_req = 16)
+  ),
+  targets::tar_target(
+    name = blacklist_GRanges_by_genome,
+    description = "Load the blacklist regions of every supported genome once; aggregations select their own",
+    command = with_annotation_hub_cache_lock({
+      AnnotationHub::setAnnotationHubOption("CACHE", file.path(targets::tar_config_get("store"), "files", "AnnotationHub"))
+      annot_hub_interface <- AnnotationHub::AnnotationHub(ask = FALSE)
+
+      c("GRCh38", "mm10", "GRCm39") |>
+        purrr::set_names() |>
+        purrr::map(\(genome) get_blacklist_GRanges(genome, annot_hub_interface))
+    }),
+    resources = get_tar_resources(RAM_GB_req = 16)
+  ),
+  targets::tar_target(
+    name = roadmap_chromHMMs_by_EDACC_name,
+    description = "Load and lift over the Roadmap Epigenomics chromHMM states of every EDACC name that an active aggregation configures, once",
+    command = with_annotation_hub_cache_lock({
+      AnnotationHub::setAnnotationHubOption("CACHE", file.path(targets::tar_config_get("store"), "files", "AnnotationHub"))
+      get_roadmap_chromHMMs_from_annotation_hub(
+        annot_hub_interface = AnnotationHub::AnnotationHub(ask = FALSE),
+        roadmap_EDACC_names = !!sort(
+          normalize_roadmap_EDACC_names(aggregation_tibble$aggregation_roadmap_EDACC_names),
+          method = "radix"
+        )
+      )
+    }),
+    packages = w_def("AnnotationHub"),
     resources = get_tar_resources(cores_req = 1, RAM_GB_req = 16)
   ),
   targets::tar_target(

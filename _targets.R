@@ -68,6 +68,21 @@ pipeline <- rlang::list2(
     delimiter = ".",
     source("extra_targets/ATAC_tile_targets.R")$value
   ),
+  tarchetypes::tar_map(
+    values = aggregation_tibble |>
+      dplyr::filter(purrr::map_lgl(aggregation_ATAC_gene_activity_scores, isTRUE)) |>
+      add_aggregation_target_syms(c(
+        "metadata_w_cell_types_tibble.ATAC",
+        "aggregated_cellranger_ref_list",
+        "marker_validated_Ensembl_annotations_GRanges_list",
+        "blacklist_GRanges.ATAC",
+        "UCell_GEX_marker_genes_list"
+      )),
+    names = aggregation,
+    descriptions = NULL,
+    delimiter = ".",
+    source("extra_targets/ATAC_gene_activity_targets.R")$value
+  ),
   source("extra_targets/module_differential_analyses/targets.R")$value,
   source("extra_targets/module_genetic_enrichment/targets.R")$value,
   source("extra_targets/module_peak_gene_correlation/targets.R")$value

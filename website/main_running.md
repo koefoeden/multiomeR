@@ -208,9 +208,9 @@ targets::tar_make(
 
 ## Checkpoint 7: ATAC clusters and motifs {#checkpoint-7}
 
-Clusters the ATAC data, names the clusters from GEX marker scores, removes ATAC doublets, and computes gene activity and motif accessibility. [Method details](methods_primary_module.md#atac-filtering)
+Clusters the ATAC data, names the clusters from GEX marker scores, removes ATAC doublets, and computes motif accessibility. [Method details](methods_primary_module.md#atac-filtering)
 
-**Configure:** optionally, list expected transcription factors per cell type in [`aggregation_ATAC_marker_TFs`](parameters.html#aggregation_ATAC_marker_TFs) to organize the motif-accessibility plots.
+**Configure:** optionally, list expected transcription factors per cell type in [`aggregation_ATAC_marker_TFs`](parameters.html#aggregation_ATAC_marker_TFs) to organize the motif-accessibility plots. Set [`aggregation_ATAC_gene_activity_scores`](parameters.html#aggregation_ATAC_gene_activity_scores) to `true` to also compute gene activity scores and `marker_gene_activity_dot_plot.png`; they are off by default because they take hours of worker time in large aggregations.
 
 **Run pipeline:**
 

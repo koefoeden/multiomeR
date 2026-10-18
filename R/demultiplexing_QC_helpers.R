@@ -30,7 +30,7 @@ summarize_demultiplexing_assignments <- function(vireo_results, barcode_files, c
           fraction = .data$n_nuclei / .data$n_called,
           not_demultiplexed = all(result$vireo_type == "not_demultiplexed"),
           # The SNP-by-barcode matrix header gives the number of SNPs cellsnp-lite kept.
-          n_passing_SNPs = if (cellsnp_dir == "NULL.txt") NA_integer_ else scan(file.path(cellsnp_dir, "cellSNP.tag.AD.mtx"),
+          n_passing_SNPs = if (length(cellsnp_dir) == 0L) NA_integer_ else scan(file.path(cellsnp_dir, "cellSNP.tag.AD.mtx"),
             what = integer(), comment.char = "%", nmax = 1L, quiet = TRUE),
           median_SNPs_per_nucleus = stats::median(result$vireo_n_vars))
     }) |>

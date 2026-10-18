@@ -167,6 +167,8 @@ differential_analyses_tibble |>
 
 For aggregation `PBMC`, the column `metadata_w_cell_types_tibble.WNN` contains the symbol `metadata_w_cell_types_tibble.WNN.PBMC`. Inside a module target, the command can be written against the unsuffixed local name; `tar_map()` resolves it to the aggregation-specific upstream target for that row.
 
+A module with a `<module>_GEM_well_datasets` parameter then passes its tibble through `restrict_module_to_GEM_well_datasets()`. For each aggregation that sets the parameter, this function defines module copies of the inputs it knows, such as `metadata_w_cell_types_tibble.WNN.differential_analyses.PBMC`. The copies keep only the nuclei of those datasets and the pseudobulks of their donors. The function returns the copies as `targets` and, as `values`, the tibble whose symbols for that aggregation point at them. Aggregations without the parameter keep their symbols, so their commands do not change. Per-nucleus matrices, embeddings and fragments are not copied, so module targets must select nuclei through `metadata_w_cell_types_tibble.WNN`.
+
 ## Target metadata tags
 
 multiomeR stores lightweight target metadata in the `description` argument of `targets::tar_target()` and `tarchetypes::tar_file()` calls. The descriptions should remain readable prose, with bracketed tags appended when a target needs to be discoverable from the manifest.

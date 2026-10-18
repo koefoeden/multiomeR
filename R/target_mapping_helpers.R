@@ -607,3 +607,109 @@ add_aggregation_target_syms <- function(module_tibble, target_names) {
   module_tibble |>
     dplyr::mutate(!!!target_sym_cols)
 }
+
+#' Restrict a module to the nuclei of chosen GEM well datasets
+#'
+#' An aggregation whose `<module>_GEM_well_datasets` lists datasets gets module
+#' copies `<input>.<module>.<aggregation>` of the module's inputs below, and the
+#' module's symbol columns point at them. The copies keep the nuclei of these
+#' datasets and the pseudobulks of their donors. Motif-family accessibility is
+#' relative to the mean of all pseudobulks, so its copy is recomputed. Modules
+#' select nuclei through `metadata_w_cell_types_tibble.WNN`, so per-nucleus
+#' matrices, embeddings and fragments stay whole. Other aggregations keep their
+#' own inputs, so their commands do not change.
+#'
+#' @param module_tibble Module mapping tibble with the symbol columns of
+#'   `add_aggregation_target_syms()`.
+#' @param module_name Module identifier, as listed under `modules`.
+#' @return A list of the copies' `targets` and the mapping `values` that use them.
+#' @keywords internal
+
+restrict_module_to_GEM_well_datasets <- function(module_tibble, module_name) {
+  datasets_column <- paste0(module_name, "_GEM_well_datasets")
+  restriction_targets <- list()
+  for (row in which(!purrr::map_lgl(module_tibble[[datasets_column]], is.null))) {
+    aggregation <- module_tibble$aggregation[[row]]
+    datasets <- module_tibble[[datasets_column]][[row]]
+    upstream <- \(target_name) rlang::sym(paste(target_name, aggregation, sep = "."))
+    metadata <- upstream("metadata_w_cell_types_tibble.WNN")
+    pseudobulks <- \(target_name) {
+      rlang::expr(select_GEM_well_dataset_pseudobulks(!!upstream(target_name), !!metadata, !!datasets))
+    }
+    commands <- list(
+      metadata_w_cell_types_tibble.WNN = rlang::expr(select_GEM_well_dataset_nuclei(!!metadata, !!datasets)),
+      GEM_well_metadata_tibble = rlang::expr(
+        dplyr::filter(!!upstream("GEM_well_metadata_tibble"), .data$GEM_well_dataset %in% !!datasets)
+      ),
+      pseudobulk_counts_matrix.GEX = pseudobulks("pseudobulk_counts_matrix.GEX"),
+      pseudobulk_counts_matrix.ATAC = pseudobulks("pseudobulk_counts_matrix.ATAC"),
+      pseudobulk_depth_tibble.GEX = pseudobulks("pseudobulk_depth_tibble.GEX"),
+      pseudobulk_depth_tibble.ATAC = pseudobulks("pseudobulk_depth_tibble.ATAC"),
+      pseudobulk_motif_family_accessibility_matrix.ATAC = rlang::expr(get_pseudobulk_motif_family_accessibility_matrix(
+        !!pseudobulks("pseudobulk_counts_matrix.ATAC"),
+        !!upstream("chromVAR_obj.ATAC"),
+        !!upstream("chromVAR_TF_motif_family_matrix.ATAC")
+      ))
+    )
+    for (input in intersect(names(commands), colnames(module_tibble))) {
+      name <- paste(input, module_name, aggregation, sep = ".")
+      restriction_targets <- c(restriction_targets, list(targets::tar_target_raw(
+        name = name,
+        command = commands[[input]],
+        description = paste0("Restrict ", input, " to GEM well datasets ", toString(datasets), " for the ", module_name, " module"),
+        resources = if (startsWith(input, "pseudobulk_motif")) get_tar_resources(RAM_GB_req = 32) else targets::tar_option_get("resources")
+      )))
+      module_tibble[[input]][[row]] <- rlang::sym(name)
+    }
+  }
+  list(targets = restriction_targets, values = module_tibble)
+}
+
+#' Keep the nuclei of chosen GEM well datasets
+#'
+#' @param metadata_tibble Per-nucleus metadata with a `dataset` column.
+#' @param GEM_well_datasets GEM well datasets to keep.
+#' @return The rows of `metadata_tibble` from these datasets.
+#' @keywords internal
+
+select_GEM_well_dataset_nuclei <- function(metadata_tibble, GEM_well_datasets) {
+  absent_datasets <- setdiff(GEM_well_datasets, metadata_tibble$dataset)
+  if (length(absent_datasets) > 0L) {
+    stop("The aggregation has no nuclei of GEM well dataset(s): ", toString(absent_datasets), call. = FALSE)
+  }
+  metadata_tibble[metadata_tibble$dataset %in% GEM_well_datasets, ]
+}
+
+#' Keep the pseudobulks of chosen GEM well datasets
+#'
+#' Pseudobulks sum a donor's nuclei over all GEM wells, so they can be kept
+#' only for donors whose nuclei all come from the chosen datasets.
+#'
+#' @param pseudobulks Pseudobulk matrix with `<cluster>_<donor_id>` columns, or
+#'   a pseudobulk depth tibble with a `donor_id` column.
+#' @param metadata_tibble Per-nucleus metadata the pseudobulks were summed from.
+#' @param GEM_well_datasets GEM well datasets to keep.
+#' @return `pseudobulks` reduced to the donors of these datasets.
+#' @keywords internal
+
+select_GEM_well_dataset_pseudobulks <- function(pseudobulks, metadata_tibble, GEM_well_datasets) {
+  donor_datasets <- dplyr::distinct(
+    metadata_tibble,
+    donor_id = stringr::str_replace_all(as.character(.data$donor_id), "_", "-"),
+    is_kept = .data$dataset %in% GEM_well_datasets
+  )
+  shared_donors <- donor_datasets$donor_id[duplicated(donor_datasets$donor_id)]
+  if (length(shared_donors) > 0L) {
+    stop(
+      "Donor(s) ", toString(shared_donors), " have nuclei both in and outside GEM well dataset(s) ",
+      toString(GEM_well_datasets), ", so their pseudobulks cannot be restricted to them. ",
+      "Give each such donor one sample per dataset in cfg_GEM_well_samples.tsv.",
+      call. = FALSE
+    )
+  }
+  kept_donors <- donor_datasets$donor_id[donor_datasets$is_kept]
+  if (is.data.frame(pseudobulks)) {
+    return(pseudobulks[pseudobulks$donor_id %in% kept_donors, ])
+  }
+  pseudobulks[, get_pseudobulk_sample_tibble(pseudobulks)$donor_id %in% kept_donors, drop = FALSE]
+}

@@ -1,4 +1,4 @@
-differential_analyses_tibble <- build_module_tibble("differential_analyses", aggregation_tibble, aggregation_tibble_all_from_yaml) |>
+differential_analyses_restriction <- build_module_tibble("differential_analyses", aggregation_tibble, aggregation_tibble_all_from_yaml) |>
   dplyr::mutate(differential_analyses_target_suffix = stringr::str_c("differential_analyses", aggregation, sep = ".")) |>
   add_aggregation_target_syms(c(
     "metadata_w_cell_types_tibble.WNN",
@@ -10,12 +10,14 @@ differential_analyses_tibble <- build_module_tibble("differential_analyses", agg
     "consensus_peak_annotated_GRanges.ATAC",
     "gene_features_df",
     "organism_chr"
-  ))
+  )) |>
+  restrict_module_to_GEM_well_datasets("differential_analyses")
 
 rlang::list2(
-  if (nrow(differential_analyses_tibble) > 0L) source("extra_targets/module_differential_analyses/shared_targets.R")$value,
+  if (nrow(differential_analyses_restriction$values) > 0L) source("extra_targets/module_differential_analyses/shared_targets.R")$value,
+  differential_analyses_restriction$targets,
   tarchetypes::tar_map(
-    values = differential_analyses_tibble,
+    values = differential_analyses_restriction$values,
     names = differential_analyses_target_suffix,
     descriptions = NULL,
     delimiter = ".",

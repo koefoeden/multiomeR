@@ -1470,6 +1470,7 @@ An aggregation can add GEM wells from other tissues to a single-tissue analysis,
 - **Clustering resolution:** many diverse nuclei coarsen the clusters at a given resolution, so the single-tissue [`aggregation_GEX_cluster_res`](parameters.html#aggregation_GEX_cluster_res) gives the main tissue fewer clusters. Raise it, [`aggregation_ATAC_cluster_res`](parameters.html#aggregation_ATAC_cluster_res) and [`aggregation_WNN_cluster_res`](parameters.html#aggregation_WNN_cluster_res) above the single-tissue values; marker sets that lead no cluster in the [marker-set summary](review_outputs.md#cluster-annotation) suggest that the clusters are too coarse.
 - **Dimensions:** the PCA and LSI compute only as many components as the largest value in [`aggregation_GEX_data_PCs`](parameters.html#aggregation_GEX_data_PCs) and [`aggregation_ATAC_data_PCs`](parameters.html#aggregation_ATAC_data_PCs), and the elbow plots show only these. Small populations from other tissues may need more, for example 40 instead of 20 dimensions to separate related epithelial or stromal cell types.
 - **Marker genes:** for the background tissues, one marker set per broad population, such as one colon-epithelium set rather than separate colonocyte and goblet-cell sets, gives clearer labels. Markers well detected in nuclei work better than short transcripts, for example BCL11B and THEMIS rather than only CD3D and TRAC for T cells.
+- **Optional modules:** every module analyses all nuclei of the aggregation. To keep the background tissues out of the differential analyses or the peak–gene correlation, list the main tissue's `GEM_well_dataset` values in [`differential_analyses_GEM_well_datasets`](parameters.html#differential_analyses_GEM_well_datasets) or [`peak_gene_correlation_GEM_well_datasets`](parameters.html#peak_gene_correlation_GEM_well_datasets). Genetic enrichment ranks cell types against each other, so it usually keeps the background.
 
 ## Optional modules
 
@@ -2199,6 +2200,8 @@ differential_analyses_tibble |>
 ```
 
 For aggregation `PBMC`, the column `metadata_w_cell_types_tibble.WNN` contains the symbol `metadata_w_cell_types_tibble.WNN.PBMC`. Inside a module target, the command can be written against the unsuffixed local name; `tar_map()` resolves it to the aggregation-specific upstream target for that row.
+
+A module with a `<module>_GEM_well_datasets` parameter then passes its tibble through `restrict_module_to_GEM_well_datasets()`. For each aggregation that sets the parameter, this function defines module copies of the inputs it knows, such as `metadata_w_cell_types_tibble.WNN.differential_analyses.PBMC`. The copies keep only the nuclei of those datasets and the pseudobulks of their donors. The function returns the copies as `targets` and, as `values`, the tibble whose symbols for that aggregation point at them. Aggregations without the parameter keep their symbols, so their commands do not change. Per-nucleus matrices, embeddings and fragments are not copied, so module targets must select nuclei through `metadata_w_cell_types_tibble.WNN`.
 
 ## Target metadata tags
 

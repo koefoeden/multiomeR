@@ -255,7 +255,8 @@ empty_peak_GRanges <- function() {
 #'   names of `BCs_per_peak_cluster_list`.
 #' @param max_cells_per_cluster Maximum number of barcodes retained per cluster;
 #'   larger clusters are downsampled to limit peak-calling runtime and memory.
-#' @param seed Random seed of the downsampling and the split.
+#' @param seed Random seed of the downsampling and the split, combined with
+#'   each cluster's name.
 #' @return A tibble with two rows per cluster: `peak_calling_cluster_name`,
 #'   `replicate_name` and the half's `BCs_for_peak_discovery`.
 #' @keywords internal
@@ -269,7 +270,8 @@ build_peak_calling_cluster_discovery_tibble <- function(
   max_cells_per_cluster <- max_cells_per_cluster %||% Inf
   purrr::map_dfr(peak_calling_cluster_names, \(cluster_name) {
     barcodes <- sort(unique(as.character(BCs_per_peak_cluster_list[[cluster_name]])))
-    set.seed(seed + match(cluster_name, peak_calling_cluster_names))
+    # Seeding by the name's SHA3 hash keeps a cluster's halves independent of the other clusters.
+    set.seed(strtoi(substr(secretbase::sha3(paste(seed, cluster_name)), 1, 7), 16L))
     if (length(barcodes) > max_cells_per_cluster) barcodes <- sort(sample(barcodes, max_cells_per_cluster))
     tibble::tibble(
       peak_calling_cluster_name = cluster_name,

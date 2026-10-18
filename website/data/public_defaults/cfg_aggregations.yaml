@@ -25,7 +25,7 @@ immune_human_2x:
   aggregation_WNN_cluster_annotation_min_advantage: 0.02
   # Two donors' 7,800 nuclei hold MAIT and other populations of about 100 nuclei.
   aggregation_cluster_min_barcodes: 50
-  aggregation_QC_exclude_list_combined_object: [nCount_ATAC < 1000, atac_peak_counts_frac < 0.1, atac_peak_counts_blacklist_frac > 0.05]
+  aggregation_QC_exclude_list_combined_object: [atac_fragments_in_peaks < 590, atac_fragments_in_peaks_frac < 0.12, atac_fragments_in_blacklist_frac > 0.012]
   aggregation_ATAC_marker_TFs:
     B: [EBF1]
     Mono: [CEBPA, CEBPB]
@@ -47,7 +47,7 @@ brain_mouse:
     Deep_layer_neuron: [Fezf2, Tle4, Zfpm2, Sox5, Tbr1]
     Hippocampal_neuron: [Prox1, Nrp2, Grik4, Emx2]
     Inhibitory_neuron: [Gad2, Gad1, Dlx6os1, Dlx1, Dlx5]
-  aggregation_QC_exclude_list_combined_object: [nCount_ATAC < 1000, atac_peak_counts_frac < 0.1, atac_peak_counts_blacklist_frac > 0.05]
+  aggregation_QC_exclude_list_combined_object: [atac_fragments_in_peaks < 590, atac_fragments_in_peaks_frac < 0.12, atac_fragments_in_blacklist_frac > 0.012]
   aggregation_ATAC_marker_TFs:
     Radial_glia: [Pax6, Sox2, Hes5, Nfib]
     Intermediate_progenitor: [Eomes, Neurod1]
@@ -87,7 +87,7 @@ ENCODE_heart_LV_6x:
     Pericyte: [RGS5, PDGFRB, CSPG4]
   modules: differential_analyses
   aggregation_categorical_vars: [GEM_well_dataset, GEM_well_tissue, GEM_well_cell_sorting, GEM_well_instrument, GEM_well_target_recovery]
-  aggregation_QC_exclude_list_combined_object: [nCount_ATAC < 1000, atac_peak_counts_frac < 0.1, atac_peak_counts_blacklist_frac > 0.05]
+  aggregation_QC_exclude_list_combined_object: [atac_fragments_in_peaks < 590, atac_fragments_in_peaks_frac < 0.12, atac_fragments_in_blacklist_frac > 0.012]
   aggregation_ATAC_marker_TFs:
     B: EBF1
     T: [TCF7, LEF1]

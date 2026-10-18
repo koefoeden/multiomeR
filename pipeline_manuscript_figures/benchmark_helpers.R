@@ -49,7 +49,7 @@ SEURAT_SIGNAC_COMPARISON_WORKFLOWS <- local({
     # analysis, and no ATAC-only or uncorrected RNA embedding.
     "^cluster_UCell_", "^(UCell_GEX_marker_genes_list|GEX_marker_genes_vec)(\\.|$)",
     "^metadata_w_cell_types(_unfiltered|_annotation)?_tibble[.]",
-    "^(amulet|scDblFinder)_", "^(ATAC_qc_metrics|per_barcode_metrics|blacklist_counts)_tibble[.]",
+    "^(amulet|scDblFinder)_", "^(ATAC_qc_metrics|ATAC_blacklist_metrics|per_barcode_metrics|peak_fragment_counts)_tibble[.]",
     "^metadata_w_QC", "Ensembl_(gene_)?annotations?_GRanges_list(\\.|$)",
     "^(consensus_peak_annotated|signac_annotation)_GRanges(\\.|$)", "^chromHMMs_",
     "^(chromVAR|motif_family|peak_TF_motif|JASPAR)",

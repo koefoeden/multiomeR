@@ -179,6 +179,22 @@ rlang::list2(
     },
   ),
   targets::tar_target(
+    name = ATAC_blacklist_metrics_tibble,
+    description = "Compute the fraction of each called nucleus's fragments with a cut site in the genome blacklist [part_of_graph:parallel] [part_of_graph:seurat_export]",
+    command = {
+      barcode_prefix <- paste0(GEM_well_ID, "_")
+      genome <- cellranger_ref_list$genomes[[1]]
+      fragments_w_prefix_bpcells |>
+        BPCells::select_chromosomes(get_standard_chroms(genome)) |>
+        BPCells::select_cells(paste0(barcode_prefix, readLines(cellranger_barcodes_tsv))) |>
+        count_fragments_in_regions(blacklist_GRanges_by_genome[[genome]]) |>
+        dplyr::transmute(
+          barcode = substring(.data$barcode_w_prefix, nchar(barcode_prefix) + 1),
+          atac_fragments_in_blacklist_frac = .data$fragments_in_regions_frac
+        )
+    }
+  ),
+  targets::tar_target(
     name = GEX_basic_metadata_tibble,
     description = "Compute basic per-cell RNA QC metadata from the BPCells GEX matrix",
     command = {
@@ -279,6 +295,7 @@ rlang::list2(
     description = "Join GEX metadata with ATAC QC, vireo, per-barcode, and AMULET metrics into a comprehensive per-barcode metadata tibble [part_of_graph:parallel] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=2.5; scope=largest GEM well of comparison_31x; method=slurm_monitor; date=2026-10-09]",
     command = GEX_basic_metadata_tibble |>
       dplyr::full_join(ATAC_qc_metrics_tibble, by = "barcode") |>
+      dplyr::full_join(ATAC_blacklist_metrics_tibble, by = "barcode") |>
       # vireo_donor_ids_tibble, with donors mapped to samples where cfg_GEM_well_samples.tsv sets them
       dplyr::full_join(GEM_well_donor_assignments, by = "barcode") |>
       dplyr::full_join(per_barcode_metrics_tibble, by = "barcode") |>

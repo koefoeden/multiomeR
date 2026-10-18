@@ -87,8 +87,7 @@ mixed_human_31x:
       Fetal_Intestine_Large, Adult_Liver
 
 ]
-  aggregation_QC_exclude_list_combined_object: [nCount_ATAC < 1000, atac_peak_counts_frac < 0.1,
-      atac_peak_counts_blacklist_frac > 0.05]
+  aggregation_QC_exclude_list_combined_object: [atac_fragments_in_peaks < 590, atac_fragments_in_peaks_frac < 0.12, atac_fragments_in_blacklist_frac > 0.012]
 
 # Nested aggregations of the first 1, 2, 5, 10, 20 and all 31 GEM wells of mixed_human_31x, which the
 # manuscript's Seurat/Signac resource comparison and algorithm comparisons use. Their comparison_ GEM

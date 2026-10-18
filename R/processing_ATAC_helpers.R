@@ -710,85 +710,73 @@ open_GEM_well_fragments <- function(GEM_well_cells, genome) {
     BPCells::select_chromosomes(get_standard_chroms(genome))
 }
 
-#' Count blacklist fragments by GEM well
+#' Count fragments in regions
 #'
-#' Count fragment insertions or overlaps in blacklisted regions for each GEM
-#' well's nuclei, reading each well's fragments separately.
+#' Count each cell's fragments with at least one cut site in `regions`, each
+#' fragment once however many regions it touches, and their fraction of all the
+#' cell's fragments. Summed over regions, `BPCells::peak_matrix(mode =
+#' "fragments")` would count a fragment with cut sites in two regions twice.
 #'
-#' @param GEM_well_cells Output of `split_cells_by_GEM_well()`.
-#' @param blacklist_GRanges Blacklisted regions.
-#' @param genome Genome build key used to select the standard chromosomes.
-#' @param peak_matrix_mode Counting mode passed to `BPCells::peak_matrix()`.
-#' @param workers Number of forked workers, each counting whole GEM wells.
-#' @return Tibble of `barcode_w_prefix` and `atac_peak_counts_blacklist`, in
-#'   the row order of `GEM_well_cells`.
+#' @param fragments BPCells fragments, read one chromosome at a time.
+#' @param regions `GRanges` of the regions.
+#' @return Tibble with one row per cell of `fragments`: `barcode_w_prefix`,
+#'   `fragments_in_regions` and `fragments_in_regions_frac`, which is `NA` for
+#'   cells without fragments.
 #' @keywords internal
-count_blacklist_fragments_by_GEM_well <- function(GEM_well_cells, blacklist_GRanges, genome, peak_matrix_mode, workers = 1L) {
-  count_GEM_well <- function(i) {
-    barcodes <- GEM_well_cells$barcodes[[i]]
-    counts <- open_GEM_well_fragments(GEM_well_cells[i, ], genome) |>
-      BPCells::peak_matrix(ranges = blacklist_GRanges, mode = peak_matrix_mode) |>
-      BPCells::colSums()
-    tibble::tibble(barcode_w_prefix = barcodes, atac_peak_counts_blacklist = as.numeric(counts[barcodes]))
+count_fragments_in_regions <- function(fragments, regions) {
+  regions <- GenomicRanges::reduce(regions, ignore.strand = TRUE)
+  n_cells <- length(BPCells::cellNames(fragments))
+  fragments_total <- fragments_in_regions <- integer(n_cells)
+  for (chromosome in BPCells::chrNames(fragments)) {
+    chromosome_fragments <- BPCells::select_chromosomes(fragments, chromosome) |>
+      BPCells::write_fragments_memory(compress = FALSE)
+    chromosome_regions <- regions[GenomicRanges::seqnames(regions) == chromosome]
+    # Cut sites are a fragment's 0-based start and end - 1; the leading empty region keeps findInterval() above zero.
+    region_starts <- c(-1L, GenomicRanges::start(chromosome_regions) - 1L)
+    region_ends <- c(0L, GenomicRanges::end(chromosome_regions))
+    in_regions <- \(cut_site) cut_site < region_ends[findInterval(cut_site, region_starts)]
+    cell <- chromosome_fragments@cell + 1L
+    fragments_total <- fragments_total + tabulate(cell, n_cells)
+    hit <- in_regions(chromosome_fragments@start) | in_regions(chromosome_fragments@end - 1L)
+    fragments_in_regions <- fragments_in_regions + tabulate(cell[hit], n_cells)
   }
-  rows <- seq_len(nrow(GEM_well_cells))
-  counts <- if (workers == 1L) lapply(rows, count_GEM_well) else {
-    parallel::mclapply(rows, count_GEM_well, mc.cores = workers)
-  }
-  if (any(vapply(counts, inherits, logical(1L), "try-error"))) stop("Blacklist counting worker failed.")
-  dplyr::bind_rows(counts)
+  tibble::tibble(
+    barcode_w_prefix = BPCells::cellNames(fragments),
+    fragments_in_regions = fragments_in_regions,
+    fragments_in_regions_frac = fragments_in_regions / dplyr::na_if(fragments_total, 0L)
+  )
 }
 
 #' Get ATAC QC metadata from BPCells
 #'
-#' Add BPCells-derived ATAC peak and blacklist QC metrics to cell metadata.
+#' Add the consensus-peak QC metrics to cell metadata.
 #'
-#' @param metadata_df Cell metadata data frame. If `barcode_w_prefix` is absent,
-#'   row names are promoted to that column before joining.
-#' @param ATAC_peak_BPCells_matrix BPCells peak-by-cell ATAC matrix with peak names in rows and cell barcodes in columns.
-#' @param blacklist_counts_tibble Tibble of `barcode_w_prefix` and
-#'   `atac_peak_counts_blacklist`, e.g. from `count_blacklist_fragments_by_GEM_well()`.
-#' @param ATAC_peak_GRanges GRanges for ATAC peaks, aligned by peak name to the corresponding ATAC matrix rows.
-#' @param genome Genome build key used to choose chromosome sizes, blacklist resources, and external-tool parameters.
-#' @param peak_matrix_mode BPCells counting mode of the peak matrix; insertions
-#'   count two per fragment, so the peak fraction divides by twice the fragments.
-#' @return The input metadata as a tibble with `nCount_ATAC`,
-#'   `atac_peak_counts_blacklist`, fraction/enrichment columns, and missing
-#'   count values replaced by zero.
+#' @param metadata_df Cell metadata with `barcode_w_prefix`.
+#' @param ATAC_peak_BPCells_matrix BPCells peak-by-cell ATAC matrix of the same nuclei.
+#' @param peak_fragment_counts_tibble Each nucleus's fragments in consensus
+#'   peaks, from `count_fragments_in_regions()`.
+#' @param ATAC_peak_GRanges Consensus peaks.
+#' @param genome Genome build key, for the effective genome size.
+#' @return The metadata as a tibble with `nCount_ATAC` (the matrix column sums),
+#'   `log10_nCount_ATAC`, `atac_fragments_in_peaks`,
+#'   `atac_fragments_in_peaks_frac` and `atac_peak_count_enrichment`: the
+#'   in-peak fraction divided by the fraction of the effective genome that the
+#'   peaks cover.
 #' @keywords internal
-
-get_ATAC_QC_metadata_from_BPCells <- function(
-  metadata_df,
-  ATAC_peak_BPCells_matrix,
-  blacklist_counts_tibble,
-  ATAC_peak_GRanges,
-  genome,
-  peak_matrix_mode
-) {
-  metadata_tibble <- tibble::as_tibble(metadata_df)
+get_ATAC_QC_metadata_from_BPCells <- function(metadata_df, ATAC_peak_BPCells_matrix, peak_fragment_counts_tibble,
+                                              ATAC_peak_GRanges, genome) {
+  peak_coverage <- sum(GenomicRanges::width(ATAC_peak_GRanges)) / get_effective_genome_size(genome)
   peak_counts <- BPCells::colSums(ATAC_peak_BPCells_matrix)
-
-  qc_tibble <- tibble::tibble(
-    barcode_w_prefix = colnames(ATAC_peak_BPCells_matrix),
-    nCount_ATAC = as.numeric(peak_counts),
-    atac_peak_counts_blacklist = blacklist_counts_tibble$atac_peak_counts_blacklist[
-      match(colnames(ATAC_peak_BPCells_matrix), blacklist_counts_tibble$barcode_w_prefix)
-    ]
-  )
-
-  genome_peak_cov <- ATAC_peak_GRanges |>
-    GenomicRanges::width() |>
-    sum() |>
-    magrittr::divide_by(get_effective_genome_size(genome))
-
-  metadata_tibble |>
-    dplyr::left_join(qc_tibble, by = "barcode_w_prefix") |>
+  tibble::as_tibble(metadata_df) |>
+    dplyr::left_join(
+      dplyr::select(peak_fragment_counts_tibble, "barcode_w_prefix", atac_fragments_in_peaks = "fragments_in_regions",
+        atac_fragments_in_peaks_frac = "fragments_in_regions_frac"),
+      by = "barcode_w_prefix"
+    ) |>
     dplyr::mutate(
-      dplyr::across(c(nCount_ATAC, atac_peak_counts_blacklist), ~ tidyr::replace_na(.x, 0)),
-      atac_peak_counts_frac = nCount_ATAC / (.data$atac_fragments * (1 + (peak_matrix_mode == "insertions"))),
-      atac_peak_counts_blacklist_frac = atac_peak_counts_blacklist / nCount_ATAC,
-      log10_nCount_ATAC = log10(nCount_ATAC),
-      atac_peak_count_enrichment = atac_peak_counts_frac / genome_peak_cov
+      nCount_ATAC = as.numeric(peak_counts[.data$barcode_w_prefix]),
+      log10_nCount_ATAC = log10(.data$nCount_ATAC),
+      atac_peak_count_enrichment = .data$atac_fragments_in_peaks_frac / peak_coverage
     )
 }
 

@@ -994,7 +994,7 @@ get_WNN_weight_metadata_summary <- function(metadata, continuous_vars = characte
   continuous_labels <- c(log10_nCount_RNA = "RNA depth (log10 counts)",
     log10_nCount_ATAC = "ATAC depth (log10 counts)", nFeature_RNA = "Detected genes",
     RNA_mito_percent = "Mitochondrial fraction", TSS.enrichment = "TSS enrichment",
-    nucleosome_signal = "Nucleosome signal", atac_peak_counts_frac = "ATAC counts in peaks",
+    nucleosome_signal = "Nucleosome signal", atac_fragments_in_peaks_frac = "ATAC fragments in peaks",
     ATAC_peak_region_frac = "ATAC peak-region fraction", amulet_q.value = "AMULET q-value",
     scDblFinder.score_GEX = "GEX doublet score", scDblFinder.score_ATAC = "ATAC doublet score")
   categorical_labels <- c(GEM_well_ID = "GEM well", donor_id = "Donor",

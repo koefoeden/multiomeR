@@ -7,13 +7,13 @@ PROCESSING_QC_FEATURE_SETS <- list(
       "novelty",
       "TSS.enrichment",
       "nucleosome_signal",
+      "atac_fragments_in_blacklist_frac",
       "amulet_q.value",
       "scDblFinder.score_GEX"
     ),
     peak_QC = c(
       "log10_nCount_ATAC",
-      "atac_peak_counts_blacklist_frac",
-      "atac_peak_counts_frac",
+      "atac_fragments_in_peaks_frac",
       "atac_peak_count_enrichment",
       "scDblFinder.score_ATAC"
     ),

@@ -169,11 +169,7 @@ rlang::list2(
         out_dir <- get_structured_file_path(override_suffix = GEX_cells_per_GEM_well_tibble.ATAC$GEM_well_ID)
         frags <- open_GEM_well_fragments(GEX_cells_per_GEM_well_tibble.ATAC, aggregated_cellranger_ref_list$genomes[[1]]) |>
           BPCells::select_cells(GEX_cells_per_GEM_well_tibble.ATAC$barcodes[[1]])
-
-        peaks_df <- GenomicRanges::as.data.frame(consensus_peak_GRanges.ATAC) |>
-          dplyr::transmute(chr = as.character(seqnames), start, end)
-
-        consensus_mat <- BPCells::peak_matrix(frags, peaks_df, mode = aggregation_ATAC_peak_matrix_mode)
+        consensus_mat <- BPCells::peak_matrix(frags, consensus_peak_GRanges.ATAC, mode = "fragments")
         rownames(consensus_mat) <- names(consensus_peak_GRanges.ATAC)
         BPCells::write_matrix_dir(consensus_mat, out_dir, buffer_size = 65536L, overwrite = TRUE)
         out_dir
@@ -282,18 +278,14 @@ rlang::list2(
   ),
 
   ATAC_dim_reduc_and_plots_targets = rlang::list2(
-    # One target counts all GEM wells, each in seconds, instead of one worker job per well.
     targets::tar_target(
-      name = blacklist_counts_tibble.ATAC,
-      description = "Count blacklist-region fragments for each GEM well's GEX-retained nuclei",
-      command = count_blacklist_fragments_by_GEM_well(
-        GEX_cells_per_GEM_well_tibble.ATAC,
-        blacklist_GRanges = blacklist_GRanges.ATAC,
-        genome = aggregated_cellranger_ref_list$genomes[[1]],
-        peak_matrix_mode = aggregation_ATAC_peak_matrix_mode,
-        workers = 6
-      ),
-      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
+      name = peak_fragment_counts_tibble.ATAC,
+      description = "Count one GEM well's GEX-retained nuclei's fragments with a cut site in a consensus peak, each fragment once",
+      command = open_GEM_well_fragments(GEX_cells_per_GEM_well_tibble.ATAC, aggregated_cellranger_ref_list$genomes[[1]]) |>
+        BPCells::select_cells(GEX_cells_per_GEM_well_tibble.ATAC$barcodes[[1]]) |>
+        count_fragments_in_regions(consensus_peak_GRanges.ATAC),
+      pattern = map(GEX_cells_per_GEM_well_tibble.ATAC),
+      iteration = "vector"
     ),
     targets::tar_target(
       name = metadata_w_QC_tibble.ATAC,
@@ -301,10 +293,9 @@ rlang::list2(
       command = get_ATAC_QC_metadata_from_BPCells(
         metadata_df = metadata_w_cell_types_tibble.GEX,
         ATAC_peak_BPCells_matrix = consensus_peak_BPCells_matrix.ATAC,
-        blacklist_counts_tibble = blacklist_counts_tibble.ATAC,
+        peak_fragment_counts_tibble = peak_fragment_counts_tibble.ATAC,
         ATAC_peak_GRanges = consensus_peak_GRanges.ATAC,
-        genome = aggregated_cellranger_ref_list$genomes[[1]],
-        peak_matrix_mode = aggregation_ATAC_peak_matrix_mode
+        genome = aggregated_cellranger_ref_list$genomes[[1]]
       ),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
@@ -556,8 +547,8 @@ rlang::list2(
           continuous_technical_cols = c(
             "log10_nCount_ATAC",
             "atac_fragments",
-            "atac_peak_counts_frac",
-            "atac_peak_counts_blacklist_frac",
+            "atac_fragments_in_peaks_frac",
+            "atac_fragments_in_blacklist_frac",
             "TSS.enrichment",
             "nucleosome_signal",
             "amulet_q.value",

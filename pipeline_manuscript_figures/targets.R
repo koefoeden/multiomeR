@@ -284,7 +284,7 @@ algorithm_parity_pipeline <- c(
     ),
     tarchetypes::tar_file(
       algorithm_parity_scDblFinder_ATAC_predoublet_matrix_dir.comparison_5x,
-      description = "S4 pre-doublet ATAC fixture: insertion-counted consensus peaks of one well after ordinary QC",
+      description = "S4 pre-doublet ATAC fixture: fragment-counted consensus peaks of one well after ordinary QC",
       command = write_scDblFinder_ATAC_predoublet_parity_matrix(
         cellranger_kept_metadata_tibble.comparison_pbmc_10k_chromium_x,
         excluded_cellranger_only_barcodes_by_type_list.comparison_pbmc_10k_chromium_x,

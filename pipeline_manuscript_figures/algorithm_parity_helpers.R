@@ -37,18 +37,16 @@ get_scDblFinder_ATAC_parity_fixture <- function(branches, counts, feature_groups
     n_groups = length(unique(feature_groups)))
 }
 
-#' Write the pre-doublet ATAC fixture: insertion-counted consensus peaks for the
+#' Write the pre-doublet ATAC fixture: fragment-counted consensus peaks for the
 #' well's nuclei after ordinary QC, before doublet filters
 write_scDblFinder_ATAC_predoublet_parity_matrix <- function(metadata, exclusions, consensus_peaks, fragments, dir) {
   doublet_filter <- grepl("amulet|vireo|doublet", names(exclusions), ignore.case = TRUE)
   QC_excluded <- unique(unlist(exclusions[!doublet_filter], use.names = FALSE))
   barcodes <- metadata$barcode_w_prefix[!metadata$barcode_w_prefix %in% QC_excluded]
   stopifnot("Missing or duplicated pre-doublet barcodes" = length(barcodes) > 0L && !anyDuplicated(barcodes))
-  peaks <- GenomicRanges::as.data.frame(consensus_peaks) |>
-    dplyr::transmute(chr = as.character(.data$seqnames), start = .data$start, end = .data$end)
   fragments <- BPCells::select_cells(fragments, barcodes)
-  peak_order <- BPCells::order_ranges(peaks, BPCells::chrNames(fragments))
-  counts <- BPCells::peak_matrix(fragments, peaks, mode = "insertions")
+  peak_order <- BPCells::order_ranges(consensus_peaks, BPCells::chrNames(fragments))
+  counts <- BPCells::peak_matrix(fragments, consensus_peaks, mode = "fragments")
   rownames(counts) <- names(consensus_peaks)[peak_order]
   BPCells::write_matrix_dir(counts, dir, overwrite = TRUE)
   dir

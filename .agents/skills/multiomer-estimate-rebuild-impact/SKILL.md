@@ -47,6 +47,12 @@ an edited function body, which reruns every target that calls it directly or
 through other functions; list the roots as above for that. Also check the
 content of changed file targets, such as manifests.
 
+Dynamic branches take their names from their upstream branches, and those of
+an `iteration = "vector"` stem from each element's value, never from the
+pattern: a shifted `slice()` index or a key added beside existing ones reruns
+no existing branch. Mapping over a different or regrouped upstream renames
+every downstream branch, which then reruns.
+
 To confirm a commit's impact line against an existing store, save
 `tar_outdated()` before editing code (it loads the current code), apply the
 change, build only the earliest changed targets, and compare a second

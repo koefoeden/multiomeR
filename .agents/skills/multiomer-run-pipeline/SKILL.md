@@ -57,6 +57,10 @@ targets::tar_outdated(
 EOF
 ```
 
+A full-graph check fails with "unequal lengths of vars in map(...)" when an
+aggregation's GWAS list changed after its `GWAS_input_records` were built;
+restrict `names` to the aggregations in question.
+
 An outdated count is not the cost of a run. Before running after code,
 configuration or input changes, estimate the cost with
 `multiomer-estimate-rebuild-impact`.

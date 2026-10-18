@@ -434,11 +434,10 @@ rlang::list2(
   targets::tar_target(
     name = peak_gene_correlation_top_link_focal_ATAC_coverage_tibble.WNN,
     description = "Cache focal-cell-type insertion coverage over the full candidate window [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation] [resource_observation: peak_RAM_GiB=6.7; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-11] [resource_observation: peak_RAM_GiB=11.5; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-11]",
-    command = compute_peak_gene_focal_coverage(
+    command = compute_peak_gene_focal_coverages(
       peak_gene_correlation_top_link_plot_data.WNN,
       metadata_w_cell_types_tibble.WNN, combined_BPCells_fragment_obj.ATAC
     ),
-    pattern = map(peak_gene_correlation_top_link_plot_data.WNN),
     iteration = "list",
     resources = get_tar_resources(RAM_GB_req = 32)
   ),

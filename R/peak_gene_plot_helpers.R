@@ -31,6 +31,21 @@ compute_peak_gene_focal_coverage <- function(plot_data, metadata, fragments) {
     cell_read_counts = metadata$atac_fragments, bins = 500L)[[1]]
 }
 
+# Load the fragments once for all links: keep the focal cell types' nuclei and the
+# links' windows in memory, then cover each link from that small copy.
+compute_peak_gene_focal_coverages <- function(plot_data_list, metadata, fragments) {
+  links <- purrr::keep(plot_data_list, \(plot_data) isTRUE(plot_data$link$is_analyzable_link[[1]]))
+  if (length(links) > 0L) {
+    focal_cells <- metadata$barcode_w_prefix[metadata$WNN_harmony_SNN_cluster_cell_type %in%
+      purrr::map_chr(links, \(plot_data) plot_data$link$cell_group[[1]])]
+    fragment_names <- BPCells::cellNames(fragments)
+    fragments <- BPCells::select_cells(fragments, fragment_names[fragment_names %in% focal_cells]) |>
+      BPCells::select_regions(GenomicRanges::reduce(do.call(c, unname(purrr::map(links, "region"))))) |>
+      BPCells::write_fragments_memory()
+  }
+  purrr::map(plot_data_list, compute_peak_gene_focal_coverage, metadata, fragments)
+}
+
 plot_peak_gene_correlation_top_link <- function(plot_data, coverage, aggregate_scatter, cell_types) {
   top <- plot_data$link
   if (!isTRUE(top$is_analyzable_link[[1]])) {

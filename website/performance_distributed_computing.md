@@ -58,6 +58,8 @@ For SLURM, PBS, SGE, or LSF, replace the local controllers with the matching `cr
 2. Set the queue, account, wall time, modules, and worker start-up commands your cluster requires.
 3. Give GPUs their own tier: only targets that request GPUs are routed to it.
 
+MACS3 peak calling writes several gigabytes of temporary pileups per peak-calling group to the worker's R temporary folder, which follows `TMPDIR`. Point `TMPDIR` at node-local scratch in the worker start-up commands where `/tmp` is small.
+
 Test a small target selection before increasing worker counts. For start-up and routing errors, see [Troubleshooting](troubleshooting.md#controller-and-scheduler-failures).
 
 ## Rules for `crew_controllers.R` {#controller-rules}

@@ -18,15 +18,15 @@ rlang::list2(
       combined_counts_matrix <- purrr::reduce(aggregation_GEX_counts_BPCells_matrix_syms, cbind)
 
       out_dir <- get_structured_file_path()
-      BPCells::write_matrix_dir(combined_counts_matrix, out_dir, overwrite = TRUE)
+      BPCells::write_matrix_dir(BPCells::convert_matrix_type(combined_counts_matrix, "uint32_t"), out_dir, overwrite = TRUE)
       out_dir
     },
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = aggregated_counts_BPCells_matrix.GEX,
-    description = "Open the combined GEX BPCells count matrix",
-    command = open_BPCells_dir(aggregated_GEX_BPCells_matrix_dir.GEX),
+    description = "Open the combined GEX BPCells integer counts as doubles",
+    command = open_BPCells_dir(aggregated_GEX_BPCells_matrix_dir.GEX, open = open_BPCells_counts_as_double),
     resources = get_tar_resources(RAM_GB_req = 8)
   ),
   targets::tar_target(

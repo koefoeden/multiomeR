@@ -32,3 +32,15 @@ open_BPCells_dir <- function(path, open = BPCells::open_matrix_dir) {
   )
   object
 }
+
+#' Open BPCells counts as doubles
+#'
+#' GEX counts are stored as `uint32_t`; reading them as doubles gives every
+#' consumer the values it got when they were stored as doubles.
+#'
+#' @param path BPCells matrix directory.
+#' @return The lazily converted matrix.
+#' @keywords internal
+open_BPCells_counts_as_double <- function(path) {
+  BPCells::convert_matrix_type(BPCells::open_matrix_dir(path), "double")
+}

@@ -114,14 +114,15 @@ rlang::list2(
       rownames(gene_expression_matrix) <- gene_features_df$gene_name_unique
       colnames(gene_expression_matrix) <- paste0(GEM_well_ID, "_", colnames(gene_expression_matrix))
 
-      BPCells::write_matrix_dir(gene_expression_matrix, out_dir, overwrite = TRUE)
+      # Counts are integers (CellBender stores them as int64); uint32 storage is several times smaller than double.
+      BPCells::write_matrix_dir(BPCells::convert_matrix_type(gene_expression_matrix, "uint32_t"), out_dir, overwrite = TRUE)
       out_dir
     }
   ),
   targets::tar_target(
     name = GEX_counts_BPCells_matrix,
-    description = "Open the matrix from the GEX BPCells directory",
-    command = open_BPCells_dir(GEX_counts_BPcells_matrix_dir)
+    description = "Open the integer counts of the GEX BPCells directory as doubles",
+    command = open_BPCells_dir(GEX_counts_BPcells_matrix_dir, open = open_BPCells_counts_as_double)
   ),
   targets::tar_target(
     name = signac_fragment_object,

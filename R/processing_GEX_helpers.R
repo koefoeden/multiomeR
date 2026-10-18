@@ -249,9 +249,14 @@ get_BPCells_native_GEX_residuals <- function(
     names()
   list(
     pearson_residuals = pearson_residuals[variable_features, , drop = FALSE],
-    # svds() streams its input ~300 times; residuals of the variable genes' counts held in memory save
-    # decompressing every gene on each pass. The export keeps the disk-backed residuals above.
-    PCA_input = split_in_chunks(get_residuals(BPCells::write_matrix_memory(counts_matrix[variable_features, , drop = FALSE], compress = TRUE))),
+    # svds() streams its input ~300 times; residuals of the variable genes' integer counts held in memory
+    # save decompressing every gene on each pass. The export keeps the disk-backed residuals above.
+    PCA_input = counts_matrix[variable_features, , drop = FALSE] |>
+      BPCells::convert_matrix_type("uint32_t") |>
+      BPCells::write_matrix_memory(compress = TRUE) |>
+      BPCells::convert_matrix_type("double") |>
+      get_residuals() |>
+      split_in_chunks(),
     residual_variance = residual_variance
   )
 }

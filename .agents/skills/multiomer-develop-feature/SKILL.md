@@ -38,7 +38,13 @@ Use this when adding or changing targets, helpers, or analysis steps.
   `cfg_module_<module>.yaml` only for aggregations that list the module under
   `modules` in `cfg_aggregations.yaml`.
 - The project's default `iteration` is `"list"`, so a pattern whose consumers
-  read its branches as one table needs `iteration = "vector"`.
+  read its branches as one table needs `iteration = "vector"`, and a pattern
+  that maps over a data frame branches over its columns unless that data frame
+  target sets `iteration = "vector"`.
+- Return file-target paths relative to the repository root or built from
+  `targets::tar_config_get("store")`, never through `normalizePath()`: targets
+  checks exactly the returned paths, so absolute ones break when the store is
+  moved or copied to node-local disk.
 - Keep a download in its own target that stores only the rows or fields the
   analysis needs, apart from their parsing, so that a parsing change does not
   download again. Run downloads one at a time with `deployment = "main"` when

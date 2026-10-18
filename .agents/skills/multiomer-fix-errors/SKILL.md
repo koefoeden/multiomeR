@@ -22,6 +22,13 @@ Use the full target name, including mapped or dynamic suffixes. If an external
 command error is truncated, inspect the saved workspace and rerun only the
 failing helper expression to recover complete output.
 
+The helper keeps only targets that errored in the store's latest run: it filters
+by `tar_errored()`, which reads the progress file that every run start empties,
+including another session's. If a run has started since, read
+`tar_meta(fields = error)` and filter `!is.na(error)` instead; a stored error
+stays until the target succeeds. A failed target with no stored error had its
+worker crash; read the controller's worker log.
+
 ## Inspect The Workspace
 
 Inspect the saved workspace when the stored error does not identify the cause:
@@ -33,7 +40,10 @@ inspect_target_workspace("<full_target_name>")
 It prints the stored error, traceback and command, and builds the full manifest
 to find the command, which takes about a minute. Use the compact dependency
 summaries before reading large inputs. Probe upstream objects only when their
-dimensions, names, or configuration look suspicious.
+dimensions, names, or configuration look suspicious. The workspace loads the
+current upstream values, so an old workspace may no longer reproduce the error.
+Use these helpers and exported `targets` functions rather than guessing at
+`targets:::` internals.
 
 For deeper probes, read upstream objects by the full target or dynamic branch
 name:

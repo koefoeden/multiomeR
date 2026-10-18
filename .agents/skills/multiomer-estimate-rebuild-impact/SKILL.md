@@ -1,6 +1,6 @@
 ---
 name: multiomer-estimate-rebuild-impact
-description: Estimate which existing targets a code, configuration or input change, a merge, or a run will actually rebuild, and what that costs. Use before running targets after such changes, when tar_outdated() reports many outdated targets, and when classifying target impact for commits, merges, pull requests or release notes.
+description: Estimate which existing targets a code, configuration or input change, a merge, or a run will actually rebuild, and what that costs. Use before running targets after such changes, before telling anyone that a change will or will not rerun targets, when tar_outdated() reports many outdated targets, and when classifying target impact for commits, merges, pull requests or release notes.
 ---
 
 # Estimate Rebuild Impact
@@ -32,7 +32,9 @@ EOF
 
 When the roots and their direct consumers are cheap, rebuild only them and
 compare their `tar_meta()` data hashes before and after; consumers that
-reproduce theirs stop the cascade, which a second root listing confirms. Do
+reproduce theirs stop the cascade, which a second root listing confirms. Until
+then, a target whose own command changed stays hidden below an outdated root;
+`tar_sitrep(names = ...)` shows it at once in its `command` column. Do
 this before any run whose cascade could reach WNN: its neighbour search is
 nondeterministic, so WNN and everything downstream would rebuild with new
 values.
@@ -44,7 +46,10 @@ commands. Save `tar_manifest(fields = c(name, command, pattern))` before and
 after a configuration, merge or graph-construction change and compare the rows
 by name: identical rows rule out reruns from changed commands. They cannot show
 an edited function body, which reruns every target that calls it directly or
-through other functions; list the roots as above for that. Also check the
+through other functions, whatever configuration branch runs; list the roots as
+above for that. To change one consumer, edit its call site rather than a shared
+helper. Descriptions and resources are not cues, so edits limited to them
+rerun nothing. Also check the
 content of changed file targets, such as manifests. If no manifest was saved
 before the edit, build it with `tar_manifest(script = ...)` from a temporary
 copy of `_targets.R` in the repository root whose `source()` calls read
@@ -62,7 +67,12 @@ pattern: a shifted `slice()` index or a key added beside existing ones reruns
 no existing branch. Mapping over a different or regrouped upstream renames
 every downstream branch, which then reruns.
 
-To confirm a commit's impact line against an existing store, save
-`tar_outdated()` before editing code (it loads the current code), apply the
-change, build only the earliest changed targets, and compare a second
-`tar_outdated()` with the baseline.
+To confirm a commit's impact line against an existing store, save the outdated
+targets of the affected families before editing code, which the check loads,
+with the commit they ran at. A full-graph baseline takes minutes and fails on
+any stale pattern elsewhere. Apply the change, build only the earliest changed
+targets, and compare a second listing with the baseline. Never revert shared
+files to recreate a missed baseline; use the `git show HEAD:` copies above.
+Rebuilding a target overwrites its `command`, `depend` and `seconds` records,
+so before a run whose reruns you may have to explain, or whose run times are
+measured, save `tar_sitrep()` and `tar_meta()` for the selection.

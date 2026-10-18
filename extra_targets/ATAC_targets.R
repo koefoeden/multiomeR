@@ -850,7 +850,7 @@ rlang::list2(
                 UMAP_n_dims_seq.ATAC, n_neighbors, aggregation_UMAP_min_dist))
           }) |>
           purrr::set_names(\(n_neighbors) paste0(UMAP_n_dims_seq.ATAC, "_", n_neighbors)) |>
-          save_plots_structured(dyn_suffix_in_subdir = TRUE, override_suffix = UMAP_n_dims_seq.ATAC)
+          save_plots_structured(dyn_suffix_in_subdir = TRUE, override_suffix = as.character(UMAP_n_dims_seq.ATAC))
       },
       pattern = map(cross_UMAP_embeddings_tibbles.ATAC, UMAP_n_dims_seq.ATAC),
       resources = get_tar_resources(RAM_GB_req = 16)

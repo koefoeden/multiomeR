@@ -343,7 +343,7 @@ rlang::list2(
               UMAP_n_dims_seq.GEX, n_neighbors, aggregation_UMAP_min_dist))
         }) |>
         purrr::set_names(\(n_neighbors) paste0(UMAP_n_dims_seq.GEX, "_", n_neighbors)) |>
-        save_plots_structured(dyn_suffix_in_subdir = TRUE, override_suffix = UMAP_n_dims_seq.GEX)
+        save_plots_structured(dyn_suffix_in_subdir = TRUE, override_suffix = as.character(UMAP_n_dims_seq.GEX))
     },
     pattern = map(cross_UMAP_embeddings_tibbles.GEX, UMAP_n_dims_seq.GEX),
     resources = get_tar_resources(RAM_GB_req = 16)

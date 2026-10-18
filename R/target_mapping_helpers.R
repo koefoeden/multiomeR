@@ -408,7 +408,8 @@ build_aggregation_tibble <- function(aggregation_tibble_all_from_yaml, GEM_well_
       "excluded_barcodes_by_type_list",
       "excluded_cellranger_only_barcodes_by_type_list",
       "cellranger_ref_list",
-      "gene_features_df"
+      "gene_features_df",
+      "signac_fragment_object"
     ))
 
   project_categorical_vars <- purrr::map(

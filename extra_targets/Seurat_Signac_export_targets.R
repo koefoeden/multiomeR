@@ -6,25 +6,6 @@ rlang::list2(
     packages = w_def("Signac")
   ),
   targets::tar_target(
-    name = signac_fragment_records_tibble,
-    description = "Map prefixed pipeline barcodes to original CellRanger fragment files for Signac",
-    command = make_signac_fragment_records(
-      metadata_tibble = metadata_w_cell_types_annotation_tibble.WNN,
-      GEM_well_ID_vec = aggregation_GEM_well_IDs,
-      cellranger_summary_files = aggregation_cellranger_summary_file_syms
-    ),
-    iteration = "vector"
-  ),
-  targets::tar_target(
-    name = signac_fragment_object,
-    description = "Create and cache one Signac Fragment object per GEM well",
-    command = create_signac_fragment_object(signac_fragment_records_tibble),
-    pattern = map(signac_fragment_records_tibble),
-    iteration = "list",
-    resources = get_tar_resources(RAM_GB_req = 8),
-    packages = w_def("Signac")
-  ),
-  targets::tar_target(
     name = multimodal_Seurat_object.8_multimodal_QC,
     description = "Build a Seurat/Signac compatibility object backed by BPCells matrices where possible. [checkpoint:8_multimodal-QC] [resource_observation: peak_RAM_GiB=8.9; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=17.6; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02] [resource_observation: peak_RAM_GiB=47.3; n_nuclei=376k; aggregation=comparison_31x; backend=Seurat_SCT; method=slurm_monitor; date=2026-10-10]",
     command = build_seurat_signac_convenience_object(
@@ -46,7 +27,7 @@ rlang::list2(
       motif_family_accessibility_matrix = motif_family_accessibility_BPCells_matrix.ATAC,
       gene_features_df = gene_features_df,
       signac_annotation_GRanges = signac_annotation_GRanges,
-      fragment_objects = signac_fragment_object,
+      fragment_objects = aggregation_signac_fragment_object_syms,
       GEX_dims = aggregation_GEX_data_PCs,
       ATAC_dims = aggregation_ATAC_data_PCs,
       data_nNNs = aggregation_data_nNNs,

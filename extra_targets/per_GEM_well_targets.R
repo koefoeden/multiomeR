@@ -123,6 +123,19 @@ rlang::list2(
     description = "Open the matrix from the GEX BPCells directory",
     command = open_BPCells_dir(GEX_counts_BPcells_matrix_dir)
   ),
+  targets::tar_target(
+    name = signac_fragment_object,
+    description = "Create one Signac Fragment object for the nuclei of the GEM well's GEX matrix; Seurat exports keep their own nuclei [part_of_graph:seurat_export]",
+    command = {
+      cells <- colnames(GEX_counts_BPCells_matrix)
+      Signac::CreateFragmentObject(
+        path = file.path(dirname(cellranger_summary_file), "atac_fragments.tsv.gz"),
+        cells = purrr::set_names(substring(cells, nchar(GEM_well_ID) + 2), cells),
+        validate.fragments = FALSE
+      )
+    },
+    packages = w_def("Signac")
+  ),
   tarchetypes::tar_file(
     name = fragments_w_prefix_bpcells_dir,
     description = "Convert the CellRanger fragment file to a BPCells directory with GEM well-prefixed barcodes [part_of_graph:parallel] [part_of_graph:seurat_export]",

@@ -105,7 +105,8 @@ load_project_runtime <- function() {
     error = "trim",
     iteration = "list",
     format = "qs",
-    garbage_collection = 1L
+    # A full gc() before every target costs about 0.2 s per task; R still collects garbage as it needs to.
+    garbage_collection = 0L
   )
 
   apply_crew_controller_options(

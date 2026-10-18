@@ -52,7 +52,9 @@ assert_R_build_configuration <- function() {
 #' Attach the core packages and conflict preferences, source the project
 #' helpers, and install the targets options and crew controllers. `.Rprofile`
 #' calls this at startup; call it again to reload edited helpers or controllers
-#' in a running session.
+#' in a running session. A crew worker
+#' stops after the packages and plot theme: the driver sends the helpers and
+#' targets options with every task, and workers launch no workers.
 #'
 #' @return Invisibly returns `TRUE`.
 #' @keywords internal
@@ -93,14 +95,17 @@ load_project_runtime <- function() {
     .quiet = TRUE
   )
 
-  targets::tar_source(c("packages/multiomeRCore/R", "R"))
-
   ggplot2::theme_set(ggplot2::theme_bw())
   ggplot2::theme_update(legend.position = "bottom")
   Sys.setenv("R_MSG_PKG_START_MSG" = "FALSE")
   # Seurat's C++ kernels run single-threaded unless told otherwise; give them the
   # cores of the worker's Slurm job.
   options(Seurat.nthreads = as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "1")))
+  if (any(startsWith(commandArgs(), "crew::crew_worker("))) {
+    return(invisible(TRUE))
+  }
+
+  targets::tar_source(c("packages/multiomeRCore/R", "R"))
   targets::tar_option_set(
     error = "trim",
     iteration = "list",

@@ -37,6 +37,8 @@ Use this when adding or changing targets, helpers, or analysis steps.
   maps over `build_module_tibble()`, which reads the module's
   `cfg_module_<module>.yaml` only for aggregations that list the module under
   `modules` in `cfg_aggregations.yaml`.
+- The project's default `iteration` is `"list"`, so a pattern whose consumers
+  read its branches as one table needs `iteration = "vector"`.
 - Keep a download in its own target that stores only the rows or fields the
   analysis needs, apart from their parsing, so that a parsing change does not
   download again. Run downloads one at a time with `deployment = "main"` when

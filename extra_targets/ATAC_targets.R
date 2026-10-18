@@ -447,7 +447,7 @@ rlang::list2(
       command = metadata_filtered_tibble.ATAC |>
         dplyr::filter(.data$barcode_w_prefix %in% names(LSI_clusters.ATAC)) |>
         dplyr::left_join(UMAP_embeddings_tibble.ATAC, by = "barcode_w_prefix") |>
-        dplyr::mutate(LSI_harmony_SNN_cluster = LSI_clusters.ATAC[.data$barcode_w_prefix])
+        dplyr::mutate(LSI_harmony_SNN_cluster = unname(LSI_clusters.ATAC[.data$barcode_w_prefix]))
     ),
     targets::tar_target(
       name = cluster_UCell_evidence.ATAC,

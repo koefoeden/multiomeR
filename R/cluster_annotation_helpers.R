@@ -304,7 +304,7 @@ add_cluster_UCell_annotations <- function(metadata_tibble, annotation, cluster_c
   metadata_tibble[[paste0(cluster_column, "_annotation_status")]] <- decisions$status[index]
   if (!is.null(annotation$cell_scores)) {
     scores <- annotation$cell_scores[metadata_tibble$barcode_w_prefix, , drop = FALSE]
-    for (name in colnames(scores)) metadata_tibble[[name]] <- scores[, name]
+    for (name in colnames(scores)) metadata_tibble[[name]] <- unname(scores[, name])
   }
   metadata_tibble
 }

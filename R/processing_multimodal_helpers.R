@@ -430,6 +430,8 @@ build_WNN_metadata_tibble <- function(metadata_tibble, WNN_results, UMAP_embeddi
       dplyr::left_join(GEX_UMAP_embeddings_tibble, by = "barcode_w_prefix")
   }
 
+  # Barcode names on each column would multiply the tibble's memory and loading time several-fold.
+  metadata_out[] <- lapply(metadata_out, unname)
   metadata_out
 }
 

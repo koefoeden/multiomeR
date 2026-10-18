@@ -41,7 +41,7 @@ rlang::list2(
       dplyr::filter(.data$barcode_w_prefix %in% names(PCA_clusters.GEX)) |>
       dplyr::left_join(UMAP_embeddings_tibble.GEX, by = "barcode_w_prefix") |>
       dplyr::left_join(UMAP_embeddings_tibble.GEX_non_harmony, by = "barcode_w_prefix") |>
-      dplyr::mutate(PCA_harmony_SNN_cluster = PCA_clusters.GEX[.data$barcode_w_prefix]),
+      dplyr::mutate(PCA_harmony_SNN_cluster = unname(PCA_clusters.GEX[.data$barcode_w_prefix])),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(

@@ -286,7 +286,8 @@ save_plots_structured <- function(
       auto_dimensions <- get_ggplot_auto_save_dimensions(plot_build)
       # Draw the existing build unless culling changed the plot: building large plots takes seconds.
       # The gtable is made at draw time, inside the device, so text is measured as ggsave() would.
-      if (identical(culled_plot, plot)) {
+      # A patchwork's build holds only its base plot, so patchworks are drawn whole by ggsave().
+      if (identical(culled_plot, plot) && !inherits(plot, "patchwork")) {
         plot_save_args$bg <- plot_save_args$bg %||%
           ggplot2::calc_element("plot.background", ggplot2::complete_theme(plot$theme))$fill
         plot <- grid::delayGrob(ggplot2::ggplot_gtable(plot_build), list(plot_build = plot_build))

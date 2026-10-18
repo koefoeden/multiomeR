@@ -75,7 +75,7 @@ rlang::list2(
     name = cluster_UCell_annotation.3_GEX_QC,
     description = "GEX assignments from minimum adjusted-score advantage. [checkpoint:3_GEX-QC]",
     command = evaluate_cluster_UCell_evidence(cluster_UCell_evidence.GEX,
-      min_advantage = aggregation_cluster_annotation_min_advantage),
+      min_advantage = aggregation_GEX_cluster_annotation_min_advantage),
     resources = get_tar_resources(RAM_GB_req = 8)
   ),
   tarchetypes::tar_file(

@@ -135,7 +135,7 @@ targets::tar_make(
 **Revise:**
 
 - [`aggregation_GEX_cluster_res`](parameters.html#aggregation_GEX_cluster_res) sets how finely the nuclei are clustered; judge it by marker consistency and cluster sizes. By default, the GEX clusters are also the peak-calling groups of checkpoint 4.
-- [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes) and [`aggregation_cluster_annotation_min_advantage`](parameters.html#aggregation_cluster_annotation_min_advantage) determine the cell-type labels; see [Cluster annotation](review_outputs.md#cluster-annotation).
+- [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes) and [`aggregation_GEX_cluster_annotation_min_advantage`](parameters.html#aggregation_GEX_cluster_annotation_min_advantage) determine the cell-type labels; see [Cluster annotation](review_outputs.md#cluster-annotation).
 - `UMAPs/cross/` compares layouts across PC and neighbor counts, for choosing [`aggregation_UMAP_GEX_PCs`](parameters.html#aggregation_UMAP_GEX_PCs) and [`aggregation_UMAP_nNNs`](parameters.html#aggregation_UMAP_nNNs).
 
 ## Checkpoint 4: Peak QC {#checkpoint-4}
@@ -242,7 +242,7 @@ targets::tar_make(
 └── cluster_composition_table.tsv
 ```
 
-**Revise:** choose [`aggregation_ATAC_cluster_res`](parameters.html#aggregation_ATAC_cluster_res) from the motif patterns and the agreement with GEX labels in `confusion_matrices_plots.png`.
+**Revise:** choose [`aggregation_ATAC_cluster_res`](parameters.html#aggregation_ATAC_cluster_res) from the motif patterns and the agreement with GEX labels in `confusion_matrices_plots.png`. [`aggregation_ATAC_cluster_annotation_min_advantage`](parameters.html#aggregation_ATAC_cluster_annotation_min_advantage) sets the assignment margin of the ATAC labels.
 
 ## Checkpoint 8: WNN integration {#checkpoint-8}
 
@@ -280,7 +280,7 @@ targets::tar_make(
 └── cluster_composition_table.tsv
 ```
 
-**Revise:** choose [`aggregation_WNN_cluster_res`](parameters.html#aggregation_WNN_cluster_res). To refine the WNN labels without rebuilding the earlier checkpoints, override marker sets in [`aggregation_WNN_marker_genes`](parameters.html#aggregation_WNN_marker_genes). The WNN clusters and cell types are the populations used in downstream summaries and comparisons.
+**Revise:** choose [`aggregation_WNN_cluster_res`](parameters.html#aggregation_WNN_cluster_res). To refine the WNN labels without rebuilding the earlier checkpoints, override marker sets in [`aggregation_WNN_marker_genes`](parameters.html#aggregation_WNN_marker_genes) or change [`aggregation_WNN_cluster_annotation_min_advantage`](parameters.html#aggregation_WNN_cluster_annotation_min_advantage). The WNN clusters and cell types are the populations used in downstream summaries and comparisons.
 
 The final object is `multimodal_Seurat_object.8_multimodal_QC.my_aggregation`; read it as in [Inspect the demo results](demo_outputs.md). Like the checkpoint 3 export, it is costly and outdated whenever the labels change: until you accept them, add `& !tidyselect::starts_with("multimodal_Seurat_object")` to `names` in the command above.
 

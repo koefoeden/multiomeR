@@ -12,7 +12,7 @@ read_target <- function(name) targets::tar_read_raw(paste(name, aggregation, sep
 control <- read_target(paste0("cluster_UCell_controls.", if (modality == "WNN") "WNN" else "GEX"))
 min_advantage <- read_aggregation_config_tibble() |>
   dplyr::filter(.data$aggregation == .env$aggregation) |>
-  dplyr::pull("aggregation_cluster_annotation_min_advantage") |>
+  dplyr::pull(paste0("aggregation_", modality, "_cluster_annotation_min_advantage")) |>
   unlist()
 summaries <- summarize_cluster_UCell_diagnostic_counts(
   read_target("aggregated_counts_BPCells_matrix.GEX"),

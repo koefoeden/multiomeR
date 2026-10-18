@@ -457,7 +457,7 @@ rlang::list2(
       name = cluster_UCell_annotation.7_ATAC_QC,
       description = "ATAC cluster assignments from minimum adjusted GEX score advantage. [checkpoint:7_ATAC-QC]",
       command = evaluate_cluster_UCell_evidence(cluster_UCell_evidence.ATAC,
-        min_advantage = aggregation_cluster_annotation_min_advantage),
+        min_advantage = aggregation_ATAC_cluster_annotation_min_advantage),
       resources = get_tar_resources(RAM_GB_req = 8)
     ),
     tarchetypes::tar_file(

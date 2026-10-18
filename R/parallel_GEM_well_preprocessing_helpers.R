@@ -37,10 +37,9 @@ get_cellsnp_dir <- function(
     )
   )
 
-  vcf_out_lines <- cellsnp_out_dir %>% file.path("cellSNP.base.vcf.gz") %>% readLines() %>% length()
-
-  if (vcf_out_lines <= 1) {
-    stop("cellsnp-lite failed to run. Check the output directory for errors. VCF file contains ", vcf_out_lines, " line().")
+  if (all(startsWith(readLines(file.path(cellsnp_out_dir, "cellSNP.base.vcf.gz")), "#"))) {
+    stop("cellsnp-lite found no donor VCF SNP passing its filters in ", bam_file,
+      "; check that the VCF and BAM share contig names and genome build.", call. = FALSE)
   }
   return(cellsnp_out_dir)
 }

@@ -430,7 +430,11 @@ call_peaks_w_MACS3 <- function(ATAC_cut_site_files,
       c("--call-summits"),
       c("--name", output_suffix),
       c("--outdir", out_dir),
-      c("--keep-dup", "all")
+      c("--keep-dup", "all"),
+      # MACS3 writes gigabytes of per-chromosome pileups to its temporary folder, by default /tmp; the
+      # worker's R temporary folder follows its TMPDIR, usually node scratch. Level 1 drops the progress lines.
+      c("--tempdir", tempdir()),
+      c("--verbose", "1")
     )
   )
 

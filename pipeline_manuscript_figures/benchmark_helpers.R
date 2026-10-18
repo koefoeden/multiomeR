@@ -364,7 +364,10 @@ benchmark_context <- function() {
     dplyr::left_join(allocations[c("static_target", "tier")], by = "static_target")
   timed <- executions$seconds >= 1
   samples <- read_slurm_monitor_samples(since = min(executions$completed_utc[timed] - executions$seconds[timed]) - 3600)
-  workers <- benchmark_assign_workers(executions, samples, benchmark_worker_jobs(samples, tiers$tier))
+  jobs <- benchmark_worker_jobs(samples, tiers$tier)
+  # Other pipelines' workers on the same node can run targets of the same names.
+  samples <- dplyr::filter(samples, .data$job %in% jobs$job)
+  workers <- benchmark_assign_workers(executions, samples, jobs)
   list(graph = igraph::graph_from_data_frame(network$edges, vertices = network$vertices["name"]),
     workers = stats::setNames(tiers$workers, tiers$tier), tiers = tiers, allocations = allocations, runs = runs,
     input_files = unique(records$static_target[!records$in_store]), samples = samples,

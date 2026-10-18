@@ -96,7 +96,8 @@ Agent tool calls have time limits, including for background commands, and
 stopping the driver also stops its running targets. Start a driver that may
 run for hours detached (`setsid nohup <script> > /dev/null 2>&1 < /dev/null &`),
 have the script log `tar_make()` output and its exit status to a file, and
-follow that log.
+follow that log. End the script with the completion check below, so that its
+exit status says whether the selection was built.
 
 Preview a new or regex-based selection before running it. Fail if it matches no
 defined targets. Run a known exact target directly instead of constructing the
@@ -115,6 +116,7 @@ print(selection)
 targets::tar_make(
   names = tidyselect::matches("<target-or-dataset-pattern>")
 )
+stopifnot(nrow(list_unfinished_targets(selection$name)) == 0L)
 EOF
 ```
 
@@ -134,11 +136,14 @@ neither do the "errored" lines of its log:
 - An errored target keeps its previous value, data hash and `time`, so a run's
   errors cannot be found by build time.
 
-`list_unfinished_targets(<selected names>)` lists each selected stem or pattern
+`list_unfinished_targets()`, as in the snippet above, takes the selected stem
+and pattern names, such as the preview's `selection$name`. It lists each one
 whose metadata holds an error or that the latest run did not report completed
-or skipped. Run it right after the run, since every run start empties the
-progress file, and gate chained jobs on it, for example by ending the driver
-script with `stopifnot(nrow(list_unfinished_targets(selected_names)) == 0L)`.
+or skipped; `NA` progress means the run never reached it. Gate chained jobs on
+it. Run it right after the run: every run start empties the progress file,
+including another session's, and after such a run each target it did not
+visit reads as unfinished. Then read stored errors with
+`list_errored_targets()` instead.
 
 To verify dynamic branches, read metadata with `complete_only = FALSE` and
 follow `children` only for selected rows with `type == "pattern"`. Other

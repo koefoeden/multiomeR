@@ -134,18 +134,11 @@ neither do the "errored" lines of its log:
 - An errored target keeps its previous value, data hash and `time`, so a run's
   errors cannot be found by build time.
 
-A target is done when its metadata row has no error and `tar_progress()`, which
-covers only the store's latest run, reports it "completed" or "skipped". Gate
-chained jobs on the same check, which lists the unfinished targets of the
-selected names:
-
-```r
-done <- intersect(
-  subset(targets::tar_meta(names = tidyselect::any_of(selected_names), fields = error), is.na(error))$name,
-  subset(targets::tar_progress(names = tidyselect::any_of(selected_names)), progress %in% c("completed", "skipped"))$name
-)
-setdiff(selected_names, done)
-```
+`list_unfinished_targets(<selected names>)` lists each selected stem or pattern
+whose metadata holds an error or that the latest run did not report completed
+or skipped. Run it right after the run, since every run start empties the
+progress file, and gate chained jobs on it, for example by ending the driver
+script with `stopifnot(nrow(list_unfinished_targets(selected_names)) == 0L)`.
 
 To verify dynamic branches, read metadata with `complete_only = FALSE` and
 follow `children` only for selected rows with `type == "pattern"`. Other

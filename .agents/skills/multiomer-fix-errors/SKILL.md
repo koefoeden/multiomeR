@@ -22,12 +22,11 @@ Use the full target name, including mapped or dynamic suffixes. If an external
 command error is truncated, inspect the saved workspace and rerun only the
 failing helper expression to recover complete output.
 
-The helper keeps only targets that errored in the store's latest run: it filters
-by `tar_errored()`, which reads the progress file that every run start empties,
-including another session's. If a run has started since, read
-`tar_meta(fields = error)` and filter `!is.na(error)` instead; a stored error
-stays until the target succeeds. A failed target with no stored error had its
-worker crash; read the controller's worker log.
+A stored error lasts until the target succeeds, whichever run raised it, so the
+helper builds the graph to drop errors of removed targets. A target that failed
+without a stored error had its worker crash; read the controller's worker log.
+To check whether a run finished, use `list_unfinished_targets()` as
+`multiomer-run-pipeline` describes.
 
 ## Inspect The Workspace
 

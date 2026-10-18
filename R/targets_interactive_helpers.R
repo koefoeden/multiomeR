@@ -76,20 +76,53 @@ inspect_target_workspace <- function(name, envir = parent.frame(), store = targe
   invisible(out)
 }
 
-#' List currently errored target metadata
+#' List errored targets of the current graph
+#'
+#' Stored errors last until a target succeeds, whichever run raised them, so
+#' errors of removed targets are dropped by matching each target, or a branch's
+#' pattern, against the manifest.
 #'
 #' @param target_name_pattern Regex used to filter target names.
-#' @return Tibble of errored targets.
+#' @return Tibble of errored targets with their stored error, warnings and command.
 #' @keywords internal
 list_errored_targets <- function(target_name_pattern = ".") {
-  targets::tar_meta(fields = c("name", "error", "warnings")) |>
+  capture.output(manifest <- targets::tar_manifest(fields = c("name", "command")))
+  targets::tar_meta(fields = c("name", "parent", "error", "warnings")) |>
+    dplyr::mutate(command = manifest$command[match(dplyr::coalesce(.data$parent, .data$name), manifest$name)]) |>
     dplyr::filter(
       !is.na(.data$error),
-      .data$name %in% targets::tar_errored(),
+      !is.na(.data$command),
       stringr::str_detect(.data$name, target_name_pattern)
     ) |>
     dplyr::arrange(.data$error) |>
-    dplyr::select(dplyr::all_of(c("name", "error", "warnings")))
+    dplyr::select(dplyr::all_of(c("name", "error", "warnings", "command")))
+}
+
+#' List selected targets that the latest run did not finish
+#'
+#' A target is finished when its metadata holds no error and the latest run's
+#' progress reports it completed or skipped. Neither the exit status of
+#' `tar_make()`, which returns normally when targets error under
+#' `error = "trim"`, nor its log shows this: a worker that crashes beyond
+#' `crashes_max` aborts the run without storing an error. Every run start
+#' empties the progress file, so check right after the run.
+#'
+#' @param target_names Names of the selected stems and patterns.
+#' @param store Targets store path.
+#' @return Tibble of unfinished targets with their stored error and progress;
+#'   `NA` progress means the run never reached the target.
+#' @keywords internal
+list_unfinished_targets <- function(target_names, store = targets::tar_config_get("store")) {
+  tibble::tibble(name = target_names) |>
+    dplyr::left_join(
+      targets::tar_meta(names = tidyselect::any_of(target_names), fields = "error", store = store),
+      by = "name"
+    ) |>
+    dplyr::left_join(
+      targets::tar_progress(names = tidyselect::any_of(target_names), store = store),
+      by = "name"
+    ) |>
+    dplyr::filter(!is.na(.data$error) | !.data$progress %in% c("completed", "skipped"))
 }
 
 #' Print one errored target per distinct error message
@@ -102,7 +135,6 @@ list_distinct_errored_targets <- function(target_name_pattern = ".", tracebacks 
   errors <- list_errored_targets(target_name_pattern) |>
     dplyr::distinct(.data$error, .keep_all = TRUE)
   width <- if (!tracebacks) 500 else if (identical(target_name_pattern, ".")) 200 else 1000
-  commands <- if (tracebacks) .target_commands(errors$name)
   for (i in seq_len(nrow(errors))) {
     name <- errors$name[[i]]
     cat(
@@ -111,7 +143,7 @@ list_distinct_errored_targets <- function(target_name_pattern = ".", tracebacks 
       sep = ""
     )
     if (tracebacks) {
-      cat("- Command: ", commands[[i]], "\n", sep = "")
+      cat("- Command: ", errors$command[[i]], "\n", sep = "")
     }
     cat("- Error: ", stringr::str_trunc(errors$error[[i]], width = width), "\n", sep = "")
     if (tracebacks) {

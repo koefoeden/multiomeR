@@ -5,6 +5,7 @@ Find the target name and first error message in the run output. Fix that cause, 
 | What happened? | Start here |
 |---|---|
 | Setup fails before any data processing | [The manifest does not build](#the-manifest-does-not-build) |
+| A run ended and you need to know whether it built everything | [Check that a run finished](#check-that-a-run-finished) |
 | A target reports an error | [A run reports errored targets](#a-run-reports-errored-targets) |
 | You need to check a result that a failed target used | [Inspect one upstream value](#inspect-one-upstream-value) |
 | An error names an input file, GEM well, donor, or metadata column | [Input and metadata failures](#input-and-metadata-failures) |
@@ -33,9 +34,23 @@ Failures at this stage usually mean:
 
 Correct the field or file named in the error, then repeat the manifest check.
 
+## Check that a run finished
+
+The pipeline keeps building after an error: a failed target skips only the targets that depend on it. `tar_make()` then returns without an R error, so a script that runs it exits with status 0. Check the targets you selected right after the run:
+
+```{.r filename="R"}
+selected <- targets::tar_manifest(
+  names = tidyselect::ends_with("8_multimodal_QC.my_aggregation"),
+  fields = name
+)$name
+list_unfinished_targets(selected)
+```
+
+It lists each selected target that has a stored error or that the run did not complete. A target without progress was never reached, for example because the run stopped early. The next run resets the progress this check reads.
+
 ## A run reports errored targets
 
-List the errors, one target per distinct error message:
+List the errors of the current pipeline, one target per distinct error message:
 
 ```{.r filename="R"}
 list_distinct_errored_targets()
@@ -79,6 +94,7 @@ If workers do not start, are killed, or no controller can run a target:
 2. An error starting with `No controller found` means that no tier offers the requested cores, RAM, or GPUs; add or enlarge a tier.
 3. For scheduler controllers, read the scheduler's output and error logs, and check the queue, account, wall time, memory, CPU, module, and file-system settings.
 4. If local workers are killed for lack of memory, lower their `workers` values as described in [Local execution](performance_distributed_computing.md#local-execution).
+5. A target whose worker is killed is retried up to its controller's `crashes_max` times. One more crash stops the whole run with `the crew worker of task ... crashed`. That target stores no error, and targets that had not started are not built. Give the target more memory, then rerun the same selection.
 
 ## A target is unexpectedly outdated
 

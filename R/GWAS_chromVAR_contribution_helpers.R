@@ -816,8 +816,10 @@ plot_GWAS_variant_contribution_detail_panels <- function(plot_records, variants,
       ggplot2::aes(position, 0, label = "No annotated genes overlap"), size = 3) +
     ggplot2::labs(x = NULL, y = "Gene bodies") + ggplot2::guides(y = "none") +
     ggplot2::theme(panel.grid = ggplot2::element_blank())
+  # Each coverage panel holds one group, so stacking, which costs most of the
+  # figure's build time across its hundreds of panels, would change nothing.
   coverage_track <- base_track +
-    ggplot2::geom_area(data = coverage, ggplot2::aes(pos, coverage, fill = group)) +
+    ggplot2::geom_area(data = coverage, ggplot2::aes(pos, coverage, fill = group), position = "identity") +
     ggplot2::geom_text(data = dplyr::distinct(coverage, locus, group, range_label),
       ggplot2::aes(x = -Inf, y = 1, label = range_label), hjust = -0.1, vjust = 1.1, size = 2.2) +
     ggplot2::facet_grid(rows = ggplot2::vars(group), cols = ggplot2::vars(locus), scales = "free_x") +

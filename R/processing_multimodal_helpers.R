@@ -388,27 +388,25 @@ get_SNN_matrix_from_WNN_results <- function(WNN_results) {
 
 #' Build WNN metadata tibble
 #'
-#' Join WNN weights, UMAP coordinates, and clusters back onto cell metadata.
+#' Join WNN weights, clusters and, optionally, UMAP coordinates back onto cell metadata.
 #'
 #' @param metadata_tibble Tibble with one row per cell or pseudobulk sample; must contain the barcode/grouping columns referenced by the helper arguments.
 #' @param WNN_results List returned by WNN helpers, including KNN/SNN structures and modality weights aligned by barcode.
-#' @param UMAP_embeddings_tibble WNN UMAP coordinate tibble keyed by
-#'   `barcode_w_prefix`.
 #' @param WNN_clusters_tibble WNN cluster-label tibble keyed by `barcode_w_prefix`.
+#' @param UMAP_embeddings_tibble Optional WNN UMAP coordinate tibble keyed by
+#'   `barcode_w_prefix`.
 #' @param GEX_UMAP_embeddings_tibble Optional RNA-only UMAP coordinate tibble to
 #'   append for comparison plots.
 #' @return Metadata restricted to cells present in WNN outputs, with old generated
 #'   WNN/GEX columns removed before fresh outputs are joined.
 #' @keywords internal
 
-build_WNN_metadata_tibble <- function(metadata_tibble, WNN_results, UMAP_embeddings_tibble, WNN_clusters_tibble, GEX_UMAP_embeddings_tibble = NULL) {
+build_WNN_metadata_tibble <- function(metadata_tibble, WNN_results, WNN_clusters_tibble, UMAP_embeddings_tibble = NULL,
+                                      GEX_UMAP_embeddings_tibble = NULL) {
   modality_weights_tibble <- WNN_results$modality_weights |>
     dplyr::rename_with(\(modality) paste0(modality, ".weight"), -barcode_w_prefix)
-
-  generated_tibbles <- list(modality_weights_tibble, UMAP_embeddings_tibble, WNN_clusters_tibble)
-  if (!is.null(GEX_UMAP_embeddings_tibble)) {
-    generated_tibbles <- append(generated_tibbles, list(GEX_UMAP_embeddings_tibble))
-  }
+  generated_tibbles <- purrr::compact(list(modality_weights_tibble, UMAP_embeddings_tibble, WNN_clusters_tibble,
+    GEX_UMAP_embeddings_tibble))
 
   # Rebuilding WNN metadata can start from metadata that already has older
   # generated WNN/GEX columns. Drop them before joining to avoid .x/.y suffixes.
@@ -421,14 +419,7 @@ build_WNN_metadata_tibble <- function(metadata_tibble, WNN_results, UMAP_embeddi
     dplyr::semi_join(modality_weights_tibble, by = "barcode_w_prefix") |>
     dplyr::semi_join(WNN_clusters_tibble, by = "barcode_w_prefix") |>
     dplyr::select(-dplyr::any_of(generated_cols)) |>
-    dplyr::left_join(modality_weights_tibble, by = "barcode_w_prefix") |>
-    dplyr::left_join(UMAP_embeddings_tibble, by = "barcode_w_prefix") |>
-    dplyr::left_join(WNN_clusters_tibble, by = "barcode_w_prefix")
-
-  if (!is.null(GEX_UMAP_embeddings_tibble)) {
-    metadata_out <- metadata_out |>
-      dplyr::left_join(GEX_UMAP_embeddings_tibble, by = "barcode_w_prefix")
-  }
+    purrr::reduce(generated_tibbles, \(metadata, generated) dplyr::left_join(metadata, generated, by = "barcode_w_prefix"), .init = _)
 
   # Barcode names on each column would multiply the tibble's memory and loading time several-fold.
   metadata_out[] <- lapply(metadata_out, unname)

@@ -105,13 +105,11 @@ rlang::list2(
     ),
     targets::tar_target(
       name = metadata_w_clusters_tibble.WNN,
-      description = "Join native WNN weights, UMAP coordinates, and clusters onto metadata",
+      description = "Join native WNN weights and clusters onto metadata",
       command = build_WNN_metadata_tibble(
         metadata_tibble = metadata_w_cell_types_tibble.ATAC,
         WNN_results = WNN_results,
-        UMAP_embeddings_tibble = UMAP_embeddings_tibble.WNN,
-        WNN_clusters_tibble = clusters_tibble.WNN,
-        GEX_UMAP_embeddings_tibble = UMAP_embeddings_tibble.GEX
+        WNN_clusters_tibble = clusters_tibble.WNN
       ),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
@@ -168,13 +166,16 @@ rlang::list2(
     ),
     targets::tar_target(
       name = metadata_w_cell_types_analysis_tibble.WNN,
-      description = "Join configured analysis variables onto processed WNN metadata",
+      description = "Join configured analysis variables and the WNN, GEX and ATAC UMAP coordinates onto processed WNN metadata for plots",
       command = prepare_GEX_metadata_tibble(
         metadata_tibble = metadata_w_cell_types_tibble.WNN,
         barcode_vec = metadata_w_cell_types_tibble.WNN$barcode_w_prefix,
         donor_id_metadata_tibble = donor_id_analysis_metadata_tibble,
         GEM_well_metadata_tibble = GEM_well_analysis_metadata_tibble
-      ),
+      ) |>
+        dplyr::left_join(UMAP_embeddings_tibble.WNN, by = "barcode_w_prefix") |>
+        dplyr::left_join(UMAP_embeddings_tibble.GEX, by = "barcode_w_prefix") |>
+        dplyr::left_join(UMAP_embeddings_tibble.ATAC, by = "barcode_w_prefix"),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     targets::tar_target(
@@ -387,7 +388,7 @@ rlang::list2(
     tarchetypes::tar_file(
       name = cluster_named_dim_tri_plot.UMAPs.8_multimodal_QC,
       description = "3×3 grid of UMAPs with cell-type-named cluster-level identities. [checkpoint:8_multimodal-QC]",
-      command = metadata_w_cell_types_tibble.WNN |>
+      command = metadata_w_cell_types_analysis_tibble.WNN |>
         plot_3_by_3_clusters_and_reduction_UMAPs_from_metadata(
           cluster_col_suffix = "named"
         ) |>
@@ -397,7 +398,7 @@ rlang::list2(
     tarchetypes::tar_file(
       name = cluster_cell_type_dim_tri_plot.UMAPs.8_multimodal_QC,
       description = "3×3 grid of UMAPs with cell-type identities. [checkpoint:8_multimodal-QC]",
-      command = metadata_w_cell_types_tibble.WNN |>
+      command = metadata_w_cell_types_analysis_tibble.WNN |>
         plot_3_by_3_clusters_and_reduction_UMAPs_from_metadata(
           cluster_col_suffix = "cell_type"
         ) |>
@@ -421,7 +422,6 @@ rlang::list2(
       description = "Plot WNN cell types on UMAPs across a sweep of nNN counts. [checkpoint:8_multimodal-QC]",
       command = {
         metadata_w_cell_types_tibble.WNN |>
-          dplyr::select(-dplyr::any_of(c("WNN_UMAP_1", "WNN_UMAP_2"))) |>
           dplyr::left_join(cross_UMAP_embeddings_tibble.WNN, by = "barcode_w_prefix") |>
           plot_UMAP_from_metadata(
             variable = "WNN_harmony_SNN_cluster_cell_type",

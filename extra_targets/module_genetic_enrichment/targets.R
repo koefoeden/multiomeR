@@ -87,7 +87,8 @@ genetic_enrichment_tibble <- genetic_enrichment_tibble |>
     "chromVAR_chunk_context_records.ATAC",
     "harmony_embeddings_matrix.GEX",
     "harmony_embeddings_matrix.ATAC",
-    "WNN_results"
+    "WNN_results",
+    "UMAP_embeddings_tibble.WNN"
   ))
 
 rlang::list2(

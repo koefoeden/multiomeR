@@ -8,8 +8,10 @@ rlang::list2(
   targets::tar_target(
     name = SCAVENGE_cell_metadata_tibble,
     description = "Keep each nucleus's graph embedding and cluster labels, so per-GWAS SCAVENGE targets load a small table",
-    command = dplyr::select(metadata_w_cell_types_tibble.WNN, "barcode_w_prefix", dplyr::all_of(unlist(map_SCAVENGE_umap_cols)),
-      dplyr::all_of(paste0(map_SCAVENGE_graph_name, c("_cluster_named", "_cluster_cell_type"))))
+    command = metadata_w_cell_types_tibble.WNN |>
+      dplyr::select("barcode_w_prefix", dplyr::all_of(paste0(map_SCAVENGE_graph_name, c("_cluster_named", "_cluster_cell_type")))) |>
+      dplyr::left_join(dplyr::select(UMAP_embeddings_tibble.WNN, "barcode_w_prefix", dplyr::all_of(unlist(map_SCAVENGE_umap_cols))),
+        by = "barcode_w_prefix")
   ),
   targets::tar_target(
     name = TRS_tibbles,

@@ -21,7 +21,7 @@ cell_metadata
 
 {{< include data/demo_outputs/cell_metadata.md >}}
 
-The table has one row per retained nucleus, with its QC metrics, GEX, ATAC and WNN clusters, cell-type labels and UMAP coordinates. The multimodal Seurat/Signac object is a convenience export for exploring the results with Seurat and Signac:
+The table has one row per retained nucleus, with its QC metrics, GEX, ATAC and WNN clusters and cell-type labels. UMAP coordinates are kept apart, in `UMAP_embeddings_tibble.WNN.immune_human_2x` and its GEX and ATAC counterparts, so that UMAPs do not hold up cell typing and the optional modules. The multimodal Seurat/Signac object is a convenience export for exploring the results with Seurat and Signac:
 
 ```{.r filename="R"}
 demo_object <- targets::tar_read(

@@ -431,10 +431,9 @@ rlang::list2(
     ),
     targets::tar_target(
       name = metadata_w_clusters_tibble.ATAC,
-      description = "BPCells-native ATAC metadata with LSI clusters and UMAP coordinates",
+      description = "BPCells-native ATAC metadata with LSI clusters",
       command = metadata_filtered_tibble.ATAC |>
         dplyr::filter(.data$barcode_w_prefix %in% names(LSI_clusters.ATAC)) |>
-        dplyr::left_join(UMAP_embeddings_tibble.ATAC, by = "barcode_w_prefix") |>
         dplyr::mutate(LSI_harmony_SNN_cluster = unname(LSI_clusters.ATAC[.data$barcode_w_prefix]))
     ),
     targets::tar_target(
@@ -668,13 +667,14 @@ rlang::list2(
     ),
     targets::tar_target(
       name = metadata_w_cell_types_analysis_tibble.ATAC,
-      description = "Join configured analysis variables onto processed ATAC metadata",
+      description = "Join configured analysis variables and UMAP coordinates onto processed ATAC metadata for plots",
       command = prepare_GEX_metadata_tibble(
         metadata_tibble = metadata_w_cell_types_tibble.ATAC,
         barcode_vec = metadata_w_cell_types_tibble.ATAC$barcode_w_prefix,
         donor_id_metadata_tibble = donor_id_analysis_metadata_tibble,
         GEM_well_metadata_tibble = GEM_well_analysis_metadata_tibble
-      )
+      ) |>
+        dplyr::left_join(UMAP_embeddings_tibble.ATAC, by = "barcode_w_prefix")
     ),
     targets::tar_target(
       name = metadata_w_cell_types_annotation_tibble.ATAC,
@@ -826,11 +826,9 @@ rlang::list2(
       name = cross.UMAPs.7_ATAC_QC,
       description = "Plot ATAC cell types on UMAPs across a sweep of LSI dimension counts and neighbor counts. [checkpoint:7_ATAC-QC]",
       command = {
-        metadata <- metadata_w_cell_types_tibble.ATAC |>
-          dplyr::select(-dplyr::any_of(c("LSI_UMAP_1", "LSI_UMAP_2")))
         cross_UMAP_embeddings_tibbles.ATAC |>
           purrr::imap(\(sweep_umap, n_neighbors) {
-            dplyr::left_join(metadata, sweep_umap, by = "barcode_w_prefix") |>
+            dplyr::left_join(metadata_w_cell_types_tibble.ATAC, sweep_umap, by = "barcode_w_prefix") |>
               plot_UMAP_from_metadata(variable = "LSI_harmony_SNN_cluster_cell_type") +
               ggplot2::labs(subtitle = sprintf("First %s UMAP LSI dimensions; neighbours: %s; min_dist: %s. Compare label stability across settings; labels are GEX-derived.",
                 UMAP_n_dims_seq.ATAC, n_neighbors, aggregation_UMAP_min_dist))

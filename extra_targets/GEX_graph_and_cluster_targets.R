@@ -36,11 +36,9 @@ rlang::list2(
   ),
   targets::tar_target(
     name = metadata_w_clusters_tibble.GEX,
-    description = "BPCells-native GEX metadata with PCA clusters and UMAP coordinates",
+    description = "BPCells-native GEX metadata with PCA clusters",
     command = metadata_tibble.GEX |>
       dplyr::filter(.data$barcode_w_prefix %in% names(PCA_clusters.GEX)) |>
-      dplyr::left_join(UMAP_embeddings_tibble.GEX, by = "barcode_w_prefix") |>
-      dplyr::left_join(UMAP_embeddings_tibble.GEX_non_harmony, by = "barcode_w_prefix") |>
       dplyr::mutate(PCA_harmony_SNN_cluster = unname(PCA_clusters.GEX[.data$barcode_w_prefix])),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
@@ -217,13 +215,15 @@ rlang::list2(
   ),
   targets::tar_target(
     name = metadata_w_cell_types_analysis_tibble.GEX,
-    description = "Join configured analysis variables onto processed GEX metadata",
+    description = "Join configured analysis variables and UMAP coordinates onto processed GEX metadata for plots",
     command = prepare_GEX_metadata_tibble(
       metadata_tibble = metadata_w_cell_types_tibble.GEX,
       barcode_vec = metadata_w_cell_types_tibble.GEX$barcode_w_prefix,
       donor_id_metadata_tibble = donor_id_analysis_metadata_tibble,
       GEM_well_metadata_tibble = GEM_well_analysis_metadata_tibble
-    )
+    ) |>
+      dplyr::left_join(UMAP_embeddings_tibble.GEX, by = "barcode_w_prefix") |>
+      dplyr::left_join(UMAP_embeddings_tibble.GEX_non_harmony, by = "barcode_w_prefix")
   ),
   targets::tar_target(
     name = metadata_w_cell_types_annotation_tibble.GEX,
@@ -316,11 +316,9 @@ rlang::list2(
     name = cross.UMAPs.3_GEX_QC,
     description = "Plot GEX cell types on UMAPs across a sweep of PC counts and neighbor counts. [checkpoint:3_GEX-QC]",
     command = {
-      metadata <- metadata_w_cell_types_tibble.GEX |>
-        dplyr::select(-dplyr::any_of(c("GEX_UMAP_1", "GEX_UMAP_2")))
       cross_UMAP_embeddings_tibbles.GEX |>
         purrr::imap(\(sweep_umap, n_neighbors) {
-          dplyr::left_join(metadata, sweep_umap, by = "barcode_w_prefix") |>
+          dplyr::left_join(metadata_w_cell_types_tibble.GEX, sweep_umap, by = "barcode_w_prefix") |>
             plot_UMAP_from_metadata(variable = "PCA_harmony_SNN_cluster_cell_type", umap_cols = c("GEX_UMAP_1", "GEX_UMAP_2")) +
             ggplot2::labs(subtitle = sprintf("First %s UMAP PCs; neighbours: %s; min_dist: %s. Compare label stability across settings; island spacing is not biological distance.",
               UMAP_n_dims_seq.GEX, n_neighbors, aggregation_UMAP_min_dist))

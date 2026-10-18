@@ -100,7 +100,8 @@ figure_pipeline <- list(
         dplyr::select("barcode_w_prefix", "score")
       stopifnot(nrow(scores) > 0L)
       data <- metadata_w_cell_types_tibble.WNN.mixed_human_31x |>
-        dplyr::select("barcode_w_prefix", "WNN_UMAP_1", "WNN_UMAP_2", "WNN_harmony_SNN_cluster_cell_type") |>
+        dplyr::select("barcode_w_prefix", "WNN_harmony_SNN_cluster_cell_type") |>
+        dplyr::left_join(UMAP_embeddings_tibble.WNN.mixed_human_31x, by = "barcode_w_prefix", relationship = "one-to-one") |>
         dplyr::left_join(scores, by = "barcode_w_prefix", relationship = "one-to-one") |>
         dplyr::filter(is.finite(.data$WNN_UMAP_1), is.finite(.data$WNN_UMAP_2))
       # Match production random drawing.

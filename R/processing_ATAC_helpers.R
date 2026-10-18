@@ -892,7 +892,8 @@ choose_ATAC_LSI_variant <- function(n_nonzero, memory_budget_GB) {
 #' @param seed Random seed passed to stochastic clustering, sampling, or embedding code for reproducibility.
 #' @param col_prefix Prefix assigned to generated coordinate columns, for example `LSI_UMAP` gives `LSI_UMAP_1` and `LSI_UMAP_2`.
 #' @param n_components Number of UMAP output dimensions to compute; use 2 for plotting panels and 3 for 3D widgets.
-#' @param init uwot initialization. `"spca"` needs `embedding_matrix`.
+#' @param init uwot initialization. `"spca"` needs `embedding_matrix`;
+#'   `"spectral"` is computed by [get_spectral_UMAP_init()].
 #' @param embedding_matrix Optional cell coordinates in `knn` row order, used only by PCA initializations.
 #' @param threads Number of threads for the fuzzy graph and the optimization.
 #' @return A numeric UMAP matrix with `knn` row names and `<col_prefix>_<dimension>` columns.
@@ -910,10 +911,14 @@ run_UMAP_from_neighbors <- function(
   threads = 1
 ) {
   neighbors <- seq_len(min(as.integer(n_neighbors), ncol(knn$idx)))
+  nn_method <- list(idx = knn$idx[, neighbors, drop = FALSE], dist = knn$dist[, neighbors, drop = FALSE])
   set.seed(seed)
+  if (identical(init, "spectral")) {
+    init <- get_spectral_UMAP_init(nn_method, n_components, threads)
+  }
   umap <- uwot::umap(
     X = embedding_matrix,
-    nn_method = list(idx = knn$idx[, neighbors, drop = FALSE], dist = knn$dist[, neighbors, drop = FALSE]),
+    nn_method = nn_method,
     n_neighbors = length(neighbors),
     min_dist = min_dist,
     n_components = n_components,
@@ -924,6 +929,36 @@ run_UMAP_from_neighbors <- function(
   )
   dimnames(umap) <- list(rownames(knn$idx), paste0(col_prefix, "_", seq_len(ncol(umap))))
   umap
+}
+
+#' Get spectral UMAP initialisation
+#'
+#' uwot's spectral initialisation, but solved for the largest eigenvalues of
+#' the normalised adjacency I - L instead of the smallest of the normalised
+#' Laplacian L: the same eigenvectors in a third of the time (205 instead of
+#' 630 s for 921k nuclei). A tolerance of 1e-6 reproduces uwot's eigenvalues to
+#' six digits; 1e-4 returned a wrong eigenvector at 100k nuclei. Like uwot, the
+#' coordinates are scaled to a maximum of 10 with N(0, 1e-4) jitter from R's
+#' random number stream. Graphs that uwot does not embed spectrally, those
+#' with several components or fewer than three cells, are left to uwot.
+#'
+#' @param nn_method List with `idx` and `dist` matrices, as passed to `uwot::umap()`.
+#' @param n_components Number of UMAP output dimensions.
+#' @param threads Number of threads for the fuzzy graph.
+#' @return An initial coordinate matrix, or `"spectral"` for uwot's own handling.
+#' @keywords internal
+
+get_spectral_UMAP_init <- function(nn_method, n_components, threads) {
+  graph <- uwot::similarity_graph(nn_method = nn_method, n_neighbors = ncol(nn_method$idx), n_threads = threads, verbose = FALSE)
+  edges <- Matrix::summary(graph)
+  if (nrow(graph) < 3 || igraph::count_components(igraph::make_graph(rbind(edges$i, edges$j), n = nrow(graph), directed = FALSE)) > 1) {
+    return("spectral")
+  }
+  degree_sqrt <- sqrt(Matrix::colSums(graph))
+  eigen <- RSpectra::eigs_sym(Matrix::t(graph / degree_sqrt) / degree_sqrt, k = n_components + 1, which = "LA", opts = list(tol = 1e-6))
+  # The leading eigenvector, proportional to the square-rooted degrees, carries no structure; uwot keeps the next ones in order.
+  coords <- eigen$vectors[, order(eigen$values, decreasing = TRUE)[-1], drop = FALSE]
+  coords * 10 / max(abs(coords)) + matrix(stats::rnorm(length(coords), sd = 1e-4), ncol = n_components)
 }
 
 #' Run harmony on embedding matrix

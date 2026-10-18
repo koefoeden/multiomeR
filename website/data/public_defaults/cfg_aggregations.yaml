@@ -23,6 +23,8 @@ immune_human_2x:
   aggregation_GEX_cluster_annotation_min_advantage: 0.02
   aggregation_ATAC_cluster_annotation_min_advantage: 0.02
   aggregation_WNN_cluster_annotation_min_advantage: 0.02
+  # Two donors' 7,800 nuclei hold MAIT and other populations of about 100 nuclei.
+  aggregation_cluster_min_barcodes: 50
   aggregation_QC_exclude_list_combined_object: [nCount_ATAC < 1000, atac_peak_counts_frac < 0.1, atac_peak_counts_blacklist_frac > 0.05]
   aggregation_ATAC_marker_TFs:
     B: [EBF1]

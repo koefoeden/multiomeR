@@ -52,13 +52,13 @@ rlang::list2(
   ),
   targets::tar_target(
     name = chromVAR_z_score_chunk_records.single_nucleus,
-    description = "Compute single-nucleus chromVAR z-scores for one GWAS and one reusable ATAC chunk [resource_observation: peak_RAM_GiB=10.4; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=6.2; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
-    command = get_GWAS_chromVAR_z_score_chunk_record(
-      peak_weight_record = GWAS_peak_weight_records,
+    description = "Compute single-nucleus chromVAR z-scores of every GWAS for one reusable ATAC chunk [resource_observation: peak_RAM_GiB=10.4; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=6.2; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
+    command = get_GWAS_chromVAR_z_score_chunk_records(
+      peak_weights_matrix = GWAS_peak_weight_matrix,
       RSE_ATAC = chromVAR_obj.ATAC,
       chunk_context_record = chromVAR_chunk_context_records.ATAC
     ),
-    pattern = cross(GWAS_peak_weight_records, chromVAR_chunk_context_records.ATAC),
+    pattern = map(chromVAR_chunk_context_records.ATAC),
     iteration = "vector",
     resources = get_tar_resources(RAM_GB_req = 16)
   ),

@@ -92,24 +92,19 @@ get_GWAS_chromVAR_peak_weight_matrix <- function(peak_weight_records) {
   Matrix::Matrix(peak_weights_matrix, sparse = TRUE)
 }
 
-#' Get GWAS chromVAR z-score chunk record
+#' Get GWAS chromVAR z-score chunk records
 #'
-#' Compute one GWAS chromVAR z-score vector for one cell chunk.
+#' Compute the chromVAR z-score vectors of all GWAS for one cell chunk, so that
+#' each chunk's large count matrix is loaded once rather than once per GWAS.
 #'
-#' @param peak_weight_record One GWAS record containing `GWAS_ID` and named
-#'   peak weights.
+#' @param peak_weights_matrix Sparse peak-by-GWAS weight matrix, named by GWAS.
 #' @param chunk_context_record Cell-chunk record containing counts, background,
 #'   chunk ID, and cell names.
 #' @param RSE_ATAC RangedSummarizedExperiment for ATAC peaks, with row ranges aligned to peak-level matrices.
-#' @return A single branch record, usually a list or one-row tibble, carrying all inputs needed by a dynamic target branch.
+#' @return A tibble with one row per GWAS: `GWAS_ID`, `chunk_id` and list-column `z_score_vec`.
 #' @keywords internal
 
-get_GWAS_chromVAR_z_score_chunk_record <- function(peak_weight_record, chunk_context_record, RSE_ATAC) {
-  peak_weights_matrix <- matrix(peak_weight_record$peak_weights_vec, ncol = 1)
-  rownames(peak_weights_matrix) <- names(peak_weight_record$peak_weights_vec)
-  colnames(peak_weights_matrix) <- peak_weight_record$GWAS_ID
-  peak_weights_matrix <- Matrix::Matrix(peak_weights_matrix, sparse = TRUE)
-
+get_GWAS_chromVAR_z_score_chunk_records <- function(peak_weights_matrix, chunk_context_record, RSE_ATAC) {
   chunk_obj <- SummarizedExperiment::SummarizedExperiment(
     assays = list(counts = chunk_context_record$counts),
     rowRanges = SummarizedExperiment::rowRanges(RSE_ATAC)
@@ -133,15 +128,13 @@ get_GWAS_chromVAR_z_score_chunk_record <- function(peak_weight_record, chunk_con
     Matrix::sparseMatrix(i = bin_idx, j = rep.int(1L, length(bin_idx)), x = weights, dims = c(nrow(bin_variance), 1L)),
     bin_variance
   ))
-  peak_weights_vec <- as.numeric(peak_weights_matrix[, 1])
-  z_score_vec <- z_score_matrix[peak_weight_record$GWAS_ID, ] *
-    sqrt(background_variance(peak_weights_vec) / background_variance(peak_weights_vec^2))
-  names(z_score_vec) <- chunk_context_record$cell_names
-  tibble::tibble(
-    GWAS_ID = peak_weight_record$GWAS_ID,
-    chunk_id = chunk_context_record$chunk_id,
-    z_score_vec = list(z_score_vec)
-  )
+  purrr::map_dfr(colnames(peak_weights_matrix), \(GWAS_ID) {
+    peak_weights_vec <- as.numeric(peak_weights_matrix[, GWAS_ID])
+    z_score_vec <- z_score_matrix[GWAS_ID, ] *
+      sqrt(background_variance(peak_weights_vec) / background_variance(peak_weights_vec^2))
+    names(z_score_vec) <- chunk_context_record$cell_names
+    tibble::tibble(GWAS_ID = GWAS_ID, chunk_id = chunk_context_record$chunk_id, z_score_vec = list(z_score_vec))
+  })
 }
 
 combine_GWAS_chromVAR_z_score_chunk_records <- function(chromVAR_z_score_chunk_records) {

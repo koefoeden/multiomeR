@@ -106,7 +106,10 @@ To verify dynamic branches, read metadata with `complete_only = FALSE` and
 follow `children` only for selected rows with `type == "pattern"`. Other
 targets can have slice identifiers in `children` that are not target names.
 Use these current branch lists rather than a name-prefix search that can
-include obsolete branches.
+include obsolete branches. A pattern's row is written only once all its
+branches complete, so after a branch errors it is missing or stale: select the
+branches by `parent` instead, and read an errored branch's inputs from its
+workspace (`tar_workspace()`).
 
 Run all targets only when explicitly requested:
 

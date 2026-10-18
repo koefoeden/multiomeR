@@ -799,11 +799,14 @@ get_ATAC_QC_metadata_from_BPCells <- function(
 #'   and inverse-document-frequency scaling.
 #' @param threads Number of threads for the sums and `BPCells::svds()`; the
 #'   result does not depend on it.
+#' @param memory_budget_GB RAM the computation may use; see
+#'   [choose_ATAC_LSI_variant()]. The default reads the counts from disk.
 #' @return A list with cell embeddings (`cell_embeddings`), peak loadings
 #'   (`feature_loadings`), and singular values (`singular_values`).
 #' @keywords internal
 
-run_ATAC_LSI_BPCells <- function(ATAC_peak_BPCells_matrix, n_components, scale_factor = 10000, threads = 1) {
+run_ATAC_LSI_BPCells <- function(ATAC_peak_BPCells_matrix, n_components, scale_factor = 10000, threads = 1,
+                                 memory_budget_GB = 0) {
   peak_matrix <- ATAC_peak_BPCells_matrix
   # 24 chunks along the storage axis are read in parallel. A fixed number keeps the floating-point
   # result independent of `threads`; parallel_split() leaves the matrix whole for one thread.
@@ -816,16 +819,26 @@ run_ATAC_LSI_BPCells <- function(ATAC_peak_BPCells_matrix, n_components, scale_f
   row_sums <- BPCells::rowSums(counts)
   idf <- ifelse(row_sums > 0, ncol(peak_matrix) / row_sums, 0)
 
+  # svds() streams its input a few hundred times. Counts held in memory save decompressing and
+  # cell-filtering them on each pass; the transformed matrix held as float also saves the transform.
+  variant <- choose_ATAC_LSI_variant(
+    n_nonzero = sum(BPCells::matrix_stats(counts, col_stats = "nonzero")$col_stats),
+    memory_budget_GB = memory_budget_GB
+  )
+  message("LSI input layout: ", variant)
+  if (variant == "counts") {
+    peak_matrix <- BPCells::write_matrix_memory(peak_matrix, compress = TRUE)
+  }
   mat_lsi <- peak_matrix |>
     BPCells::multiply_cols(col_scaling) |>
     BPCells::multiply_rows(idf)
   mat_lsi <- split_in_chunks(log1p(scale_factor * mat_lsi))
-  # svds() streams its input a few hundred times. Holding the transformed chunks in memory as float
-  # (about 5.7 bytes per non-zero) saves decompressing, cell-filtering and log-transforming the counts each time.
-  mat_lsi@matrix_list <- lapply(mat_lsi@matrix_list, \(chunk) chunk |>
-    BPCells::convert_matrix_type("float") |>
-    BPCells::write_matrix_memory(compress = TRUE) |>
-    BPCells::convert_matrix_type("double"))
+  if (variant == "float") {
+    mat_lsi@matrix_list <- lapply(mat_lsi@matrix_list, \(chunk) chunk |>
+      BPCells::convert_matrix_type("float") |>
+      BPCells::write_matrix_memory(compress = TRUE) |>
+      BPCells::convert_matrix_type("double"))
+  }
 
   svd <- BPCells::svds(mat_lsi, k = n_components, threads = 0)
 
@@ -842,6 +855,29 @@ run_ATAC_LSI_BPCells <- function(ATAC_peak_BPCells_matrix, n_components, scale_f
     feature_loadings = feature_loadings,
     singular_values = svd$d
   )
+}
+
+#' Choose how LSI holds its input
+#'
+#' Pick the fastest layout whose projected peak RAM fits the budget, from
+#' measurements on a 786,000-nucleus aggregation (5.4e9 non-zeros, 6 threads):
+#' - `"float"`: the transformed matrix in memory as float, about 6 bytes per
+#'   non-zero plus 5 GB (13 min on that aggregation);
+#' - `"counts"`: the integer counts in memory, about 3.2 bytes per non-zero
+#'   plus 5 GB while they are written (11 s instead of 25 s per pass);
+#' - `"disk"`: the counts read from disk on every pass.
+#'
+#' The counts and disk layouts give identical results; the float layout agrees
+#' with them to about 1e-11 in the singular values.
+#'
+#' @param n_nonzero Number of non-zero entries of the LSI input matrix.
+#' @param memory_budget_GB RAM the computation may use, in GB.
+#' @return `"float"`, `"counts"` or `"disk"`.
+#' @keywords internal
+
+choose_ATAC_LSI_variant <- function(n_nonzero, memory_budget_GB) {
+  projected_GB <- 5 + n_nonzero * c(float = 6, counts = 3.2) / 1e9
+  c(names(projected_GB)[projected_GB <= memory_budget_GB], "disk")[[1]]
 }
 
 #' Run UMAP from nearest neighbours

@@ -365,9 +365,10 @@ rlang::list2(
       command = run_ATAC_LSI_BPCells(
         ATAC_peak_BPCells_matrix = peak_QC_filtered_BPCells_matrix.ATAC,
         n_components = aggregation_ATAC_LSI_n_components,
-        threads = 6
+        threads = 6,
+        memory_budget_GB = 32
       ),
-      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
+      resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
     ),
     targets::tar_target(
       name = LSI_embeddings_tibble.ATAC,

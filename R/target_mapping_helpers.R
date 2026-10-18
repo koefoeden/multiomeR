@@ -171,7 +171,9 @@ get_GEM_well_annotation_metadata_tibble <- function(GEM_well_metadata_tibble) {
     "GEM_well_cellbender_h5_file",
     "GEM_well_donors_VCF_file",
     "GEM_well_QC_exclude_list",
-    "GEM_well_is_active"
+    "GEM_well_is_active",
+    "GEM_well_cellsnp_min_count",
+    "GEM_well_cellsnp_min_MAF"
   )
 
   GEM_well_metadata_tibble |>
@@ -203,7 +205,10 @@ assert_donor_GEM_well_metadata_column_ownership <- function(donor_id_metadata_ti
 #' The ` ;; ` separator preserves multiple QC expressions inside the tabular
 #' configuration file. User-facing GEM well column names are normalized to the
 #' existing internal target-command symbols so the configuration migration does
-#' not invalidate cached processing targets.
+#' not invalidate cached processing targets. The optional cellsnp-lite
+#' thresholds `GEM_well_cellsnp_min_count` and `GEM_well_cellsnp_min_MAF`
+#' default to 20 reads and 0.1 when absent or empty; lowering both helps
+#' demultiplexing in GEM wells whose weak ATAC signal leaves few SNPs at 20 reads.
 #'
 #' @param GEM_well_config_file Path to the GEM well TSV config.
 #' @return A tibble with one row per GEM well and normalized config columns.
@@ -269,6 +274,10 @@ build_GEM_well_tibble <- function(GEM_well_config_file = configuration_path("cfg
   if (anyNA(GEM_well_tibble$GEM_well_is_active)) {
     stop("Every GEM well must define GEM_well_is_active.", call. = FALSE)
   }
+  cellsnp_defaults <- c(GEM_well_cellsnp_min_count = 20, GEM_well_cellsnp_min_MAF = 0.1)
+  for (column in names(cellsnp_defaults)) {
+    GEM_well_tibble[[column]] <- dplyr::coalesce(as.numeric(GEM_well_tibble[[column]] %||% NA), cellsnp_defaults[[column]])
+  }
 
   if (length(validation_aggregations())) {
     config <- read_aggregation_config_tibble()
@@ -297,6 +306,8 @@ build_GEM_well_tibble <- function(GEM_well_config_file = configuration_path("cfg
         "GEM_well_cellranger_arc_count_dir",
         "GEM_well_cellbender_h5_file",
         "GEM_well_donors_VCF_file",
+        "GEM_well_cellsnp_min_count",
+        "GEM_well_cellsnp_min_MAF",
         "GEM_well_QC_exclude_list",
         "is_active"
       ))

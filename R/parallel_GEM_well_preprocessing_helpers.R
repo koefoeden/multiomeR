@@ -7,8 +7,8 @@
 #' @param cellranger_barcodes_tsv Path to a TSV containing CellRanger-called barcodes, used as the cellsnp-lite sample whitelist.
 #' @param GEM_well_donors_VCF_file VCF path containing donor genotypes for the GEM well.
 #' @param cores Number of CPU cores requested for external tools or parallel work.
-#' @param minMAF Minimum minor allele frequency threshold passed to cellsnp-lite.
-#' @param minCOUNT Minimum SNP read-count threshold passed to cellsnp-lite.
+#' @param minMAF Minimum minor allele frequency threshold passed to cellsnp-lite (`GEM_well_cellsnp_min_MAF`).
+#' @param minCOUNT Minimum SNP read-count threshold passed to cellsnp-lite (`GEM_well_cellsnp_min_count`).
 #' @return Path to the cellsnp-lite output directory containing `cellSNP.base.vcf.gz`.
 #' @keywords internal
 
@@ -17,8 +17,8 @@ get_cellsnp_dir <- function(
   cellranger_barcodes_tsv,
   GEM_well_donors_VCF_file,
   cores,
-  minMAF = 0.1,
-  minCOUNT = 20
+  minMAF,
+  minCOUNT
 ) {
   cellsnp_out_dir <- get_structured_file_path(filetype = NULL)
 

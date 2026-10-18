@@ -233,7 +233,9 @@ rlang::list2(
         bam_file = ATAC_bam_file,
         cellranger_barcodes_tsv = cellranger_barcodes_tsv,
         GEM_well_donors_VCF_file = GEM_well_donors_VCF_file,
-        cores = 6
+        cores = 6,
+        minMAF = GEM_well_cellsnp_min_MAF,
+        minCOUNT = GEM_well_cellsnp_min_count
       )
     } else {
       character(0)

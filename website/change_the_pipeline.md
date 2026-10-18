@@ -226,7 +226,11 @@ multiomeR assumes that the repository runtime is bootstrapped before the target 
 4.  applying global plotting and `{targets}` options,
 5.  sourcing `crew_controllers.R` from the selected configuration directory and installing controller resources.
 
-The nested `multiomeRCore` directory is both ordinary editable pipeline source and an installable package boundary for standalone repositories. multiomeR does not install or attach that package itself: `targets::tar_source()` loads the same implementation files before the root helpers. Keep domain-specific code under `R/`, but do not duplicate the generally reusable implementations there.
+A `crew` worker stops after the packages, conflict preferences and plot options. `{targets}` sends the driver's helpers and options with every task, so workers do not source the helpers or build controllers themselves. They therefore run exactly the helper versions the driver hashed, and a helper file added during a run reaches no worker until the driver reloads.
+
+The nested `multiomeRCore` directory is both ordinary editable pipeline source and an installable package boundary for standalone repositories. multiomeR does not install or attach that package itself: the bootstrap sources the same implementation files before the root helpers. Keep domain-specific code under `R/`, but do not duplicate the generally reusable implementations there.
+
+The bootstrap sources the helper files with `source()` rather than `targets::tar_source()`. `source()` follows `getOption("keep.source")`, so non-interactive sessions drop the source references that would make every task's payload about four times larger. Interactive sessions keep them for debugging. `{targets}` hashes functions without source references, so the choice invalidates no target.
 
 For commands that intentionally bypass startup side effects, source the bootstrap helper directly and then load the runtime:
 

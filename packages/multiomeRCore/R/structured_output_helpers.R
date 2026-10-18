@@ -226,9 +226,13 @@ cull_dense_discrete_legends <- function(plot, n_distinct_max, plot_build) {
 #'   graphics device. ggplot objects without explicit dimensions are sized from
 #'   their facets and discrete breaks; other grid objects default to 10 x 10 in.
 #' @details Rendering completes in staging before published files change.
-#' A per-target inventory removes only previously owned files, including when
-#' the new result is empty. On first use, existing ownership is recovered from
-#' file paths registered in the targets store when available.
+#' An inventory per output location, a plot file or a plot-list folder,
+#' removes only previously owned files, including when the new result is
+#' empty. Keyed by location rather than target name, it also lets a branch
+#' that an upstream change renamed replace its predecessor's files. On first
+#' use, existing ownership is recovered from file paths registered in the
+#' targets store when available. [prune_orphaned_plots()] finds the files no
+#' current target owns.
 #' @return Image paths for the saved plots, or `character()` for an empty result.
 #' @keywords internal
 
@@ -336,8 +340,9 @@ save_plots_structured <- function(
   }
   store <- targets::tar_config_get("store")
   inventory_dir <- file.path(store, "plot_inventory")
-  fs::dir_create(inventory_dir)
-  inventory_file <- file.path(inventory_dir, paste0(target_name, ".rds"))
+  output_location <- if (is_single_plot) image_paths else out_dir
+  inventory_file <- file.path(inventory_dir, paste0(fs::path_rel(output_location, start = store), ".rds"))
+  fs::dir_create(dirname(inventory_file))
   if (file.exists(inventory_file)) {
     previous_paths <- file.path(store, readRDS(inventory_file))
   } else {
@@ -376,6 +381,39 @@ save_plots_structured <- function(
   image_paths
 }
 
+
+#' Prune orphaned plots
+#'
+#' List, and optionally delete, the plot images in a store that no target of
+#' the current graphs owns: images of removed targets and aggregations, of
+#' branches that upstream changes renamed, and of plot lists that shrank.
+#' Ownership comes from the file paths the targets metadata records for the
+#' graphs' current targets and branches.
+#'
+#' @param scripts Target scripts of every graph that writes plots to the
+#'   store; images owned in any of them are kept.
+#' @param store Targets store holding the `plots` folder.
+#' @param delete Whether to delete the orphaned images. By default they are
+#'   only listed.
+#' @return Paths of the orphaned images, invisibly.
+#' @keywords internal
+prune_orphaned_plots <- function(
+  scripts = targets::tar_config_get("script"),
+  store = targets::tar_config_get("store"),
+  delete = FALSE
+) {
+  current <- unique(unlist(lapply(scripts, \(script) targets::tar_manifest(fields = "name", script = script)$name)))
+  meta <- targets::tar_meta(fields = c("type", "path", "children"), targets_only = TRUE, store = store)
+  owned_names <- c(current, unlist(meta$children[meta$name %in% current & meta$type == "pattern"]))
+  owned <- unlist(meta$path[meta$name %in% owned_names])
+  owned <- fs::path_abs(owned[!is.na(owned)])
+  images <- fs::dir_ls(file.path(store, "plots"), recurse = TRUE, type = "file", regexp = "[.](png|svg)$")
+  orphaned <- images[!fs::path_abs(images) %in% owned]
+  message(length(orphaned), " of ", length(images), " plot images (", round(sum(fs::file_size(orphaned), na.rm = TRUE) / 1e6),
+    " MB) belong to no current target", if (!delete) "; delete = TRUE removes them")
+  if (delete) fs::file_delete(orphaned)
+  invisible(as.character(orphaned))
+}
 
 get_structured_file_path <- function(filetype = NULL, override_suffix = NULL) {
   file_path <- get_structured_output_path(

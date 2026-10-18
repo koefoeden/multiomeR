@@ -113,6 +113,17 @@ Changes to code, configuration, input files, or any upstream target make downstr
 
 Neighbor searches build their index on one thread, so rebuilding a target from unchanged inputs gives the same neighbors, clusters and UMAP layouts. A small upstream change can still move results: removing a few nuclei, for example, redraws the random subsets in which WNN modality weights are estimated, and clusters, UMAP coordinates and downstream statistics shift with them. This is expected; compare cluster composition and marker results rather than exact labels, and keep the store when results must stay unchanged.
 
+## Old plots remain in the store
+
+Plots of removed targets, of aggregations no longer configured and of branches that an upstream change renamed stay in `<store>/plots/`. List the images that no current target owns, check the list, and only then delete them:
+
+```{.r filename="R"}
+orphaned <- prune_orphaned_plots()
+prune_orphaned_plots(delete = TRUE)
+```
+
+Pass every target script that writes plots to the store as `scripts`, since images owned by any of their graphs are kept. An aggregation removed from the configuration counts as gone, so its plots are listed too.
+
 ## Rerun safely
 
 After fixing the cause, rerun the same selection; up-to-date results are reused:

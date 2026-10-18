@@ -1,6 +1,7 @@
 export(apply_crew_controller_options)
 export(get_structured_file_path)
 export(get_tar_resources)
+export(prune_orphaned_plots)
 export(run_w_error_check)
 export(save_plots_structured)
 export(tar_name_wo_suffixes)

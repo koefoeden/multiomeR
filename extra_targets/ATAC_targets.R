@@ -430,6 +430,25 @@ rlang::list2(
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     targets::tar_target(
+      name = resolution_sweep_cluster_sizes.ATAC,
+      description = "Cluster the cached ATAC neighbours with Leiden at half, once and twice the configured resolution, keeping clusters of every size",
+      command = get_resolution_sweep_cluster_sizes(knn.ATAC, k = aggregation_data_nNNs, resolution = aggregation_ATAC_cluster_res),
+      resources = get_tar_resources(RAM_GB_req = 16)
+    ),
+    tarchetypes::tar_file(
+      name = resolution_sweep_table.7_ATAC_QC,
+      description = "Tabulate ATAC cluster counts and sizes at half, once and twice the configured Leiden resolution. [checkpoint:7_ATAC-QC]",
+      command = save_resolution_sweep_table(resolution_sweep_cluster_sizes.ATAC, aggregation_cluster_min_barcodes)
+    ),
+    tarchetypes::tar_file(
+      name = resolution_sweep_plot.7_ATAC_QC,
+      description = "Plot ATAC cluster sizes at half, once and twice the configured Leiden resolution. [checkpoint:7_ATAC-QC]",
+      command = plot_resolution_sweep(resolution_sweep_cluster_sizes.ATAC, aggregation_cluster_min_barcodes, "ATAC") |>
+        add_plot_parameters("cfg_aggregations.yaml", aggregation_ATAC_cluster_res = aggregation_ATAC_cluster_res,
+          aggregation_cluster_min_barcodes = aggregation_cluster_min_barcodes) |>
+        save_plots_structured(width = 10, height = 9)
+    ),
+    targets::tar_target(
       name = metadata_w_clusters_tibble.ATAC,
       description = "BPCells-native ATAC metadata with LSI clusters",
       command = metadata_filtered_tibble.ATAC |>

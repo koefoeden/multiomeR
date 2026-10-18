@@ -35,6 +35,25 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
+    name = resolution_sweep_cluster_sizes.GEX,
+    description = "Cluster the cached GEX neighbours with Leiden at half, once and twice the configured resolution, keeping clusters of every size",
+    command = get_resolution_sweep_cluster_sizes(knn.GEX, k = aggregation_data_nNNs, resolution = aggregation_GEX_cluster_res),
+    resources = get_tar_resources(RAM_GB_req = 16)
+  ),
+  tarchetypes::tar_file(
+    name = resolution_sweep_table.3_GEX_QC,
+    description = "Tabulate GEX cluster counts and sizes at half, once and twice the configured Leiden resolution. [checkpoint:3_GEX-QC]",
+    command = save_resolution_sweep_table(resolution_sweep_cluster_sizes.GEX, aggregation_cluster_min_barcodes)
+  ),
+  tarchetypes::tar_file(
+    name = resolution_sweep_plot.3_GEX_QC,
+    description = "Plot GEX cluster sizes at half, once and twice the configured Leiden resolution. [checkpoint:3_GEX-QC]",
+    command = plot_resolution_sweep(resolution_sweep_cluster_sizes.GEX, aggregation_cluster_min_barcodes, "GEX") |>
+      add_plot_parameters("cfg_aggregations.yaml", aggregation_GEX_cluster_res = aggregation_GEX_cluster_res,
+        aggregation_cluster_min_barcodes = aggregation_cluster_min_barcodes) |>
+      save_plots_structured(width = 10, height = 9)
+  ),
+  targets::tar_target(
     name = metadata_w_clusters_tibble.GEX,
     description = "BPCells-native GEX metadata with PCA clusters",
     command = metadata_tibble.GEX |>

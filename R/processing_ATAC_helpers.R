@@ -1141,6 +1141,67 @@ cluster_neighbors <- function(knn, k, resolution, seed = 1, min_barcodes = 100) 
   filter_clusters_by_min_barcodes(clusters, min_barcodes = min_barcodes)
 }
 
+#' Get cluster sizes over a resolution sweep
+#'
+#' Cluster the nearest neighbours with Leiden at multiples of the configured
+#' resolution, keeping clusters of every size.
+#'
+#' @inheritParams cluster_neighbors
+#' @param multipliers Multiples of `resolution` to cluster at.
+#' @return Tibble with `resolution`, `cluster` (rank by size) and `n_nuclei`.
+#' @keywords internal
+
+get_resolution_sweep_cluster_sizes <- function(knn, k, resolution, multipliers = c(0.5, 1, 2)) {
+  purrr::map_dfr(resolution * multipliers, \(sweep_resolution) {
+    sizes <- sort(table(cluster_neighbors(knn, k, sweep_resolution, min_barcodes = NULL)), decreasing = TRUE)
+    tibble::tibble(resolution = sweep_resolution, cluster = seq_along(sizes), n_nuclei = as.integer(sizes))
+  })
+}
+
+#' Save a resolution sweep table
+#'
+#' @param cluster_sizes Output of [get_resolution_sweep_cluster_sizes()].
+#' @param min_barcodes Minimum size of the clusters the pipeline keeps.
+#' @param path Output TSV path.
+#' @return `path`.
+#' @keywords internal
+
+save_resolution_sweep_table <- function(cluster_sizes, min_barcodes, path = get_structured_file_path(filetype = "tsv")) {
+  cluster_sizes |>
+    dplyr::summarise(clusters = dplyr::n(), clusters_kept = sum(n_nuclei >= min_barcodes),
+      nuclei_in_smaller_clusters = sum(n_nuclei[n_nuclei < min_barcodes]), largest = max(n_nuclei),
+      median = stats::median(n_nuclei), smallest = min(n_nuclei), .by = "resolution") |>
+    readr::write_tsv(path)
+  path
+}
+
+#' Plot a resolution sweep
+#'
+#' @inheritParams save_resolution_sweep_table
+#' @param modality Modality named in the title.
+#' @return A ggplot of cluster sizes by rank, one panel per resolution.
+#' @keywords internal
+
+plot_resolution_sweep <- function(cluster_sizes, min_barcodes, modality) {
+  panel_labels <- cluster_sizes |>
+    dplyr::summarise(label = sprintf("Resolution %s: %d clusters, %d of at least %d nuclei", resolution[[1]], dplyr::n(),
+      sum(n_nuclei >= min_barcodes), min_barcodes), .by = "resolution")
+  ggplot2::ggplot(cluster_sizes, ggplot2::aes(.data$cluster, .data$n_nuclei)) +
+    ggplot2::geom_col(width = 0.9, fill = "grey35") +
+    ggplot2::geom_hline(yintercept = min_barcodes, linetype = "dashed", colour = "firebrick") +
+    ggplot2::scale_y_log10() +
+    ggplot2::facet_wrap(ggplot2::vars(.data$resolution), ncol = 1,
+      labeller = ggplot2::as_labeller(stats::setNames(panel_labels$label, panel_labels$resolution))) +
+    ggplot2::labs(
+      title = paste(modality, "cluster sizes at three Leiden resolutions"),
+      subtitle = stringr::str_wrap(paste("Compare the number of clusters and how many fall below the minimum size (dashed line).",
+        "A higher resolution that mainly adds clusters below it splits off small groups rather than new populations."), width = 100),
+      caption = stringr::str_wrap(paste("Leiden clustering, as for the pipeline's clusters, of the same cached SNN graph at half,",
+        "once and twice the configured resolution. Bars are clusters ranked by size, on a log scale; the pipeline drops",
+        "clusters below the dashed line. Cluster counts are descriptive and do not test whether clusters differ."), width = 110),
+      x = "Cluster rank by size", y = "Nuclei")
+}
+
 plot_LSI_loadings_from_tibble <- function(LSI_loadings_tibble, dims, nfeatures = 50) {
   dims |>
     purrr::set_names(paste0("LSI_", dims)) |>

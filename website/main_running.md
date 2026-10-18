@@ -127,14 +127,16 @@ targets::tar_make(
 ├── categorical_by_cell_type_bars_plots/
 ├── continuous_by_cluster_violin_plot/
 ├── continuous_by_cell_type_violin_plot/
+├── resolution_sweep_plot.png
 └── cell_retention_flow_plot.png
 <store>/files/my_aggregation/3_GEX_QC/
-└── cluster_composition_table.tsv
+├── cluster_composition_table.tsv
+└── resolution_sweep_table.tsv
 ```
 
 **Revise:**
 
-- [`aggregation_GEX_cluster_res`](parameters.html#aggregation_GEX_cluster_res) sets how finely the nuclei are clustered; judge it by marker consistency and cluster sizes. By default, the GEX clusters are also the peak-calling groups of checkpoint 4.
+- [`aggregation_GEX_cluster_res`](parameters.html#aggregation_GEX_cluster_res) sets how finely the nuclei are clustered; judge it by marker consistency and cluster sizes. `resolution_sweep_plot.png` and its table show the cluster counts and sizes at half and twice the resolution. A resolution change reruns only the clustering and later steps, not the neighbor search. By default, the GEX clusters are also the peak-calling groups of checkpoint 4.
 - [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes) and [`aggregation_GEX_cluster_annotation_min_advantage`](parameters.html#aggregation_GEX_cluster_annotation_min_advantage) determine the cell-type labels; see [Cluster annotation](review_outputs.md#cluster-annotation).
 - `UMAPs/cross/` compares layouts across PC and neighbor counts, for choosing [`aggregation_GEX_data_PCs`](parameters.html#aggregation_GEX_data_PCs) and [`aggregation_UMAP_nNNs`](parameters.html#aggregation_UMAP_nNNs).
 
@@ -237,12 +239,14 @@ targets::tar_make(
 ├── categorical_by_cell_type_bars_plots/
 ├── continuous_by_cluster_violin_plot/
 ├── continuous_by_cell_type_violin_plot/
+├── resolution_sweep_plot.png
 └── cell_retention_flow_plot.png
 <store>/files/my_aggregation/7_ATAC_QC/
-└── cluster_composition_table.tsv
+├── cluster_composition_table.tsv
+└── resolution_sweep_table.tsv
 ```
 
-**Revise:** choose [`aggregation_ATAC_cluster_res`](parameters.html#aggregation_ATAC_cluster_res) from the motif patterns and the agreement with GEX labels in `confusion_matrices_plots.png`. [`aggregation_ATAC_cluster_annotation_min_advantage`](parameters.html#aggregation_ATAC_cluster_annotation_min_advantage) sets the assignment margin of the ATAC labels.
+**Revise:** choose [`aggregation_ATAC_cluster_res`](parameters.html#aggregation_ATAC_cluster_res) from the motif patterns, the agreement with GEX labels in `confusion_matrices_plots.png` and the cluster counts at half and twice the resolution in `resolution_sweep_plot.png`. [`aggregation_ATAC_cluster_annotation_min_advantage`](parameters.html#aggregation_ATAC_cluster_annotation_min_advantage) sets the assignment margin of the ATAC labels.
 
 ## Checkpoint 8: WNN integration {#checkpoint-8}
 

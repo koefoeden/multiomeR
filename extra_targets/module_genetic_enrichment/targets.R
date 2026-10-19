@@ -2,7 +2,7 @@ genetic_enrichment_tibble <- build_module_tibble("genetic_enrichment", aggregati
   dplyr::mutate(genetic_enrichment_target_suffix = stringr::str_c("genetic_enrichment", aggregation, sep = "."))
 
 genetic_enrichment_GWAS_config_tibble <- if (nrow(genetic_enrichment_tibble) == 0) {
-  tibble::tibble(aggregation = character(), GWAS_inputs_config_tibble = list())
+  tibble::tibble(aggregation = character(), GWAS_inputs_config_tibble = list(), SLDSC_sumstats_index = list())
 } else {
   GWAS_config_tibble <- purrr::map_dfr(seq_len(nrow(genetic_enrichment_tibble)), \(i) {
     row <- genetic_enrichment_tibble[i, , drop = FALSE]
@@ -23,6 +23,7 @@ genetic_enrichment_GWAS_config_tibble <- if (nrow(genetic_enrichment_tibble) == 
           as.character(config$sourceId)
         }),
         sourceType = purrr::map_chr(sourceId, classify_GWAS_source),
+        summaryStatistics = purrr::map_chr(GWAS_config, \(config) as.character(config$summaryStatistics %||% NA)),
         requested_finemappingMethod = purrr::pmap_chr(
           dplyr::pick(GWAS_config, sourceType, GWAS_ID),
           \(GWAS_config, sourceType, GWAS_ID) {
@@ -54,11 +55,28 @@ genetic_enrichment_GWAS_config_tibble <- if (nrow(genetic_enrichment_tibble) == 
         GWAS_ID,
         sourceId,
         sourceType,
-        requested_finemappingMethod
+        requested_finemappingMethod,
+        summaryStatistics
       )
   })
 
+  # S-LDSC fetches each distinct source's summary statistics once for all
+  # aggregations. Each aggregation slices these shared branches in the
+  # GWAS_ID order of its GWAS_input_records.
+  SLDSC_sumstats_source_tibble <- GWAS_config_tibble |>
+    dplyr::distinct(sourceId, summaryStatistics) |>
+    dplyr::arrange(sourceId, summaryStatistics)
+  SLDSC_sumstats_index_tibble <- GWAS_config_tibble |>
+    dplyr::left_join(
+      dplyr::mutate(SLDSC_sumstats_source_tibble, SLDSC_sumstats_index = dplyr::row_number()),
+      by = c("sourceId", "summaryStatistics"),
+      relationship = "many-to-one"
+    ) |>
+    dplyr::arrange(GWAS_ID) |>
+    dplyr::summarise(SLDSC_sumstats_index = list(SLDSC_sumstats_index), .by = aggregation)
+
   GWAS_config_tibble |>
+    dplyr::select(-summaryStatistics) |>
     dplyr::group_by(aggregation) |>
     tidyr::nest(
       GWAS_inputs_config_tibble = c(
@@ -70,13 +88,15 @@ genetic_enrichment_GWAS_config_tibble <- if (nrow(genetic_enrichment_tibble) == 
         requested_finemappingMethod
       )
     ) |>
-    dplyr::ungroup()
+    dplyr::ungroup() |>
+    dplyr::left_join(SLDSC_sumstats_index_tibble, by = "aggregation", relationship = "one-to-one")
 }
 
 genetic_enrichment_tibble <- genetic_enrichment_tibble |>
   dplyr::left_join(genetic_enrichment_GWAS_config_tibble, by = "aggregation") |>
   add_aggregation_target_syms(c(
     "marker_validated_Ensembl_annotations_GRanges_list",
+    "pseudobulk_counts_matrix.GEX",
     "metadata_w_cell_types_tibble.WNN",
     "combined_BPCells_fragment_obj.ATAC",
     "consensus_peak_GRanges.ATAC",
@@ -103,6 +123,7 @@ rlang::list2(
     source("extra_targets/module_genetic_enrichment/GWAS_chromVAR_cell_type_targets.R")$value,
     source("extra_targets/module_genetic_enrichment/GWAS_chromVAR_absolute_effect_targets.R")$value,
     source("extra_targets/module_genetic_enrichment/GWAS_chromVAR_contribution_targets.R")$value,
+    source("extra_targets/module_genetic_enrichment/SLDSC_targets.R")$value,
     tarchetypes::tar_map(
       values = tibble::tibble(
         map_SCAVENGE_tar_suffix = "WNN_harmony_SNN.SCAVENGE.single_nucleus",

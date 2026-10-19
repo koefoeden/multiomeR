@@ -69,6 +69,8 @@ Preflight makes new, bounded network requests on every invocation:
 - Each configured Open Targets dataset: parse the live release listing with the
   same helper as the downloader; retrieve four bytes of one shard and require
   the Parquet header and HTTP partial-content response.
+- S-LDSC reference: retrieve two bytes of the pinned Zenodo archive and require
+  the gzip header and HTTP partial-content response.
 - CollecTRI: download into a temporary directory, verify the pinned checksum,
   and parse it with the pipeline reader.
 - AnnotationHub: retrieve SQLite headers from its live metadata database and
@@ -80,7 +82,8 @@ Preflight makes new, bounded network requests on every invocation:
 Requests have time and size limits. Failed or unsupported range requests fail
 preflight instead of falling back to a large download. Only AnnotationHub
 metadata may be refreshed; large analysis resources are
-untouched by these probes; the pipeline then downloads the GWAS configured for
+untouched by these probes; the pipeline then downloads the S-LDSC reference and
+the credible sets and summary statistics of the GWAS configured for
 `mixed_human_31x`'s genetic enrichment.
 
 Reports under `outputs/validation/<timestamp>/` record the Git commit, dirty

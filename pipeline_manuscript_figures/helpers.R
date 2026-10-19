@@ -370,28 +370,33 @@ plot_figure_1_TRS <- function(data, trait, cell_types) {
       x = "UMAP 1", y = "UMAP 2")
 }
 
-# Supplementary Figure S5: the module's unscaled deviation heatmap of every study
-# and assigned cell type, with Figure 1D's colour scale, cell-type labels and stars;
-# rows also name the study. Deviations beyond Figure 1D's range take its end colours.
-plot_figure_S5 <- function(scores, GWAS_metadata_tracks_plot, traits) {
-  limit <- max(abs(scores$deviation[scores$GWAS_ID %in% traits$GWAS_ID]))
-  # Of the module's metadata tracks, only trait category and credible-set loci are
-  # kept; Supplementary Table S3 gives each study's sample size, method and ancestry.
+# Supplementary Figures S5 and S6: a module heatmap of every scored study and assigned cell
+# type, with Figure 1's cell-type labels and stars at q < 0.05 on the cell type's `value`.
+# Values beyond the limit take the end colours. The metadata tracks must hold exactly the
+# scored studies. Of them, only trait category, whose rows also name the study, and the
+# listed `bar_tracks` are kept; Supplementary Table S3 gives each study's sample size,
+# method and ancestry.
+plot_trait_cell_type_heatmap <- function(scores, GWAS_metadata_tracks_plot, value_label, limit, bar_tracks = character()) {
   bars <- which(vapply(seq_along(GWAS_metadata_tracks_plot), \(i) "track" %in% names(GWAS_metadata_tracks_plot[[i]]$data), logical(1)))
   stopifnot(length(bars) == 1L)
-  loci <- GWAS_metadata_tracks_plot[[bars]]
-  loci$data <- dplyr::filter(loci$data, .data$track == "Loci")
   category <- GWAS_metadata_tracks_plot[[1]] +
     ggplot2::scale_y_discrete(drop = FALSE, expand = c(0, 0),
       labels = \(x) paste0(figure_1_trait_labels(x), " (", sub("^.*_([A-Za-z]+)([0-9]{4}).*$", "\\1 \\2", x), ")"))
+  tracks <- list(category)
+  if (length(bar_tracks)) {
+    tracks[[2]] <- GWAS_metadata_tracks_plot[[bars]]
+    tracks[[2]]$data <- dplyr::filter(tracks[[2]]$data, .data$track %in% bar_tracks)
+  }
   ordered <- scores |>
     dplyr::mutate(cluster = figure_1_cell_type_labels(.data$cluster),
-      deviation = pmax(pmin(.data$deviation, limit), -limit), label = dplyr::if_else(.data$z_q < .05, "*", "")) |>
-    get_ordered_GWAS_score_plot_data(NULL, score_col = "deviation")
-  heatmap <- plot_GWAS_feature_heatmap(ordered$scores, ordered$clusters, "cluster", "deviation", "Deviation",
+      value = pmax(pmin(.data$value, limit), -limit), label = dplyr::if_else(.data$q < .05, "*", "")) |>
+    get_ordered_GWAS_score_plot_data(NULL, score_col = "value")
+  heatmap <- plot_GWAS_feature_heatmap(ordered$scores, ordered$clusters, "cluster", "value", value_label,
     fill_limits = c(-limit, limit), support_label_col = "label")
-  patchwork::wrap_plots(list(category, loci, heatmap, plot_GWAS_feature_support_tracks(ordered$clusters)),
-    design = "##D\nABC", widths = c(.35, 1.6, 9), heights = grid::unit(c(24, 1), c("mm", "null")),
+  n <- length(tracks)
+  patchwork::wrap_plots(c(tracks, list(heatmap, plot_GWAS_feature_support_tracks(ordered$clusters))),
+    design = paste0(strrep("#", n), LETTERS[n + 2], "\n", paste(LETTERS[seq_len(n + 1)], collapse = "")),
+    widths = c(.35, 1.6, 9)[c(seq_len(n), 3)], heights = grid::unit(c(24, 1), c("mm", "null")),
     guides = "collect") &
     ggplot2::theme(legend.position = "bottom", legend.box = "horizontal", legend.justification = "left")
 }

@@ -57,6 +57,7 @@ rlang::list2(
     description = "Save ordinary GWAS deviations without within-GWAS scaling. [checkpoint:genetic_enrichment]",
     command = plot_GWAS_chromVAR_deviation_heatmap(
       chromVAR_deviation_tibble.cell_type_pseudobulk,
+      chromVAR_top_set_tibble.cell_type_pseudobulk,
       GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
       compartments_patterns = genetic_enrichment_compartment_patterns,
       standardize = FALSE,
@@ -69,6 +70,7 @@ rlang::list2(
     description = "Save ordinary GWAS deviations standardized within each GWAS. [checkpoint:genetic_enrichment]",
     command = plot_GWAS_chromVAR_deviation_heatmap(
       chromVAR_deviation_tibble.cell_type_pseudobulk,
+      chromVAR_top_set_tibble.cell_type_pseudobulk,
       GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
       compartments_patterns = genetic_enrichment_compartment_patterns,
       standardize = TRUE,

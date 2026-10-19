@@ -352,6 +352,30 @@ get_pseudobulk_chromVAR_background_record <- function(
   )
 }
 
+#' Correct the background variance of betterChromVAR 1.1.10
+#'
+#' `betterChromVAR::computeBackgrounds()` divides `E`, already the mean count
+#' per background peak, by the bin size again before subtracting its square,
+#' so `V` approaches the mean squared count rather than the variance. This
+#' deflates the z-scores of deep counts, such as pseudobulks, but hardly those
+#' of sparse nucleus counts. `V` is recomputed as the variance of the
+#' background peaks that betterChromVAR samples for each bin around their mean
+#' `E`.
+#'
+#' @param background Background from `betterChromVAR::computeBackgrounds()`.
+#' @param counts The peak-by-sample counts it was computed from.
+#' @return The background with corrected `V`.
+#' @keywords internal
+
+correct_chromVAR_background_variance <- function(background, counts) {
+  peak_to_bin <- Matrix::sparseMatrix(
+    i = background@peak2bin, j = seq_along(background@peak2bin), x = 1,
+    dims = c(nrow(background@binBinProbs), length(background@peak2bin))
+  )
+  background@V <- pmax(as.matrix(background@binBinProbs %*% (peak_to_bin %*% counts^2) - background@E^2), 0)
+  background
+}
+
 #' Pseudobulk motif-family accessibility
 #'
 #' Compute analytic chromVAR bias-corrected deviations of motif families on

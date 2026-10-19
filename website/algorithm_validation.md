@@ -19,6 +19,7 @@ Passing these fixtures does not validate every dataset, parameter regime, approx
 | Sparse SCAVENGE propagation | Algorithmically derived and reference-parity tested | SCAVENGE source at `8ee8b173d965` | Closed-form propagation; identical seeds; propagation and trait relevance scores within 1e-12 |
 | Peak–gene donor-slope REML and Kenward–Roger kernels | Reference-parity tested | lme4 and pbkrtest | Coefficients, df and P-values within 1e-6; identical fit statuses |
 | Peak–gene compact BH breakpoints | Reference-parity tested | `stats::p.adjust()` | Identical FDR per chromosome slice |
+| S-LDSC LD scores and regression | Not reference-tested | ldsc 1.0.1 | None in the suite; a development comparison is described below |
 
 The peak–gene rows belong to the analyses in [Peak–gene correlation methods](methods_peak_gene_correlation.md#models-and-candidate-links); their tests are `test-peak-gene-hierarchical-parity.R` and `test-peak-gene-correlation-parity.R`.
 
@@ -101,3 +102,15 @@ within 1e-10. Compact local reference functions reproduce the relevant SCAVENGE 
 ```bash
 pixi run --use-environment-activation-cache test-algorithm-validation
 ```
+
+## Stratified LD score regression
+
+**Reference algorithm.** [ldsc 1.0.1](https://github.com/bulik/ldsc) cleans summary statistics with `munge_sumstats.py`, computes annotation LD scores from PLINK reference genotypes with `ldsc.py --l2`, and fits stratified LD score regression with a block jackknife with `ldsc.py --h2` [@bulik-sullivan2015_ldsc; @finucane2015_stratified_ldsc].
+
+**Reason for reimplementation.** ldsc needs Python 2.7, which the workflow's environment does not provide, and computes LD scores for every reference variant. The R implementation reads the PLINK genotypes directly, computes LD scores only at the HapMap3 regression variants, and fits all cell types of a GWAS from shared block cross-products.
+
+**Deliberate deviations and consequences.** Regression weights use the total LD score of the annotations shared by all models, the baseline-LD and all-peaks annotations, rather than that of each cell type's model. All cell types of a GWAS therefore share one set of block cross-products. In the development comparison below, this changed coefficient z-scores by at most 0.003.
+
+**Implementation.** `munge_GWAS_sumstats()`, `get_SLDSC_LD_score_record()`, `fit_SLDSC_candidate_regressions()` and `jackknife_LDSC_blocks()` in `R/SLDSC_helpers.R`; the targets are in `extra_targets/module_genetic_enrichment/SLDSC_targets.R`, and the method is described in [Heritability enrichment with S-LDSC](methods_genetic_enrichment.md#heritability-enrichment).
+
+**Validation scope.** No fixture in the test suite runs ldsc, because the environment does not provide it. During development, the implementation was compared once with ldsc 1.0.1 on the peak annotations and GWAS of `mixed_human_31x`. Chromosome 22 LD scores agreed within 0.0005, the rounding of ldsc's output, and munging kept the same variants. The coefficient z-score, total heritability and intercept agreed to six digits. On the annotations and eight UK Biobank GWAS of Varshney et al., fitted with their 37-annotation baseline, the implementation reproduced their published z-scores with a correlation of 0.99985 [@varshney2024_fusion_multiome]. These comparisons are not rerun by the suite.

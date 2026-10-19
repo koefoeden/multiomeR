@@ -21,11 +21,17 @@ This page describes the analyses of the optional genetic-enrichment module. [Gen
 
 The sparse SCAVENGE implementation is compared with its reference in [Algorithm validation](algorithm_validation.md#sparse-scavenge-propagation).
 
+## Heritability enrichment with S-LDSC {#heritability-enrichment}
+
+{{< include _shared_methods/genetic_enrichment_SLDSC.md >}}
+
+How the R implementation of S-LDSC was compared with ldsc is described in [Algorithm validation](algorithm_validation.md#stratified-ld-score-regression).
+
 ## Source and target graphs
 
-`extra_targets/module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in its directory.
+`extra_targets/module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in its directory. Its shared targets download the S-LDSC reference and each distinct GWAS's summary statistics once for all aggregations.
 
-**Source:** [`extra_targets/module_genetic_enrichment/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_genetic_enrichment), [`R/open_targets_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/open_targets_helpers.R), [`R/GWAS_chromVAR_input_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_input_helpers.R), [`R/GWAS_chromVAR_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_helpers.R), [`R/GWAS_chromVAR_absolute_effect_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_absolute_effect_helpers.R), [`R/GWAS_chromVAR_contribution_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_contribution_helpers.R), [`R/SCAVENGE_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SCAVENGE_helpers.R).
+**Source:** [`extra_targets/module_genetic_enrichment/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_genetic_enrichment), [`R/open_targets_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/open_targets_helpers.R), [`R/GWAS_chromVAR_input_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_input_helpers.R), [`R/GWAS_chromVAR_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_helpers.R), [`R/GWAS_chromVAR_absolute_effect_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_absolute_effect_helpers.R), [`R/GWAS_chromVAR_contribution_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_contribution_helpers.R), [`R/SCAVENGE_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SCAVENGE_helpers.R), [`R/SLDSC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_helpers.R), [`R/SLDSC_annotation_evaluation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_annotation_evaluation_helpers.R).
 
 ### Nucleus-level enrichment and SCAVENGE
 
@@ -49,4 +55,12 @@ This view covers the annotation-class pseudobulk deviations and their decomposit
 
 ```{r, echo = FALSE, eval = TRUE, results = "asis"}
 emit_mermaid("website/figures/human_curated/genetic_enrichment_cell_type_contributions_v2.mmd")
+```
+
+### S-LDSC heritability enrichment
+
+This view covers the shared LD reference and summary statistics, the cell-type peak and gene annotations with their LD scores, the S-LDSC fits and the matched-size comparison of annotation strategies.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/human_curated/genetic_enrichment_SLDSC_v2.mmd")
 ```

@@ -7,7 +7,7 @@ source("helpers/_setup.R")
 
 ## When to use
 
-Use this module to ask which cell types or nuclei have accessible chromatin overlapping genetic evidence for a human trait. It weights ATAC peaks by the fine-mapping probabilities of the GWAS variants they contain, scores enrichment per cell type and per nucleus, and uses the [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) method to propagate nucleus scores through the WNN neighbor graph. [Method details](methods_genetic_enrichment.md)
+Use this module to ask which cell types or nuclei have accessible chromatin overlapping genetic evidence for a human trait. It weights ATAC peaks by the fine-mapping probabilities of the GWAS variants they contain, scores enrichment per cell type and per nucleus, and uses the [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) method to propagate nucleus scores through the WNN neighbor graph. Stratified LD score regression (S-LDSC) adds a genome-wide test: whether each cell type's specifically accessible peaks, or specifically expressed genes, carry more of a trait's heritability than peaks or genes in general. [Method details](methods_genetic_enrichment.md)
 
 A **credible set** contains candidate causal variants at a GWAS locus, with probabilities from fine-mapping. Enrichment helps prioritize cellular contexts; it does not by itself identify a causal cell type, gene or mechanism.
 
@@ -18,8 +18,9 @@ The public demo leaves this module off. Its configuration already contains a stu
 Before enabling the module, confirm that:
 
 - the aggregation is human and you have reviewed it through [checkpoint 8](main_running.md#checkpoint-8), including its cell-type annotations;
-- each configured study represents the intended trait and population;
-- the machine can download and keep about 4 GB of Open Targets Parquet data, stored once under `<store>/files/OpenTargets/`; and
+- each configured study represents the intended trait and population; S-LDSC uses European LD, so it only approximates studies of other ancestries;
+- the machine can download and keep about 4 GB of Open Targets Parquet data, stored once under `<store>/files/OpenTargets/`;
+- for S-LDSC, the machine can download a 1.5 GB LD reference from Zenodo, kept as 2.8 GB under `<store>/files/S-LDSC/`, and each study's genome-wide summary statistics from the GWAS Catalog; and
 - you have decided whether to interpret cell-type summaries, individual nuclei or graph-propagated scores; these answer related but different questions.
 
 ## Outputs
@@ -27,9 +28,12 @@ Before enabling the module, confirm that:
 | Question | Output |
 |---|---|
 | Which variants and peaks carry each study's evidence? | Peak-weight summaries and study and variant-to-peak tables |
-| Which cell types are enriched? | Cell-type chromVAR deviation heatmaps |
+| Which cell types are enriched, and which matters most? | Cell-type chromVAR deviation heatmaps, which outline each study's top set of cell types |
 | Which loci and variants drive a cell type's enrichment? | Locus-contribution heatmaps and bars, and variant detail plots |
 | Which nuclei are trait-relevant? | SCAVENGE trait-relevance scores on the WNN graph, summarized by cell type and cluster |
+| Is a study's genome-wide heritability enriched in a cell type's specific peaks or genes? | S-LDSC heatmap, which outlines each study's top set of cell types, and a comparison of the peak, gene and joint models |
+| Do S-LDSC and chromVAR agree? | S-LDSC versus chromVAR scatter plots per study and an agreement overview |
+| How robust is an S-LDSC enrichment, and do peaks or genes explain more? | A plot of each enrichment's most influential genome blocks, and comparisons of peak and gene annotations of matched size |
 
 ## Configure
 
@@ -56,6 +60,19 @@ Each entry under [`genetic_enrichment_GWAS_studies`](parameters.html#genetic_enr
 A `sourceId` names an Open Targets GWAS study with credible sets, read from the Open Targets release `26.03` pinned by the workflow: a GWAS Catalog accession such as `GCST90002388`, or a FinnGen study such as `FINNGEN_R12_T2D`. The run fails if the release has no credible sets for the study. `finemappingMethod: auto`, the default, selects the first available method in the order `SuSie`, `SuSiE-inf`, `PICS`. Name a method instead when the method is part of the analysis; the run then fails if that method is unavailable for the study.
 
 A `sourceId` ending in `.parquet` is instead the path of a local file, relative to the repository root. Omit `finemappingMethod` for local files: the method, like the study ID, genome build and provenance, is read from the file.
+
+S-LDSC needs genome-wide summary statistics rather than credible sets. For a GWAS Catalog `sourceId`, they are fetched from the GWAS Catalog, which keeps harmonised files for many but not all studies. Name other summary statistics with `summaryStatistics`: another GWAS Catalog accession, or the path or URL of a GRCh38 GWAS-SSF table with rsIDs, such as a consortium release:
+
+```{.yaml filename="cfg_module_genetic_enrichment.yaml"}
+my_aggregation:
+  genetic_enrichment_GWAS_studies:
+    type_2_diabetes:
+      Category: metabolic
+      sourceId: FINNGEN_R12_T2D
+      summaryStatistics: GWAS/T2D_consortium_GRCh38.tsv.gz
+```
+
+The [parameter browser](parameters.html#genetic_enrichment_GWAS_studies) lists the columns that S-LDSC reads. Studies without summary statistics, such as FinnGen studies without `summaryStatistics`, appear as grey rows in the S-LDSC plots; the other analyses use their credible sets as before.
 
 <details>
 <summary>Columns of a local fine-mapped GWAS file</summary>
@@ -100,7 +117,7 @@ targets::tar_make(
 )
 ```
 
-Runtime and disk use grow with the number of studies, nuclei and attributed loci.
+Runtime and disk use grow with the number of studies, nuclei and attributed loci. S-LDSC downloads each study's summary statistics once for all aggregations, one study at a time to spare the GWAS Catalog's server, which takes about a minute per study.
 
 ## Review
 
@@ -114,18 +131,29 @@ Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtit
 │   ├── chromVAR_locus_contribution_per_GWAS_heatmaps/
 │   ├── chromVAR_locus_contribution_per_GWAS_faceted_bars_plots/
 │   ├── chromVAR_absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots/
-│   └── chromVAR_variant_contribution_detail_plots/
+│   ├── chromVAR_variant_contribution_detail_plots/
+│   ├── SLDSC_heatmap.png
+│   ├── SLDSC_modality_comparison_plot.png
+│   ├── SLDSC_block_influence_plot.png
+│   ├── SLDSC_chromVAR_comparison_plot.png
+│   ├── SLDSC_chromVAR_agreement_plot.png
+│   ├── SLDSC_matched_enrichment_curves_plot.png
+│   ├── SLDSC_matched_size_comparison_plot.png
+│   └── SLDSC_matched_enrichment_agreement_plot.png
 └── single_nucleus/SCAVENGE/WNN_harmony_SNN/
     ├── TRS_heatmap/
     ├── TRS_UMAPs/
     └── TRS_cluster_summary_plot/
 ```
 
-Read the tables behind the plots in R, for example the cell-type enrichment scores:
+Read the tables behind the plots in R, for example the cell-type enrichment scores and the S-LDSC results:
 
 ```{.r filename="R"}
 targets::tar_read(
   chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.my_aggregation
+)
+targets::tar_read(
+  SLDSC_cell_type_tibble.cell_type_pseudobulk.genetic_enrichment.my_aggregation
 )
 ```
 

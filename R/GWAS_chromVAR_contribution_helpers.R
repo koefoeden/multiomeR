@@ -1,12 +1,3 @@
-# Unadjusted upper-tail normal thresholds for positive chromVAR enrichment.
-chromVAR_Z_support_labels <- function(z) {
-  dplyr::case_when(
-    z >= stats::qnorm(.99) ~ "**",
-    z >= stats::qnorm(.95) ~ "*",
-    .default = ""
-  )
-}
-
 scale_within_vector <- function(x) {
   x_sd <- stats::sd(x, na.rm = TRUE)
   if (is.na(x_sd) || x_sd == 0) {
@@ -22,8 +13,8 @@ scale_within_vector <- function(x) {
 #' @param chromVAR_obj Template chromVAR object with peak ranges.
 #' @param annotation_matrix Peak-by-GWAS trait weight matrix.
 #' @param GWAS_inputs_tibble GWAS metadata.
-#' @return Long tibble whose peak contributions sum to the raw deviation,
-#'   relative deviation, and z score for each GWAS and cell type.
+#' @return Long tibble whose peak contributions sum to the raw and relative
+#'   deviation of each GWAS and cell type.
 #' @keywords internal
 
 get_GWAS_chromVAR_peak_contribution_tibble <- function(
@@ -54,7 +45,6 @@ get_GWAS_chromVAR_peak_contribution_tibble <- function(
   GWAS_IDs <- colnames(annotation_matrix)
   cluster_names <- colnames(counts_matrix)
   background_expectation_matrix <- methods::slot(background, "E")
-  background_variance_matrix <- methods::slot(background, "V")
   peak_background_bin_idx <- methods::slot(background, "peak2bin")
   peak_expectation_vec <- methods::slot(background, "expectation")
   cluster_depth_vec <- methods::slot(background, "depth")
@@ -83,25 +73,7 @@ get_GWAS_chromVAR_peak_contribution_tibble <- function(
       FUN = "/"
     )
 
-    # The null variance of a weighted sum of independent peaks scales with the
-    # squared weights.
-    bin_weight_vec <- Matrix::sparseMatrix(
-      i = weighted_peak_bin_idx,
-      j = rep.int(1L, length(weighted_peak_bin_idx)),
-      x = peak_weight_vec^2,
-      dims = c(nrow(background_variance_matrix), 1L)
-    ) |>
-      Matrix::rowSums()
-    z_denominator_vec <- sqrt(as.numeric(Matrix::crossprod(bin_weight_vec, background_variance_matrix)))
-    z_contribution_matrix <- sweep(
-      deviation_numerator_matrix,
-      MARGIN = 2,
-      STATS = z_denominator_vec,
-      FUN = "/"
-    )
-
     deviation_vec <- unname(colSums(deviation_contribution_matrix))
-    z_vec <- unname(colSums(z_contribution_matrix))
     deviation_sd <- stats::sd(deviation_vec)
     relative_deviation_vec <- scale_within_vector(deviation_vec)
     relative_contribution_matrix <- if (is.na(deviation_sd) || deviation_sd == 0) {
@@ -129,25 +101,211 @@ get_GWAS_chromVAR_peak_contribution_tibble <- function(
         deviation_numerator_contribution = as.vector(deviation_numerator_matrix),
         deviation_contribution = as.vector(deviation_contribution_matrix),
         relative_deviation_contribution = as.vector(relative_contribution_matrix),
-        z_contribution = as.vector(z_contribution_matrix),
         deviation = deviation_vec[cluster_idx],
         relative_deviation = relative_deviation_vec[cluster_idx],
-        z = z_vec[cluster_idx],
         .before = 1
       )
+  })
+}
+
+#' Draw offsets that move GWAS locus blocks along their chromosomes
+#'
+#' Each block moves as a whole by an offset drawn uniformly from the allowed
+#' offsets of `shift_range` bases in either direction. An offset is allowed
+#' when none of the block's credible sets then overlaps a forbidden range or
+#' leaves its chromosome. A block with no allowed offset in that range may move
+#' anywhere on its chromosome instead.
+#'
+#' @param span_GRanges One range per credible set, spanning its variants.
+#' @param block The block of each credible set.
+#' @param forbidden_GRanges Ranges that no moved credible set may overlap.
+#' @param chromosome_lengths Named chromosome lengths.
+#' @param n_draws Number of moved configurations.
+#' @param shift_range Smallest and largest offset in bases.
+#' @return A draw-by-block offset matrix, with blocks as column names.
+#' @keywords internal
+
+get_GWAS_locus_shift_offsets <- function(span_GRanges, block, forbidden_GRanges, chromosome_lengths, n_draws, shift_range) {
+  vapply(split(seq_along(span_GRanges), block), \(index) {
+    spans <- IRanges::ranges(span_GRanges[index])
+    chromosome <- as.character(GenomicRanges::seqnames(span_GRanges)[index[[1]]])
+    forbidden <- IRanges::ranges(forbidden_GRanges[GenomicRanges::seqnames(forbidden_GRanges) == chromosome])
+    pairs <- expand.grid(span = seq_along(spans), forbidden = seq_along(forbidden))
+    blocked <- IRanges::IRanges(
+      IRanges::start(forbidden)[pairs$forbidden] - IRanges::end(spans)[pairs$span],
+      IRanges::end(forbidden)[pairs$forbidden] - IRanges::start(spans)[pairs$span]
+    )
+    on_chromosome <- IRanges::IRanges(1L - min(IRanges::start(spans)), chromosome_lengths[[chromosome]] - max(IRanges::end(spans)))
+    allowed <- \(max_shift) IRanges::IRanges(c(-max_shift, shift_range[[1]]), c(-shift_range[[1]], max_shift)) |>
+      IRanges::intersect(on_chromosome) |>
+      IRanges::setdiff(blocked)
+    offsets <- allowed(shift_range[[2]])
+    if (sum(IRanges::width(offsets)) == 0) offsets <- allowed(chromosome_lengths[[chromosome]])
+    # Sample uniformly over the allowed offsets.
+    cumulative_width <- cumsum(as.numeric(IRanges::width(offsets)))
+    position <- stats::runif(n_draws, 0, cumulative_width[[length(cumulative_width)]])
+    range_index <- findInterval(position, cumulative_width) + 1L
+    IRanges::start(offsets)[range_index] + floor(position - c(0, cumulative_width)[range_index])
+  }, numeric(n_draws))
+}
+
+#' Compute background z-scores of GWAS loci moved along their chromosomes
+#'
+#' The null of a GWAS keeps its credible sets, their variant spacing and their
+#' weights, but moves them elsewhere on their chromosomes, where they are mapped
+#' to peaks and scored like the real ones. Credible sets whose lead variants lie
+#' within `block_distance` of each other move together as one block, so that
+#' the null keeps the clustering of real loci. No moved credible set may land
+#' on an original one, in the extended MHC, in a peak-free stretch of at least
+#' 1 Mb, such as a centromere, or off its chromosome.
+#'
+#' Each configuration is scored by its background z-score: its weighted
+#' accessibility minus that of matched background peaks, divided by the
+#' background SD of its own weighted peaks. Moved loci fall in fewer and less
+#' accessible peaks than real ones, which makes their raw deviations noisier;
+#' dividing by each configuration's own background SD adjusts for this.
+#'
+#' @param GWAS_input_record One normalized GWAS input record.
+#' @param absolute_effect_weighting_status_tibble Output of
+#'   `get_GWAS_absolute_effect_weighting_status_tibble()`; eligible GWAS are
+#'   also scored with absolute-effect weights in the same moved configurations.
+#' @param posterior_probability_cutoff Raw PIP threshold for kept variants.
+#' @param chromVAR_background_record Cell-type pseudobulk background record.
+#' @param pseudobulk_ATAC_data_matrix Peak-by-cell-type count matrix.
+#' @param peak_ranges Ordered ATAC peak ranges.
+#' @param n_draws Number of moved configurations.
+#' @param shift_range Smallest and largest offset in bases.
+#' @param block_distance Largest distance between lead variants in one block.
+#' @return A list with one configuration-by-cell-type matrix of background
+#'   z-scores per weighting, whose first row holds the unmoved loci.
+#' @keywords internal
+
+get_GWAS_chromVAR_locus_shift_z_matrices <- function(
+  GWAS_input_record,
+  absolute_effect_weighting_status_tibble,
+  posterior_probability_cutoff,
+  chromVAR_background_record,
+  pseudobulk_ATAC_data_matrix,
+  peak_ranges,
+  n_draws,
+  shift_range = c(5e5, 2e6),
+  block_distance = 5e5
+) {
+  peak_deserts <- GenomicRanges::gaps(peak_ranges)
+  forbidden_GRanges <- c(
+    GenomicRanges::GRanges("chr6", IRanges::IRanges(25e6, 34e6)),
+    peak_deserts[GenomicRanges::strand(peak_deserts) == "*" & GenomicRanges::width(peak_deserts) >= 1e6]
+  )
+  chromosome_lengths <- GenomeInfoDb::seqlengths(peak_ranges)
+  peak_names <- chromVAR_background_record$peak_names
+  peak_ranges <- peak_ranges[match(peak_names, get_peak_names_from_GRanges(peak_ranges))]
+  counts_matrix <- pseudobulk_ATAC_data_matrix[peak_names, , drop = FALSE]
+  if (inherits(counts_matrix, "IterableMatrix")) {
+    counts_matrix <- methods::as(counts_matrix, "dgCMatrix")
+  }
+  background <- correct_chromVAR_background_variance(chromVAR_background_record$background, counts_matrix)
+  residual_matrix <- as.matrix(counts_matrix) - as.matrix(background@E)[background@peak2bin, , drop = FALSE]
+  variance_matrix <- background@V[background@peak2bin, , drop = FALSE]
+
+  variants <- S4Vectors::subset(GWAS_input_record$credible_set_GRanges, posteriorProbability > posterior_probability_cutoff)
+  weight_matrix <- cbind(ordinary = variants$posteriorProbability)
+  status <- dplyr::filter(absolute_effect_weighting_status_tibble, .data$GWAS_ID == GWAS_input_record$GWAS_ID, .data$eligible)
+  if (nrow(status) == 1L) {
+    absolute_variants <- get_GWAS_absolute_effect_variant_GRanges(GWAS_input_record, status$effect_weighting_route, posterior_probability_cutoff)
+    weight_matrix <- cbind(weight_matrix, absolute_effect = dplyr::coalesce(absolute_variants$absolute_effect_weight[match(
+      paste(variants$studyLocusId, variants$variantId),
+      paste(absolute_variants$studyLocusId, absolute_variants$variantId)
+    )], 0))
+  }
+
+  credible_set <- factor(variants$studyLocusId)
+  spans <- unlist(range(GenomicRanges::split(variants, credible_set)))
+  lead_position_vec <- vapply(split(seq_along(variants), credible_set), \(index) {
+    GenomicRanges::start(variants)[index[which.max(variants$posteriorProbability[index])]]
+  }, numeric(1))
+  leads <- GenomicRanges::GRanges(GenomicRanges::seqnames(spans), IRanges::IRanges(lead_position_vec, width = 1L))
+  blocks <- GenomicRanges::reduce(GenomicRanges::resize(leads, block_distance + 1, fix = "center"))
+  credible_set_block <- GenomicRanges::findOverlaps(leads, blocks, select = "first")
+  withr::local_seed(1L)
+  offsets <- rbind(0, get_GWAS_locus_shift_offsets(spans, credible_set_block, c(spans, forbidden_GRanges), chromosome_lengths, n_draws, shift_range))
+  variant_block <- match(credible_set_block, as.integer(colnames(offsets)))[as.integer(credible_set)]
+
+  # Consensus peaks do not overlap, so a moved variant can only fall in the last
+  # peak starting at or before it. Genome-wide keys put chromosomes in sequence.
+  stopifnot(IRanges::isDisjoint(peak_ranges))
+  genome_key <- \(ranges, position) match(as.character(GenomicRanges::seqnames(ranges)), GenomeInfoDb::seqlevels(peak_ranges)) * 2^32 + position
+  peak_order <- order(genome_key(peak_ranges, GenomicRanges::start(peak_ranges)))
+  peak_start_keys <- genome_key(peak_ranges, GenomicRanges::start(peak_ranges))[peak_order]
+  peak_end_keys <- genome_key(peak_ranges, GenomicRanges::end(peak_ranges))[peak_order]
+  variant_keys <- genome_key(variants, GenomicRanges::start(variants))
+
+  # Map moved variants to peaks in chunks of configurations to bound memory.
+  z_matrices <- purrr::map(split(seq_len(nrow(offsets)), ceiling(seq_len(nrow(offsets)) / 100)), \(rows) {
+    moved_keys <- rep(variant_keys, length(rows)) + as.vector(t(offsets[rows, variant_block, drop = FALSE]))
+    peak_rank <- findInterval(moved_keys, peak_start_keys)
+    moved_idx <- which(peak_rank > 0L)
+    moved_idx <- moved_idx[moved_keys[moved_idx] <= peak_end_keys[peak_rank[moved_idx]]]
+    peak_idx <- peak_order[peak_rank[moved_idx]]
+    # Keep findOverlaps() order, by peak and then position, so sums add up identically.
+    hit_order <- order(peak_idx, moved_keys[moved_idx], moved_idx)
+    peak_idx <- peak_idx[hit_order]
+    moved_idx <- moved_idx[hit_order]
+    variant_idx <- (moved_idx - 1L) %% length(variants) + 1L
+    row_idx <- (moved_idx - 1L) %/% length(variants) + 1L
+    apply(weight_matrix, 2, simplify = FALSE, \(variant_weight_vec) {
+      # Peak weights sum and cap their variants' weights as get_GWAS_chromVAR_peak_variant_weight_tibble() does.
+      peak_weight_matrix <- Matrix::sparseMatrix(peak_idx, row_idx,
+        x = variant_weight_vec[variant_idx], dims = c(length(peak_ranges), length(rows)))
+      peak_weight_matrix@x <- pmin(peak_weight_matrix@x, 1)
+      # The background variance of a weighted sum of peaks scales with the squared weights.
+      as.matrix(Matrix::crossprod(peak_weight_matrix, residual_matrix)) /
+        sqrt(as.matrix(Matrix::crossprod(peak_weight_matrix^2, variance_matrix)))
+    })
+  })
+  purrr::map(rlang::set_names(colnames(weight_matrix)), \(weighting) do.call(rbind, purrr::map(z_matrices, weighting)))
+}
+
+#' Test one GWAS's cell-type chromVAR scores against moved copies of its loci
+#'
+#' @inheritParams get_GWAS_chromVAR_locus_shift_z_matrices
+#' @param ... Further arguments to `get_GWAS_chromVAR_locus_shift_z_matrices()`.
+#' @return One row per weighting and cell type with the unmoved loci's
+#'   background z-score, the mean and SD of the moved copies' background
+#'   z-scores, the background z-score standardized by them (`z`) and its
+#'   empirical one-sided P-value `z_p`, (1 + moved copies at least as large) /
+#'   (1 + `n_draws`).
+#' @keywords internal
+
+get_GWAS_chromVAR_locus_shift_null_tibble <- function(GWAS_input_record, ..., n_draws = 10000L) {
+  purrr::imap_dfr(get_GWAS_chromVAR_locus_shift_z_matrices(GWAS_input_record, ..., n_draws = n_draws), \(z_matrix, weighting) {
+    null_matrix <- z_matrix[-1, , drop = FALSE]
+    tibble::tibble(
+      GWAS_ID = GWAS_input_record$GWAS_ID,
+      weighting = weighting,
+      cluster = colnames(z_matrix),
+      background_z = z_matrix[1, ],
+      null_mean = colMeans(null_matrix),
+      null_sd = matrixStats::colSds(null_matrix),
+      z = (background_z - null_mean) / null_sd,
+      z_p = (colSums(null_matrix >= rep(background_z, each = n_draws)) + 1) / (n_draws + 1)
+    )
   })
 }
 
 #' Summarize peak contribution into the cell-type GWAS heatmap table
 #'
 #' @param peak_contribution_tibble Exact peak-level chromVAR contributions.
+#' @param null_tibble The same GWAS and cell types' locus-shift nulls in this
+#'   weighting, from `get_GWAS_chromVAR_locus_shift_null_tibble()`.
 #' @param cell_type_support_tibble Optional nuclei and ATAC-depth support by cell type.
-#' @return One row per GWAS and cell type with summed deviations, z-score support,
-#'   and optional cell-count annotations.
+#' @return One row per GWAS and cell type with summed deviations, their tests
+#'   against the null, Benjamini-Hochberg q-values `z_q` and optional
+#'   cell-count annotations.
 #' @keywords internal
 
 summarize_GWAS_chromVAR_peak_contributions <- function(
   peak_contribution_tibble,
+  null_tibble,
   cell_type_support_tibble = NULL
 ) {
   out <- peak_contribution_tibble |>
@@ -156,14 +314,14 @@ summarize_GWAS_chromVAR_peak_contributions <- function(
       .data$Category,
       .data$cluster,
       .data$deviation,
-      .data$relative_deviation,
-      .data$z
+      .data$relative_deviation
     ) |>
-    dplyr::mutate(
-      z_p = stats::pnorm(.data$z, lower.tail = FALSE),
-      z_q = stats::p.adjust(.data$z_p, method = "BH"),
-      support_label = chromVAR_Z_support_labels(.data$z)
-    )
+    dplyr::inner_join(
+      dplyr::select(null_tibble, -weighting),
+      by = c("GWAS_ID", "cluster"),
+      relationship = "one-to-one"
+    ) |>
+    dplyr::mutate(z_q = stats::p.adjust(.data$z_p, method = "BH"))
 
   if (!is.null(cell_type_support_tibble)) {
     out <- out |>
@@ -177,12 +335,97 @@ summarize_GWAS_chromVAR_peak_contributions <- function(
       cluster,
       deviation,
       relative_deviation,
+      background_z,
+      null_mean,
+      null_sd,
       z,
       z_p,
       z_q,
-      support_label,
       dplyr::any_of(c("n_cells", "n_counts", "n_features", "counts_per_feature"))
     )
+}
+
+#' Find the cell types not significantly below the top significant one
+#'
+#' The top set is anchored on the significant cell type with the largest
+#' estimate. It holds the anchor and every other cell type whose shortfall from
+#' it is not significant in a one-sided normal test at level `alpha` divided by
+#' the number of comparisons, so cell types with larger but nonsignificant
+#' estimates join it. Whichever cell type anchors it, by the Bonferroni
+#' inequality it contains the cell type with the largest true value with
+#' probability at least 1 - `alpha`.
+#'
+#' @param estimate Estimate per cell type; missing values take no part.
+#' @param replicate_matrix Cell-type-by-replicate matrix of bootstrap
+#'   estimates, or of delete-one-block jackknife estimates.
+#' @param significant Whether each cell type is significant; without any,
+#'   there is no top set.
+#' @param jackknife Whether the replicates are jackknife estimates, whose
+#'   spread is scaled up to the jackknife standard error.
+#' @param alpha Probability of leaving out the cell type with the largest true
+#'   value.
+#' @return A tibble with each cell type's top-set membership and the z-score
+#'   of its shortfall from the anchor.
+#' @keywords internal
+
+get_top_set_tibble <- function(estimate, replicate_matrix, significant, jackknife = FALSE, alpha = 0.05) {
+  anchor <- which.max(dplyr::if_else(significant, estimate, NA))
+  if (length(anchor) == 0L) {
+    return(tibble::tibble(in_top_set = NA, z_below_anchor = NA_real_))
+  }
+  n_replicates <- ncol(replicate_matrix)
+  shortfall_se <- matrixStats::rowSds(sweep(replicate_matrix, 2, replicate_matrix[anchor, ]), useNames = FALSE) *
+    if (jackknife) (n_replicates - 1) / sqrt(n_replicates) else 1
+  z_below_anchor <- dplyr::if_else(seq_along(estimate) == anchor, 0, (estimate[[anchor]] - estimate) / shortfall_se)
+  tibble::tibble(
+    in_top_set = z_below_anchor < stats::qnorm(alpha / (sum(!is.na(estimate)) - 1), lower.tail = FALSE),
+    z_below_anchor = z_below_anchor
+  )
+}
+
+#' Find each GWAS's top set of cell types by bootstrapping its loci
+#'
+#' Bootstrap samples of loci re-sum their exact deviation contributions per
+#' cell type. Each cell type's background expectation and denominator stay
+#' those of all loci, so the samples approximate the sampling of loci rather
+#' than refitting chromVAR. Loci are the credible sets whose lead variants in
+#' peaks lie within 500 kb of each other, so that credible sets sharing peaks
+#' are resampled together.
+#'
+#' @param locus_contribution_tibble Exact credible-set contributions from
+#'   `get_GWAS_chromVAR_locus_contribution_tibble()`.
+#' @param deviation_tibble The same GWAS and cell types with their q-values
+#'   `z_q`, which mark the significant cell types at q < 0.05.
+#' @param n_bootstraps Bootstrap samples of loci.
+#' @param min_loci Fewest loci whose bootstrap defines a top set.
+#' @return One row per GWAS and cell type with its top-set membership by
+#'   deviation and the z-score of its shortfall from the anchor, both missing
+#'   for a GWAS with fewer than `min_loci` loci or no significant cell type.
+#' @keywords internal
+
+get_GWAS_chromVAR_top_set_tibble <- function(locus_contribution_tibble, deviation_tibble, n_bootstraps = 1000L, min_loci = 10L) {
+  purrr::map_dfr(split(locus_contribution_tibble, locus_contribution_tibble$GWAS_ID), \(GWAS_tibble) {
+    leads <- GenomicRanges::GRanges(GWAS_tibble$chromosome, IRanges::IRanges(GWAS_tibble$lead_variant_position, width = 1L))
+    loci <- GenomicRanges::reduce(GenomicRanges::resize(leads, 500001L, fix = "center"))
+    contribution_matrix <- tapply(
+      GWAS_tibble$deviation_contribution,
+      list(GenomicRanges::findOverlaps(leads, loci, select = "first"), GWAS_tibble$cluster),
+      sum,
+      default = 0
+    )
+    deviation <- unname(colSums(contribution_matrix))
+    # A bootstrap of a handful of loci gives no usable standard errors.
+    if (nrow(contribution_matrix) < min_loci) deviation[] <- NA
+    GWAS_deviation_tibble <- dplyr::filter(deviation_tibble, .data$GWAS_ID == GWAS_tibble$GWAS_ID[[1]])
+    significant <- GWAS_deviation_tibble$z_q[match(colnames(contribution_matrix), GWAS_deviation_tibble$cluster)] < 0.05
+    withr::local_seed(1L)
+    bootstrap_weights <- t(stats::rmultinom(n_bootstraps, nrow(contribution_matrix), rep(1, nrow(contribution_matrix))))
+    tibble::tibble(
+      GWAS_ID = GWAS_tibble$GWAS_ID[[1]],
+      cluster = colnames(contribution_matrix),
+      get_top_set_tibble(deviation, t(bootstrap_weights %*% contribution_matrix), significant)
+    )
+  })
 }
 
 #' Allocate peak contributions to credible-set variants
@@ -199,8 +442,7 @@ get_GWAS_chromVAR_variant_contribution_tibble <- function(peak_contribution_tibb
   contribution_cols <- c(
     "deviation_numerator_contribution",
     "deviation_contribution",
-    "relative_deviation_contribution",
-    "z_contribution"
+    "relative_deviation_contribution"
   )
 
   peak_contribution_tibble |>
@@ -233,8 +475,7 @@ get_GWAS_chromVAR_variant_contribution_tibble <- function(peak_contribution_tibb
       peak_end,
       dplyr::all_of(contribution_cols),
       deviation,
-      relative_deviation,
-      z
+      relative_deviation
     )
 }
 
@@ -406,10 +647,8 @@ get_GWAS_chromVAR_locus_contribution_tibble <- function(variant_contribution_tib
     deviation_numerator_contribution = base::sum(deviation_numerator_contribution),
     deviation_contribution = base::sum(deviation_contribution),
     relative_deviation_contribution = base::sum(relative_deviation_contribution),
-    z_contribution = base::sum(z_contribution),
     deviation = deviation[1L],
-    relative_deviation = relative_deviation[1L],
-    z = z[1L]
+    relative_deviation = relative_deviation[1L]
   ), by = keys] |>
     tibble::as_tibble() |>
     dplyr::left_join(lead_variant_tibble, by = c("GWAS_ID", "studyLocusId")) |>
@@ -532,7 +771,7 @@ plot_GWAS_locus_contribution_heatmaps <- function(
       ggplot2::ggplot(ggplot2::aes(x = .data$relative_deviation, y = .data$cluster, fill = .data$relative_deviation >= 0)) +
       ggplot2::geom_col(width = 0.8) +
       ggplot2::geom_vline(xintercept = 0, color = "grey45", linewidth = 0.3) +
-      ggplot2::geom_text(ggplot2::aes(label = .data$support_label), size = 3, hjust = -0.3) +
+      ggplot2::geom_text(ggplot2::aes(label = get_significance_stars(.data$z_p, .data$z_q)), size = 3, hjust = -0.3) +
       ggplot2::scale_fill_manual(values = c(`TRUE` = "#B40426", `FALSE` = "#3B4CC0"), guide = "none") +
       ggplot2::scale_y_discrete(drop = FALSE) +
       ggplot2::labs(x = "Total relative deviation", y = NULL) +
@@ -547,7 +786,7 @@ plot_GWAS_locus_contribution_heatmaps <- function(
       patchwork::plot_annotation(title = paste("Locus contributions to GWAS-linked accessibility:", GWAS_ID),
         subtitle = stringr::str_wrap("Look for enrichment dominated by a few loci versus distributed support; the adjacent bar shows the total.", width = 100),
         caption = stringr::str_wrap(paste("Loci are ranked by their largest absolute relative-deviation contribution across cell types; up to", n_top_loci,
-          "are shown individually. Remaining contributions are summed as Other positive/negative. Contributions sum to the total deviation standardized across cell types. Total-bar stars mark unadjusted upper-tail normal P <= 0.05 (*) or <= 0.01 (**) from background Z-scores (Z >= 1.645 or >= 2.326). Open Targets gene labels are prioritizations, not causal assignments."), width = 110))
+          "are shown individually. Remaining contributions are summed as Other positive/negative. Contributions sum to the total deviation standardized across cell types. Total-bar stars mark one-sided P < 0.05 (*) and also Benjamini-Hochberg q < 0.05 over all GWAS and cell types (**), comparing the background z-score with 10,000 copies of the GWAS whose credible sets are moved 0.5-2 Mb along their chromosomes. Open Targets gene labels are prioritizations, not causal assignments."), width = 110))
     combined_plot$labels$title <- ggplot2::waiver()
     combined_plot
   })
@@ -615,7 +854,8 @@ prepare_GWAS_locus_contribution_waterfall_tibble <- function(locus_tibble, n_top
 #'
 #' @param variant_contribution_tibble Variant-level contribution.
 #' @param locus_contribution_tibble Locus-level contribution used to select loci.
-#' @param absolute_effect_locus_tibble Weighted scores used only for the z screen.
+#' @param deviation_tibble Ordinary and absolute-effect cell-type scores, used
+#'   only for the z screen.
 #' @param GWAS_input_records Credible-set records supplying locus effects.
 #' @param consensus_peak_GRanges Consensus ATAC peaks.
 #' @param fragments BPCells fragment object.
@@ -629,7 +869,7 @@ prepare_GWAS_locus_contribution_waterfall_tibble <- function(locus_tibble, n_top
 prepare_GWAS_variant_contribution_detail_records <- function(
   variant_contribution_tibble,
   locus_contribution_tibble,
-  absolute_effect_locus_tibble,
+  deviation_tibble,
   GWAS_input_records,
   consensus_peak_GRanges,
   fragments,
@@ -640,7 +880,7 @@ prepare_GWAS_variant_contribution_detail_records <- function(
   group_cells_by_col = "WNN_harmony_SNN_cluster_cell_type"
 ) {
   selected_locus_tibble <- select_GWAS_detail_loci(locus_contribution_tibble,
-    absolute_effect_locus_tibble,
+    deviation_tibble,
     locus_effect_tibble = get_GWAS_locus_prioritization_effects(purrr::keep(GWAS_input_records,
       \(record) record$GWAS_ID %in% locus_contribution_tibble$GWAS_ID)),
     min_z = min_z, n_top_loci = n_top_loci)
@@ -843,7 +1083,7 @@ plot_GWAS_variant_contribution_detail_panels <- function(plot_records, variants,
       title = paste("Variant contributions:", plot_records[[1]]$GWAS_ID, "—", plot_records[[1]]$variant_tibble$cluster[[1]]),
       subtitle = "Compare loci on a shared contribution scale; point area shows PIP and colour shows effect magnitude.\nGene bodies and accessibility provide context, not proof of a causal variant or target gene.",
       caption = stringr::str_wrap(paste(
-        "Cell types pass a descriptive screen: positive deviation and z at least the configured threshold in either the ordinary or absolute-effect analysis; this is not a significance cutoff.",
+        "Cell types pass a descriptive screen: positive deviation and a z-score against the locus-shift null of at least the configured threshold in either the ordinary or absolute-effect analysis; this is not a significance cutoff.",
         "Loci combine the leading absolute ordinary contributions with a balanced priority ranking: the lower of the contribution and |β| percentiles within each GWAS and cell type, using loci with available effects. Percentiles use average ranks for ties; a single eligible locus receives 100%. Priority ties use the higher other percentile, then absolute contribution and locus ID. Locus |β| uses the recorded lead SNP when available, otherwise the highest-PIP available-effect variant (proxy). This prioritization does not reweight chromVAR; plotted stems remain ordinary contributions. PIP is the original fine-mapping probability, before effect weighting. Filled points use the variant's own |β|; hollow points inherit the locus lead variant's |β|; grey means unavailable.",
         "The lead is the highest-PIP variant of each locus. No signed effects are inherited. Effect units are study-specific.",
         "Facet genes are the top available Open Targets L2G predictions, not established causal genes. Gene arrows show strand; gene bodies are clipped to each window and overlapping labels may be omitted. Coverage uses cached depth-normalized 500-bin profiles, clipped at each locus's 99.9th percentile; displayed coverage ranges differ between loci."), 180),
@@ -951,15 +1191,16 @@ get_GWAS_locus_prioritization_effects <- function(GWAS_input_records) {
 
 #' Select ordinary top loci plus loci scoring highly on both contribution and effect
 #' @param locus_contribution_tibble Ordinary locus contributions.
-#' @param absolute_effect_locus_tibble Absolute-effect contributions, used only for the z screen.
+#' @param deviation_tibble Ordinary and absolute-effect cell-type scores, used
+#'   only for the z screen.
 #' @param locus_effect_tibble Locus effects and provenance from credible-set records.
 #' @param min_z Minimum z-score in either analysis, also requiring positive deviation.
 #' @param n_top_loci Number of loci retained per ranking and focal cell type.
 #' @return Unique loci with selection provenance, priority percentiles and ordinary contributions.
-select_GWAS_detail_loci <- function(locus_contribution_tibble, absolute_effect_locus_tibble,
+select_GWAS_detail_loci <- function(locus_contribution_tibble, deviation_tibble,
   locus_effect_tibble, min_z = 1, n_top_loci = 3L) {
   stopifnot(length(min_z) == 1L, is.finite(min_z), min_z >= 0)
-  focal <- dplyr::bind_rows(locus_contribution_tibble, absolute_effect_locus_tibble) |>
+  focal <- deviation_tibble |>
     dplyr::filter(deviation > 0, z >= min_z) |>
     dplyr::distinct(GWAS_ID, cluster)
   ordinary <- locus_contribution_tibble |>

@@ -337,6 +337,9 @@ get_plot_group_breaks <- function(ordered_values) {
 #'   and `diverging` for signed deviations.
 #' @param fill_limits Optional numeric fill-scale limits.
 #' @param support_label_col Optional text column drawn on top of heatmap tiles.
+#' @param top_set_col Optional logical column whose `TRUE` tiles are outlined
+#'   as each GWAS's top set: its anchor, whose `z_below_anchor` is zero, in
+#'   black and the rest in grey.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
@@ -348,7 +351,8 @@ plot_GWAS_feature_heatmap <- function(
   fill_label,
   fill_scale = c("diverging", "sequential"),
   fill_limits = NULL,
-  support_label_col = NULL
+  support_label_col = NULL,
+  top_set_col = NULL
 ) {
   fill_scale <- match.arg(fill_scale)
   row_categories <- score_plot_data |>
@@ -373,6 +377,22 @@ plot_GWAS_feature_heatmap <- function(
     ) +
     ggplot2::geom_hline(yintercept = row_breaks, color = "grey30", linewidth = 0.35) +
     ggplot2::geom_vline(xintercept = feature_breaks, color = "grey30", linewidth = 0.35)
+
+  if (!is.null(top_set_col)) {
+    top_set_roles <- c("Top significant" = "grey5", "Not significantly below it" = "grey60")
+    feature_plot <- feature_plot +
+      ggplot2::geom_tile(
+        data = \(data) data |>
+          dplyr::filter(.data[[top_set_col]] %in% TRUE) |>
+          dplyr::mutate(top_set_role = dplyr::if_else(z_below_anchor == 0, names(top_set_roles)[[1]], names(top_set_roles)[[2]])),
+        ggplot2::aes(colour = top_set_role),
+        fill = NA,
+        linewidth = 0.6,
+        width = 0.92,
+        height = 0.88
+      ) +
+      ggplot2::scale_colour_manual(values = top_set_roles, breaks = names(top_set_roles), name = NULL)
+  }
 
   if (!is.null(support_label_col) && support_label_col %in% colnames(score_plot_data)) {
     feature_plot <- feature_plot +
@@ -637,6 +657,7 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
 #' @param fill_scale Color-scale type passed to `plot_GWAS_feature_heatmap()`.
 #' @param fill_limits Optional numeric fill-scale limits.
 #' @param support_label_col Optional text column drawn on top of heatmap tiles.
+#' @param top_set_col Optional logical column marking each GWAS's top set.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
@@ -648,7 +669,8 @@ plot_GWAS_by_cluster_heatmap <- function(
   fill_label = "Score",
   fill_scale = c("diverging", "sequential"),
   fill_limits = NULL,
-  support_label_col = NULL
+  support_label_col = NULL,
+  top_set_col = NULL
 ) {
   if (nrow(data_per_GWAS_and_cluster_df) == 0) {
     return(structure(list(), class = c("empty_plot_list", "list")))
@@ -669,7 +691,8 @@ plot_GWAS_by_cluster_heatmap <- function(
     fill_label = fill_label,
     fill_scale = fill_scale,
     fill_limits = fill_limits,
-    support_label_col = support_label_col
+    support_label_col = support_label_col,
+    top_set_col = top_set_col
   )
 
   # Keep all body panels at the same layout level so axes and legends cannot
@@ -740,14 +763,21 @@ plot_WNN_TRS_heatmap <- function(heatmap_data, GWAS_metadata_tracks_plot,
   )
 }
 
+# One star marks nominal significance and two mark FDR significance.
+get_significance_stars <- function(p, q) {
+  dplyr::case_when(q < 0.05 ~ "**", p < 0.05 ~ "*", .default = "")
+}
+
 #' Plot ordinary or absolute-effect chromVAR deviations from cached summaries
-#' @param deviation_tibble Cached scores containing deviation, relative_deviation and support_label.
+#' @param deviation_tibble Cached scores containing deviation, relative_deviation, z_p and z_q.
+#' @param top_set_tibble Top-set membership of the same GWAS and cell types from
+#'   `get_GWAS_chromVAR_top_set_tibble()`, missing where there is no top set.
 #' @param GWAS_metadata_tracks_plot Metadata tracks for the same GWAS collection.
 #' @param compartments_patterns Optional cell-type compartment patterns.
 #' @param standardize Use the precomputed within-GWAS standardized deviation column.
 #' @param beta_weighted Label the input as PIP times absolute-effect weighted.
 #' @return Annotated heatmap, or an explicit empty-result plot.
-plot_GWAS_chromVAR_deviation_heatmap <- function(deviation_tibble,
+plot_GWAS_chromVAR_deviation_heatmap <- function(deviation_tibble, top_set_tibble,
   GWAS_metadata_tracks_plot, compartments_patterns = NULL,
   standardize = FALSE, beta_weighted = FALSE) {
   if (nrow(deviation_tibble) == 0L) {
@@ -755,28 +785,41 @@ plot_GWAS_chromVAR_deviation_heatmap <- function(deviation_tibble,
       ggplot2::annotate("text", x = 0, y = 0, label = "No eligible cell-type GWAS scores"))
   }
   quantity <- if (standardize) "Standardized deviation" else "Deviation"
+  heatmap_data <- deviation_tibble |>
+    dplyr::left_join(top_set_tibble, by = c("GWAS_ID", "cluster"), relationship = "one-to-one") |>
+    dplyr::mutate(significance_label = get_significance_stars(z_p, z_q))
   plot_GWAS_by_cluster_heatmap(
-    deviation_tibble,
+    heatmap_data,
     GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
     compartments_patterns = compartments_patterns,
     fill_col = if (standardize) "relative_deviation" else "deviation",
     fill_label = paste(if (beta_weighted) "PIP × |β|" else "Ordinary", quantity),
-    support_label_col = "support_label"
+    support_label_col = "significance_label",
+    top_set_col = "in_top_set"
   ) + patchwork::plot_annotation(
     title = paste(if (beta_weighted) "Effect-magnitude-weighted" else "Ordinary",
       "GWAS-linked accessibility by cell type", if (standardize) "— standardized" else "— unscaled"),
     subtitle = paste(
       if (standardize) "Compare cell types within each trait; red indicates above-average deviation."
-      else "Positive values indicate accessibility above that of the average cell type.",
-      "Stars show chromVAR z-score support, not adjusted-p significance or independent donor evidence.", sep = "\n"),
+      else "Positive values indicate accessibility above that expected from matched background peaks.",
+      "Stars mark nominal (*) and FDR-significant (**) enrichment; a black outline marks the top significant cell type and grey outlines the cell types not significantly below it; together they contain the most relevant cell type.",
+      sep = "\n"),
     caption = stringr::str_wrap(paste(
       "ATAC counts are summed by WNN cell type. The expected accessibility averages the depth-normalized cell-type profiles, so abundant cell types do not dominate the reference.",
+      "Each GWAS's deviations therefore average about zero across cell types, and a cell type's mean over many GWAS reflects the trait panel.",
       if (beta_weighted) paste(
         "PIP × |β| weighting uses variant effects when complete, otherwise the highest-PIP available effect per locus; only eligible GWAS are included.",
         "Genetic effect direction is discarded. Weights preserve retained PIP mass before peak weights are capped at one."),
+      "Deviation: weighted accessibility of the GWAS peaks minus that of background peaks matched on GC content and expected accessibility, divided by the depth-adjusted expected accessibility (chromVAR's bias-corrected deviation).",
       if (standardize) "Colour: deviation centred and divided by its SD across cell types within each GWAS."
-      else "Colour: weighted observed-minus-expected accessibility divided by the depth-adjusted expectation, without centring or SD scaling across cell types.",
-      "Stars: * Z >= 1.645; ** Z >= 2.326 (unadjusted upper-tail normal P <= 0.05 and <= 0.01) against the betterChromVAR background for the corresponding weighting. Nuclei counts describe input support; this is a descriptive pooled comparison."
+      else "Colour: deviation, without centring or SD scaling across cell types.",
+      "Stars: * one-sided P < 0.05, the share of 10,000 copies of the GWAS whose background z-score is at least as high;",
+      "** also Benjamini-Hochberg q < 0.05 over all GWAS and cell types. Each copy moves the credible sets 0.5-2 Mb along their chromosomes, which keeps the clustering of real loci.",
+      "The background z-score divides the deviation by its SD under independently drawn matched background peaks.",
+      "Outlines: in GWAS with a cell type at q < 0.05, black marks the one of these with the largest deviation and grey every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types",
+      "(Bonferroni, so the set holds the cell type with the largest true deviation with at least 95% probability).",
+      "Shortfall standard errors come from 1,000 bootstrap samples of the GWAS loci (credible sets with lead variants within 500 kb grouped), which re-sum their exact contributions with the background fixed; GWAS with fewer than 10 loci get no top set.",
+      "Nuclei counts describe input support; cell types are pooled, so donors are not independent replicates."
     ), width = 150)
   )
 }

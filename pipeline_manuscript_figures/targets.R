@@ -470,6 +470,19 @@ comparison_seurat_signac_targets <- function(values, peak_resources) {
         comparison_seurat_signac_config
       )
     ),
+    # The same chain with Seurat's default log-normalization instead of SCTransform.
+    targets::tar_target(
+      comparison_seurat_signac_lognorm_RNA_object,
+      comparison_process_RNA(comparison_seurat_signac_RNA_BPCells_dirs, comparison_seurat_signac_config, "LogNormalize")
+    ),
+    targets::tar_target(
+      comparison_seurat_signac_lognorm_object,
+      comparison_build_object(
+        comparison_seurat_signac_lognorm_RNA_object,
+        comparison_seurat_signac_ATAC_BPCells_dirs,
+        comparison_seurat_signac_config
+      )
+    ),
     targets::tar_target(
       comparison_seurat_signac_summary,
       comparison_summarize(

@@ -60,13 +60,20 @@ comparison_write_RNA_dirs <- function(config, out_dir) {
   })
 }
 
-comparison_process_RNA <- function(RNA_dirs, config) {
+# Normalizes with SCTransform or with Seurat's default route: log-normalization of the on-disk
+# counts, then scaling of the variable features, which alone become an in-memory matrix.
+comparison_process_RNA <- function(RNA_dirs, config, normalization = c("SCTransform", "LogNormalize")) {
+  normalization <- match.arg(normalization)
   # SCTransform passes its gene models to future even in a sequential plan.
   withr::local_options(future.globals.maxSize = Inf)
   counts <- purrr::map(RNA_dirs, open_BPCells_dir)
   object <- SeuratObject::CreateSeuratObject(purrr::reduce(counts, cbind), assay = "RNA")
   object$GEM_well_ID <- rep(config$sample_tibble$sample_id, purrr::map_int(counts, ncol))
-  object <- Seurat::SCTransform(object, conserve.memory = TRUE, seed.use = config$random_seed)
+  object <- if (normalization == "SCTransform") {
+    Seurat::SCTransform(object, conserve.memory = TRUE, seed.use = config$random_seed)
+  } else {
+    Seurat::NormalizeData(object) |> Seurat::FindVariableFeatures() |> Seurat::ScaleData()
+  }
   object <- Seurat::RunPCA(object, npcs = max(config$RNA_dims), seed.use = config$random_seed)
   object <- Seurat::FindNeighbors(object, reduction = "pca", dims = config$RNA_dims, k.param = config$WNN_k)
   object <- Seurat::FindClusters(object, resolution = config$GEX_cluster_resolution, algorithm = 4L,

@@ -50,7 +50,9 @@ brain_mouse:
     Deep_layer_neuron: [Fezf2, Tle4, Zfpm2, Sox5, Tbr1]
     Hippocampal_neuron: [Prox1, Nrp2, Grik4, Emx2]
     Inhibitory_neuron: [Gad2, Gad1, Dlx6os1, Dlx1, Dlx5]
-  aggregation_QC_exclude_list_combined_object: [atac_fragments_in_peaks < 590, atac_fragments_in_peaks_frac < 0.12, atac_fragments_in_blacklist_frac > 0.012]
+  # The mm10 blacklist covers 239 Mb against 72 Mb for GRCh38, so a typical nucleus has 1.7% instead of 0.03% of
+  # its fragments there. 0.025, about 1.5 times the median, removes the upper tail.
+  aggregation_QC_exclude_list_combined_object: [atac_fragments_in_peaks < 590, atac_fragments_in_peaks_frac < 0.12, atac_fragments_in_blacklist_frac > 0.025]
   aggregation_ATAC_marker_TFs:
     Radial_glia: [Pax6, Sox2, Hes5, Nfib]
     Intermediate_progenitor: [Eomes, Neurod1]

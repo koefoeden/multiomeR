@@ -128,7 +128,11 @@ peak-calling clusters, quantifies the peaks per GEM well with
 `Signac::FeatureMatrix()` and its default fragtk backend into BPCells
 directories, and runs Signac's TF-IDF/LSI on them before building the WNN graph,
 UMAP and clusters. Seurat's kernels use the cores of their Slurm worker, and
-peak calling and quantification run one `future` worker per core.
+peak calling and quantification run one `future` worker per core. Both
+clusterings leave singleton communities unmerged (`group.singletons = FALSE`),
+as multiomeR does: Seurat's default merges each into a cluster in a
+single-threaded loop over singletons and clusters, which took 2.3 of the
+log-normalization chain's 6.9 hours at 31 samples.
 
 A second conventional chain follows Seurat's default normalization instead of
 SCTransform: `NormalizeData()` log-normalizes the joined counts on disk,

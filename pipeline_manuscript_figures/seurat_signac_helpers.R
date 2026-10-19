@@ -72,8 +72,10 @@ comparison_process_RNA <- function(RNA_dirs, config, normalization = c("SCTransf
   }
   object <- Seurat::RunPCA(object, npcs = max(config$RNA_dims), seed.use = config$random_seed)
   object <- Seurat::FindNeighbors(object, reduction = "pca", dims = config$RNA_dims, k.param = config$WNN_k)
+  # Singleton communities stay unmerged, as in multiomeR. Seurat's default merges each into a cluster
+  # in an R loop over singletons and clusters, which took 2.3 h of the 31-sample WNN clustering.
   object <- Seurat::FindClusters(object, resolution = config$GEX_cluster_resolution, algorithm = 4L,
-    random.seed = config$random_seed)
+    group.singletons = FALSE, random.seed = config$random_seed)
   object$RNA_clusters <- object$seurat_clusters
   Seurat::RunUMAP(object, reduction = "pca", dims = config$RNA_dims, n.neighbors = config$UMAP_n_neighbors,
     min.dist = config$UMAP_min_dist, reduction.name = "umap.rna", reduction.key = "rnaUMAP_",
@@ -145,7 +147,7 @@ comparison_build_object <- function(RNA_object, ATAC_dirs, config) {
   object <- Seurat::RunUMAP(object, nn.name = "weighted.nn", min.dist = config$UMAP_min_dist,
     reduction.name = "wnn.umap", reduction.key = "wnnUMAP_", seed.use = config$random_seed)
   Seurat::FindClusters(object, graph.name = "wsnn", algorithm = 3L, resolution = config$WNN_cluster_resolution,
-    random.seed = config$random_seed)
+    group.singletons = FALSE, random.seed = config$random_seed)
 }
 
 comparison_summarize <- function(object, config, peaks) {

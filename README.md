@@ -1,5 +1,8 @@
 [![status](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 
+> This is the `FLINC-2.24` snapshot: the code and configuration that produced
+> freeze 2.24 of the FLINC liver Multiome data. See [PROVENANCE.md](PROVENANCE.md).
+
 # multiomeR
 
 multiomeR is a targets-based workflow for processing and analyzing single-nucleus 10x Genomics Multiome data. It is designed as a lean, readable framework that users can adapt to their own studies rather than as a black-box command-line pipeline.

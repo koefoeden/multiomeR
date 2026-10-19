@@ -165,7 +165,7 @@ rlang::list2(
     name = psbulk_GWAS_gene_chromVAR_KCNJ12_ATAC_accessibility_track,
     description = "Build the hardcoded KCNJ12 BPCells ATAC coverage track for locus-effect sanity-check plotting",
     command = {
-      hardcoded_GWAS_ID <- "T2D_Suzuki2024_locus_effect"
+      hardcoded_GWAS_ID <- "T2D_multiancestry_Suzuki2024_locus_effect"
       hardcoded_target_id <- "ENSG00000184185"
       hardcoded_contrast <- "fibers_vs_non_myogenic"
 
@@ -227,7 +227,7 @@ rlang::list2(
     command = {
       # First-pass sanity check plot. If this remains useful, generalize this
       # block to selected volcano hits instead of keeping one hardcoded gene.
-      hardcoded_GWAS_ID <- "T2D_Suzuki2024_locus_effect"
+      hardcoded_GWAS_ID <- "T2D_multiancestry_Suzuki2024_locus_effect"
       hardcoded_target_id <- "ENSG00000184185"
       hardcoded_contrast <- "fibers_vs_non_myogenic"
 
@@ -279,7 +279,7 @@ rlang::list2(
 
       plot |>
         save_plots_structured(
-          override_suffix = "KCNJ12_T2D_Suzuki2024_locus_effect_fibers_vs_non_myogenic",
+          override_suffix = "KCNJ12_T2D_multiancestry_Suzuki2024_locus_effect_fibers_vs_non_myogenic",
           width = 12,
           height = 14
         )

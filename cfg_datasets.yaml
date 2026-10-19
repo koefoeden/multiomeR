@@ -1,0 +1,31 @@
+# FLINC configuration that produced freeze 2.24_w_Seurat_SCT. PROVENANCE.md lists what differs from the run.
+default:
+  mandatory:
+    dataset_cellranger_arc_refdata_dir: NULL
+  optional:
+    dataset_QC_exclude_list_per_reaction: NULL # Exclusion dplyr::filter-expressions to evaluate on per-barcode metadata prior to initial GEX-based clustering.
+    dataset_run_amulet: true
+    dataset_freeze_non_plots:
+      - GEX_Seurat_object
+      - multimodal_Seurat_object
+      - aggregated_GEX_BPCells_matrix_dir.GEX
+      - consensus_peak_BPCells_matrix_dir.ATAC
+      - TF_activity_BPCells_matrix_dir.ATAC
+      - GWAS_chromVAR_ZScores_tibble.single_cell
+      - SCAVENGE_TRS_tibble
+    dataset_tar_make_skip_regex_patterns: NULL
+
+FLINC:
+  mandatory:
+    dataset_cellranger_arc_refdata_dir: /projects/cbmr_shared/data/common_resources/SEGMENT/reference_cellranger/refdata-cellranger-arc-GRCh38-2024-A
+  optional:
+    dataset_QC_exclude_list_per_reaction:
+      - TSS.enrichment < 2.5
+      - nucleosome_signal > 2
+      - nCount_RNA < 250
+      - RNA_mito_percent > 1
+      - vireo_max_prob_singlet < 0.75
+      - amulet_q.value < 0.05
+      - donor_id=='excluded_by_cellranger_and_not_demuxed'
+      - str_starts(donor_id, 'donor')
+      - donor_id == 'withheld_donor_ID' # excluded one donor; its study ID is withheld, see PROVENANCE.md

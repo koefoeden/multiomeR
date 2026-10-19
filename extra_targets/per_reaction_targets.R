@@ -83,12 +83,8 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = cellbender_h5_file,
-    description = "Track the CellBender output h5 file for this reaction, or no files if not configured",
-    command = if (is.na(reaction_cellbender_h5_file) || reaction_cellbender_h5_file == "") {
-      character(0)
-    } else {
-      reaction_cellbender_h5_file
-    }
+    description = "Track the CellBender output h5 file for this reaction, or NULL.txt if not configured",
+    command = dplyr::coalesce(reaction_cellbender_h5_file, "NULL.txt")
   ),
   tarchetypes::tar_file(
     name = GEX_counts_BPcells_matrix_dir,
@@ -97,14 +93,14 @@ rlang::list2(
       out_dir <- get_structured_file_path()
 
       gene_expression_matrix <-
-        if (length(cellbender_h5_file) > 0L) {
+        if (cellbender_h5_file != "NULL.txt") {
           read_cellbender_h5_matrix(cellbender_h5_file, feature_type = "Gene Expression")
         } else {
           cellranger_h5_file <- file.path(dirname(cellranger_summary_file), "filtered_feature_bc_matrix.h5")
           BPCells::open_matrix_10x_hdf5(cellranger_h5_file, feature_type = "Gene Expression")
         }
 
-      source_label <- if (length(cellbender_h5_file) > 0L) "CellBender GEX matrix" else "CellRanger GEX matrix"
+      source_label <- if (cellbender_h5_file != "NULL.txt") "CellBender GEX matrix" else "CellRanger GEX matrix"
       if (nrow(gene_expression_matrix) != nrow(gene_features_df)) {
         stop(
           source_label,
@@ -259,7 +255,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = cellsnp_dir,
-    description = "Run cellsnp-lite to genotype each barcode at SNP positions, or return no files if no VCF is configured",
+    description = "Run cellsnp-lite to genotype each barcode at SNP positions, or return NULL.txt if no VCF is configured",
     command = if (!is.na(reaction_donors_VCF_file)) {
       ATAC_bam_file <- file.path(dirname(cellranger_summary_file), "atac_possorted_bam.bam")
       get_cellsnp_dir(
@@ -269,7 +265,7 @@ rlang::list2(
         cores = 15
       )
     } else {
-      character(0)
+      "NULL.txt"
     },
     resources = get_tar_resources(cores_req = 15)
   ),

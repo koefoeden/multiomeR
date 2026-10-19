@@ -1,0 +1,203 @@
+# FLINC configuration that produced freeze 2.24_w_Seurat_SCT. PROVENANCE.md lists what differs from the run.
+default:
+  mandatory:
+    genetic_enrichment_open_targets_studies: NULL # Named Open Targets study mappings keyed by GWAS_ID. Each mapping must include Category and studyId. variant_weighting_mode is optional.
+  optional:
+    genetic_enrichment_psbulk_GWAS_chromVAR_models: # Model specification list for pseudobulk GWAS chromVAR differential activity.
+      all_cell_types_one_vs_rest:
+        cell_type_subset: NULL
+        design_matrix_func_name: NULL
+        formula: ~ 0 + cluster + donor_id
+        random_effect: NULL
+        contrast_specs_vec: NULL
+        contrast_functions:
+          cell_type_vs_rest: get_cluster_one_vs_rest_contrast_vec_list
+    genetic_enrichment_posterior_probability_cutoff: 0.001 # posteriorProbability cutoff for gchromVAR. NULL applies no cutoff.
+    genetic_enrichment_posterior_probability_weighting_function_name: NULL # Function expression used to weight Open Targets posteriorProbability values. NULL skips weighting.
+    genetic_enrichment_compartment_patterns: NULL # Named regex patterns used to group cell types or contrasts into plot compartments.
+    genetic_enrichment_SCAVENGE_permutation_times: 100 # Degree-matched random-walk permutations per GWAS/graph branch.
+    genetic_enrichment_SCAVENGE_restart_prob: 0.05 # Random-walk restart probability.
+    genetic_enrichment_SCAVENGE_seed_percent: 0.05 # Maximum fraction of cells used as random-walk seeds.
+    genetic_enrichment_psbulk_GWAS_chromVAR_min_ATAC_counts: 5000 # Minimum pseudobulk ATAC counts per cluster-donor sample for GWAS chromVAR differential activity.
+    genetic_enrichment_psbulk_GWAS_gene_chromVAR_GWAS_IDs: NULL # GWAS_IDs to run in the gene-level pseudobulk GWAS chromVAR extension. NULL skips the extension.
+    genetic_enrichment_extended_donor_id_metadata_tsv: NULL # TSV with donor-level metadata of interest. If NULL, inherits aggregation_donor_id_metadata_tsv.
+
+FLINC:
+  mandatory:
+    genetic_enrichment_open_targets_studies:
+      HbA1c_Karczewski2025:
+        Category: HbA1C
+        studyId: GCST90692780
+        finemappingMethod: auto
+      T2D_multiancestry_Suzuki2024:
+        Category: T2D
+        studyId: GCST90492734
+        finemappingMethod: auto
+      T2D_Verma2024:
+        Category: T2D
+        studyId: GCST90475667
+        finemappingMethod: auto
+      ADHD_Pedersen2023:
+        Category: Uncategorized
+        studyId: GCST90275136
+        finemappingMethod: auto
+      AG_Verma2024:
+        Category: Uncategorized
+        studyId: GCST90475682
+        finemappingMethod: auto
+      Alcohol_Linner2019:
+        Category: Uncategorized
+        studyId: GCST007328
+        finemappingMethod: auto
+      Alcohol_Liu2019:
+        Category: Uncategorized
+        studyId: GCST007461
+        finemappingMethod: auto
+      CLD_CIRR_Verma2024:
+        Category: Uncategorized
+        studyId: GCST90476081
+        finemappingMethod: auto
+      Cirrhosis_Ghouse2024:
+        Category: Uncategorized
+        studyId: GCST90319877
+        finemappingMethod: auto
+      Cirrhosis_Verma2024:
+        Category: Uncategorized
+        studyId: GCST90476086
+        finemappingMethod: auto
+      DR_Verma2024:
+        Category: Uncategorized
+        studyId: GCST90475689
+        finemappingMethod: auto
+      GDM_Elliot2024:
+        Category: Uncategorized
+        studyId: GCST90296696
+        finemappingMethod: auto
+      HLD_Verma2024:
+        Category: Uncategorized
+        studyId: GCST90475718
+        finemappingMethod: auto
+      HOMA_B_Dupuis2010:
+        Category: Uncategorized
+        studyId: GCST005180
+        finemappingMethod: auto
+      IFG_Verma2024:
+        Category: Uncategorized
+        studyId: GCST90475683
+        finemappingMethod: auto
+      MASLD_Ghodsian2021:
+        Category: Uncategorized
+        studyId: GCST90091033
+        finemappingMethod: auto
+      MOBES_Verma2024:
+        Category: Uncategorized
+        studyId: GCST90475765
+        finemappingMethod: auto
+      OBES_Verma2024:
+        Category: Uncategorized
+        studyId: GCST90475762
+        finemappingMethod: auto
+      RG_Lagou2023:
+        Category: Uncategorized
+        studyId: GCST90271557
+        finemappingMethod: auto
+      Stroke_Koskeridis2024:
+        Category: Uncategorized
+        studyId: GCST90449063
+        finemappingMethod: auto
+      T2D_MARD_Aly2021:
+        Category: Uncategorized
+        studyId: GCST90026416
+        finemappingMethod: auto
+      T2D_MOD_Aly2021:
+        Category: Uncategorized
+        studyId: GCST90026415
+        finemappingMethod: auto
+      T2D_SIDD_Aly2021:
+        Category: Uncategorized
+        studyId: GCST90026413
+        finemappingMethod: auto
+      TC_Richardson2022:
+        Category: Uncategorized
+        studyId: GCST90092985
+        finemappingMethod: auto
+      TC_Verma2024:
+        Category: Uncategorized
+        studyId: GCST90476424
+        finemappingMethod: auto
+      TG_Verma2024:
+        Category: Uncategorized
+        studyId: GCST90476435
+        finemappingMethod: auto
+      WHR_BMIadj_Men_Christakoudi2021:
+        Category: Uncategorized
+        studyId: GCST012230
+        finemappingMethod: auto
+      WHR_BMIadj_Women_Christakoudi2021:
+        Category: Uncategorized
+        studyId: GCST90020025
+        finemappingMethod: auto
+      BMI_Jee2025:
+        Category: body_composition
+        studyId: GCST90662912
+        finemappingMethod: auto
+      WHR_Pulit2019:
+        Category: body_composition
+        studyId: GCST008996
+        finemappingMethod: auto
+      WholeBodyFatFreeMass_Karczewski2025:
+        Category: body_composition
+        studyId: GCST90692693
+        finemappingMethod: auto
+      CAD_Aragam2022:
+        Category: endothelial_ctrl
+        studyId: GCST90132315
+        finemappingMethod: auto
+      SystolicBP_Keaton2024:
+        Category: endothelial_ctrl
+        studyId: GCST90310294
+        finemappingMethod: auto
+      Dupuytren_Riesmeijer2024:
+        Category: fibroblast_ctrl
+        studyId: GCST90301252
+        finemappingMethod: auto
+      FastingGlucose_Jee2025:
+        Category: glucose
+        studyId: GCST90662896
+        finemappingMethod: auto
+      OGTT2H_Gu2025:
+        Category: glucose
+        studyId: GCST90566423
+        finemappingMethod: auto
+      RG_Verma2024:
+        Category: glucose
+        studyId: GCST90479626
+        finemappingMethod: auto
+      LymphocyteCount_Chen2020:
+        Category: immune_ctrl
+        studyId: GCST90002320
+        finemappingMethod: auto
+      MonocyteCount_PanUKB_Karczewski2025:
+        Category: immune_ctrl
+        studyId: GCST90692929
+        finemappingMethod: auto
+      WhiteBloodCellCount_Vuckovic2020:
+        Category: immune_ctrl
+        studyId: GCST90002407
+        finemappingMethod: auto
+      HDL_Graham2021:
+        Category: lipids
+        studyId: GCST90239649
+        finemappingMethod: auto
+      LDL_Graham2021:
+        Category: lipids
+        studyId: GCST90239655
+        finemappingMethod: auto
+      TotalCholesterol_Graham2021:
+        Category: lipids
+        studyId: GCST90239673
+        finemappingMethod: auto
+      Triglycerides_Graham2021:
+        Category: lipids
+        studyId: GCST90239661
+        finemappingMethod: auto

@@ -1,0 +1,201 @@
+# FLINC configuration that produced freeze 2.24_w_Seurat_SCT. PROVENANCE.md lists what differs from the run.
+default:
+  mandatory:
+    aggregation_reaction_IDs: NULL # 10X reaction IDs to aggregate (must match configured processing_and_aggregation reactions).
+    aggregation_GEX_marker_genes: NULL # Named list of genes per cell type for module scoring and cluster annotation.
+    aggregation_donor_id_metadata_tsv: NULL # TSV with donor-level phenotypes; must have 'donor_id' column. Joined to cell metadata before harmony.
+    aggregation_reaction_ID_metadata_tsv: NULL # TSV mapping reactions to metadata; must have 'TENX_reaction_ID' column. Joined to cell metadata.
+  optional:
+    is_active: true # Whether to construct targets for this aggregation.
+    modules: NULL # Optional aggregation-level modules to add to the target graph.
+    aggregation_QC_exclude_list_combined_object: NULL # dplyr filter expressions for post-peak-calling QC.
+    # GEX processing
+    aggregation_ATAC_marker_TFs: NULL # Named list of TFs per cell type for chromVAR motif enrichment analysis.
+    aggregation_harmony_correction_metadata_col_names: NULL # Cell metadata columns for harmony batch correction. NULL skips harmony.
+    aggregation_GEX_data_PCs: !expr 1:30 # Sequence of PC integers for GEX PCA, harmony, NN-graph, and clustering.
+    aggregation_GEX_PCA_backend: BPCells_native # GEX PCA backend: Seurat_SCT or BPCells_native.
+    aggregation_SCT_regress_vars: [CC.Difference] # Metadata columns passed to Seurat::SCTransform(vars.to.regress). Cell-cycle scores are computed when requested.
+    aggregation_max_scDblFinder_GEX_score_filter: 1.1 # Numeric 0-1: scDblFinder-predicted doublet score cutoff to remove. 1 keeps all.
+    aggregation_max_scDblFinder_ATAC_score_filter: 1.1 # Numeric 0-1: scDblFinder-predicted ATAC doublet score cutoff to remove. 1 keeps all.
+    aggregation_scDblFinder_GEX_cell_type_collapse_list: NULL # Named list mapping collapsed group names to vectors of PCA_harmony_SNN_cluster_cell_type labels (e.g. {epithelial: [Hepatocytes, Cholangiocytes]}). NULL uses cell type labels as-is.
+    aggregation_allow_multiple_cell_types: FALSE # If TRUE, clusters with tied module scores get combined labels (e.g. "TypeA&TypeB").
+    aggregation_roadmap_EDACC_names: NULL # Roadmap Epigenomics tissue names for chromHMM peak annotation - only valid for human datasets. If NULL, chromHMMs are not added to the ATAC_GRanges.
+    # ATAC processing
+    aggregation_ATAC_data_PCs: !expr 2:30 # Sequence of LSI component integers for ATAC harmony, NN-graph, and clustering. Starts at 2 to skip depth-correlated PC1.
+    aggregation_ATAC_peak_matrix_mode: overlaps # BPCells peak counting mode for `BPCells::peak_matrix()`; use `overlaps` for datasets that should count full fragment overlaps.
+    aggregation_ATAC_peak_calling_method: macs3 # Per-cluster ATAC peak caller: `macs3` or `bpcells_tile`.
+    aggregation_call_peaks_by_cluster_col: PCA_harmony_SNN_cluster # Metadata column defining groups for peak calling and DA testing.
+    aggregation_extra_harmony_covars_ATAC: NULL # Additional metadata columns for ATAC-specific harmony (added to aggregation_harmony_correction_metadata_col_names).
+    # Clustering
+    aggregation_GEX_cluster_res: 0.3 # Leiden resolution for BPCells-native GEX clustering.
+    aggregation_ATAC_cluster_res: 0.3 # Leiden resolution for BPCells-native ATAC clustering.
+    aggregation_WNN_cluster_res: 0.3 # Leiden resolution for BPCells-native WNN clustering.
+    aggregation_cluster_min_barcodes: 100 # Minimum barcodes per Leiden cluster; smaller clusters are removed from downstream metadata.
+    aggregation_data_nNNs: 30 # k nearest neighbors for SNN graph construction (clustering).
+    # subgroup analysis
+    aggregation_subgroups_col: PCA_harmony_SNN_cluster_cell_type # Metadata column to split by for per-cell-type reprocessing.
+    aggregation_subgroups_res: 0.3 # Leiden resolution for clustering within subgroup analysis.
+    aggregation_subgroups_min_nuclei_filter: 300 # Minimum nuclei required per cluster to include in subgroup analysis.
+    aggregation_subgroups_extra_harmony_covars: NULL # Extra metadata columns for harmony in subgroup reprocessing (e.g. [sex, age]).
+    # Plotting / UMAP
+    aggregation_categorical_vars: NULL # Extra categorical metadata columns for UMAP coloring and bar plots.
+    aggregation_continuous_vars: NULL # Extra continuous metadata columns for UMAP coloring (phenotype data).
+    aggregation_UMAP_nNNs: 30 # k nearest neighbors for UMAP embedding.
+    aggregation_UMAP_min_dist: 0.001 # UMAP min_dist parameter (smaller = tighter clusters).
+    aggregation_UMAP_ATAC_PCs: !expr 2:30 # LSI components used as input for ATAC UMAP.
+    aggregation_UMAP_GEX_PCs: !expr 1:30 # PCs used as input for GEX UMAP.
+    # Galaxy track upload
+    aggregation_GALAXY_track_upload_API_KEY: NULL # withheld, see PROVENANCE.md
+    aggregation_GALAXY_track_upload_HISTORY_ID: NULL # withheld, see PROVENANCE.md
+    # Other genes/features
+    aggregation_other_interesting_genes: NULL # Additional genes to plot (not used for cell type annotation).
+    # Extras
+    aggregation_prop_threshold_contaminated_cluster_removal: NULL # Fraction threshold (e.g. 0.51) to discard sub-clusters with mismatched module scores. NULL keeps all.
+    aggregation_tar_make_skip_regex_patterns:
+      - ^ATAC_(tracks|insertions|million_reads|coverage|bigBeds) # ---------- skips ATAC tracks
+      # NULL
+      # Regex patterns to skip targets in tar_make_w_cfg_skip_patterns(). Examples below:
+      # - scE2G # ---------- skips scE2G input generation
+      # - ^subgroups_ # ---------- skips subgroup analysis
+      # - _galaxy # ---------- skips Galaxy track upload
+      # - ^(psbulk|sc_psbulk)_ # ---------- skips pseudobulk models
+      # - GEX_reclustered # ---------- skips GEX reclustering
+      # - ^GEX_3D_UMAP_ # ---------- skips GEX 3D UMAPs
+      # - TF_activity # ---------- skips chromVAR TF activity
+
+FLINC:
+  mandatory:
+    aggregation_donor_id_metadata_tsv: /projects/hh_liver_cohorts-AUDIT/data/FLINC/phenotypes/processed/combined_cleaned_FLINC_phenotypes.tsv
+    aggregation_reaction_ID_metadata_tsv: /projects/hh_liver_cohorts-AUDIT/data/FLINC/multiome/processed/FLINC_10x_reaction_metadata.tsv
+    aggregation_GEX_marker_genes:
+      Hepatocytes: [GHR, CYP2C9, ADH4]
+      Cholangiocytes: [CFTR, PKHD1, BICC1]
+      Endothelial: [FBXL7, MEIS2, ST6GALNAC3]
+      Myeloid: [FMNL2, ZEB2, MSR1, PLXDC2]
+      Lymphoid: [BCL11B, PARP8, PYHIN1]
+      Stellate: [RBMS3, MGAT4C, LAMC3, LRAT, RSPO3]
+    aggregation_reaction_IDs:
+      - A1
+      - A2
+      - A3
+      - A4
+      - B1
+      - B2
+      - B3
+      - B4
+      - B5
+      - B6
+      - B7
+      - B8
+      - C1
+      - C2
+      - C3
+      - C4
+      - C5
+      - C6
+      - C7
+      - C8
+      - D1
+      - D2
+      - D3
+      - D5
+      - E1
+      - E2
+      - E3
+      - E4
+      - E5
+      - E6
+      - F1
+      - F2
+      - F3
+      - F4
+      - F5
+      - F6
+      - F7
+      - F8
+      - G1
+      - G2
+      - G3
+      - G4
+      - G5
+      - G6
+      - G7
+      - H1
+      - H2
+      - H3
+      - H4
+      - H5
+      - liver_single_donor_1
+      - liver_single_donor_2
+  optional:
+    is_active: true
+    modules:
+      - genetic_enrichment
+    aggregation_GEX_PCA_backend: Seurat_SCT
+    aggregation_QC_exclude_list_combined_object:
+      - nCount_ATAC < 1000
+      - atac_peak_counts_frac < 0.1
+      - atac_peak_counts_blacklist_frac > 0.01
+    aggregation_ATAC_marker_TFs:
+      hepatocyte: [HNF4A__MA1494.2, CEBPA, FOXA1]
+      cholangiocyte: [SOX9, HNF1B, GATA6]
+      stellate: [PPARG, NR1H3, KLF4]
+      kupffer: [SPI1, IRF8, NR1H3]
+      endothelial: [ERG, KLF2, GATA2]
+    aggregation_ATAC_peak_matrix_mode: overlaps
+    aggregation_scDblFinder_GEX_cell_type_collapse_list:
+      epithelial: [Hepatocytes, Cholangiocytes]
+    aggregation_max_scDblFinder_GEX_score_filter: 0.5
+    aggregation_max_scDblFinder_ATAC_score_filter: 0.5
+    aggregation_ATAC_data_PCs: !expr 2:13
+    aggregation_UMAP_ATAC_PCs: !expr 2:13
+    aggregation_GEX_data_PCs: !expr 1:20
+    aggregation_UMAP_GEX_PCs: !expr 1:20
+    aggregation_UMAP_min_dist: 0.3
+    aggregation_GEX_cluster_res: 0.3
+    aggregation_ATAC_cluster_res: 0.3
+    aggregation_WNN_cluster_res: 0.3
+    aggregation_data_nNNs: 50
+    aggregation_UMAP_nNNs: 50
+    aggregation_harmony_correction_metadata_col_names: [run_harmony, type_biopsy]
+    aggregation_categorical_vars:
+      - pheno_sex
+      - diabetes
+      - clinical_condition
+      - statin
+      - hypertension
+      - dyslipidaemia
+      - IHD
+      - arrhytmia
+      - GLP1_RA
+      - glitazones
+      - DPP4I
+      - STLG2I
+      - insulin
+      - metformin
+      - type_biopsy
+    aggregation_continuous_vars:
+      - fibrosis_score
+      - vireo_max_prob_doublet
+      - vireo_max_prob_singlet
+      - age
+      - INR
+      - ALT
+      - AST
+      - ALP
+      - bilirubin
+      - HBA1C
+      - HDL
+      - LDL
+      - VLDL
+      - CPR
+      - steatosis_score
+      - lobular_inflammation_score
+      - ballooning_score
+      - NAS_score
+      - fatmassindex
+    aggregation_roadmap_EDACC_names: Adult_Liver
+    aggregation_tar_make_skip_regex_patterns:
+      - ^ATAC_(tracks|insertions|million_reads|coverage|bigBeds) # ---------- skips ATAC tracks
+      - ^GEX_3D_UMAP_ # ---------- skips GEX 3D UMAPs
+      - ^subgroups_ # ---------- skips subgroup analysis

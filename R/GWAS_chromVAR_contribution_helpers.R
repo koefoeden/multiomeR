@@ -230,18 +230,31 @@ get_GWAS_chromVAR_locus_shift_z_matrices <- function(
   offsets <- rbind(0, get_GWAS_locus_shift_offsets(spans, credible_set_block, c(spans, forbidden_GRanges), chromosome_lengths, n_draws, shift_range))
   variant_block <- match(credible_set_block, as.integer(colnames(offsets)))[as.integer(credible_set)]
 
+  # Consensus peaks do not overlap, so a moved variant can only fall in the last
+  # peak starting at or before it. Genome-wide keys put chromosomes in sequence.
+  stopifnot(IRanges::isDisjoint(peak_ranges))
+  genome_key <- \(ranges, position) match(as.character(GenomicRanges::seqnames(ranges)), GenomeInfoDb::seqlevels(peak_ranges)) * 2^32 + position
+  peak_order <- order(genome_key(peak_ranges, GenomicRanges::start(peak_ranges)))
+  peak_start_keys <- genome_key(peak_ranges, GenomicRanges::start(peak_ranges))[peak_order]
+  peak_end_keys <- genome_key(peak_ranges, GenomicRanges::end(peak_ranges))[peak_order]
+  variant_keys <- genome_key(variants, GenomicRanges::start(variants))
+
   # Map moved variants to peaks in chunks of configurations to bound memory.
   z_matrices <- purrr::map(split(seq_len(nrow(offsets)), ceiling(seq_len(nrow(offsets)) / 100)), \(rows) {
-    moved_variants <- GenomicRanges::GRanges(
-      rep(GenomicRanges::seqnames(variants), length(rows)),
-      IRanges::IRanges(rep(GenomicRanges::start(variants), length(rows)) + as.vector(t(offsets[rows, variant_block, drop = FALSE])), width = 1L)
-    )
-    hits <- GenomicRanges::findOverlaps(peak_ranges, moved_variants)
-    variant_idx <- (S4Vectors::subjectHits(hits) - 1L) %% length(variants) + 1L
-    row_idx <- (S4Vectors::subjectHits(hits) - 1L) %/% length(variants) + 1L
+    moved_keys <- rep(variant_keys, length(rows)) + as.vector(t(offsets[rows, variant_block, drop = FALSE]))
+    peak_rank <- findInterval(moved_keys, peak_start_keys)
+    moved_idx <- which(peak_rank > 0L)
+    moved_idx <- moved_idx[moved_keys[moved_idx] <= peak_end_keys[peak_rank[moved_idx]]]
+    peak_idx <- peak_order[peak_rank[moved_idx]]
+    # Keep findOverlaps() order, by peak and then position, so sums add up identically.
+    hit_order <- order(peak_idx, moved_keys[moved_idx], moved_idx)
+    peak_idx <- peak_idx[hit_order]
+    moved_idx <- moved_idx[hit_order]
+    variant_idx <- (moved_idx - 1L) %% length(variants) + 1L
+    row_idx <- (moved_idx - 1L) %/% length(variants) + 1L
     apply(weight_matrix, 2, simplify = FALSE, \(variant_weight_vec) {
       # Peak weights sum and cap their variants' weights as get_GWAS_chromVAR_peak_variant_weight_tibble() does.
-      peak_weight_matrix <- Matrix::sparseMatrix(S4Vectors::queryHits(hits), row_idx,
+      peak_weight_matrix <- Matrix::sparseMatrix(peak_idx, row_idx,
         x = variant_weight_vec[variant_idx], dims = c(length(peak_ranges), length(rows)))
       peak_weight_matrix@x <- pmin(peak_weight_matrix@x, 1)
       # The background variance of a weighted sum of peaks scales with the squared weights.

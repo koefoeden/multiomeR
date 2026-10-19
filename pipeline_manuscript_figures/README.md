@@ -151,10 +151,8 @@ at that size in either workflow: Seurat converts the joined count matrix to a
 2.17 billion. S2F shows each size's RNA non-zero entries against that limit, the
 genes detected in each called nucleus summed from Cell Ranger's per-barcode
 metrics. They equal the count in Seurat's error. S2A-E name each workflow's
-line in its colour beside its last point, by normalization method. multiomeR on
-SCTransform's name adds how it differs from the conventional chain at 31
-samples: as a fold difference from 1.5-fold, as a percentage below it, and not
-at all under 10%.
+line in its colour beside its last point, by normalization method; on linear
+axes, the differences read directly from the lines.
 
 ### Sizing
 

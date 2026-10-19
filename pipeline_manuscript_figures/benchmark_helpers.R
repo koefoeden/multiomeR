@@ -648,10 +648,9 @@ benchmark_simulation_check <- function(context) {
 BENCHMARK_WORKFLOW_COLOURS <- c("Seurat/Signac (SCTransform)" = "#eb6834", "multiomeR (SCTransform)" = "#2a78d6",
   "multiomeR (default normalization)" = "#1baf7a")
 BENCHMARK_DEFAULT_COLOUR <- BENCHMARK_WORKFLOW_COLOURS[["multiomeR (default normalization)"]]
-# The names written beside each workflow's line, by normalization method.
-BENCHMARK_LINE_LABELS <- c("Seurat/Signac (SCTransform)" = "Seurat/Signac\nwith SCTransform",
-  "multiomeR (SCTransform)" = "multiomeR\nwith SCTransform",
-  "multiomeR (default normalization)" = "multiomeR with analytic\nPearson residuals (default)")
+# The names written beside each workflow's line, by normalization method; the legend spells them out.
+BENCHMARK_LINE_LABELS <- c("Seurat/Signac (SCTransform)" = "Seurat/Signac (SCT)", "multiomeR (SCTransform)" = "multiomeR (SCT)",
+  "multiomeR (default normalization)" = "multiomeR (default)")
 # Width and height in inches.
 BENCHMARK_FIGURE_SIZES <- list(S2 = c(8, 6.4), S3 = c(8, 5.6), S4 = c(8, 3.3))
 
@@ -685,32 +684,25 @@ benchmark_linear_scale <- function(..., top = .1) {
 benchmark_text <- function(...) ggplot2::geom_text(..., family = BENCHMARK_FONT, size = 2.1, lineheight = .9, colour = "grey25")
 
 # Names each workflow's line in its colour. The two SCTransform workflows' names sit to the right of
-# their last point, multiomeR's with its `difference` from the baseline (NA for none), on a white box
-# that masks the default workflow's line where it passes; overlapping names move apart around their
-# midpoint. The default workflow's name sits above and left of its last point, or above the
-# SCTransform names if it would overlap one.
-benchmark_line_labels <- function(values, difference) {
+# their last point on a white box that masks the default workflow's line where it passes; overlapping
+# names move apart around their midpoint. The default workflow's name sits above and left of its last
+# point, or above the SCTransform names if it would overlap one.
+benchmark_line_labels <- function(values) {
   default <- names(BENCHMARK_LINE_LABELS)[[3]]
   # One text line's height in data units: 4.6% of a panel whose y axis runs 22% beyond the data.
   line <- .046 * 1.22 * max(values$value)
-  half_height <- \(label) lengths(strsplit(label, "\n")) / 2 * line
   ends <- dplyr::slice_max(values, .data$cellranger_input_nuclei, by = "workflow") |>
     dplyr::mutate(label = BENCHMARK_LINE_LABELS[as.character(.data$workflow)])
-  arms <- dplyr::filter(ends, .data$workflow != default) |>
-    dplyr::mutate(label = dplyr::if_else(.data$workflow == names(BENCHMARK_LINE_LABELS)[[2]] & !is.na(difference),
-      paste0(.data$label, "\n", difference), .data$label)) |>
-    dplyr::arrange(.data$value)
-  space <- sum(half_height(arms$label)) + .3 * line
-  if (diff(arms$value) < space) arms$value <- mean(arms$value) + c(-.5, .5) * space
+  arms <- dplyr::filter(ends, .data$workflow != default) |> dplyr::arrange(.data$value)
+  if (diff(arms$value) < 1.3 * line) arms$value <- mean(arms$value) + c(-.65, .65) * line
   last <- dplyr::filter(ends, .data$workflow == default) |> dplyr::mutate(value = .data$value + .3 * line)
-  top <- arms$value + half_height(arms$label)
-  clash <- last$value < top & last$value + 2 * half_height(last$label) > arms$value - half_height(arms$label)
-  if (any(clash)) last$value <- max(top[clash]) + .3 * line
+  clash <- abs(last$value + .5 * line - arms$value) < line
+  if (any(clash)) last$value <- max(arms$value[clash]) + .8 * line
   list(
     ggplot2::geom_label(data = arms, ggplot2::aes(label = .data$label), hjust = 0, nudge_x = 2.5e4, family = BENCHMARK_FONT,
-      size = 2.3, lineheight = .9, fill = "white", linewidth = 0, label.padding = grid::unit(1, "pt"), show.legend = FALSE),
+      size = 2.3, fill = "white", linewidth = 0, label.padding = grid::unit(1, "pt"), show.legend = FALSE),
     ggplot2::geom_text(data = last, ggplot2::aes(label = .data$label), hjust = 1, vjust = 0, family = BENCHMARK_FONT,
-      size = 2.3, lineheight = .9, show.legend = FALSE))
+      size = 2.3, show.legend = FALSE))
 }
 
 # A figure's panels, under their shared legend if they have one, tagged from A.
@@ -736,29 +728,16 @@ plot_benchmark_figures <- function(tables) {
       dplyr::filter(.data$scope == "like for like: multiomeR + Seurat exports") |>
       dplyr::mutate(workflow = default)) |>
     dplyr::mutate(workflow = factor(.data$workflow, names(BENCHMARK_WORKFLOW_COLOURS)))
-  # Title, axis title, and how multiomeR compares when lower and when higher.
-  measures <- list(simulated_wall_time_hours = c("Run time on 128 cores", "Estimated hours", "shorter", "longer"),
-    used_CPU_hours = c("CPU time", "CPU-hours", "less", "more"),
-    used_RAM_GB_hours = c("Memory use summed over the run", "GB-hours", "less", "more"),
-    peak_RAM_GB = c("Memory of the largest worker", "Peak GB", "less", "more"),
-    disk_space_GB = c("Disk space", "GB, with Cell Ranger inputs", "less", "more"))
-  largest_shared <- max(tables$seurat_signac_comparison_resources$cellranger_input_nuclei)
+  # Title and axis title of each measure.
+  measures <- list(simulated_wall_time_hours = c("Run time on 128 cores", "Estimated hours"),
+    used_CPU_hours = c("CPU time", "CPU-hours"),
+    used_RAM_GB_hours = c("Memory use summed over the run", "GB-hours"),
+    peak_RAM_GB = c("Memory of the largest worker", "Peak GB"),
+    disk_space_GB = c("Disk space", "GB, with Cell Ranger inputs"))
   like_panels <- purrr::imap(measures, \(words, measure) {
     values <- dplyr::transmute(like_for_like, .data$cellranger_input_nuclei, .data$workflow, value = .data[[measure]])
-    shared <- dplyr::filter(values, .data$cellranger_input_nuclei == largest_shared, .data$workflow != default)
-    multiomeR <- shared$value[shared$workflow == "multiomeR (SCTransform)"]
-    baseline <- shared$value[shared$workflow == "Seurat/Signac (SCTransform)"]
-    # How multiomeR differs from the baseline at the largest shared size: as a fold difference from
-    # 1.5-fold, as a percentage below it, and not under 10%.
-    ratio <- multiomeR / baseline
-    change <- if (max(ratio, 1 / ratio) >= 1.5) sprintf("%.1f×", max(ratio, 1 / ratio)) else sprintf("%.0f%%", 100 * abs(ratio - 1))
-    fold <- tibble::tibble(x = largest_shared, y = min(shared$value), yend = max(shared$value)) |>
-      dplyr::filter(.data$yend / .data$y >= 1.1)
-    difference <- if (nrow(fold)) paste(change, words[[if (ratio < 1) 3 else 4]]) else NA
     plot <- ggplot2::ggplot(values, ggplot2::aes(.data$cellranger_input_nuclei, .data$value, colour = .data$workflow)) +
-      ggplot2::geom_segment(data = fold, ggplot2::aes(.data$x, .data$y, xend = .data$x, yend = .data$yend), inherit.aes = FALSE,
-        linewidth = .3, linetype = "dashed", colour = "grey45") +
-      ggplot2::geom_line(linewidth = .5) + ggplot2::geom_point(size = 1.2) + benchmark_line_labels(values, difference) +
+      ggplot2::geom_line(linewidth = .5) + ggplot2::geom_point(size = 1.2) + benchmark_line_labels(values) +
       benchmark_nuclei_scale() + benchmark_linear_scale(labels = scales::label_number(drop0trailing = TRUE), top = .22) +
       ggplot2::scale_colour_manual(values = BENCHMARK_WORKFLOW_COLOURS, guide = "none")
     benchmark_panel(plot, words[[1]], words[[2]])

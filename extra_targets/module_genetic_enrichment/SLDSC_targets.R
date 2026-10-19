@@ -79,8 +79,9 @@ rlang::list2(
     delimiter = ".",
     targets::tar_target(
       name = SLDSC_matched_annotation_record.cell_type_pseudobulk,
-      description = "Binarise each WNN cell type's annotation score, and a random one, to the top 0.5%, 1%, 2% and 5% of common reference SNPs and sum the baseline-LD annotations inside [part_of_graph:genetic_enrichment_SLDSC] [resource_observation: peak_RAM_GiB=4.4; n_nuclei=740k; aggregation=unpublished; method=slurm_monitor; date=2026-10-16]",
-      command = get_SLDSC_matched_annotation_record(score_matrix, score_ranges, SLDSC_reference_dir)
+      description = "Binarise each WNN cell type's annotation score, and a random one, to the top 0.5%, 1%, 2% and 5% of common reference SNPs and sum the baseline-LD annotations inside [part_of_graph:genetic_enrichment_SLDSC] [resource_observation: peak_RAM_GiB=4.4; n_nuclei=740k; aggregation=unpublished; method=slurm_monitor; date=2026-10-16] [resource_observation: peak_RAM_GiB=43.3 before a crash at its 48 GB limit; n_nuclei=1.16M; aggregation=sizing_91x; method=slurm_monitor; date=2026-10-19]",
+      command = get_SLDSC_matched_annotation_record(score_matrix, score_ranges, SLDSC_reference_dir),
+      resources = get_tar_resources(RAM_GB_req = 60)
     ),
     targets::tar_target(
       name = SLDSC_matched_LD_score_record.cell_type_pseudobulk,

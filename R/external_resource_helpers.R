@@ -14,6 +14,11 @@ amulet_repeat_list_source <- function() {
        sha256 = '97b9df0f375f2ec6a10d72fdd67fa9d7ec93ff0acd1bb9dd76b47cf1e014681c')
 }
 
+SLDSC_reference_source <- function() {
+  list(url = 'https://zenodo.org/records/10515792/files/GRCh38.tgz',
+       md5 = '31618a3bb6b5d20bdbfb02d9fa0bfc3f')
+}
+
 parse_open_targets_listing <- function(dataset_index) {
   parquet_files <- stringr::str_match_all(paste(dataset_index, collapse = '\n'), 'href="([^"/]+\\.parquet)"')[[1]][, 2]
   if (!length(parquet_files)) stop('No Parquet files found in Open Targets listing.')

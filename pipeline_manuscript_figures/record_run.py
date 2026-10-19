@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """Record the targets one build run completed, and fail if any errored.
 
-Run from the checkout that built the store, after the run. Keeps the targets completed since
-the run's build started (from its first driver log) and writes their runtimes, completion times,
-bytes and errors to a TSV, with the run's node, which the benchmarks use to match each target
-with the worker samples of that node. The resource and revision benchmarks read these files,
-because later runs overwrite the store's metadata. The record also lists every file target
-outside the store, such as configuration tables and Cell Ranger outputs, with in_store false:
-targets records such an input file's modification time as its completion time, so a run that
-first tracks it records no build of it. A file target that returns no file has no completion
-time, so it takes the time at which a driver log reports it completed.
+Run from the checkout that built the store, after the run. Keeps the targets that the run's
+driver logs report completing, so a run of another workflow on the same store in between does
+not count, and writes their runtimes, completion times, bytes and errors to a TSV, with the
+run's node, which the benchmarks use to match each target with the worker samples of that node.
+The resource and revision benchmarks read these files, because later runs overwrite the store's
+metadata. The record also lists every file target outside the store, such as configuration
+tables and Cell Ranger outputs, with in_store false: targets records such an input file's
+modification time as its completion time, so a run that first tracks it records no build of it.
+targets times a file target by its newest file, so a file target in the store that returns no
+file, or files that an unpacked archive dates years back, takes the time at which a driver log
+reports it completed.
 
 A target that errors after an earlier successful build keeps its old completion time in
 the metadata, so errors and worker crashes are also read from the driver logs; each must
@@ -53,7 +55,8 @@ with open(meta_file) as meta:
 for row in rows.values():
     row["in_store"] = row["format"] != "file" or all(
         os.path.realpath(path).startswith(store) for path in row["path"].split("*") if path)
-    if row["time"] == "t0s" and row["name"] in completed_days:
+    if row["name"] in completed_days and (row["time"] == "t0s" or row["format"] == "file" and row["in_store"]
+                                          and float(row["time"][1:-1]) < start_days):
         row["time"] = f"t{completed_days[row['name']]}s"
 children = {row["name"]: row["children"].split("*") for row in rows.values() if row["type"] == "pattern" and row["children"]}
 
@@ -65,7 +68,7 @@ def replaced(row):
 
 
 completed = [row for row in rows.values() if row["type"] in ("stem", "branch") and not replaced(row)
-             and (float(row["time"][1:-1]) >= start_days or not row["in_store"])]
+             and (row["name"] in completed_days or not row["in_store"])]
 
 with open(output_file, "w", newline="") as output:
     writer = csv.writer(output, delimiter="\t", lineterminator="\n")

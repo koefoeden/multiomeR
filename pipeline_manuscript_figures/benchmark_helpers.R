@@ -261,10 +261,11 @@ upstream_targets <- function(graph, names) {
 
 # Static targets of an aggregation's full analysis by stage: its own primary-module targets and
 # every target of its GEM wells, with their upstream setup targets, then each optional module's
-# own targets and the upstream targets that only it needs.
+# own targets and the upstream targets that only it needs. The conventional Seurat/Signac chain,
+# which sizing_91x also maps, is not part of it.
 benchmark_stages <- function(graph, aggregation, GEM_well_IDs) {
   vertices <- igraph::V(graph)$name
-  own <- vertices[endsWith(vertices, paste0(".", aggregation))]
+  own <- vertices[endsWith(vertices, paste0(".", aggregation)) & !startsWith(vertices, "comparison_seurat_signac_")]
   module <- purrr::map_chr(own, \(name)
     c(BENCHMARK_MODULES[endsWith(name, paste0(".", BENCHMARK_MODULES, ".", aggregation))], NA)[[1]])
   GEM_well_targets <- vertices[sub("^.*[.]", "", vertices) %in% GEM_well_IDs]

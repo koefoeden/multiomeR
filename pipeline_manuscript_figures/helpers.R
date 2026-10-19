@@ -53,20 +53,27 @@ figure_1_enrichments <- function(scores) {
 # of the summed contribution, which leaves out pairs driven by one or a few loci; the
 # configured studies already have at least 20 effective peaks. In decreasing z, a pair
 # is shown unless its study is shown already or its cell type shows a study of the
-# same category.
+# same category. A near-duplicate is also left out: a pair whose cell type is enriched
+# for a shown study of the same publication and category, such as systolic beside
+# diastolic blood pressure.
 select_figure_1_traits <- function(scores, loci) {
   loci <- dplyr::summarise(loci, n_loci = dplyr::n(),
     top_locus_share = max(.data$relative_deviation_contribution) / sum(.data$relative_deviation_contribution),
     .by = c("GWAS_ID", "cluster"))
-  candidates <- figure_1_enrichments(scores) |>
+  enriched <- figure_1_enrichments(scores)
+  candidates <- enriched |>
     dplyr::left_join(loci, by = c("GWAS_ID", "cluster")) |>
     dplyr::filter(.data$top_locus_share < .5)
   if (!nrow(candidates)) stop("No broadly supported cell-type/GWAS enrichments.")
+  publication <- \(GWAS_ID) sub("^.*_([A-Za-z]+[0-9]{4}).*$", "\\1", GWAS_ID)
   selected <- candidates[0, ]
   for (i in seq_len(nrow(candidates))) {
     pair <- candidates[i, ]
+    relatives <- selected$GWAS_ID[publication(selected$GWAS_ID) == publication(pair$GWAS_ID) &
+      selected$Category == pair$Category]
     if (!pair$GWAS_ID %in% selected$GWAS_ID &&
-      !any(selected$cluster == pair$cluster & selected$Category == pair$Category)) {
+      !any(selected$cluster == pair$cluster & selected$Category == pair$Category) &&
+      !any(enriched$GWAS_ID %in% relatives & enriched$cluster == pair$cluster)) {
       selected <- dplyr::bind_rows(selected, pair)
     }
   }
@@ -86,7 +93,9 @@ select_figure_1_showcase <- function(traits) {
 figure_1_trait_labels <- function(x) {
   x <- gsub("_", " ", sub("_[^_]+[0-9]{4}(_[A-Z]+)?$", "", x))
   x <- gsub("([a-z])(?=[A-Z][A-Za-z])", "\\1 ", x, perl = TRUE)
-  gsub(" ([A-Z])(?=[a-z])", " \\L\\1", x, perl = TRUE)
+  x <- gsub(" ([A-Z])(?=[a-z])", " \\L\\1", x, perl = TRUE)
+  # The spirometry ratio reads FEV1/FVC.
+  sub("FEV1FVC", "FEV1/FVC", x, fixed = TRUE)
 }
 
 # Deviation clusters use hyphens and metadata cell types underscores.
@@ -445,8 +454,9 @@ compose_figure_1 <- function(A, B, C, D, E, F) {
           hjust = .5, margin = ggplot2::margin(b = 5.5)),
         plot.title.position = "plot")
   })
+  # Panel D holds one row per trait, about 16 since the locus-shift null.
   (patchwork::wrap_plots(plots, design = "AA\nBC\nDD\nEF",
-    heights = c(2.3, 1.6, 1.5, 2.7)) +
+    heights = c(2.1, 1.5, 2.4, 2.5)) +
     patchwork::plot_annotation(tag_levels = "A")) &
     ggplot2::theme(plot.tag = ggplot2::element_text(family = "NimbusSan", face = "bold",
         size = 12, hjust = 0, vjust = 1), plot.tag.position = c(0, 1))

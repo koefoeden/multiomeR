@@ -191,6 +191,11 @@ figure_pipeline <- list(
         dplyr::arrange(.data$Category, .data$GWAS_ID) |>
         dplyr::mutate(GWAS_ID = factor(.data$GWAS_ID, levels = rev(.data$GWAS_ID))) |>
         plot_GWAS_metadata_tracks()
+      # Supplementary Figure S5's category colours, which all studies of the aggregation set.
+      tracks[[1]] <- tracks[[1]] + ggplot2::scale_fill_manual(
+        values = make_named_heatmap_palette(GWAS_inputs_tibble.genetic_enrichment.mixed_human_31x$Category, "Set3"),
+        labels = \(x) gsub("_", " ", x), name = "Category",
+        guide = ggplot2::guide_legend(ncol = 4L, byrow = TRUE, title.position = "top", order = 1))
       ggplot2::ggsave(paths[[1]], plot_trait_cell_type_heatmap(dplyr::mutate(scores, value = .data$tau_star),
         tracks, "tau*", limit),
         device = ragg::agg_png, width = 9, height = 2.5 + 0.22 * dplyr::n_distinct(scores$GWAS_ID), dpi = 300)

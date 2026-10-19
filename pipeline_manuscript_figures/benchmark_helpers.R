@@ -68,7 +68,11 @@ SEURAT_SIGNAC_COMPARISON_WORKFLOWS <- local({
     # peak calling uses multiomeR's clusters, so in the graph it can overlap the
     # RNA steps; a script runs the steps one after another.
     "Seurat/Signac" = list(endpoint = "comparison_seurat_signac_object.",
-      exclude = "^(?!comparison_seurat_signac_)", sequential = TRUE))
+      exclude = "^(?!comparison_seurat_signac_)", sequential = TRUE),
+    # The same chain with Seurat's default log-normalization, measured in its own run from an empty
+    # store, which builds the steps it shares with the SCTransform chain again.
+    "Seurat/Signac log-normalization" = list(endpoint = "comparison_seurat_signac_lognorm_object.",
+      exclude = "^(?!comparison_seurat_signac_)", sequential = TRUE, run = "comparison_lognorm"))
 })
 
 benchmark_aggregation_tibble <- function(aggregations) {
@@ -495,12 +499,13 @@ benchmark_workflow_measures <- function(context, executions, workflow, aggregati
 }
 
 # Like for like: multiomeR, with and without its Seurat exports, and the Seurat/Signac chain
-# on comparison_1x to comparison_31x, all built in one run.
+# on comparison_1x to comparison_31x, all built in one run, and the Seurat/Signac chain with
+# log-normalization, built in its own run.
 seurat_signac_comparison_resource_tibble <- function(context) {
   tidyr::expand_grid(aggregation = comparison_aggregation_names(), workflow = names(SEURAT_SIGNAC_COMPARISON_WORKFLOWS)) |>
     purrr::pmap_dfr(\(aggregation, workflow) tibble::tibble(aggregation = aggregation, workflow = workflow,
-      benchmark_workflow_measures(context, read_benchmark_executions(BENCHMARK_AGGREGATION_RUNS[[aggregation]]),
-        workflow, aggregation))) |>
+      benchmark_workflow_measures(context, read_benchmark_executions(
+        SEURAT_SIGNAC_COMPARISON_WORKFLOWS[[workflow]]$run %||% BENCHMARK_AGGREGATION_RUNS[[aggregation]]), workflow, aggregation))) |>
     dplyr::left_join(benchmark_cellranger_inputs(comparison_aggregation_names()), by = "aggregation") |>
     dplyr::mutate(disk_space_GB = .data$disk_space_GB + .data$input_disk_space_GB) |>
     dplyr::relocate("GEM_well_count", "cellranger_input_nuclei", .after = "aggregation")
@@ -641,16 +646,18 @@ benchmark_simulation_check <- function(context) {
 }
 
 # Supplementary Figures S2-S4, one per question. S2, same methods: multiomeR on SCTransform with
-# its Seurat exports against the Seurat/Signac chain, multiomeR on its default normalization as a
-# third line, and the RNA non-zero entries against the dgCMatrix limit that stops SCTransform. S3,
+# its Seurat exports against the Seurat/Signac chain on SCTransform, each tool with its default
+# normalization, and the RNA non-zero entries against the dgCMatrix limit that stops SCTransform. S3,
 # sizing: multiomeR's full analysis with its defaults. S4, revisions. All axes are linear from zero, so
 # values and differences read directly, and the smallest aggregations bunch near the origin.
+# The fourth colour, outside the categorical palette, is the darkest of Seurat/Signac's warm pair, so all
+# four lines stay apart in colour-vision checks of every pair.
 BENCHMARK_WORKFLOW_COLOURS <- c("Seurat/Signac (SCTransform)" = "#eb6834", "multiomeR (SCTransform)" = "#2a78d6",
-  "multiomeR (default normalization)" = "#1baf7a")
+  "multiomeR (default normalization)" = "#1baf7a", "Seurat/Signac (log-normalization)" = "#8a4b08")
 BENCHMARK_DEFAULT_COLOUR <- BENCHMARK_WORKFLOW_COLOURS[["multiomeR (default normalization)"]]
 # The names written beside each workflow's line, by normalization method; the legend spells them out.
 BENCHMARK_LINE_LABELS <- c("Seurat/Signac (SCTransform)" = "Seurat/Signac (SCT)", "multiomeR (SCTransform)" = "multiomeR (SCT)",
-  "multiomeR (default normalization)" = "multiomeR (default)")
+  "multiomeR (default normalization)" = "multiomeR (default)", "Seurat/Signac (log-normalization)" = "Seurat/Signac (default)")
 # Width and height in inches.
 BENCHMARK_FIGURE_SIZES <- list(S2 = c(8, 6.4), S3 = c(8, 5.6), S4 = c(8, 3.3))
 
@@ -683,25 +690,34 @@ benchmark_linear_scale <- function(..., top = .1) {
 
 benchmark_text <- function(...) ggplot2::geom_text(..., family = BENCHMARK_FONT, size = 2.1, lineheight = .9, colour = "grey25")
 
-# Names each workflow's line in its colour. The two SCTransform workflows' names sit to the right of
-# their last point on a white box that masks the default workflow's line where it passes; overlapping
-# names move apart around their midpoint. The default workflow's name sits above and left of its last
-# point, or above the SCTransform names if it would overlap one.
+# Names each workflow's line in its colour. Lines that end before the largest size are named to the
+# right of their last point, on a white box that masks lines passing behind it, and names closer than
+# 1.3 lines move apart around their mean. Lines that reach the largest size, multiomeR's default, are
+# named above and left of their last point, above any name to the right that they would overlap.
 benchmark_line_labels <- function(values) {
-  default <- names(BENCHMARK_LINE_LABELS)[[3]]
-  # One text line's height in data units: 4.6% of a panel whose y axis runs 22% beyond the data.
+  # One text line's height in data units, 4.6% of a panel whose y axis runs 22% beyond the data, and
+  # one character's width, 2.4% of an x axis that runs 7% beyond the data.
   line <- .046 * 1.22 * max(values$value)
+  char <- .024 * 1.07 * max(values$cellranger_input_nuclei)
   ends <- dplyr::slice_max(values, .data$cellranger_input_nuclei, by = "workflow") |>
-    dplyr::mutate(label = BENCHMARK_LINE_LABELS[as.character(.data$workflow)])
-  arms <- dplyr::filter(ends, .data$workflow != default) |> dplyr::arrange(.data$value)
-  if (diff(arms$value) < 1.3 * line) arms$value <- mean(arms$value) + c(-.65, .65) * line
-  last <- dplyr::filter(ends, .data$workflow == default) |> dplyr::mutate(value = .data$value + .3 * line)
-  clash <- abs(last$value + .5 * line - arms$value) < line
-  if (any(clash)) last$value <- max(arms$value[clash]) + .8 * line
+    dplyr::mutate(label = BENCHMARK_LINE_LABELS[as.character(.data$workflow)], width = nchar(.data$label) * char)
+  largest <- max(ends$cellranger_input_nuclei)
+  right <- dplyr::filter(ends, .data$cellranger_input_nuclei < largest) |> dplyr::arrange(.data$value)
+  spread <- right$value
+  for (i in seq_along(spread)[-1]) spread[[i]] <- max(spread[[i]], spread[[i - 1]] + 1.3 * line)
+  right$value <- spread - mean(spread) + mean(right$value)
+  left <- dplyr::filter(ends, .data$cellranger_input_nuclei == largest) |> dplyr::arrange(.data$value) |>
+    dplyr::mutate(value = .data$value + .3 * line)
+  for (i in seq_len(nrow(left))) {
+    if (i > 1) left$value[[i]] <- max(left$value[[i]], left$value[[i - 1]] + 1.3 * line)
+    overlap <- right$cellranger_input_nuclei + 2.5e4 + right$width > largest - left$width[[i]] &
+      abs(left$value[[i]] + .5 * line - right$value) < line
+    if (any(overlap)) left$value[[i]] <- max(right$value[overlap]) + .8 * line
+  }
   list(
-    ggplot2::geom_label(data = arms, ggplot2::aes(label = .data$label), hjust = 0, nudge_x = 2.5e4, family = BENCHMARK_FONT,
+    ggplot2::geom_label(data = right, ggplot2::aes(label = .data$label), hjust = 0, nudge_x = 2.5e4, family = BENCHMARK_FONT,
       size = 2.3, fill = "white", linewidth = 0, label.padding = grid::unit(1, "pt"), show.legend = FALSE),
-    ggplot2::geom_text(data = last, ggplot2::aes(label = .data$label), hjust = 1, vjust = 0, family = BENCHMARK_FONT,
+    ggplot2::geom_text(data = left, ggplot2::aes(label = .data$label), hjust = 1, vjust = 0, family = BENCHMARK_FONT,
       size = 2.3, show.legend = FALSE))
 }
 
@@ -723,7 +739,8 @@ plot_benchmark_figures <- function(tables) {
   like_for_like <- dplyr::bind_rows(
     tables$seurat_signac_comparison_resources |>
       dplyr::filter(.data$workflow != "multiomeR") |>
-      dplyr::mutate(workflow = paste(dplyr::recode(.data$workflow, "multiomeR + Seurat exports" = "multiomeR"), "(SCTransform)")),
+      dplyr::mutate(workflow = dplyr::recode(.data$workflow, "multiomeR + Seurat exports" = "multiomeR (SCTransform)",
+        "Seurat/Signac" = "Seurat/Signac (SCTransform)", "Seurat/Signac log-normalization" = "Seurat/Signac (log-normalization)")),
     tables$benchmark_sizing |>
       dplyr::filter(.data$scope == "like for like: multiomeR + Seurat exports") |>
       dplyr::mutate(workflow = default)) |>

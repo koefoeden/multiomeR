@@ -20,7 +20,8 @@ below `results/`:
   weight.
 - `S2.png`, `S3.png` and `S4.png` and their data, Supplementary Table S6, on what multiomeR costs and
   saves: `data/seurat_signac_comparison_resources.tsv` compares multiomeR with a
-  conventional Seurat/Signac workflow on `comparison_1x` to `comparison_31x`;
+  conventional Seurat/Signac workflow, normalizing with SCTransform and with
+  Seurat's default log-normalization, on `comparison_1x` to `comparison_31x`;
   `data/benchmark_sizing.tsv` and `data/benchmark_sizing_stages.tsv` measure
   multiomeR with its defaults on `sizing_1x` to `sizing_91x`, whose nuclei, RNA
   non-zero entries, ATAC fragments and input files `data/benchmark_sizes.tsv`
@@ -129,6 +130,15 @@ directories, and runs Signac's TF-IDF/LSI on them before building the WNN graph,
 UMAP and clusters. Seurat's kernels use the cores of their Slurm worker, and
 peak calling and quantification run one `future` worker per core.
 
+A second conventional chain follows Seurat's default normalization instead of
+SCTransform: `NormalizeData()` log-normalizes the joined counts on disk,
+`FindVariableFeatures()` selects 2,000 variable genes, and `ScaleData()` scales
+only those into an in-memory matrix before the same PCA. Its other steps and
+settings are the SCTransform chain's. It is measured in its own run, the
+`comparison_lognorm` series, which builds all six aggregations from an empty
+store, so it builds the steps that it shares with the SCTransform chain, such as
+peak calling, again.
+
 `comparison_1x` to `comparison_31x` take the first 1, 2, 5, 10, 20 and all 31
 GEM wells of `mixed_human_31x` without per-well QC filters, CellBender or
 doublet removal, so both workflows keep every called nucleus and yield identical
@@ -141,10 +151,11 @@ peak-calling clusters and their cut sites is excluded from all workflows, and
 analyses that the conventional chain does not perform from both multiomeR
 measurements: cell-type annotation, doublet detection, QC metrics, gene and peak
 annotation, chromatin-state projection, motif analysis, and the ATAC-only and
-uncorrected RNA embeddings. Both workflows are measured in one run, the
-`comparison` series, which builds all six aggregations from an empty store.
+uncorrected RNA embeddings. multiomeR and the SCTransform chain are measured in
+one run, the `comparison` series, which builds all six aggregations from an
+empty store.
 
-A third line measures the same multiomeR result with its default normalization,
+Another line measures the same multiomeR result with its default normalization,
 the BPCells_native backend, which computes Pearson residuals on disk: `sizing_1x` to
 `sizing_31x` repeat the comparison aggregations with only that setting changed,
 and `sizing_91x` adds 60 ENCODE multiome series, for 1.16 million nuclei. Its
@@ -154,8 +165,9 @@ at that size in either workflow: Seurat converts the joined count matrix to a
 2.17 billion. S2F shows each size's RNA non-zero entries against that limit, the
 genes detected in each called nucleus summed from Cell Ranger's per-barcode
 metrics. They equal the count in Seurat's error. S2A-E name each workflow's
-line in its colour beside its last point, by normalization method; on linear
-axes, the differences read directly from the lines.
+line in its colour by normalization method: to the right of its last point for
+lines that end at 31 samples, and above and left of it for multiomeR's default,
+which reaches 91. On linear axes, the differences read directly from the lines.
 
 ### Sizing
 

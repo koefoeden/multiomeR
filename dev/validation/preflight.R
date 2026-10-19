@@ -51,6 +51,11 @@ run_validation_preflight <- function() {
       stopifnot(identical(readBin(file, 'raw', n = 4), charToRaw('PAR1')))
     })
   }
+  check('S-LDSC/reference-archive', {
+    file <- file.path(directory, 'gzip-header')
+    fetch_validation_resource(SLDSC_reference_source()$url, file, 2, '0-1')
+    stopifnot(identical(readBin(file, 'raw', n = 2), as.raw(c(0x1f, 0x8b))))
+  })
   check('CollecTRI/checksum-and-schema', {
     file <- file.path(directory, 'CollecTRI.csv')
     resource <- collectri_source()

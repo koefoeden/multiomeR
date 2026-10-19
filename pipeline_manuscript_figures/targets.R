@@ -427,10 +427,12 @@ comparison_seurat_signac_targets <- function(values, peak_resources) {
         comparison_build_config(aggregation)
       }
     ),
+    # The main process hashes the Cell Ranger inputs once: after a worker, its check of their hash
+    # can time out on tens of gigabytes read over the network.
     targets::tar_target(
       comparison_seurat_signac_cellranger_input_files,
       comparison_input_files(comparison_seurat_signac_config),
-      format = "file"
+      format = "file", deployment = "main"
     ),
     tarchetypes::tar_file(
       comparison_seurat_signac_RNA_BPCells_dirs,

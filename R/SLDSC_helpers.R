@@ -906,7 +906,8 @@ plot_SLDSC_cell_type_heatmap <- function(SLDSC_tibble, GWAS_inputs_tibble, compa
 #'
 #' @param SLDSC_tibble Combined cell-type S-LDSC results.
 #' @param chromVAR_deviation_tibble Cell-type pseudobulk chromVAR results.
-#' @return One row per GWAS with summary statistics and cell type.
+#' @return One row per GWAS with summary statistics and cell type with a
+#'   finite chromVAR z-score, which a pseudobulk of very few nuclei may lack.
 #' @keywords internal
 
 pair_SLDSC_chromVAR_z <- function(SLDSC_tibble, chromVAR_deviation_tibble) {
@@ -914,7 +915,8 @@ pair_SLDSC_chromVAR_z <- function(SLDSC_tibble, chromVAR_deviation_tibble) {
     dplyr::filter(!is.na(z)) |>
     dplyr::select(GWAS_ID, Category, cluster, SLDSC_z = z, SLDSC_p = p, h2, h2_se, sample_size, ancestry_EUR, n_cells) |>
     dplyr::inner_join(
-      dplyr::select(chromVAR_deviation_tibble, GWAS_ID, cluster, chromVAR_z = z, chromVAR_p = z_p),
+      dplyr::filter(chromVAR_deviation_tibble, is.finite(z)) |>
+        dplyr::select(GWAS_ID, cluster, chromVAR_z = z, chromVAR_p = z_p),
       by = c("GWAS_ID", "cluster")
     )
 }
@@ -1036,7 +1038,7 @@ plot_SLDSC_chromVAR_agreement <- function(SLDSC_tibble, chromVAR_deviation_tibbl
   pivot_predictors <- \(tibble, predictors) {
     tibble |>
       tidyr::pivot_longer(dplyr::all_of(unname(predictors)), names_to = "predictor", values_to = "value") |>
-      dplyr::filter(!is.na(value)) |>
+      dplyr::filter(!is.na(value), !is.na(rho)) |>
       dplyr::mutate(predictor = factor(predictor, predictors, names(predictors))) |>
       dplyr::mutate(
         strip = sprintf(

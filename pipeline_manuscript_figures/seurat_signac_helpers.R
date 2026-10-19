@@ -12,10 +12,6 @@ comparison_with_workers <- function(expr) {
 }
 
 comparison_build_config <- function(aggregation) {
-  if (!aggregation %in% comparison_aggregation_names()) {
-    stop("Unsupported comparison aggregation: ", aggregation, call. = FALSE)
-  }
-
   aggregation_config <- benchmark_aggregation_tibble(aggregation)
   sample_tibble <- tibble::tibble(
     sample_id = aggregation_config$aggregation_GEM_well_IDs[[1]],

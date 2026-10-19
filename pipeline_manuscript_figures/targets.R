@@ -433,7 +433,7 @@ targets::tar_option_set(
 )
 
 comparison_aggregation_tibble <- tibble::tibble(
-  aggregation = comparison_aggregation_names(),
+  aggregation = c(comparison_aggregation_names(), "sizing_91x"),
   comparison_peak_calling_cut_site_dirs = rlang::syms(
     paste0("peak_calling_cut_sites_per_GEM_well.fragments.ATAC.", aggregation)
   ),
@@ -441,7 +441,9 @@ comparison_aggregation_tibble <- tibble::tibble(
   comparison_blacklist_GRanges = rlang::syms(paste0("blacklist_GRanges.ATAC.", aggregation))
 )
 
-comparison_seurat_signac_targets <- function(values, peak_resources) {
+# SCTransform = FALSE leaves out the SCTransform chain, which cannot hold more than 2^31 non-zero RNA counts.
+comparison_seurat_signac_targets <- function(values, peak_resources, object_resources = comparison_resources,
+                                             SCTransform = TRUE) {
   tarchetypes::tar_map(
     values = values,
     names = aggregation,
@@ -469,10 +471,6 @@ comparison_seurat_signac_targets <- function(values, peak_resources) {
       }
     ),
     targets::tar_target(
-      comparison_seurat_signac_RNA_object,
-      comparison_process_RNA(comparison_seurat_signac_RNA_BPCells_dirs, comparison_seurat_signac_config)
-    ),
-    targets::tar_target(
       comparison_seurat_signac_consensus_peak_GRanges,
       comparison_call_consensus_peaks(
         comparison_peak_calling_cut_site_dirs,
@@ -491,15 +489,7 @@ comparison_seurat_signac_targets <- function(values, peak_resources) {
         get_structured_file_path()
       )
     ),
-    targets::tar_target(
-      comparison_seurat_signac_object,
-      comparison_build_object(
-        comparison_seurat_signac_RNA_object,
-        comparison_seurat_signac_ATAC_BPCells_dirs,
-        comparison_seurat_signac_config
-      )
-    ),
-    # The same chain with Seurat's default log-normalization instead of SCTransform.
+    # Seurat's default log-normalization.
     targets::tar_target(
       comparison_seurat_signac_lognorm_RNA_object,
       comparison_process_RNA(comparison_seurat_signac_RNA_BPCells_dirs, comparison_seurat_signac_config, "LogNormalize")
@@ -510,14 +500,31 @@ comparison_seurat_signac_targets <- function(values, peak_resources) {
         comparison_seurat_signac_lognorm_RNA_object,
         comparison_seurat_signac_ATAC_BPCells_dirs,
         comparison_seurat_signac_config
-      )
+      ),
+      resources = object_resources
     ),
-    targets::tar_target(
-      comparison_seurat_signac_summary,
-      comparison_summarize(
+    # The same chain with SCTransform.
+    if (SCTransform) list(
+      targets::tar_target(
+        comparison_seurat_signac_RNA_object,
+        comparison_process_RNA(comparison_seurat_signac_RNA_BPCells_dirs, comparison_seurat_signac_config)
+      ),
+      targets::tar_target(
         comparison_seurat_signac_object,
-        comparison_seurat_signac_config,
-        comparison_seurat_signac_consensus_peak_GRanges
+        comparison_build_object(
+          comparison_seurat_signac_RNA_object,
+          comparison_seurat_signac_ATAC_BPCells_dirs,
+          comparison_seurat_signac_config
+        ),
+        resources = object_resources
+      ),
+      targets::tar_target(
+        comparison_seurat_signac_summary,
+        comparison_summarize(
+          comparison_seurat_signac_object,
+          comparison_seurat_signac_config,
+          comparison_seurat_signac_consensus_peak_GRanges
+        )
       )
     )
   )
@@ -546,6 +553,14 @@ comparison_seurat_signac_pipeline <- rlang::list2(
     values = dplyr::filter(comparison_aggregation_tibble,
       .data$aggregation %in% c("comparison_10x", "comparison_20x", "comparison_31x")),
     peak_resources = get_tar_resources(cores_req = 6, RAM_GB_req = 500)
+  ),
+  # Log-normalization only on sizing_91x's 91 samples. Its RNA object needed 30 GB up to the
+  # neighbour graph in a feasibility run, so only peak calling and the joint object get more.
+  comparison_seurat_signac_targets(
+    values = dplyr::filter(comparison_aggregation_tibble, .data$aggregation == "sizing_91x"),
+    peak_resources = get_tar_resources(cores_req = 6, RAM_GB_req = 500),
+    object_resources = get_tar_resources(cores_req = 6, RAM_GB_req = 500),
+    SCTransform = FALSE
   )
 )
 

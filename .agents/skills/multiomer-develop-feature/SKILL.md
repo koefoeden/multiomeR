@@ -49,6 +49,10 @@ Use this when adding or changing targets, helpers, or analysis steps.
   read its branches as one table needs `iteration = "vector"`, and a pattern
   that maps over a data frame branches over its columns unless that data frame
   target sets `iteration = "vector"`.
+- Call `RhpcBLASctl::blas_set_num_threads(1L)` inside forked workers that do
+  matrix algebra, as the pseudobulk fits do: each fork otherwise inherits one
+  BLAS thread per allocated core, so the forks oversubscribe the cores and can
+  stall.
 - Return file-target paths relative to the repository root or built from
   `targets::tar_config_get("store")`, never through `normalizePath()`: targets
   checks exactly the returned paths, so absolute ones break when the store is

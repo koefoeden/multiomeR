@@ -11,6 +11,9 @@ below `results/`:
 - `S5.png` and `data/cell_type_trait_enrichment.tsv`: Supplementary Figure S5,
   the cell-type deviations of every GWAS study of `mixed_human_31x`, of which
   Figure 1D shows a selection.
+- `S6.png` and `data/cell_type_heritability_enrichment.tsv`: Supplementary
+  Figure S6, the S-LDSC heritability enrichment of the cell types' peaks for
+  every GWAS study of `mixed_human_31x` with genome-wide summary statistics.
 - `data/table_S3.tsv`: Supplementary Table S3, the GWAS studies of
   `mixed_human_31x` with their Open Targets records and credible sets, and the
   credible-set loci and variants that overlap consensus peaks and the peaks they
@@ -40,7 +43,7 @@ repository root inside a Slurm allocation (see the configuration's README):
 targets::tar_make(
   script = "pipeline_manuscript_figures/targets.R",
   names = tidyselect::any_of(c("figure_1.mixed_human_31x", "supplementary_figure_S5.mixed_human_31x",
-    "supplementary_table_S3.mixed_human_31x", "supplementary_figures_S2_S4", "supplementary_table_S4.comparison_5x"))
+    "supplementary_figure_S6.mixed_human_31x", "supplementary_table_S3.mixed_human_31x", "supplementary_figures_S2_S4", "supplementary_table_S4.comparison_5x"))
 )
 ```
 

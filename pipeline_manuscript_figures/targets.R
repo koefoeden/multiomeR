@@ -1,5 +1,5 @@
 # Manuscript figures and tables from configuration_dev's public-data aggregations:
-# Figure 1, Supplementary Figure S5 and Supplementary Table S3 from mixed_human_31x,
+# Figure 1, Supplementary Figures S5 and S6 and Supplementary Table S3 from mixed_human_31x,
 # Supplementary Figures S2-S4 and Table S6 on what multiomeR costs and saves: against a
 # conventional Seurat/Signac workflow on comparison_1x to comparison_31x, with its defaults
 # on sizing_1x to sizing_91x and for revisions of revision_31x, and Supplementary Table S4 comparing
@@ -166,9 +166,36 @@ figure_pipeline <- list(
       scores <- chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x |>
         dplyr::filter(is_figure_1_cell_type(.data$cluster))
       paths <- file.path(output_dir, c("S5.png", "data/cell_type_trait_enrichment.tsv"))
-      ggplot2::ggsave(paths[[1]], plot_figure_S5(scores, GWAS_metadata_tracks_plot.genetic_enrichment.mixed_human_31x,
-        figure_1_traits.mixed_human_31x), device = ragg::agg_png, width = 9, height = 10.5, dpi = 300)
+      # Figure 1D's colour scale: deviations beyond its range take its end colours.
+      limit <- max(abs(scores$deviation[scores$GWAS_ID %in% figure_1_traits.mixed_human_31x$GWAS_ID]))
+      ggplot2::ggsave(paths[[1]], plot_trait_cell_type_heatmap(dplyr::mutate(scores, value = .data$deviation, q = .data$z_q),
+        GWAS_metadata_tracks_plot.genetic_enrichment.mixed_human_31x, "Deviation", limit, bar_tracks = "Loci"),
+        device = ragg::agg_png, width = 9, height = 10.5, dpi = 300)
       readr::write_tsv(dplyr::select(scores, "GWAS_ID", "Category", "cluster", "deviation", "z", "z_q"), paths[[2]])
+      paths
+    },
+    resources = get_tar_resources(RAM_GB_req = 4)
+  ),
+  tarchetypes::tar_file(
+    supplementary_figure_S6.mixed_human_31x,
+    description = "Supplementary Figure S6: the module's S-LDSC tau* heatmap of the peak model for every GWAS study with summary statistics and positive heritability and every assigned cell type, with a trait-category track and q < 0.05 stars, and its values",
+    command = {
+      scores <- SLDSC_cell_type_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x |>
+        dplyr::filter(.data$model == "peaks", !is.na(.data$tau_star), is_figure_1_cell_type(.data$cluster))
+      paths <- file.path(output_dir, c("S6.png", "data/cell_type_heritability_enrichment.tsv"))
+      # As in the module's heatmap, a few extreme tau* would otherwise wash out the others.
+      limit <- signif(stats::quantile(abs(scores$tau_star), .99, names = FALSE), 2)
+      # The module's metadata tracks, built for the studies with S-LDSC results.
+      tracks <- GWAS_inputs_tibble.genetic_enrichment.mixed_human_31x |>
+        dplyr::filter(.data$GWAS_ID %in% scores$GWAS_ID) |>
+        dplyr::arrange(.data$Category, .data$GWAS_ID) |>
+        dplyr::mutate(GWAS_ID = factor(.data$GWAS_ID, levels = rev(.data$GWAS_ID))) |>
+        plot_GWAS_metadata_tracks()
+      ggplot2::ggsave(paths[[1]], plot_trait_cell_type_heatmap(dplyr::mutate(scores, value = .data$tau_star),
+        tracks, "tau*", limit),
+        device = ragg::agg_png, width = 9, height = 2.5 + 0.22 * dplyr::n_distinct(scores$GWAS_ID), dpi = 300)
+      readr::write_tsv(dplyr::select(scores, "GWAS_ID", "Category", "cluster", "tau_star", "z", "p", "q", "h2", "h2_se",
+        "sumstats_url"), paths[[2]])
       paths
     },
     resources = get_tar_resources(RAM_GB_req = 4)

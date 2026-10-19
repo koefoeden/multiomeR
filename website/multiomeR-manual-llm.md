@@ -825,7 +825,7 @@ Use [Troubleshooting](troubleshooting.md) if a formula, contrast or metadata joi
 
 ## When to use
 
-Use this module to ask which cell types or nuclei have accessible chromatin overlapping genetic evidence for a human trait. It weights ATAC peaks by the fine-mapping probabilities of the GWAS variants they contain, scores enrichment per cell type and per nucleus, and uses the [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) method to propagate nucleus scores through the WNN neighbor graph. [Method details](methods_genetic_enrichment.md)
+Use this module to ask which cell types or nuclei have accessible chromatin overlapping genetic evidence for a human trait. It weights ATAC peaks by the fine-mapping probabilities of the GWAS variants they contain, scores enrichment per cell type and per nucleus, and uses the [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) method to propagate nucleus scores through the WNN neighbor graph. Stratified LD score regression (S-LDSC) adds a genome-wide test: whether each cell type's specifically accessible peaks, or specifically expressed genes, carry more of a trait's heritability than peaks or genes in general. [Method details](methods_genetic_enrichment.md)
 
 A **credible set** contains candidate causal variants at a GWAS locus, with probabilities from fine-mapping. Enrichment helps prioritize cellular contexts; it does not by itself identify a causal cell type, gene or mechanism.
 
@@ -836,8 +836,9 @@ The public demo leaves this module off. Its configuration already contains a stu
 Before enabling the module, confirm that:
 
 - the aggregation is human and you have reviewed it through [checkpoint 8](main_running.md#checkpoint-8), including its cell-type annotations;
-- each configured study represents the intended trait and population;
-- the machine can download and keep about 4 GB of Open Targets Parquet data, stored once under `<store>/files/OpenTargets/`; and
+- each configured study represents the intended trait and population; S-LDSC uses European LD, so it only approximates studies of other ancestries;
+- the machine can download and keep about 4 GB of Open Targets Parquet data, stored once under `<store>/files/OpenTargets/`;
+- for S-LDSC, the machine can download a 1.5 GB LD reference from Zenodo, kept as 2.8 GB under `<store>/files/S-LDSC/`, and each study's genome-wide summary statistics from the GWAS Catalog; and
 - you have decided whether to interpret cell-type summaries, individual nuclei or graph-propagated scores; these answer related but different questions.
 
 ## Outputs
@@ -848,6 +849,9 @@ Before enabling the module, confirm that:
 | Which cell types are enriched, and which matters most? | Cell-type chromVAR deviation heatmaps, which outline each study's top set of cell types |
 | Which loci and variants drive a cell type's enrichment? | Locus-contribution heatmaps and bars, and variant detail plots |
 | Which nuclei are trait-relevant? | SCAVENGE trait-relevance scores on the WNN graph, summarized by cell type and cluster |
+| Is a study's genome-wide heritability enriched in a cell type's specific peaks or genes? | S-LDSC heatmap, which outlines each study's top set of cell types, and a comparison of the peak, gene and joint models |
+| Do S-LDSC and chromVAR agree? | S-LDSC versus chromVAR scatter plots per study and an agreement overview |
+| How robust is an S-LDSC enrichment, and do peaks or genes explain more? | A plot of each enrichment's most influential genome blocks, and comparisons of peak and gene annotations of matched size |
 
 ## Configure
 
@@ -874,6 +878,19 @@ Each entry under [`genetic_enrichment_GWAS_studies`](parameters.html#genetic_enr
 A `sourceId` names an Open Targets GWAS study with credible sets, read from the Open Targets release `26.03` pinned by the workflow: a GWAS Catalog accession such as `GCST90002388`, or a FinnGen study such as `FINNGEN_R12_T2D`. The run fails if the release has no credible sets for the study. `finemappingMethod: auto`, the default, selects the first available method in the order `SuSie`, `SuSiE-inf`, `PICS`. Name a method instead when the method is part of the analysis; the run then fails if that method is unavailable for the study.
 
 A `sourceId` ending in `.parquet` is instead the path of a local file, relative to the repository root. Omit `finemappingMethod` for local files: the method, like the study ID, genome build and provenance, is read from the file.
+
+S-LDSC needs genome-wide summary statistics rather than credible sets. For a GWAS Catalog `sourceId`, they are fetched from the GWAS Catalog, which keeps harmonised files for many but not all studies. Name other summary statistics with `summaryStatistics`: another GWAS Catalog accession, or the path or URL of a GRCh38 GWAS-SSF table with rsIDs, such as a consortium release:
+
+```{.yaml filename="cfg_module_genetic_enrichment.yaml"}
+my_aggregation:
+  genetic_enrichment_GWAS_studies:
+    type_2_diabetes:
+      Category: metabolic
+      sourceId: FINNGEN_R12_T2D
+      summaryStatistics: GWAS/T2D_consortium_GRCh38.tsv.gz
+```
+
+The [parameter browser](parameters.html#genetic_enrichment_GWAS_studies) lists the columns that S-LDSC reads. Studies without summary statistics, such as FinnGen studies without `summaryStatistics`, appear as grey rows in the S-LDSC plots; the other analyses use their credible sets as before.
 
 <details>
 <summary>Columns of a local fine-mapped GWAS file</summary>
@@ -918,7 +935,7 @@ targets::tar_make(
 )
 ```
 
-Runtime and disk use grow with the number of studies, nuclei and attributed loci.
+Runtime and disk use grow with the number of studies, nuclei and attributed loci. S-LDSC downloads each study's summary statistics once for all aggregations, one study at a time to spare the GWAS Catalog's server, which takes about a minute per study.
 
 ## Review
 
@@ -932,18 +949,29 @@ Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtit
 │   ├── chromVAR_locus_contribution_per_GWAS_heatmaps/
 │   ├── chromVAR_locus_contribution_per_GWAS_faceted_bars_plots/
 │   ├── chromVAR_absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots/
-│   └── chromVAR_variant_contribution_detail_plots/
+│   ├── chromVAR_variant_contribution_detail_plots/
+│   ├── SLDSC_heatmap.png
+│   ├── SLDSC_modality_comparison_plot.png
+│   ├── SLDSC_block_influence_plot.png
+│   ├── SLDSC_chromVAR_comparison_plot.png
+│   ├── SLDSC_chromVAR_agreement_plot.png
+│   ├── SLDSC_matched_enrichment_curves_plot.png
+│   ├── SLDSC_matched_size_comparison_plot.png
+│   └── SLDSC_matched_enrichment_agreement_plot.png
 └── single_nucleus/SCAVENGE/WNN_harmony_SNN/
     ├── TRS_heatmap/
     ├── TRS_UMAPs/
     └── TRS_cluster_summary_plot/
 ```
 
-Read the tables behind the plots in R, for example the cell-type enrichment scores:
+Read the tables behind the plots in R, for example the cell-type enrichment scores and the S-LDSC results:
 
 ```{.r filename="R"}
 targets::tar_read(
   chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.my_aggregation
+)
+targets::tar_read(
+  SLDSC_cell_type_tibble.cell_type_pseudobulk.genetic_enrichment.my_aggregation
 )
 ```
 
@@ -1893,11 +1921,33 @@ SCAVENGE-style trait-relevance scores are calculated from the nucleus-level z-sc
 
 The sparse SCAVENGE implementation is compared with its reference in [Algorithm validation](algorithm_validation.md#sparse-scavenge-propagation).
 
+## Heritability enrichment with S-LDSC {#heritability-enrichment}
+
+
+<!-- begin include: website/_shared_methods/genetic_enrichment_SLDSC.md -->
+
+Stratified LD score regression (S-LDSC) tests whether a GWAS's heritability is enriched in variants within the peaks accessible in each annotation class, using genome-wide summary statistics rather than fine-mapped loci [@finucane2015_stratified_ldsc; @finucane2018_ldsc_seg]. It uses the peaks and the ATAC counts summed by the final WNN cell-type labels of the pseudobulk chromVAR analysis. Each class's counts are divided by its total, and each peak's depth-normalized values are divided by their sum across classes. A peak's annotation value for a class is thus its share of the summed class profiles: the chromVAR background model's observed-over-expected ratio divided by the number of classes. A peak equally accessible in all classes therefore gets the same small value in each. An all-peaks annotation marks every peak with reads. Reference variants inside a peak take its values, and all other variants take zero. LD scores of these annotations are computed from the 1000 Genomes European samples on GRCh38 [@auton2015_1000_genomes] for HapMap3 regression variants outside the MHC, with ldsc's bias-corrected squared correlation summed over a 1 cM window [@bulik-sullivan2015_ldsc]. Harmonized summary statistics are taken from the GWAS Catalog [@sollis2023_gwas_catalog]. A GWAS can instead name another Catalog study or its own summary statistics in GWAS-SSF format on GRCh38 with rsIDs [@hayhurst2022_gwas_ssf], such as a consortium release that the Catalog lacks. The statistics are cleaned as ldsc does. Variants need an rsID, a P-value within the double-precision range, alleles that match the reference without strand ambiguity, and a minor-allele frequency above 0.01 when one is reported. Variants whose sample size is below two-thirds of the 90th percentile are removed. Studies without per-variant sample sizes use the total of the samples in the summary statistics' GWAS-SSF metadata, which also gives the sample size and ancestry shown for each trait. Each class is fitted separately, jointly with the all-peaks annotation and the 97 annotations of the baseline-LD v2.2 model [@gazal2017_baseline_ld]. The class coefficient therefore measures heritability per variant beyond accessible chromatin in general and the baseline functional categories. Regression weights follow ldsc but are computed once per GWAS from the shared annotations. Variants with a chi-square statistic above 80, or above 0.001 times the largest sample size when that is larger, are excluded. Standard errors come from a jackknife over 200 blocks of adjacent variants. A one-sided P-value tests for a positive coefficient, and Benjamini–Hochberg-adjusted values across all traits and classes are reported. The standardized effect size tau* scales the coefficient by the annotation's standard deviation and the number of common variants relative to total heritability. It is left missing when the total heritability estimate is not positive. GWAS without genome-wide summary statistics in the GWAS Catalog or a named file are not analyzed, and non-European GWAS are analyzed with the European reference.
+
+Cell-type gene expression is tested in the same way, following LDSC-SEG [@finucane2018_ldsc_seg]. The GEX counts of the donor pseudobulks are summed by class and divided by each class's total. A gene's specificity for a class is its share of these depth-normalized values summed across classes [@skene2018_brain_cell_types]. A gene counts as expressed in a class with at least 10 counts and one count per million there. Each class's gene annotation marks the reference variants within 100 kb of the gene bodies of its most specific expressed genes. These number 10% of the autosomal protein-coding genes expressed in any class, and an all-genes annotation marks the windows of all of them. Where windows overlap, a variant takes the largest value, which for these binary annotations is their union. Each class is fitted in three models with the baseline-LD annotations: its peak annotation with the all-peaks annotation, its gene annotation with the all-genes annotation, and both together with both controls. In the joint model, each coefficient measures the heritability that one modality explains beyond the other. All models share the regression weights of the baseline and all-peaks annotations and the same jackknife blocks. Benjamini–Hochberg adjustment is applied separately to each model and annotation.
+
+For each model and tested annotation, each trait with a class at q < 0.05 gets a top set of classes. Its anchor is the class with the largest tau* among those at q < 0.05. The top set holds the anchor and every class not significantly below it, so classes with larger but nonsignificant tau* join it. All classes share the jackknife blocks. The standard error of each class's shortfall from the anchor therefore comes from the paired delete-one-block estimates of both tau* values, each scaled by its full-data total heritability. A class is excluded when a one-sided normal test of its shortfall reaches P < 0.05 divided by the number of other classes. Whichever class is the anchor, the Bonferroni inequality ensures that the top set contains the class with the largest true tau* with at least 95% probability. Heatmaps of the peak model colour each class by tau*. They mark classes with one star at P < 0.05 and with two at q < 0.05, and outline the top sets.
+
+The robustness of each coefficient at q < 0.05 is read from the jackknife. The blocks whose single deletion lowers the coefficient most are deleted together, 1, 5 or 10 at a time, and the model is refitted. The share of the coefficient they carry is reported, with the z-score without them from a jackknife over the remaining blocks. A coefficient that spread evenly over the genome would lose a share close to the deleted fraction of blocks, plus noise. Blocks span about 15 Mb, so this measures concentration only coarsely. Variants above the chi-square cap never enter the fits, so the loci with the largest effects never contribute.
+
+Annotation strategies are compared at matched sizes, because enrichment depends on how much of the genome an annotation covers. For each class, peaks are ranked by their accessibility share and gene windows by expression specificity. A variant in overlapping windows takes the highest specificity among them. Peaks or window pieces are added in this order until they hold 0.5%, 1%, 2% or 5% of the common (MAF > 5%) reference variants. Pieces are kept whole and ties keep genomic order, so an annotation can exceed its share by one piece. All consensus peaks together hold about 10% of common variants, so larger peak annotations would lose their class specificity. A reference annotation of each strategy ranks the same peaks or genes at random. Each binary annotation is fitted with the 97 baseline-LD annotations, which also set the regression weights. Its heritability share sums the fitted per-variant heritability of the whole model over the annotation's common variants, as ldsc's Prop._h2 does [@finucane2015_stratified_ldsc]. Heritability enrichment divides this share by the annotation's share of common variants, with a ratio jackknife standard error over the same 200 blocks. The chi-square cap removes the strongest loci from this statistic. A complementary statistic uses the fine-mapped credible sets of each GWAS instead. Fine-mapped enrichment divides the annotation's share of the summed posterior inclusion probabilities of autosomal credible-set variants by its share of common variants. Variants are assigned by position, so indels and variants missing from the reference count. Its uncertainty comes from 1,000 bootstrap samples of loci, which group the credible sets whose centres lie within 500 kb of each other. Fine-mapping methods differ between sources and some use functional priors, so each result keeps its source's method. Pairs of GWAS and class are called enriched when a single-modality model reaches q < 0.05. Summaries across pairs or GWAS report medians with 95% intervals from 1,000 bootstrap samples of GWAS. A strategy's specificity is each GWAS's median enrichment in its enriched classes divided by that in its other classes, when both are positive. Small peak annotations hold only the credible-set variants inside them, while gene windows hold whole credible sets, so imprecise fine-mapping lowers the fine-mapped enrichment of peaks more.
+
+Agreement with pseudobulk chromVAR is summarized for each GWAS by the Spearman correlation of the two methods' z-scores across classes. For each class, it is the correlation across GWAS after each method's z-scores are standardized within each GWAS.
+
+<!-- end include: website/_shared_methods/genetic_enrichment_SLDSC.md -->
+
+
+How the R implementation of S-LDSC was compared with ldsc is described in [Algorithm validation](algorithm_validation.md#stratified-ld-score-regression).
+
 ## Source and target graphs
 
-`extra_targets/module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in its directory.
+`extra_targets/module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in its directory. Its shared targets download the S-LDSC reference and each distinct GWAS's summary statistics once for all aggregations.
 
-**Source:** [`extra_targets/module_genetic_enrichment/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_genetic_enrichment), [`R/open_targets_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/open_targets_helpers.R), [`R/GWAS_chromVAR_input_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_input_helpers.R), [`R/GWAS_chromVAR_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_helpers.R), [`R/GWAS_chromVAR_absolute_effect_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_absolute_effect_helpers.R), [`R/GWAS_chromVAR_contribution_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_contribution_helpers.R), [`R/SCAVENGE_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SCAVENGE_helpers.R).
+**Source:** [`extra_targets/module_genetic_enrichment/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_genetic_enrichment), [`R/open_targets_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/open_targets_helpers.R), [`R/GWAS_chromVAR_input_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_input_helpers.R), [`R/GWAS_chromVAR_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_helpers.R), [`R/GWAS_chromVAR_absolute_effect_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_absolute_effect_helpers.R), [`R/GWAS_chromVAR_contribution_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_contribution_helpers.R), [`R/SCAVENGE_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SCAVENGE_helpers.R), [`R/SLDSC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_helpers.R), [`R/SLDSC_annotation_evaluation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_annotation_evaluation_helpers.R).
 
 ### Nucleus-level enrichment and SCAVENGE
 
@@ -1916,6 +1966,12 @@ This view covers the absolute-effect branch, which weights variants by posterior
 This view covers the annotation-class pseudobulk deviations and their decomposition into contributing peaks, variants and loci.
 
 [Mermaid graph omitted; source: `website/figures/human_curated/genetic_enrichment_cell_type_contributions_v2.mmd`]
+
+### S-LDSC heritability enrichment
+
+This view covers the shared LD reference and summary statistics, the cell-type peak and gene annotations with their LD scores, the S-LDSC fits and the matched-size comparison of annotation strategies.
+
+[Mermaid graph omitted; source: `website/figures/human_curated/genetic_enrichment_SLDSC_v2.mmd`]
 
 
 <!-- source: website/methods_peak_gene_correlation.md -->
@@ -1986,6 +2042,7 @@ Passing these fixtures does not validate every dataset, parameter regime, approx
 | Sparse SCAVENGE propagation | Algorithmically derived and reference-parity tested | SCAVENGE source at `8ee8b173d965` | Closed-form propagation; identical seeds; propagation and trait relevance scores within 1e-12 |
 | Peak–gene donor-slope REML and Kenward–Roger kernels | Reference-parity tested | lme4 and pbkrtest | Coefficients, df and P-values within 1e-6; identical fit statuses |
 | Peak–gene compact BH breakpoints | Reference-parity tested | `stats::p.adjust()` | Identical FDR per chromosome slice |
+| S-LDSC LD scores and regression | Not reference-tested | ldsc 1.0.1 | None in the suite; a development comparison is described below |
 
 The peak–gene rows belong to the analyses in [Peak–gene correlation methods](methods_peak_gene_correlation.md#models-and-candidate-links); their tests are `test-peak-gene-hierarchical-parity.R` and `test-peak-gene-correlation-parity.R`.
 
@@ -2068,6 +2125,18 @@ within 1e-10. Compact local reference functions reproduce the relevant SCAVENGE 
 ```bash
 pixi run --use-environment-activation-cache test-algorithm-validation
 ```
+
+## Stratified LD score regression
+
+**Reference algorithm.** [ldsc 1.0.1](https://github.com/bulik/ldsc) cleans summary statistics with `munge_sumstats.py`, computes annotation LD scores from PLINK reference genotypes with `ldsc.py --l2`, and fits stratified LD score regression with a block jackknife with `ldsc.py --h2` [@bulik-sullivan2015_ldsc; @finucane2015_stratified_ldsc].
+
+**Reason for reimplementation.** ldsc needs Python 2.7, which the workflow's environment does not provide, and computes LD scores for every reference variant. The R implementation reads the PLINK genotypes directly, computes LD scores only at the HapMap3 regression variants, and fits all cell types of a GWAS from shared block cross-products.
+
+**Deliberate deviations and consequences.** Regression weights use the total LD score of the annotations shared by all models, the baseline-LD and all-peaks annotations, rather than that of each cell type's model. All cell types of a GWAS therefore share one set of block cross-products. In the development comparison below, this changed coefficient z-scores by at most 0.003.
+
+**Implementation.** `munge_GWAS_sumstats()`, `get_SLDSC_LD_score_record()`, `fit_SLDSC_candidate_regressions()` and `jackknife_LDSC_blocks()` in `R/SLDSC_helpers.R`; the targets are in `extra_targets/module_genetic_enrichment/SLDSC_targets.R`, and the method is described in [Heritability enrichment with S-LDSC](methods_genetic_enrichment.md#heritability-enrichment).
+
+**Validation scope.** No fixture in the test suite runs ldsc, because the environment does not provide it. During development, the implementation was compared once with ldsc 1.0.1 on the peak annotations and GWAS of `mixed_human_31x`. Chromosome 22 LD scores agreed within 0.0005, the rounding of ldsc's output, and munging kept the same variants. The coefficient z-score, total heritability and intercept agreed to six digits. On the annotations and eight UK Biobank GWAS of Varshney et al., fitted with their 37-annotation baseline, the implementation reproduced their published z-scores with a correlation of 0.99985 [@varshney2024_fusion_multiome]. These comparisons are not rerun by the suite.
 
 
 <!-- source: website/change_the_pipeline.md -->

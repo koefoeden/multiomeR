@@ -454,9 +454,9 @@ compose_figure_1 <- function(A, B, C, D, E, F) {
           hjust = .5, margin = ggplot2::margin(b = 5.5)),
         plot.title.position = "plot")
   })
-  # Panel D holds one row per trait, about 16 since the locus-shift null.
+  # Panels A and D give each cell type or trait a row of about the same height.
   (patchwork::wrap_plots(plots, design = "AA\nBC\nDD\nEF",
-    heights = c(2.1, 1.5, 2.4, 2.5)) +
+    heights = c(2.5, 1.5, 2.2, 2.3)) +
     patchwork::plot_annotation(tag_levels = "A")) &
     ggplot2::theme(plot.tag = ggplot2::element_text(family = "NimbusSan", face = "bold",
         size = 12, hjust = 0, vjust = 1), plot.tag.position = c(0, 1))

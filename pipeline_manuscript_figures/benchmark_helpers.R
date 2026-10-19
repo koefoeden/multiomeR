@@ -650,12 +650,15 @@ benchmark_simulation_check <- function(context) {
 # normalization, and the RNA non-zero entries against the dgCMatrix limit that stops SCTransform. S3,
 # sizing: multiomeR's full analysis with its defaults. S4, revisions. All axes are linear from zero, so
 # values and differences read directly, and the smallest aggregations bunch near the origin.
-# The fourth colour, outside the categorical palette, is the darkest of Seurat/Signac's warm pair, so all
-# four lines stay apart in colour-vision checks of every pair.
-BENCHMARK_WORKFLOW_COLOURS <- c("Seurat/Signac (SCTransform)" = "#eb6834", "multiomeR (SCTransform)" = "#2a78d6",
-  "multiomeR (default normalization)" = "#1baf7a", "Seurat/Signac (log-normalization)" = "#8a4b08")
+# Hue gives the tool, orange for Seurat/Signac and blue for multiomeR, and the darker shade each tool's
+# default normalization. Every pair of the four stays apart under normal and colour-deficient vision.
+BENCHMARK_WORKFLOW_COLOURS <- c("Seurat/Signac (SCTransform)" = "#eb6834", "Seurat/Signac (log-normalization)" = "#983e19",
+  "multiomeR (SCTransform)" = "#3987e5", "multiomeR (default normalization)" = "#184f95")
 BENCHMARK_DEFAULT_COLOUR <- BENCHMARK_WORKFLOW_COLOURS[["multiomeR (default normalization)"]]
-# The names written beside each workflow's line, by normalization method; the legend spells them out.
+# S3's series, both multiomeR with its default normalization, in multiomeR's two shades.
+BENCHMARK_SIZING_COLOURS <- c("Primary module" = BENCHMARK_DEFAULT_COLOUR,
+  "With optional modules" = BENCHMARK_WORKFLOW_COLOURS[["multiomeR (SCTransform)"]])
+# The names written beside each workflow's line, by normalization method.
 BENCHMARK_LINE_LABELS <- c("Seurat/Signac (SCTransform)" = "Seurat/Signac (SCT)", "multiomeR (SCTransform)" = "multiomeR (SCT)",
   "multiomeR (default normalization)" = "multiomeR (default)", "Seurat/Signac (log-normalization)" = "Seurat/Signac (default)")
 # Width and height in inches.
@@ -692,24 +695,28 @@ benchmark_text <- function(...) ggplot2::geom_text(..., family = BENCHMARK_FONT,
 
 # Names each workflow's line in its colour. Lines that end before the largest size are named to the
 # right of their last point, on a white box that masks lines passing behind it, and names closer than
-# 1.3 lines move apart around their mean. Lines that reach the largest size, multiomeR's default, are
-# named above and left of their last point, above any name to the right that they would overlap.
-benchmark_line_labels <- function(values) {
+# 1.3 lines move apart around their mean. Lines that reach the largest size, such as multiomeR's default,
+# are named above and left of their last point, in the order of those points, and above any other such
+# point or name to the right that they would overlap.
+benchmark_line_labels <- function(values, labels = BENCHMARK_LINE_LABELS) {
   # One text line's height in data units, 4.6% of a panel whose y axis runs 22% beyond the data, and
   # one character's width, 2.4% of an x axis that runs 7% beyond the data.
   line <- .046 * 1.22 * max(values$value)
   char <- .024 * 1.07 * max(values$cellranger_input_nuclei)
   ends <- dplyr::slice_max(values, .data$cellranger_input_nuclei, by = "workflow") |>
-    dplyr::mutate(label = BENCHMARK_LINE_LABELS[as.character(.data$workflow)], width = nchar(.data$label) * char)
+    dplyr::mutate(label = labels[as.character(.data$workflow)], width = nchar(.data$label) * char)
   largest <- max(ends$cellranger_input_nuclei)
   right <- dplyr::filter(ends, .data$cellranger_input_nuclei < largest) |> dplyr::arrange(.data$value)
   spread <- right$value
   for (i in seq_along(spread)[-1]) spread[[i]] <- max(spread[[i]], spread[[i - 1]] + 1.3 * line)
   right$value <- spread - mean(spread) + mean(right$value)
-  left <- dplyr::filter(ends, .data$cellranger_input_nuclei == largest) |> dplyr::arrange(.data$value) |>
-    dplyr::mutate(value = .data$value + .3 * line)
+  left <- dplyr::filter(ends, .data$cellranger_input_nuclei == largest) |> dplyr::arrange(.data$value)
+  points <- left$value
+  left$value <- points + .3 * line
   for (i in seq_len(nrow(left))) {
     if (i > 1) left$value[[i]] <- max(left$value[[i]], left$value[[i - 1]] + 1.3 * line)
+    crossed <- points[-i][abs(left$value[[i]] + .5 * line - points[-i]) < .8 * line]
+    if (length(crossed)) left$value[[i]] <- max(crossed) + .6 * line
     overlap <- right$cellranger_input_nuclei + 2.5e4 + right$width > largest - left$width[[i]] &
       abs(left$value[[i]] + .5 * line - right$value) < line
     if (any(overlap)) left$value[[i]] <- max(right$value[overlap]) + .8 * line
@@ -721,21 +728,14 @@ benchmark_line_labels <- function(values) {
       size = 2.3, show.legend = FALSE))
 }
 
-# A figure's panels, under their shared legend if they have one, tagged from A.
-benchmark_figure <- function(plots, ncol, legend = TRUE) {
-  rows <- ceiling(length(plots) / ncol)
-  design <- vapply(seq_len(rows), \(row) paste(LETTERS[legend + (row - 1) * ncol + seq_len(ncol)], collapse = ""), character(1))
-  if (legend) plots <- c(list(patchwork::guide_area()), plots)
-  patchwork::wrap_plots(plots, design = paste(c(if (legend) strrep("A", ncol), design), collapse = "\n"),
-    heights = c(if (legend) .08, rep(1, rows)), guides = "collect", axis_titles = "collect") +
-    patchwork::plot_annotation(tag_levels = "A") &
-    ggplot2::theme(legend.position = "top", legend.margin = ggplot2::margin(0, 0, 0, 0),
-      plot.tag = ggplot2::element_text(family = BENCHMARK_FONT, face = "bold", size = 11))
+# A figure's panels, tagged from A.
+benchmark_figure <- function(plots, ncol) {
+  patchwork::wrap_plots(plots, ncol = ncol, axis_titles = "collect") + patchwork::plot_annotation(tag_levels = "A") &
+    ggplot2::theme(plot.tag = ggplot2::element_text(family = BENCHMARK_FONT, face = "bold", size = 11))
 }
 
 # Supplementary Figures S2, S3 and S4 from the Table S6 data, named by figure.
 plot_benchmark_figures <- function(tables) {
-  default <- names(BENCHMARK_WORKFLOW_COLOURS)[[3]]
   like_for_like <- dplyr::bind_rows(
     tables$seurat_signac_comparison_resources |>
       dplyr::filter(.data$workflow != "multiomeR") |>
@@ -743,7 +743,7 @@ plot_benchmark_figures <- function(tables) {
         "Seurat/Signac" = "Seurat/Signac (SCTransform)", "Seurat/Signac log-normalization" = "Seurat/Signac (log-normalization)")),
     tables$benchmark_sizing |>
       dplyr::filter(.data$scope == "like for like: multiomeR + Seurat exports") |>
-      dplyr::mutate(workflow = default)) |>
+      dplyr::mutate(workflow = "multiomeR (default normalization)")) |>
     dplyr::mutate(workflow = factor(.data$workflow, names(BENCHMARK_WORKFLOW_COLOURS)))
   # Title and axis title of each measure.
   measures <- list(simulated_wall_time_hours = c("Run time on 128 cores", "Estimated hours"),
@@ -775,27 +775,27 @@ plot_benchmark_figures <- function(tables) {
     benchmark_linear_scale(labels = scales::label_number(scale_cut = scales::cut_short_scale()), top = .3)
   ceiling <- benchmark_panel(ceiling, "SCTransform's size limit", "Non-zero RNA counts")
 
-  # Sizing: multiomeR's full analysis with its defaults. The primary module ran at every size, the
-  # optional modules only at 31 and 91 samples, so their two points stay unconnected; the largest
-  # analysis is labelled.
-  modules <- "With all three optional modules, run at 31 and 91 samples"
+  # Sizing: multiomeR's full analysis with its defaults. The primary module ran at every size, all three
+  # optional modules only at 31 and 91 samples, so their two points stay unconnected; their name gives the
+  # value of the largest analysis.
   sizing <- tables$benchmark_sizing |>
     dplyr::filter(!startsWith(.data$scope, "like for like")) |>
-    dplyr::mutate(scope = factor(dplyr::if_else(.data$scope == "primary module", "Primary module", modules), c("Primary module", modules)))
+    dplyr::mutate(workflow = factor(dplyr::if_else(.data$scope == "primary module", "Primary module", "With optional modules"),
+      names(BENCHMARK_SIZING_COLOURS)))
   sizing_measures <- list(simulated_wall_time_hours = c("Run time on 128 cores", "Estimated hours", "%.1f h"),
     used_CPU_hours = c("CPU time", "CPU-hours", "%.0f CPU-hours"),
     peak_RAM_GB = c("Memory of the largest worker", "Peak GB", "%.0f GB"),
     disk_space_GB = c("Disk space", "GB, with Cell Ranger inputs", "%.0f GB"))
   sizing_panels <- purrr::imap(sizing_measures, \(words, measure) {
-    values <- dplyr::mutate(sizing, value = .data[[measure]])
-    largest <- dplyr::slice_max(values, .data$cellranger_input_nuclei, n = 1) |> dplyr::slice_max(.data$scope, n = 1) |>
-      dplyr::mutate(label = sprintf(words[[3]], .data$value))
-    plot <- ggplot2::ggplot(values, ggplot2::aes(.data$cellranger_input_nuclei, .data$value)) +
-      ggplot2::geom_line(data = dplyr::filter(values, .data$scope == "Primary module"), linewidth = .5, colour = BENCHMARK_DEFAULT_COLOUR) +
-      ggplot2::geom_point(ggplot2::aes(shape = .data$scope), size = 1.6, colour = BENCHMARK_DEFAULT_COLOUR) +
-      benchmark_text(data = largest, ggplot2::aes(label = .data$label), hjust = 1.15, vjust = -.4) +
-      ggplot2::scale_shape_manual(values = c(16, 17), name = NULL) +
-      benchmark_nuclei_scale() + benchmark_linear_scale(labels = scales::label_number(drop0trailing = TRUE))
+    values <- dplyr::transmute(sizing, .data$cellranger_input_nuclei, .data$workflow, value = .data[[measure]])
+    largest <- dplyr::filter(values, .data$workflow == "With optional modules") |> dplyr::slice_max(.data$cellranger_input_nuclei)
+    labels <- c("Primary module" = "Primary module", "With optional modules" = sprintf(paste("With optional modules:", words[[3]]), largest$value))
+    plot <- ggplot2::ggplot(values, ggplot2::aes(.data$cellranger_input_nuclei, .data$value, colour = .data$workflow)) +
+      ggplot2::geom_line(data = dplyr::filter(values, .data$workflow == "Primary module"), linewidth = .5) +
+      ggplot2::geom_point(ggplot2::aes(shape = .data$workflow), size = 1.6) + benchmark_line_labels(values, labels) +
+      ggplot2::scale_colour_manual(values = BENCHMARK_SIZING_COLOURS, guide = "none") +
+      ggplot2::scale_shape_manual(values = c(16, 17), guide = "none") +
+      benchmark_nuclei_scale() + benchmark_linear_scale(labels = scales::label_number(drop0trailing = TRUE), top = .22)
     benchmark_panel(plot, words[[1]], words[[2]])
   })
 
@@ -825,7 +825,7 @@ plot_benchmark_figures <- function(tables) {
   revision_plot <- benchmark_panel(revision_plot, "Run time of each change after a full build, in the order applied", NULL) +
     ggplot2::theme(panel.grid.major.y = ggplot2::element_blank(), axis.text.y = ggplot2::element_text(size = 7, hjust = 1))
 
-  list(S2 = benchmark_figure(c(like_panels, list(ceiling)), ncol = 3, legend = FALSE), S3 = benchmark_figure(sizing_panels, ncol = 2),
+  list(S2 = benchmark_figure(c(like_panels, list(ceiling)), ncol = 3), S3 = benchmark_figure(sizing_panels, ncol = 2),
     S4 = revision_plot)
 }
 

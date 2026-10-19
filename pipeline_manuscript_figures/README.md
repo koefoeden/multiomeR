@@ -164,10 +164,12 @@ at that size in either workflow: Seurat converts the joined count matrix to a
 `dgCMatrix`, which holds at most 2^31 - 1 non-zero entries, and `sizing_91x` has
 2.17 billion. S2F shows each size's RNA non-zero entries against that limit, the
 genes detected in each called nucleus summed from Cell Ranger's per-barcode
-metrics. They equal the count in Seurat's error. S2A-E name each workflow's
-line in its colour by normalization method: to the right of its last point for
-lines that end at 31 samples, and above and left of it for multiomeR's default,
-which reaches 91. On linear axes, the differences read directly from the lines.
+metrics. They equal the count in Seurat's error. In S2A-E, colour gives the
+tool, blue for multiomeR and orange for Seurat/Signac, and the darker shade each
+tool's default normalization. Each line is named in its colour by tool and
+normalization method: to the right of its last point for lines that end at 31
+samples, and above and left of it for multiomeR's default, which reaches 91. On
+linear axes, the differences read directly from the lines.
 
 ### Sizing
 
@@ -185,7 +187,10 @@ datasets. CellBender runs upstream of the pipeline, in cellranger-wrapper, and
 is left out. S3 shows the full analysis's simulated wall time, CPU time, peak
 memory of a worker and disk space, with the primary module alone and, as
 unconnected points at the two sizes that ran them, with all three optional
-modules. Two plot targets of `sizing_91x`, with nothing
+modules. Both series take multiomeR's two blues from S2, the primary module the
+darker one of its default normalization, and are named in their colours above
+and left of their last points. The optional modules' name gives the value of the
+largest analysis. Two plot targets of `sizing_91x`, with nothing
 downstream of them, are left out of its totals rather than counted as zero, as
 its `excluded_targets` column states. The ATAC motif-family marker volcano plot
 facets by ATAC cell type, and at about a hundred cell types its automatic

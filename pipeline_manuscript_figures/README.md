@@ -8,14 +8,14 @@ below `results/`:
 - `1.png`: Figure 1, selected outputs of `mixed_human_31x`, and
   `data/figure_1_aggregation.tsv`, `data/figure_1_link.tsv` and
   `data/figure_1_traits.tsv`, the values the manuscript quotes from it.
-- `S3.png` and `data/cell_type_trait_enrichment.tsv`: Supplementary Figure S3,
+- `S5.png` and `data/cell_type_trait_enrichment.tsv`: Supplementary Figure S5,
   the cell-type deviations of every GWAS study of `mixed_human_31x`, of which
   Figure 1D shows a selection.
 - `data/table_S3.tsv`: Supplementary Table S3, the GWAS studies of
   `mixed_human_31x` with their Open Targets records and credible sets, and the
   credible-set loci and variants that overlap consensus peaks and the peaks they
   weight.
-- `S2.png` and its data, Supplementary Table S6, on what multiomeR costs and
+- `S2.png`, `S3.png` and `S4.png` and their data, Supplementary Table S6, on what multiomeR costs and
   saves: `data/seurat_signac_comparison_resources.tsv` compares multiomeR with a
   conventional Seurat/Signac workflow on `comparison_1x` to `comparison_31x`;
   `data/benchmark_sizing.tsv` and `data/benchmark_sizing_stages.tsv` measure
@@ -39,8 +39,8 @@ repository root inside a Slurm allocation (see the configuration's README):
 ```r
 targets::tar_make(
   script = "pipeline_manuscript_figures/targets.R",
-  names = tidyselect::any_of(c("figure_1.mixed_human_31x", "supplementary_figure_S3.mixed_human_31x",
-    "supplementary_table_S3.mixed_human_31x", "supplementary_figure_S2", "supplementary_table_S4.comparison_5x"))
+  names = tidyselect::any_of(c("figure_1.mixed_human_31x", "supplementary_figure_S5.mixed_human_31x",
+    "supplementary_table_S3.mixed_human_31x", "supplementary_figures_S2_S4", "supplementary_table_S4.comparison_5x"))
 )
 ```
 
@@ -48,10 +48,10 @@ The conventional Seurat/Signac chain needs fragtk; install it into the
 environment with `pixi run install-fragtk`. The graph builds only the
 dependencies of the selected results.
 
-S2 and Table S6 read recorded runtimes, not the targets they measure or any
+Supplementary Figures S2-S4 and Table S6 read recorded runtimes, not the targets they measure or any
 store, so build them after the benchmark runs have finished. Before that they
 stop with a missing run or runtime. The measured aggregations must be active,
-because inactive ones are absent from `tar_network()`. S2 also needs the per-job
+because inactive ones are absent from `tar_network()`. They also need the per-job
 resource history of
 [slurm-monitor](https://github.com/koefoeden/slurm-monitor) in
 `SLURM_MONITOR_HISTORY_DIR` (default `~/slurm_monitor_history`), which it reads
@@ -66,7 +66,11 @@ with their runtimes, completion times, bytes, errors and node, and the input
 files outside the store that it tracked, in `data/benchmark_runs/<run>.tsv`.
 The records, not the stores, hold the measurements. Monitor samples and worker
 jobs are matched to a recorded target by its name and node, as the series ran
-at the same time and built targets of the same names.
+at the same time and built targets of the same names. The committed records
+name the nodes `node_1` to `node_3`. A table outside the repository, named by
+`BENCHMARK_NODE_LABELS`, gives each node's hostname (`node`) and label
+(`label`), and the build maps the hostnames in the monitor's samples and in new
+records to those labels.
 
 ## Figure 1
 
@@ -94,16 +98,19 @@ Selections are deterministic but follow the data.
 - **F:** SCAVENGE trait-relevance scores of the same trait on the WNN UMAP,
   with unclipped scores and the WNN cell-type labels of D.
 
-Supplementary Figure S3 shows every study across the assigned cell types with
+Supplementary Figure S5 shows every study across the assigned cell types with
 the module's unscaled deviation heatmap and GWAS metadata tracks, on Figure 1D's
 colour scale and with its stars; larger deviations take the scale's end colours.
 
-## Supplementary Figure S2 and Table S6
+## Supplementary Figures S2-S4 and Table S6
 
-S2 answers three questions: what the pipeline machinery costs or saves on the
-same algorithms (A-E), whether multiomeR with its defaults runs on a given
-data size and what it costs (F-H), and what revising an analysis costs (I).
-Sizes and resources use logarithmic axes, so equal gaps are equal ratios.
+Three figures answer three questions: what the pipeline machinery costs or
+saves on the same algorithms (S2), what multiomeR's full analysis with its
+defaults needs at a given data size (S3), and what revising an analysis costs
+(S4). All axes are linear and start at zero, so values and differences read
+directly, and the smallest aggregations bunch near the origin.
+Titles and panel tags use DejaVu Sans Bold, which the environment ships inside
+matplotlib; without it they fall back to a regular face.
 
 ### Like for like
 
@@ -125,7 +132,7 @@ doublet removal, so both workflows keep every called nucleus and yield identical
 consensus peaks. multiomeR runs its Seurat SCTransform backend there and, like
 Signac, counts each fragment once per peak, so both workflows use the same
 algorithms. It is measured twice: up to its WNN cell metadata, and with the
-multimodal Seurat/Signac object it exports from it, which the figure shows
+multimodal Seurat/Signac object it exports from it, which S2 shows
 because it matches the conventional chain's output. The shared preparation of
 peak-calling clusters and their cut sites is excluded from all workflows, and
 analyses that the conventional chain does not perform from both multiomeR
@@ -141,9 +148,11 @@ and `sizing_91x` adds 60 ENCODE multiome series, for 1.16 million nuclei. Its
 per-well steps are those of the comparison aggregations. SCTransform cannot run
 at that size in either workflow: Seurat converts the joined count matrix to a
 `dgCMatrix`, which holds at most 2^31 - 1 non-zero entries, and `sizing_91x` has
-2.17 billion. F shows each size's RNA non-zero entries against that limit, the
+2.17 billion. S2F shows each size's RNA non-zero entries against that limit, the
 genes detected in each called nucleus summed from Cell Ranger's per-barcode
-metrics. They equal the count in Seurat's error.
+metrics. They equal the count in Seurat's error. S2A-E label how multiomeR on
+SCTransform differs from the conventional chain at 31 samples: as a fold
+difference from 1.5-fold, as a percentage below it, and not at all under 10%.
 
 ### Sizing
 
@@ -158,21 +167,20 @@ modules. `benchmark_sizing_stages.tsv` splits the full analysis into setup,
 per-well steps, the primary module's aggregation steps and each optional module,
 which takes the upstream targets that only it needs, such as the Open Targets
 datasets. CellBender runs upstream of the pipeline, in cellranger-wrapper, and
-is left out. Two plot targets of `sizing_91x`, with nothing downstream of them,
-are left out of its totals rather than counted as zero, as its `excluded_targets`
-column states. The ATAC motif-family marker volcano plot facets by ATAC cell
-type with up to 20 repelled labels per direction and facet, which does not scale
-to about a hundred cell types: its worker crashed three times and a retry ran
-3.9 h without finishing, against 62 s at 31 wells. The genetic-enrichment
-variant detail plots ran over 1.5 h and up to 110 GB per GWAS without finishing,
-against at most 16 min per GWAS at 31 wells. The plot records they draw from
-finished and are counted. At this size, 14 QC
-plots also exceeded ragg's 50,000-pixel limit, and a later driver run rebuilt
-the 17 failed targets with plot sizes clamped in `save_plots_structured()`. That
-clamp is a benchmark-only change, not on the main branch. Two genetic-enrichment
-steps, `chromVAR_locus_contribution_tibble` and
-`chromVAR_variant_contribution_detail_plots`, exceeded the light workers' 48 GB
-limit and were rebuilt with 60 GB requests, which their allocations record.
+is left out. S3 shows the full analysis's simulated wall time, CPU time, peak
+memory of a worker and disk space, with the primary module alone and, as
+unconnected points at the two sizes that ran them, with all three optional
+modules. Two plot targets of `sizing_91x`, with nothing
+downstream of them, are left out of its totals rather than counted as zero, as
+its `excluded_targets` column states. The ATAC motif-family marker volcano plot
+facets by ATAC cell type, and at about a hundred cell types its automatic
+canvas, 42,300 pixels square, is more than the PNG device can allocate: its
+worker crashed twice, each time about a minute after it started, against 64 s
+for the whole plot at 31 wells. The genetic-enrichment variant detail plots were
+not run: on earlier code they ran over 1.5 h and up to 110 GB per GWAS without
+finishing, against at most 4.8 min per GWAS at 31 wells now. The plot records
+they draw from finished and are counted. No target needed a benchmark-only
+change or a raised resource request.
 
 ### Revisions
 
@@ -186,8 +194,10 @@ cardiomyopathy GWAS, age added to the cardiomyocyte sex model, and an added
 liver GEM well with its donor. The analysed configuration lacks that well, so
 its recorded targets take the dependencies of the same targets of another well.
 Each run's targets, critical path, CPU time and simulated wall time are
-compared with the full build's. A script without saved intermediates reruns
-everything, and careful manual checkpointing narrows that gap.
+compared with the full build's. S4 shows each run's simulated wall time as a
+share of the full build's, with the static targets it reran and its measured
+elapsed time. A script without saved intermediates reruns everything, the
+dashed line at 100%, and careful manual checkpointing narrows that gap.
 
 ### Measures
 
@@ -196,27 +206,29 @@ everything, and careful manual checkpointing narrows that gap.
   concurrently, and excluded or unchanged targets keep their place with no
   runtime. So do input files outside the store, such as configuration tables:
   `targets` records a file's modification time as its completion time, so a run
-  that finds the file unchanged records no build of it. The conventional chain's critical path is the sum of its runtimes, as
-  when a script runs its steps one after another.
-- **Simulated wall time:** the same runtimes scheduled on the workers of
+  that finds the file unchanged records no build of it. The conventional
+  chain's critical path is the sum of its runtimes, as when a script runs its
+  steps one after another. Table S6 gives it; the figures show the simulated
+  wall time.
+- **Simulated wall time,** which S2A, S3A and S4 show: the same runtimes scheduled on the workers of
   `configuration_dev/crew_controllers.R`, which fit one 128-core server: 16
   light, 6 heavy, one large and one huge worker, each target routed to the tier its RAM request selects. A target
   is ready once its upstream targets have finished, and each tier's workers take
-  ready targets in the order they became ready. Each target also takes 2 s
-  for dispatching, loading and saving (`BENCHMARK_TASK_OVERHEAD_SECONDS`), fitted
-  to the single-run records, which it brings within 10% of their measured
-  elapsed times, against 9-16% short without it.
+  ready targets in the order they became ready. The conventional chain's
+  simulated wall time is the sum of its runtimes, as is its critical path, so it
+  takes no per-target overhead. Each multiomeR target also takes 2 s
+  for dispatching, loading and saving (`BENCHMARK_TASK_OVERHEAD_SECONDS`). With
+  it, the simulation came to 0.96-1.16 times the measured elapsed time of each
+  single-run record, against 0.68-1.01 times without it, which falls short most
+  for runs of many short targets, such as `revision_1`. It overstates the full
+  revision build most, by 16%.
   `benchmark_simulation_check.tsv` compares the simulation, with and without
   that overhead, with each recorded run's elapsed time: the periods in which its
   targets ran, from the first recorded start to the last completion, joined
   across gaps of up to ten minutes. It also gives each run's median start gap,
   the time from the last completion of a target's upstream targets in the run to
   its start, which in large runs includes waiting for a busy worker.
-  `sizing_small`, `sizing_91x` and `revision_5` are left out of the check,
-  because each spans several driver runs: after a failed download and a rebuild
-  of a truncated annotation, after fixes for empty marker levels, nuclei without
-  counts and nuclei without chromVAR scores and after raising two steps' memory
-  requests, and after the fix for empty marker levels.
+  `sizing_91x` is left out of the check, because it spans three driver runs.
 - **CPU time and memory:** each target's runtime times its job's mean sampled
   CPU use and unreclaimable memory, which leaves out page cache. Jobs too short
   to be sampled get the median of the sampled jobs measured with them. Memory
@@ -242,7 +254,7 @@ everything, and careful manual checkpointing narrows that gap.
   targets requested in the measured runs (`benchmark_allocations.tsv`), and
   `requested_runtime_*` the runtimes alone, the definition before idle time
   was counted. Memory limits leave headroom above the requests, so reserved
-  RAM exceeds requested RAM. The figure shows the measured CPU time and memory,
+  RAM exceeds requested RAM. The figures show the measured CPU time and memory,
   not reservations.
 - **Disk space:** retained objects and files inside the store plus the Cell
   Ranger inputs that every workflow reads: filtered matrices, fragment files
@@ -250,10 +262,10 @@ everything, and careful manual checkpointing narrows that gap.
 
 ### Accounting choices
 
-- Unlimited workers favour the workflow with more parallel steps, multiomeR.
-  The simulated wall time shows the configured budget instead. The shorter
-  critical path comes from running steps in parallel, while CPU time stays
-  similar.
+- Unlimited workers favour the workflow with more parallel steps, multiomeR,
+  so the figures show the simulated wall time on the configured budget instead
+  and Table S6 also gives the critical path. The shorter run time comes from
+  running steps in parallel, while CPU time stays similar.
 - Crediting the conventional chain with a separate allocation per step favours
   it: a single script would hold its largest allocation, up to 500 GB for peak
   calling, for its whole run.
@@ -266,15 +278,33 @@ everything, and careful manual checkpointing narrows that gap.
 - Leaving out the analyses that only multiomeR performs keeps its
   like-for-like measures to the shared result; the sizing measures include them.
 
-The four series ran at the same time, from 18 October 2026 at commit f9a109d5,
-each on its own node of one model (AMD EPYC 7543, 128 cores, 2 TB RAM):
-`comparison`; `sizing_small`, which builds `sizing_1x` to `sizing_20x`, then
-`sizing_31x` on its store; `sizing_91x`; and `revision_base`, then `revision_1`
-to `revision_5` on its store. Each series' first run builds the setup, such as
-reference downloads, and the per-well steps itself, and compiles the native
-kernels into its own cache, so every measured aggregation is a first build.
-`benchmark_allocations.tsv` records the requests of every recorded target at
-the commit that built it.
+The four series ran on 18 and 19 October 2026 on three nodes of one model (AMD
+EPYC 7543, 128 cores, 2 TB RAM), each with its workers on its own node and its
+own store on that node's disk:
+
+- `comparison`, one run at commit f9a109d5;
+- `sizing_small`, which builds `sizing_1x` to `sizing_20x`, then `sizing_31x` on
+  its store, at 950472fd, on the comparison's node after it had finished;
+- `sizing_91x`, three driver runs on one store: at f9a109d5, until a cluster of
+  one nucleus stopped peak calling; at 5679054b, which fixed that, until the
+  volcano plot crashed; and at 950472fd, which rebuilt every target that the
+  commits in between changed, all plot targets among them. Each target counts
+  with its latest build;
+- `revision_base` at 950472fd, then `revision_1` to `revision_5` on its store, at
+  the five configuration commits on top of it.
+
+Each series' first run builds the setup, such as reference downloads, and the
+per-well steps itself, and compiles the native kernels into its own cache, so
+every measured aggregation is a first build. Before 950472fd,
+`save_plots_structured()` drew only the first part of a patchwork plot, which
+made those plots cheaper, so the sizing and revision series were measured on
+950472fd; the comparison builds no plot targets. The node of `sizing_91x` also
+ran other users' jobs: its load average was about 35 of 128 cores around the
+first driver run and 60-90 around the last, while the series itself was idle,
+so its times may be somewhat longer than on an idle node. The other two nodes
+showed little load outside the series. All measured commits request the same
+resources for the same targets, so `benchmark_allocations.tsv` gives one
+request per recorded target.
 
 ## Supplementary Table S4
 

@@ -370,10 +370,10 @@ plot_figure_1_TRS <- function(data, trait, cell_types) {
       x = "UMAP 1", y = "UMAP 2")
 }
 
-# Supplementary Figure S3: the module's unscaled deviation heatmap of every study
+# Supplementary Figure S5: the module's unscaled deviation heatmap of every study
 # and assigned cell type, with Figure 1D's colour scale, cell-type labels and stars;
 # rows also name the study. Deviations beyond Figure 1D's range take its end colours.
-plot_figure_S3 <- function(scores, GWAS_metadata_tracks_plot, traits) {
+plot_figure_S5 <- function(scores, GWAS_metadata_tracks_plot, traits) {
   limit <- max(abs(scores$deviation[scores$GWAS_ID %in% traits$GWAS_ID]))
   # Of the module's metadata tracks, only trait category and credible-set loci are
   # kept; Supplementary Table S3 gives each study's sample size, method and ancestry.

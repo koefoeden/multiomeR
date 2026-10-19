@@ -1,6 +1,6 @@
 # Manuscript figures and tables from configuration_dev's public-data aggregations:
-# Figure 1, Supplementary Figure S3 and Supplementary Table S3 from mixed_human_31x,
-# Supplementary Figure S2 and Table S6 on what multiomeR costs and saves: against a
+# Figure 1, Supplementary Figure S5 and Supplementary Table S3 from mixed_human_31x,
+# Supplementary Figures S2-S4 and Table S6 on what multiomeR costs and saves: against a
 # conventional Seurat/Signac workflow on comparison_1x to comparison_31x, with its defaults
 # on sizing_1x to sizing_91x and for revisions of revision_31x, and Supplementary Table S4 comparing
 # the algorithm reimplementations with their references on comparison_5x. See README.md.
@@ -160,13 +160,13 @@ figure_pipeline <- list(
     resources = get_tar_resources(RAM_GB_req = 4)
   ),
   tarchetypes::tar_file(
-    supplementary_figure_S3.mixed_human_31x,
-    description = "Supplementary Figure S3: the module's unscaled cell-type deviation heatmap for every GWAS study and assigned cell type, with trait-category and loci tracks, on Figure 1D's colour scale with its q < 0.05 stars, and its values",
+    supplementary_figure_S5.mixed_human_31x,
+    description = "Supplementary Figure S5: the module's unscaled cell-type deviation heatmap for every GWAS study and assigned cell type, with trait-category and loci tracks, on Figure 1D's colour scale with its q < 0.05 stars, and its values",
     command = {
       scores <- chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x |>
         dplyr::filter(is_figure_1_cell_type(.data$cluster))
-      paths <- file.path(output_dir, c("S3.png", "data/cell_type_trait_enrichment.tsv"))
-      ggplot2::ggsave(paths[[1]], plot_figure_S3(scores, GWAS_metadata_tracks_plot.genetic_enrichment.mixed_human_31x,
+      paths <- file.path(output_dir, c("S5.png", "data/cell_type_trait_enrichment.tsv"))
+      ggplot2::ggsave(paths[[1]], plot_figure_S5(scores, GWAS_metadata_tracks_plot.genetic_enrichment.mixed_human_31x,
         figure_1_traits.mixed_human_31x), device = ragg::agg_png, width = 9, height = 10.5, dpi = 300)
       readr::write_tsv(dplyr::select(scores, "GWAS_ID", "Category", "cluster", "deviation", "z", "z_q"), paths[[2]])
       paths
@@ -187,7 +187,7 @@ figure_pipeline <- list(
   ),
   tarchetypes::tar_file(
     supplementary_table_S6,
-    description = "Supplementary Table S6, the data of Figure S2: multiomeR against Seurat/Signac like for like, sizing with defaults by scope and stage, revisions, and the simulated wall time against measured runs, from recorded runs, the targets graph and Slurm job monitoring",
+    description = "Supplementary Table S6, the data of Figures S2-S4: multiomeR against Seurat/Signac like for like, sizing with defaults by scope and stage, revisions, and the simulated wall time against measured runs, from recorded runs, the targets graph and Slurm job monitoring",
     command = {
       context <- benchmark_context()
       sizing <- benchmark_sizing_tibbles(context)
@@ -206,22 +206,17 @@ figure_pipeline <- list(
     cue = targets::tar_cue(mode = "always"), resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    supplementary_figure_S2_plot,
-    description = "Supplementary Figure S2: like for like, sizing with defaults and revisions from the Table S6 data",
+    supplementary_figures_S2_S4_plots,
+    description = "Supplementary Figures S2-S4: like for like, sizing with defaults and revisions from the Table S6 data",
     command = stats::setNames(supplementary_table_S6, tools::file_path_sans_ext(basename(supplementary_table_S6))) |>
       lapply(readr::read_tsv, show_col_types = FALSE) |>
-      plot_benchmark_figure() |> compact_figure_1_plot(),
+      plot_benchmark_figures() |> lapply(compact_figure_1_plot),
     packages = w_def("patchwork"), resources = get_tar_resources(RAM_GB_req = 1)
   ),
   tarchetypes::tar_file(
-    supplementary_figure_S2,
-    description = "Export Supplementary Figure S2 from its ggplot object",
-    command = {
-      path <- file.path(output_dir, "S2.png")
-      ggplot2::ggsave(path, supplementary_figure_S2_plot,
-        device = ragg::agg_png, width = 8, height = 10.5, dpi = 300, create.dir = TRUE)
-      path
-    },
+    supplementary_figures_S2_S4,
+    description = "Export Supplementary Figures S2-S4 from their ggplot objects",
+    command = save_benchmark_figures(supplementary_figures_S2_S4_plots, output_dir),
     resources = get_tar_resources(RAM_GB_req = 1)
   )
 )

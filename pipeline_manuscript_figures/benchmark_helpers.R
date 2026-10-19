@@ -1,5 +1,5 @@
-# Supplementary Figure S2 and Table S6: what multiomeR costs and what it saves, for three
-# questions (README.md). Like for like: multiomeR and a conventional Seurat/Signac workflow
+# Supplementary Figures S2-S4 and Table S6: what multiomeR costs and what it saves, one figure per
+# question (README.md). Like for like: multiomeR and a conventional Seurat/Signac workflow
 # on the same algorithms. Sizing: multiomeR with its defaults up to 1.16 million nuclei.
 # Revisions: what changing a configured analysis reruns. Runtimes and bytes come from recorded
 # executions, dependencies from the targets graph, and CPU and memory from slurm_monitor.
@@ -15,7 +15,7 @@ BENCHMARK_AGGREGATION_RUNS <- c(
   stats::setNames(rep(list("sizing_small"), 5), paste0("sizing_", c(1, 2, 5, 10, 20), "x")),
   list(sizing_31x = c("sizing_small", "sizing_31x"), sizing_91x = "sizing_91x", revision_31x = "revision_base"))
 # Records that span several driver runs, after failures, have no single elapsed time.
-BENCHMARK_MULTIPLE_DRIVER_RUNS <- character()
+BENCHMARK_MULTIPLE_DRIVER_RUNS <- "sizing_91x"
 # The worker cores and RAM that each counted target requested in the run that measured it.
 BENCHMARK_ALLOCATIONS <- file.path(BENCHMARK_DATA_DIR, "benchmark_allocations.tsv")
 BENCHMARK_MODULES <- c("genetic_enrichment", "differential_analyses", "peak_gene_correlation")
@@ -24,12 +24,13 @@ BENCHMARK_SIZING_AGGREGATIONS <- paste0("sizing_", c(1, 2, 5, 10, 20, 31, 91), "
 # Targets left out of the sizing measures, with the reason that benchmark_sizing.tsv records.
 BENCHMARK_EXCLUDED_TARGETS <- c(
   "motif_family_accessibility_marker_volcano_plots.7_ATAC_QC.sizing_91x" = paste(
-    "QC plot that does not scale to about a hundred ATAC cell types, faceted with up to 20 repelled labels",
-    "per direction and facet: its worker crashed three times and a retry ran 3.9 h unfinished (62 s at 31 wells)"),
+    "QC plot faceted by ATAC cell type, whose canvas at about a hundred cell types, 42,300 pixels square, exceeds",
+    "what the PNG device can allocate: its worker crashed twice, about a minute after each start (64 s at 31 wells)"),
   "chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.sizing_91x" = paste(
-    "over 1.5 h and up to 110 GB per GWAS at 91 samples, not finished (at most 16 min per GWAS at 31 wells)"))
-# Seconds the simulated wall time adds to each target for dispatching, loading and saving, fitted
-# to the single-run records: it brings each within 10% of its measured elapsed time.
+    "not run: on earlier code they took over 1.5 h and up to 110 GB per GWAS at 91 samples without finishing",
+    "(at most 4.8 min per GWAS at 31 wells)"))
+# Seconds the simulated wall time adds to each target for dispatching, loading and saving. With it,
+# the simulation comes to 0.96-1.16 times the measured elapsed time of the single-run records.
 BENCHMARK_TASK_OVERHEAD_SECONDS <- 2
 # Each revision run changes revision_31x one step further, in this order.
 BENCHMARK_REVISIONS <- c(
@@ -121,13 +122,23 @@ benchmark_cellranger_inputs <- function(aggregations) {
       input_disk_space_GB = sum(.data$input_disk_space_GB), .by = "aggregation")
 }
 
+# The committed records name each node by a neutral label. BENCHMARK_NODE_LABELS names a table kept
+# outside the repository, with each node's hostname (node) and label (label), which maps the hostnames
+# in the monitor's samples and in new records to those labels.
+benchmark_node_labels <- function(nodes) {
+  path <- Sys.getenv("BENCHMARK_NODE_LABELS")
+  if (!nzchar(path)) stop("Set BENCHMARK_NODE_LABELS to the table of benchmark node labels.", call. = FALSE)
+  labels <- readr::read_tsv(path, col_types = "cc")
+  dplyr::coalesce(labels$label[match(nodes, labels$node)], nodes)
+}
+
 # The recorded rows of the named runs, one per stem or branch: the targets each run built and,
 # with in_store false, the input files outside the store that it tracked.
 read_benchmark_runs <- function(labels) {
   purrr::map_dfr(labels, \(label) {
     path <- file.path(BENCHMARK_RUNS_DIR, paste0(label, ".tsv"))
     if (!file.exists(path)) stop("No recorded benchmark run ", label, " in ", BENCHMARK_RUNS_DIR, call. = FALSE)
-    readr::read_tsv(path, col_types = "ccdTdccl", na = "") |> dplyr::mutate(run = label)
+    readr::read_tsv(path, col_types = "ccdTdccl", na = "") |> dplyr::mutate(run = label, node = benchmark_node_labels(.data$node))
   }) |>
     dplyr::mutate(static_target = dplyr::coalesce(.data$parent, .data$name))
 }
@@ -153,7 +164,7 @@ read_slurm_monitor_samples <- function(since) {
   samples <- data.table::fread(cmd = cmd, sep = "\t", na.strings = "NA",
     colClasses = list(character = c("timestamp", "raw_job_id", "elapsed"))) |>
     dplyr::filter(!is.na(.data$ram_cur_gib), !.data$scope %in% "sstat")
-  tibble::tibble(job = samples$raw_job_id, node = samples$node, worker = samples$name, target = samples$target,
+  tibble::tibble(job = samples$raw_job_id, node = benchmark_node_labels(samples$node), worker = samples$name, target = samples$target,
     time = .POSIXct(as.POSIXct(samples$timestamp, tz = "Europe/Copenhagen"), tz = "UTC"), elapsed = samples$elapsed,
     RAM_GB = samples$ram_cur_gib * 2^30 / 1e9, cpu_cores = samples$cpu_cur,
     booked_RAM_GB = samples$ram_lim_gib * 2^30 / 1e9, booked_cores = samples$cpus_alloc)
@@ -442,8 +453,8 @@ benchmark_worker_attribution_tibble <- function(context) {
 # needs, from their enriched executions; uncounted targets keep their graph position with no
 # runtime. So do input files outside the store, such as configuration tables: targets records a
 # file's modification time as its completion time, so a run records no build of it. A sequential
-# workflow's critical path is the sum of its runtimes, as when a script runs its steps one after
-# another.
+# workflow's critical path and simulated wall time are the sum of its runtimes, as when a script runs
+# its steps one after another.
 benchmark_measures <- function(context, executions, scope, counted = rep(TRUE, length(scope)), sequential = FALSE,
                                graph = context$graph) {
   graph <- igraph::induced_subgraph(graph, scope)
@@ -462,7 +473,7 @@ benchmark_measures <- function(context, executions, scope, counted = rep(TRUE, l
   weights[names(slowest)] <- slowest
   tibble::tibble(
     critical_path_hours = if (sequential) sum(executions$seconds) / 3600 else critical_path_seconds(graph, weights) / 3600,
-    simulated_wall_time_hours = if (sequential) NA_real_ else
+    simulated_wall_time_hours = if (sequential) sum(executions$seconds) / 3600 else
       simulate_wall_time_seconds(graph, executions, context$workers, BENCHMARK_TASK_OVERHEAD_SECONDS) / 3600,
     summarise_executions(executions))
 }
@@ -629,125 +640,174 @@ benchmark_simulation_check <- function(context) {
       simulated_without_overhead_to_measured = .data$simulated_without_overhead_hours / .data$measured_elapsed_hours)
 }
 
-# Supplementary Figure S2. Rows A-F: like for like, multiomeR with its Seurat exports on
-# SCTransform and on its default normalization against the Seurat/Signac chain, and the RNA non-zero
-# entries against the dgCMatrix limit that stops SCTransform. G-H: sizing with defaults. I:
-# revisions. Axes of sizes and resources are logarithmic, so equal gaps are equal ratios.
-BENCHMARK_WORKFLOW_COLOURS <- c("multiomeR, SCTransform" = "#2a78d6", "Seurat/Signac" = "#eb6834",
-  "multiomeR, default normalization" = "#1baf7a")
-BENCHMARK_STAGE_COLOURS <- c(setup = "#6250d6", "per-well" = "#eda100", aggregation = "#1baf7a",
-  genetic_enrichment = "#e34948", differential_analyses = "#008300", peak_gene_correlation = "#e87ba4")
+# Supplementary Figures S2-S4, one per question. S2, same methods: multiomeR on SCTransform with
+# its Seurat exports against the Seurat/Signac chain, multiomeR on its default normalization as a
+# third line, and the RNA non-zero entries against the dgCMatrix limit that stops SCTransform. S3,
+# sizing: multiomeR's full analysis with its defaults. S4, revisions. All axes are linear from zero, so
+# values and differences read directly, and the smallest aggregations bunch near the origin.
+BENCHMARK_WORKFLOW_COLOURS <- c("Seurat/Signac (SCTransform)" = "#eb6834", "multiomeR (SCTransform)" = "#2a78d6",
+  "multiomeR (default normalization)" = "#1baf7a")
+BENCHMARK_DEFAULT_COLOUR <- BENCHMARK_WORKFLOW_COLOURS[["multiomeR (default normalization)"]]
+# Width and height in inches.
+BENCHMARK_FIGURE_SIZES <- list(S2 = c(8, 6.4), S3 = c(8, 5.6), S4 = c(8, 3.3))
 
-benchmark_nuclei_scale <- function() {
-  ggplot2::scale_x_log10(labels = scales::label_number(scale_cut = scales::cut_short_scale()),
-    expand = ggplot2::expansion(mult = .06))
+# DejaVu Sans, the font that the other figures fall back to, with its bold face, which the
+# environment ships only inside matplotlib. Without it, titles and tags fall back to a regular face.
+BENCHMARK_FONT <- "BenchmarkSans"
+register_benchmark_font <- function() {
+  if (BENCHMARK_FONT %in% systemfonts::registry_fonts()$family) return(invisible())
+  dir <- Sys.glob(file.path(R.home(), "..", "python3*", "site-packages", "matplotlib", "mpl-data", "fonts", "ttf"))
+  files <- file.path(dir[1], c("DejaVuSans.ttf", "DejaVuSans-Bold.ttf"))
+  if (length(dir) && all(file.exists(files))) systemfonts::register_font(BENCHMARK_FONT, plain = files[[1]], bold = files[[2]])
 }
 
-plot_benchmark_figure <- function(tables) {
+benchmark_panel <- function(plot, title, y) {
+  plot + figure_1_theme() + ggplot2::labs(title = title, y = y) +
+    ggplot2::theme(text = ggplot2::element_text(family = BENCHMARK_FONT),
+      plot.title = ggplot2::element_text(size = 8.5, face = "bold", hjust = 0, margin = ggplot2::margin(b = 3)))
+}
+
+benchmark_nuclei_scale <- function() {
+  ggplot2::scale_x_continuous("Input nuclei", breaks = seq(0, 1e6, by = 250e3),
+    labels = scales::label_number(scale_cut = scales::cut_short_scale()), limits = c(0, NA),
+    expand = ggplot2::expansion(mult = c(.02, .05)))
+}
+
+# `top` leaves room above the data for labels.
+benchmark_linear_scale <- function(..., top = .1) {
+  ggplot2::scale_y_continuous(..., limits = c(0, NA), expand = ggplot2::expansion(mult = c(0, top)))
+}
+
+benchmark_text <- function(...) ggplot2::geom_text(..., family = BENCHMARK_FONT, size = 2.1, lineheight = .9, colour = "grey25")
+
+# A figure's panels under their shared legend, tagged from A.
+benchmark_figure <- function(plots, ncol) {
+  rows <- ceiling(length(plots) / ncol)
+  design <- c(strrep("A", ncol), vapply(seq_len(rows), \(row)
+    paste(LETTERS[1 + (row - 1) * ncol + seq_len(ncol)], collapse = ""), character(1)))
+  patchwork::wrap_plots(c(list(patchwork::guide_area()), plots), design = paste(design, collapse = "\n"),
+    heights = c(.08, rep(1, rows)), guides = "collect", axis_titles = "collect") +
+    patchwork::plot_annotation(tag_levels = "A") &
+    ggplot2::theme(legend.position = "top", legend.margin = ggplot2::margin(0, 0, 0, 0),
+      plot.tag = ggplot2::element_text(family = BENCHMARK_FONT, face = "bold", size = 11))
+}
+
+# Supplementary Figures S2, S3 and S4 from the Table S6 data, named by figure.
+plot_benchmark_figures <- function(tables) {
+  default <- names(BENCHMARK_WORKFLOW_COLOURS)[[3]]
   like_for_like <- dplyr::bind_rows(
     tables$seurat_signac_comparison_resources |>
       dplyr::filter(.data$workflow != "multiomeR") |>
-      dplyr::mutate(workflow = dplyr::recode(.data$workflow, "multiomeR + Seurat exports" = "multiomeR, SCTransform")),
+      dplyr::mutate(workflow = paste(dplyr::recode(.data$workflow, "multiomeR + Seurat exports" = "multiomeR"), "(SCTransform)")),
     tables$benchmark_sizing |>
       dplyr::filter(.data$scope == "like for like: multiomeR + Seurat exports") |>
-      dplyr::mutate(workflow = "multiomeR, default normalization")) |>
+      dplyr::mutate(workflow = default)) |>
     dplyr::mutate(workflow = factor(.data$workflow, names(BENCHMARK_WORKFLOW_COLOURS)))
-  measures <- c(critical_path_hours = "Critical path (h)", used_CPU_hours = "CPU time (CPU-hours)",
-    used_RAM_GB_hours = "Memory (GB-hours)", peak_RAM_GB = "Peak memory of a worker (GB)", disk_space_GB = "Disk space (GB)")
-  # Fold change of the Seurat/Signac chain over multiomeR on SCTransform at the largest shared size.
+  # Title, axis title, and how multiomeR compares when lower and when higher.
+  measures <- list(simulated_wall_time_hours = c("Run time on 128 cores", "Estimated hours", "shorter", "longer"),
+    used_CPU_hours = c("CPU time", "CPU-hours", "less", "more"),
+    used_RAM_GB_hours = c("Memory use summed over the run", "GB-hours", "less", "more"),
+    peak_RAM_GB = c("Memory of the largest worker", "Peak GB", "less", "more"),
+    disk_space_GB = c("Disk space", "GB, with Cell Ranger inputs", "less", "more"))
   largest_shared <- max(tables$seurat_signac_comparison_resources$cellranger_input_nuclei)
-  like_panels <- lapply(names(measures), \(measure) {
+  like_panels <- purrr::imap(measures, \(words, measure) {
     values <- dplyr::transmute(like_for_like, .data$cellranger_input_nuclei, .data$workflow, value = .data[[measure]])
-    shared <- dplyr::filter(values, .data$cellranger_input_nuclei == largest_shared,
-      .data$workflow %in% c("multiomeR, SCTransform", "Seurat/Signac"))
-    ratio <- shared$value[shared$workflow == "Seurat/Signac"] / shared$value[shared$workflow == "multiomeR, SCTransform"]
-    # Differences under 10% get no label.
-    fold <- tibble::tibble(x = largest_shared, y = sqrt(prod(shared$value)),
-      label = sprintf("%.1f\u00d7 %s", pmax(ratio, 1 / ratio), if (ratio > 1) "lower" else "higher"))[abs(log(ratio)) >= log(1.1), ]
-    ggplot2::ggplot(values, ggplot2::aes(.data$cellranger_input_nuclei, .data$value, colour = .data$workflow)) +
+    shared <- dplyr::filter(values, .data$cellranger_input_nuclei == largest_shared, .data$workflow != default)
+    multiomeR <- shared$value[shared$workflow == "multiomeR (SCTransform)"]
+    baseline <- shared$value[shared$workflow == "Seurat/Signac (SCTransform)"]
+    # How multiomeR differs from the baseline at the largest shared size: as a fold difference from
+    # 1.5-fold, as a percentage below it, and not under 10%.
+    ratio <- multiomeR / baseline
+    change <- if (max(ratio, 1 / ratio) >= 1.5) sprintf("%.1f×", max(ratio, 1 / ratio)) else sprintf("%.0f%%", 100 * abs(ratio - 1))
+    fold <- tibble::tibble(x = largest_shared, y = min(shared$value), yend = max(shared$value),
+      label = sprintf("multiomeR\n%s %s", change, words[[if (ratio < 1) 3 else 4]])) |>
+      dplyr::filter(.data$yend / .data$y >= 1.1)
+    plot <- ggplot2::ggplot(values, ggplot2::aes(.data$cellranger_input_nuclei, .data$value, colour = .data$workflow)) +
+      ggplot2::geom_segment(data = fold, ggplot2::aes(.data$x, .data$y, xend = .data$x, yend = .data$yend), inherit.aes = FALSE,
+        linewidth = .3, colour = "grey45") +
       ggplot2::geom_line(linewidth = .5) + ggplot2::geom_point(size = 1.2) +
-      ggplot2::geom_segment(data = tibble::tibble(x = largest_shared, y = min(shared$value), yend = max(shared$value))[seq_len(nrow(fold)), ],
-        ggplot2::aes(.data$x, .data$y, xend = .data$x, yend = .data$yend), inherit.aes = FALSE,
-        linetype = "dashed", linewidth = .3, colour = "grey45") +
-      ggplot2::geom_label(data = fold, ggplot2::aes(.data$x, .data$y, label = .data$label), inherit.aes = FALSE,
-        family = "NimbusSan", size = 2, colour = "grey25", linewidth = 0, label.padding = grid::unit(.6, "pt"), hjust = 1.08) +
-      benchmark_nuclei_scale() +
-      ggplot2::scale_y_log10(labels = scales::label_number(drop0trailing = TRUE)) +
-      ggplot2::scale_colour_manual(values = BENCHMARK_WORKFLOW_COLOURS, name = NULL, drop = FALSE) +
-      figure_1_theme() + ggplot2::labs(x = "Input nuclei", y = measures[[measure]])
+      # Above and left of the higher value, where the lines leave room on linear axes.
+      benchmark_text(data = fold, ggplot2::aes(.data$x, .data$yend, label = .data$label), inherit.aes = FALSE,
+        hjust = 1.05, vjust = -.15) +
+      benchmark_nuclei_scale() + benchmark_linear_scale(labels = scales::label_number(drop0trailing = TRUE), top = .22) +
+      ggplot2::scale_colour_manual(values = BENCHMARK_WORKFLOW_COLOURS, name = NULL, drop = FALSE)
+    benchmark_panel(plot, words[[1]], words[[2]])
   })
-  # The joined RNA count matrix that SCTransform converts holds at most 2^31 - 1 non-zero entries.
-  sizes <- tables$benchmark_sizes
+  # The joined RNA count matrix that SCTransform converts holds at most 2^31 - 1 non-zero entries. The
+  # label of the largest size, just above that limit, sits a line higher to clear it.
+  sizes <- dplyr::mutate(tables$benchmark_sizes, label = sprintf("%d samples:\n%.2f billion", .data$GEM_well_count, .data$RNA_nonzero_entries / 1e9),
+    vjust = dplyr::if_else(.data$GEM_well_count == max(.data$GEM_well_count), -1.1, -.2))
   ceiling <- ggplot2::ggplot(sizes, ggplot2::aes(.data$cellranger_input_nuclei, .data$RNA_nonzero_entries)) +
-    ggplot2::geom_hline(yintercept = 2^31 - 1, linetype = "dashed", linewidth = .3, colour = "#e34948") +
-    ggplot2::annotate("text", x = min(sizes$cellranger_input_nuclei), y = 2^31 - 1, hjust = 0, vjust = -.4,
-      label = sprintf("Most values an in-memory\nmatrix holds, %.2f billion\n(SCTransform fails above)", (2^31 - 1) / 1e9), family = "NimbusSan", size = 2.2,
-      lineheight = .9, colour = "grey25") +
-    ggplot2::geom_line(linewidth = .5, colour = "grey30") + ggplot2::geom_point(size = 1.2, colour = "grey30") +
-    ggplot2::geom_text(data = dplyr::slice_max(sizes, .data$RNA_nonzero_entries, n = 1),
-      ggplot2::aes(label = sprintf("%.2f billion", .data$RNA_nonzero_entries / 1e9)),
-      hjust = 1.15, vjust = 1.6, family = "NimbusSan", size = 2.2, colour = "grey25") +
+    ggplot2::geom_hline(yintercept = 2^31 - 1, linetype = "dashed", linewidth = .3, colour = "grey30") +
+    ggplot2::annotate("text", x = min(sizes$cellranger_input_nuclei), y = 2^31 - 1, hjust = 0, vjust = -.4, family = BENCHMARK_FONT,
+      size = 2.1, lineheight = .9, colour = "grey25",
+      label = sprintf("In-memory matrix limit:\n%.2f billion", (2^31 - 1) / 1e9)) +
+    ggplot2::geom_line(linewidth = .5, colour = "grey55") + ggplot2::geom_point(size = 1.2, colour = "grey30") +
+    benchmark_text(data = dplyr::filter(sizes, .data$GEM_well_count %in% c(31, max(.data$GEM_well_count))),
+      ggplot2::aes(label = .data$label, vjust = .data$vjust), hjust = 1.12) +
     benchmark_nuclei_scale() +
-    ggplot2::scale_y_log10(labels = scales::label_number(scale_cut = scales::cut_short_scale()),
-      expand = ggplot2::expansion(mult = c(.05, .45))) +
-    figure_1_theme() + ggplot2::labs(x = "Input nuclei", y = "RNA non-zero entries")
+    benchmark_linear_scale(labels = scales::label_number(scale_cut = scales::cut_short_scale()), top = .3)
+  ceiling <- benchmark_panel(ceiling, "SCTransform's size limit", "Non-zero RNA counts")
 
-  # Sizing: wall time on unlimited workers and on the configured workers. Lines follow the primary
-  # module at every size; triangles add the optional modules where the aggregation runs them.
-  full <- tables$benchmark_sizing |>
+  # Sizing: multiomeR's full analysis with its defaults. The primary module ran at every size, the
+  # optional modules only at 31 and 91 samples, so their two points stay unconnected; the largest
+  # analysis is labelled.
+  modules <- "With all three optional modules, run at 31 and 91 samples"
+  sizing <- tables$benchmark_sizing |>
     dplyr::filter(!startsWith(.data$scope, "like for like")) |>
-    tidyr::pivot_longer(c("critical_path_hours", "simulated_wall_time_hours"), names_to = "measure") |>
-    dplyr::mutate(measure = dplyr::recode(.data$measure, critical_path_hours = "Unlimited workers",
-      simulated_wall_time_hours = "One 128-core server (estimated)"))
-  wall_time <- ggplot2::ggplot(full, ggplot2::aes(.data$cellranger_input_nuclei, .data$value, linetype = .data$measure)) +
-    ggplot2::geom_line(data = dplyr::filter(full, .data$scope == "primary module"), linewidth = .5,
-      colour = BENCHMARK_WORKFLOW_COLOURS[["multiomeR, default normalization"]]) +
-    ggplot2::geom_point(ggplot2::aes(shape = .data$scope), size = 1.4, colour = BENCHMARK_WORKFLOW_COLOURS[["multiomeR, default normalization"]]) +
-    ggplot2::scale_shape_manual(values = c("primary module" = 16, "primary and optional modules" = 17), name = NULL) +
-    ggplot2::scale_linetype_manual(values = c("Unlimited workers" = "dashed", "One 128-core server (estimated)" = "solid"), name = NULL) +
-    benchmark_nuclei_scale() + ggplot2::scale_y_log10(labels = scales::label_number(drop0trailing = TRUE)) +
-    figure_1_theme() + ggplot2::theme(legend.position = "inside", legend.position.inside = c(.02, .98),
-      legend.justification = c(0, 1), legend.box.just = "left", legend.spacing.y = grid::unit(0, "pt"),
-      legend.key.height = grid::unit(8, "pt"), legend.background = ggplot2::element_blank()) +
-    ggplot2::labs(x = "Input nuclei", y = "Wall time (h)")
-  stages <- tables$benchmark_sizing_stages |>
-    dplyr::mutate(stage = factor(.data$stage, rev(names(BENCHMARK_STAGE_COLOURS))),
-      GEM_wells = factor(.data$GEM_well_count, sort(unique(.data$GEM_well_count))))
-  totals <- dplyr::summarise(stages, CPU_hours = sum(.data$used_CPU_hours), .by = "GEM_wells")
-  stage_shares <- ggplot2::ggplot(stages, ggplot2::aes(.data$GEM_wells, .data$used_CPU_hours, fill = .data$stage)) +
-    ggplot2::geom_col(position = "fill", width = .7, colour = "white", linewidth = .3) +
-    ggplot2::geom_text(data = totals, ggplot2::aes(.data$GEM_wells, 1, label = scales::label_number(accuracy = .1)(.data$CPU_hours)),
-      inherit.aes = FALSE, vjust = -.4, family = "NimbusSan", size = 2) +
-    ggplot2::scale_fill_manual(values = BENCHMARK_STAGE_COLOURS, name = NULL, breaks = names(BENCHMARK_STAGE_COLOURS),
-      labels = c(setup = "setup", "per-well" = "per-well", aggregation = "aggregation", genetic_enrichment = "genetic enrichment",
-        differential_analyses = "differential analyses", peak_gene_correlation = "peak\u2013gene correlation")) +
-    ggplot2::scale_y_continuous(labels = scales::label_percent(), expand = ggplot2::expansion(mult = c(0, .1))) +
-    figure_1_theme() + ggplot2::theme(panel.grid.major.x = ggplot2::element_blank()) +
-    ggplot2::labs(x = "Samples (CPU-hours above)", y = "Share of CPU time")
+    dplyr::mutate(scope = factor(dplyr::if_else(.data$scope == "primary module", "Primary module", modules), c("Primary module", modules)))
+  sizing_measures <- list(simulated_wall_time_hours = c("Run time on 128 cores", "Estimated hours", "%.1f h"),
+    used_CPU_hours = c("CPU time", "CPU-hours", "%.0f CPU-hours"),
+    peak_RAM_GB = c("Memory of the largest worker", "Peak GB", "%.0f GB"),
+    disk_space_GB = c("Disk space", "GB, with Cell Ranger inputs", "%.0f GB"))
+  sizing_panels <- purrr::imap(sizing_measures, \(words, measure) {
+    values <- dplyr::mutate(sizing, value = .data[[measure]])
+    largest <- dplyr::slice_max(values, .data$cellranger_input_nuclei, n = 1) |> dplyr::slice_max(.data$scope, n = 1) |>
+      dplyr::mutate(label = sprintf(words[[3]], .data$value))
+    plot <- ggplot2::ggplot(values, ggplot2::aes(.data$cellranger_input_nuclei, .data$value)) +
+      ggplot2::geom_line(data = dplyr::filter(values, .data$scope == "Primary module"), linewidth = .5, colour = BENCHMARK_DEFAULT_COLOUR) +
+      ggplot2::geom_point(ggplot2::aes(shape = .data$scope), size = 1.6, colour = BENCHMARK_DEFAULT_COLOUR) +
+      benchmark_text(data = largest, ggplot2::aes(label = .data$label), hjust = 1.15, vjust = -.4) +
+      ggplot2::scale_shape_manual(values = c(16, 17), name = NULL) +
+      benchmark_nuclei_scale() + benchmark_linear_scale(labels = scales::label_number(drop0trailing = TRUE))
+    benchmark_panel(plot, words[[1]], words[[2]])
+  })
 
-  # Revisions: each rebuild as shares of the full build, with the targets it reran and its measured elapsed time.
+  # Revisions, in the order applied: each change's estimated wall time as a share of the full build's,
+  # with the steps it reran and its measured elapsed time. A script without saved intermediates reruns
+  # everything.
+  full <- dplyr::filter(tables$benchmark_revisions, .data$revision == "full build")
   revisions <- tables$benchmark_revisions |>
     dplyr::filter(.data$revision != "full build") |>
-    dplyr::mutate(label = sprintf("%s (%s of %s steps, %.0f min)", .data$change, scales::comma(.data$targets),
-      scales::comma(.data$targets_total), 60 * .data$measured_elapsed_hours),
-      label = factor(.data$label, rev(.data$label))) |>
-    tidyr::pivot_longer(c("critical_path_share", "CPU_share", "wall_time_share"), names_to = "measure", values_to = "share") |>
-    dplyr::mutate(measure = factor(dplyr::recode(.data$measure, critical_path_share = "Critical path",
-      CPU_share = "CPU time", wall_time_share = "Wall time"), c("Critical path", "CPU time", "Wall time")))
-  revision_plot <- ggplot2::ggplot(revisions, ggplot2::aes(.data$share, .data$label)) +
-    ggplot2::geom_col(width = .6, fill = BENCHMARK_WORKFLOW_COLOURS[["multiomeR, default normalization"]]) +
-    ggplot2::geom_text(ggplot2::aes(label = dplyr::if_else(.data$share < .01, "<1%", scales::label_percent(accuracy = 1)(.data$share))),
-      hjust = -.15, family = "NimbusSan", size = 2) +
-    ggplot2::facet_wrap(ggplot2::vars(.data$measure), nrow = 1) +
-    ggplot2::scale_x_continuous(labels = scales::label_percent(), limits = c(0, 1.3), breaks = c(0, .5, 1)) +
-    figure_1_theme() + ggplot2::theme(panel.grid.major.y = ggplot2::element_blank()) +
-    ggplot2::labs(x = "Share of the full build", y = NULL)
+    dplyr::mutate(label = sprintf("%d. %s\n%s of %s steps rerun", dplyr::row_number(), .data$change, scales::comma(.data$targets),
+        scales::comma(.data$targets_total)),
+      label = factor(.data$label, rev(.data$label)),
+      value = sprintf("%s, %.0f min", dplyr::if_else(.data$wall_time_share < .01, "<1%",
+        scales::label_percent(accuracy = 1)(.data$wall_time_share)), 60 * .data$measured_elapsed_hours))
+  revision_plot <- ggplot2::ggplot(revisions, ggplot2::aes(.data$wall_time_share, .data$label)) +
+    ggplot2::geom_col(width = .62, fill = BENCHMARK_DEFAULT_COLOUR) +
+    ggplot2::geom_vline(xintercept = 1, linetype = "dashed", linewidth = .3, colour = "grey30") +
+    ggplot2::annotate("text", x = 1, y = nrow(revisions) + .45, hjust = -.04, vjust = 0, family = BENCHMARK_FONT, size = 2.1,
+      colour = "grey25", label = sprintf("Full build, %.1f h", full$simulated_wall_time_hours)) +
+    # Long bars hold their value inside, clear of the full build's line.
+    benchmark_text(data = dplyr::filter(revisions, .data$wall_time_share < .5), ggplot2::aes(label = .data$value), hjust = -.08) +
+    ggplot2::geom_text(data = dplyr::filter(revisions, .data$wall_time_share >= .5), ggplot2::aes(label = .data$value),
+      hjust = 1.08, family = BENCHMARK_FONT, size = 2.1, colour = "white") +
+    ggplot2::scale_x_continuous("Share of a full build's estimated run time", labels = scales::label_percent(),
+      limits = c(0, 1.32), breaks = c(0, .25, .5, .75, 1), expand = ggplot2::expansion(mult = c(0, .02))) +
+    ggplot2::scale_y_discrete(expand = ggplot2::expansion(add = c(.6, 1)))
+  revision_plot <- benchmark_panel(revision_plot, "Run time of each change after a full build, in the order applied", NULL) +
+    ggplot2::theme(panel.grid.major.y = ggplot2::element_blank(), axis.text.y = ggplot2::element_text(size = 7, hjust = 1))
 
-  like_for_like_panels <- patchwork::wrap_plots(c(like_panels, list(ceiling)), ncol = 3, guides = "collect") &
-    ggplot2::theme(legend.position = "top")
-  # The revision labels are long; freeing that panel keeps them from widening every row's margin.
-  patchwork::wrap_plots(like_for_like_panels, patchwork::wrap_plots(wall_time, stage_shares, widths = c(1, 1.6)),
-    patchwork::free(revision_plot), ncol = 1, heights = c(2, 1.1, .9)) +
-    patchwork::plot_annotation(tag_levels = "A") &
-    ggplot2::theme(plot.tag = ggplot2::element_text(family = "NimbusSan", face = "bold", size = 11))
+  list(S2 = benchmark_figure(c(like_panels, list(ceiling)), ncol = 3), S3 = benchmark_figure(sizing_panels, ncol = 2),
+    S4 = revision_plot)
+}
+
+# Saves each figure as <name>.png at its size, with the bold font where the environment has it.
+save_benchmark_figures <- function(plots, output_dir) {
+  register_benchmark_font()
+  paths <- file.path(output_dir, paste0(names(plots), ".png"))
+  purrr::walk2(names(plots), paths, \(name, path) ggplot2::ggsave(path, plots[[name]], device = ragg::agg_png,
+    width = BENCHMARK_FIGURE_SIZES[[name]][[1]], height = BENCHMARK_FIGURE_SIZES[[name]][[2]], dpi = 300, create.dir = TRUE))
+  paths
 }

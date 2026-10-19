@@ -615,8 +615,9 @@ get_SLDSC_LD_score_record <- function(annotation_matrix, annotation_ranges, refe
 #'   regression weights.
 #' @param shared_annotations Annotations in every model.
 #' @param candidate_groups List of the annotations each model adds. A model
-#'   with an annotation without common SNPs, such as the genes of a cell type
-#'   that expresses none, cannot be fitted and has no rows.
+#'   has no rows when one of its annotations has LD scores in too few blocks
+#'   to survive the deletions below, as the genes of a cell type that
+#'   expresses few or none.
 #' @param n_blocks Jackknife blocks.
 #' @param n_influential_blocks Numbers of most influential blocks to delete.
 #' @return One row per candidate with its coefficient, its delete-one-block
@@ -646,8 +647,10 @@ fit_SLDSC_candidate_regressions <- function(chi2, N, weight_L2, L2_matrix, M, we
     matrix(0, ncol(design_matrix), ncol(design_matrix))
   )
   intercept_col <- ncol(design_matrix) - 1L
+  # Deleting the blocks that hold all of an annotation's LD scores makes its fits singular.
+  blocks_with_scores <- rowSums(apply(block_crossproducts, 3L, diag) > 0)
   purrr::map_dfr(candidate_groups, \(candidates) {
-    if (any(M[candidates] == 0)) return(NULL)
+    if (any(blocks_with_scores[match(candidates, annotations)] < max(n_influential_blocks) + 2L)) return(NULL)
     model_annotations <- c(shared_annotations, candidates)
     model_cols <- c(match(model_annotations, annotations), intercept_col)
     XtX_blocks <- block_crossproducts[model_cols, model_cols, , drop = FALSE]

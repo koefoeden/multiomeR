@@ -72,8 +72,8 @@ get_SLDSC_matched_annotation_record <- function(score_matrix, ranges, reference_
 #' @inheritParams fit_SLDSC_candidate_regressions
 #' @param overlap_matrix Candidate-by-shared-annotation sums over each
 #'   candidate's common SNPs.
-#' @param candidates Binary candidate annotations, one per model. Candidates
-#'   without common SNPs cannot be fitted and have no rows.
+#' @param candidates Binary candidate annotations, one per model. A candidate
+#'   with LD scores in fewer than two blocks has no jackknife and no row.
 #' @return One row per candidate with its coefficient, its share of the
 #'   model's heritability and the model's total heritability, each with a
 #'   jackknife standard error.
@@ -83,8 +83,9 @@ fit_SLDSC_enrichment_regressions <- function(chi2, N, weight_L2, L2_matrix, M, o
   annotations <- c(shared_annotations, candidates)
   blocks <- get_SLDSC_block_crossproducts(chi2, N, weight_L2, L2_matrix, M, shared_annotations, annotations, n_blocks)
   n_shared <- length(shared_annotations)
+  blocks_with_scores <- rowSums(apply(blocks$block_crossproducts, 3L, diag) > 0)
   purrr::map_dfr(seq_along(candidates), \(i) {
-    if (M[[candidates[[i]]]] == 0) return(NULL)
+    if (blocks_with_scores[[n_shared + i]] < 2L) return(NULL)
     model_cols <- c(seq_len(n_shared), n_shared + i, length(annotations) + 1L)
     fit <- jackknife_LDSC_blocks(
       blocks$block_crossproducts[model_cols, model_cols, , drop = FALSE],

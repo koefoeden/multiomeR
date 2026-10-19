@@ -877,7 +877,7 @@ plot_SLDSC_cell_type_heatmap <- function(SLDSC_tibble, GWAS_inputs_tibble, compa
     title = "Heritability enrichment in cell-type-specific accessibility (S-LDSC)",
     subtitle = paste(
       "Red marks cell types whose specifically accessible peaks carry more per-SNP heritability than peaks in general.",
-      "Stars mark nominal (*) and FDR-significant (**) enrichment; outlines mark the cell types not significantly below the top significant one, which contain the most relevant cell type.",
+      "Stars mark nominal (*) and FDR-significant (**) enrichment; a black outline marks the top significant cell type and grey outlines the cell types not significantly below it; together they contain the most relevant cell type.",
       sep = "\n"
     ),
     caption = stringr::str_wrap(paste(
@@ -885,7 +885,7 @@ plot_SLDSC_cell_type_heatmap <- function(SLDSC_tibble, GWAS_inputs_tibble, compa
       "Each cell type is fitted jointly with an all-peaks annotation and the 97 baseline-LD v2.2 annotations to HapMap3 SNP summary statistics from the GWAS Catalog or a configured release, using GRCh38 1000 Genomes European LD.",
       sprintf("Colour: tau*, the change in per-SNP heritability per standard deviation of the annotation, relative to the mean per-SNP heritability; values beyond ±%s take the end colours.", colour_limit),
       "Stars: * one-sided coefficient P < 0.05 from its 200-block jackknife; ** also Benjamini-Hochberg q < 0.05 over all GWAS and cell types.",
-      "Outlines: in GWAS with a cell type at q < 0.05, the one of these with the largest tau* and every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types",
+      "Outlines: in GWAS with a cell type at q < 0.05, black marks the one of these with the largest tau* and grey every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types",
       "(Bonferroni, so the set holds the cell type with the largest true tau* with at least 95% probability); shortfall standard errors come from paired jackknife differences over the same blocks.",
       if (any(without_sumstats)) paste0("Grey rows have no usable genome-wide summary statistics: ", list_GWAS(without_sumstats), "."),
       if (any(low_h2)) paste0("Heritability z < 7, so partitioning is less reliable: ", list_GWAS(low_h2), "."),

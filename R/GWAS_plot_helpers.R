@@ -338,7 +338,8 @@ get_plot_group_breaks <- function(ordered_values) {
 #' @param fill_limits Optional numeric fill-scale limits.
 #' @param support_label_col Optional text column drawn on top of heatmap tiles.
 #' @param top_set_col Optional logical column whose `TRUE` tiles are outlined
-#'   as each GWAS's top set.
+#'   as each GWAS's top set: its anchor, whose `z_below_anchor` is zero, in
+#'   black and the rest in grey.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
@@ -378,16 +379,19 @@ plot_GWAS_feature_heatmap <- function(
     ggplot2::geom_vline(xintercept = feature_breaks, color = "grey30", linewidth = 0.35)
 
   if (!is.null(top_set_col)) {
+    top_set_roles <- c("Top significant" = "grey5", "Not significantly below it" = "grey60")
     feature_plot <- feature_plot +
       ggplot2::geom_tile(
-        data = \(data) dplyr::filter(data, .data[[top_set_col]] %in% TRUE),
-        ggplot2::aes(colour = "Top set"),
+        data = \(data) data |>
+          dplyr::filter(.data[[top_set_col]] %in% TRUE) |>
+          dplyr::mutate(top_set_role = dplyr::if_else(z_below_anchor == 0, names(top_set_roles)[[1]], names(top_set_roles)[[2]])),
+        ggplot2::aes(colour = top_set_role),
         fill = NA,
         linewidth = 0.6,
         width = 0.92,
         height = 0.88
       ) +
-      ggplot2::scale_colour_manual(values = c("Top set" = "grey5"), name = NULL)
+      ggplot2::scale_colour_manual(values = top_set_roles, breaks = names(top_set_roles), name = NULL)
   }
 
   if (!is.null(support_label_col) && support_label_col %in% colnames(score_plot_data)) {
@@ -798,7 +802,7 @@ plot_GWAS_chromVAR_deviation_heatmap <- function(deviation_tibble, top_set_tibbl
     subtitle = paste(
       if (standardize) "Compare cell types within each trait; red indicates above-average deviation."
       else "Positive values indicate accessibility above that expected from matched background peaks.",
-      "Stars mark nominal (*) and FDR-significant (**) enrichment; outlines mark the cell types not significantly below the top significant one, which contain the most relevant cell type.",
+      "Stars mark nominal (*) and FDR-significant (**) enrichment; a black outline marks the top significant cell type and grey outlines the cell types not significantly below it; together they contain the most relevant cell type.",
       sep = "\n"),
     caption = stringr::str_wrap(paste(
       "ATAC counts are summed by WNN cell type. The expected accessibility averages the depth-normalized cell-type profiles, so abundant cell types do not dominate the reference.",
@@ -812,7 +816,7 @@ plot_GWAS_chromVAR_deviation_heatmap <- function(deviation_tibble, top_set_tibbl
       "Stars: * one-sided P < 0.05, the share of 10,000 copies of the GWAS whose background z-score is at least as high;",
       "** also Benjamini-Hochberg q < 0.05 over all GWAS and cell types. Each copy moves the credible sets 0.5-2 Mb along their chromosomes, which keeps the clustering of real loci.",
       "The background z-score divides the deviation by its SD under independently drawn matched background peaks.",
-      "Outlines: in GWAS with a cell type at q < 0.05, the one of these with the largest deviation and every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types",
+      "Outlines: in GWAS with a cell type at q < 0.05, black marks the one of these with the largest deviation and grey every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types",
       "(Bonferroni, so the set holds the cell type with the largest true deviation with at least 95% probability).",
       "Shortfall standard errors come from 1,000 bootstrap samples of the GWAS loci (credible sets with lead variants within 500 kb grouped), which re-sum their exact contributions with the background fixed; GWAS with fewer than 10 loci get no top set.",
       "Nuclei counts describe input support; cell types are pooled, so donors are not independent replicates."

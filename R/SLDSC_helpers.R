@@ -615,8 +615,9 @@ get_SLDSC_LD_score_record <- function(annotation_matrix, annotation_ranges, refe
 #'   regression weights.
 #' @param shared_annotations Annotations in every model.
 #' @param candidate_groups List of the annotations each model adds. A model
-#'   with an annotation without common SNPs, such as the genes of a cell type
-#'   that expresses none, cannot be fitted and has no rows.
+#'   has no rows when one of its annotations has LD scores in too few blocks
+#'   to survive the deletions below, as the genes of a cell type that
+#'   expresses few or none.
 #' @param n_blocks Jackknife blocks.
 #' @param n_influential_blocks Numbers of most influential blocks to delete.
 #' @return One row per candidate with its coefficient, its delete-one-block
@@ -646,8 +647,10 @@ fit_SLDSC_candidate_regressions <- function(chi2, N, weight_L2, L2_matrix, M, we
     matrix(0, ncol(design_matrix), ncol(design_matrix))
   )
   intercept_col <- ncol(design_matrix) - 1L
+  # Deleting the blocks that hold all of an annotation's LD scores makes its fits singular.
+  blocks_with_scores <- rowSums(apply(block_crossproducts, 3L, diag) > 0)
   purrr::map_dfr(candidate_groups, \(candidates) {
-    if (any(M[candidates] == 0)) return(NULL)
+    if (any(blocks_with_scores[match(candidates, annotations)] < max(n_influential_blocks) + 2L)) return(NULL)
     model_annotations <- c(shared_annotations, candidates)
     model_cols <- c(match(model_annotations, annotations), intercept_col)
     XtX_blocks <- block_crossproducts[model_cols, model_cols, , drop = FALSE]
@@ -903,7 +906,8 @@ plot_SLDSC_cell_type_heatmap <- function(SLDSC_tibble, GWAS_inputs_tibble, compa
 #'
 #' @param SLDSC_tibble Combined cell-type S-LDSC results.
 #' @param chromVAR_deviation_tibble Cell-type pseudobulk chromVAR results.
-#' @return One row per GWAS with summary statistics and cell type.
+#' @return One row per GWAS with summary statistics and cell type with a
+#'   finite chromVAR z-score, which a pseudobulk of very few nuclei may lack.
 #' @keywords internal
 
 pair_SLDSC_chromVAR_z <- function(SLDSC_tibble, chromVAR_deviation_tibble) {
@@ -911,7 +915,8 @@ pair_SLDSC_chromVAR_z <- function(SLDSC_tibble, chromVAR_deviation_tibble) {
     dplyr::filter(!is.na(z)) |>
     dplyr::select(GWAS_ID, Category, cluster, SLDSC_z = z, SLDSC_p = p, h2, h2_se, sample_size, ancestry_EUR, n_cells) |>
     dplyr::inner_join(
-      dplyr::select(chromVAR_deviation_tibble, GWAS_ID, cluster, chromVAR_z = z, chromVAR_p = z_p),
+      dplyr::filter(chromVAR_deviation_tibble, is.finite(z)) |>
+        dplyr::select(GWAS_ID, cluster, chromVAR_z = z, chromVAR_p = z_p),
       by = c("GWAS_ID", "cluster")
     )
 }
@@ -1033,7 +1038,7 @@ plot_SLDSC_chromVAR_agreement <- function(SLDSC_tibble, chromVAR_deviation_tibbl
   pivot_predictors <- \(tibble, predictors) {
     tibble |>
       tidyr::pivot_longer(dplyr::all_of(unname(predictors)), names_to = "predictor", values_to = "value") |>
-      dplyr::filter(!is.na(value)) |>
+      dplyr::filter(!is.na(value), !is.na(rho)) |>
       dplyr::mutate(predictor = factor(predictor, predictors, names(predictors))) |>
       dplyr::mutate(
         strip = sprintf(

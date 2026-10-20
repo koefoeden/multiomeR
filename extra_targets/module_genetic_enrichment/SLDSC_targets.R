@@ -35,7 +35,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = SLDSC_cell_type_records.cell_type_pseudobulk,
-    description = "Fit S-LDSC for each cell type of one GWAS: its peak annotation with all peaks, its gene annotation with all genes, and both jointly, each with the baseline-LD model [resource_observation: peak_RAM_GiB=4.3; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-12] [resource_observation: peak_RAM_GiB=10.5; n_nuclei=740k; aggregation=unpublished; method=slurm_monitor; date=2026-10-16]",
+    description = "Fit S-LDSC for each cell type of one GWAS: its peak annotation with all peaks, its gene annotation with all genes, and both jointly, each with the baseline-LD model [resource_observation: peak_RAM_GiB=4.3; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-12] [resource_observation: peak_RAM_GiB=10.5; n_nuclei=740k; aggregation=unpublished; method=slurm_monitor; date=2026-10-16] [resource_observation: peak_RAM_GiB=30 in most branches, one crashed twice at its 48 GB limit; n_nuclei=1.16M; aggregation=sizing_91x; method=slurm_monitor; date=2026-10-20]",
     command = get_SLDSC_cell_type_tibble(
       GWAS_input_record = GWAS_input_records,
       sumstats_record = SLDSC_sumstats_records,
@@ -46,7 +46,7 @@ rlang::list2(
     # Select the shared summary-statistics branches of this aggregation's GWAS.
     pattern = map(GWAS_input_records, slice(SLDSC_sumstats_records, index = SLDSC_sumstats_index)),
     iteration = "vector",
-    resources = get_tar_resources(RAM_GB_req = 16)
+    resources = get_tar_resources(RAM_GB_req = 60)
   ),
   targets::tar_target(
     name = SLDSC_cell_type_tibble.cell_type_pseudobulk,

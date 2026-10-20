@@ -391,12 +391,11 @@ get_SLDSC_sumstats_record <- function(sumstats_rows_record, regression_SNP_tibbl
 #' weights, divided by the number of cell types.
 #'
 #' @param pseudobulk_counts_matrix Peak-by-cell-type ATAC counts.
-#' @param cell_types Cell types to annotate.
 #' @return Dense peak-by-annotation matrix for peaks with any counts.
 #' @keywords internal
 
-get_SLDSC_peak_annotation_matrix <- function(pseudobulk_counts_matrix, cell_types) {
-  counts_matrix <- methods::as(pseudobulk_counts_matrix[, colnames(pseudobulk_counts_matrix) %in% cell_types], "dgCMatrix")
+get_SLDSC_peak_annotation_matrix <- function(pseudobulk_counts_matrix) {
+  counts_matrix <- methods::as(pseudobulk_counts_matrix, "dgCMatrix")
   counts_matrix <- as.matrix(counts_matrix[Matrix::rowSums(counts_matrix) > 0, , drop = FALSE])
   normalized_matrix <- sweep(counts_matrix, 2, colSums(counts_matrix), "/")
   cbind(all_peaks = 1, normalized_matrix / rowSums(normalized_matrix))
@@ -414,7 +413,7 @@ get_SLDSC_peak_annotation_matrix <- function(pseudobulk_counts_matrix, cell_type
 #' @param pseudobulk_counts_matrix Gene-by-pseudobulk GEX counts with columns
 #'   named `<cell type>_<donor>`.
 #' @param Ensembl_annotations_GRanges_list List with the Ensembl `genes`.
-#' @param cell_types Cell types to score.
+#' @param cell_types Cell types to score, those of the cell-type ATAC pseudobulks.
 #' @param window Bases added to each side of the gene body.
 #' @return A list with the gene-by-cell-type specificity matrix and the gene
 #'   windows, both named by GEX feature.

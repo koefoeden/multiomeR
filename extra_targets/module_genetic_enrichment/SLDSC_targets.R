@@ -1,16 +1,9 @@
 rlang::list2(
-  # A pseudobulk of very few nuclei, such as a single unassigned nucleus, has no stable profile and,
-  # with every cell type weighted equally, would distort the specificity of all the others.
-  targets::tar_target(
-    name = SLDSC_cell_types.cell_type_pseudobulk,
-    description = "Select the WNN cell types with at least 100 nuclei for S-LDSC [part_of_graph:genetic_enrichment_SLDSC]",
-    command = cell_type_pseudobulk_support_tibble.ATAC$cluster[cell_type_pseudobulk_support_tibble.ATAC$n_cells >= 100]
-  ),
   targets::tar_target(
     name = SLDSC_LD_score_record.cell_type_pseudobulk,
     description = "Compute LD scores at the S-LDSC regression SNPs of an all-peaks annotation and, per WNN cell type, each peak's share of depth-normalized pseudobulk accessibility [part_of_graph:genetic_enrichment_SLDSC] [resource_observation: peak_RAM_GiB=5.0; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-12] [resource_observation: peak_RAM_GiB=6.7; n_nuclei=740k; aggregation=unpublished; method=slurm_monitor; date=2026-10-16]",
     command = get_SLDSC_LD_score_record(
-      annotation_matrix = get_SLDSC_peak_annotation_matrix(cell_type_pseudobulk_counts_matrix.ATAC, SLDSC_cell_types.cell_type_pseudobulk),
+      annotation_matrix = get_SLDSC_peak_annotation_matrix(cell_type_pseudobulk_counts_matrix.ATAC),
       annotation_ranges = genetic_enrichment_peak_ranges,
       reference_dir = SLDSC_reference_dir,
       regression_SNP_tibble = SLDSC_regression_SNP_tibble,
@@ -22,7 +15,7 @@ rlang::list2(
     name = SLDSC_gene_specificity_record.cell_type_pseudobulk,
     description = "Score the windows (gene body +/- 100 kb) of expressed autosomal protein-coding genes by each gene's share of depth-normalized pseudobulk expression in each WNN cell type [part_of_graph:genetic_enrichment_SLDSC]",
     command = get_SLDSC_gene_specificity_record(pseudobulk_counts_matrix.GEX, marker_validated_Ensembl_annotations_GRanges_list,
-      SLDSC_cell_types.cell_type_pseudobulk)
+      colnames(cell_type_pseudobulk_counts_matrix.ATAC))
   ),
   targets::tar_target(
     name = SLDSC_gene_annotation_record.cell_type_pseudobulk,
@@ -77,7 +70,7 @@ rlang::list2(
     values = tibble::tibble(
       strategy = c("peaks", "genes"),
       score_matrix = rlang::exprs(
-        get_SLDSC_peak_annotation_matrix(cell_type_pseudobulk_counts_matrix.ATAC, SLDSC_cell_types.cell_type_pseudobulk)[, -1L],
+        get_SLDSC_peak_annotation_matrix(cell_type_pseudobulk_counts_matrix.ATAC)[, -1L],
         SLDSC_gene_specificity_record.cell_type_pseudobulk$specificity_matrix
       ),
       score_ranges = rlang::exprs(genetic_enrichment_peak_ranges, SLDSC_gene_specificity_record.cell_type_pseudobulk$ranges)

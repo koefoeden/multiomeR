@@ -9,12 +9,15 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = cell_type_pseudobulk_counts_BPCells_matrix_dir.ATAC,
-    description = "Write ATAC counts summed per WNN cell type to BPCells for descriptive GWAS chromVAR plots [part_of_graph:genetic_enrichment_cell_type_contributions] [resource_observation: peak_RAM_GiB=3.5; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-11]",
+    description = "Write ATAC counts summed per WNN cell type with at least 100 nuclei to BPCells for the cell-type chromVAR and S-LDSC analyses [part_of_graph:genetic_enrichment_cell_type_contributions] [resource_observation: peak_RAM_GiB=3.5; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-11]",
     command = {
       out_dir <- get_structured_file_path()
+      # A group of very few nuclei, such as a single unassigned nucleus that a small minimum cluster
+      # size keeps, has no stable profile, and every cell type weighs equally in the background.
       get_BPCells_group_pseudobulk_matrix(
         feature_matrix = peak_QC_filtered_BPCells_matrix.ATAC,
-        metadata_tibble = metadata_w_cell_types_tibble.WNN,
+        metadata_tibble = dplyr::filter(metadata_w_cell_types_tibble.WNN, dplyr::n() >= 100,
+          .by = "WNN_harmony_SNN_cluster_cell_type"),
         group_col = "WNN_harmony_SNN_cluster_cell_type",
         threads = 6
       ) |>

@@ -1,0 +1,1008 @@
+name	parent	seconds	completed_utc	bytes	error	node	in_store
+cellranger_summary_file.comparison_ENCSR636WIB		0	2026-09-02T11:46:27+00:00	1735		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR316WAS		0	2026-09-02T12:05:05+00:00	1737		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR788DZO		0	2026-09-02T13:22:33+00:00	1735		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR956ZER		0.001	2026-09-02T14:04:15+00:00	1736		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR264JIX		0	2026-09-02T14:53:29+00:00	1736		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR033MDU		0	2026-09-02T16:14:13+00:00	1736		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR320RLS		0.001	2026-09-02T16:16:56+00:00	1737		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR925IHI		0.001	2026-09-02T16:32:40+00:00	1738		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR245BNT		0	2026-09-02T16:37:33+00:00	1737		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR511RDV		0	2026-09-02T16:39:48+00:00	1737		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR613LBN		0	2026-09-02T17:00:55+00:00	1737		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR534YJW		0	2026-09-02T17:06:50+00:00	1737		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR568QKW		0	2026-09-02T17:12:59+00:00	1737		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR201BHG		0	2026-09-02T17:18:54+00:00	1736		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR351CSQ		0	2026-09-02T17:24:20+00:00	1737		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR508WRP		0.001	2026-09-02T17:30:00+00:00	1736		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR793DNM		0	2026-09-02T17:38:13+00:00	1737		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR923FKN		0.001	2026-09-02T18:05:20+00:00	1737		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR987VTJ		0	2026-09-02T18:19:58+00:00	1737		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR079UEO		0	2026-09-02T18:33:39+00:00	1733		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR158DQA		0	2026-09-02T18:36:02+00:00	1736		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR618WVK		0	2026-09-02T18:45:32+00:00	1737		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR233SQG		0.001	2026-09-02T18:52:43+00:00	1738		node_3	FALSE
+cellranger_summary_file.comparison_ENCSR128ZLB		0	2026-09-02T20:41:03+00:00	1735		node_3	FALSE
+cellranger_summary_file.comparison_healthy_PBMC_human		0	2026-09-07T13:56:07+00:00	1826		node_3	FALSE
+cellranger_summary_file.comparison_pbmc_unsorted_3k		0	2026-09-07T14:53:56+00:00	1824		node_3	FALSE
+cellranger_summary_file.comparison_healthy_brain_human		0.001	2026-09-07T18:39:38+00:00	1829		node_3	FALSE
+cellranger_summary_file.comparison_pbmc_granulocyte_sorted_10k		0.001	2026-09-08T00:19:43+00:00	1838		node_3	FALSE
+cellranger_summary_file.comparison_pbmc_unsorted_10k		0.001	2026-09-08T02:23:09+00:00	1827		node_3	FALSE
+cellranger_summary_file.comparison_pbmc_10k_chromium_x		0	2026-09-08T02:35:16+00:00	1830		node_3	FALSE
+cellranger_summary_file.comparison_pbmc_10k_chromium_controller		0	2026-09-08T02:54:04+00:00	1839		node_3	FALSE
+GEM_well_config_tsv		0	2026-10-19T08:45:08+00:00	23101		node_3	FALSE
+donor_id_metadata_tsv.comparison_31x		0.001	2026-10-19T08:45:08+00:00	358		node_3	FALSE
+donor_id_metadata_tsv.comparison_20x		0.001	2026-10-19T08:45:08+00:00	358		node_3	FALSE
+donor_id_metadata_tsv.comparison_5x		0	2026-10-19T08:45:08+00:00	358		node_3	FALSE
+donor_id_metadata_tsv.comparison_2x		0	2026-10-19T08:45:08+00:00	358		node_3	FALSE
+donor_id_metadata_tsv.comparison_1x		0	2026-10-19T08:45:08+00:00	358		node_3	FALSE
+donor_id_metadata_tsv.comparison_10x		0	2026-10-19T08:45:08+00:00	358		node_3	FALSE
+comparison_seurat_signac_config_files		8.567	2026-10-19T08:45:08+00:00	68686		node_3	FALSE
+cellranger_reference_json_file.comparison_healthy_brain_human		0.051	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR233SQG		0.043	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR636WIB		0.139	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR201BHG		0.051	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR956ZER		0.068	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR316WAS		0.004	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR534YJW		0.003	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR568QKW		0.003	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR158DQA		0.05	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR793DNM		0.337	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR079UEO		0.045	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_pbmc_unsorted_10k		0.052	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_healthy_PBMC_human		0.005	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR245BNT		0.007	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR987VTJ		0.02	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR320RLS		0.002	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR613LBN		0.003	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR264JIX		0.03	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR508WRP		0.026	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_pbmc_10k_chromium_x		0.002	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_pbmc_granulocyte_sorted_10k		0.002	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR618WVK		0.002	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR351CSQ		0.022	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_pbmc_unsorted_3k		0.002	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR923FKN		0.024	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR128ZLB		0.004	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR033MDU		0.002	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR511RDV		0.003	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR925IHI		0.004	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_pbmc_10k_chromium_controller		0.003	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_file.comparison_ENCSR788DZO		0.004	2026-10-19T08:45:08+00:00	1285		node_3	FALSE
+cellranger_reference_json_files		0	2026-10-19T08:45:08+00:00	3935		node_3	FALSE
+amulet_BPCells_native_source_file		0.001	2026-10-19T08:45:08+00:00	8285		node_3	FALSE
+UCell_native_source_file		0	2026-10-19T08:45:08+00:00	6698		node_3	FALSE
+cellbender_h5_file.comparison_pbmc_unsorted_10k		0	2026-10-19T09:12:32+00:00	0		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR201BHG		0.001	2026-10-19T09:12:32+00:00	0		node_3	TRUE
+cellbender_h5_file.comparison_pbmc_unsorted_3k		0	2026-10-19T09:12:32+00:00	0		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR636WIB		0	2026-10-19T09:12:32+00:00	0		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR320RLS		0	2026-10-19T09:12:32+00:00	0		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR636WIB		1.471	2026-10-19T09:12:34+00:00	121524		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR233SQG		1.637	2026-10-19T09:12:34+00:00	228969		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR201BHG		1.447	2026-10-19T09:12:34+00:00	312322		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR264JIX		0	2026-10-19T09:12:34+00:00	0		node_3	TRUE
+gene_features_df.comparison_ENCSR233SQG		2.142	2026-10-19T09:12:35+00:00	896729		node_3	TRUE
+gene_features_df.comparison_ENCSR245BNT		2.242	2026-10-19T09:12:35+00:00	896729		node_3	TRUE
+gene_features_df.comparison_ENCSR636WIB		2.053	2026-10-19T09:12:35+00:00	896729		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR956ZER		0.284	2026-10-19T09:12:35+00:00	400767		node_3	TRUE
+gene_features_df.comparison_ENCSR201BHG		0.601	2026-10-19T09:12:35+00:00	896729		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR233SQG		0.12	2026-10-19T09:12:35+00:00	691		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR618WVK		0.249	2026-10-19T09:12:35+00:00	333830		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR923FKN		0.001	2026-10-19T09:12:35+00:00	0		node_3	TRUE
+cellranger_barcodes_tsv.comparison_pbmc_unsorted_3k		0.732	2026-10-19T09:12:36+00:00	57608		node_3	TRUE
+gene_features_df.comparison_pbmc_unsorted_3k		0.506	2026-10-19T09:12:36+00:00	896729		node_3	TRUE
+gene_features_df.comparison_ENCSR128ZLB		0.497	2026-10-19T09:12:37+00:00	896729		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR033MDU		0.001	2026-10-19T09:12:37+00:00	0		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR128ZLB		0	2026-10-19T09:12:37+00:00	0		node_3	TRUE
+cellsnp_dir.comparison_ENCSR636WIB		0	2026-10-19T09:12:37+00:00	0		node_3	TRUE
+cellsnp_dir.comparison_ENCSR233SQG		0	2026-10-19T09:12:38+00:00	0		node_3	TRUE
+cellsnp_dir.comparison_ENCSR201BHG		0	2026-10-19T09:12:38+00:00	0		node_3	TRUE
+cellsnp_dir.comparison_ENCSR618WVK		0.001	2026-10-19T09:12:38+00:00	0		node_3	TRUE
+cellsnp_dir.comparison_ENCSR956ZER		0.001	2026-10-19T09:12:38+00:00	0		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR636WIB		3.236	2026-10-19T09:12:38+00:00	19135286		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR636WIB		0.019	2026-10-19T09:12:38+00:00	418792		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR201BHG		0.36	2026-10-19T09:12:38+00:00	65591		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR636WIB		0.586	2026-10-19T09:12:38+00:00	30394		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR636WIB		0.165	2026-10-19T09:12:38+00:00	186012		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR618WVK		0.085	2026-10-19T09:12:38+00:00	69139		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR233SQG		0.617	2026-10-19T09:12:38+00:00	50585		node_3	TRUE
+cellsnp_dir.comparison_pbmc_unsorted_3k		0	2026-10-19T09:12:38+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR956ZER		0.085	2026-10-19T09:12:39+00:00	81064		node_3	TRUE
+vireo_donor_ids_tibble.comparison_pbmc_unsorted_3k		0.095	2026-10-19T09:12:39+00:00	16770		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR033MDU		0.445	2026-10-19T09:12:39+00:00	98135		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_pbmc_unsorted_3k		2.913	2026-10-19T09:12:39+00:00	9383790		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_pbmc_unsorted_3k		0.016	2026-10-19T09:12:39+00:00	347842		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_pbmc_unsorted_3k		0.083	2026-10-19T09:12:39+00:00	100337		node_3	TRUE
+cellsnp_dir.comparison_ENCSR033MDU		0	2026-10-19T09:12:39+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR033MDU		0.076	2026-10-19T09:12:39+00:00	39145		node_3	TRUE
+cellbender_h5_file.comparison_healthy_brain_human		0	2026-10-19T09:12:39+00:00	0		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR233SQG		7.01	2026-10-19T09:12:40+00:00	783258		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR636WIB		7.234	2026-10-19T09:12:40+00:00	455813		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR201BHG		7.259	2026-10-19T09:12:40+00:00	1144945		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR128ZLB		3.593	2026-10-19T09:12:40+00:00	37764774		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR128ZLB		0.072	2026-10-19T09:12:41+00:00	469808		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR956ZER		6.069	2026-10-19T09:12:41+00:00	1422196		node_3	TRUE
+per_barcode_metrics_tibble.comparison_pbmc_unsorted_3k		5.302	2026-10-19T09:12:41+00:00	245168		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR613LBN		0	2026-10-19T09:12:41+00:00	0		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR511RDV		0	2026-10-19T09:12:41+00:00	0		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR534YJW		0	2026-10-19T09:12:41+00:00	0		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR128ZLB		0.308	2026-10-19T09:12:41+00:00	292510		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR233SQG		0	2026-10-19T09:12:41+00:00	0		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR618WVK		6.289	2026-10-19T09:12:41+00:00	1137459		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR316WAS		0.001	2026-10-19T09:12:41+00:00	0		node_3	TRUE
+cellbender_h5_file.comparison_pbmc_10k_chromium_controller		0.001	2026-10-19T09:12:41+00:00	0		node_3	TRUE
+cellbender_h5_file.comparison_pbmc_granulocyte_sorted_10k		0	2026-10-19T09:12:41+00:00	0		node_3	TRUE
+cellranger_barcodes_tsv.comparison_pbmc_10k_chromium_controller		0.545	2026-10-19T09:12:41+00:00	207024		node_3	TRUE
+cellsnp_dir.comparison_pbmc_10k_chromium_controller		0	2026-10-19T09:12:42+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_pbmc_10k_chromium_controller		0.061	2026-10-19T09:12:42+00:00	46836		node_3	TRUE
+gene_features_df.comparison_pbmc_10k_chromium_controller		1.395	2026-10-19T09:12:43+00:00	896729		node_3	TRUE
+comparison_seurat_signac_config.comparison_10x		0.474	2026-10-19T09:12:44+00:00	971		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR925IHI		3.96	2026-10-19T09:12:44+00:00	974669		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR793DNM		3.811	2026-10-19T09:12:45+00:00	817596		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR511RDV		6.517	2026-10-19T09:12:46+00:00	752167		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR233SQG		5.784	2026-10-19T09:12:47+00:00	45139796		node_3	TRUE
+comparison_seurat_signac_cellranger_input_files.comparison_10x		0	2026-10-19T09:12:49+00:00	21194942601		node_3	FALSE
+GEX_counts_BPcells_matrix_dir.comparison_pbmc_10k_chromium_controller		6.512	2026-10-19T09:12:50+00:00	31783330		node_3	TRUE
+comparison_seurat_signac_config.comparison_20x		0.359	2026-10-19T09:12:53+00:00	1198		node_3	TRUE
+comparison_seurat_signac_config.comparison_1x		0.343	2026-10-19T09:12:53+00:00	610		node_3	TRUE
+comparison_seurat_signac_config.comparison_31x		0.295	2026-10-19T09:12:53+00:00	1435		node_3	TRUE
+comparison_seurat_signac_config.comparison_2x		0.477	2026-10-19T09:12:53+00:00	671		node_3	TRUE
+blacklist_GRanges_by_genome		21.405	2026-10-19T09:12:53+00:00	48727		node_3	TRUE
+comparison_seurat_signac_config.comparison_5x		0.484	2026-10-19T09:12:54+00:00	798		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR508WRP		0.001	2026-10-19T09:13:20+00:00	0		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR351CSQ		0.001	2026-10-19T09:13:20+00:00	0		node_3	TRUE
+cellbender_h5_file.comparison_pbmc_10k_chromium_x		0.001	2026-10-19T09:13:20+00:00	0		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR618WVK		0.001	2026-10-19T09:13:20+00:00	0		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_pbmc_10k_chromium_controller		0.303	2026-10-19T09:13:20+00:00	479937		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR987VTJ		0.001	2026-10-19T09:13:20+00:00	0		node_3	TRUE
+comparison_seurat_signac_cellranger_input_files.comparison_5x		0.003	2026-10-19T09:13:20+00:00	13699716201		node_3	FALSE
+GEX_basic_metadata_tibble.comparison_pbmc_10k_chromium_controller		0.312	2026-10-19T09:13:21+00:00	326109		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR079UEO		1.372	2026-10-19T09:13:21+00:00	660801		node_3	TRUE
+gene_features_df.comparison_ENCSR079UEO		0.982	2026-10-19T09:13:21+00:00	896729		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR233SQG		2.432	2026-10-19T09:13:22+00:00	485423		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR079UEO		5.098	2026-10-19T09:13:25+00:00	2325687		node_3	TRUE
+comparison_seurat_signac_cellranger_input_files.comparison_2x		0	2026-10-19T09:13:26+00:00	4237738470		node_3	FALSE
+comparison_seurat_signac_cellranger_input_files.comparison_20x		0	2026-10-19T09:13:28+00:00	43137374262		node_3	FALSE
+cellranger_ref_list.comparison_ENCSR079UEO		0.043	2026-10-19T09:13:28+00:00	691		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR233SQG		0.497	2026-10-19T09:13:29+00:00	347853		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_healthy_brain_human		58.198	2026-10-19T09:13:30+00:00	764124127		node_3	TRUE
+comparison_seurat_signac_RNA_BPCells_dirs.comparison_2x		8.019	2026-10-19T09:13:36+00:00	42476821		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR636WIB		69.966	2026-10-19T09:13:42+00:00	713094009		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR788DZO		63.876	2026-10-19T09:13:46+00:00	676483827		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR233SQG		76.225	2026-10-19T09:13:48+00:00	882188211		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR511RDV		71.721	2026-10-19T09:13:51+00:00	862588119		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR534YJW		74.302	2026-10-19T09:13:53+00:00	820783331		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR618WVK		79.462	2026-10-19T09:13:54+00:00	925991705		node_3	TRUE
+comparison_seurat_signac_RNA_BPCells_dirs.comparison_5x		26.507	2026-10-19T09:13:55+00:00	161686689		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR201BHG		80.913	2026-10-19T09:13:55+00:00	954030297		node_3	TRUE
+comparison_seurat_signac_RNA_BPCells_dirs.comparison_10x		41.248	2026-10-19T09:14:01+00:00	304081617		node_3	TRUE
+comparison_seurat_signac_cellranger_input_files.comparison_31x		0.001	2026-10-19T09:14:01+00:00	67178282846		node_3	FALSE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR925IHI		86.342	2026-10-19T09:14:06+00:00	1030338747		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR079UEO		85.726	2026-10-19T09:14:46+00:00	1096223115		node_3	TRUE
+comparison_seurat_signac_cellranger_input_files.comparison_1x		0	2026-10-19T09:15:03+00:00	508735379		node_3	FALSE
+fragments_w_prefix_bpcells.comparison_ENCSR233SQG		0.289	2026-10-19T09:15:04+00:00	3527930		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR618WVK		0.614	2026-10-19T09:15:04+00:00	3591454		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR956ZER		0	2026-10-19T09:15:04+00:00	0		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR793DNM		0	2026-10-19T09:15:04+00:00	0		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR636WIB		0.902	2026-10-19T09:15:04+00:00	3536540		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR925IHI		0.499	2026-10-19T09:15:04+00:00	3598375		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_healthy_brain_human		0.825	2026-10-19T09:15:04+00:00	3550242		node_3	TRUE
+cellranger_barcodes_tsv.comparison_pbmc_unsorted_10k		0.495	2026-10-19T09:15:04+00:00	232180		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR511RDV		0.984	2026-10-19T09:15:04+00:00	3459255		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR079UEO		0.001	2026-10-19T09:15:04+00:00	0		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR534YJW		1.273	2026-10-19T09:15:05+00:00	3400572		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR201BHG		1.244	2026-10-19T09:15:05+00:00	3544316		node_3	TRUE
+cellbender_h5_file.comparison_healthy_PBMC_human		0.001	2026-10-19T09:15:05+00:00	0		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR788DZO		1.555	2026-10-19T09:15:05+00:00	3483130		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR925IHI		0.001	2026-10-19T09:15:05+00:00	0		node_3	TRUE
+AMULET_repeat_list_zip		1.699	2026-10-19T09:15:05+00:00	88722249		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR245BNT		0.001	2026-10-19T09:15:05+00:00	0		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR568QKW		0	2026-10-19T09:15:05+00:00	0		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR158DQA		0.001	2026-10-19T09:15:05+00:00	0		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR079UEO		1.374	2026-10-19T09:15:05+00:00	3435827		node_3	TRUE
+cellbender_h5_file.comparison_ENCSR788DZO		0	2026-10-19T09:15:05+00:00	0		node_3	TRUE
+donor_id_metadata_tibble.comparison_31x		0.049	2026-10-19T09:15:05+00:00	329		node_3	TRUE
+donor_id_metadata_tibble.comparison_5x		0.01	2026-10-19T09:15:05+00:00	329		node_3	TRUE
+donor_id_SCT_metadata_tibble.comparison_31x		0.024	2026-10-19T09:15:05+00:00	303		node_3	TRUE
+gene_features_df.comparison_healthy_PBMC_human		0.7	2026-10-19T09:15:05+00:00	896729		node_3	TRUE
+donor_id_harmony_metadata_tibble.comparison_31x		0.018	2026-10-19T09:15:05+00:00	303		node_3	TRUE
+cellranger_barcodes_tsv.comparison_healthy_PBMC_human		1.121	2026-10-19T09:15:05+00:00	51547		node_3	TRUE
+donor_id_metadata_tibble.comparison_20x		0.213	2026-10-19T09:15:05+00:00	329		node_3	TRUE
+donor_id_harmony_metadata_tibble.comparison_5x		0.021	2026-10-19T09:15:05+00:00	303		node_3	TRUE
+gene_features_df.comparison_pbmc_unsorted_10k		0.94	2026-10-19T09:15:05+00:00	896729		node_3	TRUE
+donor_id_SCT_metadata_tibble.comparison_5x		0.022	2026-10-19T09:15:05+00:00	303		node_3	TRUE
+GEM_well_metadata_tibble.comparison_5x		0.146	2026-10-19T09:15:05+00:00	709		node_3	TRUE
+donor_id_metadata_tibble.comparison_1x		0.014	2026-10-19T09:15:05+00:00	329		node_3	TRUE
+GEM_well_metadata_tibble.comparison_31x		0.274	2026-10-19T09:15:05+00:00	1281		node_3	TRUE
+donor_id_metadata_tibble.comparison_2x		0.122	2026-10-19T09:15:05+00:00	329		node_3	TRUE
+GEM_well_harmony_metadata_tibble.comparison_5x		0.002	2026-10-19T09:15:05+00:00	282		node_3	TRUE
+GEM_well_SCT_metadata_tibble.comparison_5x		0.015	2026-10-19T09:15:05+00:00	282		node_3	TRUE
+cellranger_ref_list.comparison_pbmc_unsorted_10k		0.048	2026-10-19T09:15:05+00:00	691		node_3	TRUE
+donor_id_harmony_metadata_tibble.comparison_1x		0.002	2026-10-19T09:15:06+00:00	303		node_3	TRUE
+donor_id_SCT_metadata_tibble.comparison_1x		0.002	2026-10-19T09:15:06+00:00	303		node_3	TRUE
+GEM_well_metadata_tibble.comparison_1x		0.087	2026-10-19T09:15:06+00:00	527		node_3	TRUE
+GEM_well_SCT_metadata_tibble.comparison_31x		0.001	2026-10-19T09:15:06+00:00	485		node_3	TRUE
+GEM_well_harmony_metadata_tibble.comparison_31x		0.002	2026-10-19T09:15:06+00:00	485		node_3	TRUE
+donor_id_harmony_metadata_tibble.comparison_2x		0.023	2026-10-19T09:15:06+00:00	303		node_3	TRUE
+donor_id_SCT_metadata_tibble.comparison_2x		0.002	2026-10-19T09:15:06+00:00	303		node_3	TRUE
+GEM_well_metadata_tibble.comparison_2x		0.084	2026-10-19T09:15:06+00:00	604		node_3	TRUE
+GEM_well_harmony_metadata_tibble.comparison_1x		0.002	2026-10-19T09:15:06+00:00	208		node_3	TRUE
+GEM_well_SCT_metadata_tibble.comparison_1x		0.001	2026-10-19T09:15:06+00:00	208		node_3	TRUE
+donor_id_metadata_tibble.comparison_10x		0.01	2026-10-19T09:15:06+00:00	329		node_3	TRUE
+donor_id_harmony_metadata_tibble.comparison_10x		0.001	2026-10-19T09:15:06+00:00	303		node_3	TRUE
+donor_id_SCT_metadata_tibble.comparison_10x		0.002	2026-10-19T09:15:06+00:00	303		node_3	TRUE
+GEM_well_harmony_metadata_tibble.comparison_2x		0.002	2026-10-19T09:15:06+00:00	242		node_3	TRUE
+GEM_well_metadata_tibble.comparison_10x		0.096	2026-10-19T09:15:06+00:00	934		node_3	TRUE
+GEM_well_SCT_metadata_tibble.comparison_2x		0.002	2026-10-19T09:15:06+00:00	242		node_3	TRUE
+GEM_well_SCT_metadata_tibble.comparison_10x		0.002	2026-10-19T09:15:06+00:00	337		node_3	TRUE
+GEM_well_harmony_metadata_tibble.comparison_10x		0.002	2026-10-19T09:15:06+00:00	337		node_3	TRUE
+cellranger_barcodes_tsv.comparison_healthy_brain_human		0.257	2026-10-19T09:15:06+00:00	65626		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR245BNT		0.029	2026-10-19T09:15:06+00:00	691		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR245BNT		1.095	2026-10-19T09:15:07+00:00	304038		node_3	TRUE
+gene_features_df.comparison_healthy_brain_human		0.58	2026-10-19T09:15:07+00:00	896729		node_3	TRUE
+cellranger_ref_list.comparison_healthy_brain_human		0.014	2026-10-19T09:15:07+00:00	691		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR079UEO		4.021	2026-10-19T09:15:09+00:00	79784888		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR245BNT		3.891	2026-10-19T09:15:09+00:00	61452374		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR079UEO		0.03	2026-10-19T09:15:09+00:00	644085		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR245BNT		0.013	2026-10-19T09:15:09+00:00	512620		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR245BNT		0.476	2026-10-19T09:15:09+00:00	470228		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR987VTJ		0.433	2026-10-19T09:15:09+00:00	236113		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR079UEO		0.594	2026-10-19T09:15:10+00:00	893920		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_healthy_brain_human		2.425	2026-10-19T09:15:10+00:00	20426466		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_healthy_brain_human		0.01	2026-10-19T09:15:10+00:00	362173		node_3	TRUE
+per_barcode_metrics_tibble.comparison_healthy_PBMC_human		5.612	2026-10-19T09:15:10+00:00	222896		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_healthy_brain_human		0.163	2026-10-19T09:15:10+00:00	117563		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_pbmc_unsorted_10k		5.136	2026-10-19T09:15:10+00:00	42896602		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_pbmc_unsorted_10k		0.014	2026-10-19T09:15:11+00:00	487505		node_3	TRUE
+gene_features_df.comparison_ENCSR987VTJ		0.669	2026-10-19T09:15:11+00:00	896729		node_3	TRUE
+AMULET_excluded_regions_GRanges_list		4.798	2026-10-19T09:15:11+00:00	14234558		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_pbmc_unsorted_10k		0.337	2026-10-19T09:15:11+00:00	366101		node_3	TRUE
+per_barcode_metrics_tibble.comparison_pbmc_unsorted_10k		6.887	2026-10-19T09:15:11+00:00	912505		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR320RLS		0.375	2026-10-19T09:15:11+00:00	243067		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR245BNT		5.575	2026-10-19T09:15:12+00:00	1091548		node_3	TRUE
+per_barcode_metrics_tibble.comparison_healthy_brain_human		5.714	2026-10-19T09:15:12+00:00	303591		node_3	TRUE
+gene_features_df.comparison_ENCSR320RLS		0.627	2026-10-19T09:15:12+00:00	896729		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR320RLS		0.002	2026-10-19T09:15:12+00:00	691		node_3	TRUE
+gene_features_df.comparison_ENCSR613LBN		0.998	2026-10-19T09:15:13+00:00	896729		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR613LBN		0.002	2026-10-19T09:15:14+00:00	691		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR987VTJ		3.512	2026-10-19T09:15:14+00:00	54478820		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR987VTJ		0.014	2026-10-19T09:15:14+00:00	488116		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR320RLS		4.398	2026-10-19T09:15:15+00:00	855998		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR613LBN		0.482	2026-10-19T09:15:15+00:00	209722		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR987VTJ		0.425	2026-10-19T09:15:15+00:00	382469		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR264JIX		0.816	2026-10-19T09:15:15+00:00	134767		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR320RLS		3.069	2026-10-19T09:15:15+00:00	48921560		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR320RLS		0.015	2026-10-19T09:15:15+00:00	490838		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR987VTJ		5.624	2026-10-19T09:15:16+00:00	847201		node_3	TRUE
+gene_features_df.comparison_ENCSR264JIX		0.603	2026-10-19T09:15:16+00:00	896729		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR320RLS		0.38	2026-10-19T09:15:16+00:00	384122		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR613LBN		4.441	2026-10-19T09:15:18+00:00	819324		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR508WRP		0.46	2026-10-19T09:15:18+00:00	325698		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR233SQG		14.644	2026-10-19T09:15:19+00:00	128885		node_3	TRUE
+comparison_seurat_signac_RNA_BPCells_dirs.comparison_1x		2.109	2026-10-19T09:15:19+00:00	10467983		node_3	TRUE
+gene_features_df.comparison_ENCSR508WRP		0.704	2026-10-19T09:15:19+00:00	896729		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR264JIX		3.623	2026-10-19T09:15:20+00:00	29735224		node_3	TRUE
+amulet_metrics_tibble.comparison_healthy_brain_human		8.446	2026-10-19T09:15:20+00:00	43132		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR264JIX		0.01	2026-10-19T09:15:20+00:00	434142		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR264JIX		0.304	2026-10-19T09:15:20+00:00	217266		node_3	TRUE
+cellranger_barcodes_tsv.comparison_pbmc_10k_chromium_x		0.385	2026-10-19T09:15:20+00:00	211888		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_healthy_PBMC_human		16.186	2026-10-19T09:15:20+00:00	222499830		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR264JIX		4.459	2026-10-19T09:15:20+00:00	527843		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_healthy_PBMC_human		0.135	2026-10-19T09:15:21+00:00	2653899		node_3	TRUE
+gene_features_df.comparison_pbmc_10k_chromium_x		0.808	2026-10-19T09:15:21+00:00	896729		node_3	TRUE
+cellranger_ref_list.comparison_pbmc_10k_chromium_x		0.011	2026-10-19T09:15:22+00:00	691		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_healthy_brain_human		15.187	2026-10-19T09:15:23+00:00	44491		node_3	TRUE
+gene_features_df.comparison_ENCSR956ZER		1.234	2026-10-19T09:15:23+00:00	896729		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR508WRP		4.192	2026-10-19T09:15:23+00:00	1183440		node_3	TRUE
+cellranger_barcodes_tsv.comparison_pbmc_granulocyte_sorted_10k		0.438	2026-10-19T09:15:23+00:00	226879		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR508WRP		4.182	2026-10-19T09:15:24+00:00	62668782		node_3	TRUE
+gene_features_df.comparison_pbmc_granulocyte_sorted_10k		0.735	2026-10-19T09:15:24+00:00	896729		node_3	TRUE
+cellranger_ref_list.comparison_pbmc_granulocyte_sorted_10k		0.002	2026-10-19T09:15:24+00:00	691		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR079UEO		19.502	2026-10-19T09:15:25+00:00	338455		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR636WIB		0.022	2026-10-19T09:15:25+00:00	691		node_3	TRUE
+per_barcode_metrics_tibble.comparison_pbmc_10k_chromium_x		6.103	2026-10-19T09:15:26+00:00	881010		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR956ZER		3.614	2026-10-19T09:15:27+00:00	61975364		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR956ZER		0.019	2026-10-19T09:15:27+00:00	549063		node_3	TRUE
+gene_features_df.comparison_ENCSR618WVK		1.151	2026-10-19T09:15:27+00:00	896729		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR956ZER		0.466	2026-10-19T09:15:27+00:00	593816		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR618WVK		0.002	2026-10-19T09:15:27+00:00	691		node_3	TRUE
+per_barcode_metrics_tibble.comparison_pbmc_granulocyte_sorted_10k		4.052	2026-10-19T09:15:28+00:00	791427		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_pbmc_granulocyte_sorted_10k		5.759	2026-10-19T09:15:29+00:00	44411608		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_pbmc_granulocyte_sorted_10k		0.012	2026-10-19T09:15:30+00:00	486833		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_pbmc_granulocyte_sorted_10k		0.339	2026-10-19T09:15:30+00:00	356721		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR201BHG		2.321	2026-10-19T09:15:30+00:00	48858506		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR201BHG		0.001	2026-10-19T09:15:30+00:00	691		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR201BHG		0.014	2026-10-19T09:15:30+00:00	516158		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR636WIB		4.791	2026-10-19T09:15:30+00:00	49465		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR201BHG		0.382	2026-10-19T09:15:31+00:00	478772		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR618WVK		4.175	2026-10-19T09:15:31+00:00	72841350		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR618WVK		0.014	2026-10-19T09:15:31+00:00	523776		node_3	TRUE
+gene_features_df.comparison_ENCSR351CSQ		1.286	2026-10-19T09:15:32+00:00	896729		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR618WVK		0.581	2026-10-19T09:15:32+00:00	498796		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR351CSQ		0.559	2026-10-19T09:15:32+00:00	144856		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR351CSQ		3.55	2026-10-19T09:15:34+00:00	518513		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR351CSQ		0.002	2026-10-19T09:15:34+00:00	691		node_3	TRUE
+cellranger_ref_list.comparison_pbmc_unsorted_3k		0.001	2026-10-19T09:15:34+00:00	691		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR351CSQ		2.779	2026-10-19T09:15:35+00:00	33341522		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR351CSQ		0.012	2026-10-19T09:15:35+00:00	446671		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR351CSQ		0.261	2026-10-19T09:15:35+00:00	243478		node_3	TRUE
+cellsnp_dir.comparison_ENCSR079UEO		0.001	2026-10-19T09:15:36+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR079UEO		0.212	2026-10-19T09:15:36+00:00	126422		node_3	TRUE
+cellsnp_dir.comparison_pbmc_unsorted_10k		0	2026-10-19T09:15:36+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_pbmc_unsorted_10k		0.055	2026-10-19T09:15:36+00:00	51253		node_3	TRUE
+cellsnp_dir.comparison_healthy_PBMC_human		0	2026-10-19T09:15:37+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_healthy_PBMC_human		0.06	2026-10-19T09:15:37+00:00	15215		node_3	TRUE
+cellsnp_dir.comparison_healthy_brain_human		0	2026-10-19T09:15:37+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_healthy_brain_human		0.065	2026-10-19T09:15:37+00:00	27056		node_3	TRUE
+cellsnp_dir.comparison_ENCSR245BNT		0	2026-10-19T09:15:37+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR245BNT		0.071	2026-10-19T09:15:37+00:00	64058		node_3	TRUE
+cellsnp_dir.comparison_ENCSR987VTJ		0	2026-10-19T09:15:37+00:00	0		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR201BHG		6.402	2026-10-19T09:15:37+00:00	107253		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR987VTJ		0.069	2026-10-19T09:15:37+00:00	52217		node_3	TRUE
+cellsnp_dir.comparison_ENCSR320RLS		0.001	2026-10-19T09:15:37+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR320RLS		0.084	2026-10-19T09:15:38+00:00	53202		node_3	TRUE
+cellsnp_dir.comparison_ENCSR613LBN		0	2026-10-19T09:15:38+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR613LBN		0.09	2026-10-19T09:15:38+00:00	47185		node_3	TRUE
+cellsnp_dir.comparison_ENCSR264JIX		0.001	2026-10-19T09:15:38+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR264JIX		0.105	2026-10-19T09:15:38+00:00	32977		node_3	TRUE
+cellsnp_dir.comparison_ENCSR508WRP		0	2026-10-19T09:15:38+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR508WRP		0.074	2026-10-19T09:15:38+00:00	67892		node_3	TRUE
+cellsnp_dir.comparison_pbmc_10k_chromium_x		0	2026-10-19T09:15:38+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_pbmc_10k_chromium_x		0.071	2026-10-19T09:15:39+00:00	47456		node_3	TRUE
+cellsnp_dir.comparison_pbmc_granulocyte_sorted_10k		0	2026-10-19T09:15:39+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_pbmc_granulocyte_sorted_10k		0.089	2026-10-19T09:15:39+00:00	50193		node_3	TRUE
+cellsnp_dir.comparison_ENCSR351CSQ		0	2026-10-19T09:15:39+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR351CSQ		0.068	2026-10-19T09:15:39+00:00	35027		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR618WVK		12.307	2026-10-19T09:15:40+00:00	175660		node_3	TRUE
+gene_features_df.comparison_ENCSR923FKN		0.908	2026-10-19T09:15:41+00:00	896729		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR923FKN		4.793	2026-10-19T09:15:42+00:00	796955		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR923FKN		0.581	2026-10-19T09:15:42+00:00	203129		node_3	TRUE
+cellsnp_dir.comparison_ENCSR923FKN		0	2026-10-19T09:15:43+00:00	0		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR128ZLB		0.002	2026-10-19T09:15:43+00:00	691		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR923FKN		0.058	2026-10-19T09:15:43+00:00	46044		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR923FKN		2.754	2026-10-19T09:15:44+00:00	45627676		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR923FKN		0.014	2026-10-19T09:15:44+00:00	475062		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR923FKN		0.363	2026-10-19T09:15:44+00:00	328485		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR128ZLB		3.663	2026-10-19T09:15:47+00:00	737943		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR128ZLB		0.796	2026-10-19T09:15:47+00:00	186314		node_3	TRUE
+cellsnp_dir.comparison_ENCSR128ZLB		0	2026-10-19T09:15:48+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR128ZLB		0.071	2026-10-19T09:15:48+00:00	42886		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_pbmc_unsorted_3k		17.514	2026-10-19T09:15:52+00:00	267459517		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_pbmc_unsorted_3k		0.163	2026-10-19T09:15:52+00:00	2568969		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR316WAS		5.411	2026-10-19T09:15:53+00:00	472808		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR316WAS		0.593	2026-10-19T09:15:53+00:00	120460		node_3	TRUE
+Ensembl_gene_annotation_GRanges_list		199.073	2026-10-19T09:15:54+00:00	11560858		node_3	TRUE
+cellsnp_dir.comparison_ENCSR316WAS		0.001	2026-10-19T09:15:54+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR316WAS		0.069	2026-10-19T09:15:54+00:00	48005		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_pbmc_unsorted_3k		3.421	2026-10-19T09:15:56+00:00	36329		node_3	TRUE
+gene_features_df.comparison_ENCSR316WAS		1.02	2026-10-19T09:15:57+00:00	896729		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR316WAS		2.19	2026-10-19T09:15:59+00:00	24581818		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR316WAS		0.011	2026-10-19T09:16:00+00:00	418317		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR316WAS		0.194	2026-10-19T09:16:00+00:00	186387		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR618WVK		6.552	2026-10-19T09:16:01+00:00	8568433		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR264JIX		47.585	2026-10-19T09:16:03+00:00	625082981		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR264JIX		0.147	2026-10-19T09:16:04+00:00	3365292		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR233SQG		9.142	2026-10-19T09:16:04+00:00	8258722		node_3	TRUE
+gene_features_df.comparison_ENCSR033MDU		1.279	2026-10-19T09:16:05+00:00	896729		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR033MDU		1.888	2026-10-19T09:16:07+00:00	18907784		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR033MDU		0.01	2026-10-19T09:16:07+00:00	391919		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR033MDU		0.142	2026-10-19T09:16:08+00:00	160793		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR033MDU		6.647	2026-10-19T09:16:11+00:00	390795		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR534YJW		1.026	2026-10-19T09:16:11+00:00	220305		node_3	TRUE
+cellsnp_dir.comparison_ENCSR534YJW		0	2026-10-19T09:16:12+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR534YJW		0.083	2026-10-19T09:16:12+00:00	49222		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR534YJW		5.069	2026-10-19T09:16:13+00:00	751510		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR568QKW		0.497	2026-10-19T09:16:13+00:00	379943		node_3	TRUE
+gene_features_df.comparison_ENCSR534YJW		1.159	2026-10-19T09:16:13+00:00	896729		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR534YJW		0.013	2026-10-19T09:16:13+00:00	691		node_3	TRUE
+cellsnp_dir.comparison_ENCSR568QKW		0	2026-10-19T09:16:13+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR568QKW		0.066	2026-10-19T09:16:14+00:00	77392		node_3	TRUE
+comparison_seurat_signac_RNA_BPCells_dirs.comparison_20x		73.845	2026-10-19T09:16:17+00:00	809249251		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR245BNT		71.369	2026-10-19T09:16:17+00:00	875435123		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR245BNT		0.237	2026-10-19T09:16:18+00:00	3615043		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR320RLS		69.054	2026-10-19T09:16:20+00:00	803455737		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR534YJW		5.706	2026-10-19T09:16:20+00:00	7968370		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR534YJW		6.824	2026-10-19T09:16:20+00:00	92652		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR320RLS		0.397	2026-10-19T09:16:21+00:00	3515834		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR613LBN		70.952	2026-10-19T09:16:22+00:00	848860763		node_3	TRUE
+gene_features_df.comparison_ENCSR568QKW		2.606	2026-10-19T09:16:23+00:00	896729		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR568QKW		0.014	2026-10-19T09:16:23+00:00	691		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR613LBN		0.193	2026-10-19T09:16:23+00:00	3423032		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR956ZER		65.079	2026-10-19T09:16:26+00:00	826069899		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR956ZER		0.14	2026-10-19T09:16:27+00:00	3477945		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR987VTJ		78.046	2026-10-19T09:16:27+00:00	915073693		node_3	TRUE
+gene_features_df.comparison_ENCSR511RDV		0.874	2026-10-19T09:16:28+00:00	896729		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR568QKW		4.511	2026-10-19T09:16:28+00:00	1380877		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR511RDV		0.51	2026-10-19T09:16:28+00:00	187264		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR987VTJ		0.156	2026-10-19T09:16:28+00:00	3526014		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR511RDV		0.002	2026-10-19T09:16:29+00:00	691		node_3	TRUE
+cellsnp_dir.comparison_ENCSR511RDV		0	2026-10-19T09:16:29+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR511RDV		0.087	2026-10-19T09:16:29+00:00	43043		node_3	TRUE
+gene_features_df.comparison_ENCSR158DQA		0.709	2026-10-19T09:16:29+00:00	896729		node_3	TRUE
+gene_features_df.comparison_10x		0.013	2026-10-19T09:16:30+00:00	896729		node_3	TRUE
+UCell_GEX_marker_genes_list.comparison_10x		0.002	2026-10-19T09:16:30+00:00	832		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR158DQA		0.376	2026-10-19T09:16:30+00:00	352773		node_3	TRUE
+cellsnp_dir.comparison_ENCSR158DQA		0	2026-10-19T09:16:30+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR158DQA		0.069	2026-10-19T09:16:30+00:00	72438		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR511RDV		3.082	2026-10-19T09:16:31+00:00	40803142		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR511RDV		0.01	2026-10-19T09:16:31+00:00	470123		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR511RDV		0.316	2026-10-19T09:16:31+00:00	306318		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR245BNT		13.686	2026-10-19T09:16:32+00:00	163684		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR925IHI		0.532	2026-10-19T09:16:32+00:00	274816		node_3	TRUE
+cellsnp_dir.comparison_ENCSR925IHI		0.001	2026-10-19T09:16:33+00:00	0		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR925IHI		0.073	2026-10-19T09:16:33+00:00	58929		node_3	TRUE
+gene_features_df.comparison_ENCSR925IHI		0.692	2026-10-19T09:16:33+00:00	896729		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR320RLS		12.356	2026-10-19T09:16:34+00:00	137086		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR925IHI		0.002	2026-10-19T09:16:34+00:00	691		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR033MDU		32.812	2026-10-19T09:16:34+00:00	456679623		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR033MDU		0.166	2026-10-19T09:16:35+00:00	3183578		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR158DQA		5.068	2026-10-19T09:16:35+00:00	1182084		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR613LBN		11.71	2026-10-19T09:16:35+00:00	123162		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR793DNM		0.474	2026-10-19T09:16:35+00:00	245765		node_3	TRUE
+gene_features_df.comparison_ENCSR793DNM		0.832	2026-10-19T09:16:36+00:00	896729		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR793DNM		0.002	2026-10-19T09:16:36+00:00	691		node_3	TRUE
+cellsnp_dir.comparison_ENCSR793DNM		0	2026-10-19T09:16:36+00:00	0		node_3	TRUE
+cellranger_ref_list.comparison_pbmc_10k_chromium_controller		0.002	2026-10-19T09:16:36+00:00	691		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR793DNM		0.067	2026-10-19T09:16:36+00:00	53883		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR316WAS		36.972	2026-10-19T09:16:37+00:00	525511237		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR316WAS		0.146	2026-10-19T09:16:37+00:00	3287682		node_3	TRUE
+cellranger_barcodes_tsv.comparison_ENCSR788DZO		0.714	2026-10-19T09:16:37+00:00	161253		node_3	TRUE
+cellsnp_dir.comparison_ENCSR788DZO		0	2026-10-19T09:16:38+00:00	0		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR925IHI		4.857	2026-10-19T09:16:38+00:00	51936530		node_3	TRUE
+vireo_donor_ids_tibble.comparison_ENCSR788DZO		0.084	2026-10-19T09:16:38+00:00	37995		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR925IHI		0.022	2026-10-19T09:16:38+00:00	501597		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR925IHI		0.422	2026-10-19T09:16:39+00:00	419593		node_3	TRUE
+gene_features_df.comparison_ENCSR788DZO		0.679	2026-10-19T09:16:40+00:00	896729		node_3	TRUE
+per_barcode_metrics_tibble.comparison_pbmc_10k_chromium_controller		4.48	2026-10-19T09:16:40+00:00	863630		node_3	TRUE
+cellranger_ref_list.comparison_healthy_PBMC_human		0.002	2026-10-19T09:16:40+00:00	691		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR925IHI		6.294	2026-10-19T09:16:41+00:00	8508401		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR788DZO		1.494	2026-10-19T09:16:41+00:00	29658612		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR788DZO		0.01	2026-10-19T09:16:41+00:00	458323		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR788DZO		0.234	2026-10-19T09:16:42+00:00	251818		node_3	TRUE
+per_barcode_metrics_tibble.comparison_ENCSR788DZO		3.494	2026-10-19T09:16:42+00:00	582441		node_3	TRUE
+gene_features_df.comparison_2x		0.001	2026-10-19T09:16:42+00:00	896729		node_3	TRUE
+gene_features_df.comparison_1x		0	2026-10-19T09:16:42+00:00	896729		node_3	TRUE
+UCell_GEX_marker_genes_list.comparison_2x		0.002	2026-10-19T09:16:42+00:00	832		node_3	TRUE
+UCell_GEX_marker_genes_list.comparison_1x		0.002	2026-10-19T09:16:42+00:00	832		node_3	TRUE
+donor_id_harmony_metadata_tibble.comparison_20x		0.013	2026-10-19T09:16:42+00:00	303		node_3	TRUE
+donor_id_SCT_metadata_tibble.comparison_20x		0.001	2026-10-19T09:16:42+00:00	303		node_3	TRUE
+GEM_well_metadata_tibble.comparison_20x		0.082	2026-10-19T09:16:42+00:00	1113		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR987VTJ		0.003	2026-10-19T09:16:42+00:00	691		node_3	TRUE
+GEM_well_SCT_metadata_tibble.comparison_20x		0.002	2026-10-19T09:16:42+00:00	415		node_3	TRUE
+GEM_well_harmony_metadata_tibble.comparison_20x		0.002	2026-10-19T09:16:42+00:00	415		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_healthy_PBMC_human		1.296	2026-10-19T09:16:42+00:00	10242475		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_healthy_PBMC_human		0.023	2026-10-19T09:16:43+00:00	341409		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_healthy_PBMC_human		0.089	2026-10-19T09:16:43+00:00	91063		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR508WRP		87.267	2026-10-19T09:16:43+00:00	986866539		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR511RDV		13.78	2026-10-19T09:16:43+00:00	111494		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR508WRP		0.172	2026-10-19T09:16:44+00:00	3533824		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_healthy_PBMC_human		2.08	2026-10-19T09:16:45+00:00	5965147		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR264JIX		0.002	2026-10-19T09:16:45+00:00	691		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR351CSQ		74.117	2026-10-19T09:16:47+00:00	978747713		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR613LBN		2.995	2026-10-19T09:16:47+00:00	42275306		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_pbmc_unsorted_10k		103.365	2026-10-19T09:16:47+00:00	1329083307		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR613LBN		0.015	2026-10-19T09:16:47+00:00	477657		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_pbmc_granulocyte_sorted_10k		84.235	2026-10-19T09:16:48+00:00	1051384175		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR923FKN		72.541	2026-10-19T09:16:48+00:00	882654755		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR613LBN		0.331	2026-10-19T09:16:48+00:00	333841		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR508WRP		0.014	2026-10-19T09:16:48+00:00	691		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_pbmc_unsorted_10k		0.196	2026-10-19T09:16:48+00:00	3847895		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR987VTJ		5.088	2026-10-19T09:16:48+00:00	8355164		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR351CSQ		1.252	2026-10-19T09:16:49+00:00	3530380		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR923FKN		0.193	2026-10-19T09:16:49+00:00	3452623		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR233SQG		8.576	2026-10-19T09:16:52+00:00	108394		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR079UEO		8.105	2026-10-19T09:16:53+00:00	274577		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR987VTJ		12.684	2026-10-19T09:16:55+00:00	134659		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR956ZER		0.011	2026-10-19T09:16:55+00:00	691		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR264JIX		10.209	2026-10-19T09:16:56+00:00	82042		node_3	TRUE
+gene_features_df.comparison_5x		0.007	2026-10-19T09:16:56+00:00	896729		node_3	TRUE
+UCell_GEX_marker_genes_list.comparison_5x		0.003	2026-10-19T09:16:56+00:00	832		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR508WRP		0.018	2026-10-19T09:16:56+00:00	521480		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR508WRP		0.494	2026-10-19T09:16:57+00:00	496909		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR233SQG		3.705	2026-10-19T09:16:57+00:00	13325472		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR351CSQ		7.386	2026-10-19T09:16:57+00:00	75946		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR351CSQ		7.617	2026-10-19T09:16:57+00:00	8291057		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR233SQG		0.081	2026-10-19T09:16:58+00:00	127		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_pbmc_10k_chromium_x		5.12	2026-10-19T09:16:58+00:00	31225134		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_pbmc_10k_chromium_x		0.013	2026-10-19T09:16:58+00:00	479979		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR923FKN		0.012	2026-10-19T09:16:58+00:00	691		node_3	TRUE
+comparison_seurat_signac_RNA_BPCells_dirs.comparison_31x		116.136	2026-10-19T09:16:59+00:00	1312052563		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_pbmc_unsorted_10k		8.652	2026-10-19T09:16:59+00:00	9269309		node_3	TRUE
+aggregated_GEX_BPCells_matrix_dir.GEX.comparison_5x		0.929	2026-10-19T09:16:59+00:00	158988833		node_3	TRUE
+aggregated_counts_BPCells_matrix.GEX.comparison_5x		0.024	2026-10-19T09:16:59+00:00	840642		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR508WRP		12.967	2026-10-19T09:17:01+00:00	175377		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR636WIB		5.764	2026-10-19T09:17:03+00:00	74427		node_3	TRUE
+amulet_metrics_tibble.comparison_pbmc_unsorted_10k		14.352	2026-10-19T09:17:03+00:00	124933		node_3	TRUE
+amulet_metrics_tibble.comparison_pbmc_unsorted_3k		4.336	2026-10-19T09:17:04+00:00	35467		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR618WVK		6.778	2026-10-19T09:17:04+00:00	126293		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR636WIB		3.924	2026-10-19T09:17:04+00:00	8367330		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR956ZER		9.022	2026-10-19T09:17:05+00:00	203062		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR316WAS		0.002	2026-10-19T09:17:05+00:00	691		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_healthy_brain_human		5.176	2026-10-19T09:17:07+00:00	8158985		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_pbmc_unsorted_3k		3.559	2026-10-19T09:17:08+00:00	5827599		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_pbmc_unsorted_10k		18.748	2026-10-19T09:17:08+00:00	126777		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR079UEO		4.912	2026-10-19T09:17:09+00:00	8079477		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR618WVK		3.86	2026-10-19T09:17:09+00:00	14470241		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR201BHG		5.057	2026-10-19T09:17:09+00:00	8395418		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR033MDU		0.002	2026-10-19T09:17:10+00:00	691		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR923FKN		10.967	2026-10-19T09:17:10+00:00	120685		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR201BHG		11.642	2026-10-19T09:17:10+00:00	169088		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR618WVK		0.009	2026-10-19T09:17:11+00:00	127		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR636WIB		5.602	2026-10-19T09:17:11+00:00	12734461		node_3	TRUE
+full_metadata_tibble.comparison_pbmc_unsorted_10k		2.22	2026-10-19T09:17:11+00:00	14771029		node_3	TRUE
+full_metadata_tibble.comparison_healthy_brain_human		2.966	2026-10-19T09:17:11+00:00	12279396		node_3	TRUE
+full_metadata_tibble.comparison_pbmc_unsorted_3k		3.464	2026-10-19T09:17:12+00:00	8810573		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR316WAS		6.554	2026-10-19T09:17:12+00:00	73684		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_pbmc_unsorted_3k		0.005	2026-10-19T09:17:12+00:00	546811		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_healthy_brain_human		0.008	2026-10-19T09:17:13+00:00	127		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_pbmc_unsorted_10k		0.011	2026-10-19T09:17:13+00:00	127		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR636WIB		0.009	2026-10-19T09:17:13+00:00	127		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR534YJW		2.552	2026-10-19T09:17:13+00:00	38877648		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR534YJW		0.011	2026-10-19T09:17:13+00:00	482612		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR079UEO		4.079	2026-10-19T09:17:14+00:00	15283620		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR534YJW		0.3	2026-10-19T09:17:14+00:00	347589		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR201BHG		2.954	2026-10-19T09:17:14+00:00	13850486		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR079UEO		0.01	2026-10-19T09:17:15+00:00	5107555		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR033MDU		5.846	2026-10-19T09:17:16+00:00	53457		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR201BHG		0.009	2026-10-19T09:17:16+00:00	127		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR033MDU		6.222	2026-10-19T09:17:16+00:00	61046		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR568QKW		3.458	2026-10-19T09:17:17+00:00	60461728		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR568QKW		0.017	2026-10-19T09:17:18+00:00	542191		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR568QKW		0.458	2026-10-19T09:17:18+00:00	568682		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR320RLS		4.085	2026-10-19T09:17:18+00:00	8333114		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR158DQA		0.003	2026-10-19T09:17:19+00:00	691		node_3	TRUE
+aggregated_cellranger_ref_list.comparison_10x		0	2026-10-19T09:17:19+00:00	691		node_3	TRUE
+blacklist_GRanges.ATAC.comparison_10x		0.001	2026-10-19T09:17:19+00:00	5965		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR245BNT		5.365	2026-10-19T09:17:19+00:00	8563780		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR320RLS		6.699	2026-10-19T09:17:20+00:00	98627		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR245BNT		7.13	2026-10-19T09:17:20+00:00	127851		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR158DQA		2.435	2026-10-19T09:17:21+00:00	47409552		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR158DQA		0.014	2026-10-19T09:17:21+00:00	529923		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR158DQA		0.371	2026-10-19T09:17:21+00:00	490991		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR511RDV		4.897	2026-10-19T09:17:22+00:00	8088204		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR534YJW		10.144	2026-10-19T09:17:22+00:00	127108		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR613LBN		5.889	2026-10-19T09:17:22+00:00	8252386		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR613LBN		6.812	2026-10-19T09:17:23+00:00	90081		node_3	TRUE
+gene_features_df.comparison_20x		0.027	2026-10-19T09:17:23+00:00	896729		node_3	TRUE
+gene_features_df.comparison_31x		0.04	2026-10-19T09:17:23+00:00	896729		node_3	TRUE
+UCell_GEX_marker_genes_list.comparison_31x		0.002	2026-10-19T09:17:23+00:00	832		node_3	TRUE
+cellranger_ref_list.comparison_ENCSR788DZO		0.014	2026-10-19T09:17:23+00:00	691		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR511RDV		7.171	2026-10-19T09:17:24+00:00	87838		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR158DQA		52.902	2026-10-19T09:17:24+00:00	703639873		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR245BNT		2.862	2026-10-19T09:17:24+00:00	14177581		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR158DQA		0.153	2026-10-19T09:17:25+00:00	3461719		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR320RLS		3.827	2026-10-19T09:17:25+00:00	13793917		node_3	TRUE
+GEX_counts_BPcells_matrix_dir.comparison_ENCSR793DNM		3.911	2026-10-19T09:17:25+00:00	58054368		node_3	TRUE
+GEX_counts_BPCells_matrix.comparison_ENCSR793DNM		0.012	2026-10-19T09:17:25+00:00	491408		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR245BNT		0.008	2026-10-19T09:17:26+00:00	127		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR534YJW		2.785	2026-10-19T09:17:26+00:00	13028969		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR613LBN		2.892	2026-10-19T09:17:27+00:00	12888401		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_pbmc_10k_chromium_x		126.564	2026-10-19T09:17:27+00:00	1608628881		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR534YJW		0.077	2026-10-19T09:17:27+00:00	127		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR320RLS		0.005	2026-10-19T09:17:27+00:00	2090597		node_3	TRUE
+aggregated_cellranger_ref_list.comparison_1x		0	2026-10-19T09:17:27+00:00	691		node_3	TRUE
+blacklist_GRanges.ATAC.comparison_1x		0	2026-10-19T09:17:27+00:00	5965		node_3	TRUE
+aggregated_cellranger_ref_list.comparison_2x		0	2026-10-19T09:17:27+00:00	691		node_3	TRUE
+blacklist_GRanges.ATAC.comparison_2x		0	2026-10-19T09:17:27+00:00	5965		node_3	TRUE
+aggregated_cellranger_ref_list.comparison_5x		0	2026-10-19T09:17:27+00:00	691		node_3	TRUE
+blacklist_GRanges.ATAC.comparison_5x		0	2026-10-19T09:17:27+00:00	5965		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR511RDV		3.266	2026-10-19T09:17:28+00:00	13264789		node_3	TRUE
+aggregated_GEX_BPCells_matrix_dir.GEX.comparison_20x		4.542	2026-10-19T09:17:28+00:00	797270041		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_pbmc_10k_chromium_x		0.191	2026-10-19T09:17:28+00:00	3947891		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR613LBN		0.008	2026-10-19T09:17:28+00:00	127		node_3	TRUE
+aggregated_GEX_BPCells_matrix_dir.GEX.comparison_1x		0.077	2026-10-19T09:17:28+00:00	10242475		node_3	TRUE
+aggregated_counts_BPCells_matrix.GEX.comparison_1x		0.007	2026-10-19T09:17:28+00:00	341414		node_3	TRUE
+aggregated_counts_BPCells_matrix.GEX.comparison_20x		0.072	2026-10-19T09:17:29+00:00	2495682		node_3	TRUE
+aggregated_GEX_BPCells_matrix_dir.GEX.comparison_2x		0.277	2026-10-19T09:17:29+00:00	41635547		node_3	TRUE
+aggregated_counts_BPCells_matrix.GEX.comparison_2x		0.013	2026-10-19T09:17:29+00:00	513410		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR925IHI		9.026	2026-10-19T09:17:29+00:00	126265		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR511RDV		0.004	2026-10-19T09:17:29+00:00	1576192		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_healthy_PBMC_human		3.658	2026-10-19T09:17:30+00:00	34362		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR788DZO		5.714	2026-10-19T09:17:30+00:00	61407		node_3	TRUE
+amulet_metrics_tibble.comparison_healthy_PBMC_human		2.682	2026-10-19T09:17:30+00:00	34201		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_pbmc_granulocyte_sorted_10k		0.235	2026-10-19T09:17:30+00:00	3916153		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR925IHI		12.884	2026-10-19T09:17:32+00:00	153250		node_3	TRUE
+full_metadata_tibble.comparison_healthy_PBMC_human		2.094	2026-10-19T09:17:33+00:00	9106369		node_3	TRUE
+aggregated_GEX_BPCells_matrix_dir.GEX.comparison_31x		7.435	2026-10-19T09:17:33+00:00	1293297411		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR128ZLB		109.025	2026-10-19T09:17:33+00:00	1217144395		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR264JIX		3.482	2026-10-19T09:17:33+00:00	7810118		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_healthy_PBMC_human		0.004	2026-10-19T09:17:34+00:00	490246		node_3	TRUE
+aggregated_counts_BPCells_matrix.GEX.comparison_31x		0.11	2026-10-19T09:17:34+00:00	3710425		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR128ZLB		0.244	2026-10-19T09:17:34+00:00	3664468		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR508WRP		4.589	2026-10-19T09:17:35+00:00	8384883		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_pbmc_10k_chromium_x		0.251	2026-10-19T09:17:35+00:00	330169		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR264JIX		5.7	2026-10-19T09:17:35+00:00	60513		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR233SQG		0.006	2026-10-19T09:17:35+00:00	1933144		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR925IHI		2.043	2026-10-19T09:17:35+00:00	14319663		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR508WRP		6.433	2026-10-19T09:17:36+00:00	115175		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR158DQA		11.304	2026-10-19T09:17:36+00:00	172226		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR987VTJ		8.962	2026-10-19T09:17:37+00:00	102701		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR925IHI		0.006	2026-10-19T09:17:37+00:00	127		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR956ZER		3.937	2026-10-19T09:17:39+00:00	8229646		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR264JIX		4.112	2026-10-19T09:17:40+00:00	12069712		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR618WVK		0.006	2026-10-19T09:17:41+00:00	2678286		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR956ZER		6.789	2026-10-19T09:17:41+00:00	135863		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR987VTJ		3.021	2026-10-19T09:17:41+00:00	13613206		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR128ZLB		5.108	2026-10-19T09:17:41+00:00	8663537		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR508WRP		3.742	2026-10-19T09:17:41+00:00	13914663		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR316WAS		3.27	2026-10-19T09:17:41+00:00	7583092		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR316WAS		4.753	2026-10-19T09:17:41+00:00	64426		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR264JIX		0.007	2026-10-19T09:17:41+00:00	127		node_3	TRUE
+amulet_metrics_tibble.comparison_pbmc_granulocyte_sorted_10k		11.615	2026-10-19T09:17:42+00:00	129568		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR923FKN		5.114	2026-10-19T09:17:42+00:00	8118967		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR351CSQ		12.333	2026-10-19T09:17:42+00:00	90943		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR636WIB		0.004	2026-10-19T09:17:42+00:00	1042384		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR987VTJ		0.005	2026-10-19T09:17:43+00:00	2013874		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR508WRP		0.007	2026-10-19T09:17:43+00:00	2697347		node_3	TRUE
+UCell_GEX_marker_genes_list.comparison_20x		0.003	2026-10-19T09:17:43+00:00	832		node_3	TRUE
+aggregated_cellranger_ref_list.comparison_31x		0	2026-10-19T09:17:43+00:00	691		node_3	TRUE
+blacklist_GRanges.ATAC.comparison_31x		0	2026-10-19T09:17:43+00:00	5965		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR923FKN		7.181	2026-10-19T09:17:43+00:00	85331		node_3	TRUE
+aggregated_cellranger_ref_list.comparison_20x		0.001	2026-10-19T09:17:43+00:00	691		node_3	TRUE
+blacklist_GRanges.ATAC.comparison_20x		0.001	2026-10-19T09:17:43+00:00	5965		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_pbmc_unsorted_3k		0.005	2026-10-19T09:17:43+00:00	127		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_healthy_brain_human		0.004	2026-10-19T09:17:43+00:00	647277		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_pbmc_unsorted_10k		0.005	2026-10-19T09:17:43+00:00	2124975		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR201BHG		0.005	2026-10-19T09:17:44+00:00	2623815		node_3	TRUE
+aggregated_GEX_BPCells_matrix_dir.GEX.comparison_10x		1.674	2026-10-19T09:17:44+00:00	298299131		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR079UEO		0.019	2026-10-19T09:17:44+00:00	127		node_3	TRUE
+aggregated_counts_BPCells_matrix.GEX.comparison_10x		0.037	2026-10-19T09:17:45+00:00	1239618		node_3	TRUE
+GEX_basic_metadata_tibble.comparison_ENCSR793DNM		0.454	2026-10-19T09:17:45+00:00	394396		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR316WAS		3.075	2026-10-19T09:17:45+00:00	11748684		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR245BNT		0.006	2026-10-19T09:17:45+00:00	2636561		node_3	TRUE
+amulet_metrics_tibble.comparison_pbmc_10k_chromium_x		15.92	2026-10-19T09:17:46+00:00	120336		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR956ZER		3.329	2026-10-19T09:17:46+00:00	14104155		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR033MDU		3.943	2026-10-19T09:17:46+00:00	7269720		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR351CSQ		1.992	2026-10-19T09:17:46+00:00	12851915		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR320RLS		0.007	2026-10-19T09:17:46+00:00	127		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR316WAS		0.004	2026-10-19T09:17:47+00:00	1079947		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR923FKN		2.907	2026-10-19T09:17:47+00:00	12996976		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR956ZER		0.595	2026-10-19T09:17:47+00:00	127		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR351CSQ		0.006	2026-10-19T09:17:48+00:00	127		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR613LBN		0.005	2026-10-19T09:17:48+00:00	1764425		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR534YJW		0.006	2026-10-19T09:17:48+00:00	1933414		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR788DZO		3.869	2026-10-19T09:17:48+00:00	8397330		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR511RDV		0.117	2026-10-19T09:17:48+00:00	127		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR923FKN		0.006	2026-10-19T09:17:48+00:00	127		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR956ZER		0.006	2026-10-19T09:17:49+00:00	3149279		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR568QKW		88.726	2026-10-19T09:17:49+00:00	852873809		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR788DZO		5.399	2026-10-19T09:17:49+00:00	91208		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR158DQA		4.668	2026-10-19T09:17:49+00:00	8134114		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_healthy_PBMC_human		0.006	2026-10-19T09:17:49+00:00	127		node_3	TRUE
+GEX_cellranger_kept_metadata_tibble.comparison_1x		0.03	2026-10-19T09:17:49+00:00	490246		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR568QKW		0.187	2026-10-19T09:17:50+00:00	3502779		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR508WRP		0.008	2026-10-19T09:17:50+00:00	127		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR987VTJ		0.01	2026-10-19T09:17:51+00:00	127		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR158DQA		6.658	2026-10-19T09:17:51+00:00	119981		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR925IHI		0.006	2026-10-19T09:17:51+00:00	2306311		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR264JIX		0.004	2026-10-19T09:17:51+00:00	1105837		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR316WAS		0.006	2026-10-19T09:17:52+00:00	127		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR788DZO		3.054	2026-10-19T09:17:53+00:00	12846055		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR351CSQ		0.005	2026-10-19T09:17:53+00:00	1315540		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR923FKN		0.005	2026-10-19T09:17:53+00:00	1812313		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR788DZO		0.003	2026-10-19T09:17:54+00:00	1364108		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR158DQA		2.602	2026-10-19T09:17:55+00:00	13819598		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR568QKW		4.352	2026-10-19T09:17:55+00:00	8330459		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR788DZO		0.007	2026-10-19T09:17:55+00:00	127		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR033MDU		3.392	2026-10-19T09:17:55+00:00	11239733		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_ENCSR793DNM		79.991	2026-10-19T09:17:55+00:00	868074735		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR033MDU		0.006	2026-10-19T09:17:56+00:00	127		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR158DQA		0.005	2026-10-19T09:17:56+00:00	2812107		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_pbmc_granulocyte_sorted_10k		7.866	2026-10-19T09:17:56+00:00	9253550		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_ENCSR793DNM		0.515	2026-10-19T09:17:56+00:00	3462316		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR158DQA		0.007	2026-10-19T09:17:57+00:00	127		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR128ZLB		8.57	2026-10-19T09:17:57+00:00	75254		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_pbmc_10k_chromium_x		9.594	2026-10-19T09:17:58+00:00	9543442		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR033MDU		0.004	2026-10-19T09:17:58+00:00	895714		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR568QKW		6.661	2026-10-19T09:17:59+00:00	141215		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_ENCSR793DNM		4.775	2026-10-19T09:18:02+00:00	8146819		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_pbmc_granulocyte_sorted_10k		15.806	2026-10-19T09:18:04+00:00	127704		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR128ZLB		14.796	2026-10-19T09:18:04+00:00	110904		node_3	TRUE
+amulet_metrics_tibble.comparison_ENCSR793DNM		8.025	2026-10-19T09:18:05+00:00	112270		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR568QKW		12.926	2026-10-19T09:18:05+00:00	196349		node_3	TRUE
+full_metadata_tibble.comparison_pbmc_granulocyte_sorted_10k		2.684	2026-10-19T09:18:08+00:00	14699659		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_pbmc_granulocyte_sorted_10k		0.009	2026-10-19T09:18:08+00:00	127		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_pbmc_10k_chromium_x		21.453	2026-10-19T09:18:08+00:00	124815		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_pbmc_granulocyte_sorted_10k		0.009	2026-10-19T09:18:10+00:00	1974848		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_ENCSR793DNM		13.107	2026-10-19T09:18:10+00:00	138893		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR128ZLB		4.926	2026-10-19T09:18:10+00:00	13625144		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR128ZLB		0.005	2026-10-19T09:18:12+00:00	1593973		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR568QKW		4.249	2026-10-19T09:18:12+00:00	14240441		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR128ZLB		0.006	2026-10-19T09:18:13+00:00	127		node_3	TRUE
+full_metadata_tibble.comparison_ENCSR793DNM		2.135	2026-10-19T09:18:13+00:00	13234920		node_3	TRUE
+full_metadata_tibble.comparison_pbmc_10k_chromium_x		3.293	2026-10-19T09:18:13+00:00	14985316		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR568QKW		0.012	2026-10-19T09:18:14+00:00	127		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_pbmc_10k_chromium_x		0.007	2026-10-19T09:18:14+00:00	1854393		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR793DNM		0.005	2026-10-19T09:18:14+00:00	2101086		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_ENCSR568QKW		0.006	2026-10-19T09:18:14+00:00	3071849		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_ENCSR793DNM		0.006	2026-10-19T09:18:15+00:00	127		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_pbmc_10k_chromium_x		0.012	2026-10-19T09:18:16+00:00	127		node_3	TRUE
+GEX_normalization.GEX.comparison_1x		37.147	2026-10-19T09:18:27+00:00	75597060		node_3	TRUE
+PCA_BPCells.GEX.comparison_1x		0	2026-10-19T09:18:27+00:00	2127936		node_3	TRUE
+metadata_tibble.GEX.comparison_1x		0.007	2026-10-19T09:18:28+00:00	490246		node_3	TRUE
+metadata_harmony_tibble.GEX.comparison_1x		0.01	2026-10-19T09:18:28+00:00	490246		node_3	TRUE
+harmony_embeddings_matrix.GEX.comparison_1x		0.046	2026-10-19T09:18:28+00:00	993509		node_3	TRUE
+knn.GEX.comparison_1x		0.617	2026-10-19T09:18:29+00:00	793430		node_3	TRUE
+PCA_clusters.GEX.comparison_1x		0.335	2026-10-19T09:18:29+00:00	18484		node_3	TRUE
+metadata_w_clusters_tibble.GEX.comparison_1x		0.004	2026-10-19T09:18:29+00:00	492204		node_3	TRUE
+cluster_UCell_controls.GEX.comparison_1x		4.788	2026-10-19T09:18:34+00:00	808957		node_3	TRUE
+cluster_UCell_evidence.GEX.comparison_1x		2.12	2026-10-19T09:18:36+00:00	72297		node_3	TRUE
+cluster_UCell_annotation.3_GEX_QC.comparison_1x		0.046	2026-10-19T09:18:36+00:00	72961		node_3	TRUE
+metadata_w_cell_types_unfiltered_tibble.GEX.comparison_1x		0.055	2026-10-19T09:18:37+00:00	542667		node_3	TRUE
+scDblFinder_GEM_well_tibble.GEX.comparison_1x		0.024	2026-10-19T09:18:37+00:00	17559		node_3	TRUE
+fragments_w_prefix_bpcells_dir.comparison_pbmc_10k_chromium_controller		126.67	2026-10-19T09:18:42+00:00	1606848078		node_3	TRUE
+fragments_w_prefix_bpcells.comparison_pbmc_10k_chromium_controller		0.604	2026-10-19T09:18:44+00:00	4062387		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_1x_fd7e9f8590b01540	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_1x	14.133	2026-10-19T09:18:51+00:00	21736		node_3	TRUE
+scDblFinder_results_df.GEX.comparison_1x		0.002	2026-10-19T09:18:51+00:00	22702		node_3	TRUE
+metadata_w_cell_types_tibble.GEX.comparison_1x		0.008	2026-10-19T09:18:51+00:00	548639		node_3	TRUE
+GEX_cells_per_GEM_well_tibble.ATAC.comparison_1x		0.002	2026-10-19T09:18:51+00:00	16200		node_3	TRUE
+BCs_per_peak_cluster_list.ATAC.comparison_1x		0.007	2026-10-19T09:18:51+00:00	17697		node_3	TRUE
+peak_calling_cluster_names.ATAC.comparison_1x		0.001	2026-10-19T09:18:51+00:00	102		node_3	TRUE
+peak_calling_cluster_discovery_tibble.ATAC.comparison_1x		0.024	2026-10-19T09:18:51+00:00	18299		node_3	TRUE
+ATAC_qc_metrics_tibble.comparison_pbmc_10k_chromium_controller		12.113	2026-10-19T09:18:58+00:00	9663809		node_3	TRUE
+amulet_metrics_tibble.comparison_pbmc_10k_chromium_controller		17.221	2026-10-19T09:19:02+00:00	118327		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_1x_e2c1536074d0d6d4	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_1x	11.748	2026-10-19T09:19:03+00:00	253766693		node_3	TRUE
+ATAC_blacklist_metrics_tibble.comparison_pbmc_10k_chromium_controller		28.055	2026-10-19T09:19:13+00:00	122139		node_3	TRUE
+full_metadata_tibble.comparison_pbmc_10k_chromium_controller		6.159	2026-10-19T09:19:20+00:00	15215065		node_3	TRUE
+excluded_cellranger_only_barcodes_by_type_list.comparison_pbmc_10k_chromium_controller		0.012	2026-10-19T09:19:22+00:00	127		node_3	TRUE
+cellranger_kept_metadata_tibble.comparison_pbmc_10k_chromium_controller		0.006	2026-10-19T09:19:23+00:00	1920829		node_3	TRUE
+GEX_cellranger_kept_metadata_tibble.comparison_2x		0.142	2026-10-19T09:19:23+00:00	2305521		node_3	TRUE
+GEX_cellranger_kept_metadata_tibble.comparison_5x		0.473	2026-10-19T09:19:24+00:00	7863793		node_3	TRUE
+GEX_cellranger_kept_metadata_tibble.comparison_10x		1.069	2026-10-19T09:19:25+00:00	13864914		node_3	TRUE
+GEX_cellranger_kept_metadata_tibble.comparison_20x		3.396	2026-10-19T09:19:28+00:00	36097208		node_3	TRUE
+GEX_cellranger_kept_metadata_tibble.comparison_31x		6.675	2026-10-19T09:19:32+00:00	56807333		node_3	TRUE
+GEX_normalization.GEX.comparison_2x		91.681	2026-10-19T09:20:56+00:00	357972889		node_3	TRUE
+PCA_BPCells.GEX.comparison_2x		0	2026-10-19T09:20:59+00:00	6088659		node_3	TRUE
+metadata_tibble.GEX.comparison_2x		0.011	2026-10-19T09:20:59+00:00	2305521		node_3	TRUE
+metadata_harmony_tibble.GEX.comparison_2x		0.016	2026-10-19T09:20:59+00:00	2305521		node_3	TRUE
+comparison_seurat_signac_consensus_peak_GRanges.comparison_1x		143.811	2026-10-19T09:21:27+00:00	2725753		node_3	TRUE
+comparison_seurat_signac_ATAC_BPCells_dirs.comparison_1x		14.662	2026-10-19T09:21:42+00:00	23895545		node_3	TRUE
+GEX_normalization.GEX.comparison_5x		314.837	2026-10-19T09:24:50+00:00	1308874346		node_3	TRUE
+harmony_embeddings_matrix.GEX.comparison_2x		0.022	2026-10-19T09:24:51+00:00	4951354		node_3	TRUE
+knn.GEX.comparison_2x		3.125	2026-10-19T09:24:54+00:00	4130062		node_3	TRUE
+PCA_BPCells.GEX.comparison_5x		0	2026-10-19T09:24:58+00:00	18969063		node_3	TRUE
+metadata_tibble.GEX.comparison_5x		0.057	2026-10-19T09:24:58+00:00	7863793		node_3	TRUE
+metadata_harmony_tibble.GEX.comparison_5x		0.102	2026-10-19T09:24:59+00:00	7863793		node_3	TRUE
+harmony_embeddings_matrix.GEX.comparison_5x		0	2026-10-19T09:24:59+00:00	17782232		node_3	TRUE
+PCA_clusters.GEX.comparison_2x		5.445	2026-10-19T09:25:03+00:00	79831		node_3	TRUE
+metadata_w_clusters_tibble.GEX.comparison_2x		0.008	2026-10-19T09:25:03+00:00	2318180		node_3	TRUE
+knn.GEX.comparison_5x		8.441	2026-10-19T09:25:08+00:00	14982002		node_3	TRUE
+cluster_UCell_controls.GEX.comparison_2x		6.349	2026-10-19T09:25:10+00:00	834744		node_3	TRUE
+cluster_UCell_evidence.GEX.comparison_2x		1.562	2026-10-19T09:25:12+00:00	259699		node_3	TRUE
+cluster_UCell_annotation.3_GEX_QC.comparison_2x		0.058	2026-10-19T09:25:12+00:00	259313		node_3	TRUE
+metadata_w_cell_types_unfiltered_tibble.GEX.comparison_2x		0.077	2026-10-19T09:25:12+00:00	2528660		node_3	TRUE
+scDblFinder_GEM_well_tibble.GEX.comparison_2x		0.026	2026-10-19T09:25:12+00:00	128564		node_3	TRUE
+PCA_clusters.GEX.comparison_5x		12.999	2026-10-19T09:25:21+00:00	269238		node_3	TRUE
+metadata_w_clusters_tibble.GEX.comparison_5x		0.026	2026-10-19T09:25:22+00:00	7896062		node_3	TRUE
+cluster_UCell_controls.GEX.comparison_5x		4.644	2026-10-19T09:25:27+00:00	878138		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_2x_06940166c514b7a3	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_2x	14.834	2026-10-19T09:25:27+00:00	26936		node_3	TRUE
+cluster_UCell_evidence.GEX.comparison_5x		4.884	2026-10-19T09:25:32+00:00	821450		node_3	TRUE
+cluster_UCell_annotation.3_GEX_QC.comparison_5x		0.027	2026-10-19T09:25:32+00:00	823029		node_3	TRUE
+metadata_w_cell_types_unfiltered_tibble.GEX.comparison_5x		0.056	2026-10-19T09:25:33+00:00	8587937		node_3	TRUE
+scDblFinder_GEM_well_tibble.GEX.comparison_5x		0.014	2026-10-19T09:25:33+00:00	499039		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_5x_7cdf4b4a960bf1cd	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_5x	11.354	2026-10-19T09:25:44+00:00	26540		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_2x_7fb315ca35931fbe	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_2x	61.867	2026-10-19T09:26:19+00:00	97516		node_3	TRUE
+scDblFinder_results_df.GEX.comparison_2x		0.003	2026-10-19T09:26:19+00:00	127795		node_3	TRUE
+metadata_w_cell_types_tibble.GEX.comparison_2x		0.018	2026-10-19T09:26:19+00:00	2587443		node_3	TRUE
+GEX_cells_per_GEM_well_tibble.ATAC.comparison_2x		0.002	2026-10-19T09:26:19+00:00	67573		node_3	TRUE
+peak_calling_cluster_names.ATAC.comparison_2x		0.008	2026-10-19T09:26:19+00:00	136		node_3	TRUE
+BCs_per_peak_cluster_list.ATAC.comparison_2x		0.037	2026-10-19T09:26:19+00:00	89151		node_3	TRUE
+peak_calling_cluster_discovery_tibble.ATAC.comparison_2x		0.038	2026-10-19T09:26:19+00:00	91204		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_5x_7d11dd67a8e60b33	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_5x	55.674	2026-10-19T09:26:29+00:00	97372		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_2x_e6fa1782e15b4ac0	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_2x	12.151	2026-10-19T09:26:31+00:00	252076863		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_5x_72e7980ec6dbaf7a	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_5x	57.887	2026-10-19T09:26:35+00:00	105056		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_5x_e56d814af03d9169	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_5x	58.949	2026-10-19T09:26:37+00:00	107663		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_5x_08964696ed1b23b9	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_5x	60.948	2026-10-19T09:26:38+00:00	97672		node_3	TRUE
+scDblFinder_results_df.GEX.comparison_5x		0.005	2026-10-19T09:26:39+00:00	447007		node_3	TRUE
+metadata_w_cell_types_tibble.GEX.comparison_5x		0.035	2026-10-19T09:26:39+00:00	8801430		node_3	TRUE
+GEX_cells_per_GEM_well_tibble.ATAC.comparison_5x		0.006	2026-10-19T09:26:39+00:00	231793		node_3	TRUE
+peak_calling_cluster_names.ATAC.comparison_5x		0.01	2026-10-19T09:26:39+00:00	145		node_3	TRUE
+BCs_per_peak_cluster_list.ATAC.comparison_5x		0.049	2026-10-19T09:26:39+00:00	347150		node_3	TRUE
+peak_calling_cluster_discovery_tibble.ATAC.comparison_5x		0.05	2026-10-19T09:26:40+00:00	367828		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_5x_9a0ca0144d2ee7fd	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_5x	12.157	2026-10-19T09:26:52+00:00	261226985		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_5x_0a8b979f3cbe8397	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_5x	55.904	2026-10-19T09:27:36+00:00	1171410435		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_5x_5c2541b2163bf90d	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_5x	67.335	2026-10-19T09:27:47+00:00	1565121997		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_2x_09742bcb434791d9	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_2x	88.843	2026-10-19T09:27:48+00:00	2019058022		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_5x_40f82530568f325d	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_5x	88.043	2026-10-19T09:28:08+00:00	1984273846		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_5x_cae83da7389c9ee5	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_5x	90.461	2026-10-19T09:28:10+00:00	1965836024		node_3	TRUE
+GEX_normalization.GEX.comparison_10x		694.35	2026-10-19T09:31:30+00:00	2428288725		node_3	TRUE
+PCA_BPCells.GEX.comparison_10x		0.001	2026-10-19T09:31:40+00:00	34167547		node_3	TRUE
+metadata_tibble.GEX.comparison_10x		0.117	2026-10-19T09:31:41+00:00	13864914		node_3	TRUE
+metadata_harmony_tibble.GEX.comparison_10x		0.183	2026-10-19T09:31:41+00:00	13864914		node_3	TRUE
+harmony_embeddings_matrix.GEX.comparison_10x		0.031	2026-10-19T09:31:42+00:00	32998985		node_3	TRUE
+knn.GEX.comparison_10x		13.074	2026-10-19T09:31:55+00:00	26639026		node_3	TRUE
+PCA_clusters.GEX.comparison_10x		20.783	2026-10-19T09:32:16+00:00	493092		node_3	TRUE
+metadata_w_clusters_tibble.GEX.comparison_10x		0.037	2026-10-19T09:32:17+00:00	13927376		node_3	TRUE
+cluster_UCell_controls.GEX.comparison_10x		5.671	2026-10-19T09:32:23+00:00	942227		node_3	TRUE
+cluster_UCell_evidence.GEX.comparison_10x		8.185	2026-10-19T09:32:32+00:00	1638147		node_3	TRUE
+cluster_UCell_annotation.3_GEX_QC.comparison_10x		0.099	2026-10-19T09:32:32+00:00	1792889		node_3	TRUE
+metadata_w_cell_types_unfiltered_tibble.GEX.comparison_10x		0.144	2026-10-19T09:32:33+00:00	15221281		node_3	TRUE
+scDblFinder_GEM_well_tibble.GEX.comparison_10x		0.049	2026-10-19T09:32:33+00:00	918836		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x_a1a3516e58904cf4	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x	20.325	2026-10-19T09:32:54+00:00	44074		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x_b00c46d36efe8c24	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x	19.942	2026-10-19T09:32:57+00:00	26077		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x_1761204c43b44c6e	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x	20.841	2026-10-19T09:32:58+00:00	33103		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x_f587c62877d91dc8	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x	21.1	2026-10-19T09:32:59+00:00	29420		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x_7e54e234aff8018b	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x	53.873	2026-10-19T09:33:31+00:00	105112		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x_c62cbce0f041f9dd	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x	58.154	2026-10-19T09:33:36+00:00	97628		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x_edb17a491f46036a	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x	59.413	2026-10-19T09:33:37+00:00	97325		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x_495853acf467f52e	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x	61.394	2026-10-19T09:33:39+00:00	107542		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x_257a6f6c74905353	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x	64.705	2026-10-19T09:33:42+00:00	104937		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x_adf04401497023cd	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x	73.699	2026-10-19T09:33:51+00:00	154827		node_3	TRUE
+scDblFinder_results_df.GEX.comparison_10x		0.008	2026-10-19T09:33:51+00:00	824822		node_3	TRUE
+metadata_w_cell_types_tibble.GEX.comparison_10x		0.087	2026-10-19T09:33:52+00:00	15612602		node_3	TRUE
+peak_calling_cluster_names.ATAC.comparison_10x		0.014	2026-10-19T09:33:52+00:00	151		node_3	TRUE
+BCs_per_peak_cluster_list.ATAC.comparison_10x		0.055	2026-10-19T09:33:52+00:00	593658		node_3	TRUE
+GEX_cells_per_GEM_well_tibble.ATAC.comparison_10x		0.011	2026-10-19T09:33:52+00:00	431571		node_3	TRUE
+peak_calling_cluster_discovery_tibble.ATAC.comparison_10x		0.194	2026-10-19T09:33:53+00:00	638252		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x_7c163507e6fa8b9f	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x	11.864	2026-10-19T09:34:05+00:00	250415241		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x_1169628317d336e7	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x	14.402	2026-10-19T09:34:08+00:00	322879906		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x_5bb3af576d43e371	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x	23.874	2026-10-19T09:34:17+00:00	506942452		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x_e74e461551bcf1ec	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x	31.675	2026-10-19T09:34:25+00:00	717737816		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x_7f0d9087a0be2fdf	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x	40.27	2026-10-19T09:34:33+00:00	936840057		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x_64c3d3783f53f446	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x	51.271	2026-10-19T09:34:45+00:00	1023139536		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x_e12887ee8fbb6c3f	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x	60.68	2026-10-19T09:34:54+00:00	1113717591		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x_cfb8300bf1943f49	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x	73.087	2026-10-19T09:35:06+00:00	1531365946		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x_9ca3254c83c3ba5e	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x	88.324	2026-10-19T09:35:21+00:00	1935055614		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x_94ea2a0cd922449b	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_10x	90.024	2026-10-19T09:35:23+00:00	1944540507		node_3	TRUE
+comparison_seurat_signac_consensus_peak_GRanges.comparison_2x		991.741	2026-10-19T09:44:33+00:00	5090486		node_3	TRUE
+comparison_seurat_signac_ATAC_BPCells_dirs.comparison_2x		100.403	2026-10-19T09:46:14+00:00	170073167		node_3	TRUE
+GEX_normalization.GEX.comparison_20x		1802.221	2026-10-19T09:51:35+00:00	6292894304		node_3	TRUE
+PCA_BPCells.GEX.comparison_20x		0.001	2026-10-19T09:51:54+00:00	87096702		node_3	TRUE
+metadata_tibble.GEX.comparison_20x		0.299	2026-10-19T09:51:56+00:00	36097208		node_3	TRUE
+metadata_harmony_tibble.GEX.comparison_20x		0.443	2026-10-19T09:51:57+00:00	36097208		node_3	TRUE
+harmony_embeddings_matrix.GEX.comparison_20x		0.036	2026-10-19T09:51:58+00:00	85917858		node_3	TRUE
+knn.GEX.comparison_20x		37.658	2026-10-19T09:52:37+00:00	70655255		node_3	TRUE
+PCA_clusters.GEX.comparison_20x		52.113	2026-10-19T09:53:30+00:00	1201964		node_3	TRUE
+metadata_w_clusters_tibble.GEX.comparison_20x		0.107	2026-10-19T09:53:31+00:00	36243142		node_3	TRUE
+cluster_UCell_controls.GEX.comparison_20x		6.112	2026-10-19T09:53:38+00:00	980907		node_3	TRUE
+cluster_UCell_evidence.GEX.comparison_20x		22.497	2026-10-19T09:54:02+00:00	4330871		node_3	TRUE
+cluster_UCell_annotation.3_GEX_QC.comparison_20x		0.131	2026-10-19T09:54:02+00:00	4329982		node_3	TRUE
+metadata_w_cell_types_unfiltered_tibble.GEX.comparison_20x		0.381	2026-10-19T09:54:05+00:00	39499917		node_3	TRUE
+scDblFinder_GEM_well_tibble.GEX.comparison_20x		0.099	2026-10-19T09:54:06+00:00	2231737		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_ef955183be15a88b	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	19.744	2026-10-19T09:54:27+00:00	39750		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_3c3020333756491b	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	20.734	2026-10-19T09:54:36+00:00	22366		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_5267fd039773ce8d	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	22.089	2026-10-19T09:54:37+00:00	32426		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_e1657ccc19ed92ca	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	32.426	2026-10-19T09:54:45+00:00	54485		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_818cdd03e05812e2	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	35.597	2026-10-19T09:54:50+00:00	66361		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_96d6435cceee5ec8	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	9.414	2026-10-19T09:54:54+00:00	27989		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_e12fbee2bed0374a	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	43.059	2026-10-19T09:54:58+00:00	83423		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_9fcd0162e74fa8c7	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	43.334	2026-10-19T09:54:59+00:00	75011		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_9104f7bbdeb0d8d3	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	47.809	2026-10-19T09:55:00+00:00	77540		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_c540637fb32cea21	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	52.175	2026-10-19T09:55:05+00:00	102764		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_3a28c9a4214c9d05	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	42.084	2026-10-19T09:55:09+00:00	97639		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_bc7448bf36f0fc10	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	57.979	2026-10-19T09:55:13+00:00	97021		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_2056a28a3b90e0d2	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	63.266	2026-10-19T09:55:18+00:00	72074		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_b3caa2a77d4446d3	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	42.187	2026-10-19T09:55:19+00:00	79461		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_ee760a6153780950	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	44.607	2026-10-19T09:55:22+00:00	106998		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_92d9978564b849b1	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	79.773	2026-10-19T09:55:32+00:00	128067		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_0abd7174d16c16ae	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	81.713	2026-10-19T09:55:34+00:00	156754		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_f1ee8329df380e6f	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	82.243	2026-10-19T09:55:34+00:00	129735		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_907b5e3483f26458	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	86.347	2026-10-19T09:55:41+00:00	147576		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x_56d5497a4dcccfc4	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_20x	208.315	2026-10-19T09:57:40+00:00	282303		node_3	TRUE
+scDblFinder_results_df.GEX.comparison_20x		0.035	2026-10-19T09:57:40+00:00	1951076		node_3	TRUE
+metadata_w_cell_types_tibble.GEX.comparison_20x		0.476	2026-10-19T09:57:43+00:00	40389860		node_3	TRUE
+BCs_per_peak_cluster_list.ATAC.comparison_20x		0.144	2026-10-19T09:57:44+00:00	1385793		node_3	TRUE
+peak_calling_cluster_names.ATAC.comparison_20x		0.137	2026-10-19T09:57:44+00:00	194		node_3	TRUE
+GEX_cells_per_GEM_well_tibble.ATAC.comparison_20x		0.014	2026-10-19T09:57:44+00:00	1059204		node_3	TRUE
+peak_calling_cluster_discovery_tibble.ATAC.comparison_20x		0.406	2026-10-19T09:57:45+00:00	1494963		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_626d33028d20e4fc	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	11.621	2026-10-19T09:57:56+00:00	243998655		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_090d01248149daa4	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	20.541	2026-10-19T09:58:11+00:00	318584152		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_203989aaa4880443	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	20.94	2026-10-19T09:58:12+00:00	288150759		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_4a37194a3bfb582c	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	29.731	2026-10-19T09:58:20+00:00	498915513		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_8956b23cbe91b724	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	33.091	2026-10-19T09:58:24+00:00	569490657		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_e21ea4fc0d56513b	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	38.724	2026-10-19T09:58:29+00:00	714897701		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_2432479289323c98	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	36.002	2026-10-19T09:58:33+00:00	810884775		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_e59d8ff6da2b0781	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	42.997	2026-10-19T09:58:34+00:00	794034708		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_f304b9c44543dc55	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	44.582	2026-10-19T09:58:35+00:00	857366381		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_7c8156c47b9ab575	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	45.358	2026-10-19T09:58:36+00:00	857094569		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_4ad913cd04f61379	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	47.992	2026-10-19T09:58:38+00:00	933646357		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_3d8f4771a1177b55	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	54.574	2026-10-19T09:58:45+00:00	994744757		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_525716fd42710d1f	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	61.359	2026-10-19T09:58:49+00:00	1048170788		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_feded7cf9c734662	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	39.279	2026-10-19T09:58:51+00:00	838440341		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_802802a9d95ba661	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	62.641	2026-10-19T09:58:53+00:00	1322413454		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_081aadc5af0f04ff	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	45.703	2026-10-19T09:58:57+00:00	1015757366		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_a863de907f8e47ac	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	73.517	2026-10-19T09:59:03+00:00	1481501669		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_73251960421072a0	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	43.538	2026-10-19T09:59:04+00:00	954192667		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_5f74735dba7b71ee	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	81.867	2026-10-19T09:59:07+00:00	1827345660		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x_e68c1639e9ecc055	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_20x	90.688	2026-10-19T09:59:18+00:00	1831419839		node_3	TRUE
+GEX_normalization.GEX.comparison_31x		2918.964	2026-10-19T10:12:09+00:00	10001701649		node_3	TRUE
+PCA_BPCells.GEX.comparison_31x		0.001	2026-10-19T10:12:38+00:00	136669434		node_3	TRUE
+metadata_tibble.GEX.comparison_31x		0.392	2026-10-19T10:12:41+00:00	56807333		node_3	TRUE
+metadata_harmony_tibble.GEX.comparison_31x		0.677	2026-10-19T10:12:43+00:00	56807333		node_3	TRUE
+harmony_embeddings_matrix.GEX.comparison_31x		0.002	2026-10-19T10:12:45+00:00	135468365		node_3	TRUE
+knn.GEX.comparison_31x		74.021	2026-10-19T10:14:02+00:00	111211345		node_3	TRUE
+PCA_clusters.GEX.comparison_31x		87.026	2026-10-19T10:15:30+00:00	1854278		node_3	TRUE
+metadata_w_clusters_tibble.GEX.comparison_31x		0.159	2026-10-19T10:15:32+00:00	57047835		node_3	TRUE
+cluster_UCell_controls.GEX.comparison_31x		6.784	2026-10-19T10:15:40+00:00	1006222		node_3	TRUE
+cluster_UCell_evidence.GEX.comparison_31x		29.414	2026-10-19T10:16:11+00:00	7000810		node_3	TRUE
+cluster_UCell_annotation.3_GEX_QC.comparison_31x		0.197	2026-10-19T10:16:12+00:00	7006599		node_3	TRUE
+metadata_w_cell_types_unfiltered_tibble.GEX.comparison_31x		0.352	2026-10-19T10:16:15+00:00	62679632		node_3	TRUE
+scDblFinder_GEM_well_tibble.GEX.comparison_31x		0.107	2026-10-19T10:16:17+00:00	3525325		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_4e303bcea521aacd	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	20.145	2026-10-19T10:16:38+00:00	33326		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_7424e44318bcfd6a	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	30.48	2026-10-19T10:16:53+00:00	41788		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_33f08b647680e986	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	34.02	2026-10-19T10:16:56+00:00	62254		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_3a695a823f6330f2	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	39.6	2026-10-19T10:17:02+00:00	69542		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_9b9932a4082f046b	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	42.563	2026-10-19T10:17:05+00:00	82064		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_55bb7c68fc5a5cf2	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	45.625	2026-10-19T10:17:08+00:00	87905		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_d507bb35c15aa9a9	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	49.181	2026-10-19T10:17:11+00:00	91306		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_fdd98e905c5e6dc5	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	51.47	2026-10-19T10:17:14+00:00	88900		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_3ca285ad5ac9f255	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	51.417	2026-10-19T10:17:14+00:00	101805		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_4db072438c743411	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	22.459	2026-10-19T10:17:16+00:00	59394		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_5d0dbdd48b717448	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	55.956	2026-10-19T10:17:21+00:00	96864		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_2ad34e5b479f52ca	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	9.539	2026-10-19T10:17:24+00:00	21978		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_4b4bb16cdfc37f4c	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	11.231	2026-10-19T10:17:28+00:00	34209		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_2c62b1df52a16b1a	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	50.062	2026-10-19T10:17:28+00:00	72032		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_a46825d0b49a58ce	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	36.439	2026-10-19T10:17:33+00:00	76466		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_6f6bbe886f66d66d	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	72.476	2026-10-19T10:17:34+00:00	150383		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_4f51f3e131e9a871	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	79.44	2026-10-19T10:17:42+00:00	128075		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_8511c1cc62d33115	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	79.906	2026-10-19T10:17:42+00:00	129771		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_cda02eba846a242a	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	8.663	2026-10-19T10:17:42+00:00	24729		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_535aa5b3ffbbd354	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	44.323	2026-10-19T10:17:47+00:00	110698		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_b61c66594d5b7852	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	46.515	2026-10-19T10:17:52+00:00	94314		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_5487711ceff9cafb	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	90.096	2026-10-19T10:17:53+00:00	147703		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_8f8fead51e9df214	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	40.297	2026-10-19T10:17:55+00:00	95951		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_37255a0dde20c9c7	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	40.302	2026-10-19T10:18:01+00:00	96954		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_66cc183e0bc8c4cf	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	34.115	2026-10-19T10:18:03+00:00	101133		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_49e016b475d23fec	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	37.763	2026-10-19T10:18:06+00:00	79495		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_c8a9ab00188a16df	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	46.801	2026-10-19T10:18:11+00:00	97167		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_67b40e02d3ef3236	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	111.033	2026-10-19T10:18:16+00:00	168745		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_27c128505a82c228	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	81.974	2026-10-19T10:18:30+00:00	124324		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_3949e631ee452b9b	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	99.05	2026-10-19T10:18:51+00:00	178300		node_3	TRUE
+scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x_7deeefa296c18694	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_31x	220.51	2026-10-19T10:20:02+00:00	282161		node_3	TRUE
+scDblFinder_results_df.GEX.comparison_31x		0.032	2026-10-19T10:20:03+00:00	3128513		node_3	TRUE
+metadata_w_cell_types_tibble.GEX.comparison_31x		0.336	2026-10-19T10:20:06+00:00	64139948		node_3	TRUE
+BCs_per_peak_cluster_list.ATAC.comparison_31x		0.164	2026-10-19T10:20:07+00:00	2219626		node_3	TRUE
+peak_calling_cluster_names.ATAC.comparison_31x		0.023	2026-10-19T10:20:07+00:00	194		node_3	TRUE
+GEX_cells_per_GEM_well_tibble.ATAC.comparison_31x		0.03	2026-10-19T10:20:08+00:00	1669247		node_3	TRUE
+peak_calling_cluster_discovery_tibble.ATAC.comparison_31x		0.743	2026-10-19T10:20:08+00:00	2381333		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_29a0b4e74a773700	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	11.399	2026-10-19T10:20:20+00:00	243849048		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_4b208a1eb43e3547	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	13.6	2026-10-19T10:20:22+00:00	316445731		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_4790f0d0617f1fcd	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	19.993	2026-10-19T10:20:33+00:00	280217585		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_fe28bcf2545dd653	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	28.62	2026-10-19T10:20:42+00:00	460160652		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_8153052f54e64d7f	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	31.576	2026-10-19T10:20:45+00:00	519143176		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_b0695404de0b3a3d	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	38.502	2026-10-19T10:20:52+00:00	699818406		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_3a088731bea9081e	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	35.523	2026-10-19T10:20:56+00:00	826759258		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_943549e44e264b76	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	44.589	2026-10-19T10:20:58+00:00	782239087		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_56cfe1ceb9cc739c	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	44.878	2026-10-19T10:20:58+00:00	873917764		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_e2470ab057236f6d	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	46.78	2026-10-19T10:20:59+00:00	918289893		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_43498b3b9c7b2c40	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	46.588	2026-10-19T10:21:00+00:00	911984236		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_230f036645e084e1	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	54.074	2026-10-19T10:21:03+00:00	1049351964		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_39fa845880a39e88	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	41.61	2026-10-19T10:21:05+00:00	1023380510		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_d2ce343f0a334579	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	52.083	2026-10-19T10:21:05+00:00	975650279		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_e212d73721033349	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	39.281	2026-10-19T10:21:13+00:00	864902215		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_146cfea5fd4147bb	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	64.132	2026-10-19T10:21:18+00:00	1343758136		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_c499134be440c67e	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	69.8	2026-10-19T10:21:19+00:00	1468132221		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_d40a122a7afb1059	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	16.979	2026-10-19T10:21:20+00:00	382939008		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_ec29e9158b0f51d2	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	39.911	2026-10-19T10:21:25+00:00	896729465		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_605787a7777b2cc5	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	44.075	2026-10-19T10:21:26+00:00	972578133		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_327baa12b4f6790b	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	83.151	2026-10-19T10:21:32+00:00	1782153095		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_488630ddb464b354	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	84.614	2026-10-19T10:21:33+00:00	1793349798		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_8f17794fec008abe	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	35.187	2026-10-19T10:21:35+00:00	815645250		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_e88947053ad57dc4	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	38.668	2026-10-19T10:21:35+00:00	873641953		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_b37abea6500feea6	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	44.882	2026-10-19T10:21:37+00:00	963627390		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_2d998a22e5369257	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	40.177	2026-10-19T10:21:39+00:00	923816788		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_834ac778d54ebd90	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	26.811	2026-10-19T10:21:41+00:00	621626183		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_3462dabdd0bd76a4	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	44.052	2026-10-19T10:21:42+00:00	981036539		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_639a01a772e1219f	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	42.253	2026-10-19T10:21:43+00:00	969352952		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_e4e92d50b393a47e	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	50.166	2026-10-19T10:21:56+00:00	1106408143		node_3	TRUE
+peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x_4f5e96d3bb0302db	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_31x	51.879	2026-10-19T10:21:58+00:00	1232490021		node_3	TRUE
+comparison_seurat_signac_consensus_peak_GRanges.comparison_5x		3381.407	2026-10-19T10:24:45+00:00	7349914		node_3	TRUE
+comparison_seurat_signac_ATAC_BPCells_dirs.comparison_5x		176.433	2026-10-19T10:27:54+00:00	647197113		node_3	TRUE
+comparison_seurat_signac_consensus_peak_GRanges.comparison_10x		3856.308	2026-10-19T10:40:12+00:00	12526093		node_3	TRUE
+comparison_seurat_signac_ATAC_BPCells_dirs.comparison_10x		320.326	2026-10-19T10:45:45+00:00	1094314817		node_3	TRUE
+comparison_seurat_signac_consensus_peak_GRanges.comparison_20x		8335.756	2026-10-19T12:59:08+00:00	18176735		node_3	TRUE
+comparison_seurat_signac_ATAC_BPCells_dirs.comparison_20x		576.475	2026-10-19T13:09:07+00:00	2073804095		node_3	TRUE
+comparison_seurat_signac_consensus_peak_GRanges.comparison_31x		11049.648	2026-10-19T16:03:19+00:00	22134860		node_3	TRUE
+comparison_seurat_signac_ATAC_BPCells_dirs.comparison_31x		894.213	2026-10-19T16:23:54+00:00	3316934214		node_3	TRUE
+comparison_seurat_signac_lognorm_RNA_object.comparison_2x		55.19	2026-10-19T21:27:11+00:00	14265147		node_3	TRUE
+comparison_seurat_signac_lognorm_RNA_object.comparison_5x		171.824	2026-10-19T21:28:09+00:00	48157522		node_3	TRUE
+comparison_seurat_signac_lognorm_RNA_object.comparison_1x		17.092	2026-10-19T21:28:23+00:00	4046924		node_3	TRUE
+comparison_seurat_signac_lognorm_object.comparison_1x		57.068	2026-10-19T21:29:21+00:00	40345535		node_3	TRUE
+comparison_seurat_signac_lognorm_object.comparison_2x		211.326	2026-10-19T21:31:39+00:00	92710613		node_3	TRUE
+comparison_seurat_signac_lognorm_RNA_object.comparison_10x		309.49	2026-10-19T21:32:22+00:00	85772418		node_3	TRUE
+comparison_seurat_signac_lognorm_object.comparison_5x		509.483	2026-10-19T21:36:41+00:00	217750412		node_3	TRUE
+comparison_seurat_signac_lognorm_RNA_object.comparison_20x		914.446	2026-10-19T21:41:35+00:00	217004527		node_3	TRUE
+comparison_seurat_signac_lognorm_object.comparison_10x		950.583	2026-10-19T21:48:20+00:00	417832214		node_3	TRUE
+comparison_seurat_signac_lognorm_RNA_object.comparison_31x		1445.989	2026-10-19T21:50:25+00:00	340835339		node_3	TRUE
+comparison_seurat_signac_lognorm_object.comparison_20x		2310.951	2026-10-19T22:20:25+00:00	934665942		node_3	TRUE
+comparison_seurat_signac_lognorm_object.comparison_31x		2944.495	2026-10-19T22:39:57+00:00	1447469670		node_3	TRUE

@@ -13,9 +13,9 @@ BENCHMARK_RUNS_DIR <- file.path(BENCHMARK_DATA_DIR, "benchmark_runs")
 BENCHMARK_AGGREGATION_RUNS <- c(
   stats::setNames(rep(list("comparison"), 6), paste0("comparison_", c(1, 2, 5, 10, 20, 31), "x")),
   stats::setNames(rep(list("sizing_small"), 5), paste0("sizing_", c(1, 2, 5, 10, 20), "x")),
-  list(sizing_31x = c("sizing_small", "sizing_31x"), sizing_91x = "sizing_91x", revision_31x = "revision_base"))
-# Records that span several driver runs, after failures, have no single elapsed time.
-BENCHMARK_MULTIPLE_DRIVER_RUNS <- "sizing_91x"
+  list(sizing_31x = "sizing_31x", sizing_91x = "sizing_91x", revision_31x = "revision_base"))
+# Records that span several driver runs, after failures or top-ups, have no single elapsed time.
+BENCHMARK_MULTIPLE_DRIVER_RUNS <- c("comparison", "comparison_lognorm", "comparison_lognorm_91x", "sizing_31x", "sizing_91x")
 # The worker cores and RAM that each counted target requested in the run that measured it.
 BENCHMARK_ALLOCATIONS <- file.path(BENCHMARK_DATA_DIR, "benchmark_allocations.tsv")
 BENCHMARK_MODULES <- c("genetic_enrichment", "differential_analyses", "peak_gene_correlation")
@@ -25,12 +25,13 @@ BENCHMARK_SIZING_AGGREGATIONS <- paste0("sizing_", c(1, 2, 5, 10, 20, 31, 91), "
 BENCHMARK_EXCLUDED_TARGETS <- c(
   "motif_family_accessibility_marker_volcano_plots.7_ATAC_QC.sizing_91x" = paste(
     "QC plot faceted by ATAC cell type, whose canvas at about a hundred cell types, 42,300 pixels square, exceeds",
-    "what the PNG device can allocate: its worker crashed twice, about a minute after each start (64 s at 31 wells)"),
+    "what the PNG device can allocate: its worker crashed twice, about a minute after each start (66 s at 31 wells)"),
   "chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.sizing_91x" = paste(
     "not run: on earlier code they took over 1.5 h and up to 110 GB per GWAS at 91 samples without finishing",
-    "(at most 4.8 min per GWAS at 31 wells)"))
+    "(at most 2.3 min per GWAS at 31 wells)"))
 # Seconds the simulated wall time adds to each target for dispatching, loading and saving. With it,
-# the simulation comes to 0.96-1.16 times the measured elapsed time of the single-run records.
+# the simulation comes to 0.77-1.07 times the measured elapsed time of the single-run records, apart from
+# the full revision build (0.53), whose workers waited for other users' jobs on its node.
 BENCHMARK_TASK_OVERHEAD_SECONDS <- 2
 # Each revision run changes revision_31x one step further, in this order.
 BENCHMARK_REVISIONS <- c(
@@ -70,9 +71,12 @@ SEURAT_SIGNAC_COMPARISON_WORKFLOWS <- local({
     "Seurat/Signac" = list(endpoint = "comparison_seurat_signac_object.",
       exclude = "^(?!comparison_seurat_signac_)", sequential = TRUE),
     # The same chain with Seurat's default log-normalization, measured in its own run from an empty
-    # store, which builds the steps it shares with the SCTransform chain again.
+    # store, which builds the steps it shares with the SCTransform chain again, and on sizing_91x's
+    # store after its sizing run.
     "Seurat/Signac log-normalization" = list(endpoint = "comparison_seurat_signac_lognorm_object.",
-      exclude = "^(?!comparison_seurat_signac_)", sequential = TRUE, run = "comparison_lognorm"))
+      exclude = "^(?!comparison_seurat_signac_)", sequential = TRUE,
+      run = c(stats::setNames(rep("comparison_lognorm", 6), paste0("comparison_", c(1, 2, 5, 10, 20, 31), "x")),
+        sizing_91x = "comparison_lognorm_91x")))
 })
 
 benchmark_aggregation_tibble <- function(aggregations) {
@@ -501,13 +505,15 @@ benchmark_workflow_measures <- function(context, executions, workflow, aggregati
 
 # Like for like: multiomeR, with and without its Seurat exports, and the Seurat/Signac chain
 # on comparison_1x to comparison_31x, all built in one run, and the Seurat/Signac chain with
-# log-normalization, built in its own run.
+# log-normalization, built in its own run and also on sizing_91x, where SCTransform cannot run.
 seurat_signac_comparison_resource_tibble <- function(context) {
   tidyr::expand_grid(aggregation = comparison_aggregation_names(), workflow = names(SEURAT_SIGNAC_COMPARISON_WORKFLOWS)) |>
+    tibble::add_row(aggregation = "sizing_91x", workflow = "Seurat/Signac log-normalization") |>
     purrr::pmap_dfr(\(aggregation, workflow) tibble::tibble(aggregation = aggregation, workflow = workflow,
       benchmark_workflow_measures(context, read_benchmark_executions(
-        SEURAT_SIGNAC_COMPARISON_WORKFLOWS[[workflow]]$run %||% BENCHMARK_AGGREGATION_RUNS[[aggregation]]), workflow, aggregation))) |>
-    dplyr::left_join(benchmark_cellranger_inputs(comparison_aggregation_names()), by = "aggregation") |>
+        SEURAT_SIGNAC_COMPARISON_WORKFLOWS[[workflow]]$run[[aggregation]] %||% BENCHMARK_AGGREGATION_RUNS[[aggregation]]),
+        workflow, aggregation))) |>
+    dplyr::left_join(benchmark_cellranger_inputs(c(comparison_aggregation_names(), "sizing_91x")), by = "aggregation") |>
     dplyr::mutate(disk_space_GB = .data$disk_space_GB + .data$input_disk_space_GB) |>
     dplyr::relocate("GEM_well_count", "cellranger_input_nuclei", .after = "aggregation")
 }
@@ -694,8 +700,8 @@ benchmark_linear_scale <- function(..., top = .1) {
 
 benchmark_text <- function(...) ggplot2::geom_text(..., family = BENCHMARK_FONT, size = 2.1, lineheight = .9, colour = "grey25")
 
-# Names each workflow's line in its colour. Lines that end before the largest size are named to the
-# right of their last point, on a white box that masks lines passing behind it, and names closer than
+# Names each workflow's line in its colour, on a white box that masks lines passing behind it. Lines
+# that end before the largest size are named to the right of their last point, and names closer than
 # 1.3 lines move apart around their mean. Lines that reach the largest size, such as multiomeR's default,
 # are named above and left of their last point, in the order of those points, and above any other such
 # point or name to the right that they would overlap.
@@ -718,15 +724,18 @@ benchmark_line_labels <- function(values, labels = BENCHMARK_LINE_LABELS) {
     if (i > 1) left$value[[i]] <- max(left$value[[i]], left$value[[i - 1]] + 1.3 * line)
     crossed <- points[-i][abs(left$value[[i]] + .5 * line - points[-i]) < .8 * line]
     if (length(crossed)) left$value[[i]] <- max(crossed) + .6 * line
-    overlap <- right$cellranger_input_nuclei + 2.5e4 + right$width > largest - left$width[[i]] &
-      abs(left$value[[i]] + .5 * line - right$value) < line
-    if (any(overlap)) left$value[[i]] <- max(right$value[overlap]) + .8 * line
+    repeat {
+      overlap <- right$cellranger_input_nuclei + 2.5e4 + right$width > largest - left$width[[i]] &
+        abs(left$value[[i]] + .5 * line - right$value) < line
+      if (!any(overlap)) break
+      left$value[[i]] <- max(right$value[overlap]) + .8 * line
+    }
   }
   list(
     ggplot2::geom_label(data = right, ggplot2::aes(label = .data$label), hjust = 0, nudge_x = 2.5e4, family = BENCHMARK_FONT,
       size = 2.3, fill = "white", linewidth = 0, label.padding = grid::unit(1, "pt"), show.legend = FALSE),
-    ggplot2::geom_text(data = left, ggplot2::aes(label = .data$label), hjust = 1, vjust = 0, family = BENCHMARK_FONT,
-      size = 2.3, show.legend = FALSE))
+    ggplot2::geom_label(data = left, ggplot2::aes(label = .data$label), hjust = 1, vjust = 0, family = BENCHMARK_FONT,
+      size = 2.3, fill = "white", linewidth = 0, label.padding = grid::unit(1, "pt"), show.legend = FALSE))
 }
 
 # A figure's panels, tagged from A.

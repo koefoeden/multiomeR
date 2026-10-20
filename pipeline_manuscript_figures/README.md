@@ -132,7 +132,7 @@ peak calling and quantification run one `future` worker per core. Both
 clusterings leave singleton communities unmerged (`group.singletons = FALSE`),
 as multiomeR does: Seurat's default merges each into a cluster in a
 single-threaded loop over singletons and clusters, which took 2.3 of the
-log-normalization chain's 6.9 hours at 31 samples.
+log-normalization chain's 6.9 hours at 31 samples in a first run.
 
 A second conventional chain follows Seurat's default normalization instead of
 SCTransform: `NormalizeData()` log-normalizes the joined counts on disk,
@@ -141,7 +141,9 @@ only those into an in-memory matrix before the same PCA. Its other steps and
 settings are the SCTransform chain's. It is measured in its own run, the
 `comparison_lognorm` series, which builds all six aggregations from an empty
 store, so it builds the steps that it shares with the SCTransform chain, such as
-peak calling, again.
+peak calling, again. At 91 samples, where SCTransform cannot run, the
+`comparison_lognorm_91x` series measures it on `sizing_91x`'s store after the
+sizing run.
 
 `comparison_1x` to `comparison_31x` take the first 1, 2, 5, 10, 20 and all 31
 GEM wells of `mixed_human_31x` without per-well QC filters, CellBender or
@@ -166,13 +168,15 @@ and `sizing_91x` adds 60 ENCODE multiome series, for 1.16 million nuclei. Its
 per-well steps are those of the comparison aggregations. SCTransform cannot run
 at that size in either workflow: Seurat converts the joined count matrix to a
 `dgCMatrix`, which holds at most 2^31 - 1 non-zero entries, and `sizing_91x` has
-2.17 billion. S2F shows each size's RNA non-zero entries against that limit, the
-genes detected in each called nucleus summed from Cell Ranger's per-barcode
-metrics. They equal the count in Seurat's error. In S2A-E, colour gives the
-tool, blue for multiomeR and orange for Seurat/Signac, and the darker shade each
-tool's default normalization. Each line is named in its colour by tool and
-normalization method: to the right of its last point for lines that end at 31
-samples, and above and left of it for multiomeR's default, which reaches 91. On
+2.17 billion. Log-normalization keeps the counts on disk and runs at 91
+samples, so both tools' default normalizations reach that size. S2F shows each
+size's RNA non-zero entries against that limit, the genes detected in each
+called nucleus summed from Cell Ranger's per-barcode metrics. They equal the
+count in Seurat's error. In S2A-E, colour gives the tool, blue for multiomeR and
+orange for Seurat/Signac, and the darker shade each tool's default
+normalization. Each line is named in its colour by tool and normalization
+method: to the right of its last point for lines that end at 31 samples, and
+above and left of it for the two default normalizations, which reach 91. On
 linear axes, the differences read directly from the lines.
 
 ### Sizing
@@ -199,12 +203,16 @@ downstream of them, are left out of its totals rather than counted as zero, as
 its `excluded_targets` column states. The ATAC motif-family marker volcano plot
 facets by ATAC cell type, and at about a hundred cell types its automatic
 canvas, 42,300 pixels square, is more than the PNG device can allocate: its
-worker crashed twice, each time about a minute after it started, against 64 s
+worker crashed twice, each time about a minute after it started, against 66 s
 for the whole plot at 31 wells. The genetic-enrichment variant detail plots were
 not run: on earlier code they ran over 1.5 h and up to 110 GB per GWAS without
-finishing, against at most 4.8 min per GWAS at 31 wells now. The plot records
-they draw from finished and are counted. No target needed a benchmark-only
-change or a raised resource request.
+finishing, against at most 2.3 min per GWAS at 31 wells now. The plot records
+they draw from finished and are counted. The sizing aggregations keep clusters
+of any size, so `sizing_91x` had 1,699 cell-type groups, most of them unassigned
+clusters of one or a few nuclei. Genetic enrichment now profiles only cell
+types with at least 100 nuclei. S-LDSC's cell-type fits and matched-size
+annotation records crashed at 48 GB on `sizing_91x` before that change and now
+request 60 GB workers. No target needed a benchmark-only change.
 
 ### Revisions
 
@@ -242,17 +250,20 @@ dashed line at 100%, and careful manual checkpointing narrows that gap.
   simulated wall time is the sum of its runtimes, as is its critical path, so it
   takes no per-target overhead. Each multiomeR target also takes 2 s
   for dispatching, loading and saving (`BENCHMARK_TASK_OVERHEAD_SECONDS`). With
-  it, the simulation came to 0.96-1.16 times the measured elapsed time of each
-  single-run record, against 0.68-1.01 times without it, which falls short most
-  for runs of many short targets, such as `revision_1`. It overstates the full
-  revision build most, by 16%.
+  it, the simulation came to 0.77-1.07 times the measured elapsed time of each
+  single-run record, against 0.67-1.00 times without it, which falls short most
+  for runs of many short targets, such as `revision_1`. The full revision build
+  is the exception, at 0.53: other users' jobs on its node held up its workers,
+  so 191 of its targets waited over a minute between dispatch and start, against
+  none in an earlier build of the same aggregation.
   `benchmark_simulation_check.tsv` compares the simulation, with and without
   that overhead, with each recorded run's elapsed time: the periods in which its
   targets ran, from the first recorded start to the last completion, joined
   across gaps of up to ten minutes. It also gives each run's median start gap,
   the time from the last completion of a target's upstream targets in the run to
   its start, which in large runs includes waiting for a busy worker.
-  `sizing_91x` is left out of the check, because it spans three driver runs.
+  Records that span several driver runs are left out: `comparison`,
+  `comparison_lognorm`, `comparison_lognorm_91x`, `sizing_31x` and `sizing_91x`.
 - **CPU time and memory:** each target's runtime times its job's mean sampled
   CPU use and unreclaimable memory, which leaves out page cache. Jobs too short
   to be sampled get the median of the sampled jobs measured with them. Memory
@@ -302,33 +313,42 @@ dashed line at 100%, and careful manual checkpointing narrows that gap.
 - Leaving out the analyses that only multiomeR performs keeps its
   like-for-like measures to the shared result; the sizing measures include them.
 
-The four series ran on 18 and 19 October 2026 on three nodes of one model (AMD
-EPYC 7543, 128 cores, 2 TB RAM), each with its workers on its own node and its
-own store on that node's disk:
+The series ran from 18 to 20 October 2026 on four nodes of one model (AMD EPYC
+7543, 128 cores, 2 TB RAM), each with its workers on its own node and its own
+store on that node's disk:
 
-- `comparison`, one run at commit f9a109d5;
-- `sizing_small`, which builds `sizing_1x` to `sizing_20x`, then `sizing_31x` on
-  its store, at 950472fd, on the comparison's node after it had finished;
-- `sizing_91x`, three driver runs on one store: at f9a109d5, until a cluster of
-  one nucleus stopped peak calling; at 5679054b, which fixed that, until the
-  volcano plot crashed; and at 950472fd, which rebuilt every target that the
-  commits in between changed, all plot targets among them. Each target counts
-  with its latest build;
-- `revision_base` at 950472fd, then `revision_1` to `revision_5` on its store, at
-  the five configuration commits on top of it.
+- `comparison` at commit f9a109d5, with the Seurat/Signac chain's RNA objects,
+  joint objects and summaries rebuilt at 34be77ee, which leaves singleton
+  communities unmerged;
+- `comparison_lognorm` from an empty store at 53f40972, with its RNA and joint
+  objects rebuilt at 34be77ee;
+- `comparison_lognorm_91x` on `sizing_91x`'s store after its sizing run, with
+  peak calling at 947f21b6 and the rest at 34be77ee;
+- `sizing_small`, which builds `sizing_1x` to `sizing_20x`, at 950472fd, on the
+  comparison's node after it had finished;
+- `sizing_31x` and `sizing_91x`, each from an empty store at 113d5633 with all
+  three optional modules, topped up after failed Open Targets downloads and
+  after S-LDSC fixes up to 9d6c026e, from which genetic enrichment profiles
+  only cell types with at least 100 nuclei;
+- `revision_base` at 113d5633, then `revision_1` to `revision_5` on its store,
+  at the five configuration commits on top of it.
 
-Each series' first run builds the setup, such as reference downloads, and the
-per-well steps itself, and compiles the native kernels into its own cache, so
-every measured aggregation is a first build. Before 950472fd,
-`save_plots_structured()` drew only the first part of a patchwork plot, which
-made those plots cheaper, so the sizing and revision series were measured on
-950472fd; the comparison builds no plot targets. The node of `sizing_91x` also
-ran other users' jobs: its load average was about 35 of 128 cores around the
-first driver run and 60-90 around the last, while the series itself was idle,
-so its times may be somewhat longer than on an idle node. The other two nodes
-showed little load outside the series. All measured commits request the same
-resources for the same targets, so `benchmark_allocations.tsv` gives one
-request per recorded target.
+Each target counts with its latest build. Each series' first run builds the
+setup, such as reference downloads, and the per-well steps itself, and compiles
+the native kernels into its own cache, so every measured aggregation is a first
+build. Before 950472fd, `save_plots_structured()` drew only the first part of a
+patchwork plot, which made those plots cheaper, so the sizing and revision
+series were measured at 950472fd or later; the comparison builds no plot
+targets. The nodes also ran other users' jobs. Their median load averages,
+sampled from 12:00 to 02:00 on 19-20 October and counting the series' own
+workers, were about 50 cores on node_4, 28 on node_2 and 73 on node_3. node_1
+was not sampled, and a spot check showed about 29. Times may therefore be
+somewhat longer than on idle nodes. In the SCTransform chain's top-up, all six
+joint objects ran at once, which slowed the 20-sample one: 45 minutes, against
+32 minutes in the first run. S-LDSC's cell-type fits and matched-size
+annotation records moved from 16 GB to 60 GB workers during the sizing top-ups,
+so `benchmark_allocations.tsv` gives each recorded target's request in its
+latest build.
 
 ## Supplementary Table S4
 

@@ -1,166 +1,166 @@
 name	parent	seconds	completed_utc	bytes	error	node	in_store
-cellranger_summary_file.ENCSR636WIB		0	2026-09-02T11:46:27+00:00	1735		node_3	FALSE
-cellranger_summary_file.ENCSR316WAS		0	2026-09-02T12:05:05+00:00	1737		node_3	FALSE
-cellranger_summary_file.ENCSR788DZO		0	2026-09-02T13:22:33+00:00	1735		node_3	FALSE
-cellbender_h5_file.ENCSR316WAS		0	2026-09-02T13:38:40+00:00	81365406		node_3	FALSE
-cellranger_summary_file.ENCSR956ZER		0.092	2026-09-02T14:04:15+00:00	1736		node_3	FALSE
-cellranger_summary_file.ENCSR264JIX		0	2026-09-02T14:53:29+00:00	1736		node_3	FALSE
-cellranger_summary_file.ENCSR033MDU		0.001	2026-09-02T16:14:13+00:00	1736		node_3	FALSE
-cellranger_summary_file.ENCSR320RLS		0	2026-09-02T16:16:56+00:00	1737		node_3	FALSE
-cellranger_summary_file.ENCSR925IHI		0	2026-09-02T16:32:40+00:00	1738		node_3	FALSE
-cellranger_summary_file.ENCSR245BNT		0.001	2026-09-02T16:37:33+00:00	1737		node_3	FALSE
-cellranger_summary_file.ENCSR511RDV		0	2026-09-02T16:39:48+00:00	1737		node_3	FALSE
-cellranger_summary_file.ENCSR613LBN		0	2026-09-02T17:00:55+00:00	1737		node_3	FALSE
-cellranger_summary_file.ENCSR534YJW		0	2026-09-02T17:06:50+00:00	1737		node_3	FALSE
-cellranger_summary_file.ENCSR568QKW		0	2026-09-02T17:12:59+00:00	1737		node_3	FALSE
-cellranger_summary_file.ENCSR201BHG		0	2026-09-02T17:18:54+00:00	1736		node_3	FALSE
-cellranger_summary_file.ENCSR351CSQ		0	2026-09-02T17:24:20+00:00	1737		node_3	FALSE
-cellranger_summary_file.ENCSR508WRP		0.001	2026-09-02T17:30:00+00:00	1736		node_3	FALSE
-cellranger_summary_file.ENCSR793DNM		0.001	2026-09-02T17:38:13+00:00	1737		node_3	FALSE
-cellranger_summary_file.ENCSR923FKN		0	2026-09-02T18:05:20+00:00	1737		node_3	FALSE
-cellranger_summary_file.ENCSR987VTJ		0.001	2026-09-02T18:19:58+00:00	1737		node_3	FALSE
-cellranger_summary_file.ENCSR079UEO		0.001	2026-09-02T18:33:39+00:00	1733		node_3	FALSE
-cellranger_summary_file.ENCSR158DQA		0	2026-09-02T18:36:02+00:00	1736		node_3	FALSE
-cellranger_summary_file.ENCSR618WVK		0	2026-09-02T18:45:32+00:00	1737		node_3	FALSE
-cellranger_summary_file.ENCSR233SQG		0.001	2026-09-02T18:52:43+00:00	1738		node_3	FALSE
-cellranger_summary_file.ENCSR128ZLB		0	2026-09-02T20:41:03+00:00	1735		node_3	FALSE
-cellbender_h5_file.ENCSR636WIB		0	2026-09-02T21:55:32+00:00	37499109		node_3	FALSE
-cellbender_h5_file.ENCSR925IHI		0	2026-09-02T21:59:46+00:00	173586522		node_3	FALSE
-cellbender_h5_file.ENCSR079UEO		0	2026-09-02T22:05:15+00:00	26978684		node_3	FALSE
-cellbender_h5_file.ENCSR351CSQ		0	2026-09-02T22:19:05+00:00	96020073		node_3	FALSE
-cellbender_h5_file.ENCSR201BHG		0	2026-09-02T22:20:11+00:00	86607366		node_3	FALSE
-cellbender_h5_file.ENCSR245BNT		0.001	2026-09-02T22:21:17+00:00	131759442		node_3	FALSE
-cellbender_h5_file.ENCSR320RLS		0	2026-09-02T22:22:55+00:00	116060401		node_3	FALSE
-cellbender_h5_file.ENCSR511RDV		0	2026-09-02T22:31:02+00:00	112739567		node_3	FALSE
-cellbender_h5_file.ENCSR508WRP		0.001	2026-09-02T22:31:16+00:00	105560669		node_3	FALSE
-cellbender_h5_file.ENCSR568QKW		0.001	2026-09-02T22:32:10+00:00	86462073		node_3	FALSE
-cellbender_h5_file.ENCSR956ZER		0	2026-09-02T22:40:58+00:00	54266285		node_3	FALSE
-cellbender_h5_file.ENCSR534YJW		0	2026-09-02T22:45:09+00:00	115801534		node_3	FALSE
-cellbender_h5_file.ENCSR923FKN		0.001	2026-09-02T22:47:38+00:00	104701011		node_3	FALSE
-cellbender_h5_file.ENCSR793DNM		0	2026-09-02T22:51:02+00:00	166389033		node_3	FALSE
-cellbender_h5_file.ENCSR613LBN		0	2026-09-02T22:55:10+00:00	133999964		node_3	FALSE
-cellbender_h5_file.ENCSR987VTJ		0	2026-09-02T22:55:35+00:00	139091204		node_3	FALSE
-cellbender_h5_file.ENCSR788DZO		0	2026-09-02T23:00:53+00:00	57199958		node_3	FALSE
-cellbender_h5_file.ENCSR618WVK		0	2026-09-02T23:01:27+00:00	149085929		node_3	FALSE
-cellbender_h5_file.ENCSR264JIX		0	2026-09-02T23:02:06+00:00	68839441		node_3	FALSE
-cellbender_h5_file.ENCSR128ZLB		0.001	2026-09-02T23:03:37+00:00	67175956		node_3	FALSE
-cellbender_h5_file.ENCSR033MDU		0	2026-09-02T23:04:08+00:00	67399080		node_3	FALSE
-cellbender_h5_file.ENCSR233SQG		0	2026-09-02T23:15:36+00:00	139820038		node_3	FALSE
-cellbender_h5_file.ENCSR158DQA		0	2026-09-02T23:23:50+00:00	91001279		node_3	FALSE
-cellranger_summary_file.healthy_PBMC_human_2024A		0.001	2026-09-07T13:56:07+00:00	1826		node_3	FALSE
-cellranger_summary_file.pbmc_unsorted_3k		0	2026-09-07T14:53:56+00:00	1824		node_3	FALSE
-cellranger_summary_file.healthy_brain_human		0	2026-09-07T18:39:38+00:00	1829		node_3	FALSE
-cellbender_h5_file.healthy_PBMC_human_2024A		0	2026-09-07T19:38:39+00:00	41595680		node_3	FALSE
-cellbender_h5_file.pbmc_unsorted_3k		0.001	2026-09-07T19:44:19+00:00	35499418		node_3	FALSE
-cellbender_h5_file.healthy_brain_human		0	2026-09-07T19:50:30+00:00	73728096		node_3	FALSE
-cellranger_summary_file.pbmc_granulocyte_sorted_10k		0	2026-09-08T00:19:43+00:00	1838		node_3	FALSE
-cellbender_h5_file.pbmc_granulocyte_sorted_10k		0	2026-09-08T00:33:53+00:00	202551007		node_3	FALSE
-cellranger_summary_file.pbmc_unsorted_10k		0	2026-09-08T02:23:09+00:00	1827		node_3	FALSE
-cellranger_summary_file.pbmc_10k_chromium_x		0	2026-09-08T02:35:16+00:00	1830		node_3	FALSE
-cellbender_h5_file.pbmc_unsorted_10k		0	2026-09-08T02:37:46+00:00	166604784		node_3	FALSE
-cellbender_h5_file.pbmc_10k_chromium_x		0	2026-09-08T02:49:20+00:00	178151172		node_3	FALSE
-cellranger_summary_file.pbmc_10k_chromium_controller		0.001	2026-09-08T02:54:04+00:00	1839		node_3	FALSE
-cellbender_h5_file.pbmc_10k_chromium_controller		0	2026-09-08T03:07:05+00:00	178355667		node_3	FALSE
-QC_checkpoint_manifest_tsv		0	2026-10-18T15:59:38+00:00	3889		node_3	FALSE
-QC_metric_manifest_tsv		0	2026-10-18T15:59:38+00:00	11883		node_3	FALSE
-JASPAR2026_vertebrate_familial_root_motifs_tf		0	2026-10-18T15:59:39+00:00	115774		node_3	FALSE
-JASPAR2026_vertebrate_motif_families_tsv		0.001	2026-10-18T15:59:39+00:00	57607		node_3	FALSE
-JASPAR_motif_family_annotations_tsv		0.001	2026-10-18T15:59:39+00:00	35526		node_3	FALSE
-cellranger_reference_json_file.pbmc_unsorted_3k		0.145	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR793DNM		0.059	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR956ZER		0.242	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.pbmc_unsorted_10k		0.058	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR534YJW		0.036	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR201BHG		0.006	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR923FKN		0.006	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.healthy_PBMC_human_2024A		0.033	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR033MDU		0.047	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR613LBN		0.036	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR245BNT		0.005	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR233SQG		0.052	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR788DZO		0.044	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR264JIX		0.007	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR316WAS		0.006	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.pbmc_10k_chromium_x		0.003	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.healthy_brain_human		0.003	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR987VTJ		0.004	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR079UEO		0.007	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR568QKW		0.022	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR508WRP		0.007	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR158DQA		0.006	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR351CSQ		0.002	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR320RLS		0.003	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR618WVK		0.004	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR511RDV		0.003	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.pbmc_granulocyte_sorted_10k		0.007	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.pbmc_10k_chromium_controller		0.006	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR925IHI		0.004	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR128ZLB		0.047	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_file.ENCSR636WIB		0.006	2026-10-18T15:59:39+00:00	1285		node_3	FALSE
-cellranger_reference_json_files		0.001	2026-10-18T15:59:39+00:00	3935		node_3	FALSE
-amulet_BPCells_native_source_file		0	2026-10-18T15:59:39+00:00	8285		node_3	FALSE
-UCell_native_source_file		0	2026-10-18T15:59:39+00:00	6698		node_3	FALSE
-peak_gene_REML_native_source_file.peak_gene_correlation.revision_31x		0	2026-10-18T15:59:39+00:00	12843		node_3	FALSE
-WNN_native_source_file		0	2026-10-18T15:59:39+00:00	9963		node_3	FALSE
-GEM_well_config_tsv		0.001	2026-10-18T21:38:08+00:00	23101		node_3	FALSE
-donor_id_metadata_tsv.revision_31x		0	2026-10-18T21:38:08+00:00	358		node_3	FALSE
-donor_id_metadata_tsv.extended.differential_analyses.revision_31x		0	2026-10-18T21:38:08+00:00	1166		node_3	FALSE
-models.differential_analyses.revision_31x		0.052	2026-10-18T23:41:51+00:00	232		node_3	TRUE
-dynamic_tibble.chromatin_accessibility.differential_analyses.revision_31x		0.011	2026-10-18T23:41:52+00:00	309		node_3	TRUE
-dynamic_tibble.gene_expression.differential_analyses.revision_31x		0.004	2026-10-18T23:41:52+00:00	309		node_3	TRUE
-donor_id_metadata_tibble.analysis.differential_analyses.revision_31x		0.026	2026-10-18T23:41:54+00:00	419		node_3	TRUE
-dynamic_tibble.motif_family_accessibility.differential_analyses.revision_31x		0.003	2026-10-18T23:41:54+00:00	309		node_3	TRUE
-dynamic_tibble.transcription_factor_activity.differential_analyses.revision_31x		0.003	2026-10-18T23:41:54+00:00	309		node_3	TRUE
-model_data.cell_type_composition.differential_analyses.revision_31x_06152a3fd74009a8	model_data.cell_type_composition.differential_analyses.revision_31x	0.429	2026-10-18T23:41:55+00:00	1728		node_3	TRUE
-cohort_tsv.cell_type_composition.differential_analyses.revision_31x_38d9453013830350	cohort_tsv.cell_type_composition.differential_analyses.revision_31x	0.432	2026-10-18T23:41:56+00:00	1111		node_3	TRUE
-counts_tsv.cell_type_composition.differential_analyses.revision_31x_38d9453013830350	counts_tsv.cell_type_composition.differential_analyses.revision_31x	0.429	2026-10-18T23:41:56+00:00	6268		node_3	TRUE
-model_results.cell_type_composition.differential_analyses.revision_31x_38d9453013830350	model_results.cell_type_composition.differential_analyses.revision_31x	1.025	2026-10-18T23:41:56+00:00	919		node_3	TRUE
-model_plots.cell_type_composition.differential_analyses.revision_31x_4bb797051fe0410d	model_plots.cell_type_composition.differential_analyses.revision_31x	1.853	2026-10-18T23:41:58+00:00	502308		node_3	TRUE
-filtered_mat_per_model.motif_family_accessibility.differential_analyses.revision_31x_3a5711607cb777e8	filtered_mat_per_model.motif_family_accessibility.differential_analyses.revision_31x	0.139	2026-10-18T23:41:59+00:00	11871		node_3	TRUE
-filtered_mat_per_model.transcription_factor_activity.differential_analyses.revision_31x_43e0663b11dd7739	filtered_mat_per_model.transcription_factor_activity.differential_analyses.revision_31x	0.231	2026-10-18T23:41:59+00:00	37316		node_3	TRUE
-feature_matrix_fit.motif_family_accessibility.differential_analyses.revision_31x_46620ef22a04553d	feature_matrix_fit.motif_family_accessibility.differential_analyses.revision_31x	0.164	2026-10-18T23:41:59+00:00	21940		node_3	TRUE
-results_tibble.motif_family_accessibility.differential_analyses.revision_31x_d23796e4643ffe22	results_tibble.motif_family_accessibility.differential_analyses.revision_31x	0.049	2026-10-18T23:41:59+00:00	10349		node_3	TRUE
-feature_matrix_fit.transcription_factor_activity.differential_analyses.revision_31x_4e6774cd172ab734	feature_matrix_fit.transcription_factor_activity.differential_analyses.revision_31x	0.176	2026-10-18T23:41:59+00:00	65560		node_3	TRUE
-top_features_tibble.motif_family_accessibility.differential_analyses.revision_31x_35b79f071c7b27c4	top_features_tibble.motif_family_accessibility.differential_analyses.revision_31x	0.02	2026-10-18T23:41:59+00:00	2230		node_3	TRUE
-significant_elements_tibble.motif_family_accessibility.differential_analyses.revision_31x		0.048	2026-10-18T23:41:59+00:00	271		node_3	TRUE
-results_tibble.transcription_factor_activity.differential_analyses.revision_31x_7d46f19590db03f0	results_tibble.transcription_factor_activity.differential_analyses.revision_31x	0.014	2026-10-18T23:41:59+00:00	32491		node_3	TRUE
-cohort_tsv.motif_family_accessibility.differential_analyses.revision_31x_693563df69d707b5	cohort_tsv.motif_family_accessibility.differential_analyses.revision_31x	0.322	2026-10-18T23:42:00+00:00	1266		node_3	TRUE
-top_feature_open_targets_evidence_tibble.motif_family_accessibility.differential_analyses.revision_31x_176d8eafee3924ef	top_feature_open_targets_evidence_tibble.motif_family_accessibility.differential_analyses.revision_31x	0.002	2026-10-18T23:42:00+00:00	370		node_3	TRUE
-top_features_tibble.transcription_factor_activity.differential_analyses.revision_31x_fe8a46695c265878	top_features_tibble.transcription_factor_activity.differential_analyses.revision_31x	0.01	2026-10-18T23:42:00+00:00	2367		node_3	TRUE
-p_value_distribution_plot.motif_family_accessibility.differential_analyses.revision_31x		0.894	2026-10-18T23:42:00+00:00	183310		node_3	TRUE
-filtered_mat_per_model.gene_expression.differential_analyses.revision_31x_29488d0a9cc55d53	filtered_mat_per_model.gene_expression.differential_analyses.revision_31x	1.732	2026-10-18T23:42:00+00:00	667741		node_3	TRUE
-significant_elements_tibble.transcription_factor_activity.differential_analyses.revision_31x		0.209	2026-10-18T23:42:00+00:00	271		node_3	TRUE
-p_value_distribution_plot.transcription_factor_activity.differential_analyses.revision_31x		0.753	2026-10-18T23:42:01+00:00	186241		node_3	TRUE
-top_feature_open_targets_evidence_tibble.transcription_factor_activity.differential_analyses.revision_31x_41b84128c6135e89	top_feature_open_targets_evidence_tibble.transcription_factor_activity.differential_analyses.revision_31x	0.003	2026-10-18T23:42:01+00:00	472		node_3	TRUE
-volcano_plots.motif_family_accessibility.differential_analyses.revision_31x_db7abe88595f8122	volcano_plots.motif_family_accessibility.differential_analyses.revision_31x	0.602	2026-10-18T23:42:02+00:00	274269		node_3	TRUE
-cohort_tsv.transcription_factor_activity.differential_analyses.revision_31x_1bba55eb349b0375	cohort_tsv.transcription_factor_activity.differential_analyses.revision_31x	0.333	2026-10-18T23:42:02+00:00	1266		node_3	TRUE
-filtered_mat_per_model.chromatin_accessibility.differential_analyses.revision_31x_d52e1fbcc400b97b	filtered_mat_per_model.chromatin_accessibility.differential_analyses.revision_31x	2.846	2026-10-18T23:42:02+00:00	7507606		node_3	TRUE
-volcano_plots.transcription_factor_activity.differential_analyses.revision_31x_ff3572c81cefb169	volcano_plots.transcription_factor_activity.differential_analyses.revision_31x	0.568	2026-10-18T23:42:03+00:00	513050		node_3	TRUE
-feature_matrix_fit.gene_expression.differential_analyses.revision_31x_c74d0df574309643	feature_matrix_fit.gene_expression.differential_analyses.revision_31x	5.281	2026-10-18T23:42:06+00:00	4535470		node_3	TRUE
-results_tibble.gene_expression.differential_analyses.revision_31x_7adebf926b6c6458	results_tibble.gene_expression.differential_analyses.revision_31x	0.138	2026-10-18T23:42:06+00:00	684660		node_3	TRUE
-top_features_tibble.gene_expression.differential_analyses.revision_31x_895f63f8b639a2fd	top_features_tibble.gene_expression.differential_analyses.revision_31x	0.044	2026-10-18T23:42:06+00:00	2147		node_3	TRUE
-significant_elements_tibble.gene_expression.differential_analyses.revision_31x		0.174	2026-10-18T23:42:06+00:00	276		node_3	TRUE
-activity_accessibility_source_comparison_tibble.CollecTRI_JASPAR.differential_analyses.revision_31x		0.202	2026-10-18T23:42:06+00:00	36787		node_3	TRUE
-top_feature_open_targets_evidence_tibble.gene_expression.differential_analyses.revision_31x_0ec4c6f427b5a0a1	top_feature_open_targets_evidence_tibble.gene_expression.differential_analyses.revision_31x	0.168	2026-10-18T23:42:07+00:00	669		node_3	TRUE
-activity_accessibility_family_comparison_tibble.CollecTRI_JASPAR.differential_analyses.revision_31x		0.041	2026-10-18T23:42:07+00:00	4673		node_3	TRUE
-activity_accessibility_concordance_tibble.CollecTRI_JASPAR.differential_analyses.revision_31x		0.005	2026-10-18T23:42:07+00:00	376		node_3	TRUE
-results.Hallmark.gene_set_enrichment.gene_expression.differential_analyses.revision_31x_7adebf926b6c6458	results.Hallmark.gene_set_enrichment.gene_expression.differential_analyses.revision_31x	1.228	2026-10-18T23:42:07+00:00	2559		node_3	TRUE
-p_value_distribution_plot.gene_expression.differential_analyses.revision_31x		1.332	2026-10-18T23:42:08+00:00	183948		node_3	TRUE
-significant_elements_plot.gene_expression.differential_analyses.revision_31x		1.226	2026-10-18T23:42:08+00:00	126329		node_3	TRUE
-activity_accessibility_concordance_plots.CollecTRI_JASPAR.differential_analyses.revision_31x		1.044	2026-10-18T23:42:08+00:00	113291		node_3	TRUE
-results.Reactome.gene_set_enrichment.gene_expression.differential_analyses.revision_31x_7adebf926b6c6458	results.Reactome.gene_set_enrichment.gene_expression.differential_analyses.revision_31x	2.157	2026-10-18T23:42:08+00:00	54771		node_3	TRUE
-enrichment_plots.Hallmark.gene_set_enrichment.gene_expression.differential_analyses.revision_31x_e114a378cd29b5f7	enrichment_plots.Hallmark.gene_set_enrichment.gene_expression.differential_analyses.revision_31x	0.8	2026-10-18T23:42:08+00:00	274189		node_3	TRUE
-enrichment_plots.Reactome.gene_set_enrichment.gene_expression.differential_analyses.revision_31x_b610f8f081999f60	enrichment_plots.Reactome.gene_set_enrichment.gene_expression.differential_analyses.revision_31x	0.536	2026-10-18T23:42:09+00:00	335182		node_3	TRUE
-cohort_tsv.gene_expression.differential_analyses.revision_31x_4a6559d99f94b95c	cohort_tsv.gene_expression.differential_analyses.revision_31x	2.275	2026-10-18T23:42:09+00:00	1266		node_3	TRUE
-volcano_plots.gene_expression.differential_analyses.revision_31x_5b80067a7019de61	volcano_plots.gene_expression.differential_analyses.revision_31x	1.39	2026-10-18T23:42:10+00:00	639643		node_3	TRUE
-feature_matrix_fit.chromatin_accessibility.differential_analyses.revision_31x_3c5b05004c365cb0	feature_matrix_fit.chromatin_accessibility.differential_analyses.revision_31x	58.634	2026-10-18T23:43:02+00:00	57497885		node_3	TRUE
-results_tibble.chromatin_accessibility.differential_analyses.revision_31x_2e8f867e3505a8d1	results_tibble.chromatin_accessibility.differential_analyses.revision_31x	1.243	2026-10-18T23:43:04+00:00	9401659		node_3	TRUE
-significant_elements_tibble.chromatin_accessibility.differential_analyses.revision_31x		0.04	2026-10-18T23:43:04+00:00	278		node_3	TRUE
-top_features_tibble.chromatin_accessibility.differential_analyses.revision_31x_b1d5b44c2048d85c	top_features_tibble.chromatin_accessibility.differential_analyses.revision_31x	0.096	2026-10-18T23:43:04+00:00	2293		node_3	TRUE
-significant_elements_modality_distribution_tibble.differential_analyses.revision_31x		0.006	2026-10-18T23:43:04+00:00	369		node_3	TRUE
-top_feature_open_targets_evidence_tibble.chromatin_accessibility.differential_analyses.revision_31x_ab5674f13284cbb5	top_feature_open_targets_evidence_tibble.chromatin_accessibility.differential_analyses.revision_31x	0.002	2026-10-18T23:43:04+00:00	670		node_3	TRUE
-significant_elements_plot.chromatin_accessibility.differential_analyses.revision_31x		0.655	2026-10-18T23:43:05+00:00	126042		node_3	TRUE
-significant_elements_modality_distribution_plots.differential_analyses.revision_31x		0.831	2026-10-18T23:43:05+00:00	132886		node_3	TRUE
-cohort_tsv.chromatin_accessibility.differential_analyses.revision_31x_be743547c50784dd	cohort_tsv.chromatin_accessibility.differential_analyses.revision_31x	0.63	2026-10-18T23:43:05+00:00	1266		node_3	TRUE
-p_value_distribution_plot.chromatin_accessibility.differential_analyses.revision_31x		1.263	2026-10-18T23:43:05+00:00	178481		node_3	TRUE
-volcano_plots.chromatin_accessibility.differential_analyses.revision_31x_3be5faa9429c31c5	volcano_plots.chromatin_accessibility.differential_analyses.revision_31x	6.688	2026-10-18T23:43:12+00:00	747707		node_3	TRUE
+cellranger_summary_file.ENCSR636WIB		0	2026-09-02T11:46:27+00:00	1735		node_2	FALSE
+cellranger_summary_file.ENCSR316WAS		0	2026-09-02T12:05:05+00:00	1737		node_2	FALSE
+cellranger_summary_file.ENCSR788DZO		0.001	2026-09-02T13:22:33+00:00	1735		node_2	FALSE
+cellbender_h5_file.ENCSR316WAS		0.001	2026-09-02T13:38:40+00:00	81365406		node_2	FALSE
+cellranger_summary_file.ENCSR956ZER		0	2026-09-02T14:04:15+00:00	1736		node_2	FALSE
+cellranger_summary_file.ENCSR264JIX		0	2026-09-02T14:53:29+00:00	1736		node_2	FALSE
+cellranger_summary_file.ENCSR033MDU		0	2026-09-02T16:14:13+00:00	1736		node_2	FALSE
+cellranger_summary_file.ENCSR320RLS		0	2026-09-02T16:16:56+00:00	1737		node_2	FALSE
+cellranger_summary_file.ENCSR925IHI		0	2026-09-02T16:32:40+00:00	1738		node_2	FALSE
+cellranger_summary_file.ENCSR245BNT		0	2026-09-02T16:37:33+00:00	1737		node_2	FALSE
+cellranger_summary_file.ENCSR511RDV		0	2026-09-02T16:39:48+00:00	1737		node_2	FALSE
+cellranger_summary_file.ENCSR613LBN		0	2026-09-02T17:00:55+00:00	1737		node_2	FALSE
+cellranger_summary_file.ENCSR534YJW		0	2026-09-02T17:06:50+00:00	1737		node_2	FALSE
+cellranger_summary_file.ENCSR568QKW		0	2026-09-02T17:12:59+00:00	1737		node_2	FALSE
+cellranger_summary_file.ENCSR201BHG		0	2026-09-02T17:18:54+00:00	1736		node_2	FALSE
+cellranger_summary_file.ENCSR351CSQ		0	2026-09-02T17:24:20+00:00	1737		node_2	FALSE
+cellranger_summary_file.ENCSR508WRP		0	2026-09-02T17:30:00+00:00	1736		node_2	FALSE
+cellranger_summary_file.ENCSR793DNM		0	2026-09-02T17:38:13+00:00	1737		node_2	FALSE
+cellranger_summary_file.ENCSR923FKN		0	2026-09-02T18:05:20+00:00	1737		node_2	FALSE
+cellranger_summary_file.ENCSR987VTJ		0	2026-09-02T18:19:58+00:00	1737		node_2	FALSE
+cellranger_summary_file.ENCSR079UEO		0.001	2026-09-02T18:33:39+00:00	1733		node_2	FALSE
+cellranger_summary_file.ENCSR158DQA		0	2026-09-02T18:36:02+00:00	1736		node_2	FALSE
+cellranger_summary_file.ENCSR618WVK		0	2026-09-02T18:45:32+00:00	1737		node_2	FALSE
+cellranger_summary_file.ENCSR233SQG		0	2026-09-02T18:52:43+00:00	1738		node_2	FALSE
+cellranger_summary_file.ENCSR128ZLB		0	2026-09-02T20:41:03+00:00	1735		node_2	FALSE
+cellbender_h5_file.ENCSR636WIB		0.001	2026-09-02T21:55:32+00:00	37499109		node_2	FALSE
+cellbender_h5_file.ENCSR925IHI		0	2026-09-02T21:59:46+00:00	173586522		node_2	FALSE
+cellbender_h5_file.ENCSR079UEO		0	2026-09-02T22:05:15+00:00	26978684		node_2	FALSE
+cellbender_h5_file.ENCSR351CSQ		0	2026-09-02T22:19:05+00:00	96020073		node_2	FALSE
+cellbender_h5_file.ENCSR201BHG		0	2026-09-02T22:20:11+00:00	86607366		node_2	FALSE
+cellbender_h5_file.ENCSR245BNT		0	2026-09-02T22:21:17+00:00	131759442		node_2	FALSE
+cellbender_h5_file.ENCSR320RLS		0	2026-09-02T22:22:55+00:00	116060401		node_2	FALSE
+cellbender_h5_file.ENCSR511RDV		0.001	2026-09-02T22:31:02+00:00	112739567		node_2	FALSE
+cellbender_h5_file.ENCSR508WRP		0.001	2026-09-02T22:31:16+00:00	105560669		node_2	FALSE
+cellbender_h5_file.ENCSR568QKW		0.001	2026-09-02T22:32:10+00:00	86462073		node_2	FALSE
+cellbender_h5_file.ENCSR956ZER		0.001	2026-09-02T22:40:58+00:00	54266285		node_2	FALSE
+cellbender_h5_file.ENCSR534YJW		0	2026-09-02T22:45:09+00:00	115801534		node_2	FALSE
+cellbender_h5_file.ENCSR923FKN		0.001	2026-09-02T22:47:38+00:00	104701011		node_2	FALSE
+cellbender_h5_file.ENCSR793DNM		0	2026-09-02T22:51:02+00:00	166389033		node_2	FALSE
+cellbender_h5_file.ENCSR613LBN		0	2026-09-02T22:55:10+00:00	133999964		node_2	FALSE
+cellbender_h5_file.ENCSR987VTJ		0	2026-09-02T22:55:35+00:00	139091204		node_2	FALSE
+cellbender_h5_file.ENCSR788DZO		0.001	2026-09-02T23:00:53+00:00	57199958		node_2	FALSE
+cellbender_h5_file.ENCSR618WVK		0	2026-09-02T23:01:27+00:00	149085929		node_2	FALSE
+cellbender_h5_file.ENCSR264JIX		0	2026-09-02T23:02:06+00:00	68839441		node_2	FALSE
+cellbender_h5_file.ENCSR128ZLB		0.001	2026-09-02T23:03:37+00:00	67175956		node_2	FALSE
+cellbender_h5_file.ENCSR033MDU		0.001	2026-09-02T23:04:08+00:00	67399080		node_2	FALSE
+cellbender_h5_file.ENCSR233SQG		0.001	2026-09-02T23:15:36+00:00	139820038		node_2	FALSE
+cellbender_h5_file.ENCSR158DQA		0	2026-09-02T23:23:50+00:00	91001279		node_2	FALSE
+cellranger_summary_file.healthy_PBMC_human_2024A		0	2026-09-07T13:56:07+00:00	1826		node_2	FALSE
+cellranger_summary_file.pbmc_unsorted_3k		0	2026-09-07T14:53:56+00:00	1824		node_2	FALSE
+cellranger_summary_file.healthy_brain_human		0	2026-09-07T18:39:38+00:00	1829		node_2	FALSE
+cellbender_h5_file.healthy_PBMC_human_2024A		0.001	2026-09-07T19:38:39+00:00	41595680		node_2	FALSE
+cellbender_h5_file.pbmc_unsorted_3k		0	2026-09-07T19:44:19+00:00	35499418		node_2	FALSE
+cellbender_h5_file.healthy_brain_human		0.001	2026-09-07T19:50:30+00:00	73728096		node_2	FALSE
+cellranger_summary_file.pbmc_granulocyte_sorted_10k		0.001	2026-09-08T00:19:43+00:00	1838		node_2	FALSE
+cellbender_h5_file.pbmc_granulocyte_sorted_10k		0	2026-09-08T00:33:53+00:00	202551007		node_2	FALSE
+cellranger_summary_file.pbmc_unsorted_10k		0	2026-09-08T02:23:09+00:00	1827		node_2	FALSE
+cellranger_summary_file.pbmc_10k_chromium_x		0	2026-09-08T02:35:16+00:00	1830		node_2	FALSE
+cellbender_h5_file.pbmc_unsorted_10k		0	2026-09-08T02:37:46+00:00	166604784		node_2	FALSE
+cellbender_h5_file.pbmc_10k_chromium_x		0	2026-09-08T02:49:20+00:00	178151172		node_2	FALSE
+cellranger_summary_file.pbmc_10k_chromium_controller		0	2026-09-08T02:54:04+00:00	1839		node_2	FALSE
+cellbender_h5_file.pbmc_10k_chromium_controller		0	2026-09-08T03:07:05+00:00	178355667		node_2	FALSE
+QC_checkpoint_manifest_tsv		0	2026-10-19T09:37:46+00:00	3889		node_2	FALSE
+QC_metric_manifest_tsv		0	2026-10-19T09:37:46+00:00	11883		node_2	FALSE
+JASPAR2026_vertebrate_familial_root_motifs_tf		0	2026-10-19T09:37:46+00:00	115774		node_2	FALSE
+JASPAR2026_vertebrate_motif_families_tsv		0	2026-10-19T09:37:46+00:00	57607		node_2	FALSE
+JASPAR_motif_family_annotations_tsv		0.001	2026-10-19T09:37:46+00:00	35526		node_2	FALSE
+cellranger_reference_json_file.ENCSR079UEO		0.145	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR128ZLB		0.155	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.pbmc_unsorted_10k		0.165	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR245BNT		0.025	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR925IHI		0.038	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR264JIX		0.006	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR987VTJ		0.022	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.pbmc_10k_chromium_controller		0.003	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR956ZER		0.004	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR788DZO		0.035	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.pbmc_granulocyte_sorted_10k		0.031	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.healthy_brain_human		0.023	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR793DNM		0.003	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR233SQG		0.023	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR351CSQ		0.136	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR511RDV		0.106	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR923FKN		0.1	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR158DQA		0.099	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR534YJW		0.031	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR508WRP		0.061	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR316WAS		0.009	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR320RLS		0.023	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.pbmc_10k_chromium_x		0.097	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR613LBN		0.018	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR568QKW		0.005	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.pbmc_unsorted_3k		0.024	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR201BHG		0.039	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR636WIB		0.043	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.healthy_PBMC_human_2024A		0.102	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR618WVK		0.024	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_file.ENCSR033MDU		0.019	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
+cellranger_reference_json_files		0	2026-10-19T09:37:46+00:00	3935		node_2	FALSE
+amulet_BPCells_native_source_file		0	2026-10-19T09:37:46+00:00	8285		node_2	FALSE
+UCell_native_source_file		0	2026-10-19T09:37:46+00:00	6698		node_2	FALSE
+peak_gene_REML_native_source_file.peak_gene_correlation.revision_31x		0	2026-10-19T09:37:46+00:00	12843		node_2	FALSE
+WNN_native_source_file		0	2026-10-19T09:37:46+00:00	9963		node_2	FALSE
+GEM_well_config_tsv		0.001	2026-10-19T12:40:50+00:00	23101		node_2	FALSE
+donor_id_metadata_tsv.revision_31x		0	2026-10-19T12:40:50+00:00	358		node_2	FALSE
+donor_id_metadata_tsv.extended.differential_analyses.revision_31x		0.001	2026-10-19T12:40:50+00:00	1166		node_2	FALSE
+models.differential_analyses.revision_31x		0.055	2026-10-19T17:29:33+00:00	232		node_2	TRUE
+dynamic_tibble.transcription_factor_activity.differential_analyses.revision_31x		0.016	2026-10-19T17:29:34+00:00	309		node_2	TRUE
+dynamic_tibble.gene_expression.differential_analyses.revision_31x		0.005	2026-10-19T17:29:35+00:00	309		node_2	TRUE
+dynamic_tibble.motif_family_accessibility.differential_analyses.revision_31x		0.004	2026-10-19T17:29:35+00:00	309		node_2	TRUE
+dynamic_tibble.chromatin_accessibility.differential_analyses.revision_31x		0.004	2026-10-19T17:29:35+00:00	309		node_2	TRUE
+donor_id_metadata_tibble.analysis.differential_analyses.revision_31x		0.031	2026-10-19T17:29:40+00:00	419		node_2	TRUE
+model_data.cell_type_composition.differential_analyses.revision_31x_06152a3fd74009a8	model_data.cell_type_composition.differential_analyses.revision_31x	0.667	2026-10-19T17:29:42+00:00	1728		node_2	TRUE
+counts_tsv.cell_type_composition.differential_analyses.revision_31x_38d9453013830350	counts_tsv.cell_type_composition.differential_analyses.revision_31x	0.576	2026-10-19T17:29:43+00:00	6268		node_2	TRUE
+cohort_tsv.cell_type_composition.differential_analyses.revision_31x_38d9453013830350	cohort_tsv.cell_type_composition.differential_analyses.revision_31x	0.741	2026-10-19T17:29:43+00:00	1111		node_2	TRUE
+model_results.cell_type_composition.differential_analyses.revision_31x_38d9453013830350	model_results.cell_type_composition.differential_analyses.revision_31x	1.219	2026-10-19T17:29:44+00:00	919		node_2	TRUE
+filtered_mat_per_model.motif_family_accessibility.differential_analyses.revision_31x_3a5711607cb777e8	filtered_mat_per_model.motif_family_accessibility.differential_analyses.revision_31x	0.171	2026-10-19T17:29:45+00:00	11871		node_2	TRUE
+filtered_mat_per_model.transcription_factor_activity.differential_analyses.revision_31x_43e0663b11dd7739	filtered_mat_per_model.transcription_factor_activity.differential_analyses.revision_31x	0.004	2026-10-19T17:29:46+00:00	37316		node_2	TRUE
+feature_matrix_fit.transcription_factor_activity.differential_analyses.revision_31x_4e6774cd172ab734	feature_matrix_fit.transcription_factor_activity.differential_analyses.revision_31x	0.187	2026-10-19T17:29:46+00:00	65560		node_2	TRUE
+feature_matrix_fit.motif_family_accessibility.differential_analyses.revision_31x_46620ef22a04553d	feature_matrix_fit.motif_family_accessibility.differential_analyses.revision_31x	0.653	2026-10-19T17:29:46+00:00	21940		node_2	TRUE
+model_plots.cell_type_composition.differential_analyses.revision_31x_4bb797051fe0410d	model_plots.cell_type_composition.differential_analyses.revision_31x	2.715	2026-10-19T17:29:46+00:00	502308		node_2	TRUE
+results_tibble.transcription_factor_activity.differential_analyses.revision_31x_7d46f19590db03f0	results_tibble.transcription_factor_activity.differential_analyses.revision_31x	0.104	2026-10-19T17:29:47+00:00	32491		node_2	TRUE
+results_tibble.motif_family_accessibility.differential_analyses.revision_31x_d23796e4643ffe22	results_tibble.motif_family_accessibility.differential_analyses.revision_31x	0.072	2026-10-19T17:29:47+00:00	10349		node_2	TRUE
+top_features_tibble.transcription_factor_activity.differential_analyses.revision_31x_fe8a46695c265878	top_features_tibble.transcription_factor_activity.differential_analyses.revision_31x	0.026	2026-10-19T17:29:47+00:00	2367		node_2	TRUE
+top_features_tibble.motif_family_accessibility.differential_analyses.revision_31x_35b79f071c7b27c4	top_features_tibble.motif_family_accessibility.differential_analyses.revision_31x	0.032	2026-10-19T17:29:47+00:00	2230		node_2	TRUE
+significant_elements_tibble.transcription_factor_activity.differential_analyses.revision_31x		0.183	2026-10-19T17:29:47+00:00	271		node_2	TRUE
+significant_elements_tibble.motif_family_accessibility.differential_analyses.revision_31x		0.015	2026-10-19T17:29:47+00:00	271		node_2	TRUE
+cohort_tsv.motif_family_accessibility.differential_analyses.revision_31x_693563df69d707b5	cohort_tsv.motif_family_accessibility.differential_analyses.revision_31x	0.211	2026-10-19T17:29:47+00:00	1266		node_2	TRUE
+filtered_mat_per_model.gene_expression.differential_analyses.revision_31x_29488d0a9cc55d53	filtered_mat_per_model.gene_expression.differential_analyses.revision_31x	1.93	2026-10-19T17:29:47+00:00	667741		node_2	TRUE
+top_feature_open_targets_evidence_tibble.transcription_factor_activity.differential_analyses.revision_31x_41b84128c6135e89	top_feature_open_targets_evidence_tibble.transcription_factor_activity.differential_analyses.revision_31x	0.002	2026-10-19T17:29:47+00:00	472		node_2	TRUE
+top_feature_open_targets_evidence_tibble.motif_family_accessibility.differential_analyses.revision_31x_176d8eafee3924ef	top_feature_open_targets_evidence_tibble.motif_family_accessibility.differential_analyses.revision_31x	0.002	2026-10-19T17:29:47+00:00	370		node_2	TRUE
+p_value_distribution_plot.transcription_factor_activity.differential_analyses.revision_31x		0.98	2026-10-19T17:29:48+00:00	186241		node_2	TRUE
+p_value_distribution_plot.motif_family_accessibility.differential_analyses.revision_31x		1.06	2026-10-19T17:29:48+00:00	183310		node_2	TRUE
+volcano_plots.transcription_factor_activity.differential_analyses.revision_31x_ff3572c81cefb169	volcano_plots.transcription_factor_activity.differential_analyses.revision_31x	0.626	2026-10-19T17:29:49+00:00	513050		node_2	TRUE
+filtered_mat_per_model.chromatin_accessibility.differential_analyses.revision_31x_d52e1fbcc400b97b	filtered_mat_per_model.chromatin_accessibility.differential_analyses.revision_31x	3.295	2026-10-19T17:29:49+00:00	7507606		node_2	TRUE
+cohort_tsv.transcription_factor_activity.differential_analyses.revision_31x_1bba55eb349b0375	cohort_tsv.transcription_factor_activity.differential_analyses.revision_31x	0.362	2026-10-19T17:29:49+00:00	1266		node_2	TRUE
+volcano_plots.motif_family_accessibility.differential_analyses.revision_31x_db7abe88595f8122	volcano_plots.motif_family_accessibility.differential_analyses.revision_31x	0.766	2026-10-19T17:29:50+00:00	274269		node_2	TRUE
+feature_matrix_fit.gene_expression.differential_analyses.revision_31x_c74d0df574309643	feature_matrix_fit.gene_expression.differential_analyses.revision_31x	5.26	2026-10-19T17:29:53+00:00	4535470		node_2	TRUE
+results_tibble.gene_expression.differential_analyses.revision_31x_7adebf926b6c6458	results_tibble.gene_expression.differential_analyses.revision_31x	0.111	2026-10-19T17:29:53+00:00	684660		node_2	TRUE
+top_features_tibble.gene_expression.differential_analyses.revision_31x_895f63f8b639a2fd	top_features_tibble.gene_expression.differential_analyses.revision_31x	0.011	2026-10-19T17:29:53+00:00	2147		node_2	TRUE
+activity_accessibility_source_comparison_tibble.CollecTRI_JASPAR.differential_analyses.revision_31x		0.07	2026-10-19T17:29:53+00:00	36787		node_2	TRUE
+activity_accessibility_family_comparison_tibble.CollecTRI_JASPAR.differential_analyses.revision_31x		0.056	2026-10-19T17:29:54+00:00	4673		node_2	TRUE
+activity_accessibility_concordance_tibble.CollecTRI_JASPAR.differential_analyses.revision_31x		0.005	2026-10-19T17:29:54+00:00	376		node_2	TRUE
+significant_elements_tibble.gene_expression.differential_analyses.revision_31x		0.194	2026-10-19T17:29:54+00:00	276		node_2	TRUE
+top_feature_open_targets_evidence_tibble.gene_expression.differential_analyses.revision_31x_0ec4c6f427b5a0a1	top_feature_open_targets_evidence_tibble.gene_expression.differential_analyses.revision_31x	0.163	2026-10-19T17:29:54+00:00	669		node_2	TRUE
+activity_accessibility_concordance_plots.CollecTRI_JASPAR.differential_analyses.revision_31x		0.941	2026-10-19T17:29:55+00:00	113291		node_2	TRUE
+p_value_distribution_plot.gene_expression.differential_analyses.revision_31x		1.647	2026-10-19T17:29:55+00:00	183948		node_2	TRUE
+significant_elements_plot.gene_expression.differential_analyses.revision_31x		1.182	2026-10-19T17:29:55+00:00	126329		node_2	TRUE
+results.Hallmark.gene_set_enrichment.gene_expression.differential_analyses.revision_31x_7adebf926b6c6458	results.Hallmark.gene_set_enrichment.gene_expression.differential_analyses.revision_31x	1.985	2026-10-19T17:29:55+00:00	2559		node_2	TRUE
+results.Reactome.gene_set_enrichment.gene_expression.differential_analyses.revision_31x_7adebf926b6c6458	results.Reactome.gene_set_enrichment.gene_expression.differential_analyses.revision_31x	2.51	2026-10-19T17:29:56+00:00	54771		node_2	TRUE
+enrichment_plots.Hallmark.gene_set_enrichment.gene_expression.differential_analyses.revision_31x_e114a378cd29b5f7	enrichment_plots.Hallmark.gene_set_enrichment.gene_expression.differential_analyses.revision_31x	0.663	2026-10-19T17:29:56+00:00	274189		node_2	TRUE
+enrichment_plots.Reactome.gene_set_enrichment.gene_expression.differential_analyses.revision_31x_b610f8f081999f60	enrichment_plots.Reactome.gene_set_enrichment.gene_expression.differential_analyses.revision_31x	0.825	2026-10-19T17:29:56+00:00	335182		node_2	TRUE
+volcano_plots.gene_expression.differential_analyses.revision_31x_5b80067a7019de61	volcano_plots.gene_expression.differential_analyses.revision_31x	1.365	2026-10-19T17:29:57+00:00	639643		node_2	TRUE
+cohort_tsv.gene_expression.differential_analyses.revision_31x_4a6559d99f94b95c	cohort_tsv.gene_expression.differential_analyses.revision_31x	2.55	2026-10-19T17:29:57+00:00	1266		node_2	TRUE
+feature_matrix_fit.chromatin_accessibility.differential_analyses.revision_31x_3c5b05004c365cb0	feature_matrix_fit.chromatin_accessibility.differential_analyses.revision_31x	60.963	2026-10-19T17:30:51+00:00	57497885		node_2	TRUE
+results_tibble.chromatin_accessibility.differential_analyses.revision_31x_2e8f867e3505a8d1	results_tibble.chromatin_accessibility.differential_analyses.revision_31x	1.248	2026-10-19T17:30:53+00:00	9401659		node_2	TRUE
+top_features_tibble.chromatin_accessibility.differential_analyses.revision_31x_b1d5b44c2048d85c	top_features_tibble.chromatin_accessibility.differential_analyses.revision_31x	0.058	2026-10-19T17:30:54+00:00	2293		node_2	TRUE
+significant_elements_tibble.chromatin_accessibility.differential_analyses.revision_31x		0.058	2026-10-19T17:30:54+00:00	278		node_2	TRUE
+top_feature_open_targets_evidence_tibble.chromatin_accessibility.differential_analyses.revision_31x_ab5674f13284cbb5	top_feature_open_targets_evidence_tibble.chromatin_accessibility.differential_analyses.revision_31x	0.002	2026-10-19T17:30:54+00:00	670		node_2	TRUE
+significant_elements_modality_distribution_tibble.differential_analyses.revision_31x		0.006	2026-10-19T17:30:54+00:00	369		node_2	TRUE
+significant_elements_plot.chromatin_accessibility.differential_analyses.revision_31x		0.781	2026-10-19T17:30:55+00:00	126042		node_2	TRUE
+significant_elements_modality_distribution_plots.differential_analyses.revision_31x		0.92	2026-10-19T17:30:55+00:00	132886		node_2	TRUE
+cohort_tsv.chromatin_accessibility.differential_analyses.revision_31x_be743547c50784dd	cohort_tsv.chromatin_accessibility.differential_analyses.revision_31x	0.762	2026-10-19T17:30:56+00:00	1266		node_2	TRUE
+p_value_distribution_plot.chromatin_accessibility.differential_analyses.revision_31x		1.482	2026-10-19T17:30:56+00:00	178481		node_2	TRUE
+volcano_plots.chromatin_accessibility.differential_analyses.revision_31x_3be5faa9429c31c5	volcano_plots.chromatin_accessibility.differential_analyses.revision_31x	7.394	2026-10-19T17:31:03+00:00	747707		node_2	TRUE

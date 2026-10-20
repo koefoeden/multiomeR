@@ -20,14 +20,6 @@ authors:
     family-names: He
     affiliation: Novo Nordisk Foundation Center for Basic Metabolic Research, University of Copenhagen
     orcid: https://orcid.org/0009-0007-4178-2810
-  - given-names: Malte
-    family-names: Thodberg
-    affiliation: Novo Nordisk Foundation Center for Basic Metabolic Research, University of Copenhagen
-    orcid: https://orcid.org/0000-0001-6244-3841
-  - given-names: Laura Maarit
-    family-names: Pikkupeura
-    affiliation: Novo Nordisk Foundation Center for Basic Metabolic Research, University of Copenhagen
-    orcid: https://orcid.org/0000-0003-4430-8552
   - given-names: Kata
     family-names: Krizic
     affiliation: Novo Nordisk Foundation Center for Basic Metabolic Research, University of Copenhagen
@@ -46,9 +38,17 @@ authors:
     orcid: https://orcid.org/0000-0001-6323-9041
   - given-names: Torben
     family-names: Hansen
-    email: torben.hansen@sund.ku.dk
     affiliation: Novo Nordisk Foundation Center for Basic Metabolic Research, University of Copenhagen
     orcid: https://orcid.org/0000-0001-8748-3831
+  - given-names: Laura Maarit
+    family-names: Pikkupeura
+    affiliation: Novo Nordisk Foundation Center for Basic Metabolic Research, University of Copenhagen
+    orcid: https://orcid.org/0000-0003-4430-8552
+  - given-names: Malte
+    family-names: Thodberg
+    email: malte.thodberg@sund.ku.dk
+    affiliation: Novo Nordisk Foundation Center for Basic Metabolic Research, University of Copenhagen
+    orcid: https://orcid.org/0000-0001-6244-3841
 repository-code: https://github.com/koefoeden/multiomeR
 url: https://koefoeden.github.io/multiomeR/
 license: MIT

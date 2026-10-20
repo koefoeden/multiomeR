@@ -8,7 +8,8 @@
 # headroom: the pipeline sizes its requests for local workers, which have no
 # memory limit, and the large aggregations here exceed several of them. The
 # worker counts fit a 128-CPU, 2-TB node; adjust them and the wall time for your
-# cluster.
+# cluster. The workstation worker runs the manuscript's Seurat/Signac baseline
+# one step at a time, as on a 32-core, 256-GB workstation.
 
 node <- Sys.getenv("SLURMD_NODENAME")
 if (!nzchar(node)) stop("Run configuration_dev inside a Slurm allocation.", call. = FALSE)
@@ -21,7 +22,8 @@ tiers <- tibble::tribble(
   "slurm-light",         1,      16,     0,        48,       16,
   "slurm-heavy",         6,      60,     0,       120,        6,
   "slurm-large",         6,     200,     0,       200,        1,
-  "slurm-huge",          6,     500,     0,       500,        1
+  "slurm-huge",          6,     500,     0,       500,        1,
+  "slurm-workstation",  32,     256,     0,       256,        1
 )
 
 controller_list <- purrr::pmap(tiers, function(controller_name, cores, RAM_GB, gpus, limit_GB, workers) {

@@ -127,8 +127,10 @@ algorithm in one target on the cut sites that multiomeR writes for its
 peak-calling clusters, quantifies the peaks per GEM well with
 `Signac::FeatureMatrix()` and its default fragtk backend into BPCells
 directories, and runs Signac's TF-IDF/LSI on them before building the WNN graph,
-UMAP and clusters. Seurat's kernels use the cores of their Slurm worker, and
-peak calling and quantification run one `future` worker per core. Both
+UMAP and clusters. Each step runs alone in a 32-core, 256-GB Slurm job, as on
+one workstation: Seurat's kernels use its cores, and peak calling and
+quantification run one `future` worker per core, in the fixed chunks of
+future.apply's default scheduling, as Signac's `CallPeaks()` does. Both
 clusterings leave singleton communities unmerged (`group.singletons = FALSE`),
 as multiomeR does: Seurat's default merges each into a cluster in a
 single-threaded loop over singletons and clusters, which took 2.3 of the
@@ -243,21 +245,20 @@ dashed line at 100%, and careful manual checkpointing narrows that gap.
   steps one after another. Table S6 gives it; the figures show the simulated
   wall time.
 - **Simulated wall time,** which S2A, S3A and S4 show: the same runtimes
-  scheduled on one server with 128 cores and 2 TB (`BENCHMARK_BUDGET`), with as
-  many workers of each tier of `configuration_dev/crew_controllers.R` as fit.
-  Each target goes to the tier its RAM request selects, and each of its
-  executions holds the cores and memory that Slurm books for a worker of that
-  tier, such as one core and 51.5 GB for a light worker. Memory, not cores,
-  limits it: at most 38 light, 15 heavy, 9 large or 3 huge workers fit at once.
-  A target is ready once its upstream targets have finished. Ready executions
+  scheduled on one workstation with 32 cores and 256 GB (`BENCHMARK_BUDGET`),
+  with as many steps at once as fit. Each execution holds the cores and memory
+  that its target requests, as a local worker would, such as one core and 16 GB
+  for a light target. Memory, not cores, limits it: at most 16 light or 4 heavy
+  steps fit at once. A target is ready once its upstream targets have finished. Ready executions
   start in the order they became ready, each as soon as it fits in the free
   cores and memory, so a smaller step can start while an earlier, larger one
   waits. Each multiomeR target also takes 2 s for dispatching, loading and
   saving (`BENCHMARK_TASK_OVERHEAD_SECONDS`). The estimate is optimistic: the
   recorded runtimes were measured with fewer steps running at once, on at most
-  16 light, 6 heavy, one large and one huge worker. The conventional chain's
-  simulated wall time is the sum of its runtimes, as is its critical path, so
-  it takes no per-target overhead.
+  16 light, 6 heavy, one large and one huge worker, and some steps use more
+  memory than they request. The conventional chain's simulated wall time is the
+  sum of its runtimes, measured with each step alone in the workstation's job,
+  as is its critical path, so it takes no per-target overhead.
   `benchmark_simulation_check.tsv` checks the recorded runtimes and that
   overhead against measured runs. It schedules each run on the workers that
   ran it, the 16 light, 6 heavy, one large and one huge worker of

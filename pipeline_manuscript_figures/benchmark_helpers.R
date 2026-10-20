@@ -34,9 +34,10 @@ BENCHMARK_EXCLUDED_TARGETS <- c(
 # single-run records, apart from the full revision build (0.53), whose workers waited for other users'
 # jobs on its node.
 BENCHMARK_TASK_OVERHEAD_SECONDS <- 2
-# The cores and GB of the server for which the figures estimate run time, with as many workers of
-# each tier as fit. That is optimistic: the recorded runtimes were measured with fewer steps at once.
-BENCHMARK_BUDGET <- c(cores = 128, RAM_GB = 2000)
+# The cores and GB of the workstation for which the figures estimate run time, with as many steps
+# at once as their requests fit. That is optimistic: the recorded runtimes were measured with fewer
+# steps at once, and some steps use more memory than they request.
+BENCHMARK_BUDGET <- c(cores = 32, RAM_GB = 256)
 # Each revision run changes revision_31x one step further, in this order.
 BENCHMARK_REVISIONS <- c(
   revision_1 = "WNN clustering resolution 0.4 to 0.6",
@@ -462,9 +463,9 @@ benchmark_worker_attribution_tibble <- function(context) {
 # needs, from their enriched executions; uncounted targets keep their graph position with no
 # runtime. So do input files outside the store, such as configuration tables: targets records a
 # file's modification time as its completion time, so a run records no build of it. The simulated
-# wall time gives each execution the cores and memory that Slurm books for a worker of its tier,
-# within the budget. A sequential workflow's critical path and simulated wall time are the sum of its
-# runtimes, as when a script runs its steps one after another.
+# wall time gives each execution the cores and memory that its target requests, within the budget,
+# as local workers on one machine would take them. A sequential workflow's critical path and
+# simulated wall time are the sum of its runtimes, as when a script runs its steps one after another.
 benchmark_measures <- function(context, executions, scope, counted = rep(TRUE, length(scope)), sequential = FALSE,
                                graph = context$graph) {
   graph <- igraph::induced_subgraph(graph, scope)
@@ -484,7 +485,7 @@ benchmark_measures <- function(context, executions, scope, counted = rep(TRUE, l
   tibble::tibble(
     critical_path_hours = if (sequential) sum(executions$seconds) / 3600 else critical_path_seconds(graph, weights) / 3600,
     simulated_wall_time_hours = if (sequential) sum(executions$seconds) / 3600 else
-      simulate_wall_time_seconds(graph, executions, cbind(executions$tier_booked_cores, executions$tier_booked_RAM_GB),
+      simulate_wall_time_seconds(graph, executions, cbind(executions$cores, executions$RAM_GB),
         BENCHMARK_BUDGET, BENCHMARK_TASK_OVERHEAD_SECONDS) / 3600,
     summarise_executions(executions))
 }
@@ -759,7 +760,7 @@ plot_benchmark_figures <- function(tables) {
       dplyr::mutate(workflow = "multiomeR (default normalization)")) |>
     dplyr::mutate(workflow = factor(.data$workflow, names(BENCHMARK_WORKFLOW_COLOURS)))
   # Title and axis title of each measure.
-  measures <- list(simulated_wall_time_hours = c("Run time on 128 cores, 2 TB", "Estimated hours"),
+  measures <- list(simulated_wall_time_hours = c("Run time on 32 cores, 256 GB", "Estimated hours"),
     used_CPU_hours = c("CPU time", "CPU-hours"),
     used_RAM_GB_hours = c("Memory use summed over the run", "GB-hours"),
     peak_RAM_GB = c("Memory of the largest worker", "Peak GB"),
@@ -795,7 +796,7 @@ plot_benchmark_figures <- function(tables) {
     dplyr::filter(!startsWith(.data$scope, "like for like")) |>
     dplyr::mutate(workflow = factor(dplyr::if_else(.data$scope == "primary module", "Primary module", "With optional modules"),
       names(BENCHMARK_SIZING_COLOURS)))
-  sizing_measures <- list(simulated_wall_time_hours = c("Run time on 128 cores, 2 TB", "Estimated hours", "%.1f h"),
+  sizing_measures <- list(simulated_wall_time_hours = c("Run time on 32 cores, 256 GB", "Estimated hours", "%.1f h"),
     used_CPU_hours = c("CPU time", "CPU-hours", "%.0f CPU-hours"),
     peak_RAM_GB = c("Memory of the largest worker", "Peak GB", "%.0f GB"),
     disk_space_GB = c("Disk space", "GB, with Cell Ranger inputs", "%.0f GB"))

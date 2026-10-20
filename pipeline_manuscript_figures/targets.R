@@ -428,13 +428,11 @@ algorithm_parity_pipeline <- c(
 )
 
 # The conventional Seurat/Signac workflow. Its default packages and resources are
-# set after the other targets are defined, so they apply to this chain only; only
-# its peak calling, which runs MACS3 on six clusters at once, needs more RAM.
-comparison_resources <- get_tar_resources(cores_req = 6, RAM_GB_req = 60)
-
+# set after the other targets are defined, so they apply to this chain only: each
+# step runs alone on the 32 cores and 256 GB of one workstation.
 targets::tar_option_set(
   packages = c("Seurat", "SeuratObject", "Signac"),
-  resources = comparison_resources
+  resources = get_tar_resources(cores_req = 32, RAM_GB_req = 256)
 )
 
 comparison_aggregation_tibble <- tibble::tibble(
@@ -447,8 +445,7 @@ comparison_aggregation_tibble <- tibble::tibble(
 )
 
 # SCTransform = FALSE leaves out the SCTransform chain, which cannot hold more than 2^31 non-zero RNA counts.
-comparison_seurat_signac_targets <- function(values, peak_resources, object_resources = comparison_resources,
-                                             SCTransform = TRUE) {
+comparison_seurat_signac_targets <- function(values, SCTransform = TRUE) {
   tarchetypes::tar_map(
     values = values,
     names = aggregation,
@@ -482,8 +479,7 @@ comparison_seurat_signac_targets <- function(values, peak_resources, object_reso
         comparison_peak_calling_discovery_tibble,
         comparison_seurat_signac_config,
         comparison_blacklist_GRanges
-      ),
-      resources = peak_resources
+      )
     ),
     tarchetypes::tar_file(
       comparison_seurat_signac_ATAC_BPCells_dirs,
@@ -505,8 +501,7 @@ comparison_seurat_signac_targets <- function(values, peak_resources, object_reso
         comparison_seurat_signac_lognorm_RNA_object,
         comparison_seurat_signac_ATAC_BPCells_dirs,
         comparison_seurat_signac_config
-      ),
-      resources = object_resources
+      )
     ),
     # The same chain with SCTransform.
     if (SCTransform) list(
@@ -520,8 +515,7 @@ comparison_seurat_signac_targets <- function(values, peak_resources, object_reso
           comparison_seurat_signac_RNA_object,
           comparison_seurat_signac_ATAC_BPCells_dirs,
           comparison_seurat_signac_config
-        ),
-        resources = object_resources
+        )
       ),
       targets::tar_target(
         comparison_seurat_signac_summary,
@@ -546,27 +540,10 @@ comparison_seurat_signac_pipeline <- rlang::list2(
     comparison_seurat_signac_config_paths,
     format = "file"
   ),
-  comparison_seurat_signac_targets(
-    values = dplyr::filter(comparison_aggregation_tibble, .data$aggregation %in% c("comparison_1x", "comparison_2x")),
-    peak_resources = comparison_resources
-  ),
-  comparison_seurat_signac_targets(
-    values = dplyr::filter(comparison_aggregation_tibble, .data$aggregation == "comparison_5x"),
-    peak_resources = get_tar_resources(cores_req = 6, RAM_GB_req = 200)
-  ),
-  comparison_seurat_signac_targets(
-    values = dplyr::filter(comparison_aggregation_tibble,
-      .data$aggregation %in% c("comparison_10x", "comparison_20x", "comparison_31x")),
-    peak_resources = get_tar_resources(cores_req = 6, RAM_GB_req = 500)
-  ),
-  # Log-normalization only on sizing_91x's 91 samples. Its RNA object needed 30 GB up to the
-  # neighbour graph in a feasibility run, so only peak calling and the joint object get more.
-  comparison_seurat_signac_targets(
-    values = dplyr::filter(comparison_aggregation_tibble, .data$aggregation == "sizing_91x"),
-    peak_resources = get_tar_resources(cores_req = 6, RAM_GB_req = 500),
-    object_resources = get_tar_resources(cores_req = 6, RAM_GB_req = 500),
-    SCTransform = FALSE
-  )
+  comparison_seurat_signac_targets(dplyr::filter(comparison_aggregation_tibble, .data$aggregation != "sizing_91x")),
+  # Log-normalization only on sizing_91x's 91 samples.
+  comparison_seurat_signac_targets(dplyr::filter(comparison_aggregation_tibble, .data$aggregation == "sizing_91x"),
+    SCTransform = FALSE)
 )
 
 c(base_pipeline, figure_pipeline, algorithm_parity_pipeline, comparison_seurat_signac_pipeline)

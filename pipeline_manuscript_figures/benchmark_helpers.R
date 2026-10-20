@@ -30,9 +30,13 @@ BENCHMARK_EXCLUDED_TARGETS <- c(
     "not run: on earlier code they took over 1.5 h and up to 110 GB per GWAS at 91 samples without finishing",
     "(at most 2.3 min per GWAS at 31 wells)"))
 # Seconds the simulated wall time adds to each target for dispatching, loading and saving. With it,
-# the simulation comes to 0.77-1.07 times the measured elapsed time of the single-run records, apart from
-# the full revision build (0.53), whose workers waited for other users' jobs on its node.
+# the simulation on the configured workers comes to 0.77-1.07 times the measured elapsed time of the
+# single-run records, apart from the full revision build (0.53), whose workers waited for other users'
+# jobs on its node.
 BENCHMARK_TASK_OVERHEAD_SECONDS <- 2
+# The cores and GB of the server for which the figures estimate run time, with as many workers of
+# each tier as fit. That is optimistic: the recorded runtimes were measured with fewer steps at once.
+BENCHMARK_BUDGET <- c(cores = 128, RAM_GB = 2000)
 # Each revision run changes revision_31x one step further, in this order.
 BENCHMARK_REVISIONS <- c(
   revision_1 = "WNN clustering resolution 0.4 to 0.6",
@@ -305,22 +309,21 @@ critical_path_seconds <- function(graph, weights) {
   max(finish)
 }
 
-# Wall time on a worker budget by list scheduling: a target is ready once its upstream targets
-# have finished, and the workers of its tier take ready executions in the order they became
-# ready, each for its recorded runtime plus `overhead_seconds`, which can stand for dispatching,
-# loading and saving. benchmark_simulation_check() compares it with measured runs.
-simulate_wall_time_seconds <- function(graph, executions, workers, overhead_seconds = 0) {
+# Wall time by list scheduling: a target is ready once its upstream targets have finished, and
+# whenever capacity is free, the earliest ready execution that fits in it starts, so a smaller one
+# can start in a gap that an earlier one does not fit. Each execution holds its row of `demand`,
+# one column per entry of `capacity`, for its recorded runtime plus `overhead_seconds`, which can
+# stand for dispatching, loading and saving.
+simulate_wall_time_seconds <- function(graph, executions, demand, capacity, overhead_seconds = 0) {
   order <- igraph::as_ids(igraph::topo_sort(graph))
   children <- stats::setNames(lapply(igraph::adjacent_vertices(graph, order, mode = "out"), igraph::as_ids), order)
   waiting <- igraph::degree(graph, order, mode = "in")
-  seconds <- split(executions$seconds + overhead_seconds, factor(executions$static_target, levels = order))
-  tier <- stats::setNames(executions$tier[match(order, executions$static_target)], order)
-  unfinished <- lengths(seconds)
-  queued_targets <- stats::setNames(rep(list(character()), length(workers)), names(workers))
-  queued_seconds <- stats::setNames(rep(list(numeric()), length(workers)), names(workers))
-  next_task <- stats::setNames(rep(1L, length(workers)), names(workers))
+  rows <- split(seq_len(nrow(executions)), factor(executions$static_target, levels = order))
+  unfinished <- lengths(rows)
+  seconds <- executions$seconds + overhead_seconds
+  demand <- t(demand)
+  queued <- running <- integer()
   ends <- numeric()
-  running_targets <- running_tiers <- character()
   now <- 0
   ready <- order[waiting == 0]
   repeat {
@@ -332,27 +335,24 @@ simulate_wall_time_seconds <- function(graph, executions, workers, overhead_seco
         waiting[released] <- waiting[released] - 1
         ready <- c(ready, released[waiting[released] == 0])
       } else {
-        queued_targets[[tier[[target]]]] <- c(queued_targets[[tier[[target]]]], rep(target, unfinished[[target]]))
-        queued_seconds[[tier[[target]]]] <- c(queued_seconds[[tier[[target]]]], seconds[[target]])
+        queued <- c(queued, rows[[target]])
       }
     }
-    for (worker_tier in names(workers)) {
-      while (workers[[worker_tier]] > 0 && next_task[[worker_tier]] <= length(queued_targets[[worker_tier]])) {
-        ends <- c(ends, now + queued_seconds[[worker_tier]][[next_task[[worker_tier]]]])
-        running_targets <- c(running_targets, queued_targets[[worker_tier]][[next_task[[worker_tier]]]])
-        running_tiers <- c(running_tiers, worker_tier)
-        next_task[[worker_tier]] <- next_task[[worker_tier]] + 1L
-        workers[[worker_tier]] <- workers[[worker_tier]] - 1
-      }
+    repeat {
+      fits <- queued[colSums(demand[, queued, drop = FALSE] <= capacity) == length(capacity)]
+      if (!length(fits)) break
+      capacity <- capacity - demand[, fits[[1]]]
+      running <- c(running, fits[[1]])
+      ends <- c(ends, now + seconds[[fits[[1]]]])
+      queued <- queued[queued != fits[[1]]]
     }
     if (!length(ends)) break
     finished <- which.min(ends)
     now <- ends[[finished]]
-    target <- running_targets[[finished]]
-    workers[[running_tiers[[finished]]]] <- workers[[running_tiers[[finished]]]] + 1
+    capacity <- capacity + demand[, running[[finished]]]
+    target <- executions$static_target[[running[[finished]]]]
     ends <- ends[-finished]
-    running_targets <- running_targets[-finished]
-    running_tiers <- running_tiers[-finished]
+    running <- running[-finished]
     unfinished[[target]] <- unfinished[[target]] - 1L
     # A finished target releases its downstream targets on the next pass.
     if (unfinished[[target]] == 0L) ready <- target
@@ -461,9 +461,10 @@ benchmark_worker_attribution_tibble <- function(context) {
 # Resource measures of the counted targets among `scope`, the static targets that a result
 # needs, from their enriched executions; uncounted targets keep their graph position with no
 # runtime. So do input files outside the store, such as configuration tables: targets records a
-# file's modification time as its completion time, so a run records no build of it. A sequential
-# workflow's critical path and simulated wall time are the sum of its runtimes, as when a script runs
-# its steps one after another.
+# file's modification time as its completion time, so a run records no build of it. The simulated
+# wall time gives each execution the cores and memory that Slurm books for a worker of its tier,
+# within the budget. A sequential workflow's critical path and simulated wall time are the sum of its
+# runtimes, as when a script runs its steps one after another.
 benchmark_measures <- function(context, executions, scope, counted = rep(TRUE, length(scope)), sequential = FALSE,
                                graph = context$graph) {
   graph <- igraph::induced_subgraph(graph, scope)
@@ -483,7 +484,8 @@ benchmark_measures <- function(context, executions, scope, counted = rep(TRUE, l
   tibble::tibble(
     critical_path_hours = if (sequential) sum(executions$seconds) / 3600 else critical_path_seconds(graph, weights) / 3600,
     simulated_wall_time_hours = if (sequential) sum(executions$seconds) / 3600 else
-      simulate_wall_time_seconds(graph, executions, context$workers, BENCHMARK_TASK_OVERHEAD_SECONDS) / 3600,
+      simulate_wall_time_seconds(graph, executions, cbind(executions$tier_booked_cores, executions$tier_booked_RAM_GB),
+        BENCHMARK_BUDGET, BENCHMARK_TASK_OVERHEAD_SECONDS) / 3600,
     summarise_executions(executions))
 }
 
@@ -630,9 +632,9 @@ benchmark_start_gaps <- function(graph, executions) {
 }
 
 # Each recorded run's measured elapsed time against the wall time simulated for its executions on
-# the configured workers, with the targets it did not build counted as finished, with and without
-# the per-target overhead, and the run's median start gap. Records of several driver runs are
-# left out.
+# the configured workers that ran it, each execution holding one worker of its tier, with the
+# targets it did not build counted as finished, with and without the per-target overhead, and the
+# run's median start gap. Records of several driver runs are left out.
 benchmark_simulation_check <- function(context) {
   reference_GEM_well <- benchmark_aggregation_tibble("revision_31x")$aggregation_GEM_well_IDs[[1]][[1]]
   purrr::map_dfr(setdiff(context$runs, BENCHMARK_MULTIPLE_DRIVER_RUNS), \(label) {
@@ -641,12 +643,13 @@ benchmark_simulation_check <- function(context) {
     scope <- upstream_targets(graph, unique(executions$static_target))
     enriched <- enrich_executions(context, executions)
     measures <- benchmark_measures(context, enriched, scope, scope %in% executions$static_target, graph = graph)
-    without_overhead <- simulate_wall_time_seconds(igraph::induced_subgraph(graph, scope),
-      dplyr::filter(enriched, .data$static_target %in% scope), context$workers) / 3600
+    on_workers <- \(overhead_seconds) simulate_wall_time_seconds(igraph::induced_subgraph(graph, scope), enriched,
+      outer(enriched$tier, names(context$workers), "=="), context$workers, overhead_seconds) / 3600
     start_gap <- stats::median(benchmark_start_gaps(graph, executions))
     tibble::tibble(run = label, measured_elapsed_hours = benchmark_elapsed_hours(executions),
-      measures[c("simulated_wall_time_hours", "critical_path_hours", "runtime_hours", "targets", "executions")],
-      simulated_without_overhead_hours = without_overhead, median_start_gap_seconds = start_gap)
+      simulated_wall_time_hours = on_workers(BENCHMARK_TASK_OVERHEAD_SECONDS),
+      measures[c("critical_path_hours", "runtime_hours", "targets", "executions")],
+      simulated_without_overhead_hours = on_workers(0), median_start_gap_seconds = start_gap)
   }) |>
     dplyr::mutate(simulated_to_measured = .data$simulated_wall_time_hours / .data$measured_elapsed_hours,
       simulated_without_overhead_to_measured = .data$simulated_without_overhead_hours / .data$measured_elapsed_hours)
@@ -756,7 +759,7 @@ plot_benchmark_figures <- function(tables) {
       dplyr::mutate(workflow = "multiomeR (default normalization)")) |>
     dplyr::mutate(workflow = factor(.data$workflow, names(BENCHMARK_WORKFLOW_COLOURS)))
   # Title and axis title of each measure.
-  measures <- list(simulated_wall_time_hours = c("Run time on 128 cores", "Estimated hours"),
+  measures <- list(simulated_wall_time_hours = c("Run time on 128 cores, 2 TB", "Estimated hours"),
     used_CPU_hours = c("CPU time", "CPU-hours"),
     used_RAM_GB_hours = c("Memory use summed over the run", "GB-hours"),
     peak_RAM_GB = c("Memory of the largest worker", "Peak GB"),
@@ -792,7 +795,7 @@ plot_benchmark_figures <- function(tables) {
     dplyr::filter(!startsWith(.data$scope, "like for like")) |>
     dplyr::mutate(workflow = factor(dplyr::if_else(.data$scope == "primary module", "Primary module", "With optional modules"),
       names(BENCHMARK_SIZING_COLOURS)))
-  sizing_measures <- list(simulated_wall_time_hours = c("Run time on 128 cores", "Estimated hours", "%.1f h"),
+  sizing_measures <- list(simulated_wall_time_hours = c("Run time on 128 cores, 2 TB", "Estimated hours", "%.1f h"),
     used_CPU_hours = c("CPU time", "CPU-hours", "%.0f CPU-hours"),
     peak_RAM_GB = c("Memory of the largest worker", "Peak GB", "%.0f GB"),
     disk_space_GB = c("Disk space", "GB, with Cell Ranger inputs", "%.0f GB"))

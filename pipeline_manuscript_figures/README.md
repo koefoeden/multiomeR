@@ -27,8 +27,8 @@ below `results/`:
   non-zero entries, ATAC fragments and input files `data/benchmark_sizes.tsv`
   gives;
   `data/benchmark_revisions.tsv` measures what five revisions of `revision_31x`
-  rerun; `data/benchmark_simulation_check.tsv` compares the simulated wall
-  time with measured runs; and `data/benchmark_worker_attribution.tsv` gives the
+  rerun; `data/benchmark_simulation_check.tsv` compares the wall time
+  simulated on the configured workers with measured runs; and `data/benchmark_worker_attribution.tsv` gives the
   worker time that no target claims while each run ran. Its inputs are `data/benchmark_runs/`, the targets
   each measured run built, and `data/benchmark_allocations.tsv`, the worker
   cores and RAM that each counted target requested in the run that measured it.
@@ -242,24 +242,35 @@ dashed line at 100%, and careful manual checkpointing narrows that gap.
   chain's critical path is the sum of its runtimes, as when a script runs its
   steps one after another. Table S6 gives it; the figures show the simulated
   wall time.
-- **Simulated wall time,** which S2A, S3A and S4 show: the same runtimes scheduled on the workers of
-  `configuration_dev/crew_controllers.R`, which fit one 128-core server: 16
-  light, 6 heavy, one large and one huge worker, each target routed to the tier its RAM request selects. A target
-  is ready once its upstream targets have finished, and each tier's workers take
-  ready targets in the order they became ready. The conventional chain's
-  simulated wall time is the sum of its runtimes, as is its critical path, so it
-  takes no per-target overhead. Each multiomeR target also takes 2 s
-  for dispatching, loading and saving (`BENCHMARK_TASK_OVERHEAD_SECONDS`). With
-  it, the simulation came to 0.77-1.07 times the measured elapsed time of each
-  single-run record, against 0.67-1.00 times without it, which falls short most
-  for runs of many short targets, such as `revision_1`. The full revision build
+- **Simulated wall time,** which S2A, S3A and S4 show: the same runtimes
+  scheduled on one server with 128 cores and 2 TB (`BENCHMARK_BUDGET`), with as
+  many workers of each tier of `configuration_dev/crew_controllers.R` as fit.
+  Each target goes to the tier its RAM request selects, and each of its
+  executions holds the cores and memory that Slurm books for a worker of that
+  tier, such as one core and 51.5 GB for a light worker. Memory, not cores,
+  limits it: at most 38 light, 15 heavy, 9 large or 3 huge workers fit at once.
+  A target is ready once its upstream targets have finished. Ready executions
+  start in the order they became ready, each as soon as it fits in the free
+  cores and memory, so a smaller step can start while an earlier, larger one
+  waits. Each multiomeR target also takes 2 s for dispatching, loading and
+  saving (`BENCHMARK_TASK_OVERHEAD_SECONDS`). The estimate is optimistic: the
+  recorded runtimes were measured with fewer steps running at once, on at most
+  16 light, 6 heavy, one large and one huge worker. The conventional chain's
+  simulated wall time is the sum of its runtimes, as is its critical path, so
+  it takes no per-target overhead.
+  `benchmark_simulation_check.tsv` checks the recorded runtimes and that
+  overhead against measured runs. It schedules each run on the workers that
+  ran it, the 16 light, 6 heavy, one large and one huge worker of
+  `configuration_dev/crew_controllers.R`, each execution holding one worker of
+  its tier. With the overhead, the simulation came to 0.77-1.07 times the
+  measured elapsed time of each single-run record, against 0.67-1.00 times
+  without it, which falls short most for runs of many short targets, such as `revision_1`. The full revision build
   is the exception, at 0.53: other users' jobs on its node held up its workers,
   so 191 of its targets waited over a minute between dispatch and start, against
-  none in an earlier build of the same aggregation.
-  `benchmark_simulation_check.tsv` compares the simulation, with and without
-  that overhead, with each recorded run's elapsed time: the periods in which its
-  targets ran, from the first recorded start to the last completion, joined
-  across gaps of up to ten minutes. It also gives each run's median start gap,
+  none in an earlier build of the same aggregation. The check compares the
+  simulation, with and without that overhead, with each recorded run's elapsed
+  time: the periods in which its targets ran, from the first recorded start to
+  the last completion, joined across gaps of up to ten minutes. It also gives each run's median start gap,
   the time from the last completion of a target's upstream targets in the run to
   its start, which in large runs includes waiting for a busy worker.
   Records that span several driver runs are left out: `comparison`,
@@ -298,9 +309,10 @@ dashed line at 100%, and careful manual checkpointing narrows that gap.
 ### Accounting choices
 
 - Unlimited workers favour the workflow with more parallel steps, multiomeR,
-  so the figures show the simulated wall time on the configured budget instead
-  and Table S6 also gives the critical path. The shorter run time comes from
-  running steps in parallel, while CPU time stays similar.
+  so the figures show the simulated wall time within one server's cores and
+  memory instead, and Table S6 also gives the critical path. As many workers
+  as fit, with runtimes measured on fewer, still favour multiomeR. The shorter
+  run time comes from running steps in parallel, while CPU time stays similar.
 - Crediting the conventional chain with a separate allocation per step favours
   it: a single script would hold its largest allocation, up to 500 GB for peak
   calling, for its whole run.

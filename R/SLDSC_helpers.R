@@ -391,11 +391,12 @@ get_SLDSC_sumstats_record <- function(sumstats_rows_record, regression_SNP_tibbl
 #' weights, divided by the number of cell types.
 #'
 #' @param pseudobulk_counts_matrix Peak-by-cell-type ATAC counts.
+#' @param cell_types Cell types to annotate.
 #' @return Dense peak-by-annotation matrix for peaks with any counts.
 #' @keywords internal
 
-get_SLDSC_peak_annotation_matrix <- function(pseudobulk_counts_matrix) {
-  counts_matrix <- methods::as(pseudobulk_counts_matrix, "dgCMatrix")
+get_SLDSC_peak_annotation_matrix <- function(pseudobulk_counts_matrix, cell_types) {
+  counts_matrix <- methods::as(pseudobulk_counts_matrix[, colnames(pseudobulk_counts_matrix) %in% cell_types], "dgCMatrix")
   counts_matrix <- as.matrix(counts_matrix[Matrix::rowSums(counts_matrix) > 0, , drop = FALSE])
   normalized_matrix <- sweep(counts_matrix, 2, colSums(counts_matrix), "/")
   cbind(all_peaks = 1, normalized_matrix / rowSums(normalized_matrix))
@@ -413,14 +414,18 @@ get_SLDSC_peak_annotation_matrix <- function(pseudobulk_counts_matrix) {
 #' @param pseudobulk_counts_matrix Gene-by-pseudobulk GEX counts with columns
 #'   named `<cell type>_<donor>`.
 #' @param Ensembl_annotations_GRanges_list List with the Ensembl `genes`.
+#' @param cell_types Cell types to score.
 #' @param window Bases added to each side of the gene body.
 #' @return A list with the gene-by-cell-type specificity matrix and the gene
 #'   windows, both named by GEX feature.
 #' @keywords internal
 
-get_SLDSC_gene_specificity_record <- function(pseudobulk_counts_matrix, Ensembl_annotations_GRanges_list, window = 100000L) {
+get_SLDSC_gene_specificity_record <- function(pseudobulk_counts_matrix, Ensembl_annotations_GRanges_list, cell_types,
+                                              window = 100000L) {
   counts_matrix <- methods::as(pseudobulk_counts_matrix, "dgCMatrix")
   clusters <- get_pseudobulk_sample_tibble(counts_matrix)$cluster
+  counts_matrix <- counts_matrix[, clusters %in% cell_types, drop = FALSE]
+  clusters <- clusters[clusters %in% cell_types]
   counts_matrix <- as.matrix(counts_matrix %*% Matrix::t(Matrix::fac2sparse(factor(clusters))))
   normalized_matrix <- sweep(counts_matrix, 2, colSums(counts_matrix), "/")
   gene_tibble <- make_peak_gene_correlation_gene_TSS_tibble(Ensembl_annotations_GRanges_list, counts_matrix) |>

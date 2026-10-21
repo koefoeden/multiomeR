@@ -60,13 +60,13 @@ my_aggregation:
 Each branch holds named models; the model and contrast names label the outputs.
 
 - **Abundance models** ([`differential_analyses_cell_type_composition_models`](parameters.html#differential_analyses_cell_type_composition_models)) fit each cell type's share of a donor's nuclei. Use a one-sided, fixed-effects formula; the response is added for you. `plot_phenotype_vars` and `color_by` choose the plotted variables. Omit the field to skip this branch.
-- **Feature models** ([`differential_analyses_pseudobulk_models`](parameters.html#differential_analyses_pseudobulk_models)) test the four feature families. The formula uses donor metadata variables; replace `my_cell_type` with one of your cell types. One donor's pseudobulks of different cell types are not independent replicates, so a formula that compares or pools cell types through `cluster` is refused unless it also sets a paired cell-type design (`cell_type_formula` with `pairing_variable`) or a `random_effect`.
+- **Feature models** ([`differential_analyses_pseudobulk_models`](parameters.html#differential_analyses_pseudobulk_models)) test the four feature families. The formula uses donor metadata variables; replace `my_cell_type` with one of your cell types. A model tests all cell types together unless `cell_type_subset` names one. One donor's pseudobulks of different cell types are not independent replicates, so a model over several cell types is refused unless it also sets a paired cell-type design (`cell_type_formula` with `pairing_variable`) or a `random_effect`.
 - **Contrasts** in `contrast_specs_vec` are coefficient names of the model matrix, or linear combinations of them. A text variable's alphabetically first value is the reference, so `conditiontreated` is treated minus control. Replace the example variable, formula and contrast with your own.
 
 Optional fields narrow a model:
 
 - `donor_ids` restricts the donors in either branch;
-- `cell_type_subset` restricts the cell types whose pseudobulks a feature model tests;
+- `cell_type_subset` restricts the cell types whose pseudobulks a feature model tests; name one cell type to test it on its own;
 - `GEM_well_IDs` restricts the GEM wells that define an abundance model's population; and
 - `cell_types_to_test` restricts the cell types an abundance model tests, by default the assigned cell types found in at least half of its donors. Every retained nucleus still counts towards its donor's total.
 

@@ -1,1 +1,6 @@
-After GEX clustering, `scDblFinder` is applied per GEM well, with `dbr.sd = 1`, to the gene-expression counts of the kept nuclei [@germain2022_scdblfinder]. These counts are CellBender-corrected where configured. Doublets form only within a GEM well, and `dbr.sd = 1` sets the doublet threshold from misclassification alone rather than from an expected doublet rate. scDblFinder receives cluster labels from the annotation: the cell-type label of an assigned cluster, or otherwise its annotation status and identifier. A configured map can optionally collapse these labels. By default, nuclei called as doublets are removed, as are all nuclei of Leiden clusters whose doublet fraction exceeds 0.5.
+After GEX clustering, `scDblFinder` is applied per GEM well, with `dbr.sd = 1`, to the gene-expression counts of the kept nuclei [@germain2022_scdblfinder].
+These counts are CellBender-corrected where configured.
+Doublets form only within a GEM well, and `dbr.sd = 1` sets the doublet threshold from misclassification alone rather than from an expected doublet rate.
+scDblFinder receives cluster labels from the annotation: the cell-type label of an assigned cluster, or otherwise its annotation status and identifier.
+A configured map can optionally collapse these labels.
+By default, nuclei called as doublets are removed, as are all nuclei of Leiden clusters whose doublet fraction exceeds 0.5.

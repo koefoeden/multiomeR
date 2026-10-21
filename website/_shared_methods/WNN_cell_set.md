@@ -1,1 +1,4 @@
-WNN analysis uses the nuclei kept after ATAC processing that are present in both embeddings. When small joint clusters are removed, the neighbors and modality weights are recomputed on the kept nuclei, while the cluster labels are kept. The UMAP is computed once, from the final neighbors. The GEX, ATAC and WNN metadata therefore describe successively smaller sets of nuclei, not interchangeable versions of the Cell Ranger cell calls.
+WNN analysis uses the nuclei kept after ATAC processing that are present in both embeddings.
+When small joint clusters are removed, the neighbors and modality weights are recomputed on the kept nuclei, while the cluster labels are kept.
+The UMAP is computed once, from the final neighbors.
+The GEX, ATAC and WNN metadata therefore describe successively smaller sets of nuclei, not interchangeable versions of the Cell Ranger cell calls.

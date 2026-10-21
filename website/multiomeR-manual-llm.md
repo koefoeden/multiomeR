@@ -1667,9 +1667,28 @@ Each section ends with its source files and a simplified view of its target grap
 
 <!-- begin include: website/_shared_methods/quality_control.md -->
 
-Each GEM well supplies a Cell Ranger ARC count directory. Gene-expression counts are imported into BPCells from the filtered feature-barcode matrix, or from a CellBender output when configured [@parks2025_bpcells; @fleming2023_cellbender]. ATAC fragments are imported from the Cell Ranger fragment file. Both carry a GEM-well-prefixed barcode, so nuclei remain distinct across wells. Per-well quality-control metrics are calculated for the barcodes that Cell Ranger called as cells. BPCells calculates ATAC metrics such as TSS enrichment and nucleosome signal. The blacklist fraction is the share of a nucleus's fragments with at least one cut site in a blacklisted region of the genome [@amemiya2019_encode_blacklist; @ogata2023_excluderanges]. Gene-expression metrics, such as the fraction of counts from mitochondrial genes (names beginning with `MT-`, ignoring case), are calculated from the imported matrix. Optional genotype demultiplexing runs cellsnp-lite on the ATAC alignments, with a minimum minor-allele frequency of 0.1 and 20 reads per SNP [@huang2021_cellsnp_lite]. Vireo then demultiplexes the barcodes with the supplied donor genotypes [@huang2019_vireo]. The most likely singlet donor replaces the GEM-well donor identifier of every barcode. Vireo's singlet, doublet and unassigned calls and probabilities are recorded as metadata for the exclusions. A BPCells-based implementation of AMULET reads the stored fragments of up to 1,000 bp one by one, without loading them all into memory [@thibodeau2021_amulet]. This avoids the chromosome-scale `GRanges` objects that scDblFinder builds from the text fragment file. It skips fragments on chrM, chrX and chrY and, for GRCh38, fragments in the AMULET authors' list of repeats, segmental duplications and blacklisted regions, where multi-mapping reads cause spurious overlaps. It reproduces the overlap metrics and q-values of `scDblFinder::amulet()` but applies no automatic filter [@germain2022_scdblfinder]. Because AMULET performs well only on deeply sequenced nuclei, filtering on its q-values is left to the user, and its authors recommend q < 0.01 [@thibodeau2021_amulet].
+Each GEM well supplies a Cell Ranger ARC count directory.
+Gene-expression counts are imported into BPCells from the filtered feature-barcode matrix, or from a CellBender output when configured [@parks2025_bpcells; @fleming2023_cellbender].
+ATAC fragments are imported from the Cell Ranger fragment file.
+Both carry a GEM-well-prefixed barcode, so nuclei remain distinct across wells.
+Per-well quality-control metrics are calculated for the barcodes that Cell Ranger called as cells.
+BPCells calculates ATAC metrics such as TSS enrichment and nucleosome signal.
+The blacklist fraction is the share of a nucleus's fragments with at least one cut site in a blacklisted region of the genome [@amemiya2019_encode_blacklist; @ogata2023_excluderanges].
+Gene-expression metrics, such as the fraction of counts from mitochondrial genes (names beginning with `MT-`, ignoring case), are calculated from the imported matrix.
+Optional genotype demultiplexing runs cellsnp-lite on the ATAC alignments, with a minimum minor-allele frequency of 0.1 and 20 reads per SNP [@huang2021_cellsnp_lite].
+Vireo then demultiplexes the barcodes with the supplied donor genotypes [@huang2019_vireo].
+The most likely singlet donor replaces the GEM-well donor identifier of every barcode.
+Vireo's singlet, doublet and unassigned calls and probabilities are recorded as metadata for the exclusions.
+A BPCells-based implementation of AMULET reads the stored fragments of up to 1,000 bp one by one, without loading them all into memory [@thibodeau2021_amulet].
+This avoids the chromosome-scale `GRanges` objects that scDblFinder builds from the text fragment file.
+It skips fragments on chrM, chrX and chrY and, for GRCh38, fragments in the AMULET authors' list of repeats, segmental duplications and blacklisted regions, where multi-mapping reads cause spurious overlaps.
+It reproduces the overlap metrics and q-values of `scDblFinder::amulet()` but applies no automatic filter [@germain2022_scdblfinder].
+Because AMULET performs well only on deeply sequenced nuclei, filtering on its q-values is left to the user, and its authors recommend q < 0.01 [@thibodeau2021_amulet].
 
-Configured GEM-well exclusions are filter expressions applied to the called cells of each well. Demultiplexing and AMULET results can therefore be used as exclusion criteria before aggregation-level analysis. Called cells missing from the imported gene-expression matrix are always excluded. The remaining nuclei of the selected wells are combined without further filtering.
+Configured GEM-well exclusions are filter expressions applied to the called cells of each well.
+Demultiplexing and AMULET results can therefore be used as exclusion criteria before aggregation-level analysis.
+Called cells missing from the imported gene-expression matrix are always excluded.
+The remaining nuclei of the selected wells are combined without further filtering.
 
 <!-- end include: website/_shared_methods/quality_control.md -->
 
@@ -1693,7 +1712,18 @@ This view covers per-GEM-well processing and QC, including optional ambient RNA 
 
 <!-- begin include: website/_shared_methods/GEX_normalization.md -->
 
-For each aggregation, the quality-controlled gene-expression matrices are combined with their GEM-well-prefixed barcodes. Genes with 50 or fewer total counts are excluded before dimensional reduction. Normalization and dimensional reduction use either the disk-backed BPCells Pearson-residual workflow or Seurat `SCTransform` [@parks2025_bpcells; @hafemeister2019_sctransform]. With the BPCells backend, analytic Pearson residuals are computed with one overdispersion parameter (θ = 100) for all genes and clipped to ±√*N* for *N* nuclei [@lause2021_pearson_residuals]. Per-gene estimates of θ would absorb differences between cell types and flatten marker-gene residuals, and the √*N* clip keeps markers of rare populations [@lause2021_pearson_residuals]. Configured cell-level covariates can be regressed out. The 3,000 genes with the highest residual variance are kept, and a truncated singular-value decomposition gives at least 50 principal components, of which the configured ones are used downstream. It reads these genes' counts from memory in a fixed number of blocks, so its result does not depend on the number of threads. The Seurat backend applies SCTransform with its v2 regularization to the same cells and genes [@choudhary2022_sctransform_v2]. It keeps the same number of variable features and computes the principal components from the residual matrix. A cell-cycle difference score can be regressed out but is not by default. Its S and G2M scores are computed from log-normalized counts with the 2019 Seurat cell-cycle gene sets [@tirosh2016_melanoma].
+For each aggregation, the quality-controlled gene-expression matrices are combined with their GEM-well-prefixed barcodes.
+Genes with 50 or fewer total counts are excluded before dimensional reduction.
+Normalization and dimensional reduction use either the disk-backed BPCells Pearson-residual workflow or Seurat `SCTransform` [@parks2025_bpcells; @hafemeister2019_sctransform].
+With the BPCells backend, analytic Pearson residuals are computed with one overdispersion parameter (θ = 100) for all genes and clipped to ±√*N* for *N* nuclei [@lause2021_pearson_residuals].
+Per-gene estimates of θ would absorb differences between cell types and flatten marker-gene residuals, and the √*N* clip keeps markers of rare populations [@lause2021_pearson_residuals].
+Configured cell-level covariates can be regressed out.
+The 3,000 genes with the highest residual variance are kept, and a truncated singular-value decomposition gives at least 50 principal components, of which the configured ones are used downstream.
+It reads these genes' counts from memory in a fixed number of blocks, so its result does not depend on the number of threads.
+The Seurat backend applies SCTransform with its v2 regularization to the same cells and genes [@choudhary2022_sctransform_v2].
+It keeps the same number of variable features and computes the principal components from the residual matrix.
+A cell-cycle difference score can be regressed out but is not by default.
+Its S and G2M scores are computed from log-normalized counts with the 2019 Seurat cell-cycle gene sets [@tirosh2016_melanoma].
 
 <!-- end include: website/_shared_methods/GEX_normalization.md -->
 
@@ -1703,11 +1733,23 @@ For each aggregation, the quality-controlled gene-expression matrices are combin
 
 <!-- begin include: website/_shared_methods/batch_correction_and_clustering.md -->
 
-Harmony correction can be applied separately to the selected GEX principal components and ATAC LSI dimensions, with at most 25 iterations and `lambda = 1` [@korsunsky2019_harmony; @patikas2026_harmony2]. It is off by default, since correcting a variable can also remove biology confounded with it [@luecken2022_integration_benchmark]. The configured metadata columns are combined into one interaction batch factor, and the ATAC correction can add its own columns. Nuclei with missing covariate values are removed with a warning.
+Harmony correction can be applied separately to the selected GEX principal components and ATAC LSI dimensions, with at most 25 iterations and `lambda = 1` [@korsunsky2019_harmony; @patikas2026_harmony2].
+It is off by default, since correcting a variable can also remove biology confounded with it [@luecken2022_integration_benchmark].
+The configured metadata columns are combined into one interaction batch factor, and the ATAC correction can add its own columns.
+Nuclei with missing covariate values are removed with a warning.
 
-For each modality, the nearest neighbors of every nucleus are found once on the selected dimensions, by hierarchical navigable small world (HNSW) search with cosine distance [@malkov2020_hnsw; @melville2024_rcpphnsw]. The search index is built on one thread, so a rebuild finds the same neighbors, while the search itself runs in parallel. Clustering and UMAP share these neighbors. They are converted to a shared-nearest-neighbor (SNN) graph with Jaccard weights, removing edges with weights below 1/15. The graph is clustered with the modularity objective of the Leiden algorithm in ten iterations [@parks2025_bpcells; @traag2019_leiden]. Clusters are renumbered by size, and clusters of fewer than 100 nuclei by default are removed from the GEX, ATAC and WNN clusterings. UMAP embeddings are computed with uwot from the same neighbors [@mcinnes2018_umap; @melville2026_uwot]. GEX and ATAC layouts start from the first two principal components of the clustering dimensions, and WNN layouts from a spectral embedding of the neighbor graph. uwot's batch optimization gives the same layout for any number of threads.
+For each modality, the nearest neighbors of every nucleus are found once on the selected dimensions, by hierarchical navigable small world (HNSW) search with cosine distance [@malkov2020_hnsw; @melville2024_rcpphnsw].
+The search index is built on one thread, so a rebuild finds the same neighbors, while the search itself runs in parallel.
+Clustering and UMAP share these neighbors.
+They are converted to a shared-nearest-neighbor (SNN) graph with Jaccard weights, removing edges with weights below 1/15.
+The graph is clustered with the modularity objective of the Leiden algorithm in ten iterations [@parks2025_bpcells; @traag2019_leiden].
+Clusters are renumbered by size, and clusters of fewer than 100 nuclei by default are removed from the GEX, ATAC and WNN clusterings.
+UMAP embeddings are computed with uwot from the same neighbors [@mcinnes2018_umap; @melville2026_uwot].
+GEX and ATAC layouts start from the first two principal components of the clustering dimensions, and WNN layouts from a spectral embedding of the neighbor graph.
+uwot's batch optimization gives the same layout for any number of threads.
 
-Most clusters below the size threshold hold a single nucleus or a few nuclei that share too few neighbors with any larger cluster, so the filter mainly removes such outlier nuclei. Rare populations smaller than the threshold are removed as well.
+Most clusters below the size threshold hold a single nucleus or a few nuclei that share too few neighbors with any larger cluster, so the filter mainly removes such outlier nuclei.
+Rare populations smaller than the threshold are removed as well.
 
 <!-- end include: website/_shared_methods/batch_correction_and_clustering.md -->
 
@@ -1717,9 +1759,34 @@ Most clusters below the size threshold hold a single nucleus or a few nuclei tha
 
 <!-- begin include: website/_shared_methods/cell_type_annotation.md -->
 
-Cell-type annotation uses GEX marker signatures supplied by the user. Signatures list positive markers and, optionally, genes expected to be absent. Genes missing from the count matrix stop the run with an error before scoring. Scores are computed with a BPCells-based implementation of UCell scoring [@andreatta2021_ucell; @parks2025_bpcells]. It processes the raw GEX counts in blocks of limited size and reproduces UCell's per-cell descending ranks, rank truncation at 1,500 genes, positive and negative signatures and lower-bound clipping. Working in blocks avoids loading the whole matrix or building a Seurat object only for scoring. The pipeline does not use the UCell package itself. Validation instead requires agreement with the UCell reference to within 10^−12^. Signed signatures are clipped at zero per cell before averaging. The same scoring annotates the GEX, ATAC and WNN clusters. WNN labels can use their own marker sets, whose matched controls come from the same GEX reference nuclei.
+Cell-type annotation uses GEX marker signatures supplied by the user.
+Signatures list positive markers and, optionally, genes expected to be absent.
+Genes missing from the count matrix stop the run with an error before scoring.
+Scores are computed with a BPCells-based implementation of UCell scoring [@andreatta2021_ucell; @parks2025_bpcells].
+It processes the raw GEX counts in blocks of limited size and reproduces UCell's per-cell descending ranks, rank truncation at 1,500 genes, positive and negative signatures and lower-bound clipping.
+Working in blocks avoids loading the whole matrix or building a Seurat object only for scoring.
+The pipeline does not use the UCell package itself.
+Validation instead requires agreement with the UCell reference to within 10^−12^.
+Signed signatures are clipped at zero per cell before averaging.
+The same scoring annotates the GEX, ATAC and WNN clusters.
+WNN labels can use their own marker sets, whose matched controls come from the same GEX reference nuclei.
 
-Raw UCell scores are not comparable between signatures, because some gene sets score highly by chance. Each label's cluster-level mean score is therefore compared with 999 random control signatures matched on gene abundance and detection. The control reference samples up to 50 nuclei per GEM well from the GEX metadata before doublet filtering. The GEX, ATAC and WNN annotations thus share the same controls, whatever nuclei each stage keeps. For each control signature, the markers are taken in random order. Each is replaced by a gene drawn from its 50 nearest eligible candidates not yet used in that signature. Candidates exclude all marker genes and undetected genes. A label's adjusted score in a cluster is its observed mean minus the 95th percentile of its matched controls. The label with the highest adjusted score is the candidate. Its advantage is the smaller of its lead over zero and its lead over the runner-up. The candidate is assigned when its advantage is positive and at least a minimum configured separately for the GEX, ATAC and WNN clusters (0.05 by default). Otherwise, the cluster remains unassigned, with the candidate and reason kept. Requiring a lead over both the background and the runner-up leaves ambiguous clusters unassigned rather than forcing a label. Raising the minimum can therefore only make assigned clusters unassigned, never relabel them. Each unassigned cluster keeps its own label, `Unassigned_cluster_<id>`, so doublet detection, pseudobulks and per-cell-type tests never pool unrelated unassigned clusters. Because annotation depends on the supplied signatures and their level of detail, labels can represent either cell types or broader groups of cells, such as a lineage or a tissue of origin.
+Raw UCell scores are not comparable between signatures, because some gene sets score highly by chance.
+Each label's cluster-level mean score is therefore compared with 999 random control signatures matched on gene abundance and detection.
+The control reference samples up to 50 nuclei per GEM well from the GEX metadata before doublet filtering.
+The GEX, ATAC and WNN annotations thus share the same controls, whatever nuclei each stage keeps.
+For each control signature, the markers are taken in random order.
+Each is replaced by a gene drawn from its 50 nearest eligible candidates not yet used in that signature.
+Candidates exclude all marker genes and undetected genes.
+A label's adjusted score in a cluster is its observed mean minus the 95th percentile of its matched controls.
+The label with the highest adjusted score is the candidate.
+Its advantage is the smaller of its lead over zero and its lead over the runner-up.
+The candidate is assigned when its advantage is positive and at least a minimum configured separately for the GEX, ATAC and WNN clusters (0.05 by default).
+Otherwise, the cluster remains unassigned, with the candidate and reason kept.
+Requiring a lead over both the background and the runner-up leaves ambiguous clusters unassigned rather than forcing a label.
+Raising the minimum can therefore only make assigned clusters unassigned, never relabel them.
+Each unassigned cluster keeps its own label, `Unassigned_cluster_<id>`, so doublet detection, pseudobulks and per-cell-type tests never pool unrelated unassigned clusters.
+Because annotation depends on the supplied signatures and their level of detail, labels can represent either cell types or broader groups of cells, such as a lineage or a tissue of origin.
 
 Annotation outputs also report, for each cluster, how many positive markers are detected in at least 10% of its nuclei.
 
@@ -1733,7 +1800,12 @@ The BPCells-native UCell scorer is compared with UCell in [Algorithm validation]
 
 <!-- begin include: website/_shared_methods/GEX_doublets.md -->
 
-After GEX clustering, `scDblFinder` is applied per GEM well, with `dbr.sd = 1`, to the gene-expression counts of the kept nuclei [@germain2022_scdblfinder]. These counts are CellBender-corrected where configured. Doublets form only within a GEM well, and `dbr.sd = 1` sets the doublet threshold from misclassification alone rather than from an expected doublet rate. scDblFinder receives cluster labels from the annotation: the cell-type label of an assigned cluster, or otherwise its annotation status and identifier. A configured map can optionally collapse these labels. By default, nuclei called as doublets are removed, as are all nuclei of Leiden clusters whose doublet fraction exceeds 0.5.
+After GEX clustering, `scDblFinder` is applied per GEM well, with `dbr.sd = 1`, to the gene-expression counts of the kept nuclei [@germain2022_scdblfinder].
+These counts are CellBender-corrected where configured.
+Doublets form only within a GEM well, and `dbr.sd = 1` sets the doublet threshold from misclassification alone rather than from an expected doublet rate.
+scDblFinder receives cluster labels from the annotation: the cell-type label of an assigned cluster, or otherwise its annotation status and identifier.
+A configured map can optionally collapse these labels.
+By default, nuclei called as doublets are removed, as are all nuclei of Leiden clusters whose doublet fraction exceeds 0.5.
 
 <!-- end include: website/_shared_methods/GEX_doublets.md -->
 
@@ -1755,9 +1827,39 @@ This view runs from the aggregated counts through PCA, Harmony correction, clust
 
 <!-- begin include: website/_shared_methods/ATAC_peaks_and_LSI.md -->
 
-Fragments on the standard chromosomes are used for peak calling. Peak-calling groups are defined by a configurable metadata column of the nuclei kept after GEX processing, by default their GEX clusters. GEX clusters serve because ATAC clustering needs the peak matrix. Calling peaks per group keeps those of rare populations, which a pooled call would dilute [@stuart2021_signac; @granja2021_archr]. Groups larger than 50,000 nuclei are randomly downsampled for peak discovery, which limits the runtime and memory of peak calling. Each group's discovery nuclei are split into two random halves. Both draws are seeded by the group's name, so a group's halves do not change when other groups are added or removed. Peaks are called in each half with either MACS3 or the BPCells tile-based caller [@zhang2008_macs; @parks2025_bpcells]. MACS3 runs on each half's fragment left ends, written in one pass per GEM well, with a −75-bp shift, a 150-bp extension, a 150-bp maximum gap and summit calling. Only one of each fragment's two insertions thus enters the pileup, as when MACS3 reads a fragment file. The fixed gap keeps peaks independent of fragment order, which MACS3's default, the mean length of the first ten input lines, does not. The tile-based caller runs on the stored fragments, using 500-bp tiles and an FDR of 0.01. Consensus peaks follow the ArchR strategy of iterative fixed-width peak construction [@granja2021_archr]. Summits are extended by 250 bp to 500-bp peaks, and peaks overlapping any blacklisted region of the reference genome are removed [@amemiya2019_encode_blacklist; @ogata2023_excluderanges]. Overlapping peaks are collapsed by summit significance, first within each half and then across the two halves. Only peaks called in both halves are kept. Like ArchR's pseudo-replicate rule [@granja2021_archr], this removes weak peaks called in only one half. Each group keeps its strongest peaks, up to 500 per discovery nucleus and 150,000 in all, as ArchR does by default [@granja2021_archr]. The group-level sets are then combined into one non-overlapping consensus set. Here, overlapping peaks are ranked by the quantile of their summit significance within their group. The caps and within-group quantiles keep large or deeply sequenced groups from dominating the consensus [@corces2018_cancer_atac]. For all nuclei kept after GEX processing, BPCells counts each fragment once in every peak that holds at least one of its two Tn5 cut sites. This paired-insertion counting, also Signac's default, counts a fragment with both cut sites in a peak once rather than twice, and ignores fragments that only span a peak [@miao2024_pic; @stuart2021_signac]. Signals that describe positions, such as peak-calling pileups, TSS enrichment and coverage tracks, still use cut sites.
+Fragments on the standard chromosomes are used for peak calling.
+Peak-calling groups are defined by a configurable metadata column of the nuclei kept after GEX processing, by default their GEX clusters.
+GEX clusters serve because ATAC clustering needs the peak matrix.
+Calling peaks per group keeps those of rare populations, which a pooled call would dilute [@stuart2021_signac; @granja2021_archr].
+Groups larger than 50,000 nuclei are randomly downsampled for peak discovery, which limits the runtime and memory of peak calling.
+Each group's discovery nuclei are split into two random halves.
+Both draws are seeded by the group's name, so a group's halves do not change when other groups are added or removed.
+Peaks are called in each half with either MACS3 or the BPCells tile-based caller [@zhang2008_macs; @parks2025_bpcells].
+MACS3 runs on each half's fragment left ends, written in one pass per GEM well, with a −75-bp shift, a 150-bp extension, a 150-bp maximum gap and summit calling.
+Only one of each fragment's two insertions thus enters the pileup, as when MACS3 reads a fragment file.
+The fixed gap keeps peaks independent of fragment order, which MACS3's default, the mean length of the first ten input lines, does not.
+The tile-based caller runs on the stored fragments, using 500-bp tiles and an FDR of 0.01.
+Consensus peaks follow the ArchR strategy of iterative fixed-width peak construction [@granja2021_archr].
+Summits are extended by 250 bp to 500-bp peaks, and peaks overlapping any blacklisted region of the reference genome are removed [@amemiya2019_encode_blacklist; @ogata2023_excluderanges].
+Overlapping peaks are collapsed by summit significance, first within each half and then across the two halves.
+Only peaks called in both halves are kept.
+Like ArchR's pseudo-replicate rule [@granja2021_archr], this removes weak peaks called in only one half.
+Each group keeps its strongest peaks, up to 500 per discovery nucleus and 150,000 in all, as ArchR does by default [@granja2021_archr].
+The group-level sets are then combined into one non-overlapping consensus set.
+Here, overlapping peaks are ranked by the quantile of their summit significance within their group.
+The caps and within-group quantiles keep large or deeply sequenced groups from dominating the consensus [@corces2018_cancer_atac].
+For all nuclei kept after GEX processing, BPCells counts each fragment once in every peak that holds at least one of its two Tn5 cut sites.
+This paired-insertion counting, also Signac's default, counts a fragment with both cut sites in a peak once rather than twice, and ignores fragments that only span a peak [@miao2024_pic; @stuart2021_signac].
+Signals that describe positions, such as peak-calling pileups, TSS enrichment and coverage tracks, still use cut sites.
 
-ATAC dimensional reduction starts from the consensus peak matrix of the nuclei that pass the aggregation-level ATAC exclusions. Signac's TF-IDF method 1, with a scale factor of 10,000, normalizes this matrix [@stuart2021_signac]. A BPCells singular-value decomposition of the result gives the latent semantic indexing (LSI) embeddings [@parks2025_bpcells]. It reads the matrix in a fixed number of blocks, so its result does not depend on the number of threads. When memory allows, the transformed matrix or its counts are held in memory during the decomposition. At least 50 components are computed, of which the configured ones are used downstream. The pipeline does not test them for correlation with sequencing depth. Instead, the default dimension settings leave out the first component, which often reflects depth [@stuart2021_signac].
+ATAC dimensional reduction starts from the consensus peak matrix of the nuclei that pass the aggregation-level ATAC exclusions.
+Signac's TF-IDF method 1, with a scale factor of 10,000, normalizes this matrix [@stuart2021_signac].
+A BPCells singular-value decomposition of the result gives the latent semantic indexing (LSI) embeddings [@parks2025_bpcells].
+It reads the matrix in a fixed number of blocks, so its result does not depend on the number of threads.
+When memory allows, the transformed matrix or its counts are held in memory during the decomposition.
+At least 50 components are computed, of which the configured ones are used downstream.
+The pipeline does not test them for correlation with sequencing depth.
+Instead, the default dimension settings leave out the first component, which often reflects depth [@stuart2021_signac].
 
 <!-- end include: website/_shared_methods/ATAC_peaks_and_LSI.md -->
 
@@ -1769,7 +1871,17 @@ ATAC clusters are built from the LSI dimensions as described in [Batch correctio
 
 <!-- begin include: website/_shared_methods/ATAC_filtering_and_doublets.md -->
 
-ATAC processing starts from the nuclei kept after GEX processing. The peak-calling groups and the consensus peak matrix are built on this cell set. Per-nucleus quality-control metrics are checked against configured aggregation-level exclusions. The fragments in peaks and their fraction of all fragments are counted from the stored fragments, each fragment once, even when its two cut sites fall in different peaks. After ATAC clustering, a separate ATAC-based `scDblFinder` analysis follows per GEM well, with `dbr.sd = 1`. Instead of scDblFinder's internal per-well feature aggregation, peaks are grouped once into 50 feature groups. The groups come from *k*-means clustering of the peaks' aggregation-wide LSI coordinates on dimensions 2–20 (loadings scaled by the singular values, as in scDblFinder). The peaks of each group are summed with BPCells before scDblFinder's unchanged classifier runs. This change limits memory use, but its scores are not expected to equal those from the internal aggregation. That aggregation transforms every peak within each well, which can exhaust memory before classification. ATAC doublets are removed at the nucleus and cluster level as for GEX.
+ATAC processing starts from the nuclei kept after GEX processing.
+The peak-calling groups and the consensus peak matrix are built on this cell set.
+Per-nucleus quality-control metrics are checked against configured aggregation-level exclusions.
+The fragments in peaks and their fraction of all fragments are counted from the stored fragments, each fragment once, even when its two cut sites fall in different peaks.
+After ATAC clustering, a separate ATAC-based `scDblFinder` analysis follows per GEM well, with `dbr.sd = 1`.
+Instead of scDblFinder's internal per-well feature aggregation, peaks are grouped once into 50 feature groups.
+The groups come from *k*-means clustering of the peaks' aggregation-wide LSI coordinates on dimensions 2–20 (loadings scaled by the singular values, as in scDblFinder).
+The peaks of each group are summed with BPCells before scDblFinder's unchanged classifier runs.
+This change limits memory use, but its scores are not expected to equal those from the internal aggregation.
+That aggregation transforms every peak within each well, which can exhaust memory before classification.
+ATAC doublets are removed at the nucleus and cluster level as for GEX.
 
 <!-- end include: website/_shared_methods/ATAC_filtering_and_doublets.md -->
 
@@ -1781,7 +1893,19 @@ ATAC processing starts from the nuclei kept after GEX processing. The peak-calli
 
 <!-- begin include: website/_shared_methods/motif_accessibility.md -->
 
-Transcription-factor motifs are represented by the 233 sequence-similarity families of the JASPAR 2026 CORE vertebrate collection [@ovekbaydar2026_jaspar]. Families are used because related transcription factors share near-identical motifs, whose matches and accessibility cannot be told apart. The pipeline includes a copy of the familial root motifs and the family membership table. Each root motif is trimmed of flank columns whose total count is less than half of its largest column total. These columns come from a minority of the family's aligned member motifs, so their counts are sparse and can look specific by chance. Scanning with them would restrict matches to that minority's sub-family. The trimmed root motifs are matched to the consensus peaks with `motifmatchr` at its default threshold of P < 5 × 10^−5^ [@schep2025_motifmatchr]. Configured transcription factors are matched to families by name, or by name and motif identifier when a symbol belongs to more than one family. betterChromVAR applies the chromVAR workflow with GC-bias correction to compute analytic motif-family deviations and z-scores for individual nuclei [@schep2017_chromvar; @germain2026_betterchromvar]. All families are tested per ATAC annotation class with one-versus-rest Wilcoxon tests, with Benjamini–Hochberg correction [@benjamini1995_fdr] across all family–class tests. They are also summarized as cell-weighted means per ATAC cluster, GEX cluster and GEX cell type. The configured transcription factors select only the families shown on embeddings. These values measure accessibility associated with a motif family and are not direct measurements of transcription-factor activity.
+Transcription-factor motifs are represented by the 233 sequence-similarity families of the JASPAR 2026 CORE vertebrate collection [@ovekbaydar2026_jaspar].
+Families are used because related transcription factors share near-identical motifs, whose matches and accessibility cannot be told apart.
+The pipeline includes a copy of the familial root motifs and the family membership table.
+Each root motif is trimmed of flank columns whose total count is less than half of its largest column total.
+These columns come from a minority of the family's aligned member motifs, so their counts are sparse and can look specific by chance.
+Scanning with them would restrict matches to that minority's sub-family.
+The trimmed root motifs are matched to the consensus peaks with `motifmatchr` at its default threshold of P < 5 × 10^−5^ [@schep2025_motifmatchr].
+Configured transcription factors are matched to families by name, or by name and motif identifier when a symbol belongs to more than one family.
+betterChromVAR applies the chromVAR workflow with GC-bias correction to compute analytic motif-family deviations and z-scores for individual nuclei [@schep2017_chromvar; @germain2026_betterchromvar].
+All families are tested per ATAC annotation class with one-versus-rest Wilcoxon tests, with Benjamini–Hochberg correction [@benjamini1995_fdr] across all family–class tests.
+They are also summarized as cell-weighted means per ATAC cluster, GEX cluster and GEX cell type.
+The configured transcription factors select only the families shown on embeddings.
+These values measure accessibility associated with a motif family and are not direct measurements of transcription-factor activity.
 
 <!-- end include: website/_shared_methods/motif_accessibility.md -->
 
@@ -1803,7 +1927,22 @@ This view runs from the combined fragments and the GEX-annotated nuclei through 
 
 <!-- begin include: website/_shared_methods/WNN_integration.md -->
 
-GEX and ATAC representations are combined with a BPCells-based implementation of the Seurat weighted-nearest-neighbor (WNN) strategy [@hao2021_multimodal; @parks2025_bpcells]. The native implementation returns neighbor indices, distances and modality weights that clustering, UMAP and SCAVENGE reuse, without building a Seurat object. The GEX and ATAC embeddings, after optional Harmony correction, are aligned by barcode and L2-normalized. For each modality separately, 200 candidate neighbors are then found with the same reproducible hierarchical navigable small world (HNSW) search as for clustering [@malkov2020_hnsw]. multiomeR sets each cell's kernel width in each modality from the configured neighbor count, following Seurat's small-SNN bandwidth strategy. Per-cell modality weights are computed from these kernels by comparing within-modality with cross-modality predictions. The candidates of both modalities are then pooled, and those with the highest weighted kernel scores become the final neighbors. In our tests, Seurat's weights approached 0 or 1 as the number of nuclei grew, because the kernel widths shrink with density. The weights are therefore estimated within random subsets of at most 10,000 nuclei, whereas the neighbors are selected among all nuclei. BPCells builds an SNN graph from the joint neighbors for Leiden clustering, and UMAP uses the joint neighbor lists directly. The joint lists first keep twice the configured number of neighbors. After nuclei in small WNN clusters are removed, each remaining nucleus keeps its highest-scoring remaining neighbors, so no second search or weight estimate is needed. Nuclei left with too few are reselected among the remaining nuclei by exact search, with their original weights and kernel widths. The implementation does not use `Seurat::FindMultiModalNeighbors()`. Because HNSW replaces Seurat's Annoy search, exact equality is not expected. Its validation instead requires the modality weights to correlate with Seurat's, and the neighbors to overlap with Seurat's, above preset thresholds.
+GEX and ATAC representations are combined with a BPCells-based implementation of the Seurat weighted-nearest-neighbor (WNN) strategy [@hao2021_multimodal; @parks2025_bpcells].
+The native implementation returns neighbor indices, distances and modality weights that clustering, UMAP and SCAVENGE reuse, without building a Seurat object.
+The GEX and ATAC embeddings, after optional Harmony correction, are aligned by barcode and L2-normalized.
+For each modality separately, 200 candidate neighbors are then found with the same reproducible hierarchical navigable small world (HNSW) search as for clustering [@malkov2020_hnsw].
+multiomeR sets each cell's kernel width in each modality from the configured neighbor count, following Seurat's small-SNN bandwidth strategy.
+Per-cell modality weights are computed from these kernels by comparing within-modality with cross-modality predictions.
+The candidates of both modalities are then pooled, and those with the highest weighted kernel scores become the final neighbors.
+In our tests, Seurat's weights approached 0 or 1 as the number of nuclei grew, because the kernel widths shrink with density.
+The weights are therefore estimated within random subsets of at most 10,000 nuclei, whereas the neighbors are selected among all nuclei.
+BPCells builds an SNN graph from the joint neighbors for Leiden clustering, and UMAP uses the joint neighbor lists directly.
+The joint lists first keep twice the configured number of neighbors.
+After nuclei in small WNN clusters are removed, each remaining nucleus keeps its highest-scoring remaining neighbors, so no second search or weight estimate is needed.
+Nuclei left with too few are reselected among the remaining nuclei by exact search, with their original weights and kernel widths.
+The implementation does not use `Seurat::FindMultiModalNeighbors()`.
+Because HNSW replaces Seurat's Annoy search, exact equality is not expected.
+Its validation instead requires the modality weights to correlate with Seurat's, and the neighbors to overlap with Seurat's, above preset thresholds.
 
 <!-- end include: website/_shared_methods/WNN_integration.md -->
 
@@ -1815,7 +1954,10 @@ The WNN implementation is compared with Seurat in [Algorithm validation](algorit
 
 <!-- begin include: website/_shared_methods/WNN_cell_set.md -->
 
-WNN analysis uses the nuclei kept after ATAC processing that are present in both embeddings. When small joint clusters are removed, the neighbors and modality weights are recomputed on the kept nuclei, while the cluster labels are kept. The UMAP is computed once, from the final neighbors. The GEX, ATAC and WNN metadata therefore describe successively smaller sets of nuclei, not interchangeable versions of the Cell Ranger cell calls.
+WNN analysis uses the nuclei kept after ATAC processing that are present in both embeddings.
+When small joint clusters are removed, the neighbors and modality weights are recomputed on the kept nuclei, while the cluster labels are kept.
+The UMAP is computed once, from the final neighbors.
+The GEX, ATAC and WNN metadata therefore describe successively smaller sets of nuclei, not interchangeable versions of the Cell Ranger cell calls.
 
 <!-- end include: website/_shared_methods/WNN_cell_set.md -->
 
@@ -1842,7 +1984,16 @@ This page describes the models of the optional differential-analysis module. [Di
 
 <!-- begin include: website/_shared_methods/cell_type_composition.md -->
 
-The differential-analysis module treats donors, rather than nuclei, as the biological replicates. It takes annotation classes from the WNN cell-type label of the final WNN metadata. For cell-type composition, nuclei are counted by donor and annotation class, adding missing combinations as zero counts. Unless the model lists the response classes, the assigned classes observed in at least half of the donors are tested. Rarer classes and unassigned clusters are not tested, as they would only add to the multiple-testing burden, but they still count in every donor's total. Each class is modeled separately in a fixed-effects beta-binomial model with logit link, fitted by `glmmTMB` with the configured formula [@brooks2017_glmmtmb]. Its response has two columns: the numbers of nuclei in that class and in all other classes. Named linear contrasts of the fixed effects are tested with Wald statistics. Fits that fail, do not converge or lack a positive-definite Hessian are reported as non-estimable. Benjamini–Hochberg correction is applied across the tested annotation classes within each model and contrast, but not across contrasts or models.
+The differential-analysis module treats donors, rather than nuclei, as the biological replicates.
+It takes annotation classes from the WNN cell-type label of the final WNN metadata.
+For cell-type composition, nuclei are counted by donor and annotation class, adding missing combinations as zero counts.
+Unless the model lists the response classes, the assigned classes observed in at least half of the donors are tested.
+Rarer classes and unassigned clusters are not tested, as they would only add to the multiple-testing burden, but they still count in every donor's total.
+Each class is modeled separately in a fixed-effects beta-binomial model with logit link, fitted by `glmmTMB` with the configured formula [@brooks2017_glmmtmb].
+Its response has two columns: the numbers of nuclei in that class and in all other classes.
+Named linear contrasts of the fixed effects are tested with Wald statistics.
+Fits that fail, do not converge or lack a positive-definite Hessian are reported as non-estimable.
+Benjamini–Hochberg correction is applied across the tested annotation classes within each model and contrast, but not across contrasts or models.
 
 <!-- end include: website/_shared_methods/cell_type_composition.md -->
 
@@ -1852,18 +2003,46 @@ The differential-analysis module treats donors, rather than nuclei, as the biolo
 
 <!-- begin include: website/_shared_methods/pseudobulk_differential_analyses.md -->
 
-For molecular analyses, GEX and ATAC counts of the final WNN nuclei are summed within each donor–annotation-class combination to form pseudobulk samples. Four feature matrices are tested:
+For molecular analyses, GEX and ATAC counts of the final WNN nuclei are summed within each donor–annotation-class combination to form pseudobulk samples.
+Four feature matrices are tested:
 
 - **Gene expression** (differential gene expression, DGE): gene pseudobulk counts.
 - **Chromatin accessibility** (differential chromatin accessibility, DCA): consensus-peak pseudobulk counts.
 - **Motif-family accessibility** (differential transcription-factor motif accessibility, DTFA): betterChromVAR bias-corrected deviations of the 233 JASPAR motif families, calculated from the pseudobulk ATAC counts [@germain2026_betterchromvar]. This matrix is therefore continuous. Unlike chromVAR *z*-scores, deviations do not grow with sample depth, and no per-sample centering or cross-sample normalization is applied.
 - **Transcription-factor activity** (differential CollecTRI transcription-factor activity, DCTA): signed CollecTRI regulator activities, inferred with the `decoupleR` univariate linear model from filtered, library-size-normalized log-CPM GEX pseudobulks [@muller_dott2023_collectri; @badia2022_decoupler]. Each regulator requires at least five measured targets. The CollecTRI network is used only when its checksum matches the recorded one, and complexes such as AP1 and NF-κB are kept as single regulons.
 
-For each model, donors that miss a model variable or fall outside an optional donor list are removed. Samples outside an optional annotation-class subset are also removed, and the DTFA analysis by default removes samples with fewer than 5,000 ATAC counts. For count matrices, zero-depth samples are removed, features are filtered with the design-aware `edgeR::filterByExpr()` [@chen2025_edger_v4], and library sizes are TMM-normalized with `edgeR::normLibSizes()` [@robinson2009_edger; @robinson2010_tmm].
+For each model, donors that miss a model variable or fall outside an optional donor list are removed.
+Samples outside an optional annotation-class subset are also removed, and the DTFA analysis by default removes samples with fewer than 5,000 ATAC counts.
+For count matrices, zero-depth samples are removed, features are filtered with the design-aware `edgeR::filterByExpr()` [@chen2025_edger_v4], and library sizes are TMM-normalized with `edgeR::normLibSizes()` [@robinson2009_edger; @robinson2010_tmm].
 
-Model matrices are built from a configured formula or custom design function, and contrasts from named linear expressions or custom contrast functions. A configured random effect selects `limma::duplicateCorrelation()` with the random effect as block [@smyth2005_duplicatecorrelation; @ritchie2015_limma]. For counts, voom precision weights [@law2014_voom] are re-estimated for the block and correlation (`edgeR::voomLmFit()`). Weighted fits with a block use a closed-form solution of limma's generalized least squares, computed for all features at once, which agrees with `limma::lmFit()` to floating-point error. Wherever an intra-block correlation is estimated, the consensus is taken from at most 50,000 evenly spaced features, enough to estimate this one value pooled across all features [@smyth2005_duplicatecorrelation] at a fraction of the runtime. The models are still fitted to all features. Without a random effect, count designs with more than one coefficient are fitted with edgeR quasi-likelihood models and tested with quasi-likelihood F-tests [@lund2012_quasi_likelihood; @chen2025_edger_v4]. These models use robust empirical Bayes moderation of the dispersions [@phipson2016_robust_eb]. Continuous matrices and single-coefficient designs use limma. A single-coefficient count design is fitted on the raw counts, without the filtering and normalization above. An optional paired-cell-type route fits each annotation class separately with voom–limma, or limma for continuous matrices. It allows at most one pseudobulk per pairing unit and class. A cross-class contrast is tested on a combined response, restricted to the donors present in every class involved. This response is the contrast-weighted sum of the classes' log-expression. It is weighted by the inverse of its variance, which is computed from the classes' precision weights. The combined response is fitted with the same donor-level design and correlation block, so each feature has its own covariance between classes.
+Model matrices are built from a configured formula or custom design function, and contrasts from named linear expressions or custom contrast functions.
+A configured random effect selects `limma::duplicateCorrelation()` with the random effect as block [@smyth2005_duplicatecorrelation; @ritchie2015_limma].
+For counts, voom precision weights [@law2014_voom] are re-estimated for the block and correlation (`edgeR::voomLmFit()`).
+Weighted fits with a block use a closed-form solution of limma's generalized least squares, computed for all features at once, which agrees with `limma::lmFit()` to floating-point error.
+Wherever an intra-block correlation is estimated, the consensus is taken from at most 50,000 evenly spaced features, enough to estimate this one value pooled across all features [@smyth2005_duplicatecorrelation] at a fraction of the runtime.
+The models are still fitted to all features.
+Without a random effect, count designs with more than one coefficient are fitted with edgeR quasi-likelihood models and tested with quasi-likelihood F-tests [@lund2012_quasi_likelihood; @chen2025_edger_v4].
+These models use robust empirical Bayes moderation of the dispersions [@phipson2016_robust_eb].
+Continuous matrices and single-coefficient designs use limma.
+A single-coefficient count design is fitted on the raw counts, without the filtering and normalization above.
+An optional paired-cell-type route fits each annotation class separately with voom–limma, or limma for continuous matrices.
+It allows at most one pseudobulk per pairing unit and class.
+A cross-class contrast is tested on a combined response, restricted to the donors present in every class involved.
+This response is the contrast-weighted sum of the classes' log-expression.
+It is weighted by the inverse of its variance, which is computed from the classes' precision weights.
+The combined response is fitted with the same donor-level design and correlation block, so each feature has its own covariance between classes.
 
-For each model and contrast, Benjamini–Hochberg FDR is calculated across the tested features, and features with an FDR below 0.05 are significant. DGE contrasts are also tested against the MSigDB Hallmark and Reactome collections [@liberzon2015_hallmark; @milacic2024_reactome] with competitive `camera` tests [@wu2012_camera; @dolgalev2026_msigdbr]. These tests use the contrast's expression, precision weights and design, or the combined response for cross-class contrasts. Each set's inter-gene correlation is estimated from the residuals, and each set needs at least ten tested genes. FDR is calculated within each contrast and collection. A cross-modality comparison maps CollecTRI regulators to JASPAR families. It compares the model *t*-statistics, rather than the raw scales, of transcription-factor activity and motif-family accessibility. Where gene expression is fitted with limma, it also compares TF expression (edgeR tests report no *t*-statistic). Family-level summaries use the median regulator *t*-statistic. An analysis stops with an error rather than returning a model when no samples or testable features remain or residual degrees of freedom are below one. It also fails when a correlation block or contrast is invalid, or when too few shared donors remain for a requested paired-cell-type comparison.
+For each model and contrast, Benjamini–Hochberg FDR is calculated across the tested features, and features with an FDR below 0.05 are significant.
+DGE contrasts are also tested against the MSigDB Hallmark and Reactome collections [@liberzon2015_hallmark; @milacic2024_reactome] with competitive `camera` tests [@wu2012_camera; @dolgalev2026_msigdbr].
+These tests use the contrast's expression, precision weights and design, or the combined response for cross-class contrasts.
+Each set's inter-gene correlation is estimated from the residuals, and each set needs at least ten tested genes.
+FDR is calculated within each contrast and collection.
+A cross-modality comparison maps CollecTRI regulators to JASPAR families.
+It compares the model *t*-statistics, rather than the raw scales, of transcription-factor activity and motif-family accessibility.
+Where gene expression is fitted with limma, it also compares TF expression (edgeR tests report no *t*-statistic).
+Family-level summaries use the median regulator *t*-statistic.
+An analysis stops with an error rather than returning a model when no samples or testable features remain or residual degrees of freedom are below one.
+It also fails when a correlation block or contrast is invalid, or when too few shared donors remain for a requested paired-cell-type comparison.
 
 <!-- end include: website/_shared_methods/pseudobulk_differential_analyses.md -->
 
@@ -1892,7 +2071,19 @@ This page describes the analyses of the optional genetic-enrichment module. [Gen
 
 <!-- begin include: website/_shared_methods/genetic_enrichment_nuclei.md -->
 
-Each multiomeR version uses one fixed Open Targets Platform release, currently 26.03, and downloads its study, credible-set, credible-set evidence and target datasets [@buniello2025_open_targets_platform]. Users can supply their own fine-mapping results as Parquet files in a fixed format. For each configured GWAS, multiomeR retrieves the requested study and fine-mapping result. When selection is automatic, it takes the first available of SuSiE, SuSiE-inf and PICS fine-mapping [@wang2020_susie; @cui2024_susie_inf; @farh2015_pics]. Variants of the study's credible sets (95% sets for Open Targets) with a posterior probability above 0.001 by default are mapped to consensus ATAC peaks. Variant weights that map to the same peak are summed and capped at one. These peak weights form the trait annotation from which analytic nucleus-level chromVAR z-scores are calculated, reusing the GC-bias background of the motif analysis [@schep2017_chromvar; @ulirsch2019_gchromvar; @germain2026_betterchromvar]. The background variance of a weighted sum of peaks scales with the squared weights. betterChromVAR instead scales the variance of its analytic z-scores with the summed weights, so the z-scores are rescaled accordingly. To show which traits are not independent, credible sets are also compared pairwise. Posterior probabilities are summed per variant and normalized to one within each GWAS. The similarity of two GWAS is the sum, over identical variants, of the smaller of their two values. It equals one minus the total variation distance and is not a colocalization test.
+Each multiomeR version uses one fixed Open Targets Platform release, currently 26.03, and downloads its study, credible-set, credible-set evidence and target datasets [@buniello2025_open_targets_platform].
+Users can supply their own fine-mapping results as Parquet files in a fixed format.
+For each configured GWAS, multiomeR retrieves the requested study and fine-mapping result.
+When selection is automatic, it takes the first available of SuSiE, SuSiE-inf and PICS fine-mapping [@wang2020_susie; @cui2024_susie_inf; @farh2015_pics].
+Variants of the study's credible sets (95% sets for Open Targets) with a posterior probability above 0.001 by default are mapped to consensus ATAC peaks.
+Variant weights that map to the same peak are summed and capped at one.
+These peak weights form the trait annotation from which analytic nucleus-level chromVAR z-scores are calculated, reusing the GC-bias background of the motif analysis [@schep2017_chromvar; @ulirsch2019_gchromvar; @germain2026_betterchromvar].
+The background variance of a weighted sum of peaks scales with the squared weights.
+betterChromVAR instead scales the variance of its analytic z-scores with the summed weights, so the z-scores are rescaled accordingly.
+To show which traits are not independent, credible sets are also compared pairwise.
+Posterior probabilities are summed per variant and normalized to one within each GWAS.
+The similarity of two GWAS is the sum, over identical variants, of the smaller of their two values.
+It equals one minus the total variation distance and is not a colocalization test.
 
 <!-- end include: website/_shared_methods/genetic_enrichment_nuclei.md -->
 
@@ -1902,9 +2093,52 @@ Each multiomeR version uses one fixed Open Targets Platform release, currently 2
 
 <!-- begin include: website/_shared_methods/genetic_enrichment_cell_types.md -->
 
-Annotation-class pseudobulk deviations are calculated separately rather than by averaging the nucleus-level results. ATAC counts are summed by the final WNN cell-type labels, which the other analyses also use. Classes with fewer than 100 nuclei, such as isolated unassigned nuclei that a small minimum cluster size keeps, are left out of these and the S-LDSC analyses, because their profiles are too sparse and every class weighs equally in the background model. A betterChromVAR background model is fitted to the resulting peak-by-class matrix. The expected accessibility of each peak averages the depth-normalized class profiles with equal weight. Each class is thus compared with the average class rather than with a reference dominated by the most abundant classes. Background peaks are matched on this expectation and on GC content. The deviation is the accessibility of the weighted peaks minus that of the matched background peaks, relative to their expected accessibility. It thus corresponds to chromVAR's bias-corrected deviation. Each trait's deviations average about zero across classes. A class's mean deviation over many traits therefore reflects the panel of traits rather than a property of the class. A relative deviation also standardizes the deviations across annotation classes within each trait. Significance is tested against a null that keeps the clustering of real GWAS loci, which often place several correlated peaks at one locus. Each trait's credible sets are moved along their chromosomes 10,000 times and scored like the real ones. Credible sets whose lead variants lie within 500 kb of each other move together by 0.5 to 2 Mb, keeping their variant spacing and posterior probabilities. No moved credible set may land on an original one, in the extended MHC (chr6:25–34 Mb), in a peak-free stretch of at least 1 Mb such as a centromere, or off its chromosome. A block without such a move within 2 Mb moves elsewhere on its chromosome. Moved loci fall in fewer and less accessible peaks than real ones, so their raw deviations vary more. The real and moved loci are therefore compared by their background z-scores. This is the deviation's numerator divided by its standard deviation under independently drawn matched background peaks, which scales with the squared peak weights. betterChromVAR 1.1.10 overestimates this background variance for deep counts such as pseudobulks, so it is recomputed from the counts. A class's one-sided P-value is the share of moved copies, plus the real trait, whose background z-score is at least as large. The reported z-score standardizes the real background z-score by the mean and standard deviation of the moved copies. This null is skewed to the right, so normal P-values would be too small. Benjamini–Hochberg-adjusted P-values across all traits and annotation classes are reported. Heatmaps and locus-contribution plots mark classes with one star at P < 0.05 and with two at q < 0.05. When effect sizes are available, an absolute-effect version weights variants by posterior probability times absolute effect size. When only loci carry effects, each locus's lead-variant effect is used. These weights are rescaled to sum to the kept variants' posterior probabilities. The absolute-effect version is tested against the same moved copies, weighted in the same way. Each class deviation is split into additive contributions from its loci and variants, which sum to the class totals. The loci and variants are labeled with the highest-scoring Open Targets locus-to-gene genes [@mountjoy2021_l2g]. Detail plots are drawn for classes with a positive deviation and a z-score of at least 1 by default, in either weighting. They show the top loci by absolute contribution and by combined contribution and effect-size rank.
+Annotation-class pseudobulk deviations are calculated separately rather than by averaging the nucleus-level results.
+ATAC counts are summed by the final WNN cell-type labels, which the other analyses also use.
+Classes with fewer than 100 nuclei, such as isolated unassigned nuclei that a small minimum cluster size keeps, are left out of these and the S-LDSC analyses, because their profiles are too sparse and every class weighs equally in the background model.
+A betterChromVAR background model is fitted to the resulting peak-by-class matrix.
+The expected accessibility of each peak averages the depth-normalized class profiles with equal weight.
+Each class is thus compared with the average class rather than with a reference dominated by the most abundant classes.
+Background peaks are matched on this expectation and on GC content.
+The deviation is the accessibility of the weighted peaks minus that of the matched background peaks, relative to their expected accessibility.
+It thus corresponds to chromVAR's bias-corrected deviation.
+Each trait's deviations average about zero across classes.
+A class's mean deviation over many traits therefore reflects the panel of traits rather than a property of the class.
+A relative deviation also standardizes the deviations across annotation classes within each trait.
+Significance is tested against a null that keeps the clustering of real GWAS loci, which often place several correlated peaks at one locus.
+Each trait's credible sets are moved along their chromosomes 10,000 times and scored like the real ones.
+Credible sets whose lead variants lie within 500 kb of each other move together by 0.5 to 2 Mb, keeping their variant spacing and posterior probabilities.
+No moved credible set may land on an original one, in the extended MHC (chr6:25–34 Mb), in a peak-free stretch of at least 1 Mb such as a centromere, or off its chromosome.
+A block without such a move within 2 Mb moves elsewhere on its chromosome.
+Moved loci fall in fewer and less accessible peaks than real ones, so their raw deviations vary more.
+The real and moved loci are therefore compared by their background z-scores.
+This is the deviation's numerator divided by its standard deviation under independently drawn matched background peaks, which scales with the squared peak weights.
+betterChromVAR 1.1.10 overestimates this background variance for deep counts such as pseudobulks, so it is recomputed from the counts.
+A class's one-sided P-value is the share of moved copies, plus the real trait, whose background z-score is at least as large.
+The reported z-score standardizes the real background z-score by the mean and standard deviation of the moved copies.
+This null is skewed to the right, so normal P-values would be too small.
+Benjamini–Hochberg-adjusted P-values across all traits and annotation classes are reported.
+Heatmaps and locus-contribution plots mark classes with one star at P < 0.05 and with two at q < 0.05.
+When effect sizes are available, an absolute-effect version weights variants by posterior probability times absolute effect size.
+When only loci carry effects, each locus's lead-variant effect is used.
+These weights are rescaled to sum to the kept variants' posterior probabilities.
+The absolute-effect version is tested against the same moved copies, weighted in the same way.
+Each class deviation is split into additive contributions from its loci and variants, which sum to the class totals.
+The loci and variants are labeled with the highest-scoring Open Targets locus-to-gene genes [@mountjoy2021_l2g].
+Detail plots are drawn for classes with a positive deviation and a z-score of at least 1 by default, in either weighting.
+They show the top loci by absolute contribution and by combined contribution and effect-size rank.
 
-Each trait with a class at q < 0.05 gets a top set of classes. Its anchor is the class with the largest deviation among those at q < 0.05. The top set holds the anchor and every class not significantly below it, so classes with larger but nonsignificant deviations join it. Credible sets whose lead variants in peaks lie within 500 kb of each other form one locus. In 1,000 bootstrap samples of these loci, the sampled loci's contributions are summed for each class. Each class keeps the background expectation and denominator of all loci, so the samples approximate rather than repeat the analysis. They give the standard error of each class's shortfall from the anchor. A class is excluded when a one-sided normal test of its shortfall reaches P < 0.05 divided by the number of other classes. Whichever class is the anchor, the Bonferroni inequality ensures that the top set contains the class with the largest true deviation with at least 95% probability. Traits with fewer than 10 loci get no top set, because so few loci give no reliable bootstrap. Heatmaps outline the top sets.
+Each trait with a class at q < 0.05 gets a top set of classes.
+Its anchor is the class with the largest deviation among those at q < 0.05.
+The top set holds the anchor and every class not significantly below it, so classes with larger but nonsignificant deviations join it.
+Credible sets whose lead variants in peaks lie within 500 kb of each other form one locus.
+In 1,000 bootstrap samples of these loci, the sampled loci's contributions are summed for each class.
+Each class keeps the background expectation and denominator of all loci, so the samples approximate rather than repeat the analysis.
+They give the standard error of each class's shortfall from the anchor.
+A class is excluded when a one-sided normal test of its shortfall reaches P < 0.05 divided by the number of other classes.
+Whichever class is the anchor, the Bonferroni inequality ensures that the top set contains the class with the largest true deviation with at least 95% probability.
+Traits with fewer than 10 loci get no top set, because so few loci give no reliable bootstrap.
+Heatmaps outline the top sets.
 
 <!-- end include: website/_shared_methods/genetic_enrichment_cell_types.md -->
 
@@ -1914,7 +2148,20 @@ Each trait with a class at q < 0.05 gets a top set of classes. Its anchor is the
 
 <!-- begin include: website/_shared_methods/genetic_enrichment_SCAVENGE.md -->
 
-SCAVENGE-style trait-relevance scores are calculated from the nucleus-level z-scores on the WNN graph. They use multiomeR's own sparse-matrix implementation of the SCAVENGE propagation strategy rather than the reference package [@yu2022_scavenge]. The reference package's dependencies predate the pipeline's R environment, and the local version propagates directly over the sparse WNN graph. Nuclei whose one-sided normal-tail probability is at most 0.05 are seeds. When they exceed the maximum seed fraction, 5% of nuclei by default, those with the highest z-scores are kept. When no nucleus qualifies, all scores are zero. The WNN graph is made unweighted, with every nonzero edge set to one, and nuclei without edges are excluded. Seed signal is propagated by a random walk with restart probability 0.05 by default until convergence. Nuclei that no seed reaches remain unscored. Scores are capped at their 95th percentile, min–max scaled and multiplied by the mean z-score of the top 1% of nuclei. Unlike the reference, the pipeline computes no permutation P-values. The reference's degree-matched null scatters seeds across the graph, whereas observed seeds cluster within cell types. Nearly every seeded group would therefore appear significant. Scores are summarized per metadata group.
+SCAVENGE-style trait-relevance scores are calculated from the nucleus-level z-scores on the WNN graph.
+They use multiomeR's own sparse-matrix implementation of the SCAVENGE propagation strategy rather than the reference package [@yu2022_scavenge].
+The reference package's dependencies predate the pipeline's R environment, and the local version propagates directly over the sparse WNN graph.
+Nuclei whose one-sided normal-tail probability is at most 0.05 are seeds.
+When they exceed the maximum seed fraction, 5% of nuclei by default, those with the highest z-scores are kept.
+When no nucleus qualifies, all scores are zero.
+The WNN graph is made unweighted, with every nonzero edge set to one, and nuclei without edges are excluded.
+Seed signal is propagated by a random walk with restart probability 0.05 by default until convergence.
+Nuclei that no seed reaches remain unscored.
+Scores are capped at their 95th percentile, min–max scaled and multiplied by the mean z-score of the top 1% of nuclei.
+Unlike the reference, the pipeline computes no permutation P-values.
+The reference's degree-matched null scatters seeds across the graph, whereas observed seeds cluster within cell types.
+Nearly every seeded group would therefore appear significant.
+Scores are summarized per metadata group.
 
 <!-- end include: website/_shared_methods/genetic_enrichment_SCAVENGE.md -->
 
@@ -1926,17 +2173,82 @@ The sparse SCAVENGE implementation is compared with its reference in [Algorithm 
 
 <!-- begin include: website/_shared_methods/genetic_enrichment_SLDSC.md -->
 
-Stratified LD score regression (S-LDSC) tests whether a GWAS's heritability is enriched in variants within the peaks accessible in each annotation class, using genome-wide summary statistics rather than fine-mapped loci [@finucane2015_stratified_ldsc; @finucane2018_ldsc_seg]. It uses the peaks and the ATAC counts summed by the final WNN cell-type labels of the pseudobulk chromVAR analysis. Each class's counts are divided by its total, and each peak's depth-normalized values are divided by their sum across classes. A peak's annotation value for a class is thus its share of the summed class profiles: the chromVAR background model's observed-over-expected ratio divided by the number of classes. A peak equally accessible in all classes therefore gets the same small value in each. An all-peaks annotation marks every peak with reads. Reference variants inside a peak take its values, and all other variants take zero. LD scores of these annotations are computed from the 1000 Genomes European samples on GRCh38 [@auton2015_1000_genomes] for HapMap3 regression variants outside the MHC, with ldsc's bias-corrected squared correlation summed over a 1 cM window [@bulik-sullivan2015_ldsc]. Harmonized summary statistics are taken from the GWAS Catalog [@cerezo2025_gwas_catalog]. A GWAS can instead name another Catalog study or its own summary statistics in GWAS-SSF format on GRCh38 with rsIDs [@hayhurst2022_gwas_ssf], such as a consortium release that the Catalog lacks. The statistics are cleaned as ldsc does. Variants need an rsID, a P-value within the double-precision range, alleles that match the reference without strand ambiguity, and a minor-allele frequency above 0.01 when one is reported. Variants whose sample size is below two-thirds of the 90th percentile are removed. Studies without per-variant sample sizes use the total of the samples in the summary statistics' GWAS-SSF metadata, which also gives the sample size and ancestry shown for each trait. Each class is fitted separately, jointly with the all-peaks annotation and the 97 annotations of the baseline-LD v2.2 model [@gazal2017_baseline_ld]. The class coefficient therefore measures heritability per variant beyond accessible chromatin in general and the baseline functional categories. Regression weights follow ldsc but are computed once per GWAS from the shared annotations. Variants with a chi-square statistic above 80, or above 0.001 times the largest sample size when that is larger, are excluded. Standard errors come from a jackknife over 200 blocks of adjacent variants. A one-sided P-value tests for a positive coefficient, and Benjamini–Hochberg-adjusted values across all traits and classes are reported. The standardized effect size tau* scales the coefficient by the annotation's standard deviation and the number of common variants relative to total heritability. It is left missing when the total heritability estimate is not positive. GWAS without genome-wide summary statistics in the GWAS Catalog or a named file are not analyzed, and non-European GWAS are analyzed with the European reference.
+Stratified LD score regression (S-LDSC) tests whether a GWAS's heritability is enriched in variants within the peaks accessible in each annotation class, using genome-wide summary statistics rather than fine-mapped loci [@finucane2015_stratified_ldsc; @finucane2018_ldsc_seg].
+It uses the peaks and the ATAC counts summed by the final WNN cell-type labels of the pseudobulk chromVAR analysis.
+Each class's counts are divided by its total, and each peak's depth-normalized values are divided by their sum across classes.
+A peak's annotation value for a class is thus its share of the summed class profiles: the chromVAR background model's observed-over-expected ratio divided by the number of classes.
+A peak equally accessible in all classes therefore gets the same small value in each.
+An all-peaks annotation marks every peak with reads.
+Reference variants inside a peak take its values, and all other variants take zero.
+LD scores of these annotations are computed from the 1000 Genomes European samples on GRCh38 [@auton2015_1000_genomes] for HapMap3 regression variants outside the MHC, with ldsc's bias-corrected squared correlation summed over a 1 cM window [@bulik-sullivan2015_ldsc].
+Harmonized summary statistics are taken from the GWAS Catalog [@cerezo2025_gwas_catalog].
+A GWAS can instead name another Catalog study or its own summary statistics in GWAS-SSF format on GRCh38 with rsIDs [@hayhurst2022_gwas_ssf], such as a consortium release that the Catalog lacks.
+The statistics are cleaned as ldsc does.
+Variants need an rsID, a P-value within the double-precision range, alleles that match the reference without strand ambiguity, and a minor-allele frequency above 0.01 when one is reported.
+Variants whose sample size is below two-thirds of the 90th percentile are removed.
+Studies without per-variant sample sizes use the total of the samples in the summary statistics' GWAS-SSF metadata, which also gives the sample size and ancestry shown for each trait.
+Each class is fitted separately, jointly with the all-peaks annotation and the 97 annotations of the baseline-LD v2.2 model [@gazal2017_baseline_ld].
+The class coefficient therefore measures heritability per variant beyond accessible chromatin in general and the baseline functional categories.
+Regression weights follow ldsc but are computed once per GWAS from the shared annotations.
+Variants with a chi-square statistic above 80, or above 0.001 times the largest sample size when that is larger, are excluded.
+Standard errors come from a jackknife over 200 blocks of adjacent variants.
+A one-sided P-value tests for a positive coefficient, and Benjamini–Hochberg-adjusted values across all traits and classes are reported.
+The standardized effect size tau* scales the coefficient by the annotation's standard deviation and the number of common variants relative to total heritability.
+It is left missing when the total heritability estimate is not positive.
+GWAS without genome-wide summary statistics in the GWAS Catalog or a named file are not analyzed, and non-European GWAS are analyzed with the European reference.
 
-Cell-type gene expression is tested in the same way, following LDSC-SEG [@finucane2018_ldsc_seg]. The GEX counts of the donor pseudobulks are summed by class and divided by each class's total. A gene's specificity for a class is its share of these depth-normalized values summed across classes [@skene2018_brain_cell_types]. A gene counts as expressed in a class with at least 10 counts and one count per million there. Each class's gene annotation marks the reference variants within 100 kb of the gene bodies of its most specific expressed genes. These number 10% of the autosomal protein-coding genes expressed in any class, and an all-genes annotation marks the windows of all of them. Where windows overlap, a variant takes the largest value, which for these binary annotations is their union. Each class is fitted in three models with the baseline-LD annotations: its peak annotation with the all-peaks annotation, its gene annotation with the all-genes annotation, and both together with both controls. In the joint model, each coefficient measures the heritability that one modality explains beyond the other. All models share the regression weights of the baseline and all-peaks annotations and the same jackknife blocks. Benjamini–Hochberg adjustment is applied separately to each model and annotation.
+Cell-type gene expression is tested in the same way, following LDSC-SEG [@finucane2018_ldsc_seg].
+The GEX counts of the donor pseudobulks are summed by class and divided by each class's total.
+A gene's specificity for a class is its share of these depth-normalized values summed across classes [@skene2018_brain_cell_types].
+A gene counts as expressed in a class with at least 10 counts and one count per million there.
+Each class's gene annotation marks the reference variants within 100 kb of the gene bodies of its most specific expressed genes.
+These number 10% of the autosomal protein-coding genes expressed in any class, and an all-genes annotation marks the windows of all of them.
+Where windows overlap, a variant takes the largest value, which for these binary annotations is their union.
+Each class is fitted in three models with the baseline-LD annotations: its peak annotation with the all-peaks annotation, its gene annotation with the all-genes annotation, and both together with both controls.
+In the joint model, each coefficient measures the heritability that one modality explains beyond the other.
+All models share the regression weights of the baseline and all-peaks annotations and the same jackknife blocks.
+Benjamini–Hochberg adjustment is applied separately to each model and annotation.
 
-For each model and tested annotation, each trait with a class at q < 0.05 gets a top set of classes. Its anchor is the class with the largest tau* among those at q < 0.05. The top set holds the anchor and every class not significantly below it, so classes with larger but nonsignificant tau* join it. All classes share the jackknife blocks. The standard error of each class's shortfall from the anchor therefore comes from the paired delete-one-block estimates of both tau* values, each scaled by its full-data total heritability. A class is excluded when a one-sided normal test of its shortfall reaches P < 0.05 divided by the number of other classes. Whichever class is the anchor, the Bonferroni inequality ensures that the top set contains the class with the largest true tau* with at least 95% probability. Heatmaps of the peak model colour each class by tau*. They mark classes with one star at P < 0.05 and with two at q < 0.05, and outline the top sets.
+For each model and tested annotation, each trait with a class at q < 0.05 gets a top set of classes.
+Its anchor is the class with the largest tau* among those at q < 0.05.
+The top set holds the anchor and every class not significantly below it, so classes with larger but nonsignificant tau* join it.
+All classes share the jackknife blocks.
+The standard error of each class's shortfall from the anchor therefore comes from the paired delete-one-block estimates of both tau* values, each scaled by its full-data total heritability.
+A class is excluded when a one-sided normal test of its shortfall reaches P < 0.05 divided by the number of other classes.
+Whichever class is the anchor, the Bonferroni inequality ensures that the top set contains the class with the largest true tau* with at least 95% probability.
+Heatmaps of the peak model colour each class by tau*.
+They mark classes with one star at P < 0.05 and with two at q < 0.05, and outline the top sets.
 
-The robustness of each coefficient at q < 0.05 is read from the jackknife. The blocks whose single deletion lowers the coefficient most are deleted together, 1, 5 or 10 at a time, and the model is refitted. The share of the coefficient they carry is reported, with the z-score without them from a jackknife over the remaining blocks. A coefficient that spread evenly over the genome would lose a share close to the deleted fraction of blocks, plus noise. Blocks span about 15 Mb, so this measures concentration only coarsely. Variants above the chi-square cap never enter the fits, so the loci with the largest effects never contribute.
+The robustness of each coefficient at q < 0.05 is read from the jackknife.
+The blocks whose single deletion lowers the coefficient most are deleted together, 1, 5 or 10 at a time, and the model is refitted.
+The share of the coefficient they carry is reported, with the z-score without them from a jackknife over the remaining blocks.
+A coefficient that spread evenly over the genome would lose a share close to the deleted fraction of blocks, plus noise.
+Blocks span about 15 Mb, so this measures concentration only coarsely.
+Variants above the chi-square cap never enter the fits, so the loci with the largest effects never contribute.
 
-Annotation strategies are compared at matched sizes, because enrichment depends on how much of the genome an annotation covers. For each class, peaks are ranked by their accessibility share and gene windows by expression specificity. A variant in overlapping windows takes the highest specificity among them. Peaks or window pieces are added in this order until they hold 0.5%, 1%, 2% or 5% of the common (MAF > 5%) reference variants. Pieces are kept whole and ties keep genomic order, so an annotation can exceed its share by one piece. All consensus peaks together hold about 10% of common variants, so larger peak annotations would lose their class specificity. A reference annotation of each strategy ranks the same peaks or genes at random. Each binary annotation is fitted with the 97 baseline-LD annotations, which also set the regression weights. Its heritability share sums the fitted per-variant heritability of the whole model over the annotation's common variants, as ldsc's Prop._h2 does [@finucane2015_stratified_ldsc]. Heritability enrichment divides this share by the annotation's share of common variants, with a ratio jackknife standard error over the same 200 blocks. The chi-square cap removes the strongest loci from this statistic. A complementary statistic uses the fine-mapped credible sets of each GWAS instead. Fine-mapped enrichment divides the annotation's share of the summed posterior inclusion probabilities of autosomal credible-set variants by its share of common variants. Variants are assigned by position, so indels and variants missing from the reference count. Its uncertainty comes from 1,000 bootstrap samples of loci, which group the credible sets whose centres lie within 500 kb of each other. Fine-mapping methods differ between sources and some use functional priors, so each result keeps its source's method. Pairs of GWAS and class are called enriched when a single-modality model reaches q < 0.05. Summaries across pairs or GWAS report medians with 95% intervals from 1,000 bootstrap samples of GWAS. A strategy's specificity is each GWAS's median enrichment in its enriched classes divided by that in its other classes, when both are positive. Small peak annotations hold only the credible-set variants inside them, while gene windows hold whole credible sets, so imprecise fine-mapping lowers the fine-mapped enrichment of peaks more.
+Annotation strategies are compared at matched sizes, because enrichment depends on how much of the genome an annotation covers.
+For each class, peaks are ranked by their accessibility share and gene windows by expression specificity.
+A variant in overlapping windows takes the highest specificity among them.
+Peaks or window pieces are added in this order until they hold 0.5%, 1%, 2% or 5% of the common (MAF > 5%) reference variants.
+Pieces are kept whole and ties keep genomic order, so an annotation can exceed its share by one piece.
+All consensus peaks together hold about 10% of common variants, so larger peak annotations would lose their class specificity.
+A reference annotation of each strategy ranks the same peaks or genes at random.
+Each binary annotation is fitted with the 97 baseline-LD annotations, which also set the regression weights.
+Its heritability share sums the fitted per-variant heritability of the whole model over the annotation's common variants, as ldsc's Prop._h2 does [@finucane2015_stratified_ldsc].
+Heritability enrichment divides this share by the annotation's share of common variants, with a ratio jackknife standard error over the same 200 blocks.
+The chi-square cap removes the strongest loci from this statistic.
+A complementary statistic uses the fine-mapped credible sets of each GWAS instead.
+Fine-mapped enrichment divides the annotation's share of the summed posterior inclusion probabilities of autosomal credible-set variants by its share of common variants.
+Variants are assigned by position, so indels and variants missing from the reference count.
+Its uncertainty comes from 1,000 bootstrap samples of loci, which group the credible sets whose centres lie within 500 kb of each other.
+Fine-mapping methods differ between sources and some use functional priors, so each result keeps its source's method.
+Pairs of GWAS and class are called enriched when a single-modality model reaches q < 0.05.
+Summaries across pairs or GWAS report medians with 95% intervals from 1,000 bootstrap samples of GWAS.
+A strategy's specificity is each GWAS's median enrichment in its enriched classes divided by that in its other classes, when both are positive.
+Small peak annotations hold only the credible-set variants inside them, while gene windows hold whole credible sets, so imprecise fine-mapping lowers the fine-mapped enrichment of peaks more.
 
-Agreement with pseudobulk chromVAR is summarized for each GWAS by the Spearman correlation of the two methods' z-scores across classes. For each class, it is the correlation across GWAS after each method's z-scores are standardized within each GWAS.
+Agreement with pseudobulk chromVAR is summarized for each GWAS by the Spearman correlation of the two methods' z-scores across classes.
+For each class, it is the correlation across GWAS after each method's z-scores are standardized within each GWAS.
 
 <!-- end include: website/_shared_methods/genetic_enrichment_SLDSC.md -->
 
@@ -1987,9 +2299,31 @@ This page describes the models of the optional peak–gene correlation module. [
 
 <!-- begin include: website/_shared_methods/peak_gene_pseudobulks.md -->
 
-The optional peak–gene correlation module runs separately in each assigned WNN annotation class of at least 200 nuclei. It requires donor identifiers and per-nucleus GEX and ATAC depth metadata. Classes without them are skipped, and the reason is recorded. Consensus ATAC peaks are paired with gene transcription start sites (TSSs) on the same chromosome within 250 kb of the peak center. Each pair is classified as self-promoter (−1,500 to +500 bp around the TSS), gene-body, proximal (within 10 kb) or distal. Within each class, nuclei of donors contributing at least 40 nuclei are split into mutually exclusive ATAC-state bins. The bins come from *k*-means clustering of scaled ATAC LSI dimensions 2–20, Harmony-corrected where configured. The number of bins is the median number of nuclei per donor divided by 20, rounded down and capped at 20. Counts are summed within each donor–state combination to create non-overlapping pseudobulks. Unlike ArchR's overlapping nearest-neighbor aggregates, which reuse nuclei, disjoint donor–state pseudobulks keep samples independent and donors identifiable [@granja2021_archr]. Pseudobulks of fewer than 20 nuclei are dropped. Donors and states are then removed in repeated rounds until every donor contributes at least two states.
+The optional peak–gene correlation module runs separately in each assigned WNN annotation class of at least 200 nuclei.
+It requires donor identifiers and per-nucleus GEX and ATAC depth metadata.
+Classes without them are skipped, and the reason is recorded.
+Consensus ATAC peaks are paired with gene transcription start sites (TSSs) on the same chromosome within 250 kb of the peak center.
+Each pair is classified as self-promoter (−1,500 to +500 bp around the TSS), gene-body, proximal (within 10 kb) or distal.
+Within each class, nuclei of donors contributing at least 40 nuclei are split into mutually exclusive ATAC-state bins.
+The bins come from *k*-means clustering of scaled ATAC LSI dimensions 2–20, Harmony-corrected where configured.
+The number of bins is the median number of nuclei per donor divided by 20, rounded down and capped at 20.
+Counts are summed within each donor–state combination to create non-overlapping pseudobulks.
+Unlike ArchR's overlapping nearest-neighbor aggregates, which reuse nuclei, disjoint donor–state pseudobulks keep samples independent and donors identifiable [@granja2021_archr].
+Pseudobulks of fewer than 20 nuclei are dropped.
+Donors and states are then removed in repeated rounds until every donor contributes at least two states.
 
-GEX and ATAC pseudobulk counts are separately scaled to counts per million, using the pseudobulk depth from the metadata, and log1p-transformed. Genes and peaks must be detected in at least 5% of pseudobulks. Each chromosome's analysis requires at least 10 pseudobulks and 5 residual degrees of freedom. A measurement-support filter then removes peak–gene pairs whose gene and peak are not both supported. Like `edgeR::filterByExpr()`, it drops pairs too sparsely measured for reliable inference, which also cuts runtime and the multiple-testing burden [@chen2025_edger_v4]. Its count thresholds are scaled by each pseudobulk's depth relative to the class median, but never fall below 2. The gene and the peak must each reach their thresholds in at least the larger of a minimum number and a fraction of the pseudobulks. They must also do so in at least two pseudobulks of each of a minimum number of shared donors. The lenient preset requires RNA and ATAC counts of at least 5 and 3, the larger of 6 pseudobulks and 10% of them, and two shared donors. The default moderate preset raises the counts to 10 and 5. The strict preset also requires the larger of 10 pseudobulks and 20% of them, and three shared donors with three supporting pseudobulks each. Excluded pairs are never tested and do not enter the multiple-testing family.
+GEX and ATAC pseudobulk counts are separately scaled to counts per million, using the pseudobulk depth from the metadata, and log1p-transformed.
+Genes and peaks must be detected in at least 5% of pseudobulks.
+Each chromosome's analysis requires at least 10 pseudobulks and 5 residual degrees of freedom.
+A measurement-support filter then removes peak–gene pairs whose gene and peak are not both supported.
+Like `edgeR::filterByExpr()`, it drops pairs too sparsely measured for reliable inference, which also cuts runtime and the multiple-testing burden [@chen2025_edger_v4].
+Its count thresholds are scaled by each pseudobulk's depth relative to the class median, but never fall below 2.
+The gene and the peak must each reach their thresholds in at least the larger of a minimum number and a fraction of the pseudobulks.
+They must also do so in at least two pseudobulks of each of a minimum number of shared donors.
+The lenient preset requires RNA and ATAC counts of at least 5 and 3, the larger of 6 pseudobulks and 10% of them, and two shared donors.
+The default moderate preset raises the counts to 10 and 5.
+The strict preset also requires the larger of 10 pseudobulks and 20% of them, and three shared donors with three supporting pseudobulks each.
+Excluded pairs are never tested and do not enter the multiple-testing family.
 
 <!-- end include: website/_shared_methods/peak_gene_pseudobulks.md -->
 
@@ -1999,9 +2333,40 @@ GEX and ATAC pseudobulk counts are separately scaled to counts per million, usin
 
 <!-- begin include: website/_shared_methods/peak_gene_models.md -->
 
-GEX and ATAC values are residualized against donor, scaled log RNA and ATAC depth and the class's accessibility components described below. The Pearson correlation of the residuals is reported as a descriptive summary. The hierarchical analysis fits donor fixed intercepts, depth covariates, the accessibility components and a donor-varying slope for the within-donor-centered peak value. It uses profiled restricted maximum likelihood, with Kenward–Roger inference for the average slope [@kenward1997_kenward_roger]. The donor-varying slope makes donors rather than pseudobulks the units of inference. Kenward–Roger adjusts its standard error and degrees of freedom for the small number of donors. A peak is tested only when its accessibility varies within at least eight donors. With fewer, the random-slope test has too few degrees of freedom to be informative, so its pairs remain untested. Fits that fail numerical checks keep their estimates but get no P-value. Peaks and genes that both vary along shared chromatin states correlate whether or not they interact. The accessibility components remove the leading states. They are the top ten principal components, or one per ten residual degrees of freedom when fewer. They are computed from all candidate peaks, across chromosomes, that are accessible in at least 5% of the class's pseudobulks. Each peak enters as its donor- and depth-residualized, standardized log1p CPM. Genes that vary along the remaining states still correlate with many peaks. Each candidate is therefore compared with its own gene's background, like Signac's comparison of each peak–gene correlation with matched background peaks [@stuart2021_signac]. This background consists of up to 200 candidate peaks that lie on the same chromosome but more than 10 Mb from the gene's TSS, scored with the same model. The candidate's signed normal score is the normal quantile of its P-value, signed by the slope. This score is standardized by the mean and SD of the gene's background scores, given at least ten of them. It is then rescaled by the class's background SD within its peak-detection quintile. A candidate's empirical P-value is the share of the class's rescaled background scores that are at least as extreme. These P-values are Benjamini–Hochberg-corrected within each annotation class over the complete eligible pair family, counting untested and unreliable pairs. A candidate link requires an estimable positive average slope above the gene's background mean and an FDR below 0.05, excluding self-promoter peaks. SuSiE fine-mapping prioritizes peaks on the same residualized values for genes with at least one candidate link [@wang2020_susie]. Because neighboring peaks are often co-accessible [@pliner2018_cicero], SuSiE asks which of a gene's correlated peaks jointly explain its expression. It fits up to ten single effects and reports 95% credible sets whose peaks have a minimum absolute correlation (purity) of at least 0.5. Fine-mapping covers up to the 50 genes with the lowest FDR per class and chromosome, and the 500 peaks per gene with the largest absolute residual correlation. These caps limit its runtime. These model-based associations do not establish causal enhancer–gene regulation. Background peaks more than 10 Mb away also cannot separate a specific enhancer from covariation within a local chromatin domain.
+GEX and ATAC values are residualized against donor, scaled log RNA and ATAC depth and the class's accessibility components described below.
+The Pearson correlation of the residuals is reported as a descriptive summary.
+The hierarchical analysis fits donor fixed intercepts, depth covariates, the accessibility components and a donor-varying slope for the within-donor-centered peak value.
+It uses profiled restricted maximum likelihood, with Kenward–Roger inference for the average slope [@kenward1997_kenward_roger].
+The donor-varying slope makes donors rather than pseudobulks the units of inference.
+Kenward–Roger adjusts its standard error and degrees of freedom for the small number of donors.
+A peak is tested only when its accessibility varies within at least eight donors.
+With fewer, the random-slope test has too few degrees of freedom to be informative, so its pairs remain untested.
+Fits that fail numerical checks keep their estimates but get no P-value.
+Peaks and genes that both vary along shared chromatin states correlate whether or not they interact.
+The accessibility components remove the leading states.
+They are the top ten principal components, or one per ten residual degrees of freedom when fewer.
+They are computed from all candidate peaks, across chromosomes, that are accessible in at least 5% of the class's pseudobulks.
+Each peak enters as its donor- and depth-residualized, standardized log1p CPM.
+Genes that vary along the remaining states still correlate with many peaks.
+Each candidate is therefore compared with its own gene's background, like Signac's comparison of each peak–gene correlation with matched background peaks [@stuart2021_signac].
+This background consists of up to 200 candidate peaks that lie on the same chromosome but more than 10 Mb from the gene's TSS, scored with the same model.
+The candidate's signed normal score is the normal quantile of its P-value, signed by the slope.
+This score is standardized by the mean and SD of the gene's background scores, given at least ten of them.
+It is then rescaled by the class's background SD within its peak-detection quintile.
+A candidate's empirical P-value is the share of the class's rescaled background scores that are at least as extreme.
+These P-values are Benjamini–Hochberg-corrected within each annotation class over the complete eligible pair family, counting untested and unreliable pairs.
+A candidate link requires an estimable positive average slope above the gene's background mean and an FDR below 0.05, excluding self-promoter peaks.
+SuSiE fine-mapping prioritizes peaks on the same residualized values for genes with at least one candidate link [@wang2020_susie].
+Because neighboring peaks are often co-accessible [@pliner2018_cicero], SuSiE asks which of a gene's correlated peaks jointly explain its expression.
+It fits up to ten single effects and reports 95% credible sets whose peaks have a minimum absolute correlation (purity) of at least 0.5.
+Fine-mapping covers up to the 50 genes with the lowest FDR per class and chromosome, and the 500 peaks per gene with the largest absolute residual correlation.
+These caps limit its runtime.
+These model-based associations do not establish causal enhancer–gene regulation.
+Background peaks more than 10 Mb away also cannot separate a specific enhancer from covariation within a local chromatin domain.
 
-Top-link plots rank estimable positive hierarchical associations by their uncalibrated Kenward–Roger P-value, without a significance cutoff. They exclude self-promoter peaks but keep gene-body peaks. Each plot shows the gene context, the plotted class's insertion coverage and the donor-residual scatter.
+Top-link plots rank estimable positive hierarchical associations by their uncalibrated Kenward–Roger P-value, without a significance cutoff.
+They exclude self-promoter peaks but keep gene-body peaks.
+Each plot shows the gene context, the plotted class's insertion coverage and the donor-residual scatter.
 
 <!-- end include: website/_shared_methods/peak_gene_models.md -->
 

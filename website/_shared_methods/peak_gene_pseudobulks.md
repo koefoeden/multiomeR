@@ -1,3 +1,25 @@
-The optional peak–gene correlation module runs separately in each assigned WNN annotation class of at least 200 nuclei. It requires donor identifiers and per-nucleus GEX and ATAC depth metadata. Classes without them are skipped, and the reason is recorded. Consensus ATAC peaks are paired with gene transcription start sites (TSSs) on the same chromosome within 250 kb of the peak center. Each pair is classified as self-promoter (−1,500 to +500 bp around the TSS), gene-body, proximal (within 10 kb) or distal. Within each class, nuclei of donors contributing at least 40 nuclei are split into mutually exclusive ATAC-state bins. The bins come from *k*-means clustering of scaled ATAC LSI dimensions 2–20, Harmony-corrected where configured. The number of bins is the median number of nuclei per donor divided by 20, rounded down and capped at 20. Counts are summed within each donor–state combination to create non-overlapping pseudobulks. Unlike ArchR's overlapping nearest-neighbor aggregates, which reuse nuclei, disjoint donor–state pseudobulks keep samples independent and donors identifiable [@granja2021_archr]. Pseudobulks of fewer than 20 nuclei are dropped. Donors and states are then removed in repeated rounds until every donor contributes at least two states.
+The optional peak–gene correlation module runs separately in each assigned WNN annotation class of at least 200 nuclei.
+It requires donor identifiers and per-nucleus GEX and ATAC depth metadata.
+Classes without them are skipped, and the reason is recorded.
+Consensus ATAC peaks are paired with gene transcription start sites (TSSs) on the same chromosome within 250 kb of the peak center.
+Each pair is classified as self-promoter (−1,500 to +500 bp around the TSS), gene-body, proximal (within 10 kb) or distal.
+Within each class, nuclei of donors contributing at least 40 nuclei are split into mutually exclusive ATAC-state bins.
+The bins come from *k*-means clustering of scaled ATAC LSI dimensions 2–20, Harmony-corrected where configured.
+The number of bins is the median number of nuclei per donor divided by 20, rounded down and capped at 20.
+Counts are summed within each donor–state combination to create non-overlapping pseudobulks.
+Unlike ArchR's overlapping nearest-neighbor aggregates, which reuse nuclei, disjoint donor–state pseudobulks keep samples independent and donors identifiable [@granja2021_archr].
+Pseudobulks of fewer than 20 nuclei are dropped.
+Donors and states are then removed in repeated rounds until every donor contributes at least two states.
 
-GEX and ATAC pseudobulk counts are separately scaled to counts per million, using the pseudobulk depth from the metadata, and log1p-transformed. Genes and peaks must be detected in at least 5% of pseudobulks. Each chromosome's analysis requires at least 10 pseudobulks and 5 residual degrees of freedom. A measurement-support filter then removes peak–gene pairs whose gene and peak are not both supported. Like `edgeR::filterByExpr()`, it drops pairs too sparsely measured for reliable inference, which also cuts runtime and the multiple-testing burden [@chen2025_edger_v4]. Its count thresholds are scaled by each pseudobulk's depth relative to the class median, but never fall below 2. The gene and the peak must each reach their thresholds in at least the larger of a minimum number and a fraction of the pseudobulks. They must also do so in at least two pseudobulks of each of a minimum number of shared donors. The lenient preset requires RNA and ATAC counts of at least 5 and 3, the larger of 6 pseudobulks and 10% of them, and two shared donors. The default moderate preset raises the counts to 10 and 5. The strict preset also requires the larger of 10 pseudobulks and 20% of them, and three shared donors with three supporting pseudobulks each. Excluded pairs are never tested and do not enter the multiple-testing family.
+GEX and ATAC pseudobulk counts are separately scaled to counts per million, using the pseudobulk depth from the metadata, and log1p-transformed.
+Genes and peaks must be detected in at least 5% of pseudobulks.
+Each chromosome's analysis requires at least 10 pseudobulks and 5 residual degrees of freedom.
+A measurement-support filter then removes peak–gene pairs whose gene and peak are not both supported.
+Like `edgeR::filterByExpr()`, it drops pairs too sparsely measured for reliable inference, which also cuts runtime and the multiple-testing burden [@chen2025_edger_v4].
+Its count thresholds are scaled by each pseudobulk's depth relative to the class median, but never fall below 2.
+The gene and the peak must each reach their thresholds in at least the larger of a minimum number and a fraction of the pseudobulks.
+They must also do so in at least two pseudobulks of each of a minimum number of shared donors.
+The lenient preset requires RNA and ATAC counts of at least 5 and 3, the larger of 6 pseudobulks and 10% of them, and two shared donors.
+The default moderate preset raises the counts to 10 and 5.
+The strict preset also requires the larger of 10 pseudobulks and 20% of them, and three shared donors with three supporting pseudobulks each.
+Excluded pairs are never tested and do not enter the multiple-testing family.

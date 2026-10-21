@@ -14,8 +14,9 @@ description: Draft or create GitHub issues for multiomeR using labels that exist
 3. Before creating an issue, read the current labels with `gh label list` and
    apply at least one label that exists, such as `bug`, `enhancement`, or
    `documentation`.
-4. Create the issue only when the user explicitly requested publication, then
-   return its URL.
+4. Create the issue only when the user explicitly requested publication, or
+   when the repository's `AGENTS.md` says to file such issues without asking,
+   then return its URL.
 
 Target-impact keywords classify implemented changes in commits and pull
 requests. Do not require them on speculative issues. Apply an impact label only

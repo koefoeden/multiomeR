@@ -98,7 +98,7 @@ curl -fsSL https://pixi.sh/install.sh | sh
 export PATH="$HOME/.pixi/bin:$PATH"
 
 # Install the locked environment, download the demo inputs into example_data/,
-# and install the pinned GitHub versions of BPCells, Signac and betterChromVAR.
+# and install the pinned GitHub versions of Seurat, BPCells, Signac and betterChromVAR.
 pixi run --use-environment-activation-cache --locked --run-post-link-scripts setup-demo
 
 # Start R in that environment.
@@ -698,7 +698,7 @@ Before enabling the module, confirm that:
 - model variables describe donors, not individual nuclei; and
 - each compared group has enough donors for the design and contrasts.
 
-If the models need variables beyond the aggregation's donor metadata, supply a second table in [`differential_analyses_extended_donor_id_metadata_tsv`](parameters.html#differential_analyses_extended_donor_id_metadata_tsv) with the same unique `donor_id` key. Donors missing from it, like donors with missing values, are excluded from the models that use its variables.
+If the models need variables that the aggregation's donor metadata lacks, give a complete donor table in [`differential_analyses_extended_donor_id_metadata_tsv`](parameters.html#differential_analyses_extended_donor_id_metadata_tsv). The module then reads only this table, so it must hold every variable that any model uses, keyed by a unique `donor_id`. Donors missing from it, like donors with missing values, are left out of the models.
 
 ## Outputs
 
@@ -749,9 +749,9 @@ Each branch holds named models; the model and contrast names label the outputs.
 Optional fields narrow a model:
 
 - `donor_ids` restricts the donors in either branch;
-- `cell_type_subset` restricts the cell types whose pseudobulks a feature model tests;
+- `cell_type_subset` restricts the cell types whose pseudobulks a feature model fits. The model pools all selected cell types, or all cell types when the field is omitted, so name one cell type to test it alone;
 - `GEM_well_IDs` restricts the GEM wells that define an abundance model's population; and
-- `cell_types_to_test` restricts the cell types an abundance model tests, while every retained nucleus still counts towards its donor's total.
+- `cell_types_to_test` restricts the cell types an abundance model tests, by default the assigned cell types found in at least half of its donors. Every retained nucleus still counts towards its donor's total.
 
 Donors missing a model variable are excluded. The branches use different models, so their effect sizes are not directly comparable. The methods describe [abundance models](methods_differential_analyses.md#cell-type-composition) and the [feature-model routes](methods_differential_analyses.md#molecular-pseudobulk-analyses), including random effects, custom design and contrast functions and paired cell-type designs.
 
@@ -846,6 +846,7 @@ Before enabling the module, confirm that:
 | Question | Output |
 |---|---|
 | Which variants and peaks carry each study's evidence? | Peak-weight summaries and study and variant-to-peak tables |
+| Do the studies share fine-mapped variants? | A heatmap of credible-set similarity between studies |
 | Which cell types are enriched, and which matters most? | Cell-type chromVAR deviation heatmaps, which outline each study's top set of cell types |
 | Which loci and variants drive a cell type's enrichment? | Locus-contribution heatmaps and bars, and variant detail plots |
 | Which nuclei are trait-relevant? | SCAVENGE trait-relevance scores on the WNN graph, summarized by cell type and cluster |
@@ -890,7 +891,7 @@ my_aggregation:
       summaryStatistics: GWAS/T2D_consortium_GRCh38.tsv.gz
 ```
 
-The [parameter browser](parameters.html#genetic_enrichment_GWAS_studies) lists the columns that S-LDSC reads. Studies without summary statistics, such as FinnGen studies without `summaryStatistics`, appear as grey rows in the S-LDSC plots; the other analyses use their credible sets as before.
+The [parameter browser](parameters.html#genetic_enrichment_GWAS_studies) lists the columns that S-LDSC reads. Studies without summary statistics, such as FinnGen studies or local files without `summaryStatistics`, appear as grey rows in the S-LDSC plots. The other analyses use their credible sets as before.
 
 <details>
 <summary>Columns of a local fine-mapped GWAS file</summary>
@@ -944,6 +945,7 @@ Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtit
 ```text
 <store>/plots/my_aggregation/genetic_enrichment/
 ├── GWAS_peak_weights_barplot.png
+├── GWAS_credible_set_similarity_heatmap.png
 ├── cell_type_pseudobulk/
 │   ├── chromVAR_deviation_heatmaps/
 │   ├── chromVAR_locus_contribution_per_GWAS_heatmaps/
@@ -1002,9 +1004,9 @@ A hierarchical model adjusts for donor, sequencing depth and the cell type's mai
 Before enabling the module, confirm that:
 
 - you have reviewed the aggregation through [checkpoint 8](main_running.md#checkpoint-8) and accept its final WNN cell set and cell-type annotations; and
-- the cell types you want to study contain nuclei from several donors.
+- each cell type you want to study has at least eight donors with at least 40 of its nuclei.
 
-Cell types and donors with too few nuclei are skipped. A cell type from a single donor yields diagnostics but no tests, and the `strict` support filter requires more shared donors than the other presets.
+Cell types and donors with too few nuclei are skipped. A cell type with fewer such donors yields diagnostics but no tests, and the `strict` support filter requires more shared donors than the other presets.
 
 ## Outputs
 
@@ -2451,7 +2453,7 @@ pixi run --use-environment-activation-cache test-amulet-parity
 
 **Deliberate deviations and consequences.** This is not a reimplementation of the classifier, which runs unchanged. Global LSI-derived groups replace scDblFinder's per-GEM-well feature groups, so the aggregated matrix, and therefore scores and calls, can differ; exact parity is not expected. The GEX path calls `scDblFinder::scDblFinder()` directly through the same memory-bounding per-GEM-well wrapper.
 
-**Implementation.** `get_feature_groups_from_LSI_loadings()` and `aggregate_BPCells_rows_by_group()` in `R/processing_GEX_helpers.R`, called from `extra_targets/ATAC_targets.R`.
+**Implementation.** `get_feature_groups_from_LSI()` and `aggregate_BPCells_rows_by_group()` in `R/processing_GEX_helpers.R`, called from `extra_targets/ATAC_targets.R`.
 
 **Validation scope.** The reference-parity fixtures do not establish equivalence for this path. The method is described in [Filtering and doublet removal](methods_primary_module.md#atac-filtering).
 

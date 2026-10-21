@@ -63,7 +63,7 @@ pixi run --use-environment-activation-cache test-amulet-parity
 
 **Deliberate deviations and consequences.** This is not a reimplementation of the classifier, which runs unchanged. Global LSI-derived groups replace scDblFinder's per-GEM-well feature groups, so the aggregated matrix, and therefore scores and calls, can differ; exact parity is not expected. The GEX path calls `scDblFinder::scDblFinder()` directly through the same memory-bounding per-GEM-well wrapper.
 
-**Implementation.** `get_feature_groups_from_LSI_loadings()` and `aggregate_BPCells_rows_by_group()` in `R/processing_GEX_helpers.R`, called from `extra_targets/ATAC_targets.R`.
+**Implementation.** `get_feature_groups_from_LSI()` and `aggregate_BPCells_rows_by_group()` in `R/processing_GEX_helpers.R`, called from `extra_targets/ATAC_targets.R`.
 
 **Validation scope.** The reference-parity fixtures do not establish equivalence for this path. The method is described in [Filtering and doublet removal](methods_primary_module.md#atac-filtering).
 

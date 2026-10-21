@@ -15,7 +15,7 @@ Before enabling the module, confirm that:
 - model variables describe donors, not individual nuclei; and
 - each compared group has enough donors for the design and contrasts.
 
-If the models need variables beyond the aggregation's donor metadata, supply a second table in [`differential_analyses_extended_donor_id_metadata_tsv`](parameters.html#differential_analyses_extended_donor_id_metadata_tsv) with the same unique `donor_id` key. Donors missing from it, like donors with missing values, are excluded from the models that use its variables.
+If the models need variables that the aggregation's donor metadata lacks, give a complete donor table in [`differential_analyses_extended_donor_id_metadata_tsv`](parameters.html#differential_analyses_extended_donor_id_metadata_tsv). The module then reads only this table, so it must hold every variable that any model uses, keyed by a unique `donor_id`. Donors missing from it, like donors with missing values, are left out of the models.
 
 ## Outputs
 
@@ -68,7 +68,7 @@ Optional fields narrow a model:
 - `donor_ids` restricts the donors in either branch;
 - `cell_type_subset` restricts the cell types whose pseudobulks a feature model tests;
 - `GEM_well_IDs` restricts the GEM wells that define an abundance model's population; and
-- `cell_types_to_test` restricts the cell types an abundance model tests, while every retained nucleus still counts towards its donor's total.
+- `cell_types_to_test` restricts the cell types an abundance model tests, by default the assigned cell types found in at least half of its donors. Every retained nucleus still counts towards its donor's total.
 
 Donors missing a model variable are excluded. The branches use different models, so their effect sizes are not directly comparable. The methods describe [abundance models](methods_differential_analyses.md#cell-type-composition) and the [feature-model routes](methods_differential_analyses.md#molecular-pseudobulk-analyses), including random effects, custom design and contrast functions and paired cell-type designs.
 

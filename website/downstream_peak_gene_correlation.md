@@ -11,9 +11,9 @@ A hierarchical model adjusts for donor, sequencing depth and the cell type's mai
 Before enabling the module, confirm that:
 
 - you have reviewed the aggregation through [checkpoint 8](main_running.md#checkpoint-8) and accept its final WNN cell set and cell-type annotations; and
-- the cell types you want to study contain nuclei from several donors.
+- each cell type you want to study has at least eight donors with at least 40 of its nuclei.
 
-Cell types and donors with too few nuclei are skipped. A cell type from a single donor yields diagnostics but no tests, and the `strict` support filter requires more shared donors than the other presets.
+Cell types and donors with too few nuclei are skipped. A cell type with fewer such donors yields diagnostics but no tests, and the `strict` support filter requires more shared donors than the other presets.
 
 ## Outputs
 

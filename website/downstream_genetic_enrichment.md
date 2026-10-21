@@ -28,6 +28,7 @@ Before enabling the module, confirm that:
 | Question | Output |
 |---|---|
 | Which variants and peaks carry each study's evidence? | Peak-weight summaries and study and variant-to-peak tables |
+| Do the studies share fine-mapped variants? | A heatmap of credible-set similarity between studies |
 | Which cell types are enriched, and which matters most? | Cell-type chromVAR deviation heatmaps, which outline each study's top set of cell types |
 | Which loci and variants drive a cell type's enrichment? | Locus-contribution heatmaps and bars, and variant detail plots |
 | Which nuclei are trait-relevant? | SCAVENGE trait-relevance scores on the WNN graph, summarized by cell type and cluster |
@@ -72,7 +73,7 @@ my_aggregation:
       summaryStatistics: GWAS/T2D_consortium_GRCh38.tsv.gz
 ```
 
-The [parameter browser](parameters.html#genetic_enrichment_GWAS_studies) lists the columns that S-LDSC reads. Studies without summary statistics, such as FinnGen studies without `summaryStatistics`, appear as grey rows in the S-LDSC plots; the other analyses use their credible sets as before.
+The [parameter browser](parameters.html#genetic_enrichment_GWAS_studies) lists the columns that S-LDSC reads. Studies without summary statistics, such as FinnGen studies or local files without `summaryStatistics`, appear as grey rows in the S-LDSC plots. The other analyses use their credible sets as before.
 
 <details>
 <summary>Columns of a local fine-mapped GWAS file</summary>
@@ -126,6 +127,7 @@ Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtit
 ```text
 <store>/plots/my_aggregation/genetic_enrichment/
 ├── GWAS_peak_weights_barplot.png
+├── GWAS_credible_set_similarity_heatmap.png
 ├── cell_type_pseudobulk/
 │   ├── chromVAR_deviation_heatmaps/
 │   ├── chromVAR_locus_contribution_per_GWAS_heatmaps/

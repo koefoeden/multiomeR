@@ -33,7 +33,7 @@ curl -fsSL https://pixi.sh/install.sh | sh
 export PATH="$HOME/.pixi/bin:$PATH"
 
 # Install the locked environment, download the demo inputs into example_data/,
-# and install the pinned GitHub versions of BPCells, Signac and betterChromVAR.
+# and install the pinned GitHub versions of Seurat, BPCells, Signac and betterChromVAR.
 pixi run --use-environment-activation-cache --locked --run-post-link-scripts setup-demo
 
 # Start R in that environment.

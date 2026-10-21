@@ -282,7 +282,7 @@ add_GEX_normalized_layers <- function(object, RNA_counts, normalized, variable_f
     SeuratObject::LayerData(object, assay = "RNA", layer = "scale.data") <- normalized$scale_data[, cells, drop = FALSE]
     SeuratObject::VariableFeatures(object[["RNA"]]) <- variable_features
     RNA_normalization$scale.data <- paste0("BPCells Pearson residuals of the variable genes used by the PCA, ",
-      "clipped to [-10, 10], computed lazily; regressed: ", regressed)
+      "clipped to +/- the square root of the number of PCA nuclei, computed lazily; regressed: ", regressed)
   }
   object[["RNA"]]@misc$normalization <- RNA_normalization
   object

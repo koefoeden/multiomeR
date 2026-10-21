@@ -1009,21 +1009,6 @@ run_harmony_on_embedding_matrix <- function(embedding_matrix, metadata_tibble, h
     warning("Removed ", length(barcodes_with_NAs), " cells with NA values in Harmony correction covariates.")
   }
 
-  vars_use <- harmony_correction_metadata_col_names
-  if (length(vars_use) > 1) {
-    # Harmony 2.0.2 can fail in moe_correct_ridge_cpp() with
-    # "inv(): use of LAPACK must be enabled" for multiple covariates in the
-    # pixi/conda build. Collapse them into one explicit interaction batch as a
-    # pragmatic workaround. This is not identical to additive covariate
-    # correction: each observed covariate combination is corrected as its own
-    # batch.
-    metadata <- metadata |>
-      dplyr::mutate(
-        harmony_interaction_batch = interaction(!!!rlang::syms(vars_use), drop = TRUE, sep = "__")
-      )
-    vars_use <- "harmony_interaction_batch"
-  }
-
   harmony_input <- select_embedding_dimensions(
     embedding_matrix = embedding_matrix,
     dims = dims,
@@ -1032,7 +1017,7 @@ run_harmony_on_embedding_matrix <- function(embedding_matrix, metadata_tibble, h
   harmonized_embeddings <- harmony::RunHarmony(
     data_mat = harmony_input,
     meta_data = metadata,
-    vars_use = vars_use,
+    vars_use = harmony_correction_metadata_col_names,
     max_iter = 25,
     lambda = 1,
     ncores = cores,

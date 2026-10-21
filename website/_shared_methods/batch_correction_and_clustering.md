@@ -1,6 +1,6 @@
 Harmony correction can be applied separately to the selected GEX principal components and ATAC LSI dimensions, with at most 25 iterations and `lambda = 1` [@korsunsky2019_harmony; @patikas2026_harmony2].
 It is off by default, since correcting a variable can also remove biology confounded with it [@luecken2022_integration_benchmark].
-The configured metadata columns are combined into one interaction batch factor, and the ATAC correction can add its own columns.
+Harmony corrects each configured metadata column as a separate batch variable, and the ATAC correction can add its own columns.
 Nuclei with missing covariate values are removed with a warning.
 
 For each modality, the nearest neighbors of every nucleus are found once on the selected dimensions, by hierarchical navigable small world (HNSW) search with cosine distance [@malkov2020_hnsw; @melville2024_rcpphnsw].

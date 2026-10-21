@@ -32,7 +32,9 @@ candidate with a clean working tree, once with `configuration/` and once with
 `dev/validation/reports/VALIDATION-<version>.md` and require all preflight
 and output checks to pass; cached target results may be reused.
 
-Order the notes:
+Never add manuscript material to release notes: figures, supplementary tables,
+benchmark records and their tooling, or author and citation changes. Pipeline
+speed measured on the benchmark is not such material. Order the notes:
 
 1. A short intro: what the release does and whether results change.
 2. **What you need to do**, numbered. Step 1, "Update to this release", repeats

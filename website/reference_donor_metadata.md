@@ -52,7 +52,7 @@ When the targets that read the table run, they check that:
 
 ## Extended table for differential analyses
 
-The [differential analyses](downstream_differential_analyses.md) module can read additional donor-level model variables from a second table given in [`differential_analyses_extended_donor_id_metadata_tsv`](parameters.html#differential_analyses_extended_donor_id_metadata_tsv). It must keep the same unique `donor_id` key. If it is not set, the module uses the aggregation's donor table.
+The [differential analyses](downstream_differential_analyses.md) module can read its donor-level model variables from a separate table given in [`differential_analyses_extended_donor_id_metadata_tsv`](parameters.html#differential_analyses_extended_donor_id_metadata_tsv). The module then reads only this table, so it must hold every variable that any model uses, keyed by a unique `donor_id`. If it is not set, the module uses the aggregation's donor table.
 
 ## Public example {#public-example}
 

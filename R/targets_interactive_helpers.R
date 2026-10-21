@@ -1,7 +1,3 @@
-.suffix_stripped_target_name <- function(name) {
-  stringr::str_remove(stringr::str_remove(name, "\\..*"), "_[a-f0-9]{16}$")
-}
-
 .target_commands <- function(names) {
   capture.output(manifest <- targets::tar_manifest(fields = c("name", "command")))
   manifest$command[match(stringr::str_remove(names, "_[a-f0-9]{16}$"), manifest$name)]
@@ -139,7 +135,7 @@ list_distinct_errored_targets <- function(target_name_pattern = ".", tracebacks 
     name <- errors$name[[i]]
     cat(
       "- Full, tar_map-resolved target name: ", name, "\n",
-      "- Suffix-stripped target name: ", .suffix_stripped_target_name(name), "\n",
+      "- Suffix-stripped target name: ", tar_name_wo_suffixes(name), "\n",
       sep = ""
     )
     if (tracebacks) {

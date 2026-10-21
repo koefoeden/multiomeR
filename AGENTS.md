@@ -11,7 +11,9 @@ tracked here. A missing home-level file is normal.
 The manual's sources are the Markdown files under `website/`; the generated
 `website/multiomeR-manual-llm.md` gives compact, repository-wide context. Edit
 documentation with
-[multiomer-edit-documentation](.agents/skills/multiomer-edit-documentation/SKILL.md).
+[multiomer-edit-documentation](.agents/skills/multiomer-edit-documentation/SKILL.md):
+`website/`, its build scripts and `pipeline_manuscript_figures/` must stay
+identical in both repositories.
 
 ## Repository-specific agent workflows
 
@@ -47,6 +49,17 @@ Configuration follows [configuration/README.md](configuration/README.md); read
 settings through `configuration_path()` and resolve the selection during graph
 construction.
 
+## Validation and new tests
+
+Default to **no new tests** for routine pipeline changes. Use the smallest
+relevant validation from the local validation skill; an affected targets run
+and inspection of its outputs usually provide the needed integration check.
+Do not add a permanent test fixture merely to duplicate that evidence.
+
+Add new tests only when explicitly requested. Existing tests may be run when
+they provide relevant validation; successful execution alone does not establish
+scientific correctness.
+
 ## Reusable helper source
 
 Generally reusable process, resource, and structured-output helpers live under
@@ -54,3 +67,11 @@ Generally reusable process, resource, and structured-output helpers live under
 describes how the pipeline and standalone repositories use them. Do not
 duplicate these implementations under the root `R/` directory or in downstream
 runtime packages.
+
+## GitHub destinations
+
+Before creating or modifying a PR, issue, or release, resolve the intended
+repository from the request and verified remotes; specify it explicitly in
+GitHub operations. Confirm the destination base branch for PRs and the
+repository-local tag history for releases; do not infer either from another
+repository.

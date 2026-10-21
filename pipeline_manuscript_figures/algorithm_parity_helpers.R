@@ -79,6 +79,154 @@ get_SCAVENGE_parity_fixture <- function(WNN_results, chromVAR_results, motif_fam
     motif_family = motif_family, n_cells = length(cells), n_features = length(graph@x))
 }
 
+# Per-cell UCell scores from a BPCells count matrix. The pipeline annotates clusters with the
+# native kernel of R/cluster_annotation_helpers.R; this per-cell scorer is what the scoring
+# parity test and Supplementary Table S4 compare with UCell::ScoreSignatures_UCell().
+calculate_BPCells_UCell_scores_from_matrix <- function(counts_matrix,
+                                                       features,
+                                                       max_rank = 1500,
+                                                       chunk_size = 1000,
+                                                       workers = 1,
+                                                       w_neg = 1,
+                                                       ties_method = "average",
+                                                       missing_genes = c("impute", "skip")) {
+  missing_genes <- match.arg(missing_genes)
+  if (is.null(w_neg)) {
+    w_neg <- 1
+  }
+  if (!is.numeric(w_neg) || w_neg < 0) {
+    stop("Weight on negative signatures (w_neg) must be >= 0.")
+  }
+  if (!is.numeric(max_rank)) {
+    stop("Rank cutoff (max_rank) must be numeric.")
+  }
+  if (!is.numeric(workers) || workers < 1) {
+    stop("Number of workers must be >= 1.")
+  }
+
+  features <- normalize_UCell_signature_names(features)
+  max_rank <- min(as.integer(max_rank), nrow(counts_matrix))
+  workers <- as.integer(workers)
+  if (any(lengths(features) > max_rank)) {
+    stop("One or more signatures contain more genes than max_rank. Increase max_rank or use shorter signatures.")
+  }
+
+  feature_indices <- prepare_UCell_signature_indices(
+    features = features,
+    feature_names = rownames(counts_matrix),
+    missing_genes = missing_genes
+  )
+
+  # BPCells-native reimplementation of UCell 2.14.0 scoring. We intentionally mirror
+  # UCell's per-cell descending ranks, max-rank capping, signed positive/negative
+  # signatures, and lower-bound clipping. Validation compares this helper against
+  # UCell::ScoreSignatures_UCell() on generated matrices; numerical output should
+  # match exactly apart from ordinary floating-point representation.
+  chunks <- split(seq_len(ncol(counts_matrix)), ceiling(seq_len(ncol(counts_matrix)) / chunk_size))
+  score_chunk <- function(chunk_idx) {
+    counts_chunk <- as.matrix(counts_matrix[, chunk_idx, drop = FALSE])
+    rank_chunk <- rank_UCell_count_chunk(counts_chunk, ties_method = ties_method)
+    calculate_UCell_scores_from_rank_chunk(
+      rank_chunk = rank_chunk,
+      feature_indices = feature_indices,
+      max_rank = max_rank,
+      w_neg = w_neg
+    )
+  }
+
+  chunk_scores <- if (workers == 1) {
+    lapply(chunks, score_chunk)
+  } else {
+    parallel::mclapply(chunks, score_chunk, mc.cores = workers)
+  }
+  score_matrix <- do.call(rbind, chunk_scores)
+  score_matrix <- score_matrix[colnames(counts_matrix), , drop = FALSE]
+
+  as.data.frame(score_matrix, check.names = FALSE)
+}
+
+normalize_UCell_signature_names <- function(features) {
+  default_names <- paste0("signature_", seq_along(features))
+  if (is.null(names(features))) {
+    names(features) <- default_names
+    return(features)
+  }
+
+  invalid_names <- names(features) == "" | duplicated(names(features))
+  names(features)[invalid_names] <- default_names[invalid_names]
+  features
+}
+
+prepare_UCell_signature_indices <- function(features, feature_names, missing_genes) {
+  lapply(features, function(signature) {
+    negative_features <- grep("-$", unlist(signature), perl = TRUE, value = TRUE)
+    positive_features <- setdiff(unlist(signature), negative_features)
+    positive_features <- gsub("\\+$", "", positive_features, perl = TRUE)
+    negative_features <- gsub("-$", "", negative_features, perl = TRUE)
+
+    list(
+      positive = get_UCell_feature_indices(feature_names, positive_features, missing_genes = missing_genes),
+      negative = get_UCell_feature_indices(feature_names, negative_features, missing_genes = missing_genes)
+    )
+  })
+}
+
+get_UCell_feature_indices <- function(feature_names, signature, missing_genes) {
+  idx <- match(signature, feature_names)
+  if (identical(missing_genes, "skip")) {
+    idx <- idx[!is.na(idx)]
+  } else {
+    idx[is.na(idx)] <- -1L
+  }
+  idx
+}
+
+rank_UCell_count_chunk <- function(counts_chunk, ties_method = "average") {
+  rank_chunk <- matrixStats::colRanks(
+    -counts_chunk,
+    ties.method = ties_method,
+    preserveShape = TRUE
+  )
+  dimnames(rank_chunk) <- dimnames(counts_chunk)
+  rank_chunk
+}
+
+calculate_UCell_scores_from_rank_chunk <- function(rank_chunk, feature_indices, max_rank, w_neg) {
+  scores <- vapply(feature_indices, function(signature_indices) {
+    positive_score <- calculate_UCell_score_from_indices(rank_chunk, signature_indices$positive, max_rank)
+    negative_score <- calculate_UCell_score_from_indices(rank_chunk, signature_indices$negative, max_rank)
+    score <- positive_score - w_neg * negative_score
+    score[score < 0] <- 0
+    score
+  }, numeric(ncol(rank_chunk)))
+
+  if (is.vector(scores)) {
+    scores <- matrix(scores, nrow = ncol(rank_chunk))
+  }
+  rownames(scores) <- colnames(rank_chunk)
+  colnames(scores) <- names(feature_indices)
+  scores
+}
+
+calculate_UCell_score_from_indices <- function(rank_chunk, feature_idx, max_rank) {
+  signature_length <- length(feature_idx)
+  if (signature_length == 0) {
+    return(rep(0, ncol(rank_chunk)))
+  }
+
+  present_idx <- feature_idx[feature_idx > 0]
+  missing_idx <- feature_idx[feature_idx < 0]
+  rank_sum <- rep(length(missing_idx) * max_rank, ncol(rank_chunk))
+  if (length(present_idx) > 0) {
+    signature_ranks <- rank_chunk[present_idx, , drop = FALSE]
+    signature_ranks[signature_ranks >= max_rank] <- max_rank
+    rank_sum <- rank_sum + colSums(signature_ranks)
+  }
+
+  minimum_rank_sum <- signature_length * (signature_length + 1) / 2
+  1 - (rank_sum - minimum_rank_sum) / (signature_length * max_rank - minimum_rank_sum)
+}
+
 # Runners execute in a fresh subprocess with the project runtime loaded; each
 # returns the implementation's result and version.
 

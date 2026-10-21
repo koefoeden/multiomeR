@@ -6,6 +6,7 @@ aggregation <- args[[1]]
 modality <- if (length(args) > 1L) args[[2]] else "GEX"
 cluster_column <- c(GEX = "PCA_harmony_SNN_cluster", ATAC = "LSI_harmony_SNN_cluster",
   WNN = "WNN_harmony_SNN_cluster")[[modality]]
+source("pipeline_manuscript_figures/algorithm_parity_helpers.R")
 source("dev/cluster_annotation_diagnostics/helpers.R")
 
 read_target <- function(name) targets::tar_read_raw(paste(name, aggregation, sep = "."))

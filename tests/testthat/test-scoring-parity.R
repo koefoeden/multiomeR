@@ -2,6 +2,7 @@ load_scoring_test_runtime <- function() {
   if (!exists("summarize_cluster_UCell_counts", mode = "function")) {
     load_project_test_runtime()
   }
+  source_project_file("pipeline_manuscript_figures/algorithm_parity_helpers.R", envir = globalenv())
 }
 
 make_counts_matrix <- function() {

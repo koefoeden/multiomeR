@@ -1680,9 +1680,9 @@ Vireo then demultiplexes the barcodes with the supplied donor genotypes [@huang2
 The most likely singlet donor replaces the GEM-well donor identifier of every barcode.
 Vireo's singlet, doublet and unassigned calls and probabilities are recorded as metadata for the exclusions.
 A BPCells-based implementation of AMULET reads the stored fragments of up to 1,000 bp one by one, without loading them all into memory [@thibodeau2021_amulet].
-This avoids the chromosome-scale `GRanges` objects that scDblFinder builds from the text fragment file.
+This avoids the chromosome-scale `GRanges` objects that scDblFinder builds from the text fragment file [@germain2022_scdblfinder].
 It skips fragments on chrM, chrX and chrY and, for GRCh38, fragments in the AMULET authors' list of repeats, segmental duplications and blacklisted regions, where multi-mapping reads cause spurious overlaps.
-It reproduces the overlap metrics and q-values of `scDblFinder::amulet()` but applies no automatic filter [@germain2022_scdblfinder].
+It reproduces the overlap metrics and q-values of `scDblFinder::amulet()` but applies no automatic filter.
 Because AMULET performs well only on deeply sequenced nuclei, filtering on its q-values is left to the user, and its authors recommend q < 0.01 [@thibodeau2021_amulet].
 
 Configured GEM-well exclusions are filter expressions applied to the called cells of each well.
@@ -1875,7 +1875,7 @@ ATAC processing starts from the nuclei kept after GEX processing.
 The peak-calling groups and the consensus peak matrix are built on this cell set.
 Per-nucleus quality-control metrics are checked against configured aggregation-level exclusions.
 The fragments in peaks and their fraction of all fragments are counted from the stored fragments, each fragment once, even when its two cut sites fall in different peaks.
-After ATAC clustering, a separate ATAC-based `scDblFinder` analysis follows per GEM well, with `dbr.sd = 1`.
+After ATAC clustering, a separate ATAC-based `scDblFinder` analysis follows per GEM well, with `dbr.sd = 1` [@germain2022_scdblfinder].
 Instead of scDblFinder's internal per-well feature aggregation, peaks are grouped once into 50 feature groups.
 The groups come from *k*-means clustering of the peaks' aggregation-wide LSI coordinates on dimensions 2–20 (loadings scaled by the singular values, as in scDblFinder).
 The peaks of each group are summed with BPCells before scDblFinder's unchanged classifier runs.
@@ -1928,7 +1928,7 @@ This view runs from the combined fragments and the GEX-annotated nuclei through 
 <!-- begin include: website/_shared_methods/WNN_integration.md -->
 
 GEX and ATAC representations are combined with a BPCells-based implementation of the Seurat weighted-nearest-neighbor (WNN) strategy [@hao2021_multimodal; @parks2025_bpcells].
-The native implementation returns neighbor indices, distances and modality weights that clustering, UMAP and SCAVENGE reuse, without building a Seurat object.
+The native implementation returns neighbor indices, distances and modality weights that clustering, UMAP and SCAVENGE [@yu2022_scavenge] reuse, without building a Seurat object.
 The GEX and ATAC embeddings, after optional Harmony correction, are aligned by barcode and L2-normalized.
 For each modality separately, 200 candidate neighbors are then found with the same reproducible hierarchical navigable small world (HNSW) search as for clustering [@malkov2020_hnsw].
 multiomeR sets each cell's kernel width in each modality from the configured neighbor count, following Seurat's small-SNN bandwidth strategy.
@@ -2148,8 +2148,8 @@ Heatmaps outline the top sets.
 
 <!-- begin include: website/_shared_methods/genetic_enrichment_SCAVENGE.md -->
 
-SCAVENGE-style trait-relevance scores are calculated from the nucleus-level z-scores on the WNN graph.
-They use multiomeR's own sparse-matrix implementation of the SCAVENGE propagation strategy rather than the reference package [@yu2022_scavenge].
+SCAVENGE-style trait-relevance scores are calculated from the nucleus-level z-scores on the WNN graph [@yu2022_scavenge].
+They use multiomeR's own sparse-matrix implementation of the SCAVENGE propagation strategy rather than the reference package.
 The reference package's dependencies predate the pipeline's R environment, and the local version propagates directly over the sparse WNN graph.
 Nuclei whose one-sided normal-tail probability is at most 0.05 are seeds.
 When they exceed the maximum seed fraction, 5% of nuclei by default, those with the highest z-scores are kept.

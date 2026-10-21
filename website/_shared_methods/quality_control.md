@@ -11,9 +11,9 @@ Vireo then demultiplexes the barcodes with the supplied donor genotypes [@huang2
 The most likely singlet donor replaces the GEM-well donor identifier of every barcode.
 Vireo's singlet, doublet and unassigned calls and probabilities are recorded as metadata for the exclusions.
 A BPCells-based implementation of AMULET reads the stored fragments of up to 1,000 bp one by one, without loading them all into memory [@thibodeau2021_amulet].
-This avoids the chromosome-scale `GRanges` objects that scDblFinder builds from the text fragment file.
+This avoids the chromosome-scale `GRanges` objects that scDblFinder builds from the text fragment file [@germain2022_scdblfinder].
 It skips fragments on chrM, chrX and chrY and, for GRCh38, fragments in the AMULET authors' list of repeats, segmental duplications and blacklisted regions, where multi-mapping reads cause spurious overlaps.
-It reproduces the overlap metrics and q-values of `scDblFinder::amulet()` but applies no automatic filter [@germain2022_scdblfinder].
+It reproduces the overlap metrics and q-values of `scDblFinder::amulet()` but applies no automatic filter.
 Because AMULET performs well only on deeply sequenced nuclei, filtering on its q-values is left to the user, and its authors recommend q < 0.01 [@thibodeau2021_amulet].
 
 Configured GEM-well exclusions are filter expressions applied to the called cells of each well.

@@ -1,5 +1,5 @@
 GEX and ATAC representations are combined with a BPCells-based implementation of the Seurat weighted-nearest-neighbor (WNN) strategy [@hao2021_multimodal; @parks2025_bpcells].
-The native implementation returns neighbor indices, distances and modality weights that clustering, UMAP and SCAVENGE reuse, without building a Seurat object.
+The native implementation returns neighbor indices, distances and modality weights that clustering, UMAP and SCAVENGE [@yu2022_scavenge] reuse, without building a Seurat object.
 The GEX and ATAC embeddings, after optional Harmony correction, are aligned by barcode and L2-normalized.
 For each modality separately, 200 candidate neighbors are then found with the same reproducible hierarchical navigable small world (HNSW) search as for clustering [@malkov2020_hnsw].
 multiomeR sets each cell's kernel width in each modality from the configured neighbor count, following Seurat's small-SNN bandwidth strategy.

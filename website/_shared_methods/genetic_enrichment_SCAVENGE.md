@@ -1,5 +1,5 @@
-SCAVENGE-style trait-relevance scores are calculated from the nucleus-level z-scores on the WNN graph.
-They use multiomeR's own sparse-matrix implementation of the SCAVENGE propagation strategy rather than the reference package [@yu2022_scavenge].
+SCAVENGE-style trait-relevance scores are calculated from the nucleus-level z-scores on the WNN graph [@yu2022_scavenge].
+They use multiomeR's own sparse-matrix implementation of the SCAVENGE propagation strategy rather than the reference package.
 The reference package's dependencies predate the pipeline's R environment, and the local version propagates directly over the sparse WNN graph.
 Nuclei whose one-sided normal-tail probability is at most 0.05 are seeds.
 When they exceed the maximum seed fraction, 5% of nuclei by default, those with the highest z-scores are kept.

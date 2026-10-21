@@ -26,6 +26,21 @@ make_annotation_blocks <- function(clusters, samples, n_blocks = 10L, seed = 202
   blocks
 }
 
+#' Score one signed signature and its matched controls before averaging cells.
+#' Negative genes retain their sign in every control and marker-deletion variant.
+score_signed_UCell_cells <- function(gap, control, genes) {
+  component <- function(selected) {
+    if (!length(selected)) return(matrix(0, control$n_controls + 1L, ncol(gap)))
+    rbind(score_UCell_rank_means(gap, selected, control$max_rank),
+      score_UCell_controls(gap, control, selected, control$max_rank))
+  }
+  positive <- genes[!grepl("-$", genes)]
+  negative <- sub("-$", "", genes[grepl("-$", genes)])
+  scores <- component(positive) - component(negative)
+  scores[] <- pmax(0, scores)
+  scores
+}
+
 #' Aggregate UCell statistics in bounded count chunks, clipping signed scores per cell.
 #' Cluster, stratified deletion-block, and GEM-well summaries share one rank pass.
 #' Only marker/control genes are retained after ranking all genes in each cell.

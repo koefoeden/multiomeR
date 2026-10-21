@@ -165,21 +165,6 @@ prepare_cluster_UCell_controls <- function(counts_matrix, metadata_tibble, marke
   control
 }
 
-#' Score one signed signature and its matched controls before averaging cells.
-#' Negative genes retain their sign in every control and marker-deletion variant.
-score_signed_UCell_cells <- function(gap, control, genes) {
-  component <- function(selected) {
-    if (!length(selected)) return(matrix(0, control$n_controls + 1L, ncol(gap)))
-    rbind(score_UCell_rank_means(gap, selected, control$max_rank),
-      score_UCell_controls(gap, control, selected, control$max_rank))
-  }
-  positive <- genes[!grepl("-$", genes)]
-  negative <- sub("-$", "", genes[grepl("-$", genes)])
-  scores <- component(positive) - component(negative)
-  scores[] <- pmax(0, scores)
-  scores
-}
-
 #' Aggregate cluster UCell statistics in bounded count chunks, clipping signed scores per cell.
 #' Adapted from UCell (Andreatta & Carmona 2021, doi:10.1016/j.csbj.2021.06.043); chunks avoid
 #' loading the whole matrix or building a Seurat object only for scoring.

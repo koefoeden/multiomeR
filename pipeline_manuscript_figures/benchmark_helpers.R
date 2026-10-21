@@ -15,7 +15,7 @@ BENCHMARK_AGGREGATION_RUNS <- c(
   stats::setNames(rep(list("sizing_small"), 5), paste0("sizing_", c(1, 2, 5, 10, 20), "x")),
   list(sizing_31x = "sizing_31x", sizing_91x = "sizing_91x", revision_31x = "revision_base"))
 # Records that span several driver runs, after failures or top-ups, have no single elapsed time.
-BENCHMARK_MULTIPLE_DRIVER_RUNS <- c("comparison", "comparison_lognorm", "comparison_lognorm_91x", "sizing_31x", "sizing_91x")
+BENCHMARK_MULTIPLE_DRIVER_RUNS <- c("comparison", "comparison_lognorm_91x", "sizing_31x", "sizing_91x")
 # The worker cores and RAM that each counted target requested in the run that measured it.
 BENCHMARK_ALLOCATIONS <- file.path(BENCHMARK_DATA_DIR, "benchmark_allocations.tsv")
 BENCHMARK_MODULES <- c("genetic_enrichment", "differential_analyses", "peak_gene_correlation")
@@ -34,9 +34,10 @@ BENCHMARK_EXCLUDED_TARGETS <- c(
 # single-run records, apart from the full revision build (0.53), whose workers waited for other users'
 # jobs on its node.
 BENCHMARK_TASK_OVERHEAD_SECONDS <- 2
-# The cores and GB of the server for which the figures estimate run time, with as many workers of
-# each tier as fit. That is optimistic: the recorded runtimes were measured with fewer steps at once.
-BENCHMARK_BUDGET <- c(cores = 128, RAM_GB = 2000)
+# The cores and GB of the workstation for which the figures estimate run time, with as many steps
+# at once as their requests fit. That is optimistic: the recorded runtimes were measured with fewer
+# steps at once, and some steps use more memory than they request.
+BENCHMARK_BUDGET <- c(cores = 32, RAM_GB = 256)
 # Each revision run changes revision_31x one step further, in this order.
 BENCHMARK_REVISIONS <- c(
   revision_1 = "WNN clustering resolution 0.4 to 0.6",
@@ -74,13 +75,10 @@ SEURAT_SIGNAC_COMPARISON_WORKFLOWS <- local({
     # RNA steps; a script runs the steps one after another.
     "Seurat/Signac" = list(endpoint = "comparison_seurat_signac_object.",
       exclude = "^(?!comparison_seurat_signac_)", sequential = TRUE),
-    # The same chain with Seurat's default log-normalization, measured in its own run from an empty
-    # store, which builds the steps it shares with the SCTransform chain again, and on sizing_91x's
-    # store after its sizing run.
+    # The same chain with Seurat's default log-normalization, which shares the SCTransform chain's
+    # peak calling and count matrices, and on sizing_91x's store after its sizing run.
     "Seurat/Signac log-normalization" = list(endpoint = "comparison_seurat_signac_lognorm_object.",
-      exclude = "^(?!comparison_seurat_signac_)", sequential = TRUE,
-      run = c(stats::setNames(rep("comparison_lognorm", 6), paste0("comparison_", c(1, 2, 5, 10, 20, 31), "x")),
-        sizing_91x = "comparison_lognorm_91x")))
+      exclude = "^(?!comparison_seurat_signac_)", sequential = TRUE, run = list(sizing_91x = "comparison_lognorm_91x")))
 })
 
 benchmark_aggregation_tibble <- function(aggregations) {
@@ -462,9 +460,9 @@ benchmark_worker_attribution_tibble <- function(context) {
 # needs, from their enriched executions; uncounted targets keep their graph position with no
 # runtime. So do input files outside the store, such as configuration tables: targets records a
 # file's modification time as its completion time, so a run records no build of it. The simulated
-# wall time gives each execution the cores and memory that Slurm books for a worker of its tier,
-# within the budget. A sequential workflow's critical path and simulated wall time are the sum of its
-# runtimes, as when a script runs its steps one after another.
+# wall time gives each execution the cores and memory that its target requests, within the budget,
+# as local workers on one machine would take them. A sequential workflow's critical path and
+# simulated wall time are the sum of its runtimes, as when a script runs its steps one after another.
 benchmark_measures <- function(context, executions, scope, counted = rep(TRUE, length(scope)), sequential = FALSE,
                                graph = context$graph) {
   graph <- igraph::induced_subgraph(graph, scope)
@@ -484,7 +482,7 @@ benchmark_measures <- function(context, executions, scope, counted = rep(TRUE, l
   tibble::tibble(
     critical_path_hours = if (sequential) sum(executions$seconds) / 3600 else critical_path_seconds(graph, weights) / 3600,
     simulated_wall_time_hours = if (sequential) sum(executions$seconds) / 3600 else
-      simulate_wall_time_seconds(graph, executions, cbind(executions$tier_booked_cores, executions$tier_booked_RAM_GB),
+      simulate_wall_time_seconds(graph, executions, cbind(executions$cores, executions$RAM_GB),
         BENCHMARK_BUDGET, BENCHMARK_TASK_OVERHEAD_SECONDS) / 3600,
     summarise_executions(executions))
 }
@@ -505,9 +503,9 @@ benchmark_workflow_measures <- function(context, executions, workflow, aggregati
     workflow_scope$scope, workflow_scope$counted, workflow_scope$sequential)
 }
 
-# Like for like: multiomeR, with and without its Seurat exports, and the Seurat/Signac chain
-# on comparison_1x to comparison_31x, all built in one run, and the Seurat/Signac chain with
-# log-normalization, built in its own run and also on sizing_91x, where SCTransform cannot run.
+# Like for like: multiomeR, with and without its Seurat exports, and both Seurat/Signac chains
+# on comparison_1x to comparison_31x, all built on one store, and the Seurat/Signac chain with
+# log-normalization also on sizing_91x, where SCTransform cannot run.
 seurat_signac_comparison_resource_tibble <- function(context) {
   tidyr::expand_grid(aggregation = comparison_aggregation_names(), workflow = names(SEURAT_SIGNAC_COMPARISON_WORKFLOWS)) |>
     tibble::add_row(aggregation = "sizing_91x", workflow = "Seurat/Signac log-normalization") |>
@@ -656,8 +654,8 @@ benchmark_simulation_check <- function(context) {
 }
 
 # Supplementary Figures S2-S4, one per question. S2, same methods: multiomeR on SCTransform with
-# its Seurat exports against the Seurat/Signac chain on SCTransform, each tool with its default
-# normalization, and the RNA non-zero entries against the dgCMatrix limit that stops SCTransform. S3,
+# its Seurat exports against the Seurat/Signac chain on SCTransform, and each tool with its default
+# normalization. S3,
 # sizing: multiomeR's full analysis with its defaults. S4, revisions. All axes are linear from zero, so
 # values and differences read directly, and the smallest aggregations bunch near the origin.
 # Hue gives the tool, orange for Seurat/Signac and blue for multiomeR, and the darker shade each tool's
@@ -759,7 +757,7 @@ plot_benchmark_figures <- function(tables) {
       dplyr::mutate(workflow = "multiomeR (default normalization)")) |>
     dplyr::mutate(workflow = factor(.data$workflow, names(BENCHMARK_WORKFLOW_COLOURS)))
   # Title and axis title of each measure.
-  measures <- list(simulated_wall_time_hours = c("Run time on 128 cores, 2 TB", "Estimated hours"),
+  measures <- list(simulated_wall_time_hours = c("Run time on 32 cores, 256 GB", "Estimated hours"),
     used_CPU_hours = c("CPU time", "CPU-hours"),
     used_RAM_GB_hours = c("Memory use summed over the run", "GB-hours"),
     peak_RAM_GB = c("Memory of the largest worker", "Peak GB"),
@@ -772,21 +770,6 @@ plot_benchmark_figures <- function(tables) {
       ggplot2::scale_colour_manual(values = BENCHMARK_WORKFLOW_COLOURS, guide = "none")
     benchmark_panel(plot, words[[1]], words[[2]])
   })
-  # The joined RNA count matrix that SCTransform converts holds at most 2^31 - 1 non-zero entries. The
-  # label of the largest size, just above that limit, sits a line higher to clear it.
-  sizes <- dplyr::mutate(tables$benchmark_sizes, label = sprintf("%d samples:\n%.2f billion", .data$GEM_well_count, .data$RNA_nonzero_entries / 1e9),
-    vjust = dplyr::if_else(.data$GEM_well_count == max(.data$GEM_well_count), -1.1, -.2))
-  ceiling <- ggplot2::ggplot(sizes, ggplot2::aes(.data$cellranger_input_nuclei, .data$RNA_nonzero_entries)) +
-    ggplot2::geom_hline(yintercept = 2^31 - 1, linetype = "dashed", linewidth = .3, colour = "grey30") +
-    ggplot2::annotate("text", x = min(sizes$cellranger_input_nuclei), y = 2^31 - 1, hjust = 0, vjust = -.4, family = BENCHMARK_FONT,
-      size = 2.1, lineheight = .9, colour = "grey25",
-      label = sprintf("In-memory matrix limit:\n%.2f billion", (2^31 - 1) / 1e9)) +
-    ggplot2::geom_line(linewidth = .5, colour = "grey55") + ggplot2::geom_point(size = 1.2, colour = "grey30") +
-    benchmark_text(data = dplyr::filter(sizes, .data$GEM_well_count %in% c(31, max(.data$GEM_well_count))),
-      ggplot2::aes(label = .data$label, vjust = .data$vjust), hjust = 1.12) +
-    benchmark_nuclei_scale() +
-    benchmark_linear_scale(labels = scales::label_number(scale_cut = scales::cut_short_scale()), top = .3)
-  ceiling <- benchmark_panel(ceiling, "SCTransform's size limit", "Non-zero RNA counts")
 
   # Sizing: multiomeR's full analysis with its defaults. The primary module ran at every size, all three
   # optional modules only at 31 and 91 samples, so their two points stay unconnected; their name gives the
@@ -795,7 +778,7 @@ plot_benchmark_figures <- function(tables) {
     dplyr::filter(!startsWith(.data$scope, "like for like")) |>
     dplyr::mutate(workflow = factor(dplyr::if_else(.data$scope == "primary module", "Primary module", "With optional modules"),
       names(BENCHMARK_SIZING_COLOURS)))
-  sizing_measures <- list(simulated_wall_time_hours = c("Run time on 128 cores, 2 TB", "Estimated hours", "%.1f h"),
+  sizing_measures <- list(simulated_wall_time_hours = c("Run time on 32 cores, 256 GB", "Estimated hours", "%.1f h"),
     used_CPU_hours = c("CPU time", "CPU-hours", "%.0f CPU-hours"),
     peak_RAM_GB = c("Memory of the largest worker", "Peak GB", "%.0f GB"),
     disk_space_GB = c("Disk space", "GB, with Cell Ranger inputs", "%.0f GB"))
@@ -838,7 +821,7 @@ plot_benchmark_figures <- function(tables) {
   revision_plot <- benchmark_panel(revision_plot, "Run time of each change after a full build, in the order applied", NULL) +
     ggplot2::theme(panel.grid.major.y = ggplot2::element_blank(), axis.text.y = ggplot2::element_text(size = 7, hjust = 1))
 
-  list(S2 = benchmark_figure(c(like_panels, list(ceiling)), ncol = 3), S3 = benchmark_figure(sizing_panels, ncol = 2),
+  list(S2 = benchmark_figure(like_panels, ncol = 3), S3 = benchmark_figure(sizing_panels, ncol = 2),
     S4 = revision_plot)
 }
 

@@ -127,8 +127,10 @@ algorithm in one target on the cut sites that multiomeR writes for its
 peak-calling clusters, quantifies the peaks per GEM well with
 `Signac::FeatureMatrix()` and its default fragtk backend into BPCells
 directories, and runs Signac's TF-IDF/LSI on them before building the WNN graph,
-UMAP and clusters. Seurat's kernels use the cores of their Slurm worker, and
-peak calling and quantification run one `future` worker per core. Both
+UMAP and clusters. Each step runs alone in a 32-core, 256-GB Slurm job, as on
+one workstation: Seurat's kernels use its cores, and peak calling and
+quantification run one `future` worker per core, in the fixed chunks of
+future.apply's default scheduling, as Signac's `CallPeaks()` does. Both
 clusterings leave singleton communities unmerged (`group.singletons = FALSE`),
 as multiomeR does: Seurat's default merges each into a cluster in a
 single-threaded loop over singletons and clusters, which took 2.3 of the
@@ -138,10 +140,9 @@ A second conventional chain follows Seurat's default normalization instead of
 SCTransform: `NormalizeData()` log-normalizes the joined counts on disk,
 `FindVariableFeatures()` selects 2,000 variable genes, and `ScaleData()` scales
 only those into an in-memory matrix before the same PCA. Its other steps and
-settings are the SCTransform chain's. It is measured in its own run, the
-`comparison_lognorm` series, which builds all six aggregations from an empty
-store, so it builds the steps that it shares with the SCTransform chain, such as
-peak calling, again. At 91 samples, where SCTransform cannot run, the
+settings are the SCTransform chain's, and it is measured on the same store, so
+both chains share their peak calling and count matrices. At 91 samples, where
+SCTransform cannot run, the
 `comparison_lognorm_91x` series measures it on `sizing_91x`'s store after the
 sizing run.
 
@@ -169,10 +170,10 @@ per-well steps are those of the comparison aggregations. SCTransform cannot run
 at that size in either workflow: Seurat converts the joined count matrix to a
 `dgCMatrix`, which holds at most 2^31 - 1 non-zero entries, and `sizing_91x` has
 2.17 billion. Log-normalization keeps the counts on disk and runs at 91
-samples, so both tools' default normalizations reach that size. S2F shows each
-size's RNA non-zero entries against that limit, the genes detected in each
-called nucleus summed from Cell Ranger's per-barcode metrics. They equal the
-count in Seurat's error. In S2A-E, colour gives the tool, blue for multiomeR and
+samples, so both tools' default normalizations reach that size.
+`data/benchmark_sizes.tsv` gives each size's RNA non-zero entries, the genes
+detected in each called nucleus summed from Cell Ranger's per-barcode metrics,
+which equal the count in Seurat's error. In S2, colour gives the tool, blue for multiomeR and
 orange for Seurat/Signac, and the darker shade each tool's default
 normalization. Each line is named in its colour by tool and normalization
 method: to the right of its last point for lines that end at 31 samples, and
@@ -243,21 +244,20 @@ dashed line at 100%, and careful manual checkpointing narrows that gap.
   steps one after another. Table S6 gives it; the figures show the simulated
   wall time.
 - **Simulated wall time,** which S2A, S3A and S4 show: the same runtimes
-  scheduled on one server with 128 cores and 2 TB (`BENCHMARK_BUDGET`), with as
-  many workers of each tier of `configuration_dev/crew_controllers.R` as fit.
-  Each target goes to the tier its RAM request selects, and each of its
-  executions holds the cores and memory that Slurm books for a worker of that
-  tier, such as one core and 51.5 GB for a light worker. Memory, not cores,
-  limits it: at most 38 light, 15 heavy, 9 large or 3 huge workers fit at once.
-  A target is ready once its upstream targets have finished. Ready executions
+  scheduled on one workstation with 32 cores and 256 GB (`BENCHMARK_BUDGET`),
+  with as many steps at once as fit. Each execution holds the cores and memory
+  that its target requests, as a local worker would, such as one core and 16 GB
+  for a light target. Memory, not cores, limits it: at most 16 light or 4 heavy
+  steps fit at once. A target is ready once its upstream targets have finished. Ready executions
   start in the order they became ready, each as soon as it fits in the free
   cores and memory, so a smaller step can start while an earlier, larger one
   waits. Each multiomeR target also takes 2 s for dispatching, loading and
   saving (`BENCHMARK_TASK_OVERHEAD_SECONDS`). The estimate is optimistic: the
   recorded runtimes were measured with fewer steps running at once, on at most
-  16 light, 6 heavy, one large and one huge worker. The conventional chain's
-  simulated wall time is the sum of its runtimes, as is its critical path, so
-  it takes no per-target overhead.
+  16 light, 6 heavy, one large and one huge worker, and some steps use more
+  memory than they request. The conventional chain's simulated wall time is the
+  sum of its runtimes, measured with each step alone in the workstation's job,
+  as is its critical path, so it takes no per-target overhead.
   `benchmark_simulation_check.tsv` checks the recorded runtimes and that
   overhead against measured runs. It schedules each run on the workers that
   ran it, the 16 light, 6 heavy, one large and one huge worker of
@@ -274,7 +274,7 @@ dashed line at 100%, and careful manual checkpointing narrows that gap.
   the time from the last completion of a target's upstream targets in the run to
   its start, which in large runs includes waiting for a busy worker.
   Records that span several driver runs are left out: `comparison`,
-  `comparison_lognorm`, `comparison_lognorm_91x`, `sizing_31x` and `sizing_91x`.
+  `comparison_lognorm_91x`, `sizing_31x` and `sizing_91x`.
 - **CPU time and memory:** each target's runtime times its job's mean sampled
   CPU use and unreclaimable memory, which leaves out page cache. Jobs too short
   to be sampled get the median of the sampled jobs measured with them. Memory
@@ -283,7 +283,11 @@ dashed line at 100%, and careful manual checkpointing narrows that gap.
 - **Peak memory of a worker:** the largest sampled memory of a worker while
   it ran a counted step, which sets the machine size, and that step. It
   includes memory the worker kept from its earlier steps, so the step that
-  reached it need not be the one that needed it.
+  reached it need not be the one that needed it. The Seurat/Signac steps
+  therefore run garbage collection first: their workstation worker runs the
+  steps of every aggregation one after another, as no script would. Without
+  it, the five-sample peak calling, which ran right after the 31-sample joint
+  object, started at 59 GB and peaked at 63 GB, against 28 GB with it.
 - **Reserved CPU and RAM:** each target's runtime plus its share of its
   worker's idle time, times the cores and memory that Slurm booked for that
   worker: the tier's `cpus_per_task` and `memory_gigabytes_required`, which
@@ -325,17 +329,14 @@ dashed line at 100%, and careful manual checkpointing narrows that gap.
 - Leaving out the analyses that only multiomeR performs keeps its
   like-for-like measures to the shared result; the sizing measures include them.
 
-The series ran from 18 to 20 October 2026 on four nodes of one model (AMD EPYC
+The series ran from 18 to 21 October 2026 on three nodes of one model (AMD EPYC
 7543, 128 cores, 2 TB RAM), each with its workers on its own node and its own
 store on that node's disk:
 
-- `comparison` at commit f9a109d5, with the Seurat/Signac chain's RNA objects,
-  joint objects and summaries rebuilt at 34be77ee, which leaves singleton
-  communities unmerged;
-- `comparison_lognorm` from an empty store at 53f40972, with its RNA and joint
-  objects rebuilt at 34be77ee;
-- `comparison_lognorm_91x` on `sizing_91x`'s store after its sizing run, with
-  peak calling at 947f21b6 and the rest at 34be77ee;
+- `comparison` at commit f9a109d5, with both Seurat/Signac chains measured at
+  594af40e, each step alone on the 32-core, 256-GB workstation worker;
+- `comparison_lognorm_91x` on `sizing_91x`'s store after its sizing run,
+  measured again in the same way;
 - `sizing_small`, which builds `sizing_1x` to `sizing_20x`, at 950472fd, on the
   comparison's node after it had finished;
 - `sizing_31x` and `sizing_91x`, each from an empty store at 113d5633 with all
@@ -353,11 +354,16 @@ patchwork plot, which made those plots cheaper, so the sizing and revision
 series were measured at 950472fd or later; the comparison builds no plot
 targets. The nodes also ran other users' jobs. Their median load averages,
 sampled from 12:00 to 02:00 on 19-20 October and counting the series' own
-workers, were about 50 cores on node_4, 28 on node_2 and 73 on node_3. node_1
+workers, were about 50 cores on node_4 and 28 on node_2. node_1
 was not sampled, and a spot check showed about 29. Times may therefore be
-somewhat longer than on idle nodes. In the SCTransform chain's top-up, all six
-joint objects ran at once, which slowed the 20-sample one: 45 minutes, against
-32 minutes in the first run. S-LDSC's cell-type fits and matched-size
+somewhat longer than on idle nodes. The Seurat/Signac chains were measured
+again on 20 and 21 October, finally with garbage collection at 594af40e. A first log-normalization series on its own node
+read the largest Cell Ranger outputs from network storage 4 to 10 times as
+slowly as the comparison's node, twice, with most cores idle, so that chain was
+moved to the comparison's store. On `comparison_lognorm_91x`'s node, reading
+the 91 Cell Ranger gene-expression matrices took 43 and then 39 minutes while
+its access to network storage was slow, against 8 minutes in the final
+measurement. Each record keeps its latest build. S-LDSC's cell-type fits and matched-size
 annotation records moved from 16 GB to 60 GB workers during the sizing top-ups,
 so `benchmark_allocations.tsv` gives each recorded target's request in its
 latest build.

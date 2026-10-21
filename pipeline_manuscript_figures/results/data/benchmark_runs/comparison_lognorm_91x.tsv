@@ -196,9 +196,9 @@ UCell_native_source_file		0	2026-10-19T09:38:31+00:00	6698		node_4	FALSE
 peak_gene_REML_native_source_file.peak_gene_correlation.sizing_91x		0	2026-10-19T09:38:31+00:00	12843		node_4	FALSE
 WNN_native_source_file		0	2026-10-19T09:38:31+00:00	9963		node_4	FALSE
 comparison_seurat_signac_config.sizing_91x		0.772	2026-10-19T17:27:28+00:00	2617		node_4	TRUE
-comparison_seurat_signac_RNA_BPCells_dirs.sizing_91x		348.705	2026-10-19T17:43:43+00:00	4030279845		node_4	TRUE
 comparison_seurat_signac_cellranger_input_files.sizing_91x		0	2026-10-19T17:43:43+00:00	184874924483		node_4	FALSE
-comparison_seurat_signac_consensus_peak_GRanges.sizing_91x		28007.937	2026-10-20T01:14:31+00:00	27866964		node_4	TRUE
-comparison_seurat_signac_ATAC_BPCells_dirs.sizing_91x		2356.594	2026-10-20T02:38:10+00:00	9029822704		node_4	TRUE
-comparison_seurat_signac_lognorm_RNA_object.sizing_91x		4533.064	2026-10-20T03:08:54+00:00	954754512		node_4	TRUE
-comparison_seurat_signac_lognorm_object.sizing_91x		9771.098	2026-10-20T05:53:27+00:00	4024338637		node_4	TRUE
+comparison_seurat_signac_consensus_peak_GRanges.sizing_91x		7863.292	2026-10-21T13:27:13+00:00	27866964		node_4	TRUE
+comparison_seurat_signac_RNA_BPCells_dirs.sizing_91x		486.495	2026-10-21T13:35:22+00:00	4030279845		node_4	TRUE
+comparison_seurat_signac_ATAC_BPCells_dirs.sizing_91x		517.251	2026-10-21T13:44:05+00:00	9029822704		node_4	TRUE
+comparison_seurat_signac_lognorm_RNA_object.sizing_91x		3864.02	2026-10-21T14:48:50+00:00	954754812		node_4	TRUE
+comparison_seurat_signac_lognorm_object.sizing_91x		7720.791	2026-10-21T16:58:37+00:00	4024339082		node_4	TRUE

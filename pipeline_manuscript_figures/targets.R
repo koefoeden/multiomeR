@@ -428,13 +428,11 @@ algorithm_parity_pipeline <- c(
 )
 
 # The conventional Seurat/Signac workflow. Its default packages and resources are
-# set after the other targets are defined, so they apply to this chain only; only
-# its peak calling, which runs MACS3 on six clusters at once, needs more RAM.
-comparison_resources <- get_tar_resources(cores_req = 6, RAM_GB_req = 60)
-
+# set after the other targets are defined, so they apply to this chain only: each
+# step runs alone on the 32 cores and 256 GB of one workstation.
 targets::tar_option_set(
   packages = c("Seurat", "SeuratObject", "Signac"),
-  resources = comparison_resources
+  resources = get_tar_resources(cores_req = 32, RAM_GB_req = 256)
 )
 
 comparison_aggregation_tibble <- tibble::tibble(
@@ -447,8 +445,9 @@ comparison_aggregation_tibble <- tibble::tibble(
 )
 
 # SCTransform = FALSE leaves out the SCTransform chain, which cannot hold more than 2^31 non-zero RNA counts.
-comparison_seurat_signac_targets <- function(values, peak_resources, object_resources = comparison_resources,
-                                             SCTransform = TRUE) {
+# Each measured step first runs garbage collection, so that memory a step of another aggregation left in
+# the worker does not count, as in a script that analyses one aggregation.
+comparison_seurat_signac_targets <- function(values, SCTransform = TRUE) {
   tarchetypes::tar_map(
     values = values,
     names = aggregation,
@@ -473,7 +472,8 @@ comparison_seurat_signac_targets <- function(values, peak_resources, object_reso
       {
         comparison_seurat_signac_cellranger_input_files
         comparison_write_RNA_dirs(comparison_seurat_signac_config, get_structured_file_path())
-      }
+      },
+      garbage_collection = TRUE
     ),
     targets::tar_target(
       comparison_seurat_signac_consensus_peak_GRanges,
@@ -483,7 +483,7 @@ comparison_seurat_signac_targets <- function(values, peak_resources, object_reso
         comparison_seurat_signac_config,
         comparison_blacklist_GRanges
       ),
-      resources = peak_resources
+      garbage_collection = TRUE
     ),
     tarchetypes::tar_file(
       comparison_seurat_signac_ATAC_BPCells_dirs,
@@ -492,12 +492,14 @@ comparison_seurat_signac_targets <- function(values, peak_resources, object_reso
         comparison_seurat_signac_config,
         comparison_seurat_signac_consensus_peak_GRanges,
         get_structured_file_path()
-      )
+      ),
+      garbage_collection = TRUE
     ),
     # Seurat's default log-normalization.
     targets::tar_target(
       comparison_seurat_signac_lognorm_RNA_object,
-      comparison_process_RNA(comparison_seurat_signac_RNA_BPCells_dirs, comparison_seurat_signac_config, "LogNormalize")
+      comparison_process_RNA(comparison_seurat_signac_RNA_BPCells_dirs, comparison_seurat_signac_config, "LogNormalize"),
+      garbage_collection = TRUE
     ),
     targets::tar_target(
       comparison_seurat_signac_lognorm_object,
@@ -506,13 +508,14 @@ comparison_seurat_signac_targets <- function(values, peak_resources, object_reso
         comparison_seurat_signac_ATAC_BPCells_dirs,
         comparison_seurat_signac_config
       ),
-      resources = object_resources
+      garbage_collection = TRUE
     ),
     # The same chain with SCTransform.
     if (SCTransform) list(
       targets::tar_target(
         comparison_seurat_signac_RNA_object,
-        comparison_process_RNA(comparison_seurat_signac_RNA_BPCells_dirs, comparison_seurat_signac_config)
+        comparison_process_RNA(comparison_seurat_signac_RNA_BPCells_dirs, comparison_seurat_signac_config),
+        garbage_collection = TRUE
       ),
       targets::tar_target(
         comparison_seurat_signac_object,
@@ -521,7 +524,7 @@ comparison_seurat_signac_targets <- function(values, peak_resources, object_reso
           comparison_seurat_signac_ATAC_BPCells_dirs,
           comparison_seurat_signac_config
         ),
-        resources = object_resources
+        garbage_collection = TRUE
       ),
       targets::tar_target(
         comparison_seurat_signac_summary,
@@ -546,27 +549,10 @@ comparison_seurat_signac_pipeline <- rlang::list2(
     comparison_seurat_signac_config_paths,
     format = "file"
   ),
-  comparison_seurat_signac_targets(
-    values = dplyr::filter(comparison_aggregation_tibble, .data$aggregation %in% c("comparison_1x", "comparison_2x")),
-    peak_resources = comparison_resources
-  ),
-  comparison_seurat_signac_targets(
-    values = dplyr::filter(comparison_aggregation_tibble, .data$aggregation == "comparison_5x"),
-    peak_resources = get_tar_resources(cores_req = 6, RAM_GB_req = 200)
-  ),
-  comparison_seurat_signac_targets(
-    values = dplyr::filter(comparison_aggregation_tibble,
-      .data$aggregation %in% c("comparison_10x", "comparison_20x", "comparison_31x")),
-    peak_resources = get_tar_resources(cores_req = 6, RAM_GB_req = 500)
-  ),
-  # Log-normalization only on sizing_91x's 91 samples. Its RNA object needed 30 GB up to the
-  # neighbour graph in a feasibility run, so only peak calling and the joint object get more.
-  comparison_seurat_signac_targets(
-    values = dplyr::filter(comparison_aggregation_tibble, .data$aggregation == "sizing_91x"),
-    peak_resources = get_tar_resources(cores_req = 6, RAM_GB_req = 500),
-    object_resources = get_tar_resources(cores_req = 6, RAM_GB_req = 500),
-    SCTransform = FALSE
-  )
+  comparison_seurat_signac_targets(dplyr::filter(comparison_aggregation_tibble, .data$aggregation != "sizing_91x")),
+  # Log-normalization only on sizing_91x's 91 samples.
+  comparison_seurat_signac_targets(dplyr::filter(comparison_aggregation_tibble, .data$aggregation == "sizing_91x"),
+    SCTransform = FALSE)
 )
 
 c(base_pipeline, figure_pipeline, algorithm_parity_pipeline, comparison_seurat_signac_pipeline)

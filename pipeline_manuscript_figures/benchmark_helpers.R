@@ -15,7 +15,7 @@ BENCHMARK_AGGREGATION_RUNS <- c(
   stats::setNames(rep(list("sizing_small"), 5), paste0("sizing_", c(1, 2, 5, 10, 20), "x")),
   list(sizing_31x = "sizing_31x", sizing_91x = "sizing_91x", revision_31x = "revision_base"))
 # Records that span several driver runs, after failures or top-ups, have no single elapsed time.
-BENCHMARK_MULTIPLE_DRIVER_RUNS <- c("comparison", "comparison_lognorm", "comparison_lognorm_91x", "sizing_31x", "sizing_91x")
+BENCHMARK_MULTIPLE_DRIVER_RUNS <- c("comparison", "comparison_lognorm_91x", "sizing_31x", "sizing_91x")
 # The worker cores and RAM that each counted target requested in the run that measured it.
 BENCHMARK_ALLOCATIONS <- file.path(BENCHMARK_DATA_DIR, "benchmark_allocations.tsv")
 BENCHMARK_MODULES <- c("genetic_enrichment", "differential_analyses", "peak_gene_correlation")
@@ -75,13 +75,10 @@ SEURAT_SIGNAC_COMPARISON_WORKFLOWS <- local({
     # RNA steps; a script runs the steps one after another.
     "Seurat/Signac" = list(endpoint = "comparison_seurat_signac_object.",
       exclude = "^(?!comparison_seurat_signac_)", sequential = TRUE),
-    # The same chain with Seurat's default log-normalization, measured in its own run from an empty
-    # store, which builds the steps it shares with the SCTransform chain again, and on sizing_91x's
-    # store after its sizing run.
+    # The same chain with Seurat's default log-normalization, which shares the SCTransform chain's
+    # peak calling and count matrices, and on sizing_91x's store after its sizing run.
     "Seurat/Signac log-normalization" = list(endpoint = "comparison_seurat_signac_lognorm_object.",
-      exclude = "^(?!comparison_seurat_signac_)", sequential = TRUE,
-      run = c(stats::setNames(rep("comparison_lognorm", 6), paste0("comparison_", c(1, 2, 5, 10, 20, 31), "x")),
-        sizing_91x = "comparison_lognorm_91x")))
+      exclude = "^(?!comparison_seurat_signac_)", sequential = TRUE, run = list(sizing_91x = "comparison_lognorm_91x")))
 })
 
 benchmark_aggregation_tibble <- function(aggregations) {
@@ -506,9 +503,9 @@ benchmark_workflow_measures <- function(context, executions, workflow, aggregati
     workflow_scope$scope, workflow_scope$counted, workflow_scope$sequential)
 }
 
-# Like for like: multiomeR, with and without its Seurat exports, and the Seurat/Signac chain
-# on comparison_1x to comparison_31x, all built in one run, and the Seurat/Signac chain with
-# log-normalization, built in its own run and also on sizing_91x, where SCTransform cannot run.
+# Like for like: multiomeR, with and without its Seurat exports, and both Seurat/Signac chains
+# on comparison_1x to comparison_31x, all built on one store, and the Seurat/Signac chain with
+# log-normalization also on sizing_91x, where SCTransform cannot run.
 seurat_signac_comparison_resource_tibble <- function(context) {
   tidyr::expand_grid(aggregation = comparison_aggregation_names(), workflow = names(SEURAT_SIGNAC_COMPARISON_WORKFLOWS)) |>
     tibble::add_row(aggregation = "sizing_91x", workflow = "Seurat/Signac log-normalization") |>
@@ -766,7 +763,9 @@ plot_benchmark_figures <- function(tables) {
     peak_RAM_GB = c("Memory of the largest worker", "Peak GB"),
     disk_space_GB = c("Disk space", "GB, with Cell Ranger inputs"))
   like_panels <- purrr::imap(measures, \(words, measure) {
-    values <- dplyr::transmute(like_for_like, .data$cellranger_input_nuclei, .data$workflow, value = .data[[measure]])
+    # A size whose steps were all too short to sample has no CPU or memory values.
+    values <- dplyr::transmute(like_for_like, .data$cellranger_input_nuclei, .data$workflow, value = .data[[measure]]) |>
+      dplyr::filter(!is.na(.data$value))
     plot <- ggplot2::ggplot(values, ggplot2::aes(.data$cellranger_input_nuclei, .data$value, colour = .data$workflow)) +
       ggplot2::geom_line(linewidth = .5) + ggplot2::geom_point(size = 1.2) + benchmark_line_labels(values) +
       benchmark_nuclei_scale() + benchmark_linear_scale(labels = scales::label_number(drop0trailing = TRUE), top = .22) +

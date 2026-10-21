@@ -146,7 +146,6 @@ fragments_w_prefix_bpcells.comparison_pbmc_unsorted_3k		0.194	2026-10-18T16:00:3
 signac_fragment_object.comparison_ENCSR264JIX		9.971	2026-10-18T16:00:39+00:00	65266		node_1	TRUE
 cellbender_h5_file.comparison_ENCSR033MDU		0.001	2026-10-18T16:00:39+00:00	0		node_1	TRUE
 cellbender_h5_file.comparison_ENCSR351CSQ		0	2026-10-18T16:00:39+00:00	0		node_1	TRUE
-comparison_seurat_signac_RNA_BPCells_dirs.comparison_1x		1.95	2026-10-18T16:00:41+00:00	10467983		node_1	TRUE
 JASPAR_familial_root_motif_matrix_list		5.553	2026-10-18T16:00:44+00:00	29635		node_1	TRUE
 cellbender_h5_file.comparison_ENCSR128ZLB		0.001	2026-10-18T16:00:44+00:00	0		node_1	TRUE
 gene_features_df.comparison_ENCSR233SQG		1.573	2026-10-18T16:00:46+00:00	896729		node_1	TRUE
@@ -163,7 +162,6 @@ cellbender_h5_file.comparison_ENCSR613LBN		0.001	2026-10-18T16:01:00+00:00	0		no
 cellbender_h5_file.comparison_ENCSR079UEO		0	2026-10-18T16:01:00+00:00	0		node_1	TRUE
 cellbender_h5_file.comparison_healthy_PBMC_human		0.001	2026-10-18T16:01:00+00:00	0		node_1	TRUE
 cellbender_h5_file.comparison_ENCSR618WVK		0	2026-10-18T16:01:00+00:00	0		node_1	TRUE
-comparison_seurat_signac_RNA_BPCells_dirs.comparison_2x		8.505	2026-10-18T16:01:00+00:00	42476821		node_1	TRUE
 GEX_counts_BPcells_matrix_dir.comparison_ENCSR618WVK		4.15	2026-10-18T16:01:05+00:00	72841350		node_1	TRUE
 GEX_counts_BPCells_matrix.comparison_ENCSR618WVK		0.014	2026-10-18T16:01:05+00:00	523779		node_1	TRUE
 fragments_w_prefix_bpcells_dir.comparison_ENCSR264JIX		46.289	2026-10-18T16:01:10+00:00	625082981		node_1	TRUE
@@ -224,7 +222,6 @@ per_barcode_metrics_tibble.comparison_pbmc_10k_chromium_controller		6.769	2026-1
 fragments_w_prefix_bpcells_dir.comparison_pbmc_granulocyte_sorted_10k		85.661	2026-10-18T16:01:41+00:00	1051384175		node_1	TRUE
 fragments_w_prefix_bpcells_dir.comparison_ENCSR788DZO		73.003	2026-10-18T16:01:42+00:00	676483827		node_1	TRUE
 fragments_w_prefix_bpcells_dir.comparison_ENCSR987VTJ		80.118	2026-10-18T16:01:48+00:00	915073693		node_1	TRUE
-comparison_seurat_signac_RNA_BPCells_dirs.comparison_5x		26.727	2026-10-18T16:01:51+00:00	161686689		node_1	TRUE
 fragments_w_prefix_bpcells_dir.comparison_ENCSR618WVK		94.277	2026-10-18T16:01:52+00:00	925991705		node_1	TRUE
 Ensembl_gene_annotation_GRanges_list		106.155	2026-10-18T16:02:02+00:00	11560858		node_1	TRUE
 fragments_w_prefix_bpcells_dir.comparison_ENCSR079UEO		98.705	2026-10-18T16:02:04+00:00	1096223115		node_1	TRUE
@@ -239,7 +236,6 @@ fragments_w_prefix_bpcells_dir.comparison_ENCSR128ZLB		105.462	2026-10-18T16:02:
 ATAC_qc_metrics_tibble.comparison_pbmc_unsorted_3k		5.596	2026-10-18T16:02:18+00:00	5827599		node_1	TRUE
 fragments_w_prefix_bpcells_dir.comparison_ENCSR508WRP		87.089	2026-10-18T16:02:19+00:00	986866539		node_1	TRUE
 fragments_w_prefix_bpcells_dir.comparison_pbmc_10k_chromium_x		120.669	2026-10-18T16:02:40+00:00	1608628881		node_1	TRUE
-comparison_seurat_signac_RNA_BPCells_dirs.comparison_10x		35.975	2026-10-18T16:02:47+00:00	304081617		node_1	TRUE
 cellranger_ref_list.comparison_ENCSR925IHI		0.002	2026-10-18T16:03:07+00:00	691		node_1	TRUE
 cellranger_ref_list.comparison_ENCSR511RDV		0.017	2026-10-18T16:03:07+00:00	691		node_1	TRUE
 cellranger_barcodes_tsv.comparison_ENCSR511RDV		1.513	2026-10-18T16:03:07+00:00	187264		node_1	TRUE
@@ -269,7 +265,6 @@ cellranger_ref_list.comparison_ENCSR618WVK		0.003	2026-10-18T16:04:15+00:00	691	
 gene_features_df.comparison_ENCSR316WAS		2.088	2026-10-18T16:04:15+00:00	896729		node_1	TRUE
 gene_features_df.comparison_ENCSR033MDU		1.121	2026-10-18T16:04:16+00:00	896729		node_1	TRUE
 cellranger_ref_list.comparison_ENCSR033MDU		0.016	2026-10-18T16:04:16+00:00	691		node_1	TRUE
-comparison_seurat_signac_RNA_BPCells_dirs.comparison_20x		69.646	2026-10-18T16:04:16+00:00	809249251		node_1	TRUE
 cellsnp_dir.comparison_ENCSR511RDV		0.001	2026-10-18T16:04:17+00:00	0		node_1	TRUE
 cellsnp_dir.comparison_ENCSR568QKW		0	2026-10-18T16:04:17+00:00	0		node_1	TRUE
 GEX_counts_BPcells_matrix_dir.comparison_ENCSR568QKW		3.862	2026-10-18T16:04:17+00:00	60461728		node_1	TRUE
@@ -529,7 +524,6 @@ amulet_metrics_tibble.comparison_ENCSR923FKN		6.701	2026-10-18T16:05:54+00:00	85
 signac_fragment_object.comparison_ENCSR534YJW		3.323	2026-10-18T16:05:55+00:00	99734		node_1	TRUE
 GEX_basic_metadata_tibble.comparison_pbmc_unsorted_10k		0.344	2026-10-18T16:05:55+00:00	366101		node_1	TRUE
 cellranger_ref_list.comparison_ENCSR956ZER		0.002	2026-10-18T16:05:55+00:00	691		node_1	TRUE
-comparison_seurat_signac_RNA_BPCells_dirs.comparison_31x		102.66	2026-10-18T16:05:55+00:00	1312052563		node_1	TRUE
 GEX_basic_metadata_tibble.comparison_ENCSR956ZER		0.473	2026-10-18T16:05:56+00:00	593816		node_1	TRUE
 ATAC_qc_metrics_tibble.comparison_ENCSR793DNM		5.633	2026-10-18T16:05:56+00:00	8146819		node_1	TRUE
 signac_fragment_object.comparison_ENCSR033MDU		5.934	2026-10-18T16:05:57+00:00	49996		node_1	TRUE
@@ -1005,12 +999,10 @@ scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x_edb17a491f46036a	scDbl
 peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_5x_cae83da7389c9ee5	peak_calling_cut_sites_per_GEM_well.fragments.ATAC.comparison_5x	93.092	2026-10-18T16:23:32+00:00	1965836024		node_1	TRUE
 scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x_495853acf467f52e	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x	60.949	2026-10-18T16:23:37+00:00	107542		node_1	TRUE
 scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x_257a6f6c74905353	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x	62.502	2026-10-18T16:23:38+00:00	104937		node_1	TRUE
-comparison_seurat_signac_consensus_peak_GRanges.comparison_1x		147.947	2026-10-18T16:23:41+00:00	2725753		node_1	TRUE
 scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x_adf04401497023cd	scDblFinder_results_by_GEM_well_tibble.GEX.comparison_10x	67.118	2026-10-18T16:23:42+00:00	154827		node_1	TRUE
 scDblFinder_results_df.GEX.comparison_10x		0.007	2026-10-18T16:23:43+00:00	824822		node_1	TRUE
 metadata_w_cell_types_tibble.GEX.comparison_10x		0.102	2026-10-18T16:23:43+00:00	15612602		node_1	TRUE
 peak_calling_cluster_names.ATAC.comparison_10x		0.003	2026-10-18T16:23:43+00:00	151		node_1	TRUE
-comparison_seurat_signac_ATAC_BPCells_dirs.comparison_1x		14.644	2026-10-18T16:23:56+00:00	23895545		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_2x_beab3018437c8a5a	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_2x	59.422	2026-10-18T16:24:12+00:00	4708446		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_2x_e8f1e9209c93ab9a	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_2x	63.671	2026-10-18T16:24:16+00:00	4751467		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_2x_d063268c20c44462	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_2x	46.474	2026-10-18T16:24:18+00:00	3035898		node_1	TRUE
@@ -1167,7 +1159,6 @@ peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x_0f8a5df8035ab057	peaks_p
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x_225e28b952ee8fe8	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x	44.331	2026-10-18T16:39:33+00:00	3456920		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x_e62519d56f810c7a	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x	344.107	2026-10-18T16:39:51+00:00	7847377		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x_6499e73c8a5d58d5	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x	236.531	2026-10-18T16:39:56+00:00	7025118		node_1	TRUE
-comparison_seurat_signac_consensus_peak_GRanges.comparison_2x		998.987	2026-10-18T16:39:57+00:00	5090486		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x_e3b242869e88c055	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x	235.769	2026-10-18T16:40:00+00:00	7031914		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x_95959ed8c53b6e51	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x	55.021	2026-10-18T16:40:11+00:00	4283757		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x_0df78ae0addbb57f	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x	369.361	2026-10-18T16:40:16+00:00	11900232		node_1	TRUE
@@ -1184,7 +1175,6 @@ peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x_2940e8c7e5329621	peaks_p
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x_a074ac529fd80431	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x	57.733	2026-10-18T16:41:36+00:00	50230		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x_b58d30111cdaa42d	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x	57.484	2026-10-18T16:41:37+00:00	2006078		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x_6304e5f7b16f459c	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x	97.787	2026-10-18T16:41:39+00:00	8340333		node_1	TRUE
-comparison_seurat_signac_ATAC_BPCells_dirs.comparison_2x		102.313	2026-10-18T16:41:39+00:00	170073167		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x_1ba8ac8501243dd4	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x	70.789	2026-10-18T16:41:39+00:00	5057530		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x_9ec06bb1bc410ca3	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_10x	74.827	2026-10-18T16:41:44+00:00	4746689		node_1	TRUE
 GEX_normalization.GEX.comparison_20x		1836.245	2026-10-18T16:41:50+00:00	6292894304		node_1	TRUE
@@ -1900,7 +1890,6 @@ peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_34c8bec612fec82f	peaks_p
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_143acbd57a7a04b2	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x	726.902	2026-10-18T17:42:41+00:00	14934050		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_76c551bc496fceaf	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x	277.771	2026-10-18T17:43:22+00:00	12287832		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_4ca0efa7b70d944c	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x	207.13	2026-10-18T17:43:29+00:00	10821270		node_1	TRUE
-comparison_seurat_signac_consensus_peak_GRanges.comparison_5x		3553.517	2026-10-18T17:43:31+00:00	7349914		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_6e5d44a4ac8d2a77	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x	280.343	2026-10-18T17:43:32+00:00	12272901		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_a5e3c2b740a7f0ee	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x	203.393	2026-10-18T17:43:34+00:00	10898944		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_f41ded30812ea2a8	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x	313.85	2026-10-18T17:45:12+00:00	10485919		node_1	TRUE
@@ -1922,7 +1911,6 @@ peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_bc082367d05e794e	peaks_p
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_2201a1317390ce78	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x	62.651	2026-10-18T17:48:41+00:00	4515736		node_1	TRUE
 WNN_results_raw.comparison_20x		179.346	2026-10-18T17:48:41+00:00	232116847		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_64124e5d121c55c4	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x	64.845	2026-10-18T17:48:56+00:00	4446792		node_1	TRUE
-comparison_seurat_signac_ATAC_BPCells_dirs.comparison_5x		189.592	2026-10-18T17:48:58+00:00	647197113		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_fa4cc9a9c79e336d	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x	334.352	2026-10-18T17:49:07+00:00	10966194		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_0e404ea0ffddc9cc	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x	353.049	2026-10-18T17:49:27+00:00	11116986		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_043477e3a340cedd	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x	415.415	2026-10-18T17:49:39+00:00	15485322		node_1	TRUE
@@ -1957,7 +1945,6 @@ peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_4936e91f8c0444a1	peaks_p
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_a0a87b69ad01392a	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x	121.899	2026-10-18T17:53:33+00:00	7653710		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_0093ba75cfc9c94a	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x	43.18	2026-10-18T17:53:33+00:00	2127712		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_b5c9adcba4f5d5f4	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x	280.856	2026-10-18T17:53:36+00:00	9076199		node_1	TRUE
-comparison_seurat_signac_consensus_peak_GRanges.comparison_10x		3938.281	2026-10-18T17:53:53+00:00	12526093		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_b053004edb1cbd85	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x	53.582	2026-10-18T17:53:54+00:00	3922001		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_8f6379a46cf301d8	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x	315.182	2026-10-18T17:53:55+00:00	9002017		node_1	TRUE
 peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x_a4756780bfa41433	peaks_per_cluster_narrowPeaks.peaks.ATAC.comparison_31x	82	2026-10-18T17:54:16+00:00	6111792		node_1	TRUE
@@ -2029,7 +2016,6 @@ chromVAR_chunk_context_records.ATAC.comparison_20x_4e3bf348e410889b	chromVAR_chu
 chromVAR_chunk_context_records.ATAC.comparison_20x_a665fee07812546d	chromVAR_chunk_context_records.ATAC.comparison_20x	16.19	2026-10-18T17:59:00+00:00	480664862		node_1	TRUE
 within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC.comparison_31x_7af6948559724663	within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC.comparison_31x	1.148	2026-10-18T17:59:01+00:00	813875		node_1	TRUE
 within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC.comparison_31x_58a42fbdd12abf7a	within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC.comparison_31x	1.883	2026-10-18T17:59:02+00:00	2574499		node_1	TRUE
-comparison_seurat_signac_ATAC_BPCells_dirs.comparison_10x		294.92	2026-10-18T17:59:02+00:00	1094314817		node_1	TRUE
 UMAP_embeddings_tibble.WNN.comparison_20x		116.372	2026-10-18T17:59:03+00:00	3247956		node_1	TRUE
 within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC.comparison_31x_26a9f6dd45f7ae4a	within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC.comparison_31x	3.244	2026-10-18T17:59:06+00:00	4359510		node_1	TRUE
 within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC.comparison_31x_924438090553952c	within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC.comparison_31x	4.244	2026-10-18T17:59:10+00:00	5021105		node_1	TRUE
@@ -2261,25 +2247,51 @@ metadata_w_cell_types_tibble.WNN.comparison_31x		0.26	2026-10-18T18:24:44+00:00	
 metadata_w_cell_types_annotation_tibble.WNN.comparison_31x		0.554	2026-10-18T18:24:47+00:00	78420088		node_1	TRUE
 UMAP_embeddings_tibble.WNN.comparison_31x		178.205	2026-10-18T18:26:43+00:00	5175283		node_1	TRUE
 multimodal_Seurat_object.8_multimodal_QC.comparison_31x		250.297	2026-10-18T18:32:35+00:00	11595379765		node_1	TRUE
-comparison_seurat_signac_consensus_peak_GRanges.comparison_20x		7554.203	2026-10-18T19:59:48+00:00	18176735		node_1	TRUE
-comparison_seurat_signac_ATAC_BPCells_dirs.comparison_20x		551.648	2026-10-18T20:09:14+00:00	2073804095		node_1	TRUE
-comparison_seurat_signac_consensus_peak_GRanges.comparison_31x		10124.914	2026-10-18T22:48:34+00:00	22134860		node_1	TRUE
-comparison_seurat_signac_ATAC_BPCells_dirs.comparison_31x		810.551	2026-10-18T23:02:20+00:00	3316934214		node_1	TRUE
-comparison_seurat_signac_RNA_object.comparison_1x		48.996	2026-10-19T21:26:02+00:00	77555776		node_1	TRUE
-comparison_seurat_signac_object.comparison_1x		58.695	2026-10-19T21:27:03+00:00	113942349		node_1	TRUE
 comparison_seurat_signac_summary.comparison_1x		0.041	2026-10-19T21:27:03+00:00	398		node_1	TRUE
-comparison_seurat_signac_RNA_object.comparison_2x		162.486	2026-10-19T21:27:57+00:00	368502103		node_1	TRUE
-comparison_seurat_signac_object.comparison_2x		197.198	2026-10-19T21:31:18+00:00	446526032		node_1	TRUE
 comparison_seurat_signac_summary.comparison_2x		0.056	2026-10-19T21:31:20+00:00	396		node_1	TRUE
-comparison_seurat_signac_RNA_object.comparison_5x		487.011	2026-10-19T21:33:28+00:00	1347974820		node_1	TRUE
-comparison_seurat_signac_RNA_object.comparison_10x		938.154	2026-10-19T21:41:06+00:00	2495753199		node_1	TRUE
-comparison_seurat_signac_object.comparison_5x		525.419	2026-10-19T21:42:28+00:00	1517701939		node_1	TRUE
 comparison_seurat_signac_summary.comparison_5x		0.138	2026-10-19T21:42:34+00:00	397		node_1	TRUE
-comparison_seurat_signac_object.comparison_10x		1304.261	2026-10-19T22:03:16+00:00	2825175205		node_1	TRUE
 comparison_seurat_signac_summary.comparison_10x		0.288	2026-10-19T22:03:27+00:00	393		node_1	TRUE
-comparison_seurat_signac_RNA_object.comparison_20x		2379.655	2026-10-19T22:05:32+00:00	6447617646		node_1	TRUE
-comparison_seurat_signac_RNA_object.comparison_31x		4158.955	2026-10-19T22:35:33+00:00	10244656130		node_1	TRUE
-comparison_seurat_signac_object.comparison_20x		2698.279	2026-10-19T22:51:40+00:00	7157937741		node_1	TRUE
 comparison_seurat_signac_summary.comparison_20x		0.946	2026-10-19T22:52:09+00:00	399		node_1	TRUE
-comparison_seurat_signac_object.comparison_31x		2680.749	2026-10-19T23:22:01+00:00	11339877848		node_1	TRUE
 comparison_seurat_signac_summary.comparison_31x		1.705	2026-10-19T23:22:45+00:00	398		node_1	TRUE
+comparison_seurat_signac_RNA_BPCells_dirs.comparison_1x		2.348	2026-10-20T14:31:19+00:00	10467983		node_1	TRUE
+comparison_seurat_signac_RNA_object.comparison_1x		47.422	2026-10-20T14:32:07+00:00	77556347		node_1	TRUE
+comparison_seurat_signac_RNA_BPCells_dirs.comparison_2x		8.29	2026-10-20T14:32:15+00:00	42476821		node_1	TRUE
+comparison_seurat_signac_RNA_object.comparison_2x		156.285	2026-10-20T14:34:54+00:00	368502198		node_1	TRUE
+comparison_seurat_signac_consensus_peak_GRanges.comparison_2x		470.023	2026-10-20T14:42:44+00:00	5090486		node_1	TRUE
+comparison_seurat_signac_ATAC_BPCells_dirs.comparison_2x		104.07	2026-10-20T14:44:28+00:00	170073167		node_1	TRUE
+comparison_seurat_signac_object.comparison_2x		187.196	2026-10-20T14:47:41+00:00	446523164		node_1	TRUE
+comparison_seurat_signac_consensus_peak_GRanges.comparison_20x		2024.619	2026-10-20T15:21:26+00:00	18176735		node_1	TRUE
+comparison_seurat_signac_RNA_BPCells_dirs.comparison_31x		143.392	2026-10-20T15:23:50+00:00	1312052563		node_1	TRUE
+comparison_seurat_signac_RNA_object.comparison_31x		3884.481	2026-10-20T16:29:37+00:00	10244655994		node_1	TRUE
+comparison_seurat_signac_RNA_BPCells_dirs.comparison_20x		127.49	2026-10-20T16:31:48+00:00	809249251		node_1	TRUE
+comparison_seurat_signac_ATAC_BPCells_dirs.comparison_20x		162.977	2026-10-20T16:34:31+00:00	2073804095		node_1	TRUE
+comparison_seurat_signac_RNA_BPCells_dirs.comparison_10x		43.189	2026-10-20T16:35:17+00:00	304081617		node_1	TRUE
+comparison_seurat_signac_RNA_object.comparison_10x		946.846	2026-10-20T16:51:17+00:00	2495753540		node_1	TRUE
+comparison_seurat_signac_consensus_peak_GRanges.comparison_10x		1134.233	2026-10-20T17:10:13+00:00	12526093		node_1	TRUE
+comparison_seurat_signac_ATAC_BPCells_dirs.comparison_10x		119.371	2026-10-20T17:12:12+00:00	1094314817		node_1	TRUE
+comparison_seurat_signac_object.comparison_10x		772.836	2026-10-20T17:25:33+00:00	2825183126		node_1	TRUE
+comparison_seurat_signac_RNA_BPCells_dirs.comparison_5x		28.194	2026-10-20T17:26:02+00:00	161686689		node_1	TRUE
+comparison_seurat_signac_RNA_object.comparison_5x		478.765	2026-10-20T17:34:09+00:00	1347974879		node_1	TRUE
+comparison_seurat_signac_consensus_peak_GRanges.comparison_31x		3162.605	2026-10-20T18:26:53+00:00	22134860		node_1	TRUE
+comparison_seurat_signac_ATAC_BPCells_dirs.comparison_31x		187.162	2026-10-20T18:30:00+00:00	3316934214		node_1	TRUE
+comparison_seurat_signac_object.comparison_31x		2672.987	2026-10-20T19:16:42+00:00	11339863248		node_1	TRUE
+comparison_seurat_signac_consensus_peak_GRanges.comparison_5x		1175.631	2026-10-20T19:36:24+00:00	7349914		node_1	TRUE
+comparison_seurat_signac_ATAC_BPCells_dirs.comparison_5x		117.457	2026-10-20T19:38:22+00:00	647197113		node_1	TRUE
+comparison_seurat_signac_object.comparison_5x		523.759	2026-10-20T19:47:24+00:00	1517706171		node_1	TRUE
+comparison_seurat_signac_consensus_peak_GRanges.comparison_1x		65.439	2026-10-20T19:48:31+00:00	2725753		node_1	TRUE
+comparison_seurat_signac_ATAC_BPCells_dirs.comparison_1x		13.412	2026-10-20T19:48:44+00:00	23895545		node_1	TRUE
+comparison_seurat_signac_object.comparison_1x		65.508	2026-10-20T19:49:52+00:00	113943726		node_1	TRUE
+comparison_seurat_signac_RNA_object.comparison_20x		2972.461	2026-10-20T20:40:08+00:00	6447617471		node_1	TRUE
+comparison_seurat_signac_object.comparison_20x		2024.981	2026-10-20T21:15:12+00:00	7157911050		node_1	TRUE
+comparison_seurat_signac_lognorm_RNA_object.comparison_5x		171.935	2026-10-21T00:54:16+00:00	48157279		node_1	TRUE
+comparison_seurat_signac_lognorm_object.comparison_5x		605.294	2026-10-21T01:04:24+00:00	217745140		node_1	TRUE
+comparison_seurat_signac_lognorm_RNA_object.comparison_31x		1458.341	2026-10-21T01:28:48+00:00	340835581		node_1	TRUE
+comparison_seurat_signac_lognorm_object.comparison_31x		2516.5	2026-10-21T02:11:09+00:00	1447469948		node_1	TRUE
+comparison_seurat_signac_lognorm_RNA_object.comparison_2x		45.418	2026-10-21T02:11:55+00:00	14265149		node_1	TRUE
+comparison_seurat_signac_lognorm_object.comparison_2x		180.812	2026-10-21T02:14:57+00:00	92710634		node_1	TRUE
+comparison_seurat_signac_lognorm_RNA_object.comparison_20x		773.053	2026-10-21T02:27:54+00:00	217004096		node_1	TRUE
+comparison_seurat_signac_lognorm_object.comparison_20x		1689.851	2026-10-21T02:56:20+00:00	934665530		node_1	TRUE
+comparison_seurat_signac_lognorm_RNA_object.comparison_10x		304.619	2026-10-21T03:01:27+00:00	85772516		node_1	TRUE
+comparison_seurat_signac_lognorm_object.comparison_10x		786.654	2026-10-21T03:14:40+00:00	417832315		node_1	TRUE
+comparison_seurat_signac_lognorm_RNA_object.comparison_1x		17.412	2026-10-21T03:14:58+00:00	4046916		node_1	TRUE
+comparison_seurat_signac_lognorm_object.comparison_1x		52.114	2026-10-21T03:15:50+00:00	40345459		node_1	TRUE

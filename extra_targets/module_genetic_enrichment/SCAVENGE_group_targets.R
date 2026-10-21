@@ -12,8 +12,7 @@ rlang::list2(
   targets::tar_target(
     name = TRS_heatmap_data,
     description = "Prepare SCAVENGE TRS heatmap data from per-GWAS group summaries",
-    command = TRS_summary_tibble |>
-      add_GWAS_heatmap_categories(GWAS_tibble = GWAS_inputs_tibble),
+    command = add_GWAS_heatmap_categories(TRS_summary_tibble, GWAS_tibble = GWAS_inputs_tibble),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(

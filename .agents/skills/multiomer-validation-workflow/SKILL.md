@@ -35,6 +35,12 @@ selector or store: give a worktree its own `configuration.local`, or pass
 `configuration_path()` the `project_root` of a scratch copy. Shared
 documentation examples use `configuration/`.
 
+In a worktree that runs targets on a store snapshot, the GEM-well table
+resolves to the worktree's own path, so `GEM_well_config_tsv` looks outdated
+and runs that reach aggregation targets are refused. Run
+`GEM_well_metadata_tibble.<aggregation>` first; it rebuilds to identical
+hashes.
+
 Finish code edits with:
 
 ```bash

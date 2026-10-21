@@ -170,10 +170,10 @@ per-well steps are those of the comparison aggregations. SCTransform cannot run
 at that size in either workflow: Seurat converts the joined count matrix to a
 `dgCMatrix`, which holds at most 2^31 - 1 non-zero entries, and `sizing_91x` has
 2.17 billion. Log-normalization keeps the counts on disk and runs at 91
-samples, so both tools' default normalizations reach that size. S2F shows each
-size's RNA non-zero entries against that limit, the genes detected in each
-called nucleus summed from Cell Ranger's per-barcode metrics. They equal the
-count in Seurat's error. In S2A-E, colour gives the tool, blue for multiomeR and
+samples, so both tools' default normalizations reach that size.
+`data/benchmark_sizes.tsv` gives each size's RNA non-zero entries, the genes
+detected in each called nucleus summed from Cell Ranger's per-barcode metrics,
+which equal the count in Seurat's error. In S2, colour gives the tool, blue for multiomeR and
 orange for Seurat/Signac, and the darker shade each tool's default
 normalization. Each line is named in its colour by tool and normalization
 method: to the right of its last point for lines that end at 31 samples, and
@@ -283,7 +283,11 @@ dashed line at 100%, and careful manual checkpointing narrows that gap.
 - **Peak memory of a worker:** the largest sampled memory of a worker while
   it ran a counted step, which sets the machine size, and that step. It
   includes memory the worker kept from its earlier steps, so the step that
-  reached it need not be the one that needed it.
+  reached it need not be the one that needed it. The Seurat/Signac steps
+  therefore run garbage collection first: their workstation worker runs the
+  steps of every aggregation one after another, as no script would. Without
+  it, the five-sample peak calling, which ran right after the 31-sample joint
+  object, started at 59 GB and peaked at 63 GB, against 28 GB with it.
 - **Reserved CPU and RAM:** each target's runtime plus its share of its
   worker's idle time, times the cores and memory that Slurm booked for that
   worker: the tier's `cpus_per_task` and `memory_gigabytes_required`, which
@@ -330,7 +334,7 @@ The series ran from 18 to 21 October 2026 on three nodes of one model (AMD EPYC
 store on that node's disk:
 
 - `comparison` at commit f9a109d5, with both Seurat/Signac chains measured at
-  1c6e09a9, each step alone on the 32-core, 256-GB workstation worker;
+  594af40e, each step alone on the 32-core, 256-GB workstation worker;
 - `comparison_lognorm_91x` on `sizing_91x`'s store after its sizing run,
   measured again in the same way;
 - `sizing_small`, which builds `sizing_1x` to `sizing_20x`, at 950472fd, on the
@@ -353,13 +357,13 @@ sampled from 12:00 to 02:00 on 19-20 October and counting the series' own
 workers, were about 50 cores on node_4 and 28 on node_2. node_1
 was not sampled, and a spot check showed about 29. Times may therefore be
 somewhat longer than on idle nodes. The Seurat/Signac chains were measured
-again on 20 and 21 October. A first log-normalization series on its own node
+again on 20 and 21 October, finally with garbage collection at 594af40e. A first log-normalization series on its own node
 read the largest Cell Ranger outputs from network storage 4 to 10 times as
 slowly as the comparison's node, twice, with most cores idle, so that chain was
 moved to the comparison's store. On `comparison_lognorm_91x`'s node, reading
-the 91 Cell Ranger gene-expression matrices one after another took 43 and then
-39 minutes, against 5.8 minutes on 19 October, so that chain's estimate may be
-about half an hour too long. Each record keeps its latest build. S-LDSC's cell-type fits and matched-size
+the 91 Cell Ranger gene-expression matrices took 43 and then 39 minutes while
+its access to network storage was slow, against 8 minutes in the final
+measurement. Each record keeps its latest build. S-LDSC's cell-type fits and matched-size
 annotation records moved from 16 GB to 60 GB workers during the sizing top-ups,
 so `benchmark_allocations.tsv` gives each recorded target's request in its
 latest build.

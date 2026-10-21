@@ -654,8 +654,8 @@ benchmark_simulation_check <- function(context) {
 }
 
 # Supplementary Figures S2-S4, one per question. S2, same methods: multiomeR on SCTransform with
-# its Seurat exports against the Seurat/Signac chain on SCTransform, each tool with its default
-# normalization, and the RNA non-zero entries against the dgCMatrix limit that stops SCTransform. S3,
+# its Seurat exports against the Seurat/Signac chain on SCTransform, and each tool with its default
+# normalization. S3,
 # sizing: multiomeR's full analysis with its defaults. S4, revisions. All axes are linear from zero, so
 # values and differences read directly, and the smallest aggregations bunch near the origin.
 # Hue gives the tool, orange for Seurat/Signac and blue for multiomeR, and the darker shade each tool's
@@ -763,30 +763,13 @@ plot_benchmark_figures <- function(tables) {
     peak_RAM_GB = c("Memory of the largest worker", "Peak GB"),
     disk_space_GB = c("Disk space", "GB, with Cell Ranger inputs"))
   like_panels <- purrr::imap(measures, \(words, measure) {
-    # A size whose steps were all too short to sample has no CPU or memory values.
-    values <- dplyr::transmute(like_for_like, .data$cellranger_input_nuclei, .data$workflow, value = .data[[measure]]) |>
-      dplyr::filter(!is.na(.data$value))
+    values <- dplyr::transmute(like_for_like, .data$cellranger_input_nuclei, .data$workflow, value = .data[[measure]])
     plot <- ggplot2::ggplot(values, ggplot2::aes(.data$cellranger_input_nuclei, .data$value, colour = .data$workflow)) +
       ggplot2::geom_line(linewidth = .5) + ggplot2::geom_point(size = 1.2) + benchmark_line_labels(values) +
       benchmark_nuclei_scale() + benchmark_linear_scale(labels = scales::label_number(drop0trailing = TRUE), top = .22) +
       ggplot2::scale_colour_manual(values = BENCHMARK_WORKFLOW_COLOURS, guide = "none")
     benchmark_panel(plot, words[[1]], words[[2]])
   })
-  # The joined RNA count matrix that SCTransform converts holds at most 2^31 - 1 non-zero entries. The
-  # label of the largest size, just above that limit, sits a line higher to clear it.
-  sizes <- dplyr::mutate(tables$benchmark_sizes, label = sprintf("%d samples:\n%.2f billion", .data$GEM_well_count, .data$RNA_nonzero_entries / 1e9),
-    vjust = dplyr::if_else(.data$GEM_well_count == max(.data$GEM_well_count), -1.1, -.2))
-  ceiling <- ggplot2::ggplot(sizes, ggplot2::aes(.data$cellranger_input_nuclei, .data$RNA_nonzero_entries)) +
-    ggplot2::geom_hline(yintercept = 2^31 - 1, linetype = "dashed", linewidth = .3, colour = "grey30") +
-    ggplot2::annotate("text", x = min(sizes$cellranger_input_nuclei), y = 2^31 - 1, hjust = 0, vjust = -.4, family = BENCHMARK_FONT,
-      size = 2.1, lineheight = .9, colour = "grey25",
-      label = sprintf("In-memory matrix limit:\n%.2f billion", (2^31 - 1) / 1e9)) +
-    ggplot2::geom_line(linewidth = .5, colour = "grey55") + ggplot2::geom_point(size = 1.2, colour = "grey30") +
-    benchmark_text(data = dplyr::filter(sizes, .data$GEM_well_count %in% c(31, max(.data$GEM_well_count))),
-      ggplot2::aes(label = .data$label, vjust = .data$vjust), hjust = 1.12) +
-    benchmark_nuclei_scale() +
-    benchmark_linear_scale(labels = scales::label_number(scale_cut = scales::cut_short_scale()), top = .3)
-  ceiling <- benchmark_panel(ceiling, "SCTransform's size limit", "Non-zero RNA counts")
 
   # Sizing: multiomeR's full analysis with its defaults. The primary module ran at every size, all three
   # optional modules only at 31 and 91 samples, so their two points stay unconnected; their name gives the
@@ -838,7 +821,7 @@ plot_benchmark_figures <- function(tables) {
   revision_plot <- benchmark_panel(revision_plot, "Run time of each change after a full build, in the order applied", NULL) +
     ggplot2::theme(panel.grid.major.y = ggplot2::element_blank(), axis.text.y = ggplot2::element_text(size = 7, hjust = 1))
 
-  list(S2 = benchmark_figure(c(like_panels, list(ceiling)), ncol = 3), S3 = benchmark_figure(sizing_panels, ncol = 2),
+  list(S2 = benchmark_figure(like_panels, ncol = 3), S3 = benchmark_figure(sizing_panels, ncol = 2),
     S4 = revision_plot)
 }
 

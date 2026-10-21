@@ -6,9 +6,9 @@ A peak equally accessible in all classes therefore gets the same small value in 
 An all-peaks annotation marks every peak with reads.
 Reference variants inside a peak take its values, and all other variants take zero.
 LD scores of these annotations are computed from the 1000 Genomes European samples on GRCh38 [@auton2015_1000_genomes] for HapMap3 regression variants outside the MHC, with ldsc's bias-corrected squared correlation summed over a 1 cM window [@bulik-sullivan2015_ldsc].
-Harmonized summary statistics are taken from the GWAS Catalog [@cerezo2025_gwas_catalog].
+Summary statistics are taken from the GWAS Catalog, from its harmonized file where one exists and otherwise from the submitted file [@cerezo2025_gwas_catalog].
 A GWAS can instead name another Catalog study or its own summary statistics in GWAS-SSF format on GRCh38 with rsIDs [@hayhurst2022_gwas_ssf], such as a consortium release that the Catalog lacks.
-The statistics are cleaned as ldsc does.
+The statistics are cleaned largely as ldsc does, without its imputation-quality filter.
 Variants need an rsID, a P-value within the double-precision range, alleles that match the reference without strand ambiguity, and a minor-allele frequency above 0.01 when one is reported.
 Variants whose sample size is below two-thirds of the 90th percentile are removed.
 Studies without per-variant sample sizes use the total of the samples in the summary statistics' GWAS-SSF metadata, which also gives the sample size and ancestry shown for each trait.

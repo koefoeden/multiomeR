@@ -13,9 +13,9 @@ WNN labels can use their own marker sets, whose matched controls come from the s
 Raw UCell scores are not comparable between signatures, because some gene sets score highly by chance.
 Each label's cluster-level mean score is therefore compared with 999 random control signatures matched on gene abundance and detection.
 The control reference samples up to 50 nuclei per GEM well from the GEX metadata before doublet filtering.
-The GEX, ATAC and WNN annotations thus share the same controls, whatever nuclei each stage keeps.
-For each control signature, the markers are taken in random order.
-Each is replaced by a gene drawn from its 50 nearest eligible candidates not yet used in that signature.
+The GEX and ATAC annotations thus share the same controls, and the WNN annotation draws its own from the same reference, whatever nuclei each stage keeps.
+For each control replicate, all marker genes of the panel are taken in random order.
+Each is replaced by a gene drawn from its 50 nearest eligible candidates not yet used in that replicate.
 Candidates exclude all marker genes and undetected genes.
 A label's adjusted score in a cluster is its observed mean minus the 95th percentile of its matched controls.
 The label with the highest adjusted score is the candidate.

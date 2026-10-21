@@ -5,8 +5,8 @@ Both carry a GEM-well-prefixed barcode, so nuclei remain distinct across wells.
 Per-well quality-control metrics are calculated for the barcodes that Cell Ranger called as cells.
 BPCells calculates ATAC metrics such as TSS enrichment and nucleosome signal.
 The blacklist fraction is the share of a nucleus's fragments with at least one cut site in a blacklisted region of the genome [@amemiya2019_encode_blacklist; @ogata2023_excluderanges].
-Gene-expression metrics, such as the fraction of counts from mitochondrial genes (names beginning with `MT-`, ignoring case), are calculated from the imported matrix.
-Optional genotype demultiplexing runs cellsnp-lite on the ATAC alignments, with a minimum minor-allele frequency of 0.1 and 20 reads per SNP [@huang2021_cellsnp_lite].
+Gene-expression metrics, such as the percentage of counts from mitochondrial genes (names beginning with `MT-`, ignoring case), are calculated from the imported matrix.
+Optional genotype demultiplexing runs cellsnp-lite on the ATAC alignments, by default with a minimum minor-allele frequency of 0.1 and 20 reads per SNP [@huang2021_cellsnp_lite].
 Vireo then demultiplexes the barcodes with the supplied donor genotypes [@huang2019_vireo].
 The most likely singlet donor replaces the GEM-well donor identifier of every barcode.
 Vireo's singlet, doublet and unassigned calls and probabilities are recorded as metadata for the exclusions.

@@ -254,4 +254,4 @@ targets::tar_target(
 )
 ```
 
-If `get_tar_resources()` is called before controller resources are loaded, it fails deliberately with an instruction to call `load_project_runtime()` first. Scheduler-specific examples are in [Choose where the analysis runs](performance_distributed_computing.md); the implementation contract is that target code can request resources declaratively once the runtime has been loaded.
+If `get_tar_resources()` is called before controller resources are loaded, it fails deliberately. `load_project_runtime()` loads them. Scheduler-specific examples are in [Choose where the analysis runs](performance_distributed_computing.md); the implementation contract is that target code can request resources declaratively once the runtime has been loaded.

@@ -749,7 +749,7 @@ Each branch holds named models; the model and contrast names label the outputs.
 Optional fields narrow a model:
 
 - `donor_ids` restricts the donors in either branch;
-- `cell_type_subset` restricts the cell types whose pseudobulks a feature model fits. The model pools all selected cell types, or all cell types when the field is omitted, so name one cell type to test it alone;
+- `cell_type_subset` restricts the cell types whose pseudobulks a feature model tests;
 - `GEM_well_IDs` restricts the GEM wells that define an abundance model's population; and
 - `cell_types_to_test` restricts the cell types an abundance model tests, by default the assigned cell types found in at least half of its donors. Every retained nucleus still counts towards its donor's total.
 
@@ -1332,6 +1332,8 @@ Copy a row of the [public example](#public-example), give it a unique `GEM_well_
 
 Add library or batch annotations as extra columns prefixed with `GEM_well_`, such as `GEM_well_multiplex_batch`. They become cell metadata: select them for plots with [`aggregation_categorical_vars`](parameters.html#aggregation_categorical_vars) or [`aggregation_continuous_vars`](parameters.html#aggregation_continuous_vars), and for batch correction with [`aggregation_harmony_correction_metadata_col_names`](parameters.html#aggregation_harmony_correction_metadata_col_names). Keep donor phenotypes in the [donor metadata table](reference_donor_metadata.md).
 
+Pooled GEM wells can also set `GEM_well_cellsnp_min_MAF` and `GEM_well_cellsnp_min_count`, the minimum minor-allele frequency and reads per SNP that cellsnp-lite uses for demultiplexing. Left out or `NA`, they default to 0.1 and 20.
+
 ## Cell Ranger inputs {#cellranger-inputs}
 
 Each `GEM_well_cellranger_arc_count_dir` must contain:
@@ -1676,8 +1678,8 @@ Both carry a GEM-well-prefixed barcode, so nuclei remain distinct across wells.
 Per-well quality-control metrics are calculated for the barcodes that Cell Ranger called as cells.
 BPCells calculates ATAC metrics such as TSS enrichment and nucleosome signal.
 The blacklist fraction is the share of a nucleus's fragments with at least one cut site in a blacklisted region of the genome [@amemiya2019_encode_blacklist; @ogata2023_excluderanges].
-Gene-expression metrics, such as the fraction of counts from mitochondrial genes (names beginning with `MT-`, ignoring case), are calculated from the imported matrix.
-Optional genotype demultiplexing runs cellsnp-lite on the ATAC alignments, with a minimum minor-allele frequency of 0.1 and 20 reads per SNP [@huang2021_cellsnp_lite].
+Gene-expression metrics, such as the percentage of counts from mitochondrial genes (names beginning with `MT-`, ignoring case), are calculated from the imported matrix.
+Optional genotype demultiplexing runs cellsnp-lite on the ATAC alignments, by default with a minimum minor-allele frequency of 0.1 and 20 reads per SNP [@huang2021_cellsnp_lite].
 Vireo then demultiplexes the barcodes with the supplied donor genotypes [@huang2019_vireo].
 The most likely singlet donor replaces the GEM-well donor identifier of every barcode.
 Vireo's singlet, doublet and unassigned calls and probabilities are recorded as metadata for the exclusions.
@@ -1776,9 +1778,9 @@ WNN labels can use their own marker sets, whose matched controls come from the s
 Raw UCell scores are not comparable between signatures, because some gene sets score highly by chance.
 Each label's cluster-level mean score is therefore compared with 999 random control signatures matched on gene abundance and detection.
 The control reference samples up to 50 nuclei per GEM well from the GEX metadata before doublet filtering.
-The GEX, ATAC and WNN annotations thus share the same controls, whatever nuclei each stage keeps.
-For each control signature, the markers are taken in random order.
-Each is replaced by a gene drawn from its 50 nearest eligible candidates not yet used in that signature.
+The GEX and ATAC annotations thus share the same controls, and the WNN annotation draws its own from the same reference, whatever nuclei each stage keeps.
+For each control replicate, all marker genes of the panel are taken in random order.
+Each is replaced by a gene drawn from its 50 nearest eligible candidates not yet used in that replicate.
 Candidates exclude all marker genes and undetected genes.
 A label's adjusted score in a cluster is its observed mean minus the 95th percentile of its matched controls.
 The label with the highest adjusted score is the candidate.
@@ -1839,7 +1841,7 @@ Both draws are seeded by the group's name, so a group's halves do not change whe
 Peaks are called in each half with either MACS3 or the BPCells tile-based caller [@zhang2008_macs; @parks2025_bpcells].
 MACS3 runs on each half's fragment left ends, written in one pass per GEM well, with a −75-bp shift, a 150-bp extension, a 150-bp maximum gap and summit calling.
 Only one of each fragment's two insertions thus enters the pileup, as when MACS3 reads a fragment file.
-The fixed gap keeps peaks independent of fragment order, which MACS3's default, the mean length of the first ten input lines, does not.
+The gap is fixed because MACS3's default, the mean length of the first ten input lines, would be 1 bp for these single-base cut sites.
 The tile-based caller runs on the stored fragments, using 500-bp tiles and an FDR of 0.01.
 Consensus peaks follow the ArchR strategy of iterative fixed-width peak construction [@granja2021_archr].
 Summits are extended by 250 bp to 500-bp peaks, and peaks overlapping any blacklisted region of the reference genome are removed [@amemiya2019_encode_blacklist; @ogata2023_excluderanges].
@@ -1879,7 +1881,7 @@ Per-nucleus quality-control metrics are checked against configured aggregation-l
 The fragments in peaks and their fraction of all fragments are counted from the stored fragments, each fragment once, even when its two cut sites fall in different peaks.
 After ATAC clustering, a separate ATAC-based `scDblFinder` analysis follows per GEM well, with `dbr.sd = 1` [@germain2022_scdblfinder].
 Instead of scDblFinder's internal per-well feature aggregation, peaks are grouped once into 50 feature groups.
-The groups come from *k*-means clustering of the peaks' aggregation-wide LSI coordinates on dimensions 2–20 (loadings scaled by the singular values, as in scDblFinder).
+The groups come from *k*-means clustering of the peaks' aggregation-wide LSI coordinates on the configured dimensions within 2–20 (loadings scaled by the singular values, as in scDblFinder).
 The peaks of each group are summed with BPCells before scDblFinder's unchanged classifier runs.
 This change limits memory use, but its scores are not expected to equal those from the internal aggregation.
 That aggregation transforms every peak within each well, which can exhaust memory before classification.
@@ -1932,7 +1934,7 @@ This view runs from the combined fragments and the GEX-annotated nuclei through 
 GEX and ATAC representations are combined with a BPCells-based implementation of the Seurat weighted-nearest-neighbor (WNN) strategy [@hao2021_multimodal; @parks2025_bpcells].
 The native implementation returns neighbor indices, distances and modality weights that clustering, UMAP and SCAVENGE [@yu2022_scavenge] reuse, without building a Seurat object.
 The GEX and ATAC embeddings, after optional Harmony correction, are aligned by barcode and L2-normalized.
-For each modality separately, 200 candidate neighbors are then found with the same reproducible hierarchical navigable small world (HNSW) search as for clustering [@malkov2020_hnsw].
+For each modality separately, 200 candidate neighbors are then found with the same reproducible hierarchical navigable small world (HNSW) search as for clustering, here with Euclidean distance on the normalized embeddings [@malkov2020_hnsw].
 multiomeR sets each cell's kernel width in each modality from the configured neighbor count, following Seurat's small-SNN bandwidth strategy.
 Per-cell modality weights are computed from these kernels by comparing within-modality with cross-modality predictions.
 The candidates of both modalities are then pooled, and those with the highest weighted kernel scores become the final neighbors.
@@ -1940,7 +1942,8 @@ In our tests, Seurat's weights approached 0 or 1 as the number of nuclei grew, b
 The weights are therefore estimated within random subsets of at most 10,000 nuclei, whereas the neighbors are selected among all nuclei.
 BPCells builds an SNN graph from the joint neighbors for Leiden clustering, and UMAP uses the joint neighbor lists directly.
 The joint lists first keep twice the configured number of neighbors.
-After nuclei in small WNN clusters are removed, each remaining nucleus keeps its highest-scoring remaining neighbors, so no second search or weight estimate is needed.
+After nuclei in small WNN clusters are removed, each remaining nucleus keeps its highest-scoring remaining neighbors, so no second weight estimate is needed.
+Only nuclei left with too few neighbors are searched again.
 Nuclei left with too few are reselected among the remaining nuclei by exact search, with their original weights and kernel widths.
 The implementation does not use `Seurat::FindMultiModalNeighbors()`.
 Because HNSW replaces Seurat's Annoy search, exact equality is not expected.
@@ -1957,7 +1960,8 @@ The WNN implementation is compared with Seurat in [Algorithm validation](algorit
 <!-- begin include: website/_shared_methods/WNN_cell_set.md -->
 
 WNN analysis uses the nuclei kept after ATAC processing that are present in both embeddings.
-When small joint clusters are removed, the neighbors and modality weights are recomputed on the kept nuclei, while the cluster labels are kept.
+When small joint clusters are removed, each kept nucleus keeps its highest-scoring kept neighbors and its original modality weights, while the cluster labels are kept.
+A nucleus left with too few neighbors has them selected again among the kept nuclei, with the same weights.
 The UMAP is computed once, from the final neighbors.
 The GEX, ATAC and WNN metadata therefore describe successively smaller sets of nuclei, not interchangeable versions of the Cell Ranger cell calls.
 
@@ -2010,8 +2014,12 @@ Four feature matrices are tested:
 
 - **Gene expression** (differential gene expression, DGE): gene pseudobulk counts.
 - **Chromatin accessibility** (differential chromatin accessibility, DCA): consensus-peak pseudobulk counts.
-- **Motif-family accessibility** (differential transcription-factor motif accessibility, DTFA): betterChromVAR bias-corrected deviations of the 233 JASPAR motif families, calculated from the pseudobulk ATAC counts [@germain2026_betterchromvar]. This matrix is therefore continuous. Unlike chromVAR *z*-scores, deviations do not grow with sample depth, and no per-sample centering or cross-sample normalization is applied.
-- **Transcription-factor activity** (differential CollecTRI transcription-factor activity, DCTA): signed CollecTRI regulator activities, inferred with the `decoupleR` univariate linear model from filtered, library-size-normalized log-CPM GEX pseudobulks [@muller_dott2023_collectri; @badia2022_decoupler]. Each regulator requires at least five measured targets. The CollecTRI network is used only when its checksum matches the recorded one, and complexes such as AP1 and NF-κB are kept as single regulons.
+- **Motif-family accessibility** (differential transcription-factor motif accessibility, DTFA): betterChromVAR bias-corrected deviations of the 233 JASPAR motif families, calculated from the pseudobulk ATAC counts [@germain2026_betterchromvar].
+  This matrix is therefore continuous.
+  Unlike chromVAR *z*-scores, deviations do not grow with sample depth, and no per-sample centering or cross-sample normalization is applied.
+- **Transcription-factor activity** (differential CollecTRI transcription-factor activity, DCTA): signed CollecTRI regulator activities, inferred with the `decoupleR` univariate linear model from filtered, library-size-normalized log-CPM GEX pseudobulks [@muller_dott2023_collectri; @badia2022_decoupler].
+  Each regulator requires at least five measured targets.
+  The CollecTRI network is used only when its checksum matches the recorded one, and complexes such as AP1 and NF-κB are kept as single regulons.
 
 For each model, donors that miss a model variable or fall outside an optional donor list are removed.
 Samples outside an optional annotation-class subset are also removed, and the DTFA analysis by default removes samples with fewer than 5,000 ATAC counts.
@@ -2156,7 +2164,7 @@ The reference package's dependencies predate the pipeline's R environment, and t
 Nuclei whose one-sided normal-tail probability is at most 0.05 are seeds.
 When they exceed the maximum seed fraction, 5% of nuclei by default, those with the highest z-scores are kept.
 When no nucleus qualifies, all scores are zero.
-The WNN graph is made unweighted, with every nonzero edge set to one, and nuclei without edges are excluded.
+A shared-nearest-neighbor graph is built from the WNN neighbors and made unweighted, with every remaining edge set to one, and nuclei without edges are excluded.
 Seed signal is propagated by a random walk with restart probability 0.05 by default until convergence.
 Nuclei that no seed reaches remain unscored.
 Scores are capped at their 95th percentile, min–max scaled and multiplied by the mean z-score of the top 1% of nuclei.
@@ -2183,9 +2191,9 @@ A peak equally accessible in all classes therefore gets the same small value in 
 An all-peaks annotation marks every peak with reads.
 Reference variants inside a peak take its values, and all other variants take zero.
 LD scores of these annotations are computed from the 1000 Genomes European samples on GRCh38 [@auton2015_1000_genomes] for HapMap3 regression variants outside the MHC, with ldsc's bias-corrected squared correlation summed over a 1 cM window [@bulik-sullivan2015_ldsc].
-Harmonized summary statistics are taken from the GWAS Catalog [@cerezo2025_gwas_catalog].
+Summary statistics are taken from the GWAS Catalog, from its harmonized file where one exists and otherwise from the submitted file [@cerezo2025_gwas_catalog].
 A GWAS can instead name another Catalog study or its own summary statistics in GWAS-SSF format on GRCh38 with rsIDs [@hayhurst2022_gwas_ssf], such as a consortium release that the Catalog lacks.
-The statistics are cleaned as ldsc does.
+The statistics are cleaned largely as ldsc does, without its imputation-quality filter.
 Variants need an rsID, a P-value within the double-precision range, alleles that match the reference without strand ambiguity, and a minor-allele frequency above 0.01 when one is reported.
 Variants whose sample size is below two-thirds of the 90th percentile are removed.
 Studies without per-variant sample sizes use the total of the samples in the summary statistics' GWAS-SSF metadata, which also gives the sample size and ancestry shown for each trait.
@@ -2764,7 +2772,7 @@ targets::tar_target(
 )
 ```
 
-If `get_tar_resources()` is called before controller resources are loaded, it fails deliberately with an instruction to call `load_project_runtime()` first. Scheduler-specific examples are in [Choose where the analysis runs](performance_distributed_computing.md); the implementation contract is that target code can request resources declaratively once the runtime has been loaded.
+If `get_tar_resources()` is called before controller resources are loaded, it fails deliberately. `load_project_runtime()` loads them. Scheduler-specific examples are in [Choose where the analysis runs](performance_distributed_computing.md); the implementation contract is that target code can request resources declaratively once the runtime has been loaded.
 
 
 # Orphaned Markdown Pages

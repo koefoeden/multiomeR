@@ -17,6 +17,8 @@ emit_GEM_well_column_table("website/data/GEM_well_columns.tsv")
 
 Add library or batch annotations as extra columns prefixed with `GEM_well_`, such as `GEM_well_multiplex_batch`. They become cell metadata: select them for plots with [`aggregation_categorical_vars`](parameters.html#aggregation_categorical_vars) or [`aggregation_continuous_vars`](parameters.html#aggregation_continuous_vars), and for batch correction with [`aggregation_harmony_correction_metadata_col_names`](parameters.html#aggregation_harmony_correction_metadata_col_names). Keep donor phenotypes in the [donor metadata table](reference_donor_metadata.md).
 
+Pooled GEM wells can also set `GEM_well_cellsnp_min_MAF` and `GEM_well_cellsnp_min_count`, the minimum minor-allele frequency and reads per SNP that cellsnp-lite uses for demultiplexing. Left out or `NA`, they default to 0.1 and 20.
+
 ## Cell Ranger inputs {#cellranger-inputs}
 
 Each `GEM_well_cellranger_arc_count_dir` must contain:

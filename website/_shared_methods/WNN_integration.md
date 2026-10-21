@@ -1,7 +1,7 @@
 GEX and ATAC representations are combined with a BPCells-based implementation of the Seurat weighted-nearest-neighbor (WNN) strategy [@hao2021_multimodal; @parks2025_bpcells].
 The native implementation returns neighbor indices, distances and modality weights that clustering, UMAP and SCAVENGE [@yu2022_scavenge] reuse, without building a Seurat object.
 The GEX and ATAC embeddings, after optional Harmony correction, are aligned by barcode and L2-normalized.
-For each modality separately, 200 candidate neighbors are then found with the same reproducible hierarchical navigable small world (HNSW) search as for clustering [@malkov2020_hnsw].
+For each modality separately, 200 candidate neighbors are then found with the same reproducible hierarchical navigable small world (HNSW) search as for clustering, here with Euclidean distance on the normalized embeddings [@malkov2020_hnsw].
 multiomeR sets each cell's kernel width in each modality from the configured neighbor count, following Seurat's small-SNN bandwidth strategy.
 Per-cell modality weights are computed from these kernels by comparing within-modality with cross-modality predictions.
 The candidates of both modalities are then pooled, and those with the highest weighted kernel scores become the final neighbors.
@@ -9,7 +9,8 @@ In our tests, Seurat's weights approached 0 or 1 as the number of nuclei grew, b
 The weights are therefore estimated within random subsets of at most 10,000 nuclei, whereas the neighbors are selected among all nuclei.
 BPCells builds an SNN graph from the joint neighbors for Leiden clustering, and UMAP uses the joint neighbor lists directly.
 The joint lists first keep twice the configured number of neighbors.
-After nuclei in small WNN clusters are removed, each remaining nucleus keeps its highest-scoring remaining neighbors, so no second search or weight estimate is needed.
+After nuclei in small WNN clusters are removed, each remaining nucleus keeps its highest-scoring remaining neighbors, so no second weight estimate is needed.
+Only nuclei left with too few neighbors are searched again.
 Nuclei left with too few are reselected among the remaining nuclei by exact search, with their original weights and kernel widths.
 The implementation does not use `Seurat::FindMultiModalNeighbors()`.
 Because HNSW replaces Seurat's Annoy search, exact equality is not expected.

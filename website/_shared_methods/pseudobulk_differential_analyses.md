@@ -3,8 +3,12 @@ Four feature matrices are tested:
 
 - **Gene expression** (differential gene expression, DGE): gene pseudobulk counts.
 - **Chromatin accessibility** (differential chromatin accessibility, DCA): consensus-peak pseudobulk counts.
-- **Motif-family accessibility** (differential transcription-factor motif accessibility, DTFA): betterChromVAR bias-corrected deviations of the 233 JASPAR motif families, calculated from the pseudobulk ATAC counts [@germain2026_betterchromvar]. This matrix is therefore continuous. Unlike chromVAR *z*-scores, deviations do not grow with sample depth, and no per-sample centering or cross-sample normalization is applied.
-- **Transcription-factor activity** (differential CollecTRI transcription-factor activity, DCTA): signed CollecTRI regulator activities, inferred with the `decoupleR` univariate linear model from filtered, library-size-normalized log-CPM GEX pseudobulks [@muller_dott2023_collectri; @badia2022_decoupler]. Each regulator requires at least five measured targets. The CollecTRI network is used only when its checksum matches the recorded one, and complexes such as AP1 and NF-κB are kept as single regulons.
+- **Motif-family accessibility** (differential transcription-factor motif accessibility, DTFA): betterChromVAR bias-corrected deviations of the 233 JASPAR motif families, calculated from the pseudobulk ATAC counts [@germain2026_betterchromvar].
+  This matrix is therefore continuous.
+  Unlike chromVAR *z*-scores, deviations do not grow with sample depth, and no per-sample centering or cross-sample normalization is applied.
+- **Transcription-factor activity** (differential CollecTRI transcription-factor activity, DCTA): signed CollecTRI regulator activities, inferred with the `decoupleR` univariate linear model from filtered, library-size-normalized log-CPM GEX pseudobulks [@muller_dott2023_collectri; @badia2022_decoupler].
+  Each regulator requires at least five measured targets.
+  The CollecTRI network is used only when its checksum matches the recorded one, and complexes such as AP1 and NF-κB are kept as single regulons.
 
 For each model, donors that miss a model variable or fall outside an optional donor list are removed.
 Samples outside an optional annotation-class subset are also removed, and the DTFA analysis by default removes samples with fewer than 5,000 ATAC counts.

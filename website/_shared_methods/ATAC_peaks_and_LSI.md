@@ -8,7 +8,7 @@ Both draws are seeded by the group's name, so a group's halves do not change whe
 Peaks are called in each half with either MACS3 or the BPCells tile-based caller [@zhang2008_macs; @parks2025_bpcells].
 MACS3 runs on each half's fragment left ends, written in one pass per GEM well, with a −75-bp shift, a 150-bp extension, a 150-bp maximum gap and summit calling.
 Only one of each fragment's two insertions thus enters the pileup, as when MACS3 reads a fragment file.
-The fixed gap keeps peaks independent of fragment order, which MACS3's default, the mean length of the first ten input lines, does not.
+The gap is fixed because MACS3's default, the mean length of the first ten input lines, would be 1 bp for these single-base cut sites.
 The tile-based caller runs on the stored fragments, using 500-bp tiles and an FDR of 0.01.
 Consensus peaks follow the ArchR strategy of iterative fixed-width peak construction [@granja2021_archr].
 Summits are extended by 250 bp to 500-bp peaks, and peaks overlapping any blacklisted region of the reference genome are removed [@amemiya2019_encode_blacklist; @ogata2023_excluderanges].

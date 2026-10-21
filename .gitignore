@@ -33,10 +33,11 @@ __*.mro
 example_data/*
 
 # outputs
-pipelines/*/outputs
+pipelines
 tmp/
 __pycache__/
 logs
+/slurm_monitor_history/
 
 # misc
 .vscode
@@ -44,8 +45,9 @@ logs
 .DS_Store
 **/*.quarto_ipynb
 .pixi/
+.codex/
 outputs
 outputs_dev*
 
-# Checkout-local configuration selection
+# Checkout-local configuration directory selection
 /configuration.local

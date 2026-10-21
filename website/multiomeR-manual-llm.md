@@ -743,13 +743,13 @@ my_aggregation:
 Each branch holds named models; the model and contrast names label the outputs.
 
 - **Abundance models** ([`differential_analyses_cell_type_composition_models`](parameters.html#differential_analyses_cell_type_composition_models)) fit each cell type's share of a donor's nuclei. Use a one-sided, fixed-effects formula; the response is added for you. `plot_phenotype_vars` and `color_by` choose the plotted variables. Omit the field to skip this branch.
-- **Feature models** ([`differential_analyses_pseudobulk_models`](parameters.html#differential_analyses_pseudobulk_models)) test the four feature families. The formula uses donor metadata variables; replace `my_cell_type` with one of your cell types. One donor's pseudobulks of different cell types are not independent replicates, so a formula that compares or pools cell types through `cluster` is refused unless it also sets a paired cell-type design (`cell_type_formula` with `pairing_variable`) or a `random_effect`.
+- **Feature models** ([`differential_analyses_pseudobulk_models`](parameters.html#differential_analyses_pseudobulk_models)) test the four feature families. The formula uses donor metadata variables; replace `my_cell_type` with one of your cell types. A model tests all cell types together unless `cell_type_subset` names one. One donor's pseudobulks of different cell types are not independent replicates, so a model over several cell types is refused unless it also sets a paired cell-type design (`cell_type_formula` with `pairing_variable`) or a `random_effect`.
 - **Contrasts** in `contrast_specs_vec` are coefficient names of the model matrix, or linear combinations of them. A text variable's alphabetically first value is the reference, so `conditiontreated` is treated minus control. Replace the example variable, formula and contrast with your own.
 
 Optional fields narrow a model:
 
 - `donor_ids` restricts the donors in either branch;
-- `cell_type_subset` restricts the cell types whose pseudobulks a feature model tests;
+- `cell_type_subset` restricts the cell types whose pseudobulks a feature model tests; name one cell type to test it on its own;
 - `GEM_well_IDs` restricts the GEM wells that define an abundance model's population; and
 - `cell_types_to_test` restricts the cell types an abundance model tests, by default the assigned cell types found in at least half of its donors. Every retained nucleus still counts towards its donor's total.
 
@@ -1739,7 +1739,7 @@ Its S and G2M scores are computed from log-normalized counts with the 2019 Seura
 
 Harmony correction can be applied separately to the selected GEX principal components and ATAC LSI dimensions, with at most 25 iterations and `lambda = 1` [@korsunsky2019_harmony; @patikas2026_harmony2].
 It is off by default, since correcting a variable can also remove biology confounded with it [@luecken2022_integration_benchmark].
-The configured metadata columns are combined into one interaction batch factor, and the ATAC correction can add its own columns.
+Harmony corrects each configured metadata column as a separate batch variable, and the ATAC correction can add its own columns.
 Nuclei with missing covariate values are removed with a warning.
 
 For each modality, the nearest neighbors of every nucleus are found once on the selected dimensions, by hierarchical navigable small world (HNSW) search with cosine distance [@malkov2020_hnsw; @melville2024_rcpphnsw].
@@ -2033,8 +2033,8 @@ Wherever an intra-block correlation is estimated, the consensus is taken from at
 The models are still fitted to all features.
 Without a random effect, count designs with more than one coefficient are fitted with edgeR quasi-likelihood models and tested with quasi-likelihood F-tests [@lund2012_quasi_likelihood; @chen2025_edger_v4].
 These models use robust empirical Bayes moderation of the dispersions [@phipson2016_robust_eb].
-Continuous matrices and single-coefficient designs use limma.
-A single-coefficient count design is fitted on the raw counts, without the filtering and normalization above.
+Continuous matrices use limma.
+edgeR cannot test a single-coefficient design, so such a count design is fitted with voom–limma after the same filtering and normalization.
 An optional paired-cell-type route fits each annotation class separately with voom–limma, or limma for continuous matrices.
 It allows at most one pseudobulk per pairing unit and class.
 A cross-class contrast is tested on a combined response, restricted to the donors present in every class involved.

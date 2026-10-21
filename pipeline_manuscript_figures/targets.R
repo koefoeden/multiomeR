@@ -445,6 +445,8 @@ comparison_aggregation_tibble <- tibble::tibble(
 )
 
 # SCTransform = FALSE leaves out the SCTransform chain, which cannot hold more than 2^31 non-zero RNA counts.
+# Each measured step first runs garbage collection, so that memory a step of another aggregation left in
+# the worker does not count, as in a script that analyses one aggregation.
 comparison_seurat_signac_targets <- function(values, SCTransform = TRUE) {
   tarchetypes::tar_map(
     values = values,
@@ -470,7 +472,8 @@ comparison_seurat_signac_targets <- function(values, SCTransform = TRUE) {
       {
         comparison_seurat_signac_cellranger_input_files
         comparison_write_RNA_dirs(comparison_seurat_signac_config, get_structured_file_path())
-      }
+      },
+      garbage_collection = TRUE
     ),
     targets::tar_target(
       comparison_seurat_signac_consensus_peak_GRanges,
@@ -479,7 +482,8 @@ comparison_seurat_signac_targets <- function(values, SCTransform = TRUE) {
         comparison_peak_calling_discovery_tibble,
         comparison_seurat_signac_config,
         comparison_blacklist_GRanges
-      )
+      ),
+      garbage_collection = TRUE
     ),
     tarchetypes::tar_file(
       comparison_seurat_signac_ATAC_BPCells_dirs,
@@ -488,12 +492,14 @@ comparison_seurat_signac_targets <- function(values, SCTransform = TRUE) {
         comparison_seurat_signac_config,
         comparison_seurat_signac_consensus_peak_GRanges,
         get_structured_file_path()
-      )
+      ),
+      garbage_collection = TRUE
     ),
     # Seurat's default log-normalization.
     targets::tar_target(
       comparison_seurat_signac_lognorm_RNA_object,
-      comparison_process_RNA(comparison_seurat_signac_RNA_BPCells_dirs, comparison_seurat_signac_config, "LogNormalize")
+      comparison_process_RNA(comparison_seurat_signac_RNA_BPCells_dirs, comparison_seurat_signac_config, "LogNormalize"),
+      garbage_collection = TRUE
     ),
     targets::tar_target(
       comparison_seurat_signac_lognorm_object,
@@ -501,13 +507,15 @@ comparison_seurat_signac_targets <- function(values, SCTransform = TRUE) {
         comparison_seurat_signac_lognorm_RNA_object,
         comparison_seurat_signac_ATAC_BPCells_dirs,
         comparison_seurat_signac_config
-      )
+      ),
+      garbage_collection = TRUE
     ),
     # The same chain with SCTransform.
     if (SCTransform) list(
       targets::tar_target(
         comparison_seurat_signac_RNA_object,
-        comparison_process_RNA(comparison_seurat_signac_RNA_BPCells_dirs, comparison_seurat_signac_config)
+        comparison_process_RNA(comparison_seurat_signac_RNA_BPCells_dirs, comparison_seurat_signac_config),
+        garbage_collection = TRUE
       ),
       targets::tar_target(
         comparison_seurat_signac_object,
@@ -515,7 +523,8 @@ comparison_seurat_signac_targets <- function(values, SCTransform = TRUE) {
           comparison_seurat_signac_RNA_object,
           comparison_seurat_signac_ATAC_BPCells_dirs,
           comparison_seurat_signac_config
-        )
+        ),
+        garbage_collection = TRUE
       ),
       targets::tar_target(
         comparison_seurat_signac_summary,

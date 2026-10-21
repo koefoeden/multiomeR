@@ -811,15 +811,16 @@ fit_pseudobulk_feature_matrix_model <- function(pseudobulk_feature_matrix, exten
   analysis_type <- if (!is.null(random_effect) && random_effect != "") {
     # Random effects require limma with duplicateCorrelation (works with any data type)
     "limma_duplicateCorrelation"
-  } else if (is_count_data && ncol(design_matrix) > 1) {
-    # EdgeR requires integer count matrix and at least 2 parameters
+  } else if (!is_count_data) {
+    "limma_basic"
+  } else if (ncol(design_matrix) > 1) {
     "edgeR"
   } else {
-    # Basic limma as fallback for continuous data or insufficient parameters
-    "limma_basic"
+    # edgeR's tests need at least two design columns.
+    "limma_voom"
   }
 
-  if (is_count_data && analysis_type != "limma_basic") {
+  if (is_count_data) {
     gene_expression_list <- edgeR::DGEList(counts = pseudobulk_feature_matrix, samples = final_sample_tibble)
     sample_cols_expressed <- colSums(gene_expression_list$counts) > 0
     gene_expression_list <- gene_expression_list[, sample_cols_expressed, keep.lib.sizes = FALSE]
@@ -850,6 +851,8 @@ fit_pseudobulk_feature_matrix_model <- function(pseudobulk_feature_matrix, exten
     gene_expression_list |>
       edgeR::estimateDisp.DGEList(design = design_matrix) |>
       edgeR::glmQLFit(design = design_matrix, robust = TRUE)
+  } else if (analysis_type == "limma_voom") {
+    voom_lm_fit_subset_correlation(gene_expression_list, design = design_matrix, normalize.method = "none", keep.EList = TRUE)
   } else {
     limma::lmFit(gene_expression_list, design = design_matrix)
   }

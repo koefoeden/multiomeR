@@ -22,8 +22,8 @@ Wherever an intra-block correlation is estimated, the consensus is taken from at
 The models are still fitted to all features.
 Without a random effect, count designs with more than one coefficient are fitted with edgeR quasi-likelihood models and tested with quasi-likelihood F-tests [@lund2012_quasi_likelihood; @chen2025_edger_v4].
 These models use robust empirical Bayes moderation of the dispersions [@phipson2016_robust_eb].
-Continuous matrices and single-coefficient designs use limma.
-A single-coefficient count design is fitted on the raw counts, without the filtering and normalization above.
+Continuous matrices use limma.
+edgeR cannot test a single-coefficient design, so such a count design is fitted with voom–limma after the same filtering and normalization.
 An optional paired-cell-type route fits each annotation class separately with voom–limma, or limma for continuous matrices.
 It allows at most one pseudobulk per pairing unit and class.
 A cross-class contrast is tested on a combined response, restricted to the donors present in every class involved.

@@ -25,9 +25,15 @@ links for Claude Code. Use the matching `SKILL.md`, especially for:
 - editing documentation, including pipeline diagrams;
 - creating commits, pull requests or releases.
 
-Always pass `--use-environment-activation-cache` when invoking `pixi run`. In a
-worktree whose `.pixi` links another checkout's environment, also pass
-`--as-is` so Pixi never installs into that shared environment.
+Always pass `--use-environment-activation-cache` when invoking `pixi run`. A
+worktree uses this checkout's environment: run
+`pixi run --manifest-path <this checkout>/pixi.toml --as-is <command>` from the
+worktree, without the cache flag, which a worktree run would rewrite with its
+own paths for every checkout. Pass a task's command, such as
+`Rscript tests/testthat.R`, not its name, since a task runs in this checkout.
+Pixi 0.82 rejects an environment reached through a worktree's `.pixi` link as
+moved. Never delete it as Pixi suggests: the link leads to the shared
+environment.
 
 Treat repository-local skills as living instructions. Unless a task is
 explicitly read-only, update the skill you are using in the same task whenever

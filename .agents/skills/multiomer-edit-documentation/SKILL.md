@@ -54,7 +54,8 @@ description: Edit the multiomeR manual, including its methods pages, documentati
 1. Check source links, render the manual with the builder, never
    `quarto render website` directly, so executable R chunks still generate
    galleries and diagrams, then check its links. In a worktree, run these
-   through `pixi run --as-is`, not an activated shell hook.
+   tasks' commands through the main checkout's environment as `AGENTS.md`
+   describes, not an activated shell hook.
    ```bash
    pixi run --use-environment-activation-cache -e dev check-source-links
    pixi run --use-environment-activation-cache -e dev render-website

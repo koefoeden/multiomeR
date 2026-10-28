@@ -2,7 +2,7 @@ Cell-type annotation uses GEX marker signatures supplied by the user.
 Signatures list positive markers and, optionally, genes expected to be absent.
 Genes missing from the count matrix stop the run with an error before scoring.
 Scores are computed with a BPCells-based implementation of UCell scoring [@andreatta2021_ucell; @parks2025_bpcells].
-It processes the raw GEX counts in blocks of limited size and reproduces UCell's per-cell descending ranks, rank truncation at 1,500 genes, positive and negative signatures and lower-bound clipping.
+It processes the raw GEX counts in blocks of limited size and reproduces UCell's per-cell descending ranks, rank truncation at 1,500 genes by default, positive and negative signatures and lower-bound clipping.
 Working in blocks avoids loading the whole matrix or building a Seurat object only for scoring.
 The pipeline does not use the UCell package itself.
 Validation instead requires agreement with the UCell reference to within 10^−12^.

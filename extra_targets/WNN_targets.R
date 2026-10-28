@@ -120,7 +120,8 @@ rlang::list2(
       command = prepare_cluster_UCell_controls(
         counts_matrix = aggregated_counts_BPCells_matrix.GEX,
         metadata_tibble = metadata_w_clusters_tibble.GEX,
-        markers = UCell_WNN_marker_genes_list
+        markers = UCell_WNN_marker_genes_list,
+        max_rank = aggregation_UCell_max_rank
       ),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),

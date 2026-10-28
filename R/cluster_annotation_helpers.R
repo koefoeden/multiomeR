@@ -131,10 +131,11 @@ assign_UCell_cluster_evidence <- function(evidence, min_advantage) {
 }
 
 #' Freeze abundance/detection-matched controls using up to 50 cells per GEM well.
-#' All modalities reuse this GEX reference; WNN draws controls for its own marker sets.
+#' All modalities reuse this GEX reference; WNN draws controls for its own marker sets. Genes ranked beyond
+#' `max_rank` in a nucleus count as undetected when the sets are scored.
 prepare_cluster_UCell_controls <- function(counts_matrix, metadata_tibble, markers,
                                           reference_cells_per_well = 50L,
-                                          seed = 20260910L) {
+                                          seed = 20260910L, max_rank = 1500L) {
   withr::local_seed(seed)
   markers <- normalize_marker_panel(markers, rownames(counts_matrix))
   barcodes <- metadata_tibble$barcode_w_prefix
@@ -158,7 +159,7 @@ prepare_cluster_UCell_controls <- function(counts_matrix, metadata_tibble, marke
   control <- build_UCell_controls(reference, markers, seed = seed)
   control$reference <- reference
   control$reference_barcodes <- barcodes[rows]
-  control$max_rank <- min(1500L, nrow(counts_matrix))
+  control$max_rank <- min(as.integer(max_rank), nrow(counts_matrix))
   if (control$max_rank <= 1L || any(lengths(markers) > control$max_rank)) {
     stop("Marker signatures are too long for the UCell rank cutoff.")
   }

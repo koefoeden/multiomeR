@@ -137,7 +137,7 @@ targets::tar_make(
 **Revise:**
 
 - [`aggregation_GEX_cluster_res`](parameters.html#aggregation_GEX_cluster_res) sets how finely the nuclei are clustered; judge it by marker consistency and cluster sizes. `resolution_sweep_plot.png` and its table show the cluster counts and sizes at half and twice the resolution. A resolution change reruns only the clustering and later steps, not the neighbor search. By default, the GEX clusters are also the peak-calling groups of checkpoint 4.
-- [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes) and [`aggregation_GEX_cluster_annotation_min_advantage`](parameters.html#aggregation_GEX_cluster_annotation_min_advantage) determine the cell-type labels; see [Cluster annotation](review_outputs.md#cluster-annotation).
+- [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes) and [`aggregation_GEX_cluster_annotation_min_advantage`](parameters.html#aggregation_GEX_cluster_annotation_min_advantage) determine the cell-type labels; see [Cluster annotation](review_outputs.md#cluster-annotation). When nuclei detect many genes, such as neurons, raise [`aggregation_UCell_max_rank`](parameters.html#aggregation_UCell_max_rank) towards the number of genes a typical nucleus detects, so that modestly expressed markers still count.
 - `UMAPs/cross/` compares layouts across PC and neighbor counts, for choosing [`aggregation_GEX_data_PCs`](parameters.html#aggregation_GEX_data_PCs) and [`aggregation_UMAP_nNNs`](parameters.html#aggregation_UMAP_nNNs).
 
 ## Checkpoint 4: Peak QC {#checkpoint-4}

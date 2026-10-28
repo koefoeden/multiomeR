@@ -516,7 +516,7 @@ targets::tar_make(
 **Revise:**
 
 - [`aggregation_GEX_cluster_res`](parameters.html#aggregation_GEX_cluster_res) sets how finely the nuclei are clustered; judge it by marker consistency and cluster sizes. `resolution_sweep_plot.png` and its table show the cluster counts and sizes at half and twice the resolution. A resolution change reruns only the clustering and later steps, not the neighbor search. By default, the GEX clusters are also the peak-calling groups of checkpoint 4.
-- [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes) and [`aggregation_GEX_cluster_annotation_min_advantage`](parameters.html#aggregation_GEX_cluster_annotation_min_advantage) determine the cell-type labels; see [Cluster annotation](review_outputs.md#cluster-annotation).
+- [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes) and [`aggregation_GEX_cluster_annotation_min_advantage`](parameters.html#aggregation_GEX_cluster_annotation_min_advantage) determine the cell-type labels; see [Cluster annotation](review_outputs.md#cluster-annotation). When nuclei detect many genes, such as neurons, raise [`aggregation_UCell_max_rank`](parameters.html#aggregation_UCell_max_rank) towards the number of genes a typical nucleus detects, so that modestly expressed markers still count.
 - `UMAPs/cross/` compares layouts across PC and neighbor counts, for choosing [`aggregation_GEX_data_PCs`](parameters.html#aggregation_GEX_data_PCs) and [`aggregation_UMAP_nNNs`](parameters.html#aggregation_UMAP_nNNs).
 
 ## Checkpoint 4: Peak QC {#checkpoint-4}
@@ -1767,7 +1767,7 @@ Cell-type annotation uses GEX marker signatures supplied by the user.
 Signatures list positive markers and, optionally, genes expected to be absent.
 Genes missing from the count matrix stop the run with an error before scoring.
 Scores are computed with a BPCells-based implementation of UCell scoring [@andreatta2021_ucell; @parks2025_bpcells].
-It processes the raw GEX counts in blocks of limited size and reproduces UCell's per-cell descending ranks, rank truncation at 1,500 genes, positive and negative signatures and lower-bound clipping.
+It processes the raw GEX counts in blocks of limited size and reproduces UCell's per-cell descending ranks, rank truncation at 1,500 genes by default, positive and negative signatures and lower-bound clipping.
 Working in blocks avoids loading the whole matrix or building a Seurat object only for scoring.
 The pipeline does not use the UCell package itself.
 Validation instead requires agreement with the UCell reference to within 10^−12^.

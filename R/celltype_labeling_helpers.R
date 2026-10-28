@@ -29,7 +29,8 @@ row_sums_for_peak_count_matrix <- function(counts_matrix) {
   }
 }
 
-#' Families are used because related TFs share near-identical motifs that cannot be told apart.
+#' Families are used because related TFs often share near-identical motifs that cannot be told apart. A family
+#' that merges different motif types is scored mainly by its root's type, so its other members are captured poorly.
 read_JASPAR_familial_root_PFMatrixList <- function(path) {
   lines <- readLines(path, warn = FALSE)
   motif_ends <- which(trimws(lines) == "//")

@@ -1741,6 +1741,8 @@ Harmony correction can be applied separately to the selected GEX principal compo
 It is off by default, since correcting a variable can also remove biology confounded with it [@luecken2022_integration_benchmark].
 Harmony corrects each configured metadata column as a separate batch variable, and the ATAC correction can add its own columns.
 Nuclei with missing covariate values are removed with a warning.
+Harmony's result depends on its number of threads, which is fixed at six.
+Rebuilds with six threads on the same processor type give identical corrected dimensions, whereas other thread counts change them slightly.
 
 For each modality, the nearest neighbors of every nucleus are found once on the selected dimensions, by hierarchical navigable small world (HNSW) search with cosine distance [@malkov2020_hnsw; @melville2024_rcpphnsw].
 The search index is built on one thread, so a rebuild finds the same neighbors, while the search itself runs in parallel.
@@ -1898,12 +1900,16 @@ ATAC doublets are removed at the nucleus and cluster level as for GEX.
 <!-- begin include: website/_shared_methods/motif_accessibility.md -->
 
 Transcription-factor motifs are represented by the 233 sequence-similarity families of the JASPAR 2026 CORE vertebrate collection [@ovekbaydar2026_jaspar].
-Families are used because related transcription factors share near-identical motifs, whose matches and accessibility cannot be told apart.
+Families are used because related transcription factors often share near-identical motifs, whose matches and accessibility cannot be told apart.
 The pipeline includes a copy of the familial root motifs and the family membership table.
 Each root motif is trimmed of flank columns whose total count is less than half of its largest column total.
 These columns come from a minority of the family's aligned member motifs, so their counts are sparse and can look specific by chance.
 Scanning with them would restrict matches to that minority's sub-family.
+A family that merges different motif types is thus scored mainly by its most common type, and its other members are captured poorly.
+For example, the root motif of the family that holds both forkhead and MEF2 factors matches forkhead sites.
 The trimmed root motifs are matched to the consensus peaks with `motifmatchr` at its default threshold of P < 5 × 10^−5^ [@schep2025_motifmatchr].
+Some short root motifs cannot reach this threshold even with their best-matching sequence.
+They then match only that sequence, which can occur by chance up to eight times as often as the threshold allows.
 Configured transcription factors are matched to families by name, or by name and motif identifier when a symbol belongs to more than one family.
 betterChromVAR applies the chromVAR workflow with GC-bias correction to compute analytic motif-family deviations and z-scores for individual nuclei [@schep2017_chromvar; @germain2026_betterchromvar].
 All families are tested per ATAC annotation class with one-versus-rest Wilcoxon tests, with Benjamini–Hochberg correction [@benjamini1995_fdr] across all family–class tests.
@@ -2024,6 +2030,8 @@ Four feature matrices are tested:
 For each model, donors that miss a model variable or fall outside an optional donor list are removed.
 Samples outside an optional annotation-class subset are also removed, and the DTFA analysis by default removes samples with fewer than 5,000 ATAC counts.
 For count matrices, zero-depth samples are removed, features are filtered with the design-aware `edgeR::filterByExpr()` [@chen2025_edger_v4], and library sizes are TMM-normalized with `edgeR::normLibSizes()` [@robinson2009_edger; @robinson2010_tmm].
+TMM assumes that most features do not change in one direction.
+A broad one-sided change, such as a global opening of chromatin, would shrink the estimated effects and make unchanged features appear to change the other way.
 
 Model matrices are built from a configured formula or custom design function, and contrasts from named linear expressions or custom contrast functions.
 A configured random effect selects `limma::duplicateCorrelation()` with the random effect as block [@smyth2005_duplicatecorrelation; @ritchie2015_limma].
@@ -2037,16 +2045,18 @@ Continuous matrices use limma.
 edgeR cannot test a single-coefficient design, so such a count design is fitted with voom–limma after the same filtering and normalization.
 An optional paired-cell-type route fits each annotation class separately with voom–limma, or limma for continuous matrices.
 It allows at most one pseudobulk per pairing unit and class.
-A cross-class contrast is tested on a combined response, restricted to the donors present in every class involved.
+A cross-class contrast is tested on a combined response, restricted to the donors present and the features tested in every class involved.
 This response is the contrast-weighted sum of the classes' log-expression.
 It is weighted by the inverse of its variance, which is computed from the classes' precision weights.
 The combined response is fitted with the same donor-level design and correlation block, so each feature has its own covariance between classes.
 
 For each model and contrast, Benjamini–Hochberg FDR is calculated across the tested features, and features with an FDR below 0.05 are significant.
-DGE contrasts are also tested against the MSigDB Hallmark and Reactome collections [@liberzon2015_hallmark; @milacic2024_reactome] with competitive `camera` tests [@wu2012_camera; @dolgalev2026_msigdbr].
+DGE contrasts are also tested against the Hallmark and Reactome collections of MSigDB release 2026.1 [@liberzon2015_hallmark; @milacic2024_reactome] with competitive `camera` tests [@wu2012_camera; @dolgalev2026_msigdbr].
 These tests use the contrast's expression, precision weights and design, or the combined response for cross-class contrasts.
 Each set's inter-gene correlation is estimated from the residuals, and each set needs at least ten tested genes.
 FDR is calculated within each contrast and collection.
+A set's direction compares its genes with all other tested genes, including genes that belong to no set.
+The sets of one contrast therefore often lean the same way, even under the null.
 A cross-modality comparison maps CollecTRI regulators to JASPAR families.
 It compares the model *t*-statistics, rather than the raw scales, of transcription-factor activity and motif-family accessibility.
 Where gene expression is fitted with limma, it also compares TF expression (edgeR tests report no *t*-statistic).
@@ -2116,6 +2126,7 @@ Each trait's deviations average about zero across classes.
 A class's mean deviation over many traits therefore reflects the panel of traits rather than a property of the class.
 A relative deviation also standardizes the deviations across annotation classes within each trait.
 Significance is tested against a null that keeps the clustering of real GWAS loci, which often place several correlated peaks at one locus.
+It keeps where loci lie but not the type of element they fall on, so moved loci are not matched to the real loci's share of promoter and distal peaks.
 Each trait's credible sets are moved along their chromosomes 10,000 times and scored like the real ones.
 Credible sets whose lead variants lie within 500 kb of each other move together by 0.5 to 2 Mb, keeping their variant spacing and posterior probabilities.
 No moved credible set may land on an original one, in the extended MHC (chr6:25–34 Mb), in a peak-free stretch of at least 1 Mb such as a centromere, or off its chromosome.
@@ -2381,7 +2392,7 @@ Each plot shows the gene context, the plotted class's insertion coverage and the
 <!-- end include: website/_shared_methods/peak_gene_models.md -->
 
 
-The model fits are compared with `lme4`, `pbkrtest` and `stats::p.adjust()` in [Algorithm validation](algorithm_validation.md).
+The model fits are compared with `lme4` and `pbkrtest` in [Algorithm validation](algorithm_validation.md).
 
 ## Source and target graph
 
@@ -2416,10 +2427,9 @@ Passing these fixtures does not validate every dataset, parameter regime, approx
 | Native WNN | Reference-similarity tested | Seurat | Modality-weight Spearman and neighbor-overlap thresholds per fixture |
 | Sparse SCAVENGE propagation | Algorithmically derived and reference-parity tested | SCAVENGE source at `8ee8b173d965` | Closed-form propagation; identical seeds; propagation and trait relevance scores within 1e-12 |
 | Peak–gene donor-slope REML and Kenward–Roger kernels | Reference-parity tested | lme4 and pbkrtest | Coefficients, df and P-values within 1e-6; identical fit statuses |
-| Peak–gene compact BH breakpoints | Reference-parity tested | `stats::p.adjust()` | Identical FDR per chromosome slice |
 | S-LDSC LD scores and regression | Not reference-tested | ldsc 1.0.1 | None in the suite; a development comparison is described below |
 
-The peak–gene rows belong to the analyses in [Peak–gene correlation methods](methods_peak_gene_correlation.md#models-and-candidate-links); their tests are `test-peak-gene-hierarchical-parity.R` and `test-peak-gene-correlation-parity.R`.
+The peak–gene row belongs to the analyses in [Peak–gene correlation methods](methods_peak_gene_correlation.md#models-and-candidate-links); its test is `test-peak-gene-hierarchical-parity.R`.
 
 ## BPCells-native UCell scoring
 

@@ -18,10 +18,9 @@ Passing these fixtures does not validate every dataset, parameter regime, approx
 | Native WNN | Reference-similarity tested | Seurat | Modality-weight Spearman and neighbor-overlap thresholds per fixture |
 | Sparse SCAVENGE propagation | Algorithmically derived and reference-parity tested | SCAVENGE source at `8ee8b173d965` | Closed-form propagation; identical seeds; propagation and trait relevance scores within 1e-12 |
 | Peak–gene donor-slope REML and Kenward–Roger kernels | Reference-parity tested | lme4 and pbkrtest | Coefficients, df and P-values within 1e-6; identical fit statuses |
-| Peak–gene compact BH breakpoints | Reference-parity tested | `stats::p.adjust()` | Identical FDR per chromosome slice |
 | S-LDSC LD scores and regression | Not reference-tested | ldsc 1.0.1 | None in the suite; a development comparison is described below |
 
-The peak–gene rows belong to the analyses in [Peak–gene correlation methods](methods_peak_gene_correlation.md#models-and-candidate-links); their tests are `test-peak-gene-hierarchical-parity.R` and `test-peak-gene-correlation-parity.R`.
+The peak–gene row belongs to the analyses in [Peak–gene correlation methods](methods_peak_gene_correlation.md#models-and-candidate-links); its test is `test-peak-gene-hierarchical-parity.R`.
 
 ## BPCells-native UCell scoring
 

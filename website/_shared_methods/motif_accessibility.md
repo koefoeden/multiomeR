@@ -1,10 +1,14 @@
 Transcription-factor motifs are represented by the 233 sequence-similarity families of the JASPAR 2026 CORE vertebrate collection [@ovekbaydar2026_jaspar].
-Families are used because related transcription factors share near-identical motifs, whose matches and accessibility cannot be told apart.
+Families are used because related transcription factors often share near-identical motifs, whose matches and accessibility cannot be told apart.
 The pipeline includes a copy of the familial root motifs and the family membership table.
 Each root motif is trimmed of flank columns whose total count is less than half of its largest column total.
 These columns come from a minority of the family's aligned member motifs, so their counts are sparse and can look specific by chance.
 Scanning with them would restrict matches to that minority's sub-family.
+A family that merges different motif types is thus scored mainly by its most common type, and its other members are captured poorly.
+For example, the root motif of the family that holds both forkhead and MEF2 factors matches forkhead sites.
 The trimmed root motifs are matched to the consensus peaks with `motifmatchr` at its default threshold of P < 5 × 10^−5^ [@schep2025_motifmatchr].
+Some short root motifs cannot reach this threshold even with their best-matching sequence.
+They then match only that sequence, which can occur by chance up to eight times as often as the threshold allows.
 Configured transcription factors are matched to families by name, or by name and motif identifier when a symbol belongs to more than one family.
 betterChromVAR applies the chromVAR workflow with GC-bias correction to compute analytic motif-family deviations and z-scores for individual nuclei [@schep2017_chromvar; @germain2026_betterchromvar].
 All families are tested per ATAC annotation class with one-versus-rest Wilcoxon tests, with Benjamini–Hochberg correction [@benjamini1995_fdr] across all family–class tests.

@@ -11,6 +11,7 @@ Each trait's deviations average about zero across classes.
 A class's mean deviation over many traits therefore reflects the panel of traits rather than a property of the class.
 A relative deviation also standardizes the deviations across annotation classes within each trait.
 Significance is tested against a null that keeps the clustering of real GWAS loci, which often place several correlated peaks at one locus.
+It keeps where loci lie but not the type of element they fall on, so moved loci are not matched to the real loci's share of promoter and distal peaks.
 Each trait's credible sets are moved along their chromosomes 10,000 times and scored like the real ones.
 Credible sets whose lead variants lie within 500 kb of each other move together by 0.5 to 2 Mb, keeping their variant spacing and posterior probabilities.
 No moved credible set may land on an original one, in the extended MHC (chr6:25–34 Mb), in a peak-free stretch of at least 1 Mb such as a centromere, or off its chromosome.

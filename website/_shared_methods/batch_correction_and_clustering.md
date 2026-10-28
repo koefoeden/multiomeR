@@ -2,6 +2,8 @@ Harmony correction can be applied separately to the selected GEX principal compo
 It is off by default, since correcting a variable can also remove biology confounded with it [@luecken2022_integration_benchmark].
 Harmony corrects each configured metadata column as a separate batch variable, and the ATAC correction can add its own columns.
 Nuclei with missing covariate values are removed with a warning.
+Harmony's result depends on its number of threads, which is fixed at six.
+Rebuilds with six threads on the same processor type give identical corrected dimensions, whereas other thread counts change them slightly.
 
 For each modality, the nearest neighbors of every nucleus are found once on the selected dimensions, by hierarchical navigable small world (HNSW) search with cosine distance [@malkov2020_hnsw; @melville2024_rcpphnsw].
 The search index is built on one thread, so a rebuild finds the same neighbors, while the search itself runs in parallel.

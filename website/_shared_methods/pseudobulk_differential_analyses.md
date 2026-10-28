@@ -13,6 +13,8 @@ Four feature matrices are tested:
 For each model, donors that miss a model variable or fall outside an optional donor list are removed.
 Samples outside an optional annotation-class subset are also removed, and the DTFA analysis by default removes samples with fewer than 5,000 ATAC counts.
 For count matrices, zero-depth samples are removed, features are filtered with the design-aware `edgeR::filterByExpr()` [@chen2025_edger_v4], and library sizes are TMM-normalized with `edgeR::normLibSizes()` [@robinson2009_edger; @robinson2010_tmm].
+TMM assumes that most features do not change in one direction.
+A broad one-sided change, such as a global opening of chromatin, would shrink the estimated effects and make unchanged features appear to change the other way.
 
 Model matrices are built from a configured formula or custom design function, and contrasts from named linear expressions or custom contrast functions.
 A configured random effect selects `limma::duplicateCorrelation()` with the random effect as block [@smyth2005_duplicatecorrelation; @ritchie2015_limma].
@@ -26,16 +28,18 @@ Continuous matrices use limma.
 edgeR cannot test a single-coefficient design, so such a count design is fitted with voom–limma after the same filtering and normalization.
 An optional paired-cell-type route fits each annotation class separately with voom–limma, or limma for continuous matrices.
 It allows at most one pseudobulk per pairing unit and class.
-A cross-class contrast is tested on a combined response, restricted to the donors present in every class involved.
+A cross-class contrast is tested on a combined response, restricted to the donors present and the features tested in every class involved.
 This response is the contrast-weighted sum of the classes' log-expression.
 It is weighted by the inverse of its variance, which is computed from the classes' precision weights.
 The combined response is fitted with the same donor-level design and correlation block, so each feature has its own covariance between classes.
 
 For each model and contrast, Benjamini–Hochberg FDR is calculated across the tested features, and features with an FDR below 0.05 are significant.
-DGE contrasts are also tested against the MSigDB Hallmark and Reactome collections [@liberzon2015_hallmark; @milacic2024_reactome] with competitive `camera` tests [@wu2012_camera; @dolgalev2026_msigdbr].
+DGE contrasts are also tested against the Hallmark and Reactome collections of MSigDB release 2026.1 [@liberzon2015_hallmark; @milacic2024_reactome] with competitive `camera` tests [@wu2012_camera; @dolgalev2026_msigdbr].
 These tests use the contrast's expression, precision weights and design, or the combined response for cross-class contrasts.
 Each set's inter-gene correlation is estimated from the residuals, and each set needs at least ten tested genes.
 FDR is calculated within each contrast and collection.
+A set's direction compares its genes with all other tested genes, including genes that belong to no set.
+The sets of one contrast therefore often lean the same way, even under the null.
 A cross-modality comparison maps CollecTRI regulators to JASPAR families.
 It compares the model *t*-statistics, rather than the raw scales, of transcription-factor activity and motif-family accessibility.
 Where gene expression is fitted with limma, it also compares TF expression (edgeR tests report no *t*-statistic).

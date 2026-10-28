@@ -15,7 +15,7 @@ This page describes the models of the optional peak–gene correlation module. [
 
 {{< include _shared_methods/peak_gene_models.md >}}
 
-The model fits are compared with `lme4`, `pbkrtest` and `stats::p.adjust()` in [Algorithm validation](algorithm_validation.md).
+The model fits are compared with `lme4` and `pbkrtest` in [Algorithm validation](algorithm_validation.md).
 
 ## Source and target graph
 

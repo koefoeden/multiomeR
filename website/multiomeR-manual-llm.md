@@ -2694,7 +2694,7 @@ multiomeR stores lightweight target metadata in the `description` argument of `t
 ``` r
 targets::tar_target(
   name = harmony_embeddings_matrix.GEX,
-  description = "Harmony-corrected SCTransform GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:WNN]",
+  description = "Harmony-corrected Pearson-residual GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:WNN]",
   command = ...
 )
 ```

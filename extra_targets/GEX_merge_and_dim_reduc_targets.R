@@ -87,24 +87,24 @@ rlang::list2(
   ),
   targets::tar_target(
     name = PCA_embeddings_tibble.GEX,
-    description = "Cell embeddings from SCTransform GEX PCA",
+    description = "Cell embeddings from Pearson-residual GEX PCA",
     command = PCA_BPCells.GEX$cell_embeddings |>
       tibble::as_tibble(rownames = "barcode_w_prefix")
   ),
   targets::tar_target(
     name = PCA_loadings_tibble.GEX,
-    description = "Gene loadings from SCTransform GEX PCA",
+    description = "Gene loadings from Pearson-residual GEX PCA",
     command = PCA_BPCells.GEX$feature_loadings |>
       tibble::as_tibble(rownames = "gene")
   ),
   targets::tar_target(
     name = top_variable_genes.GEX,
-    description = "Extract the top 10 most variable GEX genes from SCTransform residuals",
+    description = "Extract the top 10 most variable GEX genes from Pearson residuals",
     command = utils::head(PCA_BPCells.GEX$variable_features, 10)
   ),
   targets::tar_target(
     name = harmony_embeddings_matrix.GEX,
-    description = "Harmony-corrected SCTransform GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:WNN] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=5.0; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-01]",
+    description = "Harmony-corrected Pearson-residual GEX PCA embeddings [part_of_graph:GEX] [part_of_graph:WNN] [part_of_graph:seurat_export] [resource_observation: peak_RAM_GiB=5.0; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-01]",
     command = run_harmony_on_embedding_matrix(
       embedding_matrix = PCA_BPCells.GEX$cell_embeddings,
       metadata_tibble = metadata_harmony_tibble.GEX,
@@ -185,7 +185,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = variable_feature_plot.2_GEX_PCA_QC,
-    description = "Plot residual variance of top variable genes selected from SCTransform residuals. [checkpoint:2_GEX-PCA-QC]",
+    description = "Plot residual variance of top variable genes selected from Pearson residuals. [checkpoint:2_GEX-PCA-QC]",
     command = {
       plot <- PCA_BPCells.GEX$variable_feature_stats |>
         utils::head(50) |>

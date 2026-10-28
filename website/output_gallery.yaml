@@ -62,7 +62,7 @@ items:
   group: Primary module
   section: 2. GEX dimension reduction
   target: variable_feature_plot.2_GEX_PCA_QC
-  description: Plot residual variance of top variable genes selected from SCTransform residuals.
+  description: Plot residual variance of top variable genes selected from Pearson residuals.
   source_file: 2_GEX_PCA_QC/variable_feature_plot.png
   asset: gallery_assets/2_GEX-PCA-QC/variable_feature_plot.2_GEX_PCA_QC.webp
 - checkpoint: 2_GEX-PCA-QC

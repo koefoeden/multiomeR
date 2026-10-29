@@ -683,6 +683,11 @@ plot_GWAS_by_cluster_heatmap <- function(
     return(structure(list(), class = c("empty_plot_list", "list")))
   }
   fill_scale <- match.arg(fill_scale)
+  # GWAS of the tracks without scores keep grey rows, so that rows stay aligned with the tracks.
+  data_per_GWAS_and_cluster_df <- dplyr::bind_rows(data_per_GWAS_and_cluster_df, tidyr::expand_grid(
+    dplyr::anti_join(get_GWAS_track_tibble(GWAS_metadata_tracks_plot), data_per_GWAS_and_cluster_df, by = "GWAS_ID"),
+    cluster = unique(data_per_GWAS_and_cluster_df$cluster)
+  ))
 
   ordered_data <- get_ordered_GWAS_score_plot_data(
     data_per_GWAS_and_cluster_df,
@@ -724,6 +729,11 @@ plot_GWAS_by_cluster_heatmap <- function(
     legend.box.just = "top",
     legend.margin = ggplot2::margin(4, 8, 4, 0)
   )
+}
+
+# The GWAS and categories of plot_GWAS_metadata_tracks(), held by its first track.
+get_GWAS_track_tibble <- function(GWAS_metadata_tracks_plot) {
+  dplyr::distinct(GWAS_metadata_tracks_plot[[1]]$data, GWAS_ID = as.character(GWAS_ID), Category)
 }
 
 #' Save a GWAS-by-group heatmap with a height that grows with the GWAS count

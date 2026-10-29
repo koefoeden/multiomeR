@@ -24,7 +24,7 @@ rlang::list2(
       compartments_patterns = genetic_enrichment_compartment_patterns,
       grouping = "cell_types", scaled = TRUE
     ) |>
-      save_GWAS_heatmap(TRS_heatmap_data.SCAVENGE$GWAS_ID),
+      save_GWAS_heatmap(GWAS_inputs_tibble$GWAS_ID),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
@@ -36,7 +36,7 @@ rlang::list2(
       compartments_patterns = genetic_enrichment_compartment_patterns,
       grouping = "cell_types", scaled = FALSE
     ) |>
-      save_GWAS_heatmap(TRS_heatmap_data.SCAVENGE$GWAS_ID),
+      save_GWAS_heatmap(GWAS_inputs_tibble$GWAS_ID),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
@@ -48,7 +48,7 @@ rlang::list2(
       compartments_patterns = genetic_enrichment_compartment_patterns,
       grouping = "clusters", scaled = TRUE
     ) |>
-      save_GWAS_heatmap(TRS_heatmap_data.SCAVENGE$GWAS_ID),
+      save_GWAS_heatmap(GWAS_inputs_tibble$GWAS_ID),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
@@ -60,7 +60,7 @@ rlang::list2(
       compartments_patterns = genetic_enrichment_compartment_patterns,
       grouping = "clusters", scaled = FALSE
     ) |>
-      save_GWAS_heatmap(TRS_heatmap_data.SCAVENGE$GWAS_ID),
+      save_GWAS_heatmap(GWAS_inputs_tibble$GWAS_ID),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(

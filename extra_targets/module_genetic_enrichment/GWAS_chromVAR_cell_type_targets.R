@@ -66,7 +66,7 @@ rlang::list2(
       standardize = FALSE,
       beta_weighted = FALSE
     ) |>
-      save_GWAS_heatmap(chromVAR_deviation_tibble.cell_type_pseudobulk$GWAS_ID)
+      save_GWAS_heatmap(GWAS_inputs_tibble$GWAS_ID)
   ),
   tarchetypes::tar_file(
     name = raw_deviation_scaled.deviation_heatmaps.chromVAR,
@@ -79,6 +79,6 @@ rlang::list2(
       standardize = TRUE,
       beta_weighted = FALSE
     ) |>
-      save_GWAS_heatmap(chromVAR_deviation_tibble.cell_type_pseudobulk$GWAS_ID)
+      save_GWAS_heatmap(GWAS_inputs_tibble$GWAS_ID)
   )
 )

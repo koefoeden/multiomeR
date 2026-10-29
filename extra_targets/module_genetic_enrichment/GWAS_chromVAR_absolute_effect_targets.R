@@ -82,7 +82,7 @@ rlang::list2(
       standardize = FALSE,
       beta_weighted = TRUE
     ) |>
-      save_GWAS_heatmap(chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk$GWAS_ID)
+      save_GWAS_heatmap(GWAS_absolute_effect_inputs_tibble$GWAS_ID)
   ),
   tarchetypes::tar_file(
     name = beta_weighted_scaled.deviation_heatmaps.chromVAR,
@@ -95,7 +95,7 @@ rlang::list2(
       standardize = TRUE,
       beta_weighted = TRUE
     ) |>
-      save_GWAS_heatmap(chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk$GWAS_ID)
+      save_GWAS_heatmap(GWAS_absolute_effect_inputs_tibble$GWAS_ID)
   ),
   targets::tar_target(
     name = GWAS_absolute_effect_peak_variant_weight_tibble,

@@ -484,15 +484,7 @@ plot_SLDSC_enrichment_curves <- function(enrichment_tibble, compartments_pattern
       value_label = dplyr::if_else(abs(SLDSC_enrichment) < 10, sprintf("%.1f", SLDSC_enrichment), sprintf("%.0f", SLDSC_enrichment))
     )
   median_top_set_size <- stats::median(dplyr::count(dplyr::filter(cell_type_tibble, in_top_set), GWAS_ID, share)$n)
-  # The fixed order passes the adjacent-pair colour-vision checks; "Other" is grey.
-  compartments <- setdiff(levels(cell_type_tibble$compartment), "Other")
-  compartment_colours <- c(
-    rlang::set_names(
-      c("#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948", "#00899b", "#a0561c", "#9c2f7e", "#9a9a00")[seq_along(compartments)],
-      compartments
-    ),
-    Other = "#9b9a95"
-  )
+  compartment_colours <- get_compartment_colours(setdiff(levels(cell_type_tibble$compartment), "Other"))
   categories <- unique(curve_tibble$Category)
   purrr::map(rlang::set_names(categories), \(category) {
     of_category <- \(tibble) dplyr::filter(tibble, Category %in% category)

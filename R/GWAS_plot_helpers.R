@@ -276,6 +276,19 @@ get_cluster_compartments <- function(clusters, compartments_patterns) {
   factor(unname(matched), levels = c(names(compartments_patterns), "Other"))
 }
 
+#' Colour compartments by their pattern order, with `Other` grey
+#'
+#' The fixed order passes the adjacent-pair colour-vision checks, so each
+#' compartment keeps its colour across plots.
+#'
+#' @param compartments Compartment names in pattern order, without `Other`.
+#' @return Named colours of the compartments and `Other`.
+#' @keywords internal
+get_compartment_colours <- function(compartments) {
+  hues <- c("#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948", "#00899b", "#a0561c", "#9c2f7e", "#9a9a00")
+  c(rlang::set_names(rep_len(hues, length(compartments)), compartments), Other = "#9b9a95")
+}
+
 #' Order GWAS rows and clusters for score heatmaps
 #'
 #' Rows follow GWAS category and ID. Clusters are grouped into compartments by
@@ -534,6 +547,31 @@ plot_GWAS_feature_support_tracks <- function(feature_metadata, feature_col = "cl
     )
 }
 
+#' Plot each cluster's compartment as a coloured track above a heatmap
+#'
+#' @param feature_metadata Ordered cluster metadata with a `compartment` factor
+#'   from `get_cluster_compartments()`.
+#' @param feature_col Cluster column on the x axis.
+#' @return A one-row ggplot track with a compartment legend.
+#' @keywords internal
+plot_GWAS_feature_compartment_track <- function(feature_metadata, feature_col = "cluster") {
+  colours <- get_compartment_colours(setdiff(levels(feature_metadata$compartment), "Other"))
+  feature_metadata |>
+    ggplot2::ggplot(ggplot2::aes(x = .data[[feature_col]], y = 1, fill = compartment)) +
+    ggplot2::geom_tile(color = "white", linewidth = 0.3) +
+    ggplot2::scale_x_discrete(drop = FALSE, expand = c(0, 0)) +
+    ggplot2::scale_y_continuous(expand = c(0, 0)) +
+    ggplot2::scale_fill_manual(
+      values = colours,
+      breaks = intersect(names(colours), as.character(feature_metadata$compartment)),
+      labels = \(x) stringr::str_replace_all(x, "_", " "),
+      name = "Compartment",
+      guide = ggplot2::guide_legend(ncol = 2L, byrow = TRUE, title.position = "top", order = 2)
+    ) +
+    ggplot2::labs(x = NULL, y = NULL) +
+    gwas_heatmap_metadata_theme()
+}
+
 #' Plot GWAS metadata tracks
 #'
 #' Plot GWAS category, finemapping method, sample-size, loci, and ancestry tracks.
@@ -723,15 +761,16 @@ plot_GWAS_by_cluster_heatmap <- function(
 
   # Keep all body panels at the same layout level so axes and legends cannot
   # independently resize the metadata rows or the score matrix.
-  plots <- lapply(seq_len(4L), \(i) GWAS_metadata_tracks_plot[[i]])
-  plots[[5]] <- score_plot
-  design <- "ABCDE"
-  heights <- grid::unit(1, "null")
+  # Column tracks above the heatmap: nuclei per cluster, then compartments when grouped by them.
+  column_tracks <- list()
   if ("n_cells" %in% colnames(ordered_data$clusters) && any(!is.na(ordered_data$clusters$n_cells))) {
-    plots[[6]] <- plot_GWAS_feature_support_tracks(ordered_data$clusters)
-    design <- "####F\nABCDE"
-    heights <- grid::unit(c(28, 1), c("mm", "null"))
+    column_tracks$support <- plot_GWAS_feature_support_tracks(ordered_data$clusters)
   }
+  if (!is.null(compartments_patterns)) column_tracks$compartment <- plot_GWAS_feature_compartment_track(ordered_data$clusters)
+  track_heights_mm <- c(support = 28, compartment = 4)[names(column_tracks)]
+  plots <- c(lapply(seq_len(4L), \(i) GWAS_metadata_tracks_plot[[i]]), list(score_plot), unname(column_tracks))
+  design <- paste(c(paste0("####", LETTERS[5L + seq_along(column_tracks)]), "ABCDE"), collapse = "\n")
+  heights <- grid::unit(c(track_heights_mm, 1), c(rep("mm", length(column_tracks)), "null"))
 
   patchwork::wrap_plots(
     plots, design = design, widths = c(0.35, 0.35, 2, 1.2, 9),

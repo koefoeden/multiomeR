@@ -712,10 +712,10 @@ items:
 - checkpoint: genetic_enrichment
   group: Genetic enrichment
   section: null
-  target: modality_comparison_plot.specificity.SLDSC.genetic_enrichment
+  target: modality_comparison_plot.SLDSC.specificity.genetic_enrichment
   description: Save which enriched GWAS-cell-type pairs cell-type-specific accessibility and expression explain, alone and jointly, in S-LDSC.
-  source_file: genetic_enrichment/SLDSC/specificity/modality_comparison_plot.png
-  asset: gallery_assets/genetic_enrichment/modality_comparison_plot.specificity.SLDSC.genetic_enrichment.webp
+  source_file: genetic_enrichment/specificity/SLDSC/modality_comparison_plot.png
+  asset: gallery_assets/genetic_enrichment/modality_comparison_plot.SLDSC.specificity.genetic_enrichment.webp
 - checkpoint: genetic_enrichment
   group: Genetic enrichment
   section: null
@@ -726,17 +726,17 @@ items:
 - checkpoint: genetic_enrichment
   group: Genetic enrichment
   section: null
-  target: heatmap.specificity.SLDSC.genetic_enrichment
+  target: heatmap.SLDSC.specificity.genetic_enrichment
   description: Save the cell-type-by-GWAS heatmap of S-LDSC heritability enrichment in cell-type-specific accessibility (tau*) with each GWAS's top set of cell types.
-  source_file: genetic_enrichment/SLDSC/specificity/heatmap.png
-  asset: gallery_assets/genetic_enrichment/heatmap.specificity.SLDSC.genetic_enrichment.webp
+  source_file: genetic_enrichment/specificity/SLDSC/heatmap.png
+  asset: gallery_assets/genetic_enrichment/heatmap.SLDSC.specificity.genetic_enrichment.webp
 - checkpoint: genetic_enrichment
   group: Genetic enrichment
   section: null
-  target: block_influence_plot.specificity.SLDSC.genetic_enrichment
+  target: block_influence_plot.SLDSC.specificity.genetic_enrichment
   description: Save how much of each S-LDSC coefficient at q < 0.05 its most influential jackknife blocks carry, and whether it holds without them.
-  source_file: genetic_enrichment/SLDSC/specificity/block_influence_plot.png
-  asset: gallery_assets/genetic_enrichment/block_influence_plot.specificity.SLDSC.genetic_enrichment.webp
+  source_file: genetic_enrichment/specificity/SLDSC/block_influence_plot.png
+  asset: gallery_assets/genetic_enrichment/block_influence_plot.SLDSC.specificity.genetic_enrichment.webp
 - checkpoint: genetic_enrichment
   group: Genetic enrichment
   section: null
@@ -761,24 +761,24 @@ items:
 - checkpoint: genetic_enrichment
   group: Genetic enrichment
   section: null
-  target: PIP_agreement_plot.enrichment.SLDSC.genetic_enrichment
+  target: agreement_plot.comparison.enrichment.genetic_enrichment
   description: Save the agreement of S-LDSC heritability and fine-mapped PIP enrichment in matched-size annotations.
-  source_file: genetic_enrichment/SLDSC/enrichment/PIP_agreement_plot.png
-  asset: gallery_assets/genetic_enrichment/PIP_agreement_plot.enrichment.SLDSC.genetic_enrichment.webp
+  source_file: genetic_enrichment/enrichment/comparison/agreement_plot.png
+  asset: gallery_assets/genetic_enrichment/agreement_plot.comparison.enrichment.genetic_enrichment.webp
 - checkpoint: genetic_enrichment
   group: Genetic enrichment
   section: null
-  target: strategy_curves_plot.enrichment.SLDSC.genetic_enrichment
+  target: strategy_curves_plot.SLDSC.enrichment.genetic_enrichment
   description: Save S-LDSC heritability and fine-mapped PIP enrichment of peak and gene annotations against annotation size.
-  source_file: genetic_enrichment/SLDSC/enrichment/strategy_curves_plot.png
-  asset: gallery_assets/genetic_enrichment/strategy_curves_plot.enrichment.SLDSC.genetic_enrichment.webp
+  source_file: genetic_enrichment/enrichment/SLDSC/strategy_curves_plot.png
+  asset: gallery_assets/genetic_enrichment/strategy_curves_plot.SLDSC.enrichment.genetic_enrichment.webp
 - checkpoint: genetic_enrichment
   group: Genetic enrichment
   section: null
-  target: strategy_size_comparison_plot.enrichment.SLDSC.genetic_enrichment
+  target: strategy_size_comparison_plot.SLDSC.enrichment.genetic_enrichment
   description: Save each cell type's enrichment in peak and gene annotations of matched size.
-  source_file: genetic_enrichment/SLDSC/enrichment/strategy_size_comparison_plot.png
-  asset: gallery_assets/genetic_enrichment/strategy_size_comparison_plot.enrichment.SLDSC.genetic_enrichment.webp
+  source_file: genetic_enrichment/enrichment/SLDSC/strategy_size_comparison_plot.png
+  asset: gallery_assets/genetic_enrichment/strategy_size_comparison_plot.SLDSC.enrichment.genetic_enrichment.webp
 - checkpoint: peak_gene_correlation
   group: Peak–gene correlation
   section: null

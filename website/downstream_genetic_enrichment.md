@@ -136,14 +136,16 @@ Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtit
 │   ├── locus_contribution_per_GWAS_faceted_bars_plots/
 │   ├── absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots/
 │   └── variant_contribution_detail_plots/
-├── SLDSC/
-│   ├── enrichment/
+├── enrichment/
+│   ├── SLDSC/
 │   │   ├── heatmaps/
 │   │   ├── curves_per_category_plots/
 │   │   ├── strategy_curves_plot.png
-│   │   ├── strategy_size_comparison_plot.png
-│   │   └── PIP_agreement_plot.png
-│   └── specificity/
+│   │   └── strategy_size_comparison_plot.png
+│   └── comparison/
+│       └── agreement_plot.png
+├── specificity/
+│   └── SLDSC/
 │       ├── heatmap.png
 │       ├── modality_comparison_plot.png
 │       └── block_influence_plot.png

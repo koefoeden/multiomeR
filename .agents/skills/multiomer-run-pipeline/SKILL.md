@@ -83,6 +83,10 @@ configuration or input changes, estimate the cost with
 
 ## Run patterns
 
+To run a configuration directory other than the checkout's, set
+`MULTIOMER_CONFIGURATION` for the driver and for every query of its graph, such
+as `tar_outdated()`; without it they build the checkout's graph.
+
 Immediately before `tar_make()`, run the active-run check: `targets` itself
 refuses a second driver only on the same node. Use one driver per store, and
 while it runs use only read-only queries: `tar_invalidate()`, `tar_delete()`,

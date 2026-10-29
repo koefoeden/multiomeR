@@ -1,6 +1,8 @@
 #' Locate a file in this checkout's selected configuration directory
 #'
 #' The optional, untracked configuration.local contains one directory path.
+#' A non-empty MULTIOMER_CONFIGURATION environment variable takes precedence,
+#' so one session can select another directory without changing the checkout's.
 #' Relative directory paths are anchored at the repository root. Paths inside
 #' configuration files retain their existing interpretation.
 #' @param filename Configuration basename, including its extension.
@@ -10,13 +12,14 @@
 #' @return Absolute path to the selected configuration file.
 configuration_path <- function(filename, project_root = get_project_root(), must_exist = TRUE) {
   selection_file <- file.path(project_root, "configuration.local")
-  directory <- "configuration"
-  if (file.exists(selection_file)) {
+  directory <- Sys.getenv("MULTIOMER_CONFIGURATION")
+  if (!nzchar(directory) && file.exists(selection_file)) {
     directory <- trimws(readLines(selection_file, warn = FALSE))
     if (length(directory) != 1L || !nzchar(directory)) {
       stop(selection_file, " must contain exactly one non-empty directory path.", call. = FALSE)
     }
   }
+  if (!nzchar(directory)) directory <- "configuration"
   directory <- path.expand(directory)
   if (!startsWith(directory, "/")) directory <- file.path(project_root, directory)
   if (!dir.exists(directory)) {

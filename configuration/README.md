@@ -12,7 +12,10 @@ printf '%s\n' 'configuration_my_project' > configuration.local
 Edit the files in the copy, and commit them if you share the settings.
 `configuration.local` holds one directory path, relative to the checkout root
 or absolute. It is local to the checkout and ignored by Git, and removing it
-selects `configuration/` again.
+selects `configuration/` again. To select another directory for one session
+only, such as a targets driver, set the `MULTIOMER_CONFIGURATION` environment
+variable to its path. It takes precedence over `configuration.local`, which
+other sessions in the checkout keep using.
 
 All active configuration comes from the selected directory; missing files are
 never taken from another directory. Core files are `cfg_GEM_wells.tsv`,

@@ -825,7 +825,7 @@ Use [Troubleshooting](troubleshooting.md) if a formula, contrast or metadata joi
 
 ## When to use
 
-Use this module to ask which cell types or nuclei have accessible chromatin overlapping genetic evidence for a human trait. It weights ATAC peaks by the fine-mapping probabilities of the GWAS variants they contain, scores enrichment per cell type and per nucleus, and uses the [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) method to propagate nucleus scores through the WNN neighbor graph. Stratified LD score regression (S-LDSC) adds a genome-wide test: whether each cell type's specifically accessible peaks, or specifically expressed genes, carry more of a trait's heritability than peaks or genes in general. [Method details](methods_genetic_enrichment.md)
+Use this module to ask which cell types or nuclei have accessible chromatin overlapping genetic evidence for a human trait. It weights ATAC peaks by the fine-mapping probabilities of the GWAS variants they contain, scores enrichment per cell type and per nucleus, and uses the [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) method to propagate nucleus scores through the WNN neighbor graph. Stratified LD score regression (S-LDSC) adds genome-wide readouts: how much more of a trait's heritability each cell type's most accessible peaks carry than random variants, and whether its specifically accessible peaks, or specifically expressed genes, carry more than peaks or genes in general. [Method details](methods_genetic_enrichment.md)
 
 A **credible set** contains candidate causal variants at a GWAS locus, with probabilities from fine-mapping. Enrichment helps prioritize cellular contexts; it does not by itself identify a causal cell type, gene or mechanism.
 
@@ -850,7 +850,8 @@ Before enabling the module, confirm that:
 | Which cell types are enriched, and which matters most? | Cell-type chromVAR deviation heatmaps, which outline each study's top set of cell types |
 | Which loci and variants drive a cell type's enrichment? | Locus-contribution heatmaps and bars, and variant detail plots |
 | Which nuclei are trait-relevant? | SCAVENGE trait-relevance scores on the WNN graph, summarized by cell type and cluster |
-| Is a study's genome-wide heritability enriched in a cell type's specific peaks or genes? | S-LDSC heatmap, which outlines each study's top set of cell types, and a comparison of the peak, gene and joint models |
+| How much of a study's genome-wide heritability lies in each cell type's most accessible chromatin? | S-LDSC enrichment curves across annotation sizes, one file per study category, which highlight each study's top sets of cell types |
+| Is that heritability specific to a cell type's peaks or genes, beyond peaks or genes in general? | S-LDSC heatmap, which outlines each study's top set of cell types, and a comparison of the peak, gene and joint models |
 | Do S-LDSC and chromVAR agree? | S-LDSC versus chromVAR scatter plots per study and an agreement overview |
 | How robust is an S-LDSC enrichment, and do peaks or genes explain more? | A plot of each enrichment's most influential genome blocks, and comparisons of peak and gene annotations of matched size |
 | Do peak–gene links point to GWAS signal beyond accessibility and distance? | With the [peak–gene correlation module](downstream_peak_gene_correlation.md), comparisons of activity-by-contact, correlation and baseline rankings of each cell type's peaks against their territory |
@@ -953,6 +954,7 @@ Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtit
 │   ├── chromVAR_locus_contribution_per_GWAS_faceted_bars_plots/
 │   ├── chromVAR_absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots/
 │   ├── chromVAR_variant_contribution_detail_plots/
+│   ├── SLDSC_enrichment_curves_per_category_plots/
 │   ├── SLDSC_heatmap.png
 │   ├── SLDSC_modality_comparison_plot.png
 │   ├── SLDSC_block_influence_plot.png
@@ -976,6 +978,9 @@ Read the tables behind the plots in R, for example the cell-type enrichment scor
 ```{.r filename="R"}
 targets::tar_read(
   chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.my_aggregation
+)
+targets::tar_read(
+  SLDSC_matched_enrichment_tibble.cell_type_pseudobulk.genetic_enrichment.my_aggregation
 )
 targets::tar_read(
   SLDSC_cell_type_tibble.cell_type_pseudobulk.genetic_enrichment.my_aggregation
@@ -2200,7 +2205,9 @@ The sparse SCAVENGE implementation is compared with its reference in [Algorithm 
 <!-- begin include: website/_shared_methods/genetic_enrichment_SLDSC.md -->
 
 Stratified LD score regression (S-LDSC) tests whether a GWAS's heritability is enriched in variants within the peaks accessible in each annotation class, using genome-wide summary statistics rather than fine-mapped loci [@finucane2015_stratified_ldsc; @finucane2018_ldsc_seg].
-It uses the peaks and the ATAC counts summed by the final WNN cell-type labels of the pseudobulk chromVAR analysis.
+The main readout is the heritability enrichment of each class's most accessible peaks at matched annotation sizes, described below.
+A conditional coefficient tests specificity: whether a class's peaks carry more heritability than accessible chromatin in general.
+S-LDSC uses the peaks and the ATAC counts summed by the final WNN cell-type labels of the pseudobulk chromVAR analysis.
 Each class's counts are divided by its total.
 Entries with fewer than 10 reads are set to zero, because one read in a shallow class weighs as much as thousands of reads in a deep one.
 Each peak's remaining depth-normalized values are then divided by their sum across classes.
@@ -2216,7 +2223,7 @@ Variants need an rsID, a P-value within the double-precision range, alleles that
 Variants whose sample size is below two-thirds of the 90th percentile are removed.
 Studies without per-variant sample sizes use the total of the samples in the summary statistics' GWAS-SSF metadata, which also gives the sample size and ancestry shown for each trait.
 Each class is fitted separately, jointly with the all-peaks annotation and the 97 annotations of the baseline-LD v2.2 model [@gazal2017_baseline_ld].
-The class coefficient therefore measures heritability per variant beyond accessible chromatin in general and the baseline functional categories.
+The class coefficient therefore measures heritability per variant beyond accessible chromatin in general and the baseline functional categories, which makes it a test of specificity.
 Regression weights follow ldsc but are computed once per GWAS from the shared annotations.
 Variants with a chi-square statistic above 80, or above 0.001 times the largest sample size when that is larger, are excluded.
 Standard errors come from a jackknife over 200 blocks of adjacent variants.
@@ -2254,17 +2261,23 @@ A coefficient that spread evenly over the genome would lose a share close to the
 Blocks span about 15 Mb, so this measures concentration only coarsely.
 Variants above the chi-square cap never enter the fits, so the loci with the largest effects never contribute.
 
-Annotation strategies are compared at matched sizes, because enrichment depends on how much of the genome an annotation covers.
-For each class, peaks are ranked by their accessibility share and gene windows by expression specificity.
+The main readout compares classes at matched annotation sizes, because enrichment depends on how much of the genome an annotation covers.
+For each class, peaks are ranked by their depth-normalized accessibility, counting only entries with at least 10 reads as above.
+Two further strategies rank peaks by their accessibility share and gene windows by expression specificity.
 A variant in overlapping windows takes the highest specificity among them.
 Peaks or window pieces are added in this order until they hold 0.5%, 1%, 2% or 5% of the common (MAF > 5%) reference variants.
 Pieces are kept whole and ties keep genomic order, so an annotation can exceed its share by one piece.
 A class whose scored peaks or gene windows hold fewer common variants than a size gets no annotation of that size, and the plots count these.
 All consensus peaks together hold about 10% of common variants, so larger peak annotations would lose their class specificity.
-A reference annotation of each strategy ranks the same peaks or genes at random.
+Ten reference annotations of each strategy rank the same peaks or genes at random, with fixed seeds.
 Each binary annotation is fitted with the 97 baseline-LD annotations, which also set the regression weights.
 Its heritability share sums the fitted per-variant heritability of the whole model over the annotation's common variants, as ldsc's Prop._h2 does [@finucane2015_stratified_ldsc].
 Heritability enrichment divides this share by the annotation's share of common variants, with a ratio jackknife standard error over the same 200 blocks.
+The ten random annotations are averaged within each jackknife block, so that their mean has a standard error too.
+A one-sided normal test asks whether enrichment exceeds 1, the value of a random variant.
+Benjamini–Hochberg adjustment is applied across all traits and classes within each strategy and size.
+Each trait gets a top set of classes at each strategy and size, chosen as for tau* but on enrichment.
+The standard errors of the shortfalls come from the paired delete-one-block heritability shares, each divided by its annotation's share of common variants.
 The chi-square cap removes the strongest loci from this statistic.
 A complementary statistic uses the fine-mapped credible sets of each GWAS instead.
 Fine-mapped enrichment divides the annotation's share of the summed posterior inclusion probabilities of autosomal credible-set variants by its share of common variants.

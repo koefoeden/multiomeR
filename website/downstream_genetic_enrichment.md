@@ -7,7 +7,7 @@ source("helpers/_setup.R")
 
 ## When to use
 
-Use this module to ask which cell types or nuclei have accessible chromatin overlapping genetic evidence for a human trait. It weights ATAC peaks by the fine-mapping probabilities of the GWAS variants they contain, scores enrichment per cell type and per nucleus, and uses the [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) method to propagate nucleus scores through the WNN neighbor graph. Stratified LD score regression (S-LDSC) adds a genome-wide test: whether each cell type's specifically accessible peaks, or specifically expressed genes, carry more of a trait's heritability than peaks or genes in general. [Method details](methods_genetic_enrichment.md)
+Use this module to ask which cell types or nuclei have accessible chromatin overlapping genetic evidence for a human trait. It weights ATAC peaks by the fine-mapping probabilities of the GWAS variants they contain, scores enrichment per cell type and per nucleus, and uses the [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) method to propagate nucleus scores through the WNN neighbor graph. Stratified LD score regression (S-LDSC) adds genome-wide readouts: how much more of a trait's heritability each cell type's most accessible peaks carry than random variants, and whether its specifically accessible peaks, or specifically expressed genes, carry more than peaks or genes in general. [Method details](methods_genetic_enrichment.md)
 
 A **credible set** contains candidate causal variants at a GWAS locus, with probabilities from fine-mapping. Enrichment helps prioritize cellular contexts; it does not by itself identify a causal cell type, gene or mechanism.
 
@@ -32,7 +32,8 @@ Before enabling the module, confirm that:
 | Which cell types are enriched, and which matters most? | Cell-type chromVAR deviation heatmaps, which outline each study's top set of cell types |
 | Which loci and variants drive a cell type's enrichment? | Locus-contribution heatmaps and bars, and variant detail plots |
 | Which nuclei are trait-relevant? | SCAVENGE trait-relevance scores on the WNN graph, summarized by cell type and cluster |
-| Is a study's genome-wide heritability enriched in a cell type's specific peaks or genes? | S-LDSC heatmap, which outlines each study's top set of cell types, and a comparison of the peak, gene and joint models |
+| How much of a study's genome-wide heritability lies in each cell type's most accessible chromatin? | S-LDSC enrichment curves across annotation sizes, one file per study category, which highlight each study's top sets of cell types |
+| Is that heritability specific to a cell type's peaks or genes, beyond peaks or genes in general? | S-LDSC heatmap, which outlines each study's top set of cell types, and a comparison of the peak, gene and joint models |
 | Do S-LDSC and chromVAR agree? | S-LDSC versus chromVAR scatter plots per study and an agreement overview |
 | How robust is an S-LDSC enrichment, and do peaks or genes explain more? | A plot of each enrichment's most influential genome blocks, and comparisons of peak and gene annotations of matched size |
 | Do peak–gene links point to GWAS signal beyond accessibility and distance? | With the [peak–gene correlation module](downstream_peak_gene_correlation.md), comparisons of activity-by-contact, correlation and baseline rankings of each cell type's peaks against their territory |
@@ -135,6 +136,7 @@ Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtit
 │   ├── chromVAR_locus_contribution_per_GWAS_faceted_bars_plots/
 │   ├── chromVAR_absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots/
 │   ├── chromVAR_variant_contribution_detail_plots/
+│   ├── SLDSC_enrichment_curves_per_category_plots/
 │   ├── SLDSC_heatmap.png
 │   ├── SLDSC_modality_comparison_plot.png
 │   ├── SLDSC_block_influence_plot.png
@@ -158,6 +160,9 @@ Read the tables behind the plots in R, for example the cell-type enrichment scor
 ```{.r filename="R"}
 targets::tar_read(
   chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.my_aggregation
+)
+targets::tar_read(
+  SLDSC_matched_enrichment_tibble.cell_type_pseudobulk.genetic_enrichment.my_aggregation
 )
 targets::tar_read(
   SLDSC_cell_type_tibble.cell_type_pseudobulk.genetic_enrichment.my_aggregation

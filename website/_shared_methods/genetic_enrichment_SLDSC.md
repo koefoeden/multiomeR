@@ -1,5 +1,7 @@
 Stratified LD score regression (S-LDSC) tests whether a GWAS's heritability is enriched in variants within the peaks accessible in each annotation class, using genome-wide summary statistics rather than fine-mapped loci [@finucane2015_stratified_ldsc; @finucane2018_ldsc_seg].
-It uses the peaks and the ATAC counts summed by the final WNN cell-type labels of the pseudobulk chromVAR analysis.
+The main readout is the heritability enrichment of each class's most accessible peaks at matched annotation sizes, described below.
+A conditional coefficient tests specificity: whether a class's peaks carry more heritability than accessible chromatin in general.
+S-LDSC uses the peaks and the ATAC counts summed by the final WNN cell-type labels of the pseudobulk chromVAR analysis.
 Each class's counts are divided by its total.
 Entries with fewer than 10 reads are set to zero, because one read in a shallow class weighs as much as thousands of reads in a deep one.
 Each peak's remaining depth-normalized values are then divided by their sum across classes.
@@ -15,7 +17,7 @@ Variants need an rsID, a P-value within the double-precision range, alleles that
 Variants whose sample size is below two-thirds of the 90th percentile are removed.
 Studies without per-variant sample sizes use the total of the samples in the summary statistics' GWAS-SSF metadata, which also gives the sample size and ancestry shown for each trait.
 Each class is fitted separately, jointly with the all-peaks annotation and the 97 annotations of the baseline-LD v2.2 model [@gazal2017_baseline_ld].
-The class coefficient therefore measures heritability per variant beyond accessible chromatin in general and the baseline functional categories.
+The class coefficient therefore measures heritability per variant beyond accessible chromatin in general and the baseline functional categories, which makes it a test of specificity.
 Regression weights follow ldsc but are computed once per GWAS from the shared annotations.
 Variants with a chi-square statistic above 80, or above 0.001 times the largest sample size when that is larger, are excluded.
 Standard errors come from a jackknife over 200 blocks of adjacent variants.
@@ -53,17 +55,23 @@ A coefficient that spread evenly over the genome would lose a share close to the
 Blocks span about 15 Mb, so this measures concentration only coarsely.
 Variants above the chi-square cap never enter the fits, so the loci with the largest effects never contribute.
 
-Annotation strategies are compared at matched sizes, because enrichment depends on how much of the genome an annotation covers.
-For each class, peaks are ranked by their accessibility share and gene windows by expression specificity.
+The main readout compares classes at matched annotation sizes, because enrichment depends on how much of the genome an annotation covers.
+For each class, peaks are ranked by their depth-normalized accessibility, counting only entries with at least 10 reads as above.
+Two further strategies rank peaks by their accessibility share and gene windows by expression specificity.
 A variant in overlapping windows takes the highest specificity among them.
 Peaks or window pieces are added in this order until they hold 0.5%, 1%, 2% or 5% of the common (MAF > 5%) reference variants.
 Pieces are kept whole and ties keep genomic order, so an annotation can exceed its share by one piece.
 A class whose scored peaks or gene windows hold fewer common variants than a size gets no annotation of that size, and the plots count these.
 All consensus peaks together hold about 10% of common variants, so larger peak annotations would lose their class specificity.
-A reference annotation of each strategy ranks the same peaks or genes at random.
+Ten reference annotations of each strategy rank the same peaks or genes at random, with fixed seeds.
 Each binary annotation is fitted with the 97 baseline-LD annotations, which also set the regression weights.
 Its heritability share sums the fitted per-variant heritability of the whole model over the annotation's common variants, as ldsc's Prop._h2 does [@finucane2015_stratified_ldsc].
 Heritability enrichment divides this share by the annotation's share of common variants, with a ratio jackknife standard error over the same 200 blocks.
+The ten random annotations are averaged within each jackknife block, so that their mean has a standard error too.
+A one-sided normal test asks whether enrichment exceeds 1, the value of a random variant.
+Benjamini–Hochberg adjustment is applied across all traits and classes within each strategy and size.
+Each trait gets a top set of classes at each strategy and size, chosen as for tau* but on enrichment.
+The standard errors of the shortfalls come from the paired delete-one-block heritability shares, each divided by its annotation's share of common variants.
 The chi-square cap removes the strongest loci from this statistic.
 A complementary statistic uses the fine-mapped credible sets of each GWAS instead.
 Fine-mapped enrichment divides the annotation's share of the summed posterior inclusion probabilities of autosomal credible-set variants by its share of common variants.

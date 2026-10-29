@@ -1,7 +1,7 @@
 rlang::list2(
   targets::tar_target(
     name = SLDSC_peak_gene_score_tibble.cell_type_pseudobulk,
-    description = "Score each cell type's peaks by activity by contact, peak-gene correlation and both, with their activity, accessibility share, distance and covariate stratum, among activity-by-contact candidate pairs and correlation-tested pairs [part_of_graph:genetic_enrichment_SLDSC]",
+    description = "Score each cell type's peaks by activity by contact, peak-gene correlation and both, with their activity, accessibility share, distance and covariate stratum, among activity-by-contact candidate pairs and correlation-tested pairs [part_of_graph:genetic_enrichment_SLDSC] [resource_observation: peak_RAM_GiB=6.8; walltime_s=65; n_rows=7.1M; n_cell_groups=13; aggregation=unpublished; method=VmHWM; date=2026-10-23]",
     command = get_SLDSC_peak_gene_score_tibble(
       ABC_scores_tibble = peak_gene_ABC_scores_tibble.WNN,
       cell_groups_tibble = peak_gene_ABC_cell_groups_tibble.WNN,

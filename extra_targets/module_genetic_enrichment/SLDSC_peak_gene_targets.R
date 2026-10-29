@@ -58,6 +58,7 @@ rlang::list2(
     name = enrichment_tibble,
     description = "Combine the enrichment of all peak-gene rankings with GWAS categories and whether the single-modality S-LDSC models enrich each GWAS-cell-type pair at q < 0.05 [part_of_graph:genetic_enrichment_SLDSC]",
     command = dplyr::bind_rows(!!!rlang::syms(paste0("enrichment_records.", SLDSC_peak_gene_rankings$ranking))) |>
+      dplyr::select(-h2_share_delete_values, -PIP_bootstrap_shares) |>
       tidyr::separate_wider_delim("cluster", "/", names = c("tier", "cluster")) |>
       dplyr::left_join(dplyr::select(GWAS_inputs_tibble, GWAS_ID, Category), by = "GWAS_ID", relationship = "many-to-one") |>
       dplyr::left_join(get_SLDSC_enriched_pair_tibble(SLDSC_cell_type_tibble.cell_type_pseudobulk), by = c("GWAS_ID", "cluster"), relationship = "many-to-one") |>

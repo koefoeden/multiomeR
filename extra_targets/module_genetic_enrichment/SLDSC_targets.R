@@ -115,7 +115,7 @@ rlang::list2(
   ),
   targets::tar_target(
     name = SLDSC_matched_enrichment_tibble.cell_type_pseudobulk,
-    description = "Combine matched-size enrichment of all annotation strategies, test S-LDSC enrichment above 1 with BH q-values over GWAS and cell types within each strategy and size, find each GWAS's top set of cell types by enrichment from paired jackknife values, and add GWAS categories and whether the single-modality S-LDSC models enrich each GWAS-cell-type pair at q < 0.05 [part_of_graph:genetic_enrichment_SLDSC]",
+    description = "Combine matched-size enrichment of all annotation strategies, test S-LDSC enrichment above 1 with BH q-values over GWAS and cell types within each strategy and size, find each GWAS's top set of cell types by enrichment from paired jackknife values, test fine-mapped PIP enrichment likewise from paired locus-bootstrap values, and add GWAS categories and whether the single-modality S-LDSC models enrich each GWAS-cell-type pair at q < 0.05 [part_of_graph:genetic_enrichment_SLDSC]",
     command = dplyr::bind_rows(
       SLDSC_matched_enrichment_records.cell_type_pseudobulk.accessible_peaks,
       SLDSC_matched_enrichment_records.cell_type_pseudobulk.specific_peaks,
@@ -201,7 +201,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = heatmaps.fine_mapping.enrichment,
-    description = "Save one cell-type-by-GWAS heatmap per size of fine-mapped PIP enrichment in each cell type's most accessible peaks, starred where its bootstrap interval lies above 1. [checkpoint:genetic_enrichment]",
+    description = "Save one cell-type-by-GWAS heatmap per size of fine-mapped PIP enrichment in each cell type's most accessible peaks, with each size's FDR stars and top sets. [checkpoint:genetic_enrichment]",
     command = plot_SLDSC_enrichment_heatmaps(
       SLDSC_matched_enrichment_tibble.cell_type_pseudobulk,
       dplyr::filter(SLDSC_cell_type_tibble.cell_type_pseudobulk, model == "peaks"),

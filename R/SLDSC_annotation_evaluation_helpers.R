@@ -186,8 +186,9 @@ get_SLDSC_credible_set_annotation_matrix <- function(credible_set_GRanges, range
 #' @param annotation_matrix Binary range-by-annotation matrix.
 #' @param n_bootstraps Bootstrap samples of loci.
 #' @return One row per annotation with its share of the PIP, the bootstrap
-#'   standard error and 95% interval of that share, and the numbers of credible
-#'   sets and loci.
+#'   standard error and 95% interval of that share, its bootstrap shares
+#'   `PIP_bootstrap_shares`, paired across annotations, and the numbers of
+#'   credible sets and loci.
 #' @keywords internal
 
 get_SLDSC_PIP_share_tibble <- function(credible_set_GRanges, ranges, annotation_matrix, n_bootstraps = 1000L) {
@@ -216,6 +217,7 @@ get_SLDSC_PIP_share_tibble <- function(credible_set_GRanges, ranges, annotation_
     PIP_share_se = apply(bootstrap_shares, 2, stats::sd),
     PIP_share_lower = apply(bootstrap_shares, 2, stats::quantile, 0.025, names = FALSE),
     PIP_share_upper = apply(bootstrap_shares, 2, stats::quantile, 0.975, names = FALSE),
+    PIP_bootstrap_shares = lapply(seq_len(ncol(bootstrap_shares)), \(i) bootstrap_shares[, i]),
     n_credible_sets = nrow(set_tibble),
     n_loci = length(loci)
   )
@@ -359,7 +361,7 @@ get_SLDSC_enriched_pair_tibble <- function(SLDSC_cell_type_tibble) {
     dplyr::summarise(enriched_in_models = any(.data$q < 0.05), .by = c("GWAS_ID", "cluster"))
 }
 
-#' Test matched-size heritability enrichment and find each GWAS's top sets
+#' Test matched-size enrichment and find each GWAS's top sets
 #'
 #' Test each annotation's S-LDSC heritability enrichment above 1, the
 #' enrichment of a random variant, in a one-sided normal test with its
@@ -367,15 +369,21 @@ get_SLDSC_enriched_pair_tibble <- function(SLDSC_cell_type_tibble) {
 #' P-values over GWAS and cell types within each strategy and size. Each GWAS's
 #' top set of cell types at each strategy and size comes from
 #' `get_top_set_tibble()` on enrichment, with paired delete-one-block values.
-#' The random reference is tested, but takes no part in q-values or top sets.
+#' Fine-mapped PIP enrichment is tested in the same way, with its locus-bootstrap
+#' standard error and paired bootstrap values, in GWAS with at least
+#' `min_loci` loci, since fewer give no usable bootstrap. The random reference
+#' is tested, but takes no part in q-values or top sets.
 #'
 #' @param enrichment_tibble Combined matched-size enrichment of all GWAS with
-#'   the heritability shares' delete-one-block values.
+#'   the heritability shares' delete-one-block values and the PIP shares'
+#'   bootstrap values.
+#' @param min_loci Fewest loci whose bootstrap tests fine-mapped enrichment.
 #' @return The tibble with `z`, `p`, `q`, `in_top_set` and `z_below_anchor`,
-#'   without the delete-one-block values.
+#'   and their fine-mapped counterparts prefixed `PIP_`, without the
+#'   delete-one-block and bootstrap values.
 #' @keywords internal
 
-test_SLDSC_matched_enrichment <- function(enrichment_tibble) {
+test_SLDSC_matched_enrichment <- function(enrichment_tibble, min_loci = 10L) {
   enrichment_tibble |>
     dplyr::mutate(z = (SLDSC_enrichment - 1) / SLDSC_enrichment_se, p = stats::pnorm(z, lower.tail = FALSE)) |>
     dplyr::mutate(q = stats::p.adjust(dplyr::if_else(cluster == "random", NA, p), method = "BH"), .by = c(strategy, share)) |>
@@ -388,8 +396,23 @@ test_SLDSC_matched_enrichment <- function(enrichment_tibble) {
       ),
       .by = c(strategy, GWAS_ID, share)
     ) |>
-    dplyr::select(-h2_share_delete_values) |>
-    dplyr::relocate(z, p, q, in_top_set, z_below_anchor, .after = SLDSC_enrichment_se)
+    dplyr::mutate(
+      PIP_z = dplyr::if_else(n_loci >= min_loci, (PIP_enrichment - 1) / PIP_enrichment_se, NA),
+      PIP_p = stats::pnorm(PIP_z, lower.tail = FALSE)
+    ) |>
+    dplyr::mutate(PIP_q = stats::p.adjust(dplyr::if_else(cluster == "random", NA, PIP_p), method = "BH"), .by = c(strategy, share)) |>
+    dplyr::mutate(
+      get_top_set_tibble(
+        dplyr::if_else(cluster == "random", NA, PIP_enrichment),
+        do.call(rbind, PIP_bootstrap_shares) / SNP_share,
+        PIP_q < 0.05
+      ) |>
+        dplyr::rename(PIP_in_top_set = in_top_set, PIP_z_below_anchor = z_below_anchor),
+      .by = c(strategy, GWAS_ID, share)
+    ) |>
+    dplyr::select(-h2_share_delete_values, -PIP_bootstrap_shares) |>
+    dplyr::relocate(z, p, q, in_top_set, z_below_anchor, .after = SLDSC_enrichment_se) |>
+    dplyr::relocate(PIP_z, PIP_p, PIP_q, PIP_in_top_set, PIP_z_below_anchor, .after = PIP_enrichment_upper)
 }
 
 #' Summarise matched-size enrichment across GWAS
@@ -629,11 +652,9 @@ plot_SLDSC_enrichment_curves <- function(enrichment_tibble, compartments_pattern
 #' cell types that cannot fill the size left missing. All sizes share the
 #' statistic's limits from `get_SLDSC_enrichment_limits()`, which for S-LDSC
 #' are those of the enrichment curves, and one cell-type order, from
-#' clustering the statistic at all sizes within compartments. S-LDSC
-#' enrichment is starred at q < 0.05 with its top sets outlined. Fine-mapped
-#' PIP enrichment is shown without marks: most cell types' most accessible
-#' peaks hold more fine-mapped probability than random variants or random
-#' peaks, so a test against either would mark most cells.
+#' clustering the statistic at all sizes within compartments. Stars mark
+#' enrichment above 1 at q < 0.05 and outlines the top sets, from
+#' `test_SLDSC_matched_enrichment()`.
 #'
 #' @param enrichment_tibble Matched-size enrichment from
 #'   `test_SLDSC_matched_enrichment()`.
@@ -656,9 +677,10 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
     dplyr::filter(strategy == "accessible_peaks", cluster != "random") |>
     dplyr::mutate(
       estimate = .data[[estimate_col]],
-      # Stars mark only FDR-significant S-LDSC enrichment.
-      significance_label = if (is_SLDSC) get_significance_stars(NA, q) else NA_character_,
-      in_top_set = if (is_SLDSC) in_top_set else NA
+      # Stars mark only FDR-significant enrichment.
+      significance_label = get_significance_stars(NA, if (is_SLDSC) q else PIP_q),
+      in_top_set = if (is_SLDSC) in_top_set else PIP_in_top_set,
+      z_below_anchor = if (is_SLDSC) z_below_anchor else PIP_z_below_anchor
     )
   sizes <- sort(unique(accessible_tibble$share))
   heatmap_tibbles <- purrr::map(sizes, \(size) {
@@ -677,7 +699,7 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
     dplyr::mutate(GWAS_ID = paste(GWAS_ID, size), fill = dplyr::coalesce(fill, 1)) |>
     get_ordered_GWAS_score_plot_data(compartments_patterns, score_col = "fill") |>
     purrr::pluck("cluster_levels")
-  few_loci <- sort(unique(dplyr::filter(accessible_tibble, n_loci < 10)$GWAS_ID))
+  untested <- sort(unique(dplyr::filter(accessible_tibble, is.na(PIP_z))$GWAS_ID))
   purrr::map2(heatmap_tibbles, sizes, \(heatmap_tibble, size) {
     size_label <- scales::percent(size, accuracy = 0.1, drop0trailing = TRUE)
     not_measurable <- dplyr::filter(dropped_tibble, strategy == "accessible_peaks", share == size)$cluster
@@ -710,16 +732,18 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
       title = paste("Fine-mapped variant enrichment in each cell type's most accessible peaks, sized to", size_label, "of common SNPs"),
       subtitle = paste(
         "Red marks cell types whose most accessible peaks hold more fine-mapped posterior probability per common variant than a random variant (enrichment 1, white); all sizes share this scale.",
-        "Compare cell types within a GWAS; the credible-set heatmaps show which loci carry each cell type's enrichment.",
+        "Stars mark FDR-significant enrichment above 1 (**); a black outline marks the most enriched of these cell types and grey outlines the cell types not significantly below it.",
         sep = "\n"
       ),
       caption = c(
         annotation_sentence,
         "Enrichment: the annotation's share of the posterior inclusion probability (PIP) of autosomal credible-set variants, placed by position, over its share of common SNPs.",
         limits_sentence,
-        "No cell is marked: with enough loci, most cell types' most accessible peaks hold more fine-mapped probability than random variants and than random peaks of the same size, so a test against either marks most cells.",
+        "Stars: ** enrichment above 1 at Benjamini-Hochberg q < 0.05, from a one-sided z-test with the standard error of 1,000 bootstrap samples of loci (credible sets whose centres lie within 500 kb of each other), over all GWAS and cell types at this size.",
+        "Outlines: in GWAS with a cell type at q < 0.05, black marks the most enriched of these and grey every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types, from the paired bootstrap samples.",
+        "With enough loci, most cell types' most accessible peaks hold more fine-mapped probability than a random variant, so the outlines say more than the stars.",
         "Only genome-wide significant loci are fine-mapped, and a small annotation holds only the credible-set variants inside it, so the enrichment reflects the strongest loci and the fine-mapping resolution.",
-        if (length(few_loci)) paste0("Fewer than 10 loci, so the enrichment rests on very few loci: ", toString(few_loci), "."),
+        if (length(untested)) paste0("Not tested, with fewer than 10 loci: ", toString(untested), "."),
         not_measurable_sentence
       )
     )

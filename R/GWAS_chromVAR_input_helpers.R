@@ -205,7 +205,18 @@ get_open_targets_credible_set_variants_tibble <- function(GWAS_inputs_tibble, op
 }
 
 get_open_targets_credible_set_GRanges <- function(variants_tibble) {
-  variants_tibble |>
+  # A credible set is one locus, so variants outside the chromosome holding most of its posterior mass are source
+  # errors, such as one chr9 variant in a chr6 credible set of GCST90243984 (Open Targets 26.03).
+  main_chromosome <- variants_tibble |>
+    dplyr::summarise(mass = sum(.data$posteriorProbability), .by = c("studyLocusId", "chromosome")) |>
+    dplyr::slice_max(.data$mass, n = 1L, with_ties = FALSE, by = "studyLocusId")
+  on_main_chromosome <- variants_tibble$chromosome ==
+    main_chromosome$chromosome[match(variants_tibble$studyLocusId, main_chromosome$studyLocusId)]
+  if (!all(on_main_chromosome)) {
+    warning("Dropped ", sum(!on_main_chromosome), " credible-set variant(s) outside their set's main chromosome: ",
+      paste(unique(variants_tibble$variantId[!on_main_chromosome]), collapse = ", "), call. = FALSE)
+  }
+  variants_tibble[on_main_chromosome, ] |>
     dplyr::mutate(seqnames = stringr::str_c("chr", chromosome), start = position, end = position) |>
     GenomicRanges::makeGRangesFromDataFrame(
       seqnames.field = "seqnames",

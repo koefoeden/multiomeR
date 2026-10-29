@@ -850,8 +850,8 @@ Before enabling the module, confirm that:
 | Which cell types are enriched, and which matters most? | Cell-type chromVAR deviation heatmaps, which outline each study's top set of cell types |
 | Which loci and variants drive a cell type's enrichment? | Locus-contribution heatmaps and bars, and variant detail plots |
 | Which nuclei are trait-relevant? | SCAVENGE trait-relevance scores on the WNN graph, summarized by cell type and cluster |
-| How much of a study's genome-wide heritability lies in each cell type's most accessible chromatin? | S-LDSC enrichment curves across annotation sizes, one file per study category, which highlight each study's top sets of cell types |
-| Is that heritability specific to a cell type's peaks or genes, beyond peaks or genes in general? | S-LDSC heatmap, which outlines each study's top set of cell types, and a comparison of the peak, gene and joint models |
+| How much of a study's genome-wide heritability lies in each cell type's most accessible chromatin? | S-LDSC enrichment heatmaps, one per annotation size, and enrichment curves across sizes, one file per study category; both mark each study's top sets of cell types |
+| Is that heritability specific to a cell type's peaks or genes, beyond peaks or genes in general? | S-LDSC specificity heatmap, which outlines each study's top set of cell types, and a comparison of the peak, gene and joint models |
 | Do S-LDSC and chromVAR agree? | S-LDSC versus chromVAR scatter plots per study and an agreement overview |
 | How robust is an S-LDSC enrichment, and do peaks or genes explain more? | A plot of each enrichment's most influential genome blocks, and comparisons of peak and gene annotations of matched size |
 | Do peak–gene links point to GWAS signal beyond accessibility and distance? | With the [peak–gene correlation module](downstream_peak_gene_correlation.md), comparisons of activity-by-contact, correlation and baseline rankings of each cell type's peaks against their territory |
@@ -955,13 +955,16 @@ Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtit
 │   ├── absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots/
 │   └── variant_contribution_detail_plots/
 ├── SLDSC/
-│   ├── enrichment_curves_per_category_plots/
-│   ├── heatmap.png
-│   ├── modality_comparison_plot.png
-│   ├── block_influence_plot.png
-│   ├── matched_enrichment_curves_plot.png
-│   ├── matched_size_comparison_plot.png
-│   └── matched_enrichment_agreement_plot.png
+│   ├── enrichment/
+│   │   ├── heatmaps/
+│   │   ├── curves_per_category_plots/
+│   │   ├── strategy_curves_plot.png
+│   │   ├── strategy_size_comparison_plot.png
+│   │   └── PIP_agreement_plot.png
+│   └── specificity/
+│       ├── heatmap.png
+│       ├── modality_comparison_plot.png
+│       └── block_influence_plot.png
 ├── comparison/
 │   ├── z_score_plot.png
 │   └── agreement_plot.png
@@ -2282,6 +2285,8 @@ Benjamini–Hochberg adjustment is applied across all traits and classes within 
 Each trait gets a top set of classes at each strategy and size, chosen as for tau* but on enrichment.
 The standard errors of the shortfalls come from the paired delete-one-block heritability shares, each divided by its annotation's share of common variants.
 The chi-square cap removes the strongest loci from this statistic.
+Heatmaps of the accessibility ranking, one per size, colour each class by its enrichment on a linear scale that all sizes share.
+They mark classes at q < 0.05 with two stars, outline the top sets and leave classes without an annotation of that size empty.
 A complementary statistic uses the fine-mapped credible sets of each GWAS instead.
 Fine-mapped enrichment divides the annotation's share of the summed posterior inclusion probabilities of autosomal credible-set variants by its share of common variants.
 Variants are assigned by position, so indels and variants missing from the reference count.

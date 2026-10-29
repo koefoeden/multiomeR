@@ -73,6 +73,8 @@ Benjamini–Hochberg adjustment is applied across all traits and classes within 
 Each trait gets a top set of classes at each strategy and size, chosen as for tau* but on enrichment.
 The standard errors of the shortfalls come from the paired delete-one-block heritability shares, each divided by its annotation's share of common variants.
 The chi-square cap removes the strongest loci from this statistic.
+Heatmaps of the accessibility ranking, one per size, colour each class by its enrichment on a linear scale that all sizes share.
+They mark classes at q < 0.05 with two stars, outline the top sets and leave classes without an annotation of that size empty.
 A complementary statistic uses the fine-mapped credible sets of each GWAS instead.
 Fine-mapped enrichment divides the annotation's share of the summed posterior inclusion probabilities of autosomal credible-set variants by its share of common variants.
 Variants are assigned by position, so indels and variants missing from the reference count.

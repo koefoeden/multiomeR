@@ -142,7 +142,7 @@ rlang::list2(
     )
   ),
   tarchetypes::tar_file(
-    name = enrichment_curves_per_category_plots.SLDSC,
+    name = curves_per_category_plots.enrichment.SLDSC,
     description = "Save each cell type's S-LDSC heritability enrichment in its most accessible peaks against annotation size, one file per GWAS category with one panel per GWAS and a shared y scale, with each GWAS's top sets. [checkpoint:genetic_enrichment]",
     command = {
       plots <- plot_SLDSC_enrichment_curves(
@@ -156,13 +156,13 @@ rlang::list2(
     }
   ),
   tarchetypes::tar_file(
-    name = matched_enrichment_curves_plot.SLDSC,
+    name = strategy_curves_plot.enrichment.SLDSC,
     description = "Save S-LDSC heritability and fine-mapped PIP enrichment of peak and gene annotations against annotation size. [checkpoint:genetic_enrichment]",
     command = plot_SLDSC_matched_enrichment_curves(SLDSC_matched_enrichment_summary_tibble.cell_type_pseudobulk, SLDSC_matched_dropped_tibble.cell_type_pseudobulk) |>
       save_plots_structured(width = 13, height = 7)
   ),
   tarchetypes::tar_file(
-    name = matched_size_comparison_plot.SLDSC,
+    name = strategy_size_comparison_plot.enrichment.SLDSC,
     description = "Save each cell type's enrichment in peak and gene annotations of matched size. [checkpoint:genetic_enrichment]",
     command = plot_SLDSC_matched_size_comparison(
       SLDSC_matched_enrichment_summary_tibble.cell_type_pseudobulk,
@@ -172,18 +172,30 @@ rlang::list2(
       save_plots_structured(width = 15, height = 3 + 0.17 * dplyr::n_distinct(SLDSC_matched_enrichment_tibble.cell_type_pseudobulk$cluster))
   ),
   tarchetypes::tar_file(
-    name = matched_enrichment_agreement_plot.SLDSC,
+    name = PIP_agreement_plot.enrichment.SLDSC,
     description = "Save the agreement of S-LDSC heritability and fine-mapped PIP enrichment in matched-size annotations. [checkpoint:genetic_enrichment]",
     command = plot_SLDSC_matched_enrichment_agreement(SLDSC_matched_enrichment_tibble.cell_type_pseudobulk, SLDSC_matched_dropped_tibble.cell_type_pseudobulk) |>
       save_plots_structured(width = 14, height = 6.5)
   ),
   tarchetypes::tar_file(
-    name = heatmap.SLDSC,
-    description = "Save the cell-type-by-GWAS S-LDSC heritability enrichment heatmap with each GWAS's top set of cell types. [checkpoint:genetic_enrichment]",
-    command = plot_SLDSC_cell_type_heatmap(
+    name = heatmap.specificity.SLDSC,
+    description = "Save the cell-type-by-GWAS heatmap of S-LDSC heritability enrichment in cell-type-specific accessibility (tau*) with each GWAS's top set of cell types. [checkpoint:genetic_enrichment]",
+    command = plot_SLDSC_specificity_heatmap(
       dplyr::filter(SLDSC_cell_type_tibble.cell_type_pseudobulk, model == "peaks"),
       GWAS_inputs_tibble = GWAS_inputs_tibble,
       compartments_patterns = genetic_enrichment_compartment_patterns
+    ) |>
+      save_GWAS_heatmap(SLDSC_cell_type_tibble.cell_type_pseudobulk$GWAS_ID)
+  ),
+  tarchetypes::tar_file(
+    name = heatmaps.enrichment.SLDSC,
+    description = "Save one cell-type-by-GWAS heatmap per size of S-LDSC heritability enrichment in each cell type's most accessible peaks, on the enrichment curves' colour limits, with each size's top sets. [checkpoint:genetic_enrichment]",
+    command = plot_SLDSC_enrichment_heatmaps(
+      SLDSC_matched_enrichment_tibble.cell_type_pseudobulk,
+      dplyr::filter(SLDSC_cell_type_tibble.cell_type_pseudobulk, model == "peaks"),
+      GWAS_inputs_tibble,
+      genetic_enrichment_compartment_patterns,
+      SLDSC_matched_dropped_tibble.cell_type_pseudobulk
     ) |>
       save_GWAS_heatmap(SLDSC_cell_type_tibble.cell_type_pseudobulk$GWAS_ID)
   ),
@@ -208,13 +220,13 @@ rlang::list2(
       save_plots_structured(width = 18, height = 14)
   ),
   tarchetypes::tar_file(
-    name = modality_comparison_plot.SLDSC,
+    name = modality_comparison_plot.specificity.SLDSC,
     description = "Save which enriched GWAS-cell-type pairs cell-type-specific accessibility and expression explain, alone and jointly, in S-LDSC. [checkpoint:genetic_enrichment]",
     command = plot_SLDSC_modality_comparison(SLDSC_cell_type_tibble.cell_type_pseudobulk) |>
       save_plots_structured(width = 16, height = 5 + 0.2 * dplyr::n_distinct(SLDSC_cell_type_tibble.cell_type_pseudobulk$GWAS_ID))
   ),
   tarchetypes::tar_file(
-    name = block_influence_plot.SLDSC,
+    name = block_influence_plot.specificity.SLDSC,
     description = "Save how much of each S-LDSC coefficient at q < 0.05 its most influential jackknife blocks carry, and whether it holds without them. [checkpoint:genetic_enrichment]",
     command = plot_SLDSC_block_influence(SLDSC_cell_type_tibble.cell_type_pseudobulk) |>
       save_plots_structured(width = 11, height = 5)

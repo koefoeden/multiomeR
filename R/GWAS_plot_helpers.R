@@ -280,9 +280,10 @@ get_cluster_compartments <- function(clusters, compartments_patterns) {
 #'
 #' Rows follow GWAS category and ID. Clusters are grouped into compartments by
 #' `get_cluster_compartments()` and hierarchically ordered by their scores
-#' within each compartment.
+#' within each compartment, unless `cluster_levels` gives their order.
 #' @keywords internal
-get_ordered_GWAS_score_plot_data <- function(data_per_GWAS_and_cluster_df, compartments_patterns, score_col = "median_score") {
+get_ordered_GWAS_score_plot_data <- function(data_per_GWAS_and_cluster_df, compartments_patterns, score_col = "median_score",
+                                             cluster_levels = NULL) {
   row_metadata <- data_per_GWAS_and_cluster_df |>
     dplyr::distinct(Category, GWAS_ID) |>
     dplyr::distinct(GWAS_ID, .keep_all = TRUE)
@@ -295,7 +296,7 @@ get_ordered_GWAS_score_plot_data <- function(data_per_GWAS_and_cluster_df, compa
   clusters <- colnames(score_mat)
   compartment <- if (is.null(compartments_patterns)) "Cluster" else get_cluster_compartments(clusters, compartments_patterns)
   cluster_metadata <- tibble::tibble(cluster = clusters, compartment = compartment)
-  cluster_levels <- cluster_metadata |>
+  cluster_levels <- cluster_levels %||% (cluster_metadata |>
     dplyr::arrange(compartment, cluster) |>
     dplyr::group_split(compartment, .keep = FALSE) |>
     purrr::map(\(group_df) {
@@ -306,7 +307,7 @@ get_ordered_GWAS_score_plot_data <- function(data_per_GWAS_and_cluster_df, compa
         group_clusters
       }
     }) |>
-    unlist(use.names = FALSE)
+    unlist(use.names = FALSE))
   row_levels <- rev(dplyr::arrange(row_metadata, Category, GWAS_ID)$GWAS_ID)
   cluster_support <- data_per_GWAS_and_cluster_df |>
     dplyr::select(cluster, dplyr::any_of(c("n_cells", "n_counts", "n_features", "counts_per_feature"))) |>
@@ -352,6 +353,7 @@ get_plot_group_breaks <- function(ordered_values) {
 #' @param top_set_col Optional logical column whose `TRUE` tiles are outlined
 #'   as each GWAS's top set: its anchor, whose `z_below_anchor` is zero, in
 #'   black and the rest in grey.
+#' @param fill_midpoint Value at the white centre of the diverging scale.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
@@ -364,7 +366,8 @@ plot_GWAS_feature_heatmap <- function(
   fill_scale = c("diverging", "sequential"),
   fill_limits = NULL,
   support_label_col = NULL,
-  top_set_col = NULL
+  top_set_col = NULL,
+  fill_midpoint = 0
 ) {
   fill_scale <- match.arg(fill_scale)
   row_categories <- score_plot_data |>
@@ -444,7 +447,7 @@ plot_GWAS_feature_heatmap <- function(
         low = "#3B4CC0",
         mid = "white",
         high = "#B40426",
-        midpoint = 0,
+        midpoint = fill_midpoint,
         limits = fill_limits,
         name = fill_label,
         guide = score_guide
@@ -670,6 +673,8 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
 #' @param fill_limits Optional numeric fill-scale limits.
 #' @param support_label_col Optional text column drawn on top of heatmap tiles.
 #' @param top_set_col Optional logical column marking each GWAS's top set.
+#' @param fill_midpoint Value at the white centre of the diverging scale.
+#' @param cluster_levels Optional cluster order instead of clustering by fill.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
@@ -682,7 +687,9 @@ plot_GWAS_by_cluster_heatmap <- function(
   fill_scale = c("diverging", "sequential"),
   fill_limits = NULL,
   support_label_col = NULL,
-  top_set_col = NULL
+  top_set_col = NULL,
+  fill_midpoint = 0,
+  cluster_levels = NULL
 ) {
   if (nrow(data_per_GWAS_and_cluster_df) == 0) {
     return(structure(list(), class = c("empty_plot_list", "list")))
@@ -697,7 +704,8 @@ plot_GWAS_by_cluster_heatmap <- function(
   ordered_data <- get_ordered_GWAS_score_plot_data(
     data_per_GWAS_and_cluster_df,
     compartments_patterns,
-    score_col = fill_col
+    score_col = fill_col,
+    cluster_levels = cluster_levels
   )
 
   score_plot <- plot_GWAS_feature_heatmap(
@@ -709,7 +717,8 @@ plot_GWAS_by_cluster_heatmap <- function(
     fill_scale = fill_scale,
     fill_limits = fill_limits,
     support_label_col = support_label_col,
-    top_set_col = top_set_col
+    top_set_col = top_set_col,
+    fill_midpoint = fill_midpoint
   )
 
   # Keep all body panels at the same layout level so axes and legends cannot

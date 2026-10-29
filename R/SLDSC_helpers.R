@@ -863,64 +863,96 @@ get_SLDSC_cell_type_tibble <- function(GWAS_input_record, sumstats_record, basel
     dplyr::relocate(GWAS_ID, model, annotation, cluster, tau, tau_se, z, p, tau_star)
 }
 
-#' Plot S-LDSC cell-type enrichment for all GWAS
+#' Plot one S-LDSC statistic per GWAS and cell type as a heatmap
 #'
-#' @param SLDSC_tibble Combined cell-type S-LDSC results of one model and
-#'   annotation, with q-values and top sets.
+#' Draw the statistic beside the GWAS metadata tracks, with stars and each
+#' GWAS's top set of cell types outlined.
+#'
+#' @param heatmap_tibble One row per GWAS and cell type with the drawn `fill`,
+#'   its `significance_label`, `in_top_set` and `z_below_anchor`, GWAS
+#'   categories, cell-type support, and each GWAS's S-LDSC sample size,
+#'   ancestry and total heritability, missing without summary statistics.
 #' @param GWAS_inputs_tibble Metadata of the same GWAS, whose sample size and
 #'   ancestry are replaced by those of the S-LDSC results.
 #' @param compartments_patterns Optional cell-type compartment patterns.
+#' @param fill_label Legend title of the fill.
+#' @param title,subtitle Plot title and subtitle.
+#' @param caption Caption sentences on the statistic, which come before those
+#'   on the GWAS.
+#' @inheritParams plot_GWAS_by_cluster_heatmap
 #' @return Annotated heatmap.
 #' @keywords internal
 
-plot_SLDSC_cell_type_heatmap <- function(SLDSC_tibble, GWAS_inputs_tibble, compartments_patterns = NULL) {
-  list_GWAS <- \(rows) paste(sort(unique(SLDSC_tibble$GWAS_ID[rows])), collapse = ", ")
-  without_sumstats <- is.na(SLDSC_tibble$z)
-  low_h2 <- !without_sumstats & SLDSC_tibble$h2 / SLDSC_tibble$h2_se < 7
-  # A few extreme tau* would otherwise wash out the colours of all others.
-  colour_limit <- signif(stats::quantile(abs(SLDSC_tibble$tau_star), 0.99, na.rm = TRUE, names = FALSE), 2)
-  SLDSC_tibble <- SLDSC_tibble |>
-    dplyr::mutate(
-      tau_star_colour = pmax(pmin(tau_star, colour_limit), -colour_limit),
-      significance_label = get_significance_stars(p, q)
-    )
+plot_SLDSC_cell_type_heatmap <- function(heatmap_tibble, GWAS_inputs_tibble, compartments_patterns, fill_label, title, subtitle, caption,
+                                         fill_limits = NULL, fill_midpoint = 0, cluster_levels = NULL) {
+  list_GWAS <- \(rows) paste(sort(unique(heatmap_tibble$GWAS_ID[rows])), collapse = ", ")
+  without_sumstats <- is.na(heatmap_tibble$h2)
+  low_h2 <- !without_sumstats & heatmap_tibble$h2 / heatmap_tibble$h2_se < 7
   GWAS_metadata_tracks_plot <- GWAS_inputs_tibble |>
     dplyr::rows_update(
-      dplyr::distinct(dplyr::select(SLDSC_tibble, GWAS_ID, sample_size, dplyr::starts_with("ancestry_"))),
+      dplyr::distinct(dplyr::select(heatmap_tibble, GWAS_ID, sample_size, dplyr::starts_with("ancestry_"))),
       by = "GWAS_ID"
     ) |>
     dplyr::arrange(Category, GWAS_ID) |>
     dplyr::mutate(GWAS_ID = factor(GWAS_ID, levels = rev(GWAS_ID))) |>
     plot_GWAS_metadata_tracks()
   plot_GWAS_by_cluster_heatmap(
-    SLDSC_tibble,
+    heatmap_tibble,
     GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
     compartments_patterns = compartments_patterns,
-    fill_col = "tau_star_colour",
-    fill_label = "Standardized effect size tau*",
+    fill_col = "fill",
+    fill_label = fill_label,
+    fill_limits = fill_limits,
     support_label_col = "significance_label",
-    top_set_col = "in_top_set"
+    top_set_col = "in_top_set",
+    fill_midpoint = fill_midpoint,
+    cluster_levels = cluster_levels
   ) + patchwork::plot_annotation(
-    title = "Heritability enrichment in cell-type-specific accessibility (S-LDSC)",
-    subtitle = paste(
-      "Red marks cell types whose specifically accessible peaks carry more per-SNP heritability than peaks in general.",
-      "Stars mark nominal (*) and FDR-significant (**) enrichment; a black outline marks the top significant cell type and grey outlines the cell types not significantly below it; together they contain the most relevant cell type.",
-      sep = "\n"
-    ),
-    caption = stringr::str_wrap(paste(
-      "Each SNP in a consensus peak carries the peak's share of depth-normalized pseudobulk accessibility in the cell type.",
-      "Each cell type is fitted jointly with an all-peaks annotation and the 97 baseline-LD v2.2 annotations to HapMap3 SNP summary statistics from the GWAS Catalog or a configured release, using GRCh38 1000 Genomes European LD.",
-      sprintf("Colour: tau*, the change in per-SNP heritability per standard deviation of the annotation, relative to the mean per-SNP heritability; values beyond ±%s take the end colours.", colour_limit),
-      "Stars: * one-sided coefficient P < 0.05 from its 200-block jackknife; ** also Benjamini-Hochberg q < 0.05 over all GWAS and cell types.",
-      "Outlines: in GWAS with a cell type at q < 0.05, black marks the one of these with the largest tau* and grey every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types",
-      "(Bonferroni, so the set holds the cell type with the largest true tau* with at least 95% probability); shortfall standard errors come from paired jackknife differences over the same blocks.",
+    title = title,
+    subtitle = subtitle,
+    caption = stringr::str_wrap(paste(c(
+      caption,
       if (any(without_sumstats)) paste0("Grey rows have no usable genome-wide summary statistics: ", list_GWAS(without_sumstats), "."),
       if (any(low_h2)) paste0("Heritability z < 7, so partitioning is less reliable: ", list_GWAS(low_h2), "."),
       "Sample and ancestry tracks describe the summary statistics, from their GWAS-SSF metadata or else the credible-set study; method and loci tracks describe the credible sets.",
       "GWAS with non-European samples are approximated with European LD."
-    ), width = 150),
+    ), collapse = " "), width = 150),
     theme = ggplot2::theme(plot.caption = ggplot2::element_text(hjust = 0))
   )
+}
+
+#' Plot the S-LDSC coefficients of cell-type-specific accessibility for all GWAS
+#'
+#' @param SLDSC_tibble Combined cell-type S-LDSC results of one model and
+#'   annotation, with q-values and top sets.
+#' @inheritParams plot_SLDSC_cell_type_heatmap
+#' @return Annotated heatmap of tau*.
+#' @keywords internal
+
+plot_SLDSC_specificity_heatmap <- function(SLDSC_tibble, GWAS_inputs_tibble, compartments_patterns = NULL) {
+  # A few extreme tau* would otherwise wash out the colours of all others.
+  colour_limit <- signif(stats::quantile(abs(SLDSC_tibble$tau_star), 0.99, na.rm = TRUE, names = FALSE), 2)
+  SLDSC_tibble |>
+    dplyr::mutate(fill = pmax(pmin(tau_star, colour_limit), -colour_limit), significance_label = get_significance_stars(p, q)) |>
+    plot_SLDSC_cell_type_heatmap(
+      GWAS_inputs_tibble,
+      compartments_patterns,
+      fill_label = "Standardized effect size tau*",
+      title = "Heritability enrichment in cell-type-specific accessibility (S-LDSC)",
+      subtitle = paste(
+        "Red marks cell types whose specifically accessible peaks carry more per-SNP heritability than peaks in general.",
+        "Stars mark nominal (*) and FDR-significant (**) enrichment; a black outline marks the top significant cell type and grey outlines the cell types not significantly below it; together they contain the most relevant cell type.",
+        sep = "\n"
+      ),
+      caption = c(
+        "Each SNP in a consensus peak carries the peak's share of depth-normalized pseudobulk accessibility in the cell type.",
+        "Each cell type is fitted jointly with an all-peaks annotation and the 97 baseline-LD v2.2 annotations to HapMap3 SNP summary statistics from the GWAS Catalog or a configured release, using GRCh38 1000 Genomes European LD.",
+        sprintf("Colour: tau*, the change in per-SNP heritability per standard deviation of the annotation, relative to the mean per-SNP heritability; values beyond ±%s take the end colours.", colour_limit),
+        "Stars: * one-sided coefficient P < 0.05 from its 200-block jackknife; ** also Benjamini-Hochberg q < 0.05 over all GWAS and cell types.",
+        "Outlines: in GWAS with a cell type at q < 0.05, black marks the one of these with the largest tau* and grey every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types",
+        "(Bonferroni, so the set holds the cell type with the largest true tau* with at least 95% probability); shortfall standard errors come from paired jackknife differences over the same blocks."
+      )
+    )
 }
 
 #' Pair S-LDSC and pseudobulk chromVAR cell-type z-scores and P-values

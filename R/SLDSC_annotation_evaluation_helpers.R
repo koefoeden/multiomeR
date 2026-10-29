@@ -400,14 +400,33 @@ SLDSC_strategy_scale <- \(aesthetics = "colour") {
   )
 }
 
+#' Get the shared limits of the S-LDSC enrichment curves and heatmaps
+#'
+#' The limits cap the outer `cap_quantile` of all cell-type estimates of the
+#' `accessible_peaks` strategy at each end, with the lower end at most 0,
+#' rounded outward to multiples of 5.
+#'
+#' @param enrichment_tibble Matched-size enrichment from
+#'   `test_SLDSC_matched_enrichment()`.
+#' @param cap_quantile Share of cell-type estimates beyond each limit.
+#' @return The lower and upper limit.
+#' @keywords internal
+
+get_SLDSC_enrichment_limits <- function(enrichment_tibble, cap_quantile = 0.01) {
+  estimates <- dplyr::filter(enrichment_tibble, strategy == "accessible_peaks", cluster != "random")$SLDSC_enrichment
+  c(
+    floor(min(0, stats::quantile(estimates, cap_quantile, na.rm = TRUE, names = FALSE)) / 5) * 5,
+    ceiling(stats::quantile(estimates, 1 - cap_quantile, na.rm = TRUE, names = FALSE) / 5) * 5
+  )
+}
+
 #' Plot each cell type's heritability enrichment in its most accessible peaks
 #'
 #' One plot per GWAS category, with one panel per GWAS with S-LDSC estimates,
 #' shows each cell type's enrichment in the `accessible_peaks` strategy's
 #' annotations against their size, coloured by compartment, on one y scale
-#' shared by all plots, whose ends by default cap the outer `cap_quantile` of
-#' all cell-type estimates at each end, with the lower end at most 0, rounded
-#' outward to multiples of 5. Points beyond the caps are drawn at them as
+#' shared by all plots, by default with the limits of
+#' `get_SLDSC_enrichment_limits()`. Points beyond the limits are drawn at them as
 #' triangles labelled with their value. Up to `n_labels` cell types per GWAS
 #' are highlighted and labelled: those that anchor its top set at the most
 #' sizes, then those in its top set at the most sizes, then the most enriched.
@@ -432,11 +451,7 @@ plot_SLDSC_enrichment_curves <- function(enrichment_tibble, compartments_pattern
   curve_tibble <- enrichment_tibble |>
     dplyr::filter(strategy == "accessible_peaks", !is.na(SLDSC_enrichment)) |>
     dplyr::arrange(Category, GWAS_ID)
-  estimates <- curve_tibble$SLDSC_enrichment[curve_tibble$cluster != "random"]
-  limits <- y_limits %||% c(
-    floor(min(0, stats::quantile(estimates, cap_quantile, names = FALSE)) / 5) * 5,
-    ceiling(stats::quantile(estimates, 1 - cap_quantile, names = FALSE) / 5) * 5
-  )
+  limits <- y_limits %||% get_SLDSC_enrichment_limits(enrichment_tibble, cap_quantile)
   capped <- \(values) pmin(pmax(values, limits[[1]]), limits[[2]])
   curve_tibble <- curve_tibble |>
     dplyr::mutate(
@@ -549,6 +564,81 @@ plot_SLDSC_enrichment_curves <- function(enrichment_tibble, compartments_pattern
         plot.caption = ggplot2::element_text(hjust = 0)
       )
   })
+}
+
+#' Plot heritability enrichment in each cell type's most accessible peaks as heatmaps
+#'
+#' One heatmap per size of the `accessible_peaks` strategy, laid out as the
+#' specificity heatmap: every GWAS and cell type of the peak model, with
+#' cell types that cannot fill the size left missing. All sizes share the
+#' limits of the enrichment curves, from `get_SLDSC_enrichment_limits()`, and
+#' one cell-type order, from clustering the enrichment at all sizes within
+#' compartments.
+#'
+#' @param enrichment_tibble Matched-size enrichment from
+#'   `test_SLDSC_matched_enrichment()`.
+#' @param SLDSC_tibble Combined cell-type S-LDSC results of the peak model,
+#'   which give the GWAS and cell types with their metadata.
+#' @inheritParams plot_SLDSC_cell_type_heatmap
+#' @inheritParams plot_SLDSC_matched_enrichment_curves
+#' @return A list of annotated heatmaps named by size.
+#' @keywords internal
+
+plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS_inputs_tibble, compartments_patterns, dropped_tibble) {
+  limits <- get_SLDSC_enrichment_limits(enrichment_tibble)
+  accessible_tibble <- dplyr::filter(enrichment_tibble, strategy == "accessible_peaks", cluster != "random")
+  sizes <- sort(unique(accessible_tibble$share))
+  heatmap_tibbles <- purrr::map(sizes, \(size) {
+    SLDSC_tibble |>
+      dplyr::select(GWAS_ID, Category, cluster, h2, h2_se, sample_size, dplyr::starts_with("ancestry_"), n_cells) |>
+      dplyr::left_join(
+        dplyr::select(dplyr::filter(accessible_tibble, share == size), GWAS_ID, cluster, SLDSC_enrichment, q, in_top_set, z_below_anchor),
+        by = c("GWAS_ID", "cluster"),
+        relationship = "one-to-one"
+      ) |>
+      # Stars mark only FDR-significant enrichment.
+      dplyr::mutate(fill = pmin(pmax(SLDSC_enrichment, limits[[1]]), limits[[2]]), significance_label = get_significance_stars(NA, q))
+  })
+  # One order for all sizes, in which cell types that cannot fill a size count as not enriched.
+  cluster_levels <- dplyr::bind_rows(heatmap_tibbles, .id = "size") |>
+    dplyr::mutate(GWAS_ID = paste(GWAS_ID, size), fill = dplyr::coalesce(fill, 1)) |>
+    get_ordered_GWAS_score_plot_data(compartments_patterns, score_col = "fill") |>
+    purrr::pluck("cluster_levels")
+  purrr::map2(heatmap_tibbles, sizes, \(heatmap_tibble, size) {
+    size_label <- scales::percent(size, accuracy = 0.1, drop0trailing = TRUE)
+    not_measurable <- dplyr::filter(dropped_tibble, strategy == "accessible_peaks", share == size)$cluster
+    plot_SLDSC_cell_type_heatmap(
+      heatmap_tibble,
+      GWAS_inputs_tibble,
+      compartments_patterns,
+      fill_label = "Heritability enrichment",
+      title = paste("Heritability enrichment in each cell type's most accessible peaks, sized to", size_label, "of common SNPs (S-LDSC)"),
+      subtitle = paste(
+        "Red marks cell types whose most accessible peaks hold more heritability per common variant than a random variant (enrichment 1, white); all sizes share this scale.",
+        "Stars mark FDR-significant enrichment above 1 (**); a black outline marks the most enriched of these cell types and grey outlines the cell types not significantly below it.",
+        sep = "\n"
+      ),
+      caption = c(
+        sprintf("Each cell type's annotation keeps its peaks with the highest depth-normalized pseudobulk accessibility, among peaks with at least 10 reads in it, until they hold %s of common (MAF > 5%%) 1000 Genomes European SNPs.", size_label),
+        "Enrichment: the annotation's share of S-LDSC heritability over its share of common SNPs, in a model with the 97 baseline-LD v2.2 annotations fitted to HapMap3 SNP summary statistics from the GWAS Catalog or a configured release, using GRCh38 1000 Genomes European LD; SNPs with chi-square above 80 are excluded.",
+        sprintf(
+          "Colour: linear around 1; values beyond %s and %s take the end colours. The enrichment curves and the heatmaps of all sizes share these limits: the 1%% and 99%% quantiles of all cell-type estimates at all sizes, with the lower end at most 0, rounded outward to multiples of 5.",
+          limits[[1]], limits[[2]]
+        ),
+        "Estimates below 0, which no true enrichment can take, come from noisy annotations.",
+        "Stars: ** enrichment above 1 at Benjamini-Hochberg q < 0.05, from a one-sided z-test with its 200-block jackknife standard error, over all GWAS and cell types at this size.",
+        "Outlines: in GWAS with a cell type at q < 0.05, black marks the most enriched of these and grey every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types, from paired jackknife differences.",
+        if (length(not_measurable)) paste0("Grey columns cannot be measured at this size, since the cell type's peaks with at least 10 reads hold fewer common SNPs: ", toString(sort(not_measurable)), ".")
+      ),
+      fill_limits = limits,
+      fill_midpoint = 1,
+      cluster_levels = cluster_levels
+    ) +
+      # save_plots_structured() titles a listed plot without a title by its name, and reads a
+      # patchwork's title from its last panel, so that panel gets a hidden one.
+      ggplot2::labs(title = size_label) + ggplot2::theme(plot.title = ggplot2::element_blank())
+  }) |>
+    rlang::set_names(paste0(100 * sizes, "_percent"))
 }
 
 #' Plot matched-size enrichment against annotation size

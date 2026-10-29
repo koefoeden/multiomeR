@@ -130,26 +130,24 @@ Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtit
 <store>/plots/my_aggregation/genetic_enrichment/
 ├── GWAS_peak_weights_barplot.png
 ├── GWAS_credible_set_similarity_heatmap.png
-├── cell_type_pseudobulk/
-│   ├── chromVAR_deviation_heatmaps/
-│   ├── chromVAR_locus_contribution_per_GWAS_heatmaps/
-│   ├── chromVAR_locus_contribution_per_GWAS_faceted_bars_plots/
-│   ├── chromVAR_absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots/
-│   ├── chromVAR_variant_contribution_detail_plots/
-│   ├── SLDSC_enrichment_curves_per_category_plots/
-│   ├── SLDSC_heatmap.png
-│   ├── SLDSC_modality_comparison_plot.png
-│   ├── SLDSC_block_influence_plot.png
-│   ├── SLDSC_chromVAR_comparison_plot.png
-│   ├── SLDSC_chromVAR_agreement_plot.png
-│   ├── SLDSC_matched_enrichment_curves_plot.png
-│   ├── SLDSC_matched_size_comparison_plot.png
-│   ├── SLDSC_matched_enrichment_agreement_plot.png
-│   ├── SLDSC_peak_gene_uplift_curves_plot.png
-│   ├── SLDSC_peak_gene_contrast_plot.png
-│   ├── SLDSC_peak_gene_cell_type_plot.png
-│   └── SLDSC_peak_gene_design_plot.png
-└── single_nucleus/SCAVENGE/WNN_harmony_SNN/
+├── chromVAR/
+│   ├── deviation_heatmaps/
+│   ├── locus_contribution_per_GWAS_heatmaps/
+│   ├── locus_contribution_per_GWAS_faceted_bars_plots/
+│   ├── absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots/
+│   └── variant_contribution_detail_plots/
+├── SLDSC/
+│   ├── enrichment_curves_per_category_plots/
+│   ├── heatmap.png
+│   ├── modality_comparison_plot.png
+│   ├── block_influence_plot.png
+│   ├── matched_enrichment_curves_plot.png
+│   ├── matched_size_comparison_plot.png
+│   └── matched_enrichment_agreement_plot.png
+├── comparison/
+│   ├── z_score_plot.png
+│   └── agreement_plot.png
+└── SCAVENGE/
     ├── TRS_heatmap/
     ├── TRS_UMAPs/
     └── TRS_cluster_summary_plot/

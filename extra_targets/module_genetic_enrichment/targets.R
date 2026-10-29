@@ -124,17 +124,7 @@ rlang::list2(
     source("extra_targets/module_genetic_enrichment/GWAS_chromVAR_absolute_effect_targets.R")$value,
     source("extra_targets/module_genetic_enrichment/GWAS_chromVAR_contribution_targets.R")$value,
     source("extra_targets/module_genetic_enrichment/SLDSC_targets.R")$value,
-    tarchetypes::tar_map(
-      values = tibble::tibble(
-        map_SCAVENGE_tar_suffix = "WNN_harmony_SNN.SCAVENGE.single_nucleus",
-        map_SCAVENGE_graph_name = "WNN_harmony_SNN",
-        map_SCAVENGE_umap_cols = list(c("WNN_UMAP_1", "WNN_UMAP_2"))
-      ),
-      names = map_SCAVENGE_tar_suffix,
-      descriptions = NULL,
-      delimiter = ".",
-      source("extra_targets/module_genetic_enrichment/SCAVENGE_graph_targets.R")$value,
-      source("extra_targets/module_genetic_enrichment/SCAVENGE_group_targets.R")$value
-    )
+    source("extra_targets/module_genetic_enrichment/SCAVENGE_graph_targets.R")$value,
+    source("extra_targets/module_genetic_enrichment/SCAVENGE_group_targets.R")$value
   )
 )

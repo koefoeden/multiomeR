@@ -56,7 +56,7 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
-    name = raw_deviation_unscaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk,
+    name = raw_deviation_unscaled.deviation_heatmaps.chromVAR,
     description = "Save ordinary GWAS deviations without within-GWAS scaling. [checkpoint:genetic_enrichment]",
     command = plot_GWAS_chromVAR_deviation_heatmap(
       chromVAR_deviation_tibble.cell_type_pseudobulk,
@@ -69,7 +69,7 @@ rlang::list2(
       save_GWAS_heatmap(chromVAR_deviation_tibble.cell_type_pseudobulk$GWAS_ID)
   ),
   tarchetypes::tar_file(
-    name = raw_deviation_scaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk,
+    name = raw_deviation_scaled.deviation_heatmaps.chromVAR,
     description = "Save ordinary GWAS deviations standardized within each GWAS. [checkpoint:genetic_enrichment]",
     command = plot_GWAS_chromVAR_deviation_heatmap(
       chromVAR_deviation_tibble.cell_type_pseudobulk,

@@ -72,7 +72,7 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 8)
   ),
   tarchetypes::tar_file(
-    name = beta_weighted_unscaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk,
+    name = beta_weighted_unscaled.deviation_heatmaps.chromVAR,
     description = "Save absolute-effect-weighted GWAS deviations without within-GWAS scaling. [checkpoint:genetic_enrichment]",
     command = plot_GWAS_chromVAR_deviation_heatmap(
       chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk,
@@ -85,7 +85,7 @@ rlang::list2(
       save_GWAS_heatmap(chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk$GWAS_ID)
   ),
   tarchetypes::tar_file(
-    name = beta_weighted_scaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk,
+    name = beta_weighted_scaled.deviation_heatmaps.chromVAR,
     description = "Save absolute-effect-weighted GWAS deviations standardized within each GWAS. [checkpoint:genetic_enrichment]",
     command = plot_GWAS_chromVAR_deviation_heatmap(
       chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk,
@@ -141,7 +141,7 @@ rlang::list2(
     command = get_GWAS_chromVAR_top_set_tibble(chromVAR_absolute_effect_locus_contribution_tibble.cell_type_pseudobulk, chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk)
   ),
   tarchetypes::tar_file(
-    name = chromVAR_absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots.cell_type_pseudobulk,
+    name = absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots.chromVAR,
     description = "Save one faceted locus contribution figure per eligible GWAS using the absolute-effect heatmap weights. [checkpoint:genetic_enrichment]",
     command = chromVAR_absolute_effect_locus_contribution_tibble.cell_type_pseudobulk |>
       plot_GWAS_absolute_effect_locus_bars() |>

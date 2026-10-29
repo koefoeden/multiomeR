@@ -948,26 +948,24 @@ Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtit
 <store>/plots/my_aggregation/genetic_enrichment/
 ├── GWAS_peak_weights_barplot.png
 ├── GWAS_credible_set_similarity_heatmap.png
-├── cell_type_pseudobulk/
-│   ├── chromVAR_deviation_heatmaps/
-│   ├── chromVAR_locus_contribution_per_GWAS_heatmaps/
-│   ├── chromVAR_locus_contribution_per_GWAS_faceted_bars_plots/
-│   ├── chromVAR_absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots/
-│   ├── chromVAR_variant_contribution_detail_plots/
-│   ├── SLDSC_enrichment_curves_per_category_plots/
-│   ├── SLDSC_heatmap.png
-│   ├── SLDSC_modality_comparison_plot.png
-│   ├── SLDSC_block_influence_plot.png
-│   ├── SLDSC_chromVAR_comparison_plot.png
-│   ├── SLDSC_chromVAR_agreement_plot.png
-│   ├── SLDSC_matched_enrichment_curves_plot.png
-│   ├── SLDSC_matched_size_comparison_plot.png
-│   ├── SLDSC_matched_enrichment_agreement_plot.png
-│   ├── SLDSC_peak_gene_uplift_curves_plot.png
-│   ├── SLDSC_peak_gene_contrast_plot.png
-│   ├── SLDSC_peak_gene_cell_type_plot.png
-│   └── SLDSC_peak_gene_design_plot.png
-└── single_nucleus/SCAVENGE/WNN_harmony_SNN/
+├── chromVAR/
+│   ├── deviation_heatmaps/
+│   ├── locus_contribution_per_GWAS_heatmaps/
+│   ├── locus_contribution_per_GWAS_faceted_bars_plots/
+│   ├── absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots/
+│   └── variant_contribution_detail_plots/
+├── SLDSC/
+│   ├── enrichment_curves_per_category_plots/
+│   ├── heatmap.png
+│   ├── modality_comparison_plot.png
+│   ├── block_influence_plot.png
+│   ├── matched_enrichment_curves_plot.png
+│   ├── matched_size_comparison_plot.png
+│   └── matched_enrichment_agreement_plot.png
+├── comparison/
+│   ├── z_score_plot.png
+│   └── agreement_plot.png
+└── SCAVENGE/
     ├── TRS_heatmap/
     ├── TRS_UMAPs/
     └── TRS_cluster_summary_plot/
@@ -1082,7 +1080,12 @@ Review the plots ([examples](gallery.md#peak-gene-correlation)); each plot's sub
 ├── support_counts_plot.png
 ├── correlation_histogram_plot.png
 ├── distance_correlation_plot.png
-└── significant_pairs_vs_technical_features_plot.png
+├── significant_pairs_vs_technical_features_plot.png
+└── genetic_validation/
+    ├── uplift_curves_plot.png
+    ├── contrast_plot.png
+    ├── cell_type_plot.png
+    └── design_plot.png
 ```
 
 Start with `filter_retention_plot.png`, which compares the three support filters by cell type and marks the active one. Top-link figures rank positive, estimable slopes outside self-promoter peaks by hierarchical p-value, without a significance cutoff, so appearing in a figure is not evidence of significance. `diagnostics_plot.png` shows skipped branches, and the other plots summarize adjusted correlations and hierarchical links.
@@ -1095,7 +1098,7 @@ targets::tar_read(
 )
 ```
 
-The candidate links are in `peak_gene_correlation_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix. `peak_gene_ABC_scores_tibble.WNN` holds the ABC score of each candidate pair in each cell type that expresses the gene, without a threshold. `peak_gene_ABC_cell_groups_tibble.WNN` lists the scored cell types with their nuclei and their names in the genetic-enrichment module. When the aggregation also runs the [genetic-enrichment module](downstream_genetic_enrichment.md), it tests whether ABC scores and correlations point to GWAS signal beyond accessibility and distance.
+The candidate links are in `peak_gene_correlation_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix. `peak_gene_ABC_scores_tibble.WNN` holds the ABC score of each candidate pair in each cell type that expresses the gene, without a threshold. `peak_gene_ABC_cell_groups_tibble.WNN` lists the scored cell types with their nuclei and their names in the genetic-enrichment module. When the aggregation also runs the [genetic-enrichment module](downstream_genetic_enrichment.md), it tests whether ABC scores and correlations point to GWAS signal beyond accessibility and distance, and saves those plots in `genetic_validation/`.
 
 ## Parameter reference
 

@@ -73,7 +73,7 @@ figure_pipeline <- list(
           dplyr::filter(.data$GWAS_ID == selection$GWAS_ID[[1]], .data$cluster == selection$cluster[[1]]) |>
           dplyr::arrange(dplyr::desc(abs(.data$relative_deviation_contribution)), .data$studyLocusId) |>
           dplyr::slice_head(n = 1)
-        records <- purrr::flatten(chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x)
+        records <- purrr::flatten(variant_contribution_detail_plot_records.chromVAR.genetic_enrichment.mixed_human_31x)
         records <- purrr::keep(records, function(x) {
           x$GWAS_ID == selection$GWAS_ID[[1]] &&
             x$variant_tibble$cluster[[1]] == selection$cluster[[1]] &&
@@ -95,7 +95,7 @@ figure_pipeline <- list(
     description = "Figure 1F: rebuild the TRS_UMAP of the trait in E, with randomized cell draw order and the cell types enriched for it labelled",
     command = local({
       trait <- select_figure_1_showcase(figure_1_traits.mixed_human_31x)$GWAS_ID
-      scores <- TRS_tibble.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.mixed_human_31x |>
+      scores <- TRS_tibble.SCAVENGE.genetic_enrichment.mixed_human_31x |>
         dplyr::filter(.data$GWAS_ID == trait) |>
         dplyr::select("barcode_w_prefix", "score")
       stopifnot(nrow(scores) > 0L)

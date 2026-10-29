@@ -4,7 +4,8 @@
 # comes from the peak-gene module's ATAC pseudobulks, which its GEM-well
 # restriction may narrow.
 SLDSC_peak_gene_tibble <- genetic_enrichment_tibble |>
-  dplyr::select("aggregation", "genetic_enrichment_target_suffix", "SLDSC_sumstats_index") |>
+  dplyr::select("aggregation", "SLDSC_sumstats_index") |>
+  dplyr::mutate(genetic_validation_target_suffix = paste("genetic_validation.peak_gene_correlation", aggregation, sep = ".")) |>
   dplyr::inner_join(
     dplyr::select(peak_gene_correlation_restriction$values, "aggregation", "pseudobulk_counts_matrix.ATAC"),
     by = "aggregation"
@@ -33,7 +34,7 @@ SLDSC_peak_gene_rankings <- tibble::tibble(
 
 if (nrow(SLDSC_peak_gene_tibble) == 0L) list() else tarchetypes::tar_map(
   values = SLDSC_peak_gene_tibble,
-  names = genetic_enrichment_target_suffix,
+  names = genetic_validation_target_suffix,
   descriptions = NULL,
   delimiter = ".",
   source("extra_targets/module_genetic_enrichment/SLDSC_peak_gene_targets.R")$value

@@ -79,7 +79,12 @@ Review the plots ([examples](gallery.md#peak-gene-correlation)); each plot's sub
 ├── support_counts_plot.png
 ├── correlation_histogram_plot.png
 ├── distance_correlation_plot.png
-└── significant_pairs_vs_technical_features_plot.png
+├── significant_pairs_vs_technical_features_plot.png
+└── genetic_validation/
+    ├── uplift_curves_plot.png
+    ├── contrast_plot.png
+    ├── cell_type_plot.png
+    └── design_plot.png
 ```
 
 Start with `filter_retention_plot.png`, which compares the three support filters by cell type and marks the active one. Top-link figures rank positive, estimable slopes outside self-promoter peaks by hierarchical p-value, without a significance cutoff, so appearing in a figure is not evidence of significance. `diagnostics_plot.png` shows skipped branches, and the other plots summarize adjusted correlations and hierarchical links.
@@ -92,7 +97,7 @@ targets::tar_read(
 )
 ```
 
-The candidate links are in `peak_gene_correlation_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix. `peak_gene_ABC_scores_tibble.WNN` holds the ABC score of each candidate pair in each cell type that expresses the gene, without a threshold. `peak_gene_ABC_cell_groups_tibble.WNN` lists the scored cell types with their nuclei and their names in the genetic-enrichment module. When the aggregation also runs the [genetic-enrichment module](downstream_genetic_enrichment.md), it tests whether ABC scores and correlations point to GWAS signal beyond accessibility and distance.
+The candidate links are in `peak_gene_correlation_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix. `peak_gene_ABC_scores_tibble.WNN` holds the ABC score of each candidate pair in each cell type that expresses the gene, without a threshold. `peak_gene_ABC_cell_groups_tibble.WNN` lists the scored cell types with their nuclei and their names in the genetic-enrichment module. When the aggregation also runs the [genetic-enrichment module](downstream_genetic_enrichment.md), it tests whether ABC scores and correlations point to GWAS signal beyond accessibility and distance, and saves those plots in `genetic_validation/`.
 
 ## Parameter reference
 

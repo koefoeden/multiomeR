@@ -84,7 +84,11 @@ Adding or activating GEM well rows changes only the `GEM_well_config_tsv` file
 target. Each aggregation's `GEM_well_metadata_tibble` reruns and reproduces its
 value unless the aggregation lists a changed well; compare its new value with
 `tar_read()` before calling the change contained. Rebuilding both keeps the
-aggregation current.
+aggregation current. A new aggregation's Roadmap EDACC names that no active
+aggregation uses rerun the shared `roadmap_chromHMMs_by_EDACC_name`, and every
+aggregation's `chromHMMs_list_proj.ATAC` after it. Each name's states are
+computed on their own, so these reproduce; check them on a scratch copy of the
+store's AnnotationHub cache.
 
 Dynamic branches take their names from their upstream branches, and those of
 an `iteration = "vector"` stem from each element's value, never from the

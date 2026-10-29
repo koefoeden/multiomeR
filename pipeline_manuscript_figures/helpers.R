@@ -386,13 +386,12 @@ plot_figure_1_TRS <- function(data, trait, cell_types) {
 # listed `bar_tracks` are kept; Supplementary Table S3 gives each study's sample size,
 # method and ancestry.
 plot_trait_cell_type_heatmap <- function(scores, GWAS_metadata_tracks_plot, value_label, limit, bar_tracks = character()) {
-  bars <- which(vapply(seq_along(GWAS_metadata_tracks_plot), \(i) "track" %in% names(GWAS_metadata_tracks_plot[[i]]$data), logical(1)))
-  stopifnot(length(bars) == 1L)
   category <- GWAS_metadata_tracks_plot[[1]] +
     ggplot2::scale_y_discrete(expand = c(0, 0),
       labels = \(x) paste0(figure_1_trait_labels(x), " (", sub("^.*_([A-Za-z]+)([0-9]{4}).*$", "\\1 \\2", x), ")"))
   tracks <- list(category)
   if (length(bar_tracks)) {
+    bars <- which(vapply(seq_along(GWAS_metadata_tracks_plot), \(i) all(bar_tracks %in% GWAS_metadata_tracks_plot[[i]]$data$track), logical(1)))
     tracks[[2]] <- GWAS_metadata_tracks_plot[[bars]]
     tracks[[2]]$data <- dplyr::filter(tracks[[2]]$data, .data$track %in% bar_tracks)
   }

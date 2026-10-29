@@ -240,13 +240,12 @@ make_named_heatmap_palette <- function(values, palette = "Set3") {
 # The gap between GWAS categories and between cell-type compartments in heatmaps and their tracks.
 gwas_heatmap_group_gap <- grid::unit(2.5, "mm")
 
-gwas_heatmap_metadata_theme <- function(show_y = FALSE, show_x = FALSE) {
+gwas_heatmap_metadata_theme <- function(show_y = FALSE) {
   ggplot2::theme_minimal(base_size = 9) +
     ggplot2::theme(
-      axis.text.x = if (show_x) ggplot2::element_text(angle = 45, hjust = 1) else ggplot2::element_blank(),
+      axis.text.x = ggplot2::element_blank(),
       axis.text.y = if (show_y) ggplot2::element_text(size = 8, color = "grey20") else ggplot2::element_blank(),
-      axis.ticks.x = if (show_x) ggplot2::element_line() else ggplot2::element_blank(),
-      axis.ticks.y = ggplot2::element_blank(),
+      axis.ticks = ggplot2::element_blank(),
       panel.grid = ggplot2::element_blank(),
       legend.position = "bottom",
       legend.key.height = grid::unit(3, "mm"),
@@ -257,7 +256,8 @@ gwas_heatmap_metadata_theme <- function(show_y = FALSE, show_x = FALSE) {
       plot.margin = ggplot2::margin(t = 4, r = 5, b = 0, l = 2),
       panel.spacing = gwas_heatmap_group_gap,
       strip.text.y = ggplot2::element_blank(),
-      strip.placement = "outside",
+      # Inside, the track names share the layout row of the heatmap's outside axis labels, right under the panels.
+      strip.placement = "inside",
       strip.text.x = ggplot2::element_text(size = 8, margin = ggplot2::margin(t = 2))
     )
 }
@@ -483,7 +483,7 @@ plot_GWAS_feature_heatmap <- function(
       plot.margin = ggplot2::margin(t = 0, r = 5, b = 0, l = 2),
       panel.spacing = gwas_heatmap_group_gap,
       strip.text = ggplot2::element_blank(),
-      # Patchwork aligns layout rows by position: with the tracks' placement, the labels share the row of their axes.
+      # Patchwork aligns layout rows by position: outside, the labels share the row of the tracks' inside strips.
       strip.placement = "outside"
     )
 }
@@ -590,6 +590,8 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
   )
   # Categories are facets, so that a gap separates them in every track and in the heatmap beside them.
   category_rows <- ggplot2::facet_grid(rows = ggplot2::vars(Category), scales = "free_y", space = "free_y")
+  # Tracks with a value axis name their columns underneath instead.
+  track_columns <- ggplot2::facet_grid(rows = ggplot2::vars(Category), cols = ggplot2::vars(track), scales = "free", space = "free_y", switch = "x")
   bar_plot_data <- ordered_metadata |>
     dplyr::transmute(GWAS_ID, Category, Loci = n_credible_set_loci, Samples = sample_size) |>
     tidyr::pivot_longer(c(Loci, Samples), names_to = "track", values_to = "value") |>
@@ -609,7 +611,8 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
         fraction = 1
       )
     ) |>
-    dplyr::left_join(dplyr::distinct(ordered_metadata, GWAS_ID, Category), by = "GWAS_ID")
+    dplyr::left_join(dplyr::distinct(ordered_metadata, GWAS_ID, Category), by = "GWAS_ID") |>
+    dplyr::mutate(track = "Ancestry")
 
   category_plot <- ordered_metadata |>
     ggplot2::ggplot(ggplot2::aes(x = 1, y = GWAS_ID, fill = Category)) +
@@ -653,19 +656,17 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
       size = 3,
       na.rm = TRUE
     ) +
-    ggplot2::facet_grid(rows = ggplot2::vars(Category), cols = ggplot2::vars(track), scales = "free", space = "free_y", switch = "x") +
+    track_columns +
     ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0, 0.6))) +
     ggplot2::scale_y_discrete(expand = c(0, 0)) +
     ggplot2::labs(x = NULL, y = NULL) +
-    gwas_heatmap_metadata_theme() +
-    # Inside, the track names sit above the axis row that the heatmap's labels fill, rather than below it.
-    ggplot2::theme(strip.placement = "inside")
+    gwas_heatmap_metadata_theme()
 
   ancestry_plot <- ancestry_plot_data |>
     ggplot2::ggplot(ggplot2::aes(x = fraction, y = GWAS_ID, fill = ancestry_group)) +
     ggplot2::geom_col(width = 0.8) +
-    category_rows +
-    ggplot2::scale_x_continuous(breaks = c(0, 1), labels = scales::percent_format(accuracy = 1), limits = c(0, 1), expand = c(0, 0)) +
+    track_columns +
+    ggplot2::scale_x_continuous(limits = c(0, 1), expand = c(0, 0)) +
     ggplot2::scale_y_discrete(expand = c(0, 0)) +
     ggplot2::scale_fill_manual(
       values = c(
@@ -681,7 +682,7 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
       guide = ggplot2::guide_legend(ncol = 2, byrow = TRUE, title.position = "top", order = 3)
     ) +
     ggplot2::labs(x = NULL, y = NULL) +
-    gwas_heatmap_metadata_theme(show_x = TRUE)
+    gwas_heatmap_metadata_theme()
 
   tracks <- lapply(list(category_plot, method_plot, bar_plot, ancestry_plot), \(plot) plot + ggplot2::coord_cartesian(clip = "off"))
   patchwork::wrap_plots(tracks, nrow = 1, widths = c(0.48, 0.48, 1.25, 1.15), guides = "collect") &

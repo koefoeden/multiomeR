@@ -5,18 +5,20 @@
 #' reference SNPs. A SNP in overlapping ranges takes their largest score, as in
 #' `get_SLDSC_LD_score_record()`, so the ranges are first split into disjoint
 #' pieces. Pieces are kept whole, in genomic order among ties, so an annotation
-#' can exceed its share by one piece; pieces without score are never kept. A
-#' `random` annotation ranks the same ranges at random, as a reference for what
-#' the territory alone concentrates.
+#' can exceed its share by one piece; pieces without score are never kept, and
+#' a cell type whose scored pieces hold fewer common SNPs than a share gets no
+#' annotation of that share. A `random` annotation ranks the same ranges at
+#' random, as a reference for what the territory alone concentrates.
 #'
 #' @param score_matrix Range-by-cell-type scores named by range.
 #' @param ranges Ranges named like the score rows.
 #' @param reference_dir Directory returned by `download_SLDSC_reference()`.
 #' @param shares Shares of the common reference SNPs.
 #' @return A list with the kept pieces, their binary piece-by-annotation matrix
-#'   with annotations named `<cell type>:<share>`, and each annotation's sums of
+#'   with annotations named `<cell type>:<share>`, each annotation's sums of
 #'   the baseline-LD annotations over its common SNPs, named like the baseline
-#'   LD scores; its `baseL2` sum counts these SNPs.
+#'   LD scores (its `baseL2` sum counts these SNPs), and the `cluster` and
+#'   `share` of the dropped annotations.
 #' @keywords internal
 
 get_SLDSC_matched_annotation_record <- function(score_matrix, ranges, reference_dir, shares = c(0.005, 0.01, 0.02, 0.05)) {
@@ -53,11 +55,39 @@ get_SLDSC_matched_annotation_record <- function(score_matrix, ranges, reference_
     vapply(shares, \(share) seq_along(pieces) %in% ranked[SNPs_before < share * n_common], logical(length(pieces)))
   })) * 1
   dimnames(annotation_matrix) <- list(as.character(pieces), paste0(rep(colnames(score_matrix), each = length(shares)), ":", shares))
+  # A cell type's whole territory would otherwise stand in for a share it cannot fill.
+  territory_SNPs <- colSums(piece_n_common * (score_matrix > 0))
+  is_filled <- rep(territory_SNPs, each = length(shares)) >= rep(shares, times = ncol(score_matrix)) * n_common
+  annotation_matrix <- annotation_matrix[, is_filled, drop = FALSE]
   kept <- rowSums(annotation_matrix) > 0
   list(
     ranges = stats::setNames(GenomicRanges::granges(pieces), as.character(pieces))[kept],
     annotation_matrix = annotation_matrix[kept, , drop = FALSE],
-    baseline_overlap_matrix = crossprod(annotation_matrix, piece_baseline_matrix)
+    baseline_overlap_matrix = crossprod(annotation_matrix, piece_baseline_matrix),
+    dropped_tibble = tibble::tibble(
+      cluster = rep(colnames(score_matrix), each = length(shares)),
+      share = rep(shares, times = ncol(score_matrix))
+    )[!is_filled, ]
+  )
+}
+
+#' Describe the matched-size annotations that cell types cannot fill
+#'
+#' @param dropped_tibble The `strategy`, `cluster` and `share` of the
+#'   annotations `get_SLDSC_matched_annotation_record()` dropped.
+#' @return A caption sentence listing them by strategy and share.
+#' @keywords internal
+
+describe_SLDSC_dropped_annotations <- function(dropped_tibble) {
+  if (nrow(dropped_tibble) == 0L) {
+    return("Every cell type's peaks and gene windows fill every size.")
+  }
+  groups <- dropped_tibble |>
+    dplyr::summarise(clusters = toString(sort(.data$cluster)), n = dplyr::n(), .by = c("strategy", "share")) |>
+    dplyr::arrange(.data$strategy, .data$share)
+  paste0(
+    nrow(dropped_tibble), " cell-type annotations are dropped because the cell type's scored peaks or gene windows hold fewer common SNPs than their size: ",
+    paste(sprintf("%s at %s (%d: %s)", groups$strategy, scales::percent(groups$share, accuracy = 0.1), groups$n, groups$clusters), collapse = "; "), "."
   )
 }
 
@@ -286,10 +316,12 @@ SLDSC_strategy_scale <- \(aesthetics = "colour") {
 #' Plot matched-size enrichment against annotation size
 #'
 #' @param summary_tibble Summary from `summarise_SLDSC_matched_enrichment()`.
+#' @param dropped_tibble Annotations that cell types cannot fill, with their
+#'   `strategy`, `cluster` and `share`.
 #' @return Patchwork of median enrichment and specificity curves.
 #' @keywords internal
 
-plot_SLDSC_matched_enrichment_curves <- function(summary_tibble) {
+plot_SLDSC_matched_enrichment_curves <- function(summary_tibble, dropped_tibble) {
   summary_tibble <- dplyr::filter(summary_tibble, cluster == "All cell types")
   pair_sets <- c("Enriched pairs", "All pairs")
   curve_tibble <- dplyr::bind_rows(
@@ -345,7 +377,8 @@ plot_SLDSC_matched_enrichment_curves <- function(summary_tibble) {
         "Most enriched pairs come from the peak model on the same summary statistics, which favours peaks in S-LDSC.",
         sprintf("Specificity: each GWAS's median enrichment in its enriched cell types over that in its other cell types, for the up to %d GWAS with an enriched pair and both medians positive.", n_GWAS("Specificity", "S-LDSC heritability")),
         "PIP enrichment rests on fine-mapping resolution: wide gene windows hold whole credible sets, while small peaks hold only the variants inside them.",
-        "Lines: medians over pairs or GWAS; bands: 95% intervals from 1,000 bootstrap samples of GWAS."
+        "Lines: medians over pairs or GWAS; bands: 95% intervals from 1,000 bootstrap samples of GWAS.",
+        describe_SLDSC_dropped_annotations(dropped_tibble)
       ), width = 180),
       theme = ggplot2::theme(plot.caption = ggplot2::element_text(hjust = 0))
     ) &
@@ -356,11 +389,12 @@ plot_SLDSC_matched_enrichment_curves <- function(summary_tibble) {
 #'
 #' @param summary_tibble Summary from `summarise_SLDSC_matched_enrichment()`.
 #' @param enrichment_tibble Combined matched-size enrichment of all GWAS.
+#' @inheritParams plot_SLDSC_matched_enrichment_curves
 #' @param share Annotation size to compare, as a share of common SNPs.
 #' @return Dot plot of each cell type's median enrichment per strategy.
 #' @keywords internal
 
-plot_SLDSC_matched_size_comparison <- function(summary_tibble, enrichment_tibble, share = 0.01) {
+plot_SLDSC_matched_size_comparison <- function(summary_tibble, enrichment_tibble, dropped_tibble, share = 0.01) {
   matched_share <- share
   summary_tibble <- dplyr::filter(summary_tibble, share == matched_share)
   pair_sets <- c("Enriched pairs", "All pairs")
@@ -410,7 +444,8 @@ plot_SLDSC_matched_size_comparison <- function(summary_tibble, enrichment_tibble
         sprintf("Strategy with the higher enrichment per pair, S-LDSC: enriched pairs %s; all pairs %s.", count_best("SLDSC_enrichment", TRUE), count_best("SLDSC_enrichment", FALSE)),
         sprintf("Fine-mapped PIP: enriched pairs %s; all pairs %s.", count_best("PIP_enrichment", TRUE), count_best("PIP_enrichment", FALSE)),
         "Most enriched pairs come from the peak model on the same summary statistics, which favours peaks in S-LDSC.",
-        "Cell types are ordered by their highest median S-LDSC enrichment over all pairs; medians at or below zero cannot be shown on the log scale."
+        "Cell types are ordered by their highest median S-LDSC enrichment over all pairs; medians at or below zero cannot be shown on the log scale.",
+        describe_SLDSC_dropped_annotations(dplyr::filter(dropped_tibble, share == matched_share))
       ), width = 170),
       x = "Median enrichment (log scale)",
       y = NULL
@@ -426,7 +461,7 @@ plot_SLDSC_matched_size_comparison <- function(summary_tibble, enrichment_tibble
 #'   peak-over-gene ratios per GWAS-cell-type pair.
 #' @keywords internal
 
-plot_SLDSC_matched_enrichment_agreement <- function(enrichment_tibble, share = 0.01) {
+plot_SLDSC_matched_enrichment_agreement <- function(enrichment_tibble, dropped_tibble, share = 0.01) {
   matched_share <- share
   annotation_tibble <- enrichment_tibble |>
     dplyr::filter(share == matched_share, cluster != "random", !is.na(SLDSC_enrichment)) |>
@@ -491,7 +526,8 @@ plot_SLDSC_matched_enrichment_agreement <- function(enrichment_tibble, share = 0
         "Fine-mapped PIP enrichment: the annotation's share of the posterior inclusion probability of autosomal credible-set variants, over its share of common SNPs; it includes the strongest loci.",
         "Wide gene windows hold whole credible sets, while small peaks hold only the variants inside them, so imprecise fine-mapping lowers PIP enrichment of peaks more.",
         sprintf("Only GWAS with summary statistics and positive enrichments are shown (%d of %d annotations in A).", nrow(positive_tibble), nrow(annotation_tibble)),
-        "Enriched pairs reach q < 0.05 in the single-modality peak or gene S-LDSC model. Numbers in B count the pairs in each quadrant."
+        "Enriched pairs reach q < 0.05 in the single-modality peak or gene S-LDSC model. Numbers in B count the pairs in each quadrant.",
+        describe_SLDSC_dropped_annotations(dplyr::filter(dropped_tibble, share == matched_share))
       ), width = 170),
       tag_levels = "A",
       theme = ggplot2::theme(plot.caption = ggplot2::element_text(hjust = 0))

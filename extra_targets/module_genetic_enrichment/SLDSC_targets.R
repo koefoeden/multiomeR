@@ -137,7 +137,11 @@ rlang::list2(
   tarchetypes::tar_file(
     name = SLDSC_matched_enrichment_curves_plot.cell_type_pseudobulk,
     description = "Save S-LDSC heritability and fine-mapped PIP enrichment of peak and gene annotations against annotation size. [checkpoint:genetic_enrichment]",
-    command = plot_SLDSC_matched_enrichment_curves(SLDSC_matched_enrichment_summary_tibble.cell_type_pseudobulk) |>
+    command = plot_SLDSC_matched_enrichment_curves(SLDSC_matched_enrichment_summary_tibble.cell_type_pseudobulk, dplyr::bind_rows(
+      peaks = SLDSC_matched_annotation_record.cell_type_pseudobulk.peaks$dropped_tibble,
+      genes = SLDSC_matched_annotation_record.cell_type_pseudobulk.genes$dropped_tibble,
+      .id = "strategy"
+    )) |>
       save_plots_structured(width = 13, height = 7)
   ),
   tarchetypes::tar_file(
@@ -145,14 +149,23 @@ rlang::list2(
     description = "Save each cell type's enrichment in peak and gene annotations of matched size. [checkpoint:genetic_enrichment]",
     command = plot_SLDSC_matched_size_comparison(
       SLDSC_matched_enrichment_summary_tibble.cell_type_pseudobulk,
-      SLDSC_matched_enrichment_tibble.cell_type_pseudobulk
+      SLDSC_matched_enrichment_tibble.cell_type_pseudobulk,
+      dplyr::bind_rows(
+      peaks = SLDSC_matched_annotation_record.cell_type_pseudobulk.peaks$dropped_tibble,
+      genes = SLDSC_matched_annotation_record.cell_type_pseudobulk.genes$dropped_tibble,
+      .id = "strategy"
+    )
     ) |>
       save_plots_structured(width = 15, height = 3 + 0.17 * dplyr::n_distinct(SLDSC_matched_enrichment_tibble.cell_type_pseudobulk$cluster))
   ),
   tarchetypes::tar_file(
     name = SLDSC_matched_enrichment_agreement_plot.cell_type_pseudobulk,
     description = "Save the agreement of S-LDSC heritability and fine-mapped PIP enrichment in matched-size annotations. [checkpoint:genetic_enrichment]",
-    command = plot_SLDSC_matched_enrichment_agreement(SLDSC_matched_enrichment_tibble.cell_type_pseudobulk) |>
+    command = plot_SLDSC_matched_enrichment_agreement(SLDSC_matched_enrichment_tibble.cell_type_pseudobulk, dplyr::bind_rows(
+      peaks = SLDSC_matched_annotation_record.cell_type_pseudobulk.peaks$dropped_tibble,
+      genes = SLDSC_matched_annotation_record.cell_type_pseudobulk.genes$dropped_tibble,
+      .id = "strategy"
+    )) |>
       save_plots_structured(width = 14, height = 6.5)
   ),
   tarchetypes::tar_file(

@@ -1,9 +1,11 @@
 Stratified LD score regression (S-LDSC) tests whether a GWAS's heritability is enriched in variants within the peaks accessible in each annotation class, using genome-wide summary statistics rather than fine-mapped loci [@finucane2015_stratified_ldsc; @finucane2018_ldsc_seg].
 It uses the peaks and the ATAC counts summed by the final WNN cell-type labels of the pseudobulk chromVAR analysis.
-Each class's counts are divided by its total, and each peak's depth-normalized values are divided by their sum across classes.
-A peak's annotation value for a class is thus its share of the summed class profiles: the chromVAR background model's observed-over-expected ratio divided by the number of classes.
+Each class's counts are divided by its total.
+Entries with fewer than 10 reads are set to zero, because one read in a shallow class weighs as much as thousands of reads in a deep one.
+Each peak's remaining depth-normalized values are then divided by their sum across classes.
+A peak's annotation value for a class is thus its share of the summed profiles of the classes that measure it.
 A peak equally accessible in all classes therefore gets the same small value in each.
-An all-peaks annotation marks every peak with reads.
+An all-peaks annotation marks every peak with at least 10 reads in some class.
 Reference variants inside a peak take its values, and all other variants take zero.
 LD scores of these annotations are computed from the 1000 Genomes European samples on GRCh38 [@auton2015_1000_genomes] for HapMap3 regression variants outside the MHC, with ldsc's bias-corrected squared correlation summed over a 1 cM window [@bulik-sullivan2015_ldsc].
 Summary statistics are taken from the GWAS Catalog, from its harmonized file where one exists and otherwise from the submitted file [@cerezo2025_gwas_catalog].
@@ -24,8 +26,8 @@ GWAS without genome-wide summary statistics in the GWAS Catalog or a named file 
 
 Cell-type gene expression is tested in the same way, following LDSC-SEG [@finucane2018_ldsc_seg].
 The GEX counts of the donor pseudobulks are summed by class and divided by each class's total.
-A gene's specificity for a class is its share of these depth-normalized values summed across classes [@skene2018_brain_cell_types].
 A gene counts as expressed in a class with at least 10 counts and one count per million there.
+A gene's specificity for a class is its share of these depth-normalized values summed across the classes that express it, and zero elsewhere [@skene2018_brain_cell_types].
 Each class's gene annotation marks the reference variants within 100 kb of the gene bodies of its most specific expressed genes.
 These number 10% of the autosomal protein-coding genes expressed in any class, and an all-genes annotation marks the windows of all of them.
 Where windows overlap, a variant takes the largest value, which for these binary annotations is their union.
@@ -56,6 +58,7 @@ For each class, peaks are ranked by their accessibility share and gene windows b
 A variant in overlapping windows takes the highest specificity among them.
 Peaks or window pieces are added in this order until they hold 0.5%, 1%, 2% or 5% of the common (MAF > 5%) reference variants.
 Pieces are kept whole and ties keep genomic order, so an annotation can exceed its share by one piece.
+A class whose scored peaks or gene windows hold fewer common variants than a size gets no annotation of that size, and the plots count these.
 All consensus peaks together hold about 10% of common variants, so larger peak annotations would lose their class specificity.
 A reference annotation of each strategy ranks the same peaks or genes at random.
 Each binary annotation is fitted with the 97 baseline-LD annotations, which also set the regression weights.

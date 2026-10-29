@@ -383,30 +383,51 @@ get_SLDSC_sumstats_record <- function(sumstats_rows_record, regression_SNP_tibbl
   record
 }
 
+#' Share features' depth-normalized counts among the cell types that measure them
+#'
+#' Divide each cell type's counts by its total and give each feature its share
+#' of these values summed over the cell types that measure it: at least
+#' `min_counts` counts and a `min_share` of the cell type's total. Other
+#' entries are zero before the sum, because one count in a shallow cell type
+#' weighs as much as thousands in a deep one. Features measured in no cell type
+#' are dropped.
+#'
+#' @param counts_matrix Dense feature-by-cell-type counts.
+#' @param min_counts Counts a cell type needs to measure a feature.
+#' @param min_share Share of the cell type's total counts it needs.
+#' @return The feature-by-cell-type share matrix of measured features.
+#' @keywords internal
+
+get_SLDSC_measured_share_matrix <- function(counts_matrix, min_counts = 10, min_share = 0) {
+  normalized_matrix <- sweep(counts_matrix, 2, colSums(counts_matrix), "/")
+  normalized_matrix[counts_matrix < min_counts | normalized_matrix < min_share] <- 0
+  normalized_matrix <- normalized_matrix[rowSums(normalized_matrix) > 0, , drop = FALSE]
+  normalized_matrix / rowSums(normalized_matrix)
+}
+
 #' Annotate peaks with cell-type accessibility specificity
 #'
 #' Give each peak an all-peaks indicator and, per cell type, its share of the
-#' depth-normalized pseudobulk accessibility summed over cell types. This share
-#' is chromVAR's observed-over-expected accessibility ratio under equal cell-type
-#' weights, divided by the number of cell types.
+#' depth-normalized pseudobulk accessibility summed over the cell types with at
+#' least 10 reads in it, as `get_SLDSC_measured_share_matrix()` computes.
 #'
 #' @param pseudobulk_counts_matrix Peak-by-cell-type ATAC counts.
-#' @return Dense peak-by-annotation matrix for peaks with any counts.
+#' @return Dense peak-by-annotation matrix for peaks with at least 10 reads in
+#'   some cell type.
 #' @keywords internal
 
 get_SLDSC_peak_annotation_matrix <- function(pseudobulk_counts_matrix) {
-  counts_matrix <- methods::as(pseudobulk_counts_matrix, "dgCMatrix")
-  counts_matrix <- as.matrix(counts_matrix[Matrix::rowSums(counts_matrix) > 0, , drop = FALSE])
-  normalized_matrix <- sweep(counts_matrix, 2, colSums(counts_matrix), "/")
-  cbind(all_peaks = 1, normalized_matrix / rowSums(normalized_matrix))
+  share_matrix <- get_SLDSC_measured_share_matrix(as.matrix(methods::as(pseudobulk_counts_matrix, "dgCMatrix")))
+  cbind(all_peaks = 1, share_matrix)
 }
 
 #' Score gene windows by cell-type expression specificity
 #'
 #' Sum each cell type's GEX pseudobulks, divide them by the cell type's total
 #' counts and give each gene its share of these depth-normalized profiles
-#' summed over cell types, as for the peaks. A gene counts as expressed in a
-#' cell type with at least 10 counts and 1 count per million there; its
+#' summed over the cell types that express it, as
+#' `get_SLDSC_measured_share_matrix()` computes. A gene counts as expressed in
+#' a cell type with at least 10 counts and 1 count per million there; its
 #' specificity is zero elsewhere. Only autosomal protein-coding genes expressed
 #' in any cell type are kept.
 #'
@@ -426,16 +447,11 @@ get_SLDSC_gene_specificity_record <- function(pseudobulk_counts_matrix, Ensembl_
   counts_matrix <- counts_matrix[, clusters %in% cell_types, drop = FALSE]
   clusters <- clusters[clusters %in% cell_types]
   counts_matrix <- as.matrix(counts_matrix %*% Matrix::t(Matrix::fac2sparse(factor(clusters))))
-  normalized_matrix <- sweep(counts_matrix, 2, colSums(counts_matrix), "/")
+  specificity_matrix <- get_SLDSC_measured_share_matrix(counts_matrix, min_share = 1e-6)
   gene_tibble <- make_peak_gene_correlation_gene_TSS_tibble(Ensembl_annotations_GRanges_list, counts_matrix) |>
-    dplyr::filter(gene_biotype == "protein_coding", chr %in% paste0("chr", 1:22))
-  expressed <- counts_matrix[gene_tibble$gene_matrix_feature, ] >= 10 &
-    normalized_matrix[gene_tibble$gene_matrix_feature, ] >= 1e-6
-  gene_tibble <- gene_tibble[rowSums(expressed) > 0, ]
-  expressed <- expressed[gene_tibble$gene_matrix_feature, ]
-  normalized_matrix <- normalized_matrix[gene_tibble$gene_matrix_feature, ]
+    dplyr::filter(gene_biotype == "protein_coding", chr %in% paste0("chr", 1:22), gene_matrix_feature %in% rownames(specificity_matrix))
   list(
-    specificity_matrix = normalized_matrix / rowSums(normalized_matrix) * expressed,
+    specificity_matrix = specificity_matrix[gene_tibble$gene_matrix_feature, , drop = FALSE],
     ranges = GenomicRanges::GRanges(gene_tibble$chr, IRanges::IRanges(
       pmax(gene_tibble$gene_start - window, 1L), gene_tibble$gene_end + window, names = gene_tibble$gene_matrix_feature
     ))

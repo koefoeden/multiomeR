@@ -37,7 +37,9 @@ then, a target whose own command changed stays hidden below an outdated root;
 `tar_sitrep(names = ...)` shows it at once in its `command` column. Do
 this before any run whose cascade could reach WNN: its neighbour search is
 nondeterministic, so WNN and everything downstream would rebuild with new
-values.
+values. A commit's in-process check that a changed helper reproduces earlier
+values does not show that the target's stored hash will reproduce when it
+reruns on a worker, so count such targets as cascading until they have rebuilt.
 
 ## Code and configuration changes
 

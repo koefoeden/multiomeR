@@ -194,38 +194,6 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   targets::tar_target(
-    name = peak_gene_correlation_finemapping_reference.WNN,
-    description = "Keep the within-cell-group FDR of linked genes' pairs for chromosome-level SuSiE inputs [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
-    command = make_peak_gene_finemapping_reference(peak_gene_correlation_hierarchical_results_tibble.WNN),
-    resources = get_tar_resources(RAM_GB_req = 32)
-  ),
-  targets::tar_target(
-    name = peak_gene_correlation_finemapped_links_tibbles.WNN,
-    description = "Conditionally prioritize peaks for candidate enhancer genes with SuSiE [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
-    command = finemap_peak_gene_correlations_for_branch(
-      normalized_aggregate_matrices = peak_gene_correlation_normalized_aggregate_matrices.WNN,
-      branch_results = restore_peak_gene_correlation_FDR(
-        peak_gene_correlation_hierarchical_results_tibbles.WNN,
-        peak_gene_correlation_finemapping_reference.WNN
-      )
-    ),
-    pattern = map(
-      peak_gene_correlation_normalized_aggregate_matrices.WNN,
-      peak_gene_correlation_hierarchical_results_tibbles.WNN
-    ),
-    iteration = "vector",
-    packages = w_def("susieR"),
-    resources = get_tar_resources(RAM_GB_req = 16)
-  ),
-  targets::tar_target(
-    name = peak_gene_correlation_finemapped_links_tibble.WNN,
-    description = "Combine compact SuSiE peak-gene prioritization records [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
-    command = dplyr::bind_rows(
-      peak_gene_correlation_finemapped_links_tibbles.WNN
-    ),
-    resources = get_tar_resources(RAM_GB_req = 16)
-  ),
-  targets::tar_target(
     name = peak_gene_correlation_diagnostics_tibble.WNN,
     description = "Combine peak-gene correlation cell-group and branch diagnostics [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = dplyr::bind_rows(

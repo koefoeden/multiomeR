@@ -21,11 +21,6 @@ It is then rescaled by the class's background SD within its peak-detection quint
 A candidate's empirical P-value is the share of the class's rescaled background scores that are at least as extreme.
 These P-values are Benjamini–Hochberg-corrected within each annotation class over the complete eligible pair family, counting untested and unreliable pairs.
 A candidate link requires an estimable positive average slope above the gene's background mean and an FDR below 0.05, excluding self-promoter peaks.
-SuSiE fine-mapping prioritizes peaks on the same residualized values for genes with at least one candidate link [@wang2020_susie].
-Because neighboring peaks are often co-accessible [@pliner2018_cicero], SuSiE asks which of a gene's correlated peaks jointly explain its expression.
-It fits up to ten single effects and reports 95% credible sets whose peaks have a minimum absolute correlation (purity) of at least 0.5.
-Fine-mapping covers up to the 50 genes with the lowest FDR per class and chromosome, and the 500 peaks per gene with the largest absolute residual correlation.
-These caps limit its runtime.
 These model-based associations do not establish causal enhancer–gene regulation.
 Background peaks more than 10 Mb away also cannot separate a specific enhancer from covariation within a local chromatin domain.
 

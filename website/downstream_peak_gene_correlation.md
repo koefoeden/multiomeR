@@ -4,7 +4,7 @@
 
 Use this module to nominate candidate regulatory links between accessible regions and nearby genes within each WNN cell type. It pairs consensus peaks with nearby gene transcription start sites and tests whether accessibility and expression vary together across **donor–state pseudobulks**: nuclei of one cell type summed by donor and ATAC-defined state, with each nucleus in at most one pseudobulk.
 
-A hierarchical model adjusts for donor, sequencing depth and the cell type's main chromatin states and lets the peak–gene slope vary between donors. Positive slopes that significantly exceed those of distant peaks of the same gene nominate candidate links, and SuSiE prioritizes peaks for each linked gene. Links are hypotheses: they do not establish causal regulation, and the distant-peak background cannot separate a specific enhancer from covariation within a local chromatin domain. [Method details](methods_peak_gene_correlation.md)
+A hierarchical model adjusts for donor, sequencing depth and the cell type's main chromatin states and lets the peak–gene slope vary between donors. Positive slopes that significantly exceed those of distant peaks of the same gene nominate candidate links. Links are hypotheses: they do not establish causal regulation, and the distant-peak background cannot separate a specific enhancer from covariation within a local chromatin domain. [Method details](methods_peak_gene_correlation.md)
 
 ## Prerequisites
 
@@ -23,7 +23,6 @@ Cell types and donors with too few nuclei are skipped. A cell type with fewer su
 | Which cell types or chromosome branches were skipped, and why? | Diagnostics plot and table |
 | Which peaks are associated with a gene's expression? | Hierarchical results table and top-link figures |
 | How do adjusted correlations and links vary by cell type and distance? | Summary plots and link table |
-| Which peaks best explain a linked gene? | SuSiE prioritization table |
 
 ## Configure
 
@@ -92,7 +91,7 @@ targets::tar_read(
 )
 ```
 
-The candidate links and SuSiE prioritization are in `peak_gene_correlation_links_tibble.WNN` and `peak_gene_correlation_finemapped_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix.
+The candidate links are in `peak_gene_correlation_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix.
 
 ## Parameter reference
 

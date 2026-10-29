@@ -47,7 +47,7 @@ and the gene TSS is dashed. The genomic axis uses Mb.
 Compact gene-context data and focal coverage are cached separately from
 rendering. Candidate enhancer links are estimable positive slopes above the
 gene's background with hierarchical FDR < 0.05 outside self-promoter peaks; they
-drive the link table, SuSiE fine-mapping and the support summary plots.
+drive the link table and the support summary plots.
 
 ## Measurement-support filtering
 

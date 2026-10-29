@@ -85,6 +85,14 @@ aggregation's `chromHMMs_list_proj.ATAC` after it. Each name's states are
 computed on their own, so these reproduce; check them on a scratch copy of the
 store's AnnotationHub cache.
 
+A changed donor metadata file reruns `donor_id_metadata_tibble` and, through
+it, `GEM_well_metadata_tibble` and the Harmony, QC and SCT donor projections.
+Those projections keep every donor row in file order, whether or not the
+aggregation uses the donor. They reproduce, and stop the cascade before
+Harmony, only when the donor rows, their order and the projected columns are
+unchanged. Compare their new values with `tar_read()` before calling such a
+change contained.
+
 Dynamic branches take their names from their upstream branches, and those of
 an `iteration = "vector"` stem from each element's value, never from the
 pattern: a shifted `slice()` index or a key added beside existing ones reruns

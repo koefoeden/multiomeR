@@ -59,6 +59,12 @@ preview-and-run patterns in `multiomer-run-pipeline`. Run the smallest target
 that exercises the changed code, and avoid setup/download targets unless the
 edit directly changed download/setup behavior.
 
+Building a changed target in the shared store hands its new value to other
+sessions' `shortcut = TRUE` runs, which then mix it with stale upstream
+results. When those runs are likely, check the target in memory instead:
+evaluate its `tar_manifest()` command with each dependency taken from
+`tar_read()`, and compare the result with the stored value.
+
 To show that a performance change reproduces its outputs, call the changed
 helper on a stored branch's inputs and compare the result with that branch's
 stored value using `all.equal()`. `tar_read(branches = i)` of an

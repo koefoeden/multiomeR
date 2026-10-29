@@ -44,7 +44,11 @@ The user manual is built from the Quarto book in `website/`. It includes a quick
 
 ## Citation
 
-If you use multiomeR, please cite the release you used: GitHub's **Cite this repository** gives its authors from [`CITATION.cff`](CITATION.cff), and the release's Zenodo record gives its DOI. Once the manuscript describing multiomeR is published, this section will cite it.
+If you use multiomeR, please cite its preprint and the release you used:
+
+- Koefoed TG, et al. multiomeR: a pipeline for reproducible analysis of large-scale single-nucleus Epi Multiome datasets. *bioRxiv* 2026. <https://doi.org/10.64898/2026.10.14.759117>
+
+GitHub's **Cite this repository** gives the release's authors from [`CITATION.cff`](CITATION.cff), and the release's Zenodo record gives its DOI.
 
 multiomeR is built on targets and BPCells, so please also cite them:
 

@@ -26,7 +26,8 @@ get_differential_model_metadata_columns <- function(model) {
   columns <- unlist(lapply(formulas, function(formula) {
     all.vars(stats::delete.response(stats::terms(stats::as.formula(formula))))
   }), use.names = FALSE)
-  unique(setdiff(c(columns, model$pairing_variable, model$correlation_block,
+  filter_columns <- if (!is.null(model$donor_filter)) all.vars(str2lang(model$donor_filter))
+  unique(setdiff(c(columns, filter_columns, model$pairing_variable, model$correlation_block,
     model$random_effect), "cluster"))
 }
 
@@ -42,10 +43,12 @@ get_differential_model_cohort <- function(donor_metadata, model, available_donor
   cohort <- tibble::as_tibble(donor_metadata)
   canonical <- function(x) gsub("_", "-", x, fixed = TRUE)
   complete <- if (length(required)) stats::complete.cases(cohort[, required, drop = FALSE]) else rep(TRUE, nrow(cohort))
+  filtered_out <- if (!is.null(model$donor_filter)) !eval(str2lang(model$donor_filter), cohort, baseenv()) else FALSE
   cohort$exclusion_reason <- dplyr::case_when(
     !is.null(model$donor_ids) & !cohort$donor_id %in% model$donor_ids ~ "donor_not_selected",
     !canonical(cohort$donor_id) %in% canonical(available_donor_ids) ~ "no_selected_samples",
     !complete ~ "missing_model_metadata",
+    filtered_out ~ "donor_filter",
     .default = NA_character_
   )
   cohort$included <- is.na(cohort$exclusion_reason)

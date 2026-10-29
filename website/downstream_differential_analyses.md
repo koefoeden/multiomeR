@@ -66,6 +66,7 @@ Each branch holds named models; the model and contrast names label the outputs.
 Optional fields narrow a model:
 
 - `donor_ids` restricts the donors in either branch;
+- `donor_filter` keeps the donors for whom an R condition on the donor metadata holds, such as `"!treated"` for a logical `treated` column; its variables count as model variables, so a copy of a model with this one field added refits it in a subset;
 - `cell_type_subset` restricts the cell types whose pseudobulks a feature model tests; name one cell type to test it on its own;
 - `GEM_well_IDs` restricts the GEM wells that define an abundance model's population; and
 - `cell_types_to_test` restricts the cell types an abundance model tests, by default the assigned cell types found in at least half of its donors. Every retained nucleus still counts towards its donor's total.

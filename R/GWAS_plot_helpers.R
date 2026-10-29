@@ -238,7 +238,7 @@ make_named_heatmap_palette <- function(values, palette = "Set3") {
 }
 
 # The gap between GWAS categories and between cell-type compartments in heatmaps and their tracks.
-gwas_heatmap_group_gap <- grid::unit(1.5, "mm")
+gwas_heatmap_group_gap <- grid::unit(2.5, "mm")
 
 gwas_heatmap_metadata_theme <- function(show_y = FALSE, show_x = FALSE) {
   ggplot2::theme_minimal(base_size = 9) +
@@ -484,7 +484,9 @@ plot_GWAS_feature_heatmap <- function(
       legend.title = ggplot2::element_text(size = 8),
       plot.margin = ggplot2::margin(t = 0, r = 5, b = 0, l = 2),
       panel.spacing = gwas_heatmap_group_gap,
-      strip.text = ggplot2::element_blank()
+      strip.text = ggplot2::element_blank(),
+      # Patchwork aligns layout rows by position: with the tracks' placement, the labels share the row of their axes.
+      strip.placement = "outside"
     )
 }
 
@@ -657,7 +659,9 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
     ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0, 0.6))) +
     ggplot2::scale_y_discrete(expand = c(0, 0)) +
     ggplot2::labs(x = NULL, y = NULL) +
-    gwas_heatmap_metadata_theme()
+    gwas_heatmap_metadata_theme() +
+    # Inside, the track names sit above the axis row that the heatmap's labels fill, rather than below it.
+    ggplot2::theme(strip.placement = "inside")
 
   ancestry_plot <- ancestry_plot_data |>
     ggplot2::ggplot(ggplot2::aes(x = fraction, y = GWAS_ID, fill = ancestry_group)) +

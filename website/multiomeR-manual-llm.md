@@ -853,6 +853,7 @@ Before enabling the module, confirm that:
 | Is a study's genome-wide heritability enriched in a cell type's specific peaks or genes? | S-LDSC heatmap, which outlines each study's top set of cell types, and a comparison of the peak, gene and joint models |
 | Do S-LDSC and chromVAR agree? | S-LDSC versus chromVAR scatter plots per study and an agreement overview |
 | How robust is an S-LDSC enrichment, and do peaks or genes explain more? | A plot of each enrichment's most influential genome blocks, and comparisons of peak and gene annotations of matched size |
+| Do peak–gene links point to GWAS signal beyond accessibility and distance? | With the [peak–gene correlation module](downstream_peak_gene_correlation.md), comparisons of activity-by-contact, correlation and baseline rankings of each cell type's peaks against their territory |
 
 ## Configure
 
@@ -959,7 +960,11 @@ Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtit
 │   ├── SLDSC_chromVAR_agreement_plot.png
 │   ├── SLDSC_matched_enrichment_curves_plot.png
 │   ├── SLDSC_matched_size_comparison_plot.png
-│   └── SLDSC_matched_enrichment_agreement_plot.png
+│   ├── SLDSC_matched_enrichment_agreement_plot.png
+│   ├── SLDSC_peak_gene_uplift_curves_plot.png
+│   ├── SLDSC_peak_gene_contrast_plot.png
+│   ├── SLDSC_peak_gene_cell_type_plot.png
+│   └── SLDSC_peak_gene_design_plot.png
 └── single_nucleus/SCAVENGE/WNN_harmony_SNN/
     ├── TRS_heatmap/
     ├── TRS_UMAPs/
@@ -997,7 +1002,7 @@ targets::tar_read(
 
 Use this module to nominate candidate regulatory links between accessible regions and nearby genes within each WNN cell type. It pairs consensus peaks with nearby gene transcription start sites and tests whether accessibility and expression vary together across **donor–state pseudobulks**: nuclei of one cell type summed by donor and ATAC-defined state, with each nucleus in at most one pseudobulk.
 
-A hierarchical model adjusts for donor, sequencing depth and the cell type's main chromatin states and lets the peak–gene slope vary between donors. Positive slopes that significantly exceed those of distant peaks of the same gene nominate candidate links, and SuSiE prioritizes peaks for each linked gene. Links are hypotheses: they do not establish causal regulation, and the distant-peak background cannot separate a specific enhancer from covariation within a local chromatin domain. [Method details](methods_peak_gene_correlation.md)
+A hierarchical model adjusts for donor, sequencing depth and the cell type's main chromatin states and lets the peak–gene slope vary between donors. Positive slopes that significantly exceed those of distant peaks of the same gene nominate candidate links. Links are hypotheses: they do not establish causal regulation, and the distant-peak background cannot separate a specific enhancer from covariation within a local chromatin domain. The module also gives each candidate pair an activity-by-contact (ABC) score in each cell type: the peak's accessibility weighted by its distance to the gene, relative to all peaks around the gene. It needs no donor variation, so it also covers cell types with too few donors for the model. [Method details](methods_peak_gene_correlation.md)
 
 ## Prerequisites
 
@@ -1006,7 +1011,7 @@ Before enabling the module, confirm that:
 - you have reviewed the aggregation through [checkpoint 8](main_running.md#checkpoint-8) and accept its final WNN cell set and cell-type annotations; and
 - each cell type you want to study has at least eight donors with at least 40 of its nuclei.
 
-Cell types and donors with too few nuclei are skipped. A cell type with fewer such donors yields diagnostics but no tests, and the `strict` support filter requires more shared donors than the other presets.
+Cell types and donors with too few nuclei are skipped. A cell type with fewer such donors yields diagnostics but no tests, and the `strict` support filter requires more shared donors than the other presets. ABC scores need only 100 nuclei of a cell type.
 
 ## Outputs
 
@@ -1016,7 +1021,7 @@ Cell types and donors with too few nuclei are skipped. A cell type with fewer su
 | Which cell types or chromosome branches were skipped, and why? | Diagnostics plot and table |
 | Which peaks are associated with a gene's expression? | Hierarchical results table and top-link figures |
 | How do adjusted correlations and links vary by cell type and distance? | Summary plots and link table |
-| Which peaks best explain a linked gene? | SuSiE prioritization table |
+| How strongly could each nearby peak regulate a gene, given its accessibility and distance? | ABC score table |
 
 ## Configure
 
@@ -1085,7 +1090,7 @@ targets::tar_read(
 )
 ```
 
-The candidate links and SuSiE prioritization are in `peak_gene_correlation_links_tibble.WNN` and `peak_gene_correlation_finemapped_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix.
+The candidate links are in `peak_gene_correlation_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix. `peak_gene_ABC_scores_tibble.WNN` holds the ABC score of each candidate pair in each cell type that expresses the gene, without a threshold. `peak_gene_ABC_cell_groups_tibble.WNN` lists the scored cell types with their nuclei and their names in the genetic-enrichment module. When the aggregation also runs the [genetic-enrichment module](downstream_genetic_enrichment.md), it tests whether ABC scores and correlations point to GWAS signal beyond accessibility and distance.
 
 ## Parameter reference
 
@@ -2196,10 +2201,12 @@ The sparse SCAVENGE implementation is compared with its reference in [Algorithm 
 
 Stratified LD score regression (S-LDSC) tests whether a GWAS's heritability is enriched in variants within the peaks accessible in each annotation class, using genome-wide summary statistics rather than fine-mapped loci [@finucane2015_stratified_ldsc; @finucane2018_ldsc_seg].
 It uses the peaks and the ATAC counts summed by the final WNN cell-type labels of the pseudobulk chromVAR analysis.
-Each class's counts are divided by its total, and each peak's depth-normalized values are divided by their sum across classes.
-A peak's annotation value for a class is thus its share of the summed class profiles: the chromVAR background model's observed-over-expected ratio divided by the number of classes.
+Each class's counts are divided by its total.
+Entries with fewer than 10 reads are set to zero, because one read in a shallow class weighs as much as thousands of reads in a deep one.
+Each peak's remaining depth-normalized values are then divided by their sum across classes.
+A peak's annotation value for a class is thus its share of the summed profiles of the classes that measure it.
 A peak equally accessible in all classes therefore gets the same small value in each.
-An all-peaks annotation marks every peak with reads.
+An all-peaks annotation marks every peak with at least 10 reads in some class.
 Reference variants inside a peak take its values, and all other variants take zero.
 LD scores of these annotations are computed from the 1000 Genomes European samples on GRCh38 [@auton2015_1000_genomes] for HapMap3 regression variants outside the MHC, with ldsc's bias-corrected squared correlation summed over a 1 cM window [@bulik-sullivan2015_ldsc].
 Summary statistics are taken from the GWAS Catalog, from its harmonized file where one exists and otherwise from the submitted file [@cerezo2025_gwas_catalog].
@@ -2220,8 +2227,8 @@ GWAS without genome-wide summary statistics in the GWAS Catalog or a named file 
 
 Cell-type gene expression is tested in the same way, following LDSC-SEG [@finucane2018_ldsc_seg].
 The GEX counts of the donor pseudobulks are summed by class and divided by each class's total.
-A gene's specificity for a class is its share of these depth-normalized values summed across classes [@skene2018_brain_cell_types].
 A gene counts as expressed in a class with at least 10 counts and one count per million there.
+A gene's specificity for a class is its share of these depth-normalized values summed across the classes that express it, and zero elsewhere [@skene2018_brain_cell_types].
 Each class's gene annotation marks the reference variants within 100 kb of the gene bodies of its most specific expressed genes.
 These number 10% of the autosomal protein-coding genes expressed in any class, and an all-genes annotation marks the windows of all of them.
 Where windows overlap, a variant takes the largest value, which for these binary annotations is their union.
@@ -2252,6 +2259,7 @@ For each class, peaks are ranked by their accessibility share and gene windows b
 A variant in overlapping windows takes the highest specificity among them.
 Peaks or window pieces are added in this order until they hold 0.5%, 1%, 2% or 5% of the common (MAF > 5%) reference variants.
 Pieces are kept whole and ties keep genomic order, so an annotation can exceed its share by one piece.
+A class whose scored peaks or gene windows hold fewer common variants than a size gets no annotation of that size, and the plots count these.
 All consensus peaks together hold about 10% of common variants, so larger peak annotations would lose their class specificity.
 A reference annotation of each strategy ranks the same peaks or genes at random.
 Each binary annotation is fitted with the 97 baseline-LD annotations, which also set the regression weights.
@@ -2268,6 +2276,31 @@ Summaries across pairs or GWAS report medians with 95% intervals from 1,000 boot
 A strategy's specificity is each GWAS's median enrichment in its enriched classes divided by that in its other classes, when both are positive.
 Small peak annotations hold only the credible-set variants inside them, while gene windows hold whole credible sets, so imprecise fine-mapping lowers the fine-mapped enrichment of peaks more.
 
+When an aggregation also runs the peak–gene correlation module, the same statistics compare its peak–gene strategies.
+They ask whether linking peaks to genes points to GWAS signal beyond what a peak's accessibility and its distance to a gene already give.
+Each strategy ranks the peaks of a territory in each class.
+The candidate territory holds the peaks of the class's activity-by-contact (ABC) candidate pairs with a positive score [@fulco2019_activity_by_contact].
+The tested territory holds the peaks whose correlation with a gene the hierarchical model estimated in the class.
+Self-promoter pairs are left out of both.
+The ABC ranking orders peaks by the largest ABC score among their pairs.
+The correlation ranking uses each peak's smallest one-sided calibrated P-value among its tested genes.
+This P-value is Šidák-adjusted for the number of genes, so that peaks near many genes gain nothing from multiplicity.
+A pair's one-sided P-value is half its background P-value when its slope is positive and above its gene's background, and one minus that half otherwise.
+Correlation with ABC ranks the pairs with such a positive correlation first, each group by ABC.
+Three baselines rank the same peaks by activity, the class's counts per million that ABC uses, by accessibility share, and by distance to the nearest TSS among their pairs.
+Within-strata versions of the ABC and correlation rankings order peaks within quantile bins of these three covariates.
+Each territory and class has 2 to 10 bins per covariate, as many as leave about 100 peaks per stratum.
+The top peaks of a within-strata ranking therefore keep the territory's covariate profile.
+Unless the strategy adds signal beyond these covariates, their enrichment matches the territory's.
+Annotations keep each ranking's top peaks until they hold 10%, 25% or 50% of the territory's common variants, and the whole territory serves as the reference.
+A contrast divides a ranking's central enrichment over pairs of GWAS and class by that of its reference over the same pairs.
+The reference is the territory, another ranking of the same size, or, for correlation with ABC, the ABC ranking.
+The centre is the median for heritability enrichment and the mean for fine-mapped enrichment, because small annotations often hold no credible-set variant.
+A ratio is left missing when its reference's centre is not positive, as the heritability share of a small annotation can be, because its sign would mislead.
+Contrasts are computed in enriched and in other pairs, and the quotient of the two measures specificity.
+Their intervals are 2.5% and 97.5% quantiles over 1,000 bootstrap samples of GWAS, the same samples for every contrast.
+Tested territories are small, so their heritability enrichment is noisy, and fine-mapped enrichment is the more informative statistic there.
+
 Agreement with pseudobulk chromVAR is summarized for each GWAS by the Spearman correlation of the two methods' z-scores across classes.
 For each class, it is the correlation across GWAS after each method's z-scores are standardized within each GWAS.
 
@@ -2278,9 +2311,9 @@ How the R implementation of S-LDSC was compared with ldsc is described in [Algor
 
 ## Source and target graphs
 
-`extra_targets/module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in its directory. Its shared targets download the S-LDSC reference and each distinct GWAS's summary statistics once for all aggregations.
+`extra_targets/module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in its directory. Its shared targets download the S-LDSC reference and each distinct GWAS's summary statistics once for all aggregations. `extra_targets/module_genetic_enrichment/peak_gene_targets.R` maps the comparison of peak–gene strategies over the aggregations that also run the peak–gene correlation module, after both modules' mappings.
 
-**Source:** [`extra_targets/module_genetic_enrichment/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_genetic_enrichment), [`R/open_targets_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/open_targets_helpers.R), [`R/GWAS_chromVAR_input_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_input_helpers.R), [`R/GWAS_chromVAR_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_helpers.R), [`R/GWAS_chromVAR_absolute_effect_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_absolute_effect_helpers.R), [`R/GWAS_chromVAR_contribution_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_contribution_helpers.R), [`R/SCAVENGE_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SCAVENGE_helpers.R), [`R/SLDSC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_helpers.R), [`R/SLDSC_annotation_evaluation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_annotation_evaluation_helpers.R).
+**Source:** [`extra_targets/module_genetic_enrichment/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_genetic_enrichment), [`R/open_targets_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/open_targets_helpers.R), [`R/GWAS_chromVAR_input_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_input_helpers.R), [`R/GWAS_chromVAR_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_helpers.R), [`R/GWAS_chromVAR_absolute_effect_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_absolute_effect_helpers.R), [`R/GWAS_chromVAR_contribution_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_contribution_helpers.R), [`R/SCAVENGE_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SCAVENGE_helpers.R), [`R/SLDSC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_helpers.R), [`R/SLDSC_annotation_evaluation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_annotation_evaluation_helpers.R), [`R/SLDSC_peak_gene_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_peak_gene_helpers.R).
 
 ### Nucleus-level enrichment and SCAVENGE
 
@@ -2377,11 +2410,6 @@ It is then rescaled by the class's background SD within its peak-detection quint
 A candidate's empirical P-value is the share of the class's rescaled background scores that are at least as extreme.
 These P-values are Benjamini–Hochberg-corrected within each annotation class over the complete eligible pair family, counting untested and unreliable pairs.
 A candidate link requires an estimable positive average slope above the gene's background mean and an FDR below 0.05, excluding self-promoter peaks.
-SuSiE fine-mapping prioritizes peaks on the same residualized values for genes with at least one candidate link [@wang2020_susie].
-Because neighboring peaks are often co-accessible [@pliner2018_cicero], SuSiE asks which of a gene's correlated peaks jointly explain its expression.
-It fits up to ten single effects and reports 95% credible sets whose peaks have a minimum absolute correlation (purity) of at least 0.5.
-Fine-mapping covers up to the 50 genes with the lowest FDR per class and chromosome, and the 500 peaks per gene with the largest absolute residual correlation.
-These caps limit its runtime.
 These model-based associations do not establish causal enhancer–gene regulation.
 Background peaks more than 10 Mb away also cannot separate a specific enhancer from covariation within a local chromatin domain.
 
@@ -2389,16 +2417,27 @@ Top-link plots rank estimable positive hierarchical associations by their uncali
 They exclude self-promoter peaks but keep gene-body peaks.
 Each plot shows the gene context, the plotted class's insertion coverage and the donor-residual scatter.
 
+Each candidate pair also gets an activity-by-contact (ABC) score [@fulco2019_activity_by_contact].
+It needs no variation between donors, so it also covers cell types that the hierarchical model cannot test.
+Scores are computed for each labelled WNN cell type with at least 100 nuclei, the genetic-enrichment floor for a cell type's summed profile.
+A gene is scored in a cell type when its summed GEX counts there reach 10 counts and 1 count per million, the rule of the S-LDSC gene sets.
+A peak's activity is its ATAC counts per million in the cell type, as in the ABC pipeline without H3K27ac data.
+Its contact with a gene falls with the distance from the peak centre to the TSS as a power law with exponent 1.024, the ABC pipeline's default [@nasser2021_enhancer_maps].
+Peaks closer than 5 kb get the contact at 5 kb.
+The score is activity times contact, divided by the sum of this product over all consensus peaks within 5 Mb of the TSS, including the gene's own promoter.
+The score is reported without a threshold.
+The published threshold of 0.02 was calibrated with DNase-seq, H3K27ac and Hi-C data in K562 cells, so it does not carry over to this data.
+
 <!-- end include: website/_shared_methods/peak_gene_models.md -->
 
 
-The model fits are compared with `lme4` and `pbkrtest` in [Algorithm validation](algorithm_validation.md).
+The model fits are compared with `lme4` and `pbkrtest` in [Algorithm validation](algorithm_validation.md). The ABC contact exponent and the 5 kb and 5 Mb distances are the defaults of the [ABC pipeline](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction). Its current version also sets self-promoter scores to 1 after the division. This module keeps the original ratio, so a gene's scores sum to at most 1.
 
 ## Source and target graph
 
 `extra_targets/module_peak_gene_correlation/targets.R` maps only opted-in aggregations and binds the primary-module inputs they consume. Parameters use the `peak_gene_correlation` manifest scope, targets end in `.peak_gene_correlation.<aggregation>`, and plot checkpoint tags use `peak_gene_correlation`, outside the numbered QC selections.
 
-**Source:** [`extra_targets/module_peak_gene_correlation/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_peak_gene_correlation), [`R/peak_gene_correlation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_correlation_helpers.R), [`R/peak_gene_filter_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_filter_helpers.R), [`R/peak_gene_hierarchical_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_hierarchical_helpers.R), [`R/peak_gene_finemapping_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_finemapping_helpers.R), [`src/peak_gene_REML.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/peak_gene_REML.cpp).
+**Source:** [`extra_targets/module_peak_gene_correlation/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_peak_gene_correlation), [`R/peak_gene_correlation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_correlation_helpers.R), [`R/peak_gene_filter_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_filter_helpers.R), [`R/peak_gene_hierarchical_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_hierarchical_helpers.R), [`R/peak_gene_ABC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_ABC_helpers.R), [`src/peak_gene_REML.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/peak_gene_REML.cpp).
 
 This view covers the TSS table, candidate peak–gene pairs, the WNN cell groups, donor–state pseudobulk construction, measurement-support filtering, the per-chromosome analysis branches and the diagnostic and top-link outputs.
 

@@ -121,7 +121,9 @@ eval(command, env)
 
 Save wrappers such as `save_GWAS_heatmap()` call the global
 `save_plots_structured()` and so still write into the store; replace them in
-`env` as well.
+`env` as well. For a named plot list, `save_plots_structured()` also titles
+each untitled plot with its name and reads a patchwork's title from its last
+panel, so apply `add_ggplot_title_if_missing(plot, name)` in the replacement.
 
 Use the repository's
 R execution and validation skills for code changes; a specification-only edit

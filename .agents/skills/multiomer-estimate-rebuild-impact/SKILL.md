@@ -65,6 +65,12 @@ cascade, unlike `tar_outdated()` there, which file targets resolving into the
 worktree make cascade. It lists no branches: a changed function reruns every
 branch of the patterns that call it.
 
+From a worktree, query the main store by passing its absolute path as `store`
+with `shortcut = TRUE`. File targets resolve against the worktree, so their
+`file` cue fires and everything downstream looks outdated. Compare instead the
+`meta`, `command` and `depend` cues of `tar_sitrep()` with and without the
+change, taking the base from a detached worktree of the base commit.
+
 The manuscript-figure graph, `pipeline_manuscript_figures/targets.R`, shares
 the store. It tracks `cfg_aggregations.yaml`, `cfg_GEM_wells.tsv` and
 `manifests/cfg_pipeline_parameters.tsv` as file inputs of

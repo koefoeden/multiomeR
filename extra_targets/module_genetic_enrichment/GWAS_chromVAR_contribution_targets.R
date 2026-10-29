@@ -81,7 +81,7 @@ rlang::list2(
     command = get_GWAS_chromVAR_top_set_tibble(chromVAR_locus_contribution_tibble.cell_type_pseudobulk, chromVAR_deviation_tibble.cell_type_pseudobulk)
   ),
   tarchetypes::tar_file(
-    name = locus_contribution_per_GWAS_heatmaps.chromVAR,
+    name = locus_contribution_per_GWAS_heatmaps.chromVAR.specificity,
     description = "Save one cell-type-by-locus contribution heatmap per enabled GWAS. [checkpoint:genetic_enrichment]",
     command = plot_GWAS_locus_contribution_heatmaps(
       locus_contribution_tibble = chromVAR_locus_contribution_tibble.cell_type_pseudobulk,
@@ -91,7 +91,7 @@ rlang::list2(
       save_plots_structured(width = 16, height = 8)
   ),
   tarchetypes::tar_file(
-    name = locus_contribution_per_GWAS_faceted_bars_plots.chromVAR,
+    name = locus_contribution_per_GWAS_faceted_bars_plots.chromVAR.specificity,
     description = "Save compact signed locus-contribution bars faceted by cell type for each GWAS. [checkpoint:genetic_enrichment]",
     command = chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk |>
       plot_GWAS_locus_contribution_bars(n_top_loci = 5L) |>
@@ -116,7 +116,7 @@ rlang::list2(
       dplyr::any_of(c("atac_fragments", "nCount_ATAC")))
   ),
   targets::tar_target(
-    name = variant_contribution_detail_plot_records.chromVAR,
+    name = variant_contribution_detail_plot_records.chromVAR.specificity,
     description = "Prepare plot-ready variant, accessibility, and peak-track data for one GWAS [resource_observation: peak_RAM_GiB=5.7; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=11.8; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
     command = prepare_GWAS_variant_contribution_detail_records(
       variant_contribution_tibble = chromVAR_variant_contribution_tibble.cell_type_pseudobulk,
@@ -134,9 +134,9 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
   tarchetypes::tar_file(
-    name = variant_contribution_detail_plots.chromVAR,
+    name = variant_contribution_detail_plots.chromVAR.specificity,
     description = "Save aligned locus facets with variant effects, gene bodies, ATAC coverage, and peaks per GWAS and focal cell type. [checkpoint:genetic_enrichment] [resource_observation: peak_RAM_GiB=4.3; n_nuclei=376k; aggregation=sizing_31x; method=slurm_monitor; date=2026-10-17] [resource_observation: peak_RAM_GiB>47.9 (out of memory at 48); n_nuclei=1159k; aggregation=sizing_91x; method=slurm_monitor; date=2026-10-17]",
-    command = variant_contribution_detail_plot_records.chromVAR |>
+    command = variant_contribution_detail_plot_records.chromVAR.specificity |>
       plot_GWAS_variant_contribution_details(
         GWAS_input_records = GWAS_input_records,
         gene_GRanges = marker_validated_Ensembl_annotations_GRanges_list$genes,
@@ -145,13 +145,13 @@ rlang::list2(
         genetic_enrichment_variant_detail_min_z = genetic_enrichment_variant_detail_min_z) |>
       save_plots_structured(
         width = max(20, 6 * max(0, table(purrr::map_chr(
-          variant_contribution_detail_plot_records.chromVAR,
+          variant_contribution_detail_plot_records.chromVAR.specificity,
           \(record) record$variant_tibble$cluster[[1]])))),
         height = 15,
         override_suffix = chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk$GWAS_ID[[1]],
         dyn_suffix_in_subdir = TRUE
       ),
-    pattern = map(variant_contribution_detail_plot_records.chromVAR,
+    pattern = map(variant_contribution_detail_plot_records.chromVAR.specificity,
       chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk),
     iteration = "list",
     resources = get_tar_resources(RAM_GB_req = 60)

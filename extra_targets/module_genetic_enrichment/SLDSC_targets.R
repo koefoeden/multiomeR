@@ -200,7 +200,7 @@ rlang::list2(
       save_GWAS_heatmap(SLDSC_cell_type_tibble.cell_type_pseudobulk$GWAS_ID)
   ),
   tarchetypes::tar_file(
-    name = z_score_plot.comparison,
+    name = z_score_plot.comparison.specificity,
     description = "Save per-GWAS scatter plots comparing S-LDSC and pseudobulk chromVAR cell-type z-scores. [checkpoint:genetic_enrichment]",
     command = plot_SLDSC_chromVAR_comparison(
       dplyr::filter(SLDSC_cell_type_tibble.cell_type_pseudobulk, model == "peaks"),
@@ -210,7 +210,7 @@ rlang::list2(
         SLDSC_cell_type_tibble.cell_type_pseudobulk$GWAS_ID[!is.na(SLDSC_cell_type_tibble.cell_type_pseudobulk$z)]) / 5))
   ),
   tarchetypes::tar_file(
-    name = agreement_plot.comparison,
+    name = agreement_plot.comparison.specificity,
     description = "Save an overview of S-LDSC and pseudobulk chromVAR agreement per GWAS and per cell type against GWAS and cell-type predictors. [checkpoint:genetic_enrichment]",
     command = plot_SLDSC_chromVAR_agreement(
       dplyr::filter(SLDSC_cell_type_tibble.cell_type_pseudobulk, model == "peaks"),

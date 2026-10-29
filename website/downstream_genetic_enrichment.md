@@ -124,38 +124,38 @@ Runtime and disk use grow with the number of studies, nuclei and attributed loci
 
 ## Review
 
-Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtitle and caption say what to look for.
+Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtitle and caption say what to look for. They are grouped by the question they answer, then by method. `specificity/` asks whether a cell type's chromatin holds more GWAS signal than the other cell types': the S-LDSC coefficients, chromVAR and SCAVENGE, and their comparison. `enrichment/` asks whether it holds more heritability than random variants: the S-LDSC enrichment and its agreement with fine-mapped credible sets.
 
 ```text
 <store>/plots/my_aggregation/genetic_enrichment/
 ├── GWAS_peak_weights_barplot.png
 ├── GWAS_credible_set_similarity_heatmap.png
-├── chromVAR/
-│   ├── deviation_heatmaps/
-│   ├── locus_contribution_per_GWAS_heatmaps/
-│   ├── locus_contribution_per_GWAS_faceted_bars_plots/
-│   ├── absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots/
-│   └── variant_contribution_detail_plots/
-├── enrichment/
-│   ├── SLDSC/
-│   │   ├── heatmaps/
-│   │   ├── curves_per_category_plots/
-│   │   ├── strategy_curves_plot.png
-│   │   └── strategy_size_comparison_plot.png
-│   └── comparison/
-│       └── agreement_plot.png
 ├── specificity/
-│   └── SLDSC/
-│       ├── heatmap.png
-│       ├── modality_comparison_plot.png
-│       └── block_influence_plot.png
-├── comparison/
-│   ├── z_score_plot.png
-│   └── agreement_plot.png
-└── SCAVENGE/
-    ├── TRS_heatmap/
-    ├── TRS_UMAPs/
-    └── TRS_cluster_summary_plot/
+│   ├── SLDSC/
+│   │   ├── heatmap.png
+│   │   ├── modality_comparison_plot.png
+│   │   └── block_influence_plot.png
+│   ├── chromVAR/
+│   │   ├── deviation_heatmaps/
+│   │   ├── locus_contribution_per_GWAS_heatmaps/
+│   │   ├── locus_contribution_per_GWAS_faceted_bars_plots/
+│   │   ├── absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots/
+│   │   └── variant_contribution_detail_plots/
+│   ├── SCAVENGE/
+│   │   ├── TRS_heatmap/
+│   │   ├── TRS_UMAPs/
+│   │   └── TRS_cluster_summary_plot/
+│   └── comparison/
+│       ├── z_score_plot.png
+│       └── agreement_plot.png
+└── enrichment/
+    ├── SLDSC/
+    │   ├── heatmaps/
+    │   ├── curves_per_category_plots/
+    │   ├── strategy_curves_plot.png
+    │   └── strategy_size_comparison_plot.png
+    └── comparison/
+        └── agreement_plot.png
 ```
 
 Read the tables behind the plots in R, for example the cell-type enrichment scores and the S-LDSC results:

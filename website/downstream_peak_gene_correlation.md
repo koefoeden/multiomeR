@@ -4,7 +4,7 @@
 
 Use this module to nominate candidate regulatory links between accessible regions and nearby genes within each WNN cell type. It pairs consensus peaks with nearby gene transcription start sites and tests whether accessibility and expression vary together across **donor–state pseudobulks**: nuclei of one cell type summed by donor and ATAC-defined state, with each nucleus in at most one pseudobulk.
 
-A hierarchical model adjusts for donor, sequencing depth and the cell type's main chromatin states and lets the peak–gene slope vary between donors. Positive slopes that significantly exceed those of distant peaks of the same gene nominate candidate links. Links are hypotheses: they do not establish causal regulation, and the distant-peak background cannot separate a specific enhancer from covariation within a local chromatin domain. [Method details](methods_peak_gene_correlation.md)
+A hierarchical model adjusts for donor, sequencing depth and the cell type's main chromatin states and lets the peak–gene slope vary between donors. Positive slopes that significantly exceed those of distant peaks of the same gene nominate candidate links. Links are hypotheses: they do not establish causal regulation, and the distant-peak background cannot separate a specific enhancer from covariation within a local chromatin domain. The module also gives each candidate pair an activity-by-contact (ABC) score in each cell type: the peak's accessibility weighted by its distance to the gene, relative to all peaks around the gene. It needs no donor variation, so it also covers cell types with too few donors for the model. [Method details](methods_peak_gene_correlation.md)
 
 ## Prerequisites
 
@@ -13,7 +13,7 @@ Before enabling the module, confirm that:
 - you have reviewed the aggregation through [checkpoint 8](main_running.md#checkpoint-8) and accept its final WNN cell set and cell-type annotations; and
 - each cell type you want to study has at least eight donors with at least 40 of its nuclei.
 
-Cell types and donors with too few nuclei are skipped. A cell type with fewer such donors yields diagnostics but no tests, and the `strict` support filter requires more shared donors than the other presets.
+Cell types and donors with too few nuclei are skipped. A cell type with fewer such donors yields diagnostics but no tests, and the `strict` support filter requires more shared donors than the other presets. ABC scores need only 100 nuclei of a cell type.
 
 ## Outputs
 
@@ -23,6 +23,7 @@ Cell types and donors with too few nuclei are skipped. A cell type with fewer su
 | Which cell types or chromosome branches were skipped, and why? | Diagnostics plot and table |
 | Which peaks are associated with a gene's expression? | Hierarchical results table and top-link figures |
 | How do adjusted correlations and links vary by cell type and distance? | Summary plots and link table |
+| How strongly could each nearby peak regulate a gene, given its accessibility and distance? | ABC score table |
 
 ## Configure
 
@@ -91,7 +92,7 @@ targets::tar_read(
 )
 ```
 
-The candidate links are in `peak_gene_correlation_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix.
+The candidate links are in `peak_gene_correlation_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix. `peak_gene_ABC_scores_tibble.WNN` holds the ABC score of each candidate pair in each cell type that expresses the gene, without a threshold. `peak_gene_ABC_cell_groups_tibble.WNN` lists the scored cell types with their nuclei and their names in the genetic-enrichment module.
 
 ## Parameter reference
 

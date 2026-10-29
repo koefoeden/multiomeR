@@ -27,3 +27,14 @@ Background peaks more than 10 Mb away also cannot separate a specific enhancer f
 Top-link plots rank estimable positive hierarchical associations by their uncalibrated Kenward–Roger P-value, without a significance cutoff.
 They exclude self-promoter peaks but keep gene-body peaks.
 Each plot shows the gene context, the plotted class's insertion coverage and the donor-residual scatter.
+
+Each candidate pair also gets an activity-by-contact (ABC) score [@fulco2019_activity_by_contact].
+It needs no variation between donors, so it also covers cell types that the hierarchical model cannot test.
+Scores are computed for each labelled WNN cell type with at least 100 nuclei, the genetic-enrichment floor for a cell type's summed profile.
+A gene is scored in a cell type when its summed GEX counts there reach 10 counts and 1 count per million, the rule of the S-LDSC gene sets.
+A peak's activity is its ATAC counts per million in the cell type, as in the ABC pipeline without H3K27ac data.
+Its contact with a gene falls with the distance from the peak centre to the TSS as a power law with exponent 1.024, the ABC pipeline's default [@nasser2021_enhancer_maps].
+Peaks closer than 5 kb get the contact at 5 kb.
+The score is activity times contact, divided by the sum of this product over all consensus peaks within 5 Mb of the TSS, including the gene's own promoter.
+The score is reported without a threshold.
+The published threshold of 0.02 was calibrated with DNase-seq, H3K27ac and Hi-C data in K562 cells, so it does not carry over to this data.

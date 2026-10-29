@@ -8,7 +8,9 @@ peak_gene_correlation_restriction <- build_module_tibble("peak_gene_correlation"
     "consensus_peak_BPCells_matrix.ATAC",
     "metadata_w_cell_types_tibble.WNN",
     "harmony_embeddings_matrix.ATAC",
-    "combined_BPCells_fragment_obj.ATAC"
+    "combined_BPCells_fragment_obj.ATAC",
+    "pseudobulk_counts_matrix.GEX",
+    "pseudobulk_counts_matrix.ATAC"
   )) |>
   restrict_module_to_GEM_well_datasets("peak_gene_correlation")
 

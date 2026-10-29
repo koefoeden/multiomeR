@@ -70,3 +70,13 @@ retention diagnostics for all three presets. `filter_retention_plot` compares
 retained fractions by cell type and identifies the active setting. Diagnostic
 exclusion counts for RNA, ATAC and donor support overlap and should not be added.
 Strict filtering necessarily excludes cell types with fewer than three donors.
+
+## Activity-by-contact scores
+
+`peak_gene_ABC_scores_tibble.WNN` scores every candidate pair by activity by
+contact in each WNN cell type with at least 100 nuclei that expresses the gene.
+It reads the general cell type by donor pseudobulks, which the GEM-well
+restriction narrows like the module's other inputs. The scores need no donor
+variation and have no threshold. `peak_gene_ABC_cell_groups_tibble.WNN` maps
+each `cell_group` to the genetic-enrichment `cluster`, which writes `_` as `-`.
+`website/_shared_methods/peak_gene_models.md` gives the formula and its sources.

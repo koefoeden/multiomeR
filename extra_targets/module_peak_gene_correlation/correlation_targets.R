@@ -18,6 +18,25 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
+    name = peak_gene_ABC_cell_groups_tibble.WNN,
+    description = "Select WNN cell types with at least 100 nuclei for activity-by-contact scores and name their genetic-enrichment clusters [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
+    command = make_peak_gene_ABC_cell_groups(metadata_w_cell_types_tibble.WNN)
+  ),
+  targets::tar_target(
+    name = peak_gene_ABC_scores_tibble.WNN,
+    # Memory grows with candidate pairs times scored cell groups.
+    description = "Score candidate peak-gene pairs by activity by contact in each cell type that expresses the gene [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation] [resource_observation: peak_RAM_GiB=5.2; walltime_s=65; n_rows=29.1M; n_cell_groups=13; aggregation=unpublished; method=VmHWM; date=2026-10-23]",
+    command = score_peak_gene_ABC(
+      candidate_pairs_tibble = peak_gene_correlation_candidate_pairs_tibble.WNN,
+      gene_TSS_tibble = peak_gene_correlation_gene_TSS_tibble.WNN,
+      consensus_peak_GRanges = consensus_peak_GRanges.ATAC,
+      ATAC_pseudobulk_matrix = pseudobulk_counts_matrix.ATAC,
+      GEX_pseudobulk_matrix = pseudobulk_counts_matrix.GEX,
+      cell_groups_tibble = peak_gene_ABC_cell_groups_tibble.WNN
+    ),
+    resources = get_tar_resources(RAM_GB_req = 16)
+  ),
+  targets::tar_target(
     name = peak_gene_correlation_chromosome_tibble.WNN,
     description = "List chromosomes with candidate peak-gene pairs [checkpoint:peak_gene_correlation] [part_of_graph:peak_gene_correlation]",
     command = make_peak_gene_correlation_chromosome_tibble(

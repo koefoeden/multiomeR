@@ -15,13 +15,13 @@ This page describes the models of the optional peak–gene correlation module. [
 
 {{< include _shared_methods/peak_gene_models.md >}}
 
-The model fits are compared with `lme4` and `pbkrtest` in [Algorithm validation](algorithm_validation.md).
+The model fits are compared with `lme4` and `pbkrtest` in [Algorithm validation](algorithm_validation.md). The ABC contact exponent and the 5 kb and 5 Mb distances are the defaults of the [ABC pipeline](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction). Its current version also sets self-promoter scores to 1 after the division. This module keeps the original ratio, so a gene's scores sum to at most 1.
 
 ## Source and target graph
 
 `extra_targets/module_peak_gene_correlation/targets.R` maps only opted-in aggregations and binds the primary-module inputs they consume. Parameters use the `peak_gene_correlation` manifest scope, targets end in `.peak_gene_correlation.<aggregation>`, and plot checkpoint tags use `peak_gene_correlation`, outside the numbered QC selections.
 
-**Source:** [`extra_targets/module_peak_gene_correlation/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_peak_gene_correlation), [`R/peak_gene_correlation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_correlation_helpers.R), [`R/peak_gene_filter_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_filter_helpers.R), [`R/peak_gene_hierarchical_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_hierarchical_helpers.R), [`src/peak_gene_REML.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/peak_gene_REML.cpp).
+**Source:** [`extra_targets/module_peak_gene_correlation/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_peak_gene_correlation), [`R/peak_gene_correlation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_correlation_helpers.R), [`R/peak_gene_filter_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_filter_helpers.R), [`R/peak_gene_hierarchical_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_hierarchical_helpers.R), [`R/peak_gene_ABC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/peak_gene_ABC_helpers.R), [`src/peak_gene_REML.cpp`](https://github.com/koefoeden/multiomeR/blob/main/src/peak_gene_REML.cpp).
 
 This view covers the TSS table, candidate peak–gene pairs, the WNN cell groups, donor–state pseudobulk construction, measurement-support filtering, the per-chromosome analysis branches and the diagnostic and top-link outputs.
 

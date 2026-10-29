@@ -57,6 +57,14 @@ before the edit, build it with `tar_manifest(script = ...)` from a temporary
 copy of `_targets.R` in the repository root whose `source()` calls read
 `git show HEAD:` copies of the edited target files.
 
+To check a branch while a run owns the base store, call
+`tar_sitrep(names = ..., store = <base store>, callr_function = NULL)` from its
+plain worktree and from a detached worktree at its base: rows whose reasons
+differ are what the branch reruns directly. It reads only metadata and does not
+cascade, unlike `tar_outdated()` there, which file targets resolving into the
+worktree make cascade. It lists no branches: a changed function reruns every
+branch of the patterns that call it.
+
 The manuscript-figure graph, `pipeline_manuscript_figures/targets.R`, shares
 the store. It tracks `cfg_aggregations.yaml`, `cfg_GEM_wells.tsv` and
 `manifests/cfg_pipeline_parameters.tsv` as file inputs of

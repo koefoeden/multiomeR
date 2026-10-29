@@ -53,23 +53,18 @@ above for that. To change one consumer, edit its call site rather than a shared
 helper. Descriptions and resources are not cues, so edits limited to them
 rerun nothing. Also check the
 content of changed file targets, such as manifests. If no manifest was saved
-before the edit, build it with `tar_manifest(script = ...)` from a temporary
-copy of `_targets.R` in the repository root whose `source()` calls read
+before the edit, build it with `tar_manifest(script = ...)`, run from the
+repository root, from a scratch copy of `_targets.R` whose `source()` calls read
 `git show HEAD:` copies of the edited target files.
 
-To check a branch while a run owns the base store, call
-`tar_sitrep(names = ..., store = <base store>, callr_function = NULL)` from its
-plain worktree and from a detached worktree at its base: rows whose reasons
-differ are what the branch reruns directly. It reads only metadata and does not
-cascade, unlike `tar_outdated()` there, which file targets resolving into the
-worktree make cascade. It lists no branches: a changed function reruns every
-branch of the patterns that call it.
-
-From a worktree, query the main store by passing its absolute path as `store`
-with `shortcut = TRUE`. File targets resolve against the worktree, so their
-`file` cue fires and everything downstream looks outdated. Compare instead the
-`meta`, `command` and `depend` cues of `tar_sitrep()` with and without the
-change, taking the base from a detached worktree of the base commit.
+To check a branch from its worktree while a run owns the base store, compare
+`tar_sitrep(names = ..., store = <base store>, shortcut = TRUE,
+callr_function = NULL)` from the worktree with the same call from a detached
+worktree at its base: rows whose `meta`, `command` or `depend` reasons differ
+are what the branch reruns directly. It reads only metadata and does not
+cascade, unlike `tar_outdated()` there, whose file targets resolve into the
+worktree so that everything downstream looks outdated. It lists no branches:
+a changed function reruns every branch of the patterns that call it.
 
 The manuscript-figure graph, `pipeline_manuscript_figures/targets.R`, shares
 the store. It tracks `cfg_aggregations.yaml`, `cfg_GEM_wells.tsv` and

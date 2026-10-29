@@ -1348,10 +1348,14 @@ plot_pseudobulk_differential_significant_elements <- function(significant_elemen
     ggplot2::scale_y_continuous(labels = \(x) abs(x)) +
     ggplot2::labs(
       title = paste("Differential", modality, "by contrast"),
-      subtitle = "Bars to the right count increases; bars to the left count decreases in the positive contrast direction.\nCompare direction and yield across models; more discoveries alone do not imply a stronger biological effect.",
-      caption = stringr::str_wrap("Counts include features with BH FDR < 0.05 and nonzero fitted effect, corrected within each model and contrast.\nTick labels show absolute counts; contrasts are ordered by total discoveries across models. Feature sets and sample support may differ between models.", width = 110),
+      subtitle = stringr::str_wrap("Bars to the right count increases; bars to the left count decreases in the positive contrast direction. Compare direction and yield across models; more discoveries alone do not imply a stronger biological effect.", width = 100),
+      caption = stringr::str_wrap(paste(
+        "Counts include features with BH FDR < 0.05 and nonzero fitted effect, corrected within each model and contrast.",
+        "Tick labels show absolute counts; contrasts are ordered by total discoveries across models. Feature sets and sample support may differ between models.",
+        "Counts follow donor numbers: a contrast estimated in fewer donors, such as one sex, finds fewer features at the same effect size.",
+        "Only an interaction contrast, the difference between two effects, tests whether strata differ."), width = 110),
       x = NULL, y = "Significant features (left: decreases; right: increases)", fill = "Model") +
-    ggplot2::theme(legend.position = "bottom")
+    ggplot2::theme(legend.position = "bottom", plot.title.position = "plot")
 }
 
 #' Plot pseudobulk differential significant elements modality distribution
@@ -1396,9 +1400,13 @@ plot_pseudobulk_differential_significant_elements_modality_distribution <- funct
           fill = "Modality",
           title = paste("Distribution of discoveries across contrasts:", model_name),
           subtitle = stringr::str_wrap("Compare which contrasts account for most discoveries within each modality; this is not the fraction of tested features found significant.", width = 100),
-          caption = stringr::str_wrap("Numerator: FDR-significant features in this contrast. Denominator: discoveries summed across contrasts within the same model and modality. Labels give counts; features can contribute to several contrasts. A modality with no discoveries is displayed as zero.", width = 110)
+          caption = stringr::str_wrap(paste(
+            "Numerator: FDR-significant features in this contrast. Denominator: discoveries summed across contrasts within the same model and modality. Labels give counts; features can contribute to several contrasts. A modality with no discoveries is displayed as zero.",
+            "Counts follow donor numbers: a contrast estimated in fewer donors, such as one sex, finds fewer features at the same effect size.",
+            "Only an interaction contrast, the difference between two effects, tests whether strata differ."), width = 110)
         ) +
-        ggplot2::theme(legend.position = "bottom")
+        ggplot2::guides(fill = ggplot2::guide_legend(nrow = 2)) +
+        ggplot2::theme(legend.position = "bottom", plot.title.position = "plot")
     })
 }
 
@@ -1523,6 +1531,14 @@ plot_pseudobulk_feature_volcano <- function(
   )
 }
 
+# A contrast named A_minus_B subtracts B's effect from A's, so its sign alone
+# does not say which group changed.
+describe_difference_contrast <- function(contrast) {
+  if (stringr::str_detect(contrast, "_minus_")) {
+    "This contrast is a difference between two effects, such as slopes in two cell types: a positive value can mean a larger decrease in the subtracted group, not an increase in the first."
+  }
+}
+
 build_pseudobulk_feature_volcano_plot <- function(plot_tibble, label_tibble, x_val, y_val, has_OT_evidence, title) {
   force(plot_tibble)
   force(label_tibble)
@@ -1540,8 +1556,8 @@ build_pseudobulk_feature_volcano_plot <- function(plot_tibble, label_tibble, x_v
     } +
     ggplot2::scale_shape_manual(values = c("TRUE" = 16, "FALSE" = 1)) +
     ggplot2::labs(title = paste("Differential feature evidence:", title),
-      subtitle = stringr::str_wrap("Look for sizeable effects with FDR support; positive values follow the positive model-contrast direction.", width = 100),
-      caption = stringr::str_wrap(paste("Points are tested features; filled points mark BH FDR < 0.05 within this model and contrast. The x-axis uses the fitted model effect (log2 fold change for gene counts; activity-scale difference for activity models).",
+      subtitle = stringr::str_wrap(paste("Look for sizeable effects with FDR support; positive values follow the positive model-contrast direction.", describe_difference_contrast(title)), width = 100),
+      caption = stringr::str_wrap(paste("Points are tested features; filled points mark BH FDR < 0.05 within this model and contrast. The x-axis uses the fitted model effect (log2 fold change for gene counts; activity-scale difference for activity models); for a continuous predictor it is the change per unit, such as one SD of a standardized index.",
         "Labels are selected from the top nominal-p features and shown only when FDR < 0.05. Open Targets colours, when present, describe external evidence and do not prove causality."), width = 110),
       x = "Fitted effect (model scale)", y = if (y_val == "log10FDR") "-log10(BH FDR)" else "-log10(nominal p-value)",
       shape = "BH FDR < 0.05", colour = "Open Targets evidence") +
@@ -1605,9 +1621,13 @@ plot_pseudobulk_chromatin_accessibility_volcano_tibble <- function(
     ggplot2::geom_point(ggplot2::aes(alpha = sig), size = 0.5) +
     ggplot2::labs(
       title = paste("Differential chromatin accessibility:", title),
-      subtitle = "Positive log2 fold changes indicate higher accessibility in the positive contrast direction.\nPoint opacity marks FDR significance; the dashed line uses the threshold on the displayed p-value scale.",
+      subtitle = paste(c(
+        "Positive log2 fold changes indicate higher accessibility in the positive contrast direction.",
+        stringr::str_wrap(describe_difference_contrast(title), width = 100),
+        "Point opacity marks FDR significance; the dashed line uses the threshold on the displayed p-value scale."
+      ), collapse = "\n"),
       caption = stringr::str_wrap(paste0(
-        "Each point is a peak. Opacity: BH FDR < 0.05 across tested peaks within this model and contrast. Dashed line: ",
+        "Each point is a peak; for a continuous predictor, log2 fold changes are per unit, such as one SD of a standardized index. Opacity: BH FDR < 0.05 across tested peaks within this model and contrast. Dashed line: ",
         if (y_val == "log10FDR") "FDR = 0.05." else "nominal p = 0.05, not an FDR cutoff.",
         "\nColours group genomic annotations. Up to 30 peaks are selected for labels by -log10(p) x absolute log2 fold change; gene labels denote annotation, not proven targets."), width = 110),
       x = "Log2 fold change", y = if (y_val == "log10FDR") "-log10(BH FDR)" else "-log10(nominal p-value)",
@@ -1718,7 +1738,7 @@ plot_gene_set_enrichment_results <- function(gene_set_enrichment_results_tibble)
 #'
 #' Plot top competitive camera terms for one pseudobulk contrast.
 #'
-#' @param gene_set_enrichment_results_tibble gene-set enrichment result tibble with contrast, pathway, enrichment score, and adjusted P-value columns.
+#' @param gene_set_enrichment_results_tibble camera results of one contrast, with gene-set `ID`, `Direction`, `PValue`, `FDR`, `model` and `contrast` columns.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for `save_plots_structured()` or composition.
 #' @keywords internal
 

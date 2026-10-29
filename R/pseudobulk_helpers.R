@@ -511,8 +511,8 @@ gls_series_block_weights <- function(M, design = NULL, ndups = 2, spacing = 1, b
     after <- seq_len(n_coef)[-seq_len(j)]
     coefficients[, j] <- (z[, j] - rowSums(slice(L, after, j) * coefficients[, after, drop = FALSE])) / L[, j, j]
   }
-  stdev_unscaled <- sqrt((1 - correlation) * vapply(seq_len(n_coef), function(j) rowSums(slice(L_inverse, j:n_coef, j)^2), numeric(n_features)))
-  dimnames(stdev_unscaled) <- dimnames(coefficients)
+  stdev_unscaled <- matrix(sqrt((1 - correlation) * vapply(seq_len(n_coef), function(j) rowSums(slice(L_inverse, j:n_coef, j)^2), numeric(n_features))),
+    n_features, n_coef, dimnames = dimnames(coefficients))
   df_residual <- rowSums(observed) - n_coef
   sigma <- sqrt(pmax(ytVy - rowSums(z^2), 0) / (1 - correlation) / df_residual)
 

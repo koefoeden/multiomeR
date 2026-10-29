@@ -85,7 +85,8 @@ pipeline <- rlang::list2(
   ),
   source("extra_targets/module_differential_analyses/targets.R")$value,
   source("extra_targets/module_genetic_enrichment/targets.R")$value,
-  source("extra_targets/module_peak_gene_correlation/targets.R")$value
+  source("extra_targets/module_peak_gene_correlation/targets.R")$value,
+  source("extra_targets/module_genetic_enrichment/peak_gene_targets.R")$value
 )
 
 pipeline

@@ -92,7 +92,7 @@ targets::tar_read(
 )
 ```
 
-The candidate links are in `peak_gene_correlation_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix. `peak_gene_ABC_scores_tibble.WNN` holds the ABC score of each candidate pair in each cell type that expresses the gene, without a threshold. `peak_gene_ABC_cell_groups_tibble.WNN` lists the scored cell types with their nuclei and their names in the genetic-enrichment module.
+The candidate links are in `peak_gene_correlation_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix. `peak_gene_ABC_scores_tibble.WNN` holds the ABC score of each candidate pair in each cell type that expresses the gene, without a threshold. `peak_gene_ABC_cell_groups_tibble.WNN` lists the scored cell types with their nuclei and their names in the genetic-enrichment module. When the aggregation also runs the [genetic-enrichment module](downstream_genetic_enrichment.md), it tests whether ABC scores and correlations point to GWAS signal beyond accessibility and distance.
 
 ## Parameter reference
 

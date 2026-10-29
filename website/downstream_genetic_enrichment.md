@@ -35,6 +35,7 @@ Before enabling the module, confirm that:
 | Is a study's genome-wide heritability enriched in a cell type's specific peaks or genes? | S-LDSC heatmap, which outlines each study's top set of cell types, and a comparison of the peak, gene and joint models |
 | Do S-LDSC and chromVAR agree? | S-LDSC versus chromVAR scatter plots per study and an agreement overview |
 | How robust is an S-LDSC enrichment, and do peaks or genes explain more? | A plot of each enrichment's most influential genome blocks, and comparisons of peak and gene annotations of matched size |
+| Do peak–gene links point to GWAS signal beyond accessibility and distance? | With the [peak–gene correlation module](downstream_peak_gene_correlation.md), comparisons of activity-by-contact, correlation and baseline rankings of each cell type's peaks against their territory |
 
 ## Configure
 
@@ -141,7 +142,11 @@ Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtit
 │   ├── SLDSC_chromVAR_agreement_plot.png
 │   ├── SLDSC_matched_enrichment_curves_plot.png
 │   ├── SLDSC_matched_size_comparison_plot.png
-│   └── SLDSC_matched_enrichment_agreement_plot.png
+│   ├── SLDSC_matched_enrichment_agreement_plot.png
+│   ├── SLDSC_peak_gene_uplift_curves_plot.png
+│   ├── SLDSC_peak_gene_contrast_plot.png
+│   ├── SLDSC_peak_gene_cell_type_plot.png
+│   └── SLDSC_peak_gene_design_plot.png
 └── single_nucleus/SCAVENGE/WNN_harmony_SNN/
     ├── TRS_heatmap/
     ├── TRS_UMAPs/

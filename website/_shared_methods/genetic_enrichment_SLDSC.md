@@ -75,5 +75,30 @@ Summaries across pairs or GWAS report medians with 95% intervals from 1,000 boot
 A strategy's specificity is each GWAS's median enrichment in its enriched classes divided by that in its other classes, when both are positive.
 Small peak annotations hold only the credible-set variants inside them, while gene windows hold whole credible sets, so imprecise fine-mapping lowers the fine-mapped enrichment of peaks more.
 
+When an aggregation also runs the peak–gene correlation module, the same statistics compare its peak–gene strategies.
+They ask whether linking peaks to genes points to GWAS signal beyond what a peak's accessibility and its distance to a gene already give.
+Each strategy ranks the peaks of a territory in each class.
+The candidate territory holds the peaks of the class's activity-by-contact (ABC) candidate pairs with a positive score [@fulco2019_activity_by_contact].
+The tested territory holds the peaks whose correlation with a gene the hierarchical model estimated in the class.
+Self-promoter pairs are left out of both.
+The ABC ranking orders peaks by the largest ABC score among their pairs.
+The correlation ranking uses each peak's smallest one-sided calibrated P-value among its tested genes.
+This P-value is Šidák-adjusted for the number of genes, so that peaks near many genes gain nothing from multiplicity.
+A pair's one-sided P-value is half its background P-value when its slope is positive and above its gene's background, and one minus that half otherwise.
+Correlation with ABC ranks the pairs with such a positive correlation first, each group by ABC.
+Three baselines rank the same peaks by activity, the class's counts per million that ABC uses, by accessibility share, and by distance to the nearest TSS among their pairs.
+Within-strata versions of the ABC and correlation rankings order peaks within quantile bins of these three covariates.
+Each territory and class has 2 to 10 bins per covariate, as many as leave about 100 peaks per stratum.
+The top peaks of a within-strata ranking therefore keep the territory's covariate profile.
+Unless the strategy adds signal beyond these covariates, their enrichment matches the territory's.
+Annotations keep each ranking's top peaks until they hold 10%, 25% or 50% of the territory's common variants, and the whole territory serves as the reference.
+A contrast divides a ranking's central enrichment over pairs of GWAS and class by that of its reference over the same pairs.
+The reference is the territory, another ranking of the same size, or, for correlation with ABC, the ABC ranking.
+The centre is the median for heritability enrichment and the mean for fine-mapped enrichment, because small annotations often hold no credible-set variant.
+A ratio is left missing when its reference's centre is not positive, as the heritability share of a small annotation can be, because its sign would mislead.
+Contrasts are computed in enriched and in other pairs, and the quotient of the two measures specificity.
+Their intervals are 2.5% and 97.5% quantiles over 1,000 bootstrap samples of GWAS, the same samples for every contrast.
+Tested territories are small, so their heritability enrichment is noisy, and fine-mapped enrichment is the more informative statistic there.
+
 Agreement with pseudobulk chromVAR is summarized for each GWAS by the Spearman correlation of the two methods' z-scores across classes.
 For each class, it is the correlation across GWAS after each method's z-scores are standardized within each GWAS.

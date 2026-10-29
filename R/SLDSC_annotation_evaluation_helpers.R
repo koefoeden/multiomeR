@@ -8,12 +8,17 @@
 #' can exceed its share by one piece; pieces without score are never kept, and
 #' a cell type whose scored pieces hold fewer common SNPs than a share gets no
 #' annotation of that share. A `random` annotation ranks the same ranges at
-#' random, as a reference for what the territory alone concentrates.
+#' random, as a reference for what the territory alone concentrates. Within
+#' territories, each column's shares are of the common SNPs in its own scored
+#' pieces instead, and a share of 1 marks the whole territory, the reference
+#' for its rankings.
 #'
 #' @param score_matrix Range-by-cell-type scores named by range.
 #' @param ranges Ranges named like the score rows.
 #' @param reference_dir Directory returned by `download_SLDSC_reference()`.
 #' @param shares Shares of the common reference SNPs.
+#' @param within_territory Whether shares are of each column's scored common
+#'   SNPs, without a `random` annotation.
 #' @return A list with the kept pieces, their binary piece-by-annotation matrix
 #'   with annotations named `<cell type>:<share>`, each annotation's sums of
 #'   the baseline-LD annotations over its common SNPs, named like the baseline
@@ -21,8 +26,9 @@
 #'   `share` of the dropped annotations.
 #' @keywords internal
 
-get_SLDSC_matched_annotation_record <- function(score_matrix, ranges, reference_dir, shares = c(0.005, 0.01, 0.02, 0.05)) {
-  score_matrix <- cbind(score_matrix, random = withr::with_seed(1L, stats::runif(nrow(score_matrix))))
+get_SLDSC_matched_annotation_record <- function(score_matrix, ranges, reference_dir, shares = c(0.005, 0.01, 0.02, 0.05),
+                                                within_territory = FALSE) {
+  if (!within_territory) score_matrix <- cbind(score_matrix, random = withr::with_seed(1L, stats::runif(nrow(score_matrix))))
   pieces <- GenomicRanges::disjoin(ranges[rownames(score_matrix)], with.revmap = TRUE)
   pieces <- pieces[as.character(GenomicRanges::seqnames(pieces)) %in% paste0("chr", 1:22)]
   score_matrix <- apply(score_matrix, 2, \(values) max(IRanges::extractList(values, pieces$revmap)))
@@ -48,16 +54,17 @@ get_SLDSC_matched_annotation_record <- function(score_matrix, ranges, reference_
   piece_baseline_matrix[as.integer(rownames(piece_sums)), ] <- piece_sums
   n_common <- sum(purrr::map_int(chromosome_records, "n_common"))
   piece_n_common <- piece_baseline_matrix[, "baseL2"]
-  annotation_matrix <- do.call(cbind, purrr::map(colnames(score_matrix), \(cluster) {
-    ranked <- order(-score_matrix[, cluster])
-    ranked <- ranked[score_matrix[ranked, cluster] > 0]
+  territory_SNPs <- colSums(piece_n_common * (score_matrix > 0))
+  share_SNPs <- if (within_territory) territory_SNPs else rep(n_common, ncol(score_matrix))
+  annotation_matrix <- do.call(cbind, purrr::map(seq_len(ncol(score_matrix)), \(column) {
+    ranked <- order(-score_matrix[, column])
+    ranked <- ranked[score_matrix[ranked, column] > 0]
     SNPs_before <- cumsum(piece_n_common[ranked]) - piece_n_common[ranked]
-    vapply(shares, \(share) seq_along(pieces) %in% ranked[SNPs_before < share * n_common], logical(length(pieces)))
+    vapply(shares, \(share) seq_along(pieces) %in% ranked[SNPs_before < share * share_SNPs[[column]]], logical(length(pieces)))
   })) * 1
   dimnames(annotation_matrix) <- list(as.character(pieces), paste0(rep(colnames(score_matrix), each = length(shares)), ":", shares))
   # A cell type's whole territory would otherwise stand in for a share it cannot fill.
-  territory_SNPs <- colSums(piece_n_common * (score_matrix > 0))
-  is_filled <- rep(territory_SNPs, each = length(shares)) >= rep(shares, times = ncol(score_matrix)) * n_common
+  is_filled <- rep(territory_SNPs, each = length(shares)) >= as.vector(outer(shares, share_SNPs))
   annotation_matrix <- annotation_matrix[, is_filled, drop = FALSE]
   kept <- rowSums(annotation_matrix) > 0
   list(
@@ -244,6 +251,19 @@ get_SLDSC_matched_enrichment_tibble <- function(GWAS_input_record, sumstats_reco
     tidyr::separate_wider_regex(annotation, c(cluster = ".*", ":", share = "[^:]+$")) |>
     dplyr::mutate(share = as.numeric(share)) |>
     dplyr::relocate(GWAS_ID, cluster, share, SNP_share, dplyr::starts_with("SLDSC_enrichment"), dplyr::starts_with("PIP_enrichment"))
+}
+
+#' Mark the GWAS-cell-type pairs that single-modality S-LDSC enriches
+#'
+#' @param SLDSC_cell_type_tibble Combined cell-type S-LDSC results.
+#' @return `GWAS_ID`, `cluster` and `enriched_in_models`, whether the peak or
+#'   gene model gives q < 0.05.
+#' @keywords internal
+
+get_SLDSC_enriched_pair_tibble <- function(SLDSC_cell_type_tibble) {
+  SLDSC_cell_type_tibble |>
+    dplyr::filter(.data$model != "joint") |>
+    dplyr::summarise(enriched_in_models = any(.data$q < 0.05), .by = c("GWAS_ID", "cluster"))
 }
 
 #' Summarise matched-size enrichment across GWAS

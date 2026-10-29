@@ -257,10 +257,8 @@ gwas_heatmap_metadata_theme <- function(show_y = FALSE, show_x = FALSE) {
       plot.margin = ggplot2::margin(t = 4, r = 5, b = 0, l = 2),
       panel.spacing = gwas_heatmap_group_gap,
       strip.text.y = ggplot2::element_blank(),
-      strip.clip = "off",
       strip.placement = "outside",
-      strip.text.x = ggplot2::element_text(angle = 45, hjust = 0, size = 8, margin = ggplot2::margin(b = 2)),
-      strip.text.x.bottom = ggplot2::element_text(size = 8, margin = ggplot2::margin(t = 2))
+      strip.text.x = ggplot2::element_text(size = 8, margin = ggplot2::margin(t = 2))
     )
 }
 

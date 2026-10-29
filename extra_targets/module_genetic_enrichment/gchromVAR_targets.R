@@ -32,7 +32,7 @@ rlang::list2(
     name = GWAS_peak_weights_barplot,
     description = "Plot summary bar plot of capped summed SNP PPs within peaks and save to file. [checkpoint:genetic_enrichment]",
     command = {
-      plot <- plot_GWAS_chromVAR_peak_weights_summary(GWAS_peak_weight_records)
+      plot <- plot_GWAS_chromVAR_peak_weights_summary(GWAS_peak_weight_records, GWAS_inputs_tibble$GWAS_ID)
       save_plots_structured(plot)
     }
   ),

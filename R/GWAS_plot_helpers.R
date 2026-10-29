@@ -3,13 +3,16 @@
 #' Plot how many peaks receive nonzero GWAS chromVAR weights per trait.
 #'
 #' @param peak_weight_records List of GWAS peak-weight records, each containing
-#'   `GWAS_ID` and a named `peak_weights_vec`.
+#'   `GWAS_ID` and a named `peak_weights_vec`, or `NULL` for a GWAS with no
+#'   credible-set variant in peaks.
+#' @param GWAS_IDs All configured GWAS.
 #' @param overlap_threshold Number of nonzero peak overlaps used as the dashed
 #'   threshold in the overlap-fraction facet.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
-plot_GWAS_chromVAR_peak_weights_summary <- function(peak_weight_records, overlap_threshold = 100) {
+plot_GWAS_chromVAR_peak_weights_summary <- function(peak_weight_records, GWAS_IDs, overlap_threshold = 100) {
+  peak_weight_records <- purrr::compact(peak_weight_records)
   total_peaks <- length(peak_weight_records[[1]]$peak_weights_vec)
   overlap_threshold_fraction <- overlap_threshold / total_peaks
 
@@ -36,9 +39,10 @@ plot_GWAS_chromVAR_peak_weights_summary <- function(peak_weight_records, overlap
     ggplot2::labs(
       title = stringr::str_glue("Peak x GWAS posterior-probability overlap summary, from {total_peaks} total peaks"),
       subtitle = stringr::str_wrap("Look for traits with limited peak overlap before interpreting enrichment; low representation can limit downstream sensitivity.", width = 100),
-      caption = stringr::str_glue(
-        "Dashed line in the frac_overlapped_peaks facet marks {overlap_threshold} overlapped peaks ({scales::percent(overlap_threshold_fraction)} of all peaks)."
-      )
+      caption = stringr::str_wrap(paste(
+        stringr::str_glue("Dashed line in the frac_overlapped_peaks facet marks {overlap_threshold} overlapped peaks ({scales::percent(overlap_threshold_fraction)} of all peaks)."),
+        describe_GWAS_without_peak_variants(GWAS_IDs, purrr::map_chr(peak_weight_records, "GWAS_ID"))
+      ), width = 110)
     )
 }
 
@@ -185,7 +189,7 @@ get_SCAVENGE_TRS_UMAP_plots <- function(TRS_tibble, metadata_tibble, umap_cols, 
   plot
 }
 
-plot_SCAVENGE_summary_score_intervals <- function(summary_tibble) {
+plot_SCAVENGE_summary_score_intervals <- function(summary_tibble, GWAS_IDs) {
   if (nrow(summary_tibble) == 0) {
     return(structure(list(), class = c("empty_plot_list", "list")))
   }
@@ -206,7 +210,8 @@ plot_SCAVENGE_summary_score_intervals <- function(summary_tibble) {
         tidytext::scale_x_reordered(labels = function(x) gsub("___.*$", "", x)) +
         ggplot2::labs(title = "SCAVENGE score distributions by group",
           subtitle = "Compare median scores and spread; wide ranges can indicate a subset of high-scoring cells.",
-          caption = stringr::str_wrap("Centre: group median; box: 25th-75th percentiles; line: full minimum-maximum range. These are cell-score distributions, not confidence intervals. Groups are ordered separately within each trait; facet scales may differ.", width = 110),
+          caption = stringr::str_wrap(paste("Centre: group median; box: 25th-75th percentiles; line: full minimum-maximum range. These are cell-score distributions, not confidence intervals. Groups are ordered separately within each trait; facet scales may differ.",
+            describe_GWAS_without_peak_variants(GWAS_IDs, summary_tibble$GWAS_ID, "SCAVENGE")), width = 110),
           x = NULL, y = "SCAVENGE TRS", fill = "Group") +
         ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), legend.position = "top")
     })
@@ -775,9 +780,26 @@ plot_WNN_TRS_heatmap <- function(heatmap_data, GWAS_metadata_tracks_plot,
       if (scaled) "Colour: median cell-level TRS min-max scaled to 0-1 across the displayed WNN groups within each GWAS."
       else "Colour: median cell-level TRS within each WNN group, without display scaling.",
       "All available scores are shown.",
-      unique(data[["support_note"]])
+      unique(data[["support_note"]]),
+      describe_GWAS_without_peak_variants(get_GWAS_track_tibble(GWAS_metadata_tracks_plot)$GWAS_ID, data$GWAS_ID, "SCAVENGE")
     ), collapse = " "), 150)
   )
+}
+
+#' Name the GWAS that a plot leaves out for lack of credible-set variants in peaks
+#'
+#' chromVAR cannot score a GWAS none of whose credible-set variants lies in a
+#' peak, so it and SCAVENGE skip it.
+#'
+#' @param GWAS_IDs GWAS that the plot would show.
+#' @param analysed_GWAS_IDs GWAS that it shows.
+#' @param method Analysis that skipped the others.
+#' @return A caption sentence, or `NULL` when the plot shows every GWAS.
+#' @keywords internal
+
+describe_GWAS_without_peak_variants <- function(GWAS_IDs, analysed_GWAS_IDs, method = "chromVAR") {
+  not_analysed <- sort(setdiff(GWAS_IDs, analysed_GWAS_IDs))
+  if (length(not_analysed)) paste0("Not analysed in ", method, ": no credible-set variant in peaks: ", toString(not_analysed), ".")
 }
 
 # One star marks nominal significance and two mark FDR significance.
@@ -836,7 +858,8 @@ plot_GWAS_chromVAR_deviation_heatmap <- function(deviation_tibble, top_set_tibbl
       "Outlines: in GWAS with a cell type at q < 0.05, black marks the one of these with the largest deviation and grey every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types",
       "(Bonferroni, so the set holds the cell type with the largest true deviation with at least 95% probability).",
       "Shortfall standard errors come from 1,000 bootstrap samples of the GWAS loci (credible sets with lead variants within 500 kb grouped), which re-sum their exact contributions with the background fixed; GWAS with fewer than 10 loci get no top set.",
-      "Nuclei counts describe input support; cell types are pooled, so donors are not independent replicates."
+      "Nuclei counts describe input support; cell types are pooled, so donors are not independent replicates.",
+      describe_GWAS_without_peak_variants(get_GWAS_track_tibble(GWAS_metadata_tracks_plot)$GWAS_ID, deviation_tibble$GWAS_ID)
     ), width = 150)
   )
 }

@@ -992,7 +992,8 @@ plot_SLDSC_chromVAR_comparison <- function(SLDSC_tibble, chromVAR_deviation_tibb
         "Cell types at unadjusted one-sided P < 0.05 in either method are labelled; the dashed line marks this level for S-LDSC (z = 1.645).",
         "chromVAR P-values are the share of moved copies that score at least as high; their null is skewed, so no single chromVAR z-score marks P = 0.05.",
         "Panel titles give the Spearman correlation across cell types and the S-LDSC total-heritability z-score.",
-        "Only GWAS with genome-wide summary statistics are shown."
+        "Only GWAS with genome-wide summary statistics are shown.",
+        describe_GWAS_without_peak_variants(SLDSC_tibble$GWAS_ID[!is.na(SLDSC_tibble$z)], chromVAR_deviation_tibble$GWAS_ID)
       ), width = 150),
       x = "Pseudobulk chromVAR z-score",
       y = "S-LDSC coefficient z-score",
@@ -1164,7 +1165,8 @@ plot_SLDSC_chromVAR_agreement <- function(SLDSC_tibble, chromVAR_deviation_tibbl
         "D: Spearman correlation across GWAS after standardizing each method's z-scores across cell types within each GWAS, which removes differences in GWAS power;",
         "spread is the standard deviation of these standardized z-scores across GWAS.",
         "Strips in C and D give each predictor's Spearman correlation with agreement and its unadjusted P; GWAS share cohorts and traits, so P-values are descriptive.",
-        sprintf("Only the %d GWAS with genome-wide summary statistics are shown.", nrow(GWAS_tibble))
+        sprintf("Only the %d GWAS with genome-wide summary statistics are shown.", nrow(GWAS_tibble)),
+        describe_GWAS_without_peak_variants(SLDSC_tibble$GWAS_ID[!is.na(SLDSC_tibble$z)], chromVAR_deviation_tibble$GWAS_ID)
       ), width = 200),
       tag_levels = "A",
       theme = ggplot2::theme(plot.caption = ggplot2::element_text(hjust = 0))

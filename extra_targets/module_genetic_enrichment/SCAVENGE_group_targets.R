@@ -67,7 +67,7 @@ rlang::list2(
     name = TRS_cluster_summary_plot.SCAVENGE,
     description = "Plot per-group SCAVENGE TRS medians, interquartile ranges, and full ranges. [checkpoint:genetic_enrichment] [resource_observation: peak_RAM_GiB=5.8; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10]",
     command = {
-      plot <- plot_SCAVENGE_summary_score_intervals(TRS_summary_tibble.SCAVENGE)
+      plot <- plot_SCAVENGE_summary_score_intervals(TRS_summary_tibble.SCAVENGE, GWAS_inputs_tibble$GWAS_ID)
       save_plots_structured(plot)
     },
     resources = get_tar_resources(RAM_GB_req = 16)

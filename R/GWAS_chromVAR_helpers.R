@@ -9,7 +9,8 @@
 #' @param variant_GRanges Retained credible-set variants.
 #' @param peak_ranges Ordered ATAC peak ranges.
 #' @param weight_col Variant weight column.
-#' @return One row per peak-variant overlap.
+#' @return One row per peak-variant overlap, none when no variant lies in a
+#'   peak, so that chromVAR skips the GWAS.
 #' @keywords internal
 
 get_GWAS_chromVAR_peak_variant_weight_tibble <- function(
@@ -19,10 +20,6 @@ get_GWAS_chromVAR_peak_variant_weight_tibble <- function(
   weight_col = "posteriorProbability"
 ) {
   overlap_hits <- GenomicRanges::findOverlaps(peak_ranges, variant_GRanges)
-  if (length(overlap_hits) == 0L) {
-    stop("No credible-set variants overlap ATAC peaks for GWAS_ID: ", GWAS_ID)
-  }
-
   peak_idx <- S4Vectors::queryHits(overlap_hits)
   variant_tibble <- GenomicRanges::mcols(variant_GRanges)[S4Vectors::subjectHits(overlap_hits), , drop = FALSE] |>
     as.data.frame() |>
@@ -60,10 +57,12 @@ get_GWAS_chromVAR_peak_variant_weight_tibble <- function(
 #'
 #' @param peak_variant_weight_tibble Peak-variant weights of one GWAS.
 #' @param peak_ranges Ordered ATAC peak ranges.
-#' @return List with `GWAS_ID` and the capped weight of every peak, named by peak.
+#' @return List with `GWAS_ID` and the capped weight of every peak, named by
+#'   peak, or `NULL` for a GWAS with no credible-set variant in peaks.
 #' @keywords internal
 
 get_GWAS_chromVAR_peak_weight_record <- function(peak_variant_weight_tibble, peak_ranges) {
+  if (nrow(peak_variant_weight_tibble) == 0L) return(NULL)
   peak_weight_tibble <- dplyr::distinct(peak_variant_weight_tibble, peak_name, peak_weight)
   peak_weights_vec <- stats::setNames(numeric(length(peak_ranges)), get_peak_names_from_GRanges(peak_ranges))
   peak_weights_vec[peak_weight_tibble$peak_name] <- peak_weight_tibble$peak_weight
@@ -84,7 +83,9 @@ get_GWAS_chromVAR_peak_weight_summary_tibble <- function(peak_weight_records) {
 }
 
 # Peak weights are named from the rowRanges of the chromVAR object they annotate.
+# GWAS with no credible-set variant in peaks have no record and get no column.
 get_GWAS_chromVAR_peak_weight_matrix <- function(peak_weight_records) {
+  peak_weight_records <- purrr::compact(peak_weight_records)
   peak_weights_matrix <- peak_weight_records |>
     purrr::map("peak_weights_vec") |>
     do.call(what = cbind)

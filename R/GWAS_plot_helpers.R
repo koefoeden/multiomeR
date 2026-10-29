@@ -816,8 +816,11 @@ plot_WNN_TRS_heatmap <- function(heatmap_data, GWAS_metadata_tracks_plot,
   ) + patchwork::plot_annotation(
     title = paste(if (scaled) "Relative" else "Median", "SCAVENGE trait scores by WNN",
       if (grouping == "cell_types") "cell type" else "cluster"),
-    subtitle = if (scaled) "Compare groups within each trait; colours do not measure absolute differences between traits."
-      else "Look for groups with high median trait scores.",
+    subtitle = paste(
+      if (scaled) "Compare groups within each trait; colours do not measure absolute differences between traits."
+      else "Higher medians mark groups whose nuclei score higher for the trait.",
+      "These medians describe nuclei and are not a test of enrichment. Test cell types with the pseudobulk chromVAR heatmaps of GWAS-linked accessibility by cell type.",
+      sep = "\n"),
     caption = stringr::str_wrap(paste(c(
       if (scaled) "Colour: median cell-level TRS min-max scaled to 0-1 across the displayed WNN groups within each GWAS."
       else "Colour: median cell-level TRS within each WNN group, without display scaling.",
@@ -883,7 +886,8 @@ plot_GWAS_chromVAR_deviation_heatmap <- function(deviation_tibble, top_set_tibbl
     subtitle = paste(
       if (standardize) "Compare cell types within each trait; red indicates above-average deviation."
       else "Positive values indicate accessibility above that expected from matched background peaks.",
-      "Stars mark nominal (*) and FDR-significant (**) enrichment; a black outline marks the top significant cell type and grey outlines the cell types not significantly below it; together they contain the most relevant cell type.",
+      "Stars mark nominal (*) and FDR-significant (**) enrichment; a black outline marks the top significant cell type and grey outlines the cell types not significantly below it.",
+      "Together the outlined cell types hold the one with the largest true deviation with at least 95% probability.",
       sep = "\n"),
     caption = stringr::str_wrap(paste(
       "ATAC counts are summed by WNN cell type. The expected accessibility averages the depth-normalized cell-type profiles, so abundant cell types do not dominate the reference.",

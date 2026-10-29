@@ -614,7 +614,7 @@ plot_SLDSC_enrichment_curves <- function(enrichment_tibble, compartments_pattern
         ),
         caption = stringr::str_wrap(paste(
           "Each cell type's annotation keeps its peaks with the highest depth-normalized pseudobulk accessibility, among peaks with at least 10 reads in it, until they hold the given share of common (MAF > 5%) 1000 Genomes European SNPs.",
-          "Enrichment: the annotation's share of S-LDSC heritability, in a model with the 97 baseline-LD v2.2 annotations, over its share of common SNPs; SNPs with chi-square above 80 are excluded. Bars and band: 95% intervals from the 200-block jackknife.",
+          "Enrichment: the annotation's share of S-LDSC heritability, in a model with the 97 baseline-LD v2.2 annotations, over its share of common SNPs; SNPs with chi-square at or above the larger of 80 and 0.001 times the GWAS's largest per-SNP sample size are excluded. Bars and band: 95% intervals from the 200-block jackknife.",
           "Random reference: the mean of 10 random rankings of the same peaks, averaged within jackknife blocks.",
           "Top set at each size: of the cell types with enrichment above 1 at Benjamini-Hochberg q < 0.05 (one-sided jackknife z-test, over all GWAS and cell types at that size), the most enriched one and every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types, from paired jackknife differences.",
           sprintf("Highlighted and labelled: up to %d cell types per GWAS, first those that anchor its top set (the most enriched of those at q < 0.05) at the most sizes, then those in its top set at the most sizes, then the most enriched.", n_labels),
@@ -720,7 +720,7 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
       ),
       caption = c(
         annotation_sentence,
-        "Enrichment: the annotation's share of S-LDSC heritability over its share of common SNPs, in a model with the 97 baseline-LD v2.2 annotations fitted to HapMap3 SNP summary statistics from the GWAS Catalog or a configured release, using GRCh38 1000 Genomes European LD; SNPs with chi-square above 80 are excluded.",
+        "Enrichment: the annotation's share of S-LDSC heritability over its share of common SNPs, in a model with the 97 baseline-LD v2.2 annotations fitted to HapMap3 SNP summary statistics from the GWAS Catalog or a configured release, using GRCh38 1000 Genomes European LD; SNPs with chi-square at or above the larger of 80 and 0.001 times the GWAS's largest per-SNP sample size are excluded.",
         limits_sentence,
         "Estimates below 0, which no true enrichment can take, come from noisy annotations.",
         "Stars: ** enrichment above 1 at Benjamini-Hochberg q < 0.05, from a one-sided z-test with its 200-block jackknife standard error, over all GWAS and cell types at this size.",
@@ -928,7 +928,7 @@ plot_SLDSC_matched_enrichment_curves <- function(summary_tibble, dropped_tibble)
       caption = stringr::str_wrap(paste(
         "Each annotation keeps a cell type's highest-scoring peaks (depth-normalized accessibility, or its share over cell types) or gene windows (expression specificity, gene body +/- 100 kb) until they hold the given share of common (MAF > 5%) 1000 Genomes European SNPs.",
         "Random reference: the mean of 10 random rankings of the same peaks or gene windows, so both peak strategies share it.",
-        "S-LDSC heritability: the annotation's share of heritability in a model with the 97 baseline-LD v2.2 annotations, over its share of common SNPs; SNPs with chi-square above 80 are excluded.",
+        "S-LDSC heritability: the annotation's share of heritability in a model with the 97 baseline-LD v2.2 annotations, over its share of common SNPs; SNPs with chi-square at or above the larger of 80 and 0.001 times the GWAS's largest per-SNP sample size are excluded.",
         "Fine-mapped PIP: the annotation's share of the posterior inclusion probability of autosomal credible-set variants, over its share of common SNPs.",
         sprintf(
           "Enriched pairs: GWAS-cell-type pairs with q < 0.05 in the single-modality peak or gene S-LDSC model (%d for S-LDSC, %d for PIP); all pairs: every GWAS and cell type (%d and %d).",
@@ -1084,7 +1084,7 @@ plot_SLDSC_matched_enrichment_agreement <- function(enrichment_tibble, dropped_t
         sep = "\n"
       ),
       caption = stringr::str_wrap(paste(
-        "S-LDSC heritability enrichment: the annotation's share of heritability in a model with the 97 baseline-LD v2.2 annotations, over its share of common SNPs; it excludes SNPs with chi-square above 80.",
+        "S-LDSC heritability enrichment: the annotation's share of heritability in a model with the 97 baseline-LD v2.2 annotations, over its share of common SNPs; it excludes SNPs with chi-square at or above the larger of 80 and 0.001 times the GWAS's largest per-SNP sample size.",
         "Fine-mapped PIP enrichment: the annotation's share of the posterior inclusion probability of autosomal credible-set variants, over its share of common SNPs; it includes the strongest loci.",
         "Wide gene windows hold whole credible sets, while small peaks hold only the variants inside them, so imprecise fine-mapping lowers PIP enrichment of peaks more.",
         sprintf("Only GWAS with summary statistics and positive enrichments are shown (%d of %d annotations in A).", nrow(positive_tibble), nrow(annotation_tibble)),

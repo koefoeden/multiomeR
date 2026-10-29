@@ -941,7 +941,8 @@ plot_SLDSC_specificity_heatmap <- function(SLDSC_tibble, GWAS_inputs_tibble, com
       title = "Heritability enrichment in cell-type-specific accessibility (S-LDSC)",
       subtitle = paste(
         "Red marks cell types whose specifically accessible peaks carry more per-SNP heritability than peaks in general.",
-        "Stars mark nominal (*) and FDR-significant (**) enrichment; a black outline marks the top significant cell type and grey outlines the cell types not significantly below it; together they contain the most relevant cell type.",
+        "Stars mark nominal (*) and FDR-significant (**) enrichment; a black outline marks the top significant cell type and grey outlines the cell types not significantly below it.",
+        "Together the outlined cell types hold the one with the largest true tau* with at least 95% probability.",
         sep = "\n"
       ),
       caption = c(
@@ -1392,7 +1393,7 @@ plot_SLDSC_block_influence <- function(SLDSC_tibble, n_blocks = 200L) {
         "The most influential blocks are those whose single deletion lowers the coefficient most; they are deleted together and the model refitted.",
         "y: share of the coefficient they carry; x: the coefficient's full z-score; shape: z-score without them, from a jackknife over the remaining blocks.",
         "Dashed curve: expected share if every block contributed equally with normally distributed noise; heavier-tailed block noise also lifts points above it.",
-        "SNPs with chi-square above 80, or above 0.001 times the largest sample size, are excluded from every fit, so the largest-effect loci never enter."
+        "SNPs with chi-square at or above the larger of 80 and 0.001 times the GWAS's largest per-SNP sample size are excluded from every fit, so the largest-effect loci never enter."
       ), width = 160),
       x = "Coefficient z-score (log scale)",
       y = "Share of the coefficient in the deleted blocks"

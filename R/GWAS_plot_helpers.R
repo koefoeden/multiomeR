@@ -254,11 +254,27 @@ gwas_heatmap_metadata_theme <- function(show_y = FALSE, show_x = FALSE) {
     )
 }
 
+#' Assign clusters to the compartment of the first pattern they match
+#'
+#' Hyphens and underscores match each other; unmatched clusters form `Other`.
+#'
+#' @param clusters Cluster names.
+#' @param compartments_patterns Named regex patterns, one per compartment.
+#' @return A factor of compartments, in pattern order with `Other` last.
+#' @keywords internal
+get_cluster_compartments <- function(clusters, compartments_patterns) {
+  patterns <- stringr::str_replace_all(unlist(compartments_patterns), "-", "_")
+  matched <- vapply(stringr::str_replace_all(clusters, "-", "_"), \(cluster) {
+    hit <- which(stringr::str_detect(cluster, patterns))
+    if (length(hit)) names(compartments_patterns)[[hit[[1]]]] else "Other"
+  }, character(1))
+  factor(unname(matched), levels = c(names(compartments_patterns), "Other"))
+}
+
 #' Order GWAS rows and clusters for score heatmaps
 #'
-#' Rows follow GWAS category and ID. Clusters are grouped into the first
-#' matching compartment pattern (hyphens and underscores match each other;
-#' unmatched clusters form `Other`) and hierarchically ordered by their scores
+#' Rows follow GWAS category and ID. Clusters are grouped into compartments by
+#' `get_cluster_compartments()` and hierarchically ordered by their scores
 #' within each compartment.
 #' @keywords internal
 get_ordered_GWAS_score_plot_data <- function(data_per_GWAS_and_cluster_df, compartments_patterns, score_col = "median_score") {
@@ -272,16 +288,7 @@ get_ordered_GWAS_score_plot_data <- function(data_per_GWAS_and_cluster_df, compa
     as.matrix()
 
   clusters <- colnames(score_mat)
-  compartment <- if (is.null(compartments_patterns)) {
-    "Cluster"
-  } else {
-    patterns <- stringr::str_replace_all(unlist(compartments_patterns), "-", "_")
-    matched <- vapply(stringr::str_replace_all(clusters, "-", "_"), \(cluster) {
-      hit <- which(stringr::str_detect(cluster, patterns))
-      if (length(hit)) names(compartments_patterns)[[hit[[1]]]] else "Other"
-    }, character(1))
-    factor(unname(matched), levels = c(names(compartments_patterns), "Other"))
-  }
+  compartment <- if (is.null(compartments_patterns)) "Cluster" else get_cluster_compartments(clusters, compartments_patterns)
   cluster_metadata <- tibble::tibble(cluster = clusters, compartment = compartment)
   cluster_levels <- cluster_metadata |>
     dplyr::arrange(compartment, cluster) |>

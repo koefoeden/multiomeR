@@ -7,18 +7,18 @@
 #' pieces. Pieces are kept whole, in genomic order among ties, so an annotation
 #' can exceed its share by one piece; pieces without score are never kept, and
 #' a cell type whose scored pieces hold fewer common SNPs than a share gets no
-#' annotation of that share. A `random` annotation ranks the same ranges at
-#' random, as a reference for what the territory alone concentrates. Within
-#' territories, each column's shares are of the common SNPs in its own scored
-#' pieces instead, and a share of 1 marks the whole territory, the reference
-#' for its rankings.
+#' annotation of that share. Ten `random_<seed>` annotations rank the same
+#' ranges at random with seeds 1 to 10, as a reference for what the territory
+#' alone concentrates. Within territories, each column's shares are of the
+#' common SNPs in its own scored pieces instead, and a share of 1 marks the
+#' whole territory, the reference for its rankings.
 #'
 #' @param score_matrix Range-by-cell-type scores named by range.
 #' @param ranges Ranges named like the score rows.
 #' @param reference_dir Directory returned by `download_SLDSC_reference()`.
 #' @param shares Shares of the common reference SNPs.
 #' @param within_territory Whether shares are of each column's scored common
-#'   SNPs, without a `random` annotation.
+#'   SNPs, without random annotations.
 #' @return A list with the kept pieces, their binary piece-by-annotation matrix
 #'   with annotations named `<cell type>:<share>`, each annotation's sums of
 #'   the baseline-LD annotations over its common SNPs, named like the baseline
@@ -28,7 +28,11 @@
 
 get_SLDSC_matched_annotation_record <- function(score_matrix, ranges, reference_dir, shares = c(0.005, 0.01, 0.02, 0.05),
                                                 within_territory = FALSE) {
-  if (!within_territory) score_matrix <- cbind(score_matrix, random = withr::with_seed(1L, stats::runif(nrow(score_matrix))))
+  if (!within_territory) {
+    random_matrix <- vapply(1:10, \(seed) withr::with_seed(seed, stats::runif(nrow(score_matrix))), numeric(nrow(score_matrix)))
+    colnames(random_matrix) <- paste0("random_", 1:10)
+    score_matrix <- cbind(score_matrix, random_matrix)
+  }
   pieces <- GenomicRanges::disjoin(ranges[rownames(score_matrix)], with.revmap = TRUE)
   pieces <- pieces[as.character(GenomicRanges::seqnames(pieces)) %in% paste0("chr", 1:22)]
   score_matrix <- apply(score_matrix, 2, \(values) max(IRanges::extractList(values, pieces$revmap)))
@@ -112,8 +116,8 @@ describe_SLDSC_dropped_annotations <- function(dropped_tibble) {
 #' @param candidates Binary candidate annotations, one per model. A candidate
 #'   with LD scores in fewer than two blocks has no jackknife and no row.
 #' @return One row per candidate with its coefficient, its share of the
-#'   model's heritability and the model's total heritability, each with a
-#'   jackknife standard error.
+#'   model's heritability with its delete-one-block values, and the model's
+#'   total heritability, each with a jackknife standard error.
 #' @keywords internal
 
 fit_SLDSC_enrichment_regressions <- function(chi2, N, weight_L2, L2_matrix, M, overlap_matrix, shared_annotations, candidates, n_blocks = 200L) {
@@ -139,6 +143,7 @@ fit_SLDSC_enrichment_regressions <- function(chi2, N, weight_L2, L2_matrix, M, o
       annotation = candidates[[i]],
       tau = fit$estimate[[n_shared + 1L]] / blocks$N_bar,
       tau_se = sqrt(fit$cov[n_shared + 1L, n_shared + 1L]) / blocks$N_bar,
+      h2_share_delete_values = list(h2_share[-1]),
       h2_share = h2_share[[1]],
       h2_share_se = stats::sd(pseudovalues) / sqrt(n_blocks),
       h2 = h2[[1]] / blocks$N_bar,
@@ -202,7 +207,11 @@ get_SLDSC_PIP_share_tibble <- function(credible_set_GRanges, ranges, annotation_
 #'
 #' Divide each annotation's share of S-LDSC heritability, fitted with the
 #' baseline-LD model, and its share of fine-mapped PIP by its share of common
-#' reference SNPs.
+#' reference SNPs. The random draws of each share are averaged into one
+#' `random` annotation: their PIP shares and common SNPs directly, and their
+#' heritability shares within each jackknife block, which gives the mean a
+#' jackknife standard error. Its coefficient and total heritability are means
+#' over the draws, without standard errors.
 #'
 #' @param GWAS_input_record One normalized GWAS input record.
 #' @param sumstats_record The record of the same source from
@@ -213,16 +222,24 @@ get_SLDSC_PIP_share_tibble <- function(credible_set_GRanges, ranges, annotation_
 #'   annotations.
 #' @return One row per annotation with its cell type, target and actual share
 #'   of common SNPs, both enrichments with their standard errors, the PIP
-#'   enrichment's bootstrap interval, and the S-LDSC coefficient and total
-#'   heritability; S-LDSC estimates are missing without summary statistics.
+#'   enrichment's bootstrap interval, the S-LDSC coefficient and total
+#'   heritability, and the heritability share's delete-one-block values;
+#'   S-LDSC estimates are missing without summary statistics.
 #' @keywords internal
 
 get_SLDSC_matched_enrichment_tibble <- function(GWAS_input_record, sumstats_record, baseline_record, annotation_record, LD_score_record) {
   if (!identical(sumstats_record$sourceId, GWAS_input_record$sourceId)) {
     stop("S-LDSC summary statistics of ", sumstats_record$sourceId, " were paired with ", GWAS_input_record$GWAS_ID, ".")
   }
+  annotation_matrix <- annotation_record$annotation_matrix
+  group_names <- sub("^random_[0-9]+:", "random:", colnames(annotation_matrix))
+  annotation_groups <- split(colnames(annotation_matrix), factor(group_names, unique(group_names)))
   M <- c(baseline_record$M_5_50, annotation_record$baseline_overlap_matrix[, "baseL2"])
-  enrichment_tibble <- get_SLDSC_PIP_share_tibble(GWAS_input_record$credible_set_GRanges, annotation_record$ranges, annotation_record$annotation_matrix)
+  enrichment_tibble <- get_SLDSC_PIP_share_tibble(
+    GWAS_input_record$credible_set_GRanges,
+    annotation_record$ranges,
+    vapply(annotation_groups, \(group) rowMeans(annotation_matrix[, group, drop = FALSE]), numeric(nrow(annotation_matrix)))
+  )
   sumstats_tibble <- sumstats_record$sumstats_tibble
   if (!is.null(sumstats_tibble)) {
     kept <- baseline_record$SNP_tibble$SNP %in% sumstats_tibble$SNP
@@ -237,9 +254,22 @@ get_SLDSC_matched_enrichment_tibble <- function(GWAS_input_record, sumstats_reco
       shared_annotations = colnames(baseline_record$L2_matrix),
       candidates = colnames(LD_score_record$L2_matrix)
     )
+    reference_tibble <- SLDSC_tibble |>
+      dplyr::filter(startsWith(annotation, "random_")) |>
+      dplyr::mutate(annotation = sub("^random_[0-9]+:", "random:", annotation)) |>
+      dplyr::summarise(
+        dplyr::across(c(tau, h2_share, h2), mean),
+        h2_share_delete_values = list(Reduce(`+`, h2_share_delete_values) / dplyr::n()),
+        .by = annotation
+      ) |>
+      dplyr::mutate(h2_share_se = purrr::map2_dbl(h2_share, h2_share_delete_values, \(estimate, delete_values) {
+        n_blocks <- length(delete_values)
+        stats::sd(n_blocks * estimate - (n_blocks - 1) * delete_values) / sqrt(n_blocks)
+      }))
+    SLDSC_tibble <- dplyr::bind_rows(dplyr::filter(SLDSC_tibble, !startsWith(annotation, "random_")), reference_tibble)
     enrichment_tibble <- dplyr::left_join(enrichment_tibble, SLDSC_tibble, by = "annotation", relationship = "one-to-one")
   }
-  SNP_share <- M[enrichment_tibble$annotation] / baseline_record$M_5_50[["baseL2"]]
+  SNP_share <- vapply(annotation_groups, \(group) mean(M[group]), numeric(1))[enrichment_tibble$annotation] / baseline_record$M_5_50[["baseL2"]]
   enrichment_tibble |>
     dplyr::mutate(
       GWAS_ID = GWAS_input_record$GWAS_ID,
@@ -264,6 +294,39 @@ get_SLDSC_enriched_pair_tibble <- function(SLDSC_cell_type_tibble) {
   SLDSC_cell_type_tibble |>
     dplyr::filter(.data$model != "joint") |>
     dplyr::summarise(enriched_in_models = any(.data$q < 0.05), .by = c("GWAS_ID", "cluster"))
+}
+
+#' Test matched-size heritability enrichment and find each GWAS's top sets
+#'
+#' Test each annotation's S-LDSC heritability enrichment above 1, the
+#' enrichment of a random variant, in a one-sided normal test with its
+#' jackknife standard error. Benjamini-Hochberg q-values adjust the cell types'
+#' P-values over GWAS and cell types within each strategy and size. Each GWAS's
+#' top set of cell types at each strategy and size comes from
+#' `get_top_set_tibble()` on enrichment, with paired delete-one-block values.
+#' The random reference is tested, but takes no part in q-values or top sets.
+#'
+#' @param enrichment_tibble Combined matched-size enrichment of all GWAS with
+#'   the heritability shares' delete-one-block values.
+#' @return The tibble with `z`, `p`, `q`, `in_top_set` and `z_below_anchor`,
+#'   without the delete-one-block values.
+#' @keywords internal
+
+test_SLDSC_matched_enrichment <- function(enrichment_tibble) {
+  enrichment_tibble |>
+    dplyr::mutate(z = (SLDSC_enrichment - 1) / SLDSC_enrichment_se, p = stats::pnorm(z, lower.tail = FALSE)) |>
+    dplyr::mutate(q = stats::p.adjust(dplyr::if_else(cluster == "random", NA, p), method = "BH"), .by = c(strategy, share)) |>
+    dplyr::mutate(
+      get_top_set_tibble(
+        dplyr::if_else(cluster == "random", NA, SLDSC_enrichment),
+        do.call(rbind, h2_share_delete_values) / SNP_share,
+        q < 0.05,
+        jackknife = TRUE
+      ),
+      .by = c(strategy, GWAS_ID, share)
+    ) |>
+    dplyr::select(-h2_share_delete_values) |>
+    dplyr::relocate(z, p, q, in_top_set, z_below_anchor, .after = SLDSC_enrichment_se)
 }
 
 #' Summarise matched-size enrichment across GWAS
@@ -326,11 +389,166 @@ summarise_SLDSC_matched_enrichment <- function(enrichment_tibble, n_bootstraps =
 # Shared strategy colour scale of the matched-size plots.
 SLDSC_strategy_scale <- \(aesthetics = "colour") {
   ggplot2::scale_colour_manual(
-    values = c(peaks = "#D95F02", genes = "#1B9E77"),
-    labels = c(peaks = "Peaks by accessibility share", genes = "Gene windows by expression specificity"),
+    values = c(accessible_peaks = "#7570B3", specific_peaks = "#D95F02", specific_genes = "#1B9E77"),
+    labels = c(
+      accessible_peaks = "Most accessible peaks",
+      specific_peaks = "Most specific peaks (share of accessibility)",
+      specific_genes = "Most specific genes (share of expression, \u00b1100 kb)"
+    ),
     name = "Strategy",
     aesthetics = aesthetics
   )
+}
+
+#' Plot each cell type's heritability enrichment in its most accessible peaks
+#'
+#' One plot per GWAS category, with one panel per GWAS with S-LDSC estimates,
+#' shows each cell type's enrichment in the `accessible_peaks` strategy's
+#' annotations against their size, coloured by compartment, on one y scale
+#' shared by all plots, whose ends by default cap the outer `cap_quantile` of
+#' all cell-type estimates at each end, with the lower end at most 0, rounded
+#' outward to multiples of 5. Points beyond the caps are drawn at them as
+#' triangles labelled with their value. Up to `n_labels` cell types per GWAS
+#' are highlighted and labelled: those that anchor its top set at the most
+#' sizes, then those in its top set at the most sizes, then the most enriched.
+#'
+#' @param enrichment_tibble Matched-size enrichment from
+#'   `test_SLDSC_matched_enrichment()` with GWAS categories.
+#' @param compartments_patterns Optional cell-type compartment patterns.
+#' @inheritParams plot_SLDSC_matched_enrichment_curves
+#' @param n_labels Cell types to highlight and label per GWAS.
+#' @param n_columns Panels per row.
+#' @param cap_quantile Share of cell-type estimates beyond each end of the
+#'   shared y scale.
+#' @param y_limits Optional fixed limits of the shared y scale instead.
+#' @return A list of faceted line plots named by GWAS category.
+#' @keywords internal
+
+plot_SLDSC_enrichment_curves <- function(enrichment_tibble, compartments_patterns, dropped_tibble, n_labels = 4L, n_columns = 4L,
+                                         cap_quantile = 0.01, y_limits = NULL) {
+  without_sumstats <- enrichment_tibble |>
+    dplyr::filter(all(is.na(SLDSC_enrichment)), .by = GWAS_ID) |>
+    dplyr::distinct(Category, GWAS_ID)
+  curve_tibble <- enrichment_tibble |>
+    dplyr::filter(strategy == "accessible_peaks", !is.na(SLDSC_enrichment)) |>
+    dplyr::arrange(Category, GWAS_ID)
+  estimates <- curve_tibble$SLDSC_enrichment[curve_tibble$cluster != "random"]
+  limits <- y_limits %||% c(
+    floor(min(0, stats::quantile(estimates, cap_quantile, names = FALSE)) / 5) * 5,
+    ceiling(stats::quantile(estimates, 1 - cap_quantile, names = FALSE) / 5) * 5
+  )
+  capped <- \(values) pmin(pmax(values, limits[[1]]), limits[[2]])
+  curve_tibble <- curve_tibble |>
+    dplyr::mutate(
+      drawn_enrichment = capped(SLDSC_enrichment),
+      lower = capped(SLDSC_enrichment - stats::qnorm(0.975) * SLDSC_enrichment_se),
+      upper = capped(SLDSC_enrichment + stats::qnorm(0.975) * SLDSC_enrichment_se),
+      in_top_set = in_top_set %in% TRUE
+    )
+  reference_tibble <- dplyr::filter(curve_tibble, cluster == "random")
+  cell_type_tibble <- curve_tibble |>
+    dplyr::filter(cluster != "random") |>
+    dplyr::mutate(compartment = get_cluster_compartments(cluster, compartments_patterns))
+  label_tibble <- cell_type_tibble |>
+    dplyr::summarise(
+      anchor_sizes = sum(z_below_anchor %in% 0),
+      top_set_sizes = sum(in_top_set),
+      highest_enrichment = max(SLDSC_enrichment),
+      share = min(share),
+      .by = c(Category, GWAS_ID, cluster)
+    ) |>
+    dplyr::filter(top_set_sizes > 0) |>
+    dplyr::arrange(dplyr::desc(anchor_sizes), dplyr::desc(top_set_sizes), dplyr::desc(highest_enrichment)) |>
+    dplyr::slice_head(n = n_labels, by = GWAS_ID) |>
+    dplyr::left_join(dplyr::select(cell_type_tibble, GWAS_ID, cluster, share, drawn_enrichment, compartment), by = c("GWAS_ID", "cluster", "share"))
+  highlighted_tibble <- dplyr::semi_join(cell_type_tibble, label_tibble, by = c("GWAS_ID", "cluster"))
+  beyond_cap_tibble <- cell_type_tibble |>
+    dplyr::filter(SLDSC_enrichment != drawn_enrichment) |>
+    dplyr::mutate(
+      direction = dplyr::if_else(SLDSC_enrichment > limits[[2]], "above", "below"),
+      value_label = dplyr::if_else(abs(SLDSC_enrichment) < 10, sprintf("%.1f", SLDSC_enrichment), sprintf("%.0f", SLDSC_enrichment))
+    )
+  median_top_set_size <- stats::median(dplyr::count(dplyr::filter(cell_type_tibble, in_top_set), GWAS_ID, share)$n)
+  # The fixed order passes the adjacent-pair colour-vision checks; "Other" is grey.
+  compartments <- setdiff(levels(cell_type_tibble$compartment), "Other")
+  compartment_colours <- c(
+    rlang::set_names(
+      c("#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948", "#00899b", "#a0561c", "#9c2f7e", "#9a9a00")[seq_along(compartments)],
+      compartments
+    ),
+    Other = "#9b9a95"
+  )
+  categories <- unique(curve_tibble$Category)
+  purrr::map(rlang::set_names(categories), \(category) {
+    of_category <- \(tibble) dplyr::filter(tibble, Category %in% category)
+    category_without_sumstats <- of_category(without_sumstats)$GWAS_ID
+    ggplot2::ggplot(of_category(cell_type_tibble), ggplot2::aes(share, drawn_enrichment, colour = compartment, group = cluster)) +
+      ggplot2::geom_hline(yintercept = 1, colour = "grey60", linewidth = 0.3) +
+      ggplot2::geom_line(data = dplyr::anti_join(of_category(cell_type_tibble), label_tibble, by = c("GWAS_ID", "cluster")), linewidth = 0.3, alpha = 0.35) +
+      ggplot2::geom_ribbon(data = of_category(reference_tibble), ggplot2::aes(share, ymin = lower, ymax = upper), inherit.aes = FALSE, fill = "grey20", alpha = 0.08) +
+      ggplot2::geom_line(data = of_category(reference_tibble), ggplot2::aes(share, drawn_enrichment), inherit.aes = FALSE, colour = "grey20", linewidth = 0.5, linetype = "22") +
+      ggplot2::geom_errorbar(data = of_category(highlighted_tibble), ggplot2::aes(ymin = lower, ymax = upper), width = 0, linewidth = 0.3, alpha = 0.6, show.legend = FALSE) +
+      ggplot2::geom_line(data = of_category(highlighted_tibble), linewidth = 0.8) +
+      ggplot2::geom_point(data = of_category(highlighted_tibble), shape = 21, fill = "white", size = 1.6, stroke = 0.7, show.legend = FALSE) +
+      ggplot2::geom_point(data = dplyr::filter(of_category(highlighted_tibble), in_top_set), size = 1.9, show.legend = FALSE) +
+      ggplot2::geom_point(data = of_category(beyond_cap_tibble), ggplot2::aes(shape = direction, fill = compartment), size = 1.8, stroke = 0.3, colour = "grey20", show.legend = FALSE) +
+      ggrepel::geom_text_repel(
+        data = of_category(beyond_cap_tibble), ggplot2::aes(label = value_label), colour = "grey30", size = 2, max.overlaps = Inf,
+        segment.colour = "grey70", segment.size = 0.2, min.segment.length = 0.1, box.padding = 0.15, seed = 1
+      ) +
+      ggrepel::geom_text_repel(
+        data = of_category(label_tibble), ggplot2::aes(label = cluster), colour = "grey15", size = 2.4, hjust = 1, direction = "y",
+        nudge_x = -0.003, segment.colour = "grey60", segment.size = 0.25, min.segment.length = 0, seed = 1
+      ) +
+      ggplot2::scale_x_continuous(
+        breaks = sort(unique(curve_tibble$share)), labels = scales::label_number(scale = 100, drop0trailing = TRUE),
+        expand = ggplot2::expansion(mult = c(0.75, 0.04))
+      ) +
+      ggplot2::scale_colour_manual(values = compartment_colours, limits = names(compartment_colours), name = "Compartment") +
+      ggplot2::scale_fill_manual(values = compartment_colours, limits = names(compartment_colours), guide = "none") +
+      ggplot2::scale_shape_manual(values = c(above = 24, below = 25), guide = "none") +
+      ggplot2::coord_cartesian(ylim = limits) +
+      ggplot2::facet_wrap(ggplot2::vars(GWAS_ID), ncol = n_columns) +
+      ggplot2::guides(colour = ggplot2::guide_legend(nrow = 2, override.aes = list(linewidth = 0.8, alpha = 1))) +
+      ggplot2::labs(
+        title = paste("Heritability enrichment in each cell type's most accessible peaks:", category, "GWAS"),
+        subtitle = paste(
+          "Compare cell types at each size: a higher point holds more heritability per common variant than a random one (1, grey line).",
+          "The dashed line and band are randomly chosen peaks. Bold, labelled lines lead each GWAS's top sets,",
+          "with filled points at the sizes where they are in them.",
+          sep = "\n"
+        ),
+        caption = stringr::str_wrap(paste(
+          "Each cell type's annotation keeps its peaks with the highest depth-normalized pseudobulk accessibility, among peaks with at least 10 reads in it, until they hold the given share of common (MAF > 5%) 1000 Genomes European SNPs.",
+          "Enrichment: the annotation's share of S-LDSC heritability, in a model with the 97 baseline-LD v2.2 annotations, over its share of common SNPs; SNPs with chi-square above 80 are excluded. Bars and band: 95% intervals from the 200-block jackknife.",
+          "Random reference: the mean of 10 random rankings of the same peaks, averaged within jackknife blocks.",
+          "Top set at each size: of the cell types with enrichment above 1 at Benjamini-Hochberg q < 0.05 (one-sided jackknife z-test, over all GWAS and cell types at that size), the most enriched one and every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types, from paired jackknife differences.",
+          sprintf("Highlighted and labelled: up to %d cell types per GWAS, first those that anchor its top set (the most enriched of those at q < 0.05) at the most sizes, then those in its top set at the most sizes, then the most enriched.", n_labels),
+          sprintf("Top sets are wide: a median of %s cell types per GWAS and size, over all categories.", median_top_set_size),
+          paste0(
+            sprintf("All categories share the y scale from %s to %s", limits[[1]], limits[[2]]),
+            if (is.null(y_limits)) sprintf(
+              ": the %s%% and %s%% quantiles of all cell-type estimates, with the lower end at most 0, rounded outward to multiples of 5",
+              100 * cap_quantile, 100 * (1 - cap_quantile)
+            ),
+            ". Estimates beyond it are drawn at its ends as triangles labelled with their value, and intervals are cut there."
+          ),
+          "Estimates below 0, which no true enrichment can take, come from noisy annotations.",
+          if (length(category_without_sumstats)) paste0("Not shown, without usable genome-wide summary statistics: ", toString(sort(category_without_sumstats)), "."),
+          describe_SLDSC_dropped_annotations(dplyr::filter(dropped_tibble, strategy == "accessible_peaks"))
+        ), width = 165),
+        x = "Annotation size (% of common SNPs)",
+        y = "Heritability enrichment"
+      ) +
+      ggplot2::theme_bw(base_size = 9) +
+      ggplot2::theme(
+        axis.text.x = ggplot2::element_text(size = 7),
+        panel.grid.minor = ggplot2::element_blank(),
+        panel.grid.major = ggplot2::element_line(colour = "grey93", linewidth = 0.25),
+        legend.position = "bottom",
+        plot.caption = ggplot2::element_text(hjust = 0)
+      )
+  })
 }
 
 #' Plot matched-size enrichment against annotation size
@@ -352,29 +570,28 @@ plot_SLDSC_matched_enrichment_curves <- function(summary_tibble, dropped_tibble)
       dplyr::mutate(annotation = "Random reference")
   ) |>
     dplyr::mutate(pair_set = factor(pair_set, pair_sets))
-  share_axis <- ggplot2::scale_x_log10(breaks = unique(summary_tibble$share), labels = scales::label_percent(accuracy = 0.1))
+  share_axis <- ggplot2::scale_x_continuous(breaks = unique(summary_tibble$share), labels = scales::label_percent(accuracy = 0.1))
   curve_layers <- list(
     ggplot2::geom_hline(yintercept = 1, colour = "grey60", linewidth = 0.3),
     ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper, fill = strategy, group = interaction(strategy, annotation)), alpha = 0.15, colour = NA),
     ggplot2::geom_line(ggplot2::aes(colour = strategy, linetype = annotation)),
     ggplot2::geom_point(ggplot2::aes(colour = strategy), size = 1),
     share_axis,
-    ggplot2::scale_y_log10(),
     SLDSC_strategy_scale(c("colour", "fill")),
     ggplot2::scale_linetype_manual(values = c("Cell-type annotation" = "solid", "Random reference" = "dashed"), name = NULL),
     ggplot2::theme_bw(base_size = 9)
   )
   enrichment_plot <- ggplot2::ggplot(curve_tibble, ggplot2::aes(share, median)) +
     curve_layers +
-    ggplot2::facet_grid(ggplot2::vars(statistic), ggplot2::vars(pair_set), scales = "free_y") +
-    ggplot2::labs(subtitle = "Median enrichment", x = "Annotation size (share of common SNPs)", y = "Enrichment (log scale)")
+    ggplot2::facet_grid(ggplot2::vars(statistic), ggplot2::vars(pair_set)) +
+    ggplot2::labs(subtitle = "Median enrichment", x = "Annotation size (share of common SNPs)", y = "Enrichment")
   specificity_plot <- dplyr::filter(summary_tibble, pair_set == "Specificity") |>
     dplyr::mutate(annotation = "Cell-type annotation") |>
     ggplot2::ggplot(ggplot2::aes(share, median)) +
     curve_layers +
-    ggplot2::facet_grid(ggplot2::vars(statistic), scales = "free_y") +
+    ggplot2::facet_grid(ggplot2::vars(statistic)) +
     ggplot2::guides(linetype = "none") +
-    ggplot2::labs(subtitle = "Specificity: enriched over other cell types", x = "Annotation size (share of common SNPs)", y = "Ratio of median enrichments (log scale)")
+    ggplot2::labs(subtitle = "Specificity: enriched over other cell types", x = "Annotation size (share of common SNPs)", y = "Ratio of median enrichments")
   n_pairs <- \(pair_set_name, statistic_name) max(summary_tibble$n_pairs[summary_tibble$pair_set == pair_set_name & summary_tibble$statistic == statistic_name])
   n_GWAS <- \(pair_set_name, statistic_name) max(summary_tibble$n_GWAS[summary_tibble$pair_set == pair_set_name & summary_tibble$statistic == statistic_name])
   patchwork::wrap_plots(enrichment_plot, specificity_plot, widths = c(2, 1), guides = "collect") +
@@ -386,7 +603,8 @@ plot_SLDSC_matched_enrichment_curves <- function(summary_tibble, dropped_tibble)
         sep = "\n"
       ),
       caption = stringr::str_wrap(paste(
-        "Each annotation keeps a cell type's highest-scoring peaks (accessibility share) or gene windows (expression specificity, gene body +/- 100 kb) until they hold the given share of common (MAF > 5%) 1000 Genomes European SNPs.",
+        "Each annotation keeps a cell type's highest-scoring peaks (depth-normalized accessibility, or its share over cell types) or gene windows (expression specificity, gene body +/- 100 kb) until they hold the given share of common (MAF > 5%) 1000 Genomes European SNPs.",
+        "Random reference: the mean of 10 random rankings of the same peaks or gene windows, so both peak strategies share it.",
         "S-LDSC heritability: the annotation's share of heritability in a model with the 97 baseline-LD v2.2 annotations, over its share of common SNPs; SNPs with chi-square above 80 are excluded.",
         "Fine-mapped PIP: the annotation's share of the posterior inclusion probability of autosomal credible-set variants, over its share of common SNPs.",
         sprintf(
@@ -507,12 +725,13 @@ plot_SLDSC_matched_enrichment_agreement <- function(enrichment_tibble, dropped_t
     ) +
     ggplot2::theme_bw(base_size = 9)
   ratio_tibble <- annotation_tibble |>
+    dplyr::filter(strategy %in% c("specific_peaks", "specific_genes")) |>
     dplyr::select(GWAS_ID, cluster, pair_set, strategy, SLDSC_enrichment, PIP_enrichment) |>
     tidyr::pivot_wider(names_from = strategy, values_from = c(SLDSC_enrichment, PIP_enrichment)) |>
     dplyr::filter(dplyr::if_all(dplyr::matches("_enrichment_"), \(x) x > 0)) |>
     dplyr::mutate(
-      SLDSC_ratio = log2(SLDSC_enrichment_peaks / SLDSC_enrichment_genes),
-      PIP_ratio = log2(PIP_enrichment_peaks / PIP_enrichment_genes)
+      SLDSC_ratio = log2(SLDSC_enrichment_specific_peaks / SLDSC_enrichment_specific_genes),
+      PIP_ratio = log2(PIP_enrichment_specific_peaks / PIP_enrichment_specific_genes)
     )
   quadrant_tibble <- ratio_tibble |>
     dplyr::count(pair_set, SLDSC = SLDSC_ratio > 0, PIP = PIP_ratio > 0) |>
@@ -528,9 +747,9 @@ plot_SLDSC_matched_enrichment_agreement <- function(enrichment_tibble, dropped_t
     ggplot2::geom_text(data = quadrant_tibble, ggplot2::aes(x, y, label = n, hjust = hjust, vjust = vjust), size = 3) +
     ggplot2::facet_wrap(ggplot2::vars(pair_set)) +
     ggplot2::labs(
-      subtitle = "Peaks over genes per GWAS-cell-type pair",
-      x = "S-LDSC: log2 enrichment ratio, peaks over genes",
-      y = "Fine-mapped PIP: log2 enrichment ratio, peaks over genes"
+      subtitle = "Most specific peaks over most specific genes per GWAS-cell-type pair",
+      x = "S-LDSC: log2 ratio, specific peaks over genes",
+      y = "Fine-mapped PIP: log2 ratio, specific peaks over genes"
     ) +
     ggplot2::theme_bw(base_size = 9)
   patchwork::wrap_plots(A = annotation_plot, B = ratio_plot, widths = c(1, 1.6)) +

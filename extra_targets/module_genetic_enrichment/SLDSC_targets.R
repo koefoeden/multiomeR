@@ -68,19 +68,20 @@ rlang::list2(
   # Matched-size annotation strategies: each ranks a cell type's territory by its score.
   tarchetypes::tar_map(
     values = tibble::tibble(
-      strategy = c("peaks", "genes"),
+      strategy = c("accessible_peaks", "specific_peaks", "specific_genes"),
       score_matrix = rlang::exprs(
+        get_SLDSC_measured_matrix(cell_type_pseudobulk_counts_matrix.ATAC),
         get_SLDSC_peak_annotation_matrix(cell_type_pseudobulk_counts_matrix.ATAC)[, -1L],
         SLDSC_gene_specificity_record.cell_type_pseudobulk$specificity_matrix
       ),
-      score_ranges = rlang::exprs(genetic_enrichment_peak_ranges, SLDSC_gene_specificity_record.cell_type_pseudobulk$ranges)
+      score_ranges = rlang::exprs(genetic_enrichment_peak_ranges, genetic_enrichment_peak_ranges, SLDSC_gene_specificity_record.cell_type_pseudobulk$ranges)
     ),
     names = strategy,
     descriptions = NULL,
     delimiter = ".",
     targets::tar_target(
       name = SLDSC_matched_annotation_record.cell_type_pseudobulk,
-      description = "Binarise each WNN cell type's annotation score, and a random one, to the top 0.5%, 1%, 2% and 5% of common reference SNPs and sum the baseline-LD annotations inside [part_of_graph:genetic_enrichment_SLDSC] [resource_observation: peak_RAM_GiB=4.4; n_nuclei=740k; aggregation=unpublished; method=slurm_monitor; date=2026-10-16] [resource_observation: peak_RAM_GiB=43.3 before a crash at its 48 GB limit; n_nuclei=1.16M; aggregation=sizing_91x; method=slurm_monitor; date=2026-10-19]",
+      description = "Binarise each WNN cell type's annotation score, and ten random ones, to the top 0.5%, 1%, 2% and 5% of common reference SNPs and sum the baseline-LD annotations inside [part_of_graph:genetic_enrichment_SLDSC] [resource_observation: peak_RAM_GiB=4.4; n_nuclei=740k; aggregation=unpublished; method=slurm_monitor; date=2026-10-16] [resource_observation: peak_RAM_GiB=43.3 before a crash at its 48 GB limit; n_nuclei=1.16M; aggregation=sizing_91x; method=slurm_monitor; date=2026-10-19]",
       command = get_SLDSC_matched_annotation_record(score_matrix, score_ranges, SLDSC_reference_dir),
       resources = get_tar_resources(RAM_GB_req = 60)
     ),
@@ -98,7 +99,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = SLDSC_matched_enrichment_records.cell_type_pseudobulk,
-      description = "Estimate one GWAS's S-LDSC heritability enrichment, fitted with the baseline-LD model, and fine-mapped PIP enrichment in each matched-size cell-type annotation [resource_observation: peak_RAM_GiB=12.4; n_nuclei=740k; aggregation=unpublished; method=slurm_monitor; date=2026-10-16]",
+      description = "Estimate one GWAS's S-LDSC heritability enrichment, fitted with the baseline-LD model, and fine-mapped PIP enrichment in each matched-size cell-type annotation and the mean of the random ones [resource_observation: peak_RAM_GiB=12.4; n_nuclei=740k; aggregation=unpublished; method=slurm_monitor; date=2026-10-16]",
       command = get_SLDSC_matched_enrichment_tibble(
         GWAS_input_record = GWAS_input_records,
         sumstats_record = SLDSC_sumstats_records,
@@ -114,11 +115,13 @@ rlang::list2(
   ),
   targets::tar_target(
     name = SLDSC_matched_enrichment_tibble.cell_type_pseudobulk,
-    description = "Combine matched-size enrichment of all annotation strategies with GWAS categories and whether the single-modality S-LDSC models enrich each GWAS-cell-type pair at q < 0.05 [part_of_graph:genetic_enrichment_SLDSC]",
+    description = "Combine matched-size enrichment of all annotation strategies, test S-LDSC enrichment above 1 with BH q-values over GWAS and cell types within each strategy and size, find each GWAS's top set of cell types by enrichment from paired jackknife values, and add GWAS categories and whether the single-modality S-LDSC models enrich each GWAS-cell-type pair at q < 0.05 [part_of_graph:genetic_enrichment_SLDSC]",
     command = dplyr::bind_rows(
-      SLDSC_matched_enrichment_records.cell_type_pseudobulk.peaks,
-      SLDSC_matched_enrichment_records.cell_type_pseudobulk.genes
+      SLDSC_matched_enrichment_records.cell_type_pseudobulk.accessible_peaks,
+      SLDSC_matched_enrichment_records.cell_type_pseudobulk.specific_peaks,
+      SLDSC_matched_enrichment_records.cell_type_pseudobulk.specific_genes
     ) |>
+      test_SLDSC_matched_enrichment() |>
       dplyr::left_join(dplyr::select(GWAS_inputs_tibble, GWAS_ID, Category), by = "GWAS_ID", relationship = "many-to-one") |>
       dplyr::left_join(get_SLDSC_enriched_pair_tibble(SLDSC_cell_type_tibble.cell_type_pseudobulk), by = c("GWAS_ID", "cluster"), relationship = "many-to-one") |>
       dplyr::relocate(strategy, GWAS_ID, Category, cluster, share, enriched_in_models)
@@ -128,14 +131,34 @@ rlang::list2(
     description = "Summarise matched-size enrichment over GWAS per strategy, size, statistic and cell type, for enriched and all GWAS-cell-type pairs, with each GWAS's specificity for its enriched cell types [part_of_graph:genetic_enrichment_SLDSC]",
     command = summarise_SLDSC_matched_enrichment(SLDSC_matched_enrichment_tibble.cell_type_pseudobulk)
   ),
+  targets::tar_target(
+    name = SLDSC_matched_dropped_tibble.cell_type_pseudobulk,
+    description = "List the matched-size annotations of each strategy that cell types cannot fill",
+    command = dplyr::bind_rows(
+      accessible_peaks = SLDSC_matched_annotation_record.cell_type_pseudobulk.accessible_peaks$dropped_tibble,
+      specific_peaks = SLDSC_matched_annotation_record.cell_type_pseudobulk.specific_peaks$dropped_tibble,
+      specific_genes = SLDSC_matched_annotation_record.cell_type_pseudobulk.specific_genes$dropped_tibble,
+      .id = "strategy"
+    )
+  ),
+  tarchetypes::tar_file(
+    name = SLDSC_enrichment_curves_per_category_plots.cell_type_pseudobulk,
+    description = "Save each cell type's S-LDSC heritability enrichment in its most accessible peaks against annotation size, one file per GWAS category with one panel per GWAS and a shared y scale, with each GWAS's top sets. [checkpoint:genetic_enrichment]",
+    command = {
+      plots <- plot_SLDSC_enrichment_curves(
+        SLDSC_matched_enrichment_tibble.cell_type_pseudobulk,
+        genetic_enrichment_compartment_patterns,
+        SLDSC_matched_dropped_tibble.cell_type_pseudobulk
+      )
+      # Four panels per row; files of one or two GWAS keep room for the caption.
+      n_panels <- purrr::map_int(plots, \(plot) dplyr::n_distinct(plot$data$GWAS_ID))
+      save_plots_structured(plots, width = pmax(9, 0.8 + 3.3 * pmin(n_panels, 4)), height = 3.6 + 2.9 * ceiling(n_panels / 4))
+    }
+  ),
   tarchetypes::tar_file(
     name = SLDSC_matched_enrichment_curves_plot.cell_type_pseudobulk,
     description = "Save S-LDSC heritability and fine-mapped PIP enrichment of peak and gene annotations against annotation size. [checkpoint:genetic_enrichment]",
-    command = plot_SLDSC_matched_enrichment_curves(SLDSC_matched_enrichment_summary_tibble.cell_type_pseudobulk, dplyr::bind_rows(
-      peaks = SLDSC_matched_annotation_record.cell_type_pseudobulk.peaks$dropped_tibble,
-      genes = SLDSC_matched_annotation_record.cell_type_pseudobulk.genes$dropped_tibble,
-      .id = "strategy"
-    )) |>
+    command = plot_SLDSC_matched_enrichment_curves(SLDSC_matched_enrichment_summary_tibble.cell_type_pseudobulk, SLDSC_matched_dropped_tibble.cell_type_pseudobulk) |>
       save_plots_structured(width = 13, height = 7)
   ),
   tarchetypes::tar_file(
@@ -144,22 +167,14 @@ rlang::list2(
     command = plot_SLDSC_matched_size_comparison(
       SLDSC_matched_enrichment_summary_tibble.cell_type_pseudobulk,
       SLDSC_matched_enrichment_tibble.cell_type_pseudobulk,
-      dplyr::bind_rows(
-      peaks = SLDSC_matched_annotation_record.cell_type_pseudobulk.peaks$dropped_tibble,
-      genes = SLDSC_matched_annotation_record.cell_type_pseudobulk.genes$dropped_tibble,
-      .id = "strategy"
-    )
+      SLDSC_matched_dropped_tibble.cell_type_pseudobulk
     ) |>
       save_plots_structured(width = 15, height = 3 + 0.17 * dplyr::n_distinct(SLDSC_matched_enrichment_tibble.cell_type_pseudobulk$cluster))
   ),
   tarchetypes::tar_file(
     name = SLDSC_matched_enrichment_agreement_plot.cell_type_pseudobulk,
     description = "Save the agreement of S-LDSC heritability and fine-mapped PIP enrichment in matched-size annotations. [checkpoint:genetic_enrichment]",
-    command = plot_SLDSC_matched_enrichment_agreement(SLDSC_matched_enrichment_tibble.cell_type_pseudobulk, dplyr::bind_rows(
-      peaks = SLDSC_matched_annotation_record.cell_type_pseudobulk.peaks$dropped_tibble,
-      genes = SLDSC_matched_annotation_record.cell_type_pseudobulk.genes$dropped_tibble,
-      .id = "strategy"
-    )) |>
+    command = plot_SLDSC_matched_enrichment_agreement(SLDSC_matched_enrichment_tibble.cell_type_pseudobulk, SLDSC_matched_dropped_tibble.cell_type_pseudobulk) |>
       save_plots_structured(width = 14, height = 6.5)
   ),
   tarchetypes::tar_file(

@@ -942,7 +942,7 @@ Runtime and disk use grow with the number of studies, nuclei and attributed loci
 
 ## Review
 
-Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtitle and caption say what to look for. They are grouped by the question they answer, then by method. `specificity/` asks whether a cell type's chromatin holds more GWAS signal than the other cell types': the S-LDSC coefficients, chromVAR and SCAVENGE, and their comparison. `enrichment/` asks whether it holds more heritability than random variants: the S-LDSC enrichment and its agreement with fine-mapped credible sets.
+Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtitle and caption say what to look for. They are grouped by the question they answer, then by method. `specificity/` asks whether a cell type's chromatin holds more GWAS signal than the other cell types': the S-LDSC coefficients, chromVAR and SCAVENGE, and their comparison. `enrichment/` asks whether it holds more heritability than random variants: the S-LDSC enrichment, the enrichment of fine-mapped credible sets with the loci behind it, and the agreement of the two.
 
 ```text
 <store>/plots/my_aggregation/genetic_enrichment/
@@ -972,6 +972,9 @@ Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtit
     │   ├── curves_per_category_plots/
     │   ├── strategy_curves_plot.png
     │   └── strategy_size_comparison_plot.png
+    ├── fine_mapping/
+    │   ├── heatmaps/
+    │   └── locus_contribution_heatmaps/
     └── comparison/
         └── agreement_plot.png
 ```
@@ -2294,6 +2297,9 @@ Fine-mapped enrichment divides the annotation's share of the summed posterior in
 Variants are assigned by position, so indels and variants missing from the reference count.
 Its uncertainty comes from 1,000 bootstrap samples of loci, which group the credible sets whose centres lie within 500 kb of each other.
 Fine-mapping methods differ between sources and some use functional priors, so each result keeps its source's method.
+Heatmaps of the accessibility ranking show the fine-mapped enrichment as for heritability, on their own shared scale and without marks, since most classes' most accessible peaks hold more posterior probability than both random variants and random peaks.
+Each credible set contributes its posterior probability inside an annotation, over the total and the annotation's share of common variants, so the contributions sum to the fine-mapped enrichment.
+Per GWAS, a heatmap shows these contributions for the credible sets that most set a class apart, by the largest excess of a class's contribution over the median across classes.
 Pairs of GWAS and class are called enriched when a single-modality model reaches q < 0.05.
 Summaries across pairs or GWAS report medians with 95% intervals from 1,000 bootstrap samples of GWAS.
 A strategy's specificity is each GWAS's median enrichment in its enriched classes divided by that in its other classes, when both are positive.

@@ -152,13 +152,33 @@ fit_SLDSC_enrichment_regressions <- function(chi2, N, weight_L2, L2_matrix, M, o
   })
 }
 
+#' Place autosomal credible-set variants in range annotations
+#'
+#' Variants are assigned by position, so indels and variants missing from the
+#' reference count.
+#'
+#' @param credible_set_GRanges Credible-set variants.
+#' @param ranges Disjoint annotation ranges.
+#' @param annotation_matrix Range-by-annotation matrix.
+#' @return A list with the autosomal `variants` and their variant-by-annotation
+#'   `inside_matrix`, zero outside every range.
+#' @keywords internal
+
+get_SLDSC_credible_set_annotation_matrix <- function(credible_set_GRanges, ranges, annotation_matrix) {
+  variants <- credible_set_GRanges[as.character(GenomicRanges::seqnames(credible_set_GRanges)) %in% paste0("chr", 1:22)]
+  piece_idx <- GenomicRanges::findOverlaps(variants, ranges, select = "first")
+  inside_matrix <- annotation_matrix[piece_idx, , drop = FALSE]
+  inside_matrix[is.na(piece_idx), ] <- 0
+  list(variants = variants, inside_matrix = inside_matrix)
+}
+
 #' Measure the fine-mapped posterior probability inside range annotations
 #'
 #' Sum the posterior inclusion probabilities (PIPs) of autosomal credible-set
-#' variants inside each annotation and divide by their total. Variants are
-#' assigned by position, so indels and variants missing from the reference
-#' count. Loci, the credible sets whose centres lie within 500 kb of each
-#' other, are bootstrapped for uncertainty.
+#' variants inside each annotation, placed by
+#' `get_SLDSC_credible_set_annotation_matrix()`, and divide by their total.
+#' Loci, the credible sets whose centres lie within 500 kb of each other, are
+#' bootstrapped for uncertainty.
 #'
 #' @param credible_set_GRanges Credible-set variants with `studyLocusId` and
 #'   `posteriorProbability`.
@@ -171,7 +191,8 @@ fit_SLDSC_enrichment_regressions <- function(chi2, N, weight_L2, L2_matrix, M, o
 #' @keywords internal
 
 get_SLDSC_PIP_share_tibble <- function(credible_set_GRanges, ranges, annotation_matrix, n_bootstraps = 1000L) {
-  variants <- credible_set_GRanges[as.character(GenomicRanges::seqnames(credible_set_GRanges)) %in% paste0("chr", 1:22)]
+  placed <- get_SLDSC_credible_set_annotation_matrix(credible_set_GRanges, ranges, annotation_matrix)
+  variants <- placed$variants
   set_tibble <- tibble::tibble(
     studyLocusId = variants$studyLocusId,
     chromosome = as.character(GenomicRanges::seqnames(variants)),
@@ -184,10 +205,7 @@ get_SLDSC_PIP_share_tibble <- function(credible_set_GRanges, ranges, annotation_
     IRanges::IRanges(pmax(set_tibble$centre - 250000L, 1L), set_tibble$centre + 250000L)
   ))
   variant_locus <- GenomicRanges::findOverlaps(set_centres, loci, select = "first")[match(variants$studyLocusId, set_tibble$studyLocusId)]
-  piece_idx <- GenomicRanges::findOverlaps(variants, ranges, select = "first")
-  inside_matrix <- annotation_matrix[piece_idx, , drop = FALSE]
-  inside_matrix[is.na(piece_idx), ] <- 0
-  locus_PIP_matrix <- rowsum(variants$posteriorProbability * inside_matrix, variant_locus)
+  locus_PIP_matrix <- rowsum(variants$posteriorProbability * placed$inside_matrix, variant_locus)
   locus_PIP <- rowsum(variants$posteriorProbability, variant_locus)[, 1]
   withr::local_seed(1L)
   bootstrap_weights <- t(stats::rmultinom(n_bootstraps, length(locus_PIP), rep(1, length(locus_PIP))))
@@ -281,6 +299,51 @@ get_SLDSC_matched_enrichment_tibble <- function(GWAS_input_record, sumstats_reco
     tidyr::separate_wider_regex(annotation, c(cluster = ".*", ":", share = "[^:]+$")) |>
     dplyr::mutate(share = as.numeric(share)) |>
     dplyr::relocate(GWAS_ID, cluster, share, SNP_share, dplyr::starts_with("SLDSC_enrichment"), dplyr::starts_with("PIP_enrichment"))
+}
+
+#' Decompose one GWAS's fine-mapped PIP enrichment into credible-set contributions
+#'
+#' A credible set's contribution to an annotation's PIP enrichment is its
+#' posterior inclusion probability inside the annotation, over the PIP of all
+#' autosomal credible sets and the annotation's share of common SNPs, so the
+#' contributions of all credible sets sum to the enrichment of
+#' `get_SLDSC_matched_enrichment_tibble()`. The random annotations are left
+#' out.
+#'
+#' @param GWAS_input_record One normalized GWAS input record.
+#' @param annotation_record Record from `get_SLDSC_matched_annotation_record()`.
+#' @param baseline_record Record from `read_SLDSC_baseline_record()`, which
+#'   gives the number of common SNPs.
+#' @return One row per cell type, size and credible set with a nonzero
+#'   contribution, with the credible set's lead variant.
+#' @keywords internal
+
+get_SLDSC_PIP_locus_contribution_tibble <- function(GWAS_input_record, annotation_record, baseline_record) {
+  cell_type_annotations <- grep("^random_", colnames(annotation_record$annotation_matrix), value = TRUE, invert = TRUE)
+  placed <- get_SLDSC_credible_set_annotation_matrix(
+    GWAS_input_record$credible_set_GRanges,
+    annotation_record$ranges,
+    annotation_record$annotation_matrix[, cell_type_annotations, drop = FALSE]
+  )
+  variants <- placed$variants
+  SNP_share <- annotation_record$baseline_overlap_matrix[cell_type_annotations, "baseL2"] / baseline_record$M_5_50[["baseL2"]]
+  contribution_matrix <- sweep(
+    rowsum(variants$posteriorProbability * placed$inside_matrix, variants$studyLocusId) / sum(variants$posteriorProbability),
+    2, SNP_share, "/"
+  )
+  nonzero <- which(contribution_matrix > 0, arr.ind = TRUE)
+  lead_tibble <- tibble::tibble(studyLocusId = variants$studyLocusId, lead_variantId = variants$variantId, PIP = variants$posteriorProbability) |>
+    dplyr::slice_max(PIP, n = 1, with_ties = FALSE, by = studyLocusId) |>
+    dplyr::select(-PIP)
+  tibble::tibble(
+    GWAS_ID = GWAS_input_record$GWAS_ID,
+    annotation = cell_type_annotations[nonzero[, "col"]],
+    studyLocusId = rownames(contribution_matrix)[nonzero[, "row"]],
+    PIP_enrichment_contribution = contribution_matrix[nonzero]
+  ) |>
+    tidyr::separate_wider_regex(annotation, c(cluster = ".*", ":", share = "[^:]+$")) |>
+    dplyr::mutate(share = as.numeric(share)) |>
+    dplyr::left_join(lead_tibble, by = "studyLocusId", relationship = "many-to-one")
 }
 
 #' Mark the GWAS-cell-type pairs that single-modality S-LDSC enriches
@@ -400,7 +463,7 @@ SLDSC_strategy_scale <- \(aesthetics = "colour") {
   )
 }
 
-#' Get the shared limits of the S-LDSC enrichment curves and heatmaps
+#' Get the shared limits of the enrichment curves and heatmaps
 #'
 #' The limits cap the outer `cap_quantile` of all cell-type estimates of the
 #' `accessible_peaks` strategy at each end, with the lower end at most 0,
@@ -409,11 +472,12 @@ SLDSC_strategy_scale <- \(aesthetics = "colour") {
 #' @param enrichment_tibble Matched-size enrichment from
 #'   `test_SLDSC_matched_enrichment()`.
 #' @param cap_quantile Share of cell-type estimates beyond each limit.
+#' @param estimate_col Enrichment column, S-LDSC or fine-mapped PIP.
 #' @return The lower and upper limit.
 #' @keywords internal
 
-get_SLDSC_enrichment_limits <- function(enrichment_tibble, cap_quantile = 0.01) {
-  estimates <- dplyr::filter(enrichment_tibble, strategy == "accessible_peaks", cluster != "random")$SLDSC_enrichment
+get_SLDSC_enrichment_limits <- function(enrichment_tibble, cap_quantile = 0.01, estimate_col = "SLDSC_enrichment") {
+  estimates <- dplyr::filter(enrichment_tibble, strategy == "accessible_peaks", cluster != "random")[[estimate_col]]
   c(
     floor(min(0, stats::quantile(estimates, cap_quantile, na.rm = TRUE, names = FALSE)) / 5) * 5,
     ceiling(stats::quantile(estimates, 1 - cap_quantile, na.rm = TRUE, names = FALSE) / 5) * 5
@@ -558,51 +622,73 @@ plot_SLDSC_enrichment_curves <- function(enrichment_tibble, compartments_pattern
   })
 }
 
-#' Plot heritability enrichment in each cell type's most accessible peaks as heatmaps
+#' Plot enrichment in each cell type's most accessible peaks as heatmaps
 #'
 #' One heatmap per size of the `accessible_peaks` strategy, laid out as the
 #' specificity heatmap: every GWAS and cell type of the peak model, with
 #' cell types that cannot fill the size left missing. All sizes share the
-#' limits of the enrichment curves, from `get_SLDSC_enrichment_limits()`, and
-#' one cell-type order, from clustering the enrichment at all sizes within
-#' compartments.
+#' statistic's limits from `get_SLDSC_enrichment_limits()`, which for S-LDSC
+#' are those of the enrichment curves, and one cell-type order, from
+#' clustering the statistic at all sizes within compartments. S-LDSC
+#' enrichment is starred at q < 0.05 with its top sets outlined. Fine-mapped
+#' PIP enrichment is shown without marks: most cell types' most accessible
+#' peaks hold more fine-mapped probability than random variants or random
+#' peaks, so a test against either would mark most cells.
 #'
 #' @param enrichment_tibble Matched-size enrichment from
 #'   `test_SLDSC_matched_enrichment()`.
 #' @param SLDSC_tibble Combined cell-type S-LDSC results of the peak model,
 #'   which give the GWAS and cell types with their metadata.
+#' @param statistic `SLDSC` for heritability enrichment or `PIP` for
+#'   fine-mapped PIP enrichment.
 #' @inheritParams plot_SLDSC_cell_type_heatmap
 #' @inheritParams plot_SLDSC_matched_enrichment_curves
 #' @return A list of annotated heatmaps named by size.
 #' @keywords internal
 
-plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS_inputs_tibble, compartments_patterns, dropped_tibble) {
-  limits <- get_SLDSC_enrichment_limits(enrichment_tibble)
-  accessible_tibble <- dplyr::filter(enrichment_tibble, strategy == "accessible_peaks", cluster != "random")
+plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS_inputs_tibble, compartments_patterns, dropped_tibble,
+                                           statistic = c("SLDSC", "PIP")) {
+  statistic <- match.arg(statistic)
+  is_SLDSC <- statistic == "SLDSC"
+  estimate_col <- paste0(statistic, "_enrichment")
+  limits <- get_SLDSC_enrichment_limits(enrichment_tibble, estimate_col = estimate_col)
+  accessible_tibble <- enrichment_tibble |>
+    dplyr::filter(strategy == "accessible_peaks", cluster != "random") |>
+    dplyr::mutate(
+      estimate = .data[[estimate_col]],
+      # Stars mark only FDR-significant S-LDSC enrichment.
+      significance_label = if (is_SLDSC) get_significance_stars(NA, q) else NA_character_,
+      in_top_set = if (is_SLDSC) in_top_set else NA
+    )
   sizes <- sort(unique(accessible_tibble$share))
   heatmap_tibbles <- purrr::map(sizes, \(size) {
     SLDSC_tibble |>
-      dplyr::select(GWAS_ID, Category, cluster, h2, h2_se, sample_size, dplyr::starts_with("ancestry_"), n_cells) |>
+      # Without h2, PIP heatmaps draw every GWAS and add no note on summary statistics.
+      dplyr::select(GWAS_ID, Category, cluster, dplyr::any_of(if (is_SLDSC) c("h2", "h2_se")), sample_size, dplyr::starts_with("ancestry_"), n_cells) |>
       dplyr::left_join(
-        dplyr::select(dplyr::filter(accessible_tibble, share == size), GWAS_ID, cluster, SLDSC_enrichment, q, in_top_set, z_below_anchor),
+        dplyr::select(dplyr::filter(accessible_tibble, share == size), GWAS_ID, cluster, estimate, significance_label, in_top_set, z_below_anchor),
         by = c("GWAS_ID", "cluster"),
         relationship = "one-to-one"
       ) |>
-      # Stars mark only FDR-significant enrichment.
-      dplyr::mutate(fill = pmin(pmax(SLDSC_enrichment, limits[[1]]), limits[[2]]), significance_label = get_significance_stars(NA, q))
+      dplyr::mutate(fill = pmin(pmax(estimate, limits[[1]]), limits[[2]]))
   })
   # One order for all sizes, in which cell types that cannot fill a size count as not enriched.
   cluster_levels <- dplyr::bind_rows(heatmap_tibbles, .id = "size") |>
     dplyr::mutate(GWAS_ID = paste(GWAS_ID, size), fill = dplyr::coalesce(fill, 1)) |>
     get_ordered_GWAS_score_plot_data(compartments_patterns, score_col = "fill") |>
     purrr::pluck("cluster_levels")
+  few_loci <- sort(unique(dplyr::filter(accessible_tibble, n_loci < 10)$GWAS_ID))
   purrr::map2(heatmap_tibbles, sizes, \(heatmap_tibble, size) {
     size_label <- scales::percent(size, accuracy = 0.1, drop0trailing = TRUE)
     not_measurable <- dplyr::filter(dropped_tibble, strategy == "accessible_peaks", share == size)$cluster
-    plot_SLDSC_cell_type_heatmap(
-      heatmap_tibble,
-      GWAS_inputs_tibble,
-      compartments_patterns,
+    annotation_sentence <- sprintf("Each cell type's annotation keeps its peaks with the highest depth-normalized pseudobulk accessibility, among peaks with at least 10 reads in it, until they hold %s of common (MAF > 5%%) 1000 Genomes European SNPs.", size_label)
+    limits_sentence <- sprintf(
+      "Colour: linear around 1; values beyond %s and %s take the end colours. %s share these limits: the 1%% and 99%% quantiles of all cell-type estimates at all sizes, with the lower end at most 0, rounded outward to multiples of 5.",
+      limits[[1]], limits[[2]],
+      if (is_SLDSC) "The enrichment curves and the heatmaps of all sizes" else "The fine-mapped heatmaps of all sizes"
+    )
+    not_measurable_sentence <- if (length(not_measurable)) paste0("Grey columns cannot be measured at this size, since the cell type's peaks with at least 10 reads hold fewer common SNPs: ", toString(sort(not_measurable)), ".")
+    text <- if (is_SLDSC) list(
       fill_label = "Heritability enrichment",
       title = paste("Heritability enrichment in each cell type's most accessible peaks, sized to", size_label, "of common SNPs (S-LDSC)"),
       subtitle = paste(
@@ -611,17 +697,40 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
         sep = "\n"
       ),
       caption = c(
-        sprintf("Each cell type's annotation keeps its peaks with the highest depth-normalized pseudobulk accessibility, among peaks with at least 10 reads in it, until they hold %s of common (MAF > 5%%) 1000 Genomes European SNPs.", size_label),
+        annotation_sentence,
         "Enrichment: the annotation's share of S-LDSC heritability over its share of common SNPs, in a model with the 97 baseline-LD v2.2 annotations fitted to HapMap3 SNP summary statistics from the GWAS Catalog or a configured release, using GRCh38 1000 Genomes European LD; SNPs with chi-square above 80 are excluded.",
-        sprintf(
-          "Colour: linear around 1; values beyond %s and %s take the end colours. The enrichment curves and the heatmaps of all sizes share these limits: the 1%% and 99%% quantiles of all cell-type estimates at all sizes, with the lower end at most 0, rounded outward to multiples of 5.",
-          limits[[1]], limits[[2]]
-        ),
+        limits_sentence,
         "Estimates below 0, which no true enrichment can take, come from noisy annotations.",
         "Stars: ** enrichment above 1 at Benjamini-Hochberg q < 0.05, from a one-sided z-test with its 200-block jackknife standard error, over all GWAS and cell types at this size.",
         "Outlines: in GWAS with a cell type at q < 0.05, black marks the most enriched of these and grey every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types, from paired jackknife differences.",
-        if (length(not_measurable)) paste0("Grey columns cannot be measured at this size, since the cell type's peaks with at least 10 reads hold fewer common SNPs: ", toString(sort(not_measurable)), ".")
+        not_measurable_sentence
+      )
+    ) else list(
+      fill_label = "Fine-mapped PIP enrichment",
+      title = paste("Fine-mapped variant enrichment in each cell type's most accessible peaks, sized to", size_label, "of common SNPs"),
+      subtitle = paste(
+        "Red marks cell types whose most accessible peaks hold more fine-mapped posterior probability per common variant than a random variant (enrichment 1, white); all sizes share this scale.",
+        "Compare cell types within a GWAS; the credible-set heatmaps show which loci carry each cell type's enrichment.",
+        sep = "\n"
       ),
+      caption = c(
+        annotation_sentence,
+        "Enrichment: the annotation's share of the posterior inclusion probability (PIP) of autosomal credible-set variants, placed by position, over its share of common SNPs.",
+        limits_sentence,
+        "No cell is marked: with enough loci, most cell types' most accessible peaks hold more fine-mapped probability than random variants and than random peaks of the same size, so a test against either marks most cells.",
+        "Only genome-wide significant loci are fine-mapped, and a small annotation holds only the credible-set variants inside it, so the enrichment reflects the strongest loci and the fine-mapping resolution.",
+        if (length(few_loci)) paste0("Fewer than 10 loci, so the enrichment rests on very few loci: ", toString(few_loci), "."),
+        not_measurable_sentence
+      )
+    )
+    plot_SLDSC_cell_type_heatmap(
+      heatmap_tibble,
+      GWAS_inputs_tibble,
+      compartments_patterns,
+      fill_label = text$fill_label,
+      title = text$title,
+      subtitle = text$subtitle,
+      caption = text$caption,
       fill_limits = limits,
       fill_midpoint = 1,
       cluster_levels = cluster_levels
@@ -631,6 +740,114 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
       ggplot2::labs(title = size_label) + ggplot2::theme(plot.title = ggplot2::element_blank())
   }) |>
     rlang::set_names(paste0(100 * sizes, "_percent"))
+}
+
+#' Plot the credible sets behind each cell type's fine-mapped PIP enrichment
+#'
+#' One heatmap per GWAS of the contributions from
+#' `get_SLDSC_PIP_locus_contribution_tibble()`: cell types, grouped by
+#' compartment, against the credible sets that most set a cell type apart,
+#' with the rest summed, one panel per size, and each cell type's total
+#' enrichment as a number.
+#'
+#' @param locus_contribution_tibble Contributions from
+#'   `get_SLDSC_PIP_locus_contribution_tibble()`.
+#' @param enrichment_tibble Matched-size enrichment, which gives each cell
+#'   type's total and the sizes it fills.
+#' @param locus_to_gene_tibble Ranked Open Targets L2G predictions.
+#' @param compartments_patterns Cell-type compartment patterns.
+#' @param n_top_loci Credible sets shown individually per GWAS.
+#' @return A list of heatmaps named by GWAS.
+#' @keywords internal
+
+plot_SLDSC_PIP_locus_contribution_heatmaps <- function(locus_contribution_tibble, enrichment_tibble, locus_to_gene_tibble,
+                                                       compartments_patterns, n_top_loci = 12L) {
+  total_tibble <- enrichment_tibble |>
+    dplyr::filter(strategy == "accessible_peaks", cluster != "random") |>
+    dplyr::select(GWAS_ID, cluster, share, PIP_enrichment)
+  gene_tibble <- dplyr::filter(locus_to_gene_tibble, L2G_rank == 1L) |>
+    dplyr::select(GWAS_ID, studyLocusId, top_L2G_gene = gene_symbol)
+  size_label <- \(share) scales::percent(share, accuracy = 0.1, drop0trailing = TRUE)
+  GWAS_IDs <- intersect(unique(total_tibble$GWAS_ID), unique(locus_contribution_tibble$GWAS_ID))
+  purrr::map(rlang::set_names(GWAS_IDs), \(GWAS_ID) {
+    locus_tibble <- locus_contribution_tibble |>
+      dplyr::filter(.data$GWAS_ID == .env$GWAS_ID) |>
+      dplyr::left_join(gene_tibble, by = c("GWAS_ID", "studyLocusId"), relationship = "many-to-one") |>
+      dplyr::mutate(label = dplyr::if_else(is.na(top_L2G_gene), lead_variantId, paste0(lead_variantId, " (", top_L2G_gene, ")")))
+    cells <- total_tibble |>
+      dplyr::filter(.data$GWAS_ID == .env$GWAS_ID) |>
+      dplyr::mutate(compartment = get_cluster_compartments(cluster, compartments_patterns), size = size_label(share))
+    # Credible sets that set a cell type apart come first: the largest excess of a cell type's contribution over
+    # the median across the cell types that fill the size, counting those without the credible set as zero.
+    n_cells <- table(cells$share)
+    top_tibble <- locus_tibble |>
+      dplyr::mutate(
+        excess = PIP_enrichment_contribution - stats::median(c(PIP_enrichment_contribution, numeric(n_cells[[as.character(share[[1]])]] - dplyr::n()))),
+        .by = c(studyLocusId, share)
+      ) |>
+      dplyr::summarise(excess = max(excess), largest = max(PIP_enrichment_contribution), label = dplyr::first(label), .by = studyLocusId) |>
+      dplyr::arrange(dplyr::desc(excess), dplyr::desc(largest)) |>
+      dplyr::slice_head(n = n_top_loci)
+    column_levels <- c(top_tibble$label, "Other loci", "Total")
+    cluster_levels <- cells |>
+      dplyr::summarise(largest = max(PIP_enrichment), .by = c(compartment, cluster)) |>
+      dplyr::arrange(compartment, dplyr::desc(largest)) |>
+      dplyr::pull(cluster)
+    contribution_tibble <- locus_tibble |>
+      dplyr::filter(studyLocusId %in% top_tibble$studyLocusId) |>
+      dplyr::transmute(cluster, share, column = top_tibble$label[match(studyLocusId, top_tibble$studyLocusId)], contribution = PIP_enrichment_contribution) |>
+      dplyr::right_join(
+        tidyr::expand_grid(dplyr::select(cells, cluster, share, size, compartment), column = top_tibble$label),
+        by = c("cluster", "share", "column")
+      ) |>
+      dplyr::mutate(contribution = dplyr::coalesce(contribution, 0))
+    # The remaining loci and the total are numbers, so that the colours span the individual credible sets.
+    top_sums <- dplyr::summarise(contribution_tibble, top = sum(contribution), .by = c(cluster, share))
+    number_tibble <- cells |>
+      dplyr::left_join(top_sums, by = c("cluster", "share")) |>
+      dplyr::mutate(top = dplyr::coalesce(top, 0))
+    number_tibble <- dplyr::bind_rows(
+      dplyr::mutate(number_tibble, column = "Other loci", value = PIP_enrichment - top),
+      dplyr::mutate(number_tibble, column = "Total", value = PIP_enrichment)
+    ) |>
+      dplyr::mutate(label = sprintf("%.1f", value))
+    plot_factors <- \(data) dplyr::mutate(data,
+      column = factor(column, column_levels),
+      cluster = factor(cluster, rev(cluster_levels)),
+      size = factor(size, size_label(sort(unique(cells$share))))
+    )
+    number_cells <- plot_factors(number_tibble)
+    ggplot2::ggplot(plot_factors(contribution_tibble), ggplot2::aes(column, cluster)) +
+      ggplot2::geom_tile(ggplot2::aes(fill = contribution), colour = "grey90", linewidth = 0.2) +
+      ggplot2::geom_tile(data = number_cells, fill = "grey96", colour = "grey90", linewidth = 0.2) +
+      ggplot2::geom_text(data = number_cells, ggplot2::aes(label = label), size = 2.2, colour = "grey15") +
+      ggplot2::scale_fill_gradient(low = "white", high = "#B40426", name = "Contribution to\nPIP enrichment") +
+      ggplot2::scale_x_discrete(drop = FALSE) +
+      ggplot2::facet_grid(
+        rows = ggplot2::vars(compartment), cols = ggplot2::vars(size), scales = "free_y", space = "free_y",
+        labeller = ggplot2::labeller(compartment = \(x) stringr::str_replace_all(x, "_", " "))
+      ) +
+      ggplot2::labs(
+        title = paste("Credible sets behind fine-mapped variant enrichment in each cell type's most accessible peaks:", GWAS_ID),
+        subtitle = "Look for cell types whose enrichment rests on one or two credible sets rather than many; Total gives the enrichment, where 1 is a random variant.",
+        x = "Credible set (lead variant and top Open Targets L2G gene)",
+        y = NULL,
+        caption = stringr::str_wrap(paste(
+          "A credible set's contribution is its posterior inclusion probability (PIP) inside the cell type's most accessible peaks of that size,",
+          "over the PIP of all autosomal credible sets and the annotation's share of common (MAF > 5%) SNPs, so a cell type's contributions sum to its enrichment (Total).",
+          sprintf("Coloured: the %d credible sets that most set a cell type apart, by the largest excess of a cell type's contribution over the median across cell types at any size; Other loci gives the sum of the rest, including credible sets accessible in most cell types.", n_top_loci),
+          "A cell type without a row at a size cannot fill it. Gene labels are Open Targets locus-to-gene prioritizations, not causal assignments."
+        ), width = 170)
+      ) +
+      ggplot2::theme_minimal(base_size = 8) +
+      ggplot2::theme(
+        axis.text.x = ggplot2::element_text(angle = 60, hjust = 1),
+        panel.grid = ggplot2::element_blank(),
+        strip.text.y = ggplot2::element_text(angle = 0, hjust = 0),
+        legend.position = "bottom",
+        plot.caption = ggplot2::element_text(hjust = 0)
+      )
+  })
 }
 
 #' Plot matched-size enrichment against annotation size

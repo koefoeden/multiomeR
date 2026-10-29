@@ -124,7 +124,7 @@ Runtime and disk use grow with the number of studies, nuclei and attributed loci
 
 ## Review
 
-Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtitle and caption say what to look for. They are grouped by the question they answer, then by method. `specificity/` asks whether a cell type's chromatin holds more GWAS signal than the other cell types': the S-LDSC coefficients, chromVAR and SCAVENGE, and their comparison. `enrichment/` asks whether it holds more heritability than random variants: the S-LDSC enrichment and its agreement with fine-mapped credible sets.
+Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtitle and caption say what to look for. They are grouped by the question they answer, then by method. `specificity/` asks whether a cell type's chromatin holds more GWAS signal than the other cell types': the S-LDSC coefficients, chromVAR and SCAVENGE, and their comparison. `enrichment/` asks whether it holds more heritability than random variants: the S-LDSC enrichment, the enrichment of fine-mapped credible sets with the loci behind it, and the agreement of the two.
 
 ```text
 <store>/plots/my_aggregation/genetic_enrichment/
@@ -154,6 +154,9 @@ Review the plots ([examples](gallery.md#genetic-enrichment)); each plot's subtit
     │   ├── curves_per_category_plots/
     │   ├── strategy_curves_plot.png
     │   └── strategy_size_comparison_plot.png
+    ├── fine_mapping/
+    │   ├── heatmaps/
+    │   └── locus_contribution_heatmaps/
     └── comparison/
         └── agreement_plot.png
 ```

@@ -200,6 +200,42 @@ rlang::list2(
       save_GWAS_heatmap(SLDSC_cell_type_tibble.cell_type_pseudobulk$GWAS_ID)
   ),
   tarchetypes::tar_file(
+    name = heatmaps.fine_mapping.enrichment,
+    description = "Save one cell-type-by-GWAS heatmap per size of fine-mapped PIP enrichment in each cell type's most accessible peaks, starred where its bootstrap interval lies above 1. [checkpoint:genetic_enrichment]",
+    command = plot_SLDSC_enrichment_heatmaps(
+      SLDSC_matched_enrichment_tibble.cell_type_pseudobulk,
+      dplyr::filter(SLDSC_cell_type_tibble.cell_type_pseudobulk, model == "peaks"),
+      GWAS_inputs_tibble,
+      genetic_enrichment_compartment_patterns,
+      SLDSC_matched_dropped_tibble.cell_type_pseudobulk,
+      statistic = "PIP"
+    ) |>
+      save_GWAS_heatmap(SLDSC_cell_type_tibble.cell_type_pseudobulk$GWAS_ID)
+  ),
+  targets::tar_target(
+    name = locus_contribution_tibble.fine_mapping.enrichment,
+    description = "Decompose one GWAS's fine-mapped PIP enrichment in each cell type's most accessible peaks into credible-set contributions",
+    command = get_SLDSC_PIP_locus_contribution_tibble(
+      GWAS_input_record = GWAS_input_records,
+      annotation_record = SLDSC_matched_annotation_record.cell_type_pseudobulk.accessible_peaks,
+      baseline_record = SLDSC_baseline_record
+    ),
+    pattern = map(GWAS_input_records),
+    iteration = "vector",
+    resources = get_tar_resources(RAM_GB_req = 16)
+  ),
+  tarchetypes::tar_file(
+    name = locus_contribution_heatmaps.fine_mapping.enrichment,
+    description = "Save one heatmap per GWAS of the credible sets that contribute most to each cell type's fine-mapped PIP enrichment at each size. [checkpoint:genetic_enrichment]",
+    command = plot_SLDSC_PIP_locus_contribution_heatmaps(
+      locus_contribution_tibble.fine_mapping.enrichment,
+      SLDSC_matched_enrichment_tibble.cell_type_pseudobulk,
+      GWAS_locus_to_gene_tibble,
+      genetic_enrichment_compartment_patterns
+    ) |>
+      save_plots_structured(width = 17, height = 12)
+  ),
+  tarchetypes::tar_file(
     name = z_score_plot.comparison.specificity,
     description = "Save per-GWAS scatter plots comparing S-LDSC and pseudobulk chromVAR cell-type z-scores. [checkpoint:genetic_enrichment]",
     command = plot_SLDSC_chromVAR_comparison(

@@ -767,10 +767,7 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
       fill_limits = limits,
       fill_midpoint = 1,
       cluster_levels = cluster_levels
-    ) +
-      # save_plots_structured() titles a listed plot without a title by its name, and reads a
-      # patchwork's title from its last panel, so that panel gets a hidden one.
-      ggplot2::labs(title = size_label) + ggplot2::theme(plot.title = ggplot2::element_blank())
+    )
   }) |>
     rlang::set_names(paste0(100 * sizes, "_percent"))
 }

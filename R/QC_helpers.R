@@ -707,21 +707,6 @@ plot_grouped_marker_dot_BPCells <- function(source, marker_genes_list, groups, g
     ggplot2::theme(strip.placement = "outside")
 }
 
-#' Highest PNG resolution within the graphics buffer
-#'
-#' ragg allocates every RGBA pixel of a PNG at once and fails at about 2 GB, so plots sized for many markers and
-#' groups, such as marker dot plots of complex aggregations, render at a lower resolution instead.
-#'
-#' @param width,height Plot size in inches.
-#' @param dpi Preferred resolution.
-#' @param max_pixels Largest pixel count to allocate.
-#' @return The resolution to pass to save_plots_structured().
-#' @keywords internal
-
-png_dpi_within_limit <- function(width, height, dpi = 300, max_pixels = 4e8) {
-  min(dpi, floor(sqrt(max_pixels / (width * height))))
-}
-
 #' Plot marker expression dot BPCells
 #'
 #' Plot BPCells marker-expression dot plots from GEX metadata and marker sets.

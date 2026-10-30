@@ -159,7 +159,8 @@ add_ggplot_title_if_missing <- function(plot, title) {
   if (!inherits(plot, "ggplot") || is.null(title) || !nzchar(title)) {
     return(plot)
   }
-  if (!is.null(plot$labels$title)) {
+  # A patchwork's labels are those of its last panel, so its own title sits in its annotation.
+  if (!is.null(plot$labels$title) || !is.null(plot$patches$annotation$title)) {
     return(plot)
   }
 
@@ -298,10 +299,13 @@ save_plots_structured <- function(
     plot_save_args$width <- dplyr::coalesce(plot_save_args$width, auto_dimensions$width)
     plot_save_args$height <- dplyr::coalesce(plot_save_args$height, auto_dimensions$height)
     if (identical(filetype, "png")) {
-      # ggsave() sets the device resolution from dpi. ragg refuses sides above 50,000 px, so plots
-      # sized for very many groups lose resolution instead of failing.
+      # ggsave() sets the device resolution from dpi. Plots sized for very many groups lose
+      # resolution instead of failing: ragg draws wide canvases only up to 32,768 px, refuses
+      # heights above 50,000 px, and fails or crashes on canvases of a few GB, so the canvas stays
+      # within 2^28 px (1 GB).
       plot_save_args$dpi <- min(plot_save_args$dpi %||% 300,
-        floor(50000 / max(plot_save_args$width, plot_save_args$height)))
+        floor(32768 / plot_save_args$width), floor(50000 / plot_save_args$height),
+        floor(sqrt(2^28 / (plot_save_args$width * plot_save_args$height))))
     }
     do.call(
       ggplot2::ggsave,

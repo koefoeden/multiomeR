@@ -352,7 +352,7 @@ rlang::list2(
           add_cluster_doublet_bars(plot, metadata_w_cell_types_tibble.WNN,
             scDblFinder_results_df.GEX, max_doublet_fraction = NULL,
             group_col = "WNN_harmony_SNN_cluster_named"),
-          width = width, height = height, dpi = png_dpi_within_limit(width, height))
+          width = width, height = height)
       },
       resources = get_tar_resources(RAM_GB_req = 16)
     ),

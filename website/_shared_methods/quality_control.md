@@ -20,3 +20,9 @@ Configured GEM-well exclusions are filter expressions applied to the called cell
 Demultiplexing and AMULET results can therefore be used as exclusion criteria before aggregation-level analysis.
 Called cells missing from the imported gene-expression matrix are always excluded.
 The remaining nuclei of the selected wells are combined without further filtering.
+
+At the first checkpoint, two plots summarize each sample of each dataset, over its nuclei that pass per-well quality control.
+The first shows each sample's median TSS enrichment, fraction of fragments in peaks and percentage of mitochondrial UMIs.
+It flags a sample whose median lies more than three median absolute deviations from the dataset's median, on the poor side.
+The second plots each sample's XIST and chromosome Y UMIs per 10,000 UMIs, coloured by recorded sex.
+It labels samples that lie nearer the median of the other recorded sex, which points to a sample swap or a metadata error.

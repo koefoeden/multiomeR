@@ -19,6 +19,11 @@ For counts, voom precision weights [@law2014_voom] are re-estimated for the bloc
 Weighted fits with a block use a closed-form solution of limma's generalized least squares, computed for all features at once, which agrees with `limma::lmFit()` to floating-point error.
 A contrast of several coefficients takes each feature's exact standard error from its own weighted design, rather than `limma::contrasts.fit()`'s approximation, which uses one coefficient correlation for all features.
 A model with several samples of one donor in an annotation class must block on that donor, as its samples are not independent replicates.
+Count models can optionally add a configured number of RUV-4 factors of unwanted variation, such as donor-level differences in nuclei quality [@gagnon_bartsch2013_ruv4].
+The factors come from the residuals of the full design, so they cannot absorb the coefficients that the contrasts test.
+Each factor's association with those coefficients is then added back, estimated by a robust regression across features that assumes most features do not respond to them [@wang2017_cate].
+In the paired-cell-type route each class has its own factors, and a cross-class contrast adjusts for all of them.
+Continuous matrices, such as the 233 motif families, have too few features for this and are not adjusted.
 Wherever an intra-block correlation is estimated, the consensus is taken from at most 50,000 evenly spaced features, enough to estimate this one value pooled across all features [@smyth2005_duplicatecorrelation] at a fraction of the runtime.
 The models are still fitted to all features.
 Without a random effect, count designs with more than one coefficient are fitted with edgeR quasi-likelihood models and tested with quasi-likelihood F-tests [@lund2012_quasi_likelihood; @chen2025_edger_v4].

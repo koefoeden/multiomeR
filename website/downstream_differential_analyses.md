@@ -71,6 +71,8 @@ Optional fields narrow a model:
 - `GEM_well_IDs` restricts the GEM wells that define an abundance model's population; and
 - `cell_types_to_test` restricts the cell types an abundance model tests, by default the assigned cell types found in at least half of its donors. Every retained nucleus still counts towards its donor's total.
 
+A feature model can also adjust for unwanted variation. `RUV4_factors`, off by default, adds that many RUV-4 factors to its gene-expression and chromatin-accessibility fits, estimated with the effects its contrasts test protected. Use it when a technical axis, such as nuclei quality, varies between donors; it assumes that most features do not respond to the tested effects.
+
 Donors missing a model variable are excluded. The branches use different models, so their effect sizes are not directly comparable. The methods describe [abundance models](methods_differential_analyses.md#cell-type-composition) and the [feature-model routes](methods_differential_analyses.md#molecular-pseudobulk-analyses), including random effects, custom design and contrast functions and paired cell-type designs.
 
 ## Run

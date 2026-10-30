@@ -174,6 +174,9 @@ normalize_pseudobulk_feature_models <- function(cfg_pseudobulk_feature_models) {
       if (length(model$cell_type_subset) != 1 && is.null(model$cell_type_formula) && is.null(model$random_effect)) {
         stop("Model ", name, " tests several cell types without a donor term; set a single cell_type_subset, or configure cell_type_formula with pairing_variable, or random_effect.")
       }
+      if (!is.null(model$RUV4_factors) && !(is.numeric(model$RUV4_factors) && length(model$RUV4_factors) == 1L && model$RUV4_factors >= 1)) {
+        stop("Model ", name, " needs one positive whole number of RUV4_factors.")
+      }
       model$cell_type_subset <- normalize_pseudobulk_cell_type_subset(model$cell_type_subset)
       model
     })
@@ -587,12 +590,62 @@ voom_lm_fit_subset_correlation <- function(counts, ..., max_correlation_features
   fit(counts, ...)
 }
 
+#' RUV-4 factors with the tested effects protected
+#'
+#' Estimate `n_factors` factors of unwanted variation from the residuals of the
+#' full design, so that the columns being tested cannot be absorbed
+#' (Gagnon-Bartsch et al. 2013), and add back each factor's association with
+#' those columns. That association comes from a Huber regression, across
+#' features, of the protected coefficients on the factor loadings, which
+#' assumes that most features do not respond to them (CATE; Wang et al. 2017).
+#'
+#' @param expression_list Filtered, normalized `edgeR::DGEList`.
+#' @param design Model design of its samples.
+#' @param protected_columns Design columns the contrasts test.
+#' @param n_factors Number of factors.
+#' @return A sample-by-factor matrix with columns `RUV4_1`, `RUV4_2`, ...
+#' @keywords internal
+get_RUV4_factors <- function(expression_list, design, protected_columns, n_factors) {
+  log_CPM <- log2(t(t(as.matrix(expression_list$counts) + 0.5) / (edgeR::getNormLibSizes(expression_list) + 1) * 1e6))
+  QR <- qr(design)
+  residuals <- log_CPM - t(qr.fitted(QR, t(log_CPM)))
+  decomposition <- svd(t(residuals), nu = n_factors, nv = n_factors)
+  loadings <- decomposition$v %*% diag(decomposition$d[seq_len(n_factors)], n_factors)
+  coefficients <- t(qr.coef(QR, t(log_CPM)))
+  sigma <- sqrt(rowSums(residuals^2) / (ncol(log_CPM) - QR$rank))
+  association <- vapply(protected_columns, function(column) {
+    stats::coef(MASS::rlm(loadings / sigma, coefficients[, column] / sigma, psi = MASS::psi.huber, maxit = 100))
+  }, numeric(n_factors))
+  factors <- decomposition$u + design[, protected_columns, drop = FALSE] %*% t(matrix(association, n_factors))
+  dimnames(factors) <- list(rownames(design), paste0("RUV4_", seq_len(n_factors)))
+  factors
+}
+
+# The coefficients that a model's contrasts use, mapped through `transform`, such
+# as the joint-to-class map of paired cell-type models.
+get_contrast_columns <- function(design, model_list, transform = NULL) {
+  contrasts <- do.call(cbind, get_contrast_vec_list(list(design = design), model_list))
+  if (!is.null(transform)) contrasts <- t(transform) %*% contrasts
+  rownames(contrasts)[rowSums(abs(contrasts)) > 1e-8]
+}
+
+# A class fit's RUV-4 factors extend its design beyond the coefficients that
+# contrasts name, with zero weight.
+pad_contrasts <- function(contrasts, coefficient_names) {
+  contrasts <- as.matrix(contrasts)
+  padded <- matrix(0, length(coefficient_names), ncol(contrasts), dimnames = list(coefficient_names, colnames(contrasts)))
+  padded[rownames(contrasts), ] <- contrasts
+  padded
+}
+
 fit_pseudobulk_cell_type_matrix <- function(
   pseudobulk_feature_matrix,
   sample_tibble,
   formula_chr,
   correlation_block = NULL,
-  voom_fit = voom_lm_fit_subset_correlation
+  voom_fit = voom_lm_fit_subset_correlation,
+  RUV4_factors = NULL,
+  protected_columns = character()
 ) {
   design_matrix <- get_pseudobulk_cell_type_design(sample_tibble, formula_chr)
   is_count_data <- is_count_matrix(pseudobulk_feature_matrix)
@@ -615,15 +668,17 @@ fit_pseudobulk_cell_type_matrix <- function(
     design_matrix <- design_matrix[sample_cols_expressed, , drop = FALSE]
     feature_rows_expressed <- edgeR::filterByExpr(gene_expression_list, design = design_matrix)
     gene_expression_list <- edgeR::normLibSizes(gene_expression_list[feature_rows_expressed, , keep.lib.sizes = FALSE])
+    # Contrasts and the joint design use only the configured columns; RUV-4 factors are nuisance covariates.
+    fit_design <- if (is.null(RUV4_factors)) design_matrix else cbind(design_matrix, get_RUV4_factors(gene_expression_list, design_matrix, protected_columns, RUV4_factors))
 
     assert_with_info(
-      nrow(gene_expression_list) > 0 && nrow(design_matrix) > ncol(design_matrix),
+      nrow(gene_expression_list) > 0 && nrow(fit_design) > ncol(fit_design),
       glue_info = "No valid cell-type-specific count model remains after filtering."
     )
 
     fit <- voom_fit(
       gene_expression_list,
-      design = design_matrix,
+      design = fit_design,
       block = if (has_correlation_block) factor(gene_expression_list$samples[[correlation_block]]) else NULL,
       normalize.method = "none",
       keep.EList = TRUE
@@ -725,6 +780,13 @@ fit_pseudobulk_feature_matrix_by_cell_type <- function(
     glue_info = "cell_type_formula requires at least two retained cell types."
   )
 
+  # RUV-4 protects the coefficients that each class's share of the contrasts uses.
+  protected_columns <- if (!is.null(model_list$RUV4_factors)) {
+    class_designs <- purrr::map(purrr::set_names(cell_types), \(cell_type) list(
+      design = get_pseudobulk_cell_type_design(final_sample_tibble[final_sample_tibble$cluster == cell_type, ], model_list$cell_type_formula)))
+    used <- get_contrast_columns(design_matrix, model_list, get_pseudobulk_stacked_cell_type_design(class_designs, design_matrix)$joint_from_separate)
+    purrr::map(purrr::set_names(cell_types), \(cell_type) substring(used[startsWith(used, paste0(cell_type, "::"))], nchar(cell_type) + 3L))
+  }
   n_parallel_cell_type_fits <- min(workers, length(cell_types))
   fit_cell_type <- function(cell_type) {
     sample_idx <- which(final_sample_tibble$cluster == cell_type)
@@ -738,7 +800,9 @@ fit_pseudobulk_feature_matrix_by_cell_type <- function(
       sample_tibble = cell_type_samples,
       formula_chr = model_list$cell_type_formula,
       correlation_block = correlation_block,
-      voom_fit = function(...) voom_lm_fit_subset_correlation(..., workers = workers %/% n_parallel_cell_type_fits)
+      voom_fit = function(...) voom_lm_fit_subset_correlation(..., workers = workers %/% n_parallel_cell_type_fits),
+      RUV4_factors = model_list$RUV4_factors,
+      protected_columns = protected_columns[[cell_type]]
     )
   }
 
@@ -858,6 +922,10 @@ fit_pseudobulk_feature_matrix_model <- function(pseudobulk_feature_matrix, exten
     gene_expression_list <- edgeR::normLibSizes(gene_expression_list[feature_rows_expressed, , keep.lib.sizes = FALSE]) # consider using method="TMMwsp" that is designed for 0-inflated data. However, needs quantification of 0-inflatedness.
     if (!nrow(gene_expression_list$counts)) {
       stop("No features remain after expression filtering. Please check count depth and model complexity.")
+    }
+    if (!is.null(model_list$RUV4_factors)) {
+      design_matrix <- cbind(design_matrix, get_RUV4_factors(gene_expression_list, design_matrix,
+        get_contrast_columns(design_matrix, model_list), model_list$RUV4_factors))
     }
   } else {
     gene_expression_list <- structure(
@@ -1115,7 +1183,7 @@ contrasts_fit <- function(fit, contrasts, elist = fit$EList) {
 # One contrast fit per model fit: eBayes() treats every contrast column independently.
 get_pseudobulk_cell_type_contrast_statistics <- function(cell_type_fit, contrast_matrix, AveExpr = cell_type_fit$Amean) {
   contrast_fit <- cell_type_fit |>
-    contrasts_fit(contrast_matrix) |>
+    contrasts_fit(pad_contrasts(contrast_matrix, colnames(cell_type_fit$coefficients))) |>
     limma::eBayes()
 
   purrr::map(purrr::set_names(colnames(contrast_matrix)), function(contrast_name) {
@@ -1149,7 +1217,16 @@ get_pseudobulk_combined_contrast_elist <- function(pseudobulk_feature_matrix_fit
   fits <- pseudobulk_feature_matrix_fit$cell_type_fits[names(cell_type_contrasts)]
   donor_ids <- Reduce(intersect, purrr::map(fits, ~ as.character(.x$samples[[pairing_variable]])))
   feature_ids <- Reduce(intersect, purrr::map(fits, ~ rownames(.x$EList$E)))
-  design <- fits[[1]]$design[match(donor_ids, fits[[1]]$samples[[pairing_variable]]), , drop = FALSE]
+  # Each class's RUV-4 factors stay nuisance covariates of the combined response.
+  is_factor <- \(fit) startsWith(colnames(fit$design), "RUV4_")
+  donor_rows <- \(fit) match(donor_ids, fit$samples[[pairing_variable]])
+  design <- fits[[1]]$design[donor_rows(fits[[1]]), !is_factor(fits[[1]]), drop = FALSE]
+  factors <- purrr::imap(fits, function(fit, cell_type) {
+    class_factors <- fit$design[donor_rows(fit), is_factor(fit), drop = FALSE]
+    colnames(class_factors) <- paste(colnames(class_factors), cell_type, sep = "_", recycle0 = TRUE)
+    class_factors
+  })
+  design <- do.call(cbind, c(list(design), unname(factors)))
   assert_with_info(
     length(feature_ids) > 0 && length(donor_ids) > ncol(design) + 1L,
     glue_info = "Too few features or donors are shared by the cell types of a cross-cell-type contrast."
@@ -1158,7 +1235,7 @@ get_pseudobulk_combined_contrast_elist <- function(pseudobulk_feature_matrix_fit
   pieces <- purrr::map(fits, function(fit) {
     sample_idx <- match(donor_ids, fit$samples[[pairing_variable]])
     assert_with_info(
-      isTRUE(all.equal(unname(fit$design[sample_idx, , drop = FALSE]), unname(design))),
+      isTRUE(all.equal(unname(fit$design[sample_idx, !is_factor(fit), drop = FALSE]), unname(design[, seq_len(sum(!is_factor(fit))), drop = FALSE]))),
       glue_info = "Cell types of a cross-cell-type contrast must share their donor-level design."
     )
     feature_idx <- match(feature_ids, rownames(fit$EList$E))
@@ -1174,7 +1251,7 @@ get_pseudobulk_combined_contrast_elist <- function(pseudobulk_feature_matrix_fit
   list(
     elist = new("EList", list(E = E, weights = 1 / variance, samples = samples)),
     design = design,
-    contrast = reference_unit,
+    contrast = pad_contrasts(reference_unit, colnames(design))[, 1],
     AveExpr = Reduce(`+`, purrr::map(pieces, ~ rowMeans(.x$E))) / length(pieces)
   )
 }
@@ -1537,7 +1614,7 @@ get_set_test_inputs <- function(pseudobulk_feature_matrix_fit, contrast_vec, pai
     cell_type_contrasts <- get_pseudobulk_cell_type_contrasts(pseudobulk_feature_matrix_fit, contrast_vec)
     test <- if (length(cell_type_contrasts) == 1L) {
       fit <- pseudobulk_feature_matrix_fit$cell_type_fits[[names(cell_type_contrasts)]]
-      list(elist = fit$EList, design = fit$design, contrast = cell_type_contrasts[[1]])
+      list(elist = fit$EList, design = fit$design, contrast = pad_contrasts(cell_type_contrasts[[1]], colnames(fit$design))[, 1])
     } else {
       get_pseudobulk_combined_contrast_elist(pseudobulk_feature_matrix_fit, cell_type_contrasts, pairing_variable)
     }

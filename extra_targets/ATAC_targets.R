@@ -611,12 +611,12 @@ rlang::list2(
   ATAC_graph_and_cluster_targets = rlang::list2(
     targets::tar_target(
       name = scDblFinder_GEM_well_tibble.ATAC,
-      description = "Prepare per GEM well ATAC barcodes and cluster labels for scDblFinder",
+      description = "Prepare per GEM well the barcodes of nuclei passing ATAC QC, grouped by the WNN cell types of the graph that still holds the ATAC doublets, for scDblFinder",
       command = prepare_scDblFinder_GEM_well_tibble(
-        metadata_tibble = metadata_w_cell_types_unfiltered_tibble.ATAC |>
-          dplyr::filter(.data$barcode_w_prefix %in% QC_filtered_BCs.ATAC),
+        metadata_tibble = get_WNN_doublet_groups(metadata_filtered_tibble.ATAC, clusters_tibble_unfiltered.WNN,
+          cluster_UCell_annotation_unfiltered.WNN),
         cluster_collapse_list = aggregation_scDblFinder_GEX_cell_type_collapse_list,
-        cluster_col = "LSI_harmony_SNN_cluster_cell_type"
+        cluster_col = "WNN_doublet_group"
       ),
       iteration = "vector"
     ),
@@ -666,14 +666,15 @@ rlang::list2(
     ),
     targets::tar_target(
       name = metadata_w_cell_types_tibble.ATAC,
-      description = "Annotate ATAC metadata with scDblFinder QC and apply configured cell- and cluster-level doublet filters [part_of_graph:ATAC] [part_of_graph:WNN] [part_of_graph:seurat_export] [checkpoint:7_ATAC-QC]",
+      description = "Annotate ATAC metadata with scDblFinder QC and apply configured cell- and cluster-level doublet filters, removing a whole ATAC cluster only with RNA-depth or AMULET support [part_of_graph:ATAC] [part_of_graph:WNN] [part_of_graph:seurat_export] [checkpoint:7_ATAC-QC]",
       command = filter_metadata_by_scDblFinder(
         metadata_tibble = metadata_w_cell_types_unfiltered_tibble.ATAC,
         scDblFinder_results_df = scDblFinder_results_df.ATAC,
         class_col = "scDblFinder.class_ATAC",
         cluster_col = "LSI_harmony_SNN_cluster",
         remove_called_doublets = aggregation_scDblFinder_ATAC_remove_called_doublets,
-        max_doublet_fraction_per_cluster = aggregation_scDblFinder_ATAC_max_doublet_fraction_per_cluster
+        max_doublet_fraction_per_cluster = aggregation_scDblFinder_ATAC_max_doublet_fraction_per_cluster,
+        min_cluster_RNA_depth_ratio = aggregation_scDblFinder_ATAC_cluster_min_RNA_depth_ratio
       )
     ),
     targets::tar_target(

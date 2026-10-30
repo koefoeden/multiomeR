@@ -501,9 +501,15 @@ run_scDblFinder_BPCells_GEM_well <- function(feature_matrix,
 #' called as doublets or all cells in clusters whose called-doublet fraction
 #' exceeds a configured threshold. Cluster fractions are always calculated
 #' from the original scDblFinder calls, independently of cell-level removal.
+#' With `min_cluster_RNA_depth_ratio`, such a cluster is removed only when its
+#' cells' median RNA depth, relative to the median of their GEM well's cells not
+#' called doublets, reaches that ratio, or when AMULET calls (q < 0.01) more
+#' than `max_doublet_fraction_per_cluster` of them doublets. A rare population
+#' that scDblFinder flags without doublet-like RNA, such as mast cells, is then kept.
 #'
 #' @param metadata_tibble Cell metadata containing `barcode_w_prefix` and the
-#'   configured cluster column.
+#'   configured cluster column, and `GEM_well_ID`, `nCount_RNA` and
+#'   `amulet_q.value` when `min_cluster_RNA_depth_ratio` is set.
 #' @param scDblFinder_results_df scDblFinder results containing
 #'   `barcode_w_prefix`, or row names that contain the prefixed barcodes.
 #' @param class_col Name of the scDblFinder class column.
@@ -512,6 +518,8 @@ run_scDblFinder_BPCells_GEM_well <- function(feature_matrix,
 #'   doublets.
 #' @param max_doublet_fraction_per_cluster Maximum allowed fraction of called
 #'   doublets in a cluster. `NULL` disables whole-cluster removal.
+#' @param min_cluster_RNA_depth_ratio Relative RNA depth that supports removing
+#'   a whole cluster; `NULL` removes every cluster above the doublet limit.
 #' @return Filtered cell metadata with scDblFinder columns joined by barcode.
 #' @keywords internal
 
@@ -521,7 +529,8 @@ filter_metadata_by_scDblFinder <- function(
   class_col,
   cluster_col,
   remove_called_doublets,
-  max_doublet_fraction_per_cluster
+  max_doublet_fraction_per_cluster,
+  min_cluster_RNA_depth_ratio = NULL
 ) {
   if (!"barcode_w_prefix" %in% names(scDblFinder_results_df)) {
     scDblFinder_results_df <- scDblFinder_results_df |>
@@ -557,6 +566,19 @@ filter_metadata_by_scDblFinder <- function(
         .data$doublet_fraction > max_doublet_fraction_per_cluster
       )
     high_doublet_clusters <- high_doublet_clusters[[cluster_col]]
+    if (!is.null(min_cluster_RNA_depth_ratio)) {
+      support <- metadata_tibble |>
+        dplyr::mutate(is_called_doublet = .data$barcode_w_prefix %in% called_doublet_barcodes) |>
+        dplyr::group_by(.data$GEM_well_ID) |>
+        dplyr::mutate(RNA_depth_ratio = .data$nCount_RNA / stats::median(.data$nCount_RNA[!.data$is_called_doublet])) |>
+        dplyr::group_by(.data[[cluster_col]]) |>
+        dplyr::summarise(
+          supported = isTRUE(stats::median(.data$RNA_depth_ratio) >= min_cluster_RNA_depth_ratio) ||
+            isTRUE(mean(.data$amulet_q.value < 0.01, na.rm = TRUE) > max_doublet_fraction_per_cluster),
+          .groups = "drop"
+        )
+      high_doublet_clusters <- intersect(high_doublet_clusters, support[[cluster_col]][support$supported])
+    }
 
     metadata_tibble |>
       dplyr::filter(.data[[cluster_col]] %in% high_doublet_clusters) |>

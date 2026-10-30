@@ -32,11 +32,11 @@ rlang::list2(
   WNN_processing_targets = rlang::list2(
     targets::tar_target(
       name = embedding_matrices.WNN,
-      description = "Align GEX and ATAC Harmony embeddings for native WNN construction [part_of_graph:WNN] [part_of_graph:seurat_export]",
+      description = "Align the GEX and ATAC Harmony embeddings of all nuclei passing ATAC QC, ATAC doublets included, for native WNN construction [part_of_graph:WNN] [part_of_graph:seurat_export]",
       command = get_WNN_embedding_matrices(
         GEX_embedding_matrix = harmony_embeddings_matrix.GEX,
         ATAC_embedding_matrix = harmony_embeddings_matrix.ATAC,
-        barcode_vec = metadata_w_cell_types_tibble.ATAC$barcode_w_prefix,
+        barcode_vec = QC_filtered_BCs.ATAC,
         GEX_dims = aggregation_GEX_data_PCs,
         ATAC_dims = aggregation_ATAC_data_PCs
       ),
@@ -44,7 +44,7 @@ rlang::list2(
     ),
     targets::tar_target(
       name = WNN_results_raw,
-      description = "Compute native weighted nearest-neighbour graph from aligned GEX and ATAC embeddings before small-cluster filtering, keeping twice the neighbour count so that filtering needs no new search",
+      description = "Compute native weighted nearest-neighbour graph of all nuclei passing ATAC QC from aligned GEX and ATAC embeddings, before ATAC doublet and small-cluster filtering, keeping twice the neighbour count so that filtering needs no new search",
       command = weighted_nearest_neighbors_BPCells(
         embeddings_list = embedding_matrices.WNN,
         k = aggregation_data_nNNs,
@@ -56,10 +56,35 @@ rlang::list2(
       resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
     ),
     targets::tar_target(
-      name = clusters_tibble_raw.WNN,
-      description = "Cluster cells from the native WNN SNN graph before small-cluster filtering [resource_observation: peak_RAM_GiB=10.8; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=5.8; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
+      name = clusters_tibble_unfiltered.WNN,
+      description = "Cluster all nuclei passing ATAC QC, ATAC doublets included, from the native WNN SNN graph, keeping clusters of the minimum size, to group ATAC doublet detection",
       command = cluster_WNN_graph(
         WNN_results = restrict_WNN_results(WNN_results_raw, k = aggregation_data_nNNs),
+        resolution = aggregation_WNN_cluster_res,
+        min_barcodes = aggregation_cluster_min_barcodes
+      ),
+      resources = get_tar_resources(RAM_GB_req = 60)
+    ),
+    targets::tar_target(
+      name = cluster_UCell_annotation_unfiltered.WNN,
+      description = "Label the WNN clusters that still hold the ATAC doublets from adjusted GEX scores of the WNN marker sets, to group ATAC doublet detection",
+      command = prepare_cluster_UCell_evidence(
+        counts_matrix = aggregated_counts_BPCells_matrix.GEX,
+        metadata_tibble = clusters_tibble_unfiltered.WNN,
+        control = cluster_UCell_controls.WNN,
+        cluster_column = "WNN_harmony_SNN_cluster",
+        workers = 2,
+        native_source_file = UCell_native_source_file
+      ) |>
+        evaluate_cluster_UCell_evidence(min_advantage = aggregation_WNN_cluster_annotation_min_advantage),
+      resources = get_tar_resources(cores_req = 2, RAM_GB_req = 16)
+    ),
+    targets::tar_target(
+      name = clusters_tibble_raw.WNN,
+      description = "Cluster the nuclei kept after ATAC processing from the native WNN SNN graph restricted to them, before small-cluster filtering [resource_observation: peak_RAM_GiB=10.8; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=5.8; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
+      command = cluster_WNN_graph(
+        WNN_results = restrict_WNN_results(WNN_results_raw, barcodes = metadata_w_cell_types_tibble.ATAC$barcode_w_prefix,
+          k = aggregation_data_nNNs, embeddings_list = embedding_matrices.WNN),
         resolution = aggregation_WNN_cluster_res,
         min_barcodes = NULL
       ),

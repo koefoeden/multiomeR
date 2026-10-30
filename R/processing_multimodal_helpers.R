@@ -507,6 +507,31 @@ get_SNN_matrix_from_WNN_results <- function(WNN_results) {
   )
 }
 
+#' Group nuclei for ATAC doublet detection by WNN cell type
+#'
+#' Each nucleus takes the label of its WNN cluster in the graph that still
+#' holds the ATAC doublets. Abstaining clusters keep distinct labels, and the
+#' nuclei of clusters below the minimum size, which `WNN_clusters_tibble`
+#' lacks, share one group.
+#'
+#' @param metadata_tibble Metadata of the nuclei to score, with
+#'   `barcode_w_prefix` and `GEM_well_ID`.
+#' @param WNN_clusters_tibble WNN clusters of at least the minimum size, keyed
+#'   by `barcode_w_prefix`.
+#' @param annotation Their annotation from [evaluate_cluster_UCell_evidence()].
+#' @return The barcode and GEM well columns of `metadata_tibble` with each
+#'   nucleus's group in `WNN_doublet_group`.
+#' @keywords internal
+
+get_WNN_doublet_groups <- function(metadata_tibble, WNN_clusters_tibble, annotation) {
+  labels <- add_cluster_UCell_annotations(WNN_clusters_tibble, annotation, "WNN_harmony_SNN_cluster")
+  metadata_tibble |>
+    dplyr::select("barcode_w_prefix", "GEM_well_ID") |>
+    dplyr::mutate(WNN_doublet_group = dplyr::coalesce(as.character(
+      labels$WNN_harmony_SNN_cluster_cell_type)[match(.data$barcode_w_prefix, labels$barcode_w_prefix)],
+      "small_WNN_clusters"))
+}
+
 #' Build WNN metadata tibble
 #'
 #' Join WNN weights, clusters and, optionally, UMAP coordinates back onto cell metadata.

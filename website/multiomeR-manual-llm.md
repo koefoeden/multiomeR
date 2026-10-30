@@ -589,7 +589,7 @@ targets::tar_make(
 
 ## Checkpoint 7: ATAC clusters and motifs {#checkpoint-7}
 
-Clusters the ATAC data, names the clusters from GEX marker scores, removes ATAC doublets, and computes motif accessibility. [Method details](methods_primary_module.md#atac-filtering)
+Clusters the ATAC data, names the clusters from GEX marker scores, removes ATAC doublets, and computes motif accessibility. ATAC doublet detection groups the nuclei by the WNN cell types of a first joint graph, so this checkpoint also builds that graph. [Method details](methods_primary_module.md#atac-filtering)
 
 **Configure:** optionally, list expected transcription factors per cell type in [`aggregation_ATAC_marker_TFs`](parameters.html#aggregation_ATAC_marker_TFs) to organize the motif-accessibility plots. Set [`aggregation_ATAC_gene_activity_scores`](parameters.html#aggregation_ATAC_gene_activity_scores) to `true` to also compute gene activity scores and `marker_gene_activity_dot_plot.png`; they are off by default because they take hours of worker time in large aggregations.
 
@@ -1943,13 +1943,18 @@ ATAC processing starts from the nuclei kept after GEX processing.
 The peak-calling groups and the consensus peak matrix are built on this cell set.
 Per-nucleus quality-control metrics are checked against configured aggregation-level exclusions.
 The fragments in peaks and their fraction of all fragments are counted from the stored fragments, each fragment once, even when its two cut sites fall in different peaks.
-After ATAC clustering, a separate ATAC-based `scDblFinder` analysis follows per GEM well, with `dbr.sd = 1` [@germain2022_scdblfinder].
+A separate ATAC-based `scDblFinder` analysis then follows per GEM well, with `dbr.sd = 1`, for all nuclei that pass these exclusions [@germain2022_scdblfinder].
+It groups the nuclei by the WNN cell types of a joint graph that still holds the ATAC doublets, described with the WNN cell set.
+In our tests, these groups gave as many calls as ATAC cell types, with slightly more agreement between seeds, and ATAC annotation no longer delays the joint graph.
 Instead of scDblFinder's internal per-well feature aggregation, peaks are grouped once into 50 feature groups.
 The groups come from *k*-means clustering of the peaks' aggregation-wide LSI coordinates on the configured dimensions within 2–20 (loadings scaled by the singular values, as in scDblFinder).
 The peaks of each group are summed with BPCells before scDblFinder's unchanged classifier runs.
 This change limits memory use, but its scores are not expected to equal those from the internal aggregation.
 That aggregation transforms every peak within each well, which can exhaust memory before classification.
-ATAC doublets are removed at the nucleus and cluster level as for GEX.
+Nuclei called as ATAC doublets are removed.
+All nuclei of an ATAC Leiden cluster are removed when more than a configured share of them are called doublets, but only if RNA depth or AMULET also points to doublets.
+The cluster's median RNA depth, relative to its GEM wells' nuclei not called doublets, must reach a configured ratio, or AMULET must call more than that share of its nuclei doublets.
+A rare population that the ATAC calls flag without doublet-like RNA, such as mast cells, is thus kept.
 
 <!-- end include: website/_shared_methods/ATAC_filtering_and_doublets.md -->
 
@@ -2029,8 +2034,11 @@ The WNN implementation is compared with Seurat in [Algorithm validation](algorit
 
 <!-- begin include: website/_shared_methods/WNN_cell_set.md -->
 
-WNN analysis uses the nuclei kept after ATAC processing that are present in both embeddings.
-When small joint clusters are removed, each kept nucleus keeps its highest-scoring kept neighbors and its original modality weights, while the cluster labels are kept.
+The WNN graph is first built on all nuclei that pass the ATAC exclusions and are present in both embeddings, ATAC doublets included.
+Its Leiden clusters of at least the minimum size are labelled from the WNN marker signatures, and these labels group the nuclei for ATAC doublet detection, with the nuclei of smaller clusters as one more group.
+The graph is then restricted to the nuclei kept after ATAC processing, and clustered again.
+When small joint clusters are removed in turn, the graph is restricted to the remaining nuclei, while the cluster labels are kept.
+At each restriction, every kept nucleus keeps its highest-scoring kept neighbors and its original modality weights.
 A nucleus left with too few neighbors has them selected again among the kept nuclei, with the same weights.
 The UMAP is computed once, from the final neighbors.
 The GEX, ATAC and WNN metadata therefore describe successively smaller sets of nuclei, not interchangeable versions of the Cell Ranger cell calls.

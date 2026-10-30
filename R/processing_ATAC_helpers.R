@@ -697,13 +697,13 @@ collapse_group_peaks_ArchR <- function(replicate_peaks, cluster_name, n_cells, p
 #' Format peak GRanges
 #'
 #' Preserve coordinates and row order, add cluster and region identifiers, and
-#' name ranges as `seqnames-start-end`. Replace the narrowPeak `name` and
-#' `relative_summit_position` columns with `cluster` and `summit_position`.
+#' name ranges as `seqnames-start-end`. Replace the narrowPeak `name` with
+#' `cluster`. The fixed-width ranges are centred on their summits, so the
+#' narrowPeak summit offset, relative to the original peak start, is dropped.
 #'
 #' @param GRanges GRanges object containing GRanges coordinates and metadata.
 #' @param cluster_name Cluster label stored in the `cluster` metadata column.
-#' @return Named `GRanges` with `cluster`, `summit_position`, and `region_vec`
-#'   metadata. `summit_position` is `start + relative_summit_position`.
+#' @return Named `GRanges` with `cluster` and `region_vec` metadata.
 #' @keywords internal
 
 format_peak_GRanges <- function(GRanges, cluster_name) {
@@ -711,7 +711,6 @@ format_peak_GRanges <- function(GRanges, cluster_name) {
     GenomicRanges::as.data.frame() %>%
     dplyr::mutate(
       cluster = as.character(cluster_name),
-      summit_position = start + relative_summit_position,
       region_vec = paste(seqnames, start, end, sep = "-")
     ) %>%
     dplyr::select(-dplyr::any_of(c("name", "relative_summit_position"))) %>%

@@ -96,17 +96,61 @@ get_GEM_well_QC_exclude_threshold_tibble <- function(
   )
 }
 
+#' Count barcodes in each combination of QC exclusion reasons
+#'
+#' @param QC_excluded_BCs_list Named list of barcode vectors, one element per QC exclusion reason.
+#' @return A tibble with one logical column per reason, in list order, and `n`,
+#'   the number of barcodes that fail exactly that combination of reasons.
+#' @keywords internal
+
+count_excluded_BC_combinations <- function(QC_excluded_BCs_list) {
+  barcodes <- unique(unlist(QC_excluded_BCs_list, use.names = FALSE))
+  purrr::map(QC_excluded_BCs_list, \(reason_barcodes) barcodes %in% reason_barcodes) |>
+    tibble::as_tibble() |>
+    dplyr::count(dplyr::across(dplyr::everything()))
+}
+
+#' Sum QC exclusion combination counts over GEM wells
+#'
+#' Each barcode belongs to one GEM well, so the wells' counts add up exactly.
+#' Combinations are matched by reason name, since wells can have different
+#' reasons; a reason a well lacks counts as not failed.
+#'
+#' @param combination_count_tibbles List of `count_excluded_BC_combinations()` results.
+#' @return One such tibble for all wells, with the reasons in name order.
+#' @keywords internal
+
+sum_excluded_BC_combinations <- function(combination_count_tibbles) {
+  combination_tibble <- dplyr::bind_rows(combination_count_tibbles)
+  reasons <- levels(as.factor(setdiff(colnames(combination_tibble), "n")))
+  combination_tibble |>
+    dplyr::mutate(dplyr::across(dplyr::all_of(reasons), \(failed) dplyr::coalesce(failed, FALSE))) |>
+    dplyr::summarise(n = sum(.data$n), .by = dplyr::all_of(reasons))
+}
+
 #' Plot upset from excluded BCs list
 #'
 #' Plot overlaps among QC-excluded barcode sets as an UpSet-style chart.
 #'
 #' @param QC_excluded_BCs_list Named list of barcode vectors, one element per QC exclusion reason.
+#' @inheritParams plot_QC_exclusion_upset
+#' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
+#' @keywords internal
+
+plot_upset_from_excluded_BCs_list <- function(QC_excluded_BCs_list, n_total, input_label = "input barcodes") {
+  plot_QC_exclusion_upset(count_excluded_BC_combinations(QC_excluded_BCs_list), n_total, input_label)
+}
+
+#' Plot QC exclusion overlaps from combination counts
+#'
+#' @param combination_counts Output of `count_excluded_BC_combinations()` or
+#'   `sum_excluded_BC_combinations()`.
 #' @param n_total Denominator used when reporting exclusion-set and intersection percentages.
 #' @param input_label Human-readable input population used for the denominator.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for saving or composition.
 #' @keywords internal
 
-plot_upset_from_excluded_BCs_list <- function(QC_excluded_BCs_list, n_total, input_label = "input barcodes") {
+plot_QC_exclusion_upset <- function(combination_counts, n_total, input_label = "input barcodes") {
   format_QC_percent <- function(percent) {
     dplyr::case_when(
       percent >= 10 ~ stringr::str_c(round(percent), "%"),
@@ -115,8 +159,8 @@ plot_upset_from_excluded_BCs_list <- function(QC_excluded_BCs_list, n_total, inp
     )
   }
 
-  QC_excluded_BCs_list <- purrr::discard(QC_excluded_BCs_list, \(barcodes) length(barcodes) == 0)
-  set_names <- names(QC_excluded_BCs_list)
+  # Empty exclusion sets are omitted.
+  set_names <- purrr::keep(setdiff(colnames(combination_counts), "n"), \(set) any(combination_counts[[set]] & combination_counts$n > 0))
 
   if (length(set_names) == 0) {
     return(
@@ -134,20 +178,15 @@ plot_upset_from_excluded_BCs_list <- function(QC_excluded_BCs_list, n_total, inp
 
   set_bits <- bitwShiftL(1L, seq_along(set_names) - 1L)
   names(set_bits) <- set_names
-  membership_dt <- data.table::rbindlist(
-    purrr::map2(
-      .x = QC_excluded_BCs_list,
-      .y = set_bits,
-      ~ data.table::data.table(barcode = unique(.x), bit = .y)
-    ),
-    use.names = TRUE
-  )
-
-  barcode_masks <- membership_dt[, .(mask = sum(bit)), by = "barcode"]
-  n_retained <- n_total - nrow(barcode_masks)
-  intersection_counts <- barcode_masks[, .(n = .N), by = "mask"][order(-n, mask)]
-  intersection_counts[, intersection_idx := .I]
-  rm(membership_dt, barcode_masks)
+  intersection_counts <- tibble::tibble(
+    mask = as.integer(as.matrix(combination_counts[set_names]) %*% set_bits),
+    n = combination_counts$n
+  ) |>
+    dplyr::filter(.data$mask > 0L) |>
+    dplyr::summarise(n = sum(.data$n), .by = "mask") |>
+    dplyr::arrange(dplyr::desc(.data$n), .data$mask) |>
+    dplyr::mutate(intersection_idx = dplyr::row_number())
+  n_retained <- n_total - sum(intersection_counts$n)
 
   set_size_tibble <- tibble::tibble(
     set = set_names,
@@ -173,7 +212,6 @@ plot_upset_from_excluded_BCs_list <- function(QC_excluded_BCs_list, n_total, inp
     dplyr::filter(.data$ymin != .data$ymax)
 
   intersection_tibble <- intersection_counts |>
-    tibble::as_tibble() |>
     dplyr::mutate(
       percent = 100 * .data$n / n_total,
       percent_label = dplyr::if_else(.data$percent >= 0.1, format_QC_percent(.data$percent), "")

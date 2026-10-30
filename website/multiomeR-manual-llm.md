@@ -420,6 +420,8 @@ targets::tar_outdated(
 ├── per_aggregation_GEM_well_QC_comparisons/
 ├── demultiplexing_assignment_bars.png
 ├── nuclei_per_donor_id_bars.png
+├── sample_QC_metrics_plot.png
+├── sample_sex_check_plot.png
 ├── aggregation_excluded_barcodes_by_type_upset.png
 ├── aggregation_excluded_cellranger_only_barcodes_by_type_upset.png
 └── cell_retention_flow_plot.png
@@ -439,7 +441,7 @@ targets::tar_make(
 └── excluded_cellranger_only_barcodes_by_type_upset.png
 ```
 
-**Revise:** choose cutoffs from the `per_aggregation_GEM_well_QC_comparisons/` distributions and enter them in `GEM_well_QC_exclude_list` for each GEM well; see [Set QC filters after the first run](reference_GEM_wells.md#qc-filters). After the rerun, these plots mark numeric cutoffs, and the UpSet and retention plots show the nuclei each filter removes. Remove a GEM well that fails QC from `aggregation_GEM_well_IDs`.
+**Revise:** choose cutoffs from the `per_aggregation_GEM_well_QC_comparisons/` distributions and enter them in `GEM_well_QC_exclude_list` for each GEM well; see [Set QC filters after the first run](reference_GEM_wells.md#qc-filters). After the rerun, these plots mark numeric cutoffs, and the UpSet and retention plots show the nuclei each filter removes. Remove a GEM well that fails QC from `aggregation_GEM_well_IDs`. Per-well filters judge nuclei one at a time, so check samples too: `sample_QC_metrics_plot.png` flags samples whose chromatin or RNA quality lags their dataset, and `sample_sex_check_plot.png` labels samples whose XIST and chromosome Y expression disagree with their recorded sex. To drop such a sample, add a filter such as `donor_id == "sample_7"` to its GEM well's `GEM_well_QC_exclude_list`.
 
 ## Checkpoint 2: GEX dimension reduction {#checkpoint-2}
 
@@ -507,6 +509,7 @@ targets::tar_make(
 ├── continuous_by_cluster_violin_plot/
 ├── continuous_by_cell_type_violin_plot/
 ├── resolution_sweep_plot.png
+├── excluded_nuclei_cell_types_heatmap.png
 └── cell_retention_flow_plot.png
 <store>/files/my_aggregation/3_GEX_QC/
 ├── cluster_composition_table.tsv
@@ -518,6 +521,7 @@ targets::tar_make(
 - [`aggregation_GEX_cluster_res`](parameters.html#aggregation_GEX_cluster_res) sets how finely the nuclei are clustered; judge it by marker consistency and cluster sizes. `resolution_sweep_plot.png` and its table show the cluster counts and sizes at half and twice the resolution. A resolution change reruns only the clustering and later steps, not the neighbor search. By default, the GEX clusters are also the peak-calling groups of checkpoint 4.
 - [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes) and [`aggregation_GEX_cluster_annotation_min_advantage`](parameters.html#aggregation_GEX_cluster_annotation_min_advantage) determine the cell-type labels; see [Cluster annotation](review_outputs.md#cluster-annotation). When nuclei detect many genes, such as neurons, raise [`aggregation_UCell_max_rank`](parameters.html#aggregation_UCell_max_rank) towards the number of genes a typical nucleus detects, so that modestly expressed markers still count.
 - `UMAPs/cross/` compares layouts across PC and neighbor counts, for choosing [`aggregation_GEX_data_PCs`](parameters.html#aggregation_GEX_data_PCs) and [`aggregation_UMAP_nNNs`](parameters.html#aggregation_UMAP_nNNs).
+- `excluded_nuclei_cell_types_heatmap.png` shows which cell types the [checkpoint 1](#checkpoint-1) filters remove. A filter that removes one cell type more often than others biases its composition estimates: loosen it, or account for the loss when reading them.
 
 ## Checkpoint 4: Peak QC {#checkpoint-4}
 
@@ -1763,9 +1767,13 @@ The remaining nuclei of the selected wells are combined without further filterin
 
 GEM-well settings are described in [GEM well table](reference_GEM_wells.md), and the AMULET implementation is compared with scDblFinder in [Algorithm validation](algorithm_validation.md#bpcells-native-amulet).
 
+Two checks at checkpoint 1 look at samples rather than nuclei, and neither removes nuclei. The first takes each sample's median TSS enrichment, fraction of fragments in peaks and mitochondrial UMI percentage over its nuclei that pass per-well QC. It flags a sample whose median lies more than three median absolute deviations on the poor side of the other samples in its dataset. The second sums each sample's raw Cell Ranger UMIs of XIST and of all chromosome Y genes, per 10,000 UMIs. It labels a sample that lies nearer the median of the other recorded sex than of its own, on log scales.
+
+Once the GEX clusters are labelled at checkpoint 3, a third check shows which cell types the per-well rules remove. It scores every Cell Ranger-called nucleus on chromatin, because many removed nuclei carry RNA of other cells. A nucleus's share of ATAC fragments in each marker set's gene windows, the gene body and 2 kb upstream, is scaled from the 90th percentile in nuclei with other cluster labels (0) to the median in nuclei with that label (1). The nucleus takes the top set among the cell types labelled in its GEM well when it reaches 0.4, and is otherwise unclassified. The scored types of removed nuclei are then compared with those of kept nuclei, for all rules and for each.
+
 ### Source and target graph
 
-**Source:** [`extra_targets/per_GEM_well_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/per_GEM_well_targets.R), [`extra_targets/general_aggregation_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/general_aggregation_targets.R), [`R/parallel_GEM_well_preprocessing_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/parallel_GEM_well_preprocessing_helpers.R), [`R/amulet_BPCells_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/amulet_BPCells_helpers.R), [`R/processing_GEX_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_GEX_helpers.R), [`R/processing_ATAC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_ATAC_helpers.R).
+**Source:** [`extra_targets/per_GEM_well_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/per_GEM_well_targets.R), [`extra_targets/general_aggregation_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/general_aggregation_targets.R), [`R/parallel_GEM_well_preprocessing_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/parallel_GEM_well_preprocessing_helpers.R), [`R/amulet_BPCells_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/amulet_BPCells_helpers.R), [`R/processing_GEX_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_GEX_helpers.R), [`R/processing_ATAC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_ATAC_helpers.R), [`R/sample_QC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/sample_QC_helpers.R).
 
 This view covers per-GEM-well processing and QC, including optional ambient RNA correction, donor demultiplexing, doublet detection, barcode filtering, and handoffs into aggregation-level GEX and ATAC objects.
 

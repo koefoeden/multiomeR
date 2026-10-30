@@ -476,8 +476,9 @@ build_aggregation_tibble <- function(aggregation_tibble_all_from_yaml, GEM_well_
       "cellranger_summary_file",
       "cellranger_kept_metadata_tibble",
       "unfiltered_cells_n_vecs",
-      "excluded_barcodes_by_type_list",
+      "excluded_barcodes_by_type_counts",
       "excluded_cellranger_only_barcodes_by_type_list",
+      "excluded_cellranger_only_barcodes_by_type_counts",
       "cellranger_ref_list",
       "gene_features_df",
       "signac_fragment_object"

@@ -322,12 +322,17 @@ rlang::list2(
     # Nuclei without GEX counts are always excluded, so retention reports them here rather than as small clusters.
     command = get_excluded_BCs(full_metadata_tibble, QC_exclude_vector = union(GEM_well_QC_exclude_list, "not_found_in_GEX_matrix"))
   ),
+  targets::tar_target(
+    name = excluded_barcodes_by_type_counts,
+    description = "Count the barcodes in each combination of per GEM well QC exclusion reasons",
+    command = count_excluded_BC_combinations(excluded_barcodes_by_type_list)
+  ),
   tarchetypes::tar_file(
     name = excluded_barcodes_by_type_upset.1_pre_aggregation_QC,
     description = "Plot an UpSet plot of per GEM well QC exclusion overlaps and save to file. [checkpoint:1_pre-aggregation-QC]",
-    command = plot_upset_from_excluded_BCs_list(
+    command = plot_QC_exclusion_upset(
       input_label = "barcodes in the full QC metadata per GEM well",
-      QC_excluded_BCs_list = excluded_barcodes_by_type_list,
+      combination_counts = excluded_barcodes_by_type_counts,
       n_total = unfiltered_cells_n_vecs
     ) |>
       add_plot_parameters(
@@ -343,12 +348,17 @@ rlang::list2(
       dplyr::filter(!discarded_by_cellranger) |>
       get_excluded_BCs(QC_exclude_vector = union(GEM_well_QC_exclude_list, "not_found_in_GEX_matrix"))
   ),
+  targets::tar_target(
+    name = excluded_cellranger_only_barcodes_by_type_counts,
+    description = "Count the CellRanger-only barcodes in each combination of per GEM well QC exclusion reasons",
+    command = count_excluded_BC_combinations(excluded_cellranger_only_barcodes_by_type_list)
+  ),
   tarchetypes::tar_file(
     name = excluded_cellranger_only_barcodes_by_type_upset.1_pre_aggregation_QC,
     description = "Plot an UpSet plot of CellRanger-only QC exclusion overlaps and save to file. [checkpoint:1_pre-aggregation-QC]",
-    command = plot_upset_from_excluded_BCs_list(
+    command = plot_QC_exclusion_upset(
       input_label = "Cell Ranger-called nuclei per GEM well",
-      QC_excluded_BCs_list = excluded_cellranger_only_barcodes_by_type_list,
+      combination_counts = excluded_cellranger_only_barcodes_by_type_counts,
       n_total = nrow(cellranger_kept_metadata_tibble)
     ) |>
       add_plot_parameters(

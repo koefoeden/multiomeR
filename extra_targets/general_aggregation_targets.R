@@ -64,39 +64,24 @@ rlang::list2(
     description = "Sum full QC metadata barcode counts across all GEM wells in this aggregation",
     command = sum(unlist(aggregation_unfiltered_cells_n_vecs_syms))
   ),
-  targets::tar_target(
-    name = aggregation_excluded_BCs_list,
-    description = "Combine per GEM well QC exclusion lists into a single aggregation-level list",
-    command = collapse_duplicate_names(purrr::flatten(
-      aggregation_excluded_barcodes_by_type_list_syms
-    ))
-  ),
   tarchetypes::tar_file(
     name = aggregation_excluded_barcodes_by_type_upset.1_pre_aggregation_QC,
-    description = "Plot an UpSet plot of aggregation-level QC exclusion overlaps across all GEM wells and save to file. [checkpoint:1_pre-aggregation-QC] [resource_observation: peak_RAM_GiB=3.9; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=15.7; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
-    command = plot_upset_from_excluded_BCs_list(
+    description = "Plot an UpSet plot of aggregation-level QC exclusion overlaps across all GEM wells and save to file. [checkpoint:1_pre-aggregation-QC] [resource_observation: peak_RAM_GiB=0.45 with 0.31 for the loaded project; n_GEM_wells=226; aggregation=unpublished; method=VmHWM in a standalone job; date=2026-10-29]",
+    command = plot_QC_exclusion_upset(
       input_label = "barcodes in the full QC metadata across this aggregation",
-      QC_excluded_BCs_list = aggregation_excluded_BCs_list,
+      combination_counts = sum_excluded_BC_combinations(aggregation_excluded_barcodes_by_type_counts_syms),
       n_total = aggregation_unfiltered_cells_n
     ) |>
       add_plot_parameters("cfg_aggregations.yaml", aggregation_GEM_well_IDs = aggregation_GEM_well_IDs) |>
       add_plot_parameters("cfg_GEM_wells.tsv", GEM_well_QC_exclude_list = aggregation_GEM_well_QC_exclude_list) |>
-      save_plots_structured(width = 20, height = 7),
-    resources = get_tar_resources(RAM_GB_req = 32)
-  ),
-  targets::tar_target(
-    name = aggregation_excluded_cellranger_only_BCs_list,
-    description = "Combine per GEM well CellRanger-only QC exclusion lists into a single aggregation-level list",
-    command = collapse_duplicate_names(purrr::flatten(
-      aggregation_excluded_cellranger_only_barcodes_by_type_list_syms
-    ))
+      save_plots_structured(width = 20, height = 7)
   ),
   tarchetypes::tar_file(
     name = aggregation_excluded_cellranger_only_barcodes_by_type_upset.1_pre_aggregation_QC,
     description = "Plot an UpSet plot of aggregation-level CellRanger-only QC exclusion overlaps across all GEM wells and save to file. [checkpoint:1_pre-aggregation-QC]",
-    command = plot_upset_from_excluded_BCs_list(
+    command = plot_QC_exclusion_upset(
       input_label = "Cell Ranger-called nuclei across this aggregation",
-      QC_excluded_BCs_list = aggregation_excluded_cellranger_only_BCs_list,
+      combination_counts = sum_excluded_BC_combinations(aggregation_excluded_cellranger_only_barcodes_by_type_counts_syms),
       n_total = nrow(dplyr::bind_rows(aggregation_cellranger_kept_metadata_tibble_syms))
     ) |>
       add_plot_parameters("cfg_aggregations.yaml", aggregation_GEM_well_IDs = aggregation_GEM_well_IDs) |>
@@ -372,6 +357,64 @@ rlang::list2(
       add_plot_parameters("cfg_aggregations.yaml", aggregation_GEM_well_IDs = aggregation_GEM_well_IDs) |>
       save_plots_structured(width = 10,
         height = max(6, 3 + 0.22 * dplyr::n_distinct(stats::na.omit(demultiplexing_counts_tibble$donor_id))))
+  ),
+  targets::tar_target(
+    name = cellranger_sex_gene_UMIs_tibble,
+    description = "Count each Cell Ranger-called nucleus's raw GEX UMIs of XIST and of chromosome Y genes. [checkpoint:1_pre-aggregation-QC] [resource_observation: walltime_s=180; peak_RAM_GiB=1.6 with 1.07 for the loaded project, counting marker sets too; cores=4; n_GEM_wells=90; n_nuclei=1.47M; aggregation=unpublished; method=VmHWM of the parent process; date=2026-10-29]",
+    command = count_cellranger_sex_gene_UMIs(
+      cellranger_summary_files = aggregation_cellranger_summary_file_syms,
+      GEM_well_IDs = aggregation_GEM_well_IDs,
+      gene_features_df = gene_features_df,
+      cores = 4
+    ),
+    resources = get_tar_resources(cores_req = 4)
+  ),
+  targets::tar_target(
+    name = sample_QC_tibble,
+    description = "Summarize QC metric quartiles and XIST and chromosome Y expression per sample over nuclei passing per-well QC, with the recorded sex. [checkpoint:1_pre-aggregation-QC]",
+    command = summarize_sample_QC(GEX_cellranger_kept_metadata_tibble, cellranger_sex_gene_UMIs_tibble, donor_id_metadata_tibble)
+  ),
+  tarchetypes::tar_file(
+    name = sample_QC_metrics_plot.1_pre_aggregation_QC,
+    description = "Plot per-sample TSS enrichment, fraction of fragments in peaks and mitochondrial UMIs, flagging samples far on the poor side of their dataset. [checkpoint:1_pre-aggregation-QC]",
+    command = plot_sample_QC_metrics(sample_QC_tibble) |>
+      add_plot_parameters("cfg_aggregations.yaml", aggregation_GEM_well_IDs = aggregation_GEM_well_IDs) |>
+      save_plots_structured(width = max(10, 4 + 0.12 * nrow(sample_QC_tibble)), height = 9)
+  ),
+  tarchetypes::tar_file(
+    name = sample_sex_check_plot.1_pre_aggregation_QC,
+    description = "Plot per-sample XIST against chromosome Y expression by recorded sex, labelling samples nearer the other sex. [checkpoint:1_pre-aggregation-QC]",
+    command = plot_sample_sex_check(sample_QC_tibble) |>
+      add_plot_parameters("cfg_aggregations.yaml", aggregation_GEM_well_IDs = aggregation_GEM_well_IDs) |>
+      save_plots_structured(width = 9, height = 7)
+  ),
+  targets::tar_target(
+    name = marker_window_fragments_tibble,
+    description = "Count each Cell Ranger-called nucleus's ATAC fragments in the gene windows of each GEX marker set. [checkpoint:3_GEX-QC] [resource_observation: walltime_s=367; peak_RAM_GiB<8.6, cumulative with other loaded inputs; cores=4; n_GEM_wells=90; n_nuclei=1.47M; aggregation=unpublished; method=VmHWM of the parent process in a sequential evaluation; date=2026-10-29]",
+    command = count_marker_window_fragments(
+      fragments_list = aggregation_fragments_w_prefix_bpcells_syms,
+      GEM_well_IDs = aggregation_GEM_well_IDs,
+      cellranger_barcodes_tsvs = aggregation_cellranger_barcodes_tsv_syms,
+      genes = marker_validated_Ensembl_annotations_GRanges_list$genes,
+      marker_genes_list = UCell_GEX_marker_genes_list,
+      cores = 4
+    ),
+    resources = get_tar_resources(cores_req = 4, RAM_GB_req = 16)
+  ),
+  tarchetypes::tar_file(
+    name = excluded_nuclei_cell_types_heatmap.3_GEX_QC,
+    description = "Score Cell Ranger-called nuclei with the GEX marker sets and compare the cell types that per-well QC removes with those it keeps. [checkpoint:3_GEX-QC] [resource_observation: walltime_s=36; peak_RAM_GiB<11.1, cumulative with other loaded inputs; n_nuclei=1.47M; aggregation=unpublished; method=VmHWM in a sequential evaluation; date=2026-10-29]",
+    command = {
+      plot <- marker_window_fragments_tibble |>
+        classify_nuclei_by_marker_sets(metadata_w_cell_types_unfiltered_tibble.GEX, names(UCell_GEX_marker_genes_list)) |>
+        plot_excluded_nuclei_cell_types(aggregation_excluded_cellranger_only_barcodes_by_type_list_syms,
+          names(UCell_GEX_marker_genes_list))
+      plot |>
+        add_plot_parameters("cfg_GEM_wells.tsv", GEM_well_QC_exclude_list = aggregation_GEM_well_QC_exclude_list) |>
+        save_plots_structured(width = max(12, 5 + 0.4 * nlevels(plot$data$cell_type)),
+          height = max(6, 3 + 0.35 * nlevels(plot$data$group)))
+    },
+    resources = get_tar_resources(RAM_GB_req = 16)
   ),
   tarchetypes::tar_file(
     name = pseudobulk_counts_BPCells_matrix_dir.GEX,

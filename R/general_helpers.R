@@ -1,39 +1,3 @@
-#' Collapse duplicate names
-#'
-#' Group equally named entries, concatenate their values one level, and
-#' recursively collapse nested named lists. Groups follow `split()` name order.
-#'
-#' @param input_list_object A list, possibly with duplicated names at one or more
-#'   nested levels. Non-list objects and unnamed lists are returned unchanged.
-#' @return A list with elements sharing the same name collapsed under that name;
-#'   nested list values are processed recursively.
-#' @keywords internal
-
-collapse_duplicate_names <- function(input_list_object) {
-  # Return immediately if input is not a list or has no names to collapse
-  if (!is.list(input_list_object) || is.null(names(input_list_object))) {
-    return(input_list_object)
-  }
-
-  input_list_object %>%
-    # Split the list by names; this groups items sharing the same key
-    split(names(.)) %>%
-    purrr::map(function(grouped_elements_list) {
-      # unlist with recursive = FALSE concatenates the elements at the top level
-      # If elements are vectors: list(c(1), c(2)) -> c(1, 2)
-      # If elements are lists: list(list(a=1), list(a=2)) -> list(a=1, a=2)
-      merged_content_object <- unlist(unname(grouped_elements_list), recursive = FALSE)
-
-      # Recursively apply logic if the result is a list (to handle nested duplicates)
-      if (is.list(merged_content_object)) {
-        collapse_duplicate_names(merged_content_object)
-      } else {
-        merged_content_object
-      }
-    })
-}
-
-
 #' Suppress warnings matching
 #'
 #' Evaluate an expression while suppressing only warnings whose messages match the requested pattern.

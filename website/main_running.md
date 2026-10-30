@@ -41,6 +41,8 @@ targets::tar_outdated(
 ├── per_aggregation_GEM_well_QC_comparisons/
 ├── demultiplexing_assignment_bars.png
 ├── nuclei_per_donor_id_bars.png
+├── sample_QC_metrics_plot.png
+├── sample_sex_check_plot.png
 ├── aggregation_excluded_barcodes_by_type_upset.png
 ├── aggregation_excluded_cellranger_only_barcodes_by_type_upset.png
 └── cell_retention_flow_plot.png
@@ -60,7 +62,7 @@ targets::tar_make(
 └── excluded_cellranger_only_barcodes_by_type_upset.png
 ```
 
-**Revise:** choose cutoffs from the `per_aggregation_GEM_well_QC_comparisons/` distributions and enter them in `GEM_well_QC_exclude_list` for each GEM well; see [Set QC filters after the first run](reference_GEM_wells.md#qc-filters). After the rerun, these plots mark numeric cutoffs, and the UpSet and retention plots show the nuclei each filter removes. Remove a GEM well that fails QC from `aggregation_GEM_well_IDs`.
+**Revise:** choose cutoffs from the `per_aggregation_GEM_well_QC_comparisons/` distributions and enter them in `GEM_well_QC_exclude_list` for each GEM well; see [Set QC filters after the first run](reference_GEM_wells.md#qc-filters). After the rerun, these plots mark numeric cutoffs, and the UpSet and retention plots show the nuclei each filter removes. Remove a GEM well that fails QC from `aggregation_GEM_well_IDs`. Per-well filters judge nuclei one at a time, so check samples too: `sample_QC_metrics_plot.png` flags samples whose chromatin or RNA quality lags their dataset, and `sample_sex_check_plot.png` labels samples whose XIST and chromosome Y expression disagree with their recorded sex. To drop such a sample, add a filter such as `donor_id == "sample_7"` to its GEM well's `GEM_well_QC_exclude_list`.
 
 ## Checkpoint 2: GEX dimension reduction {#checkpoint-2}
 
@@ -128,6 +130,7 @@ targets::tar_make(
 ├── continuous_by_cluster_violin_plot/
 ├── continuous_by_cell_type_violin_plot/
 ├── resolution_sweep_plot.png
+├── excluded_nuclei_cell_types_heatmap.png
 └── cell_retention_flow_plot.png
 <store>/files/my_aggregation/3_GEX_QC/
 ├── cluster_composition_table.tsv
@@ -139,6 +142,7 @@ targets::tar_make(
 - [`aggregation_GEX_cluster_res`](parameters.html#aggregation_GEX_cluster_res) sets how finely the nuclei are clustered; judge it by marker consistency and cluster sizes. `resolution_sweep_plot.png` and its table show the cluster counts and sizes at half and twice the resolution. A resolution change reruns only the clustering and later steps, not the neighbor search. By default, the GEX clusters are also the peak-calling groups of checkpoint 4.
 - [`aggregation_GEX_marker_genes`](parameters.html#aggregation_GEX_marker_genes) and [`aggregation_GEX_cluster_annotation_min_advantage`](parameters.html#aggregation_GEX_cluster_annotation_min_advantage) determine the cell-type labels; see [Cluster annotation](review_outputs.md#cluster-annotation). When nuclei detect many genes, such as neurons, raise [`aggregation_UCell_max_rank`](parameters.html#aggregation_UCell_max_rank) towards the number of genes a typical nucleus detects, so that modestly expressed markers still count.
 - `UMAPs/cross/` compares layouts across PC and neighbor counts, for choosing [`aggregation_GEX_data_PCs`](parameters.html#aggregation_GEX_data_PCs) and [`aggregation_UMAP_nNNs`](parameters.html#aggregation_UMAP_nNNs).
+- `excluded_nuclei_cell_types_heatmap.png` shows which cell types the [checkpoint 1](#checkpoint-1) filters remove. A filter that removes one cell type more often than others biases its composition estimates: loosen it, or account for the loss when reading them.
 
 ## Checkpoint 4: Peak QC {#checkpoint-4}
 

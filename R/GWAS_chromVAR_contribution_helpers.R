@@ -203,7 +203,7 @@ get_GWAS_chromVAR_locus_shift_z_matrices <- function(
   if (inherits(counts_matrix, "IterableMatrix")) {
     counts_matrix <- methods::as(counts_matrix, "dgCMatrix")
   }
-  background <- correct_chromVAR_background_variance(chromVAR_background_record$background, counts_matrix)
+  background <- chromVAR_background_record$background
   residual_matrix <- as.matrix(counts_matrix) - as.matrix(background@E)[background@peak2bin, , drop = FALSE]
   variance_matrix <- background@V[background@peak2bin, , drop = FALSE]
 

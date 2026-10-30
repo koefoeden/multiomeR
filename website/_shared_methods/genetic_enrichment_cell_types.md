@@ -19,7 +19,6 @@ A block without such a move within 2 Mb moves elsewhere on its chromosome.
 Moved loci fall in fewer and less accessible peaks than real ones, so their raw deviations vary more.
 The real and moved loci are therefore compared by their background z-scores.
 This is the deviation's numerator divided by its standard deviation under independently drawn matched background peaks, which scales with the squared peak weights.
-betterChromVAR 1.1.10 overestimates this background variance for deep counts such as pseudobulks, so it is recomputed from the counts.
 A class's one-sided P-value is the share of moved copies, plus the real trait, whose background z-score is at least as large.
 The reported z-score standardizes the real background z-score by the mean and standard deviation of the moved copies.
 This null is skewed to the right, so normal P-values would be too small.

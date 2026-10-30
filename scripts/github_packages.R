@@ -18,6 +18,6 @@ github_packages <- list(
   list(
     package = "betterChromVAR",
     repo = "plger/betterChromVAR",
-    ref = "0341160ba7e994ad6755cbba92d6f644efebeb3a"
+    ref = "d64e3b5d0f52fa449c248be5e59010c8055da9ec"
   )
 )

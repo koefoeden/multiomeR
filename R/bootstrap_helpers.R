@@ -2,6 +2,19 @@ get_project_root <- function() {
   rprojroot::find_root(rprojroot::has_file("pixi.toml"))
 }
 
+assert_pinned_github_package <- function(package) {
+  github_packages <- source(
+    file.path(get_project_root(), "scripts", "github_packages.R"),
+    local = new.env(parent = baseenv())
+  )$value
+  pinned_ref <- Filter(\(x) identical(x$package, package), github_packages)[[1]]$ref
+  installed_ref <- tryCatch(utils::packageDescription(package)[["RemoteSha"]], error = function(error) NULL)
+  if (!identical(installed_ref, pinned_ref)) {
+    stop(package, " is not installed at the pinned revision. Run `pixi run install-r-github-packages`.")
+  }
+  invisible(TRUE)
+}
+
 #' Stop when the BSgenome data packages are missing
 #'
 #' Pixi installs these Bioconda data packages only when post-link scripts run.
@@ -60,6 +73,12 @@ assert_R_build_configuration <- function() {
 #' @keywords internal
 load_project_runtime <- function() {
   assert_R_build_configuration()
+  # The AMULET native helper also mirrors the private fragment iterator ABI of
+  # the pinned BPCells revision. betterChromVAR's pinned revision computes the
+  # background variance that multiomeR no longer corrects itself.
+  for (package in c("BPCells", "betterChromVAR")) {
+    assert_pinned_github_package(package)
+  }
   suppressPackageStartupMessages({
     library(Matrix)
     library(purrr)

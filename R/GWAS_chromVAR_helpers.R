@@ -119,23 +119,15 @@ get_GWAS_chromVAR_z_score_chunk_records <- function(peak_weights_matrix, chunk_c
     retSE = FALSE,
     compute = "z"
   )$z
-
-  # betterChromVAR scales the background variance by the summed weights of each
-  # bin; for a weighted sum of independent peaks it scales with the squared
-  # weights, so continuous (fine-mapping) weights deflated the z-scores.
-  bin_variance <- methods::slot(chunk_context_record$background, "V")
-  bin_idx <- methods::slot(chunk_context_record$background, "peak2bin")
-  background_variance <- \(weights) as.numeric(Matrix::crossprod(
-    Matrix::sparseMatrix(i = bin_idx, j = rep.int(1L, length(bin_idx)), x = weights, dims = c(nrow(bin_variance), 1L)),
-    bin_variance
-  ))
-  purrr::map_dfr(colnames(peak_weights_matrix), \(GWAS_ID) {
-    peak_weights_vec <- as.numeric(peak_weights_matrix[, GWAS_ID])
-    z_score_vec <- z_score_matrix[GWAS_ID, ] *
-      sqrt(background_variance(peak_weights_vec) / background_variance(peak_weights_vec^2))
-    names(z_score_vec) <- chunk_context_record$cell_names
-    tibble::tibble(GWAS_ID = GWAS_ID, chunk_id = chunk_context_record$chunk_id, z_score_vec = list(z_score_vec))
-  })
+  # The finite-population correction sums the background variance over the
+  # squared peak weights, as continuous (fine-mapping) weights require.
+  colnames(z_score_matrix) <- chunk_context_record$cell_names
+  GWAS_IDs <- unname(colnames(peak_weights_matrix))
+  tibble::tibble(
+    GWAS_ID = GWAS_IDs,
+    chunk_id = chunk_context_record$chunk_id,
+    z_score_vec = lapply(GWAS_IDs, \(GWAS_ID) z_score_matrix[GWAS_ID, ])
+  )
 }
 
 combine_GWAS_chromVAR_z_score_chunk_records <- function(chromVAR_z_score_chunk_records) {

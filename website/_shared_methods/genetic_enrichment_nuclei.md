@@ -5,8 +5,7 @@ When selection is automatic, it takes the first available of SuSiE, SuSiE-inf an
 Variants of the study's credible sets (95% sets for Open Targets) with a posterior probability above 0.001 by default are mapped to consensus ATAC peaks.
 Variant weights that map to the same peak are summed and capped at one.
 These peak weights form the trait annotation from which analytic nucleus-level chromVAR z-scores are calculated, reusing the GC-bias background of the motif analysis [@schep2017_chromvar; @ulirsch2019_gchromvar; @germain2026_betterchromvar].
-The background variance of a weighted sum of peaks scales with the squared weights.
-betterChromVAR instead scales the variance of its analytic z-scores with the summed weights, so the z-scores are rescaled accordingly.
+The z-scores use betterChromVAR's finite-population correction, which accounts for each nucleus's expectation being estimated from its own counts and sums the background variance over the squared peak weights.
 To show which traits are not independent, credible sets are also compared pairwise.
 Posterior probabilities are summed per variant and normalized to one within each GWAS.
 The similarity of two GWAS is the sum, over identical variants, of the smaller of their two values.

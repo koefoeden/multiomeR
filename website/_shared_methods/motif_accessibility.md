@@ -10,7 +10,7 @@ The trimmed root motifs are matched to the consensus peaks with `motifmatchr` at
 Some short root motifs cannot reach this threshold even with their best-matching sequence.
 They then match only that sequence, which can occur by chance up to eight times as often as the threshold allows.
 Configured transcription factors are matched to families by name, or by name and motif identifier when a symbol belongs to more than one family.
-betterChromVAR applies the chromVAR workflow with GC-bias correction to compute analytic motif-family deviations and z-scores for individual nuclei [@schep2017_chromvar; @germain2026_betterchromvar].
+betterChromVAR applies the chromVAR workflow with GC-bias correction to compute analytic motif-family deviations and z-scores for individual nuclei, with its finite-population correction of the z-scores [@schep2017_chromvar; @germain2026_betterchromvar].
 All families are tested per ATAC annotation class with one-versus-rest Wilcoxon tests, with Benjamini–Hochberg correction [@benjamini1995_fdr] across all family–class tests.
 They are also summarized as cell-weighted means per ATAC cluster, GEX cluster and GEX cell type.
 The configured transcription factors select only the families shown on embeddings.

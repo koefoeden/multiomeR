@@ -13,7 +13,7 @@ refresh-output-gallery = { cmd = "python dev/refresh_output_gallery.py", descrip
 validate-local = { cmd = "Rscript dev/validation/run.R", description = "Check external sources, run the three public validation aggregations, and verify outputs in the existing store." }
 refresh-demo-outputs = { cmd = "Rscript dev/refresh_demo_outputs.R", description = "Refresh the printed output and UMAP snapshot of the demo-results page from the built public demo." }
 test = { cmd = "Rscript tests/testthat.R", description = "Run all reference-parity tests of the reimplemented algorithms." }
-install-r-github-packages = { cmd = "Rscript scripts/install_r_github_packages.R", description = "Install GitHub-only R packages into the pixi R library." }
+install-r-github-packages = { cmd = "MULTIOMER_SKIP_PROJECT_BOOTSTRAP=1 Rscript scripts/install_r_github_packages.R", description = "Install GitHub-only R packages into the pixi R library." }
 install-fragtk = { cmd = "curl -fsSL https://github.com/stuart-lab/fragtk/releases/download/1.7.0/fragtk_1.7.0_x86_64-unknown-linux-musl.tar.gz -o fragtk.tar.gz && echo 'f7e447e440a2f766063e37424b1d02fc3a702522da38154e41f84c469cb52422  fragtk.tar.gz' | sha256sum -c - && tar -xzf fragtk.tar.gz -C $CONDA_PREFIX/bin fragtk && rm fragtk.tar.gz", description = "Install the pinned fragtk binary that Signac's FeatureMatrix() uses for peak quantification." }
 download-demo-data = { cmd = "bash scripts/download_10X_cellranger_count_data.sh manifests/public_immune_human_2x_manifest.tsv", description = "Download the required subsets of two public Cell Ranger ARC outputs." }
 setup-demo = { depends-on = ["download-demo-data", "install-r-github-packages"], description = "Prepare the environment and inputs for the public quickstart." }

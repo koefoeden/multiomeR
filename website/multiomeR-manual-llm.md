@@ -1969,7 +1969,7 @@ The trimmed root motifs are matched to the consensus peaks with `motifmatchr` at
 Some short root motifs cannot reach this threshold even with their best-matching sequence.
 They then match only that sequence, which can occur by chance up to eight times as often as the threshold allows.
 Configured transcription factors are matched to families by name, or by name and motif identifier when a symbol belongs to more than one family.
-betterChromVAR applies the chromVAR workflow with GC-bias correction to compute analytic motif-family deviations and z-scores for individual nuclei [@schep2017_chromvar; @germain2026_betterchromvar].
+betterChromVAR applies the chromVAR workflow with GC-bias correction to compute analytic motif-family deviations and z-scores for individual nuclei, with its finite-population correction of the z-scores [@schep2017_chromvar; @germain2026_betterchromvar].
 All families are tested per ATAC annotation class with one-versus-rest Wilcoxon tests, with Benjamini–Hochberg correction [@benjamini1995_fdr] across all family–class tests.
 They are also summarized as cell-weighted means per ATAC cluster, GEX cluster and GEX cell type.
 The configured transcription factors select only the families shown on embeddings.
@@ -2175,8 +2175,7 @@ When selection is automatic, it takes the first available of SuSiE, SuSiE-inf an
 Variants of the study's credible sets (95% sets for Open Targets) with a posterior probability above 0.001 by default are mapped to consensus ATAC peaks.
 Variant weights that map to the same peak are summed and capped at one.
 These peak weights form the trait annotation from which analytic nucleus-level chromVAR z-scores are calculated, reusing the GC-bias background of the motif analysis [@schep2017_chromvar; @ulirsch2019_gchromvar; @germain2026_betterchromvar].
-The background variance of a weighted sum of peaks scales with the squared weights.
-betterChromVAR instead scales the variance of its analytic z-scores with the summed weights, so the z-scores are rescaled accordingly.
+The z-scores use betterChromVAR's finite-population correction, which accounts for each nucleus's expectation being estimated from its own counts and sums the background variance over the squared peak weights.
 To show which traits are not independent, credible sets are also compared pairwise.
 Posterior probabilities are summed per variant and normalized to one within each GWAS.
 The similarity of two GWAS is the sum, over identical variants, of the smaller of their two values.
@@ -2211,7 +2210,6 @@ A block without such a move within 2 Mb moves elsewhere on its chromosome.
 Moved loci fall in fewer and less accessible peaks than real ones, so their raw deviations vary more.
 The real and moved loci are therefore compared by their background z-scores.
 This is the deviation's numerator divided by its standard deviation under independently drawn matched background peaks, which scales with the squared peak weights.
-betterChromVAR 1.1.10 overestimates this background variance for deep counts such as pseudobulks, so it is recomputed from the counts.
 A class's one-sided P-value is the share of moved copies, plus the real trait, whose background z-score is at least as large.
 The reported z-score standardizes the real background z-score by the mean and standard deviation of the moved copies.
 This null is skewed to the right, so normal P-values would be too small.

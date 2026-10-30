@@ -174,6 +174,10 @@ rlang::list2(
         frags <- open_GEM_well_fragments(GEX_cells_per_GEM_well_tibble.ATAC, aggregated_cellranger_ref_list$genomes[[1]]) |>
           BPCells::select_cells(GEX_cells_per_GEM_well_tibble.ATAC$barcodes[[1]])
         consensus_mat <- BPCells::peak_matrix(frags, consensus_peak_GRanges.ATAC, mode = "fragments")
+        # peak_matrix() returns peaks in the fragments' chromosome order, then by end, so naming rows by position
+        # needs the consensus peaks already in that order.
+        stopifnot(identical(BPCells::order_ranges(consensus_peak_GRanges.ATAC, BPCells::chrNames(frags)),
+          seq_along(consensus_peak_GRanges.ATAC)))
         rownames(consensus_mat) <- names(consensus_peak_GRanges.ATAC)
         unlink(out_dir, recursive = TRUE) # BPCells writes into an existing folder twice
         BPCells::write_matrix_dir(consensus_mat, out_dir, buffer_size = 65536L)

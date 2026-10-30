@@ -328,7 +328,8 @@ get_ordered_GWAS_score_plot_data <- function(data_per_GWAS_and_cluster_df, compa
   cluster_support <- data_per_GWAS_and_cluster_df |>
     dplyr::select(cluster, dplyr::any_of(c("n_cells", "n_counts", "n_features", "counts_per_feature"))) |>
     dplyr::summarise(
-      dplyr::across(dplyr::everything(), \(x) max(x, na.rm = TRUE)),
+      # A column without support, such as a random reference, keeps NA.
+      dplyr::across(dplyr::everything(), \(x) if (all(is.na(x))) NA else max(x, na.rm = TRUE)),
       .by = cluster
     )
 
@@ -791,8 +792,7 @@ save_GWAS_heatmap <- function(plot, GWAS_IDs) {
 }
 
 #' Plot one WNN SCAVENGE median-TRS heatmap
-#' @param heatmap_data Cached WNN group scores, optionally with `support_label`
-#'   tile labels and the `support_note` that explains them.
+#' @param heatmap_data Cached WNN group scores.
 #' @param GWAS_metadata_tracks_plot Shared GWAS metadata tracks.
 #' @param compartments_patterns Optional cell-type compartment patterns.
 #' @param grouping WNN cell types or named clusters.
@@ -812,8 +812,7 @@ plot_WNN_TRS_heatmap <- function(heatmap_data, GWAS_metadata_tracks_plot,
     GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
     compartments_patterns = compartments_patterns,
     fill_label = if (scaled) "Relative median TRS" else "Median TRS",
-    fill_scale = "sequential", fill_limits = if (scaled) c(0, 1) else NULL,
-    support_label_col = "support_label"
+    fill_scale = "sequential", fill_limits = if (scaled) c(0, 1) else NULL
   ) + patchwork::plot_annotation(
     title = paste(if (scaled) "Relative" else "Median", "SCAVENGE trait scores by WNN",
       if (grouping == "cell_types") "cell type" else "cluster"),
@@ -826,7 +825,6 @@ plot_WNN_TRS_heatmap <- function(heatmap_data, GWAS_metadata_tracks_plot,
       if (scaled) "Colour: median cell-level TRS min-max scaled to 0-1 across the displayed WNN groups within each GWAS."
       else "Colour: median cell-level TRS within each WNN group, without display scaling.",
       "All available scores are shown.",
-      unique(data[["support_note"]]),
       describe_GWAS_without_peak_variants(get_GWAS_track_tibble(GWAS_metadata_tracks_plot)$GWAS_ID, data$GWAS_ID, "SCAVENGE")
     ), collapse = " "), 150)
   )
@@ -861,10 +859,12 @@ get_significance_stars <- function(p, q) {
 #' @param compartments_patterns Optional cell-type compartment patterns.
 #' @param standardize Use the precomputed within-GWAS standardized deviation column.
 #' @param beta_weighted Label the input as PIP times absolute-effect weighted.
+#' @param ineligible_GWAS_IDs GWAS left out of the absolute-effect weighting,
+#'   named in its caption.
 #' @return Annotated heatmap, or an explicit empty-result plot.
 plot_GWAS_chromVAR_deviation_heatmap <- function(deviation_tibble, top_set_tibble,
   GWAS_metadata_tracks_plot, compartments_patterns = NULL,
-  standardize = FALSE, beta_weighted = FALSE) {
+  standardize = FALSE, beta_weighted = FALSE, ineligible_GWAS_IDs = character()) {
   if (nrow(deviation_tibble) == 0L) {
     return(ggplot2::ggplot() + ggplot2::theme_void() +
       ggplot2::annotate("text", x = 0, y = 0, label = "No eligible cell-type GWAS scores"))
@@ -886,7 +886,8 @@ plot_GWAS_chromVAR_deviation_heatmap <- function(deviation_tibble, top_set_tibbl
       "GWAS-linked accessibility by cell type", if (standardize) "— standardized" else "— unscaled"),
     subtitle = paste(
       if (standardize) "Compare cell types within each trait; red indicates above-average deviation."
-      else "Positive values indicate accessibility above that expected from matched background peaks.",
+      else "Positive values mark accessibility of the GWAS peaks above the average of the cell types tested.",
+      "Enrichment is relative to the other cell types tested, so chromatin that they all share gives no signal.",
       "Stars mark nominal (*) and FDR-significant (**) enrichment; a black outline marks the top significant cell type and grey outlines the cell types not significantly below it.",
       "Together the outlined cell types hold the one with the largest true deviation with at least 95% probability.",
       sep = "\n"),
@@ -894,8 +895,9 @@ plot_GWAS_chromVAR_deviation_heatmap <- function(deviation_tibble, top_set_tibbl
       "ATAC counts are summed by WNN cell type. The expected accessibility averages the depth-normalized cell-type profiles, so abundant cell types do not dominate the reference.",
       "Each GWAS's deviations therefore average about zero across cell types, and a cell type's mean over many GWAS reflects the trait panel.",
       if (beta_weighted) paste(
-        "PIP × |β| weighting uses variant effects when complete, otherwise the highest-PIP available effect per locus; only eligible GWAS are included.",
-        "Genetic effect direction is discarded. Weights preserve retained PIP mass before peak weights are capped at one."),
+        "PIP × |β| weighting uses variant effects when complete, otherwise the highest-PIP available effect per locus.",
+        "Genetic effect direction is discarded. Weights are scaled to sum to the kept variants' posterior probabilities; capping each peak's summed weight at one then limits the largest-effect loci.",
+        if (length(ineligible_GWAS_IDs)) paste0("Left out, without usable effect sizes at every locus: ", toString(sort(ineligible_GWAS_IDs)), ".")),
       "Deviation: weighted accessibility of the GWAS peaks minus that of background peaks matched on GC content and expected accessibility, divided by the depth-adjusted expected accessibility (chromVAR's bias-corrected deviation).",
       if (standardize) "Colour: deviation centred and divided by its SD across cell types within each GWAS."
       else "Colour: deviation, without centring or SD scaling across cell types.",

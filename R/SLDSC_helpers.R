@@ -930,6 +930,7 @@ plot_SLDSC_specificity_heatmap <- function(SLDSC_tibble, GWAS_inputs_tibble, com
       title = "Heritability enrichment in cell-type-specific accessibility (S-LDSC)",
       subtitle = paste(
         "Red marks cell types whose specifically accessible peaks carry more per-SNP heritability than peaks in general.",
+        "Specificity is relative to the other cell types tested, so chromatin that they all share gives no signal.",
         "Stars mark nominal (*) and FDR-significant (**) enrichment; a black outline marks the top significant cell type and grey outlines the cell types not significantly below it.",
         "Together the outlined cell types hold the one with the largest true tau* with at least 95% probability.",
         sep = "\n"
@@ -1016,6 +1017,7 @@ plot_SLDSC_chromVAR_comparison <- function(SLDSC_tibble, chromVAR_deviation_tibb
         "Cell types at unadjusted one-sided P < 0.05 in either method are labelled; the dashed line marks this level for S-LDSC (z = 1.645).",
         "chromVAR P-values are the share of moved copies that score at least as high; their null is skewed, so no single chromVAR z-score marks P = 0.05.",
         "Panel titles give the Spearman correlation across cell types and the S-LDSC total-heritability z-score.",
+        "Both z-scores are relative to the other cell types tested: chromVAR's expected accessibility averages them, and S-LDSC's specificity compares each with them.",
         "Only GWAS with genome-wide summary statistics are shown.",
         describe_GWAS_without_peak_variants(SLDSC_tibble$GWAS_ID[!is.na(SLDSC_tibble$z)], chromVAR_deviation_tibble$GWAS_ID)
       ), width = 150),

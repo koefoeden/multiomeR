@@ -80,7 +80,8 @@ rlang::list2(
       GWAS_metadata_tracks_plot = GWAS_absolute_effect_metadata_tracks_plot,
       compartments_patterns = genetic_enrichment_compartment_patterns,
       standardize = FALSE,
-      beta_weighted = TRUE
+      beta_weighted = TRUE,
+      ineligible_GWAS_IDs = setdiff(GWAS_inputs_tibble$GWAS_ID, GWAS_absolute_effect_inputs_tibble$GWAS_ID)
     ) |>
       save_GWAS_heatmap(GWAS_absolute_effect_inputs_tibble$GWAS_ID)
   ),
@@ -93,7 +94,8 @@ rlang::list2(
       GWAS_metadata_tracks_plot = GWAS_absolute_effect_metadata_tracks_plot,
       compartments_patterns = genetic_enrichment_compartment_patterns,
       standardize = TRUE,
-      beta_weighted = TRUE
+      beta_weighted = TRUE,
+      ineligible_GWAS_IDs = setdiff(GWAS_inputs_tibble$GWAS_ID, GWAS_absolute_effect_inputs_tibble$GWAS_ID)
     ) |>
       save_GWAS_heatmap(GWAS_absolute_effect_inputs_tibble$GWAS_ID)
   ),

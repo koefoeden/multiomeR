@@ -663,7 +663,8 @@ plot_SLDSC_enrichment_curves <- function(enrichment_tibble, compartments_pattern
 #' are those of the enrichment curves, and one cell-type order, from
 #' clustering the statistic at all sizes within compartments. Stars mark
 #' enrichment above 1 at q < 0.05 and outlines the top sets, from
-#' `test_SLDSC_matched_enrichment()`.
+#' `test_SLDSC_matched_enrichment()`. A last column shows the random
+#' reference, randomly ranked peaks of the same size, without stars or outlines.
 #'
 #' @param enrichment_tibble Matched-size enrichment from
 #'   `test_SLDSC_matched_enrichment()`.
@@ -682,9 +683,11 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
   is_SLDSC <- statistic == "SLDSC"
   estimate_col <- paste0(statistic, "_enrichment")
   limits <- get_SLDSC_enrichment_limits(enrichment_tibble, estimate_col = estimate_col)
+  random_label <- "Random peaks"
   accessible_tibble <- enrichment_tibble |>
-    dplyr::filter(strategy == "accessible_peaks", cluster != "random") |>
+    dplyr::filter(strategy == "accessible_peaks") |>
     dplyr::mutate(
+      cluster = dplyr::if_else(cluster == "random", random_label, cluster),
       estimate = .data[[estimate_col]],
       # Stars mark only FDR-significant enrichment.
       significance_label = get_significance_stars(NA, if (is_SLDSC) q else PIP_q),
@@ -692,10 +695,14 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
       z_below_anchor = if (is_SLDSC) z_below_anchor else PIP_z_below_anchor
     )
   sizes <- sort(unique(accessible_tibble$share))
+  # Without h2, PIP heatmaps draw every GWAS and add no note on summary statistics.
+  GWAS_cluster_tibble <- dplyr::select(SLDSC_tibble, GWAS_ID, Category, cluster, dplyr::any_of(if (is_SLDSC) c("h2", "h2_se")),
+    sample_size, dplyr::starts_with("ancestry_"), n_cells)
+  GWAS_cluster_tibble <- dplyr::bind_rows(GWAS_cluster_tibble, dplyr::mutate(
+    dplyr::distinct(GWAS_cluster_tibble, GWAS_ID, .keep_all = TRUE), cluster = random_label, n_cells = NA
+  ))
   heatmap_tibbles <- purrr::map(sizes, \(size) {
-    SLDSC_tibble |>
-      # Without h2, PIP heatmaps draw every GWAS and add no note on summary statistics.
-      dplyr::select(GWAS_ID, Category, cluster, dplyr::any_of(if (is_SLDSC) c("h2", "h2_se")), sample_size, dplyr::starts_with("ancestry_"), n_cells) |>
+    GWAS_cluster_tibble |>
       dplyr::left_join(
         dplyr::select(dplyr::filter(accessible_tibble, share == size), GWAS_ID, cluster, estimate, significance_label, in_top_set, z_below_anchor),
         by = c("GWAS_ID", "cluster"),
@@ -703,11 +710,13 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
       ) |>
       dplyr::mutate(fill = pmin(pmax(estimate, limits[[1]]), limits[[2]]))
   })
-  # One order for all sizes, in which cell types that cannot fill a size count as not enriched.
+  # One order for all sizes, in which cell types that cannot fill a size count as not enriched, with the random reference last.
   cluster_levels <- dplyr::bind_rows(heatmap_tibbles, .id = "size") |>
+    dplyr::filter(cluster != random_label) |>
     dplyr::mutate(GWAS_ID = paste(GWAS_ID, size), fill = dplyr::coalesce(fill, 1)) |>
     get_ordered_GWAS_score_plot_data(compartments_patterns, score_col = "fill") |>
-    purrr::pluck("cluster_levels")
+    purrr::pluck("cluster_levels") |>
+    c(random_label)
   untested <- sort(unique(dplyr::filter(accessible_tibble, is.na(PIP_z))$GWAS_ID))
   purrr::map2(heatmap_tibbles, sizes, \(heatmap_tibble, size) {
     size_label <- scales::percent(size, accuracy = 0.1, drop0trailing = TRUE)
@@ -719,21 +728,30 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
       if (is_SLDSC) "The enrichment curves and the heatmaps of all sizes" else "The fine-mapped heatmaps of all sizes"
     )
     not_measurable_sentence <- if (length(not_measurable)) paste0("Grey columns cannot be measured at this size, since the cell type's peaks with at least 10 reads hold fewer common SNPs: ", toString(sort(not_measurable)), ".")
+    random_subtitle <- "The last column, randomly chosen peaks of the same size, shows what accessibility alone gives: compare cell types with it as well as with 1."
+    random_sentence <- sprintf(
+      "Random peaks: the mean of 10 random rankings of all peaks, cut at %s of common SNPs%s; their median enrichment over GWAS is %.1f, and the column has no stars or outlines.",
+      size_label, if (is_SLDSC) ", with heritability shares averaged within jackknife blocks" else "",
+      stats::median(heatmap_tibble$estimate[heatmap_tibble$cluster == random_label], na.rm = TRUE)
+    )
     text <- if (is_SLDSC) list(
       fill_label = "Heritability enrichment",
       title = paste("Heritability enrichment in each cell type's most accessible peaks, sized to", size_label, "of common SNPs (S-LDSC)"),
       subtitle = paste(
         "Red marks cell types whose most accessible peaks hold more heritability per common variant than a random variant (enrichment 1, white); all sizes share this scale.",
+        random_subtitle,
         "Stars mark FDR-significant enrichment above 1 (**); a black outline marks the most enriched of these cell types and grey outlines the cell types not significantly below it.",
         sep = "\n"
       ),
       caption = c(
         annotation_sentence,
+        random_sentence,
         "Enrichment: the annotation's share of S-LDSC heritability over its share of common SNPs, in a model with the 97 baseline-LD v2.2 annotations fitted to HapMap3 SNP summary statistics from the GWAS Catalog or a configured release, using GRCh38 1000 Genomes European LD; SNPs with chi-square at or above the larger of 80 and 0.001 times the GWAS's largest per-SNP sample size are excluded.",
         limits_sentence,
         "Estimates below 0, which no true enrichment can take, come from noisy annotations.",
         "Stars: ** enrichment above 1 at Benjamini-Hochberg q < 0.05, from a one-sided z-test with its 200-block jackknife standard error, over all GWAS and cell types at this size.",
         "Outlines: in GWAS with a cell type at q < 0.05, black marks the most enriched of these and grey every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types, from paired jackknife differences.",
+        "Since accessible peaks in general can be enriched, the outlines say more than the stars.",
         not_measurable_sentence
       )
     ) else list(
@@ -741,11 +759,13 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
       title = paste("Fine-mapped variant enrichment in each cell type's most accessible peaks, sized to", size_label, "of common SNPs"),
       subtitle = paste(
         "Red marks cell types whose most accessible peaks hold more fine-mapped posterior probability per common variant than a random variant (enrichment 1, white); all sizes share this scale.",
+        random_subtitle,
         "Stars mark FDR-significant enrichment above 1 (**); a black outline marks the most enriched of these cell types and grey outlines the cell types not significantly below it.",
         sep = "\n"
       ),
       caption = c(
         annotation_sentence,
+        random_sentence,
         "Enrichment: the annotation's share of the posterior inclusion probability (PIP) of autosomal credible-set variants, placed by position, over its share of common SNPs.",
         limits_sentence,
         "Stars: ** enrichment above 1 at Benjamini-Hochberg q < 0.05, from a one-sided z-test with the standard error of 1,000 bootstrap samples of loci (credible sets whose centres lie within 500 kb of each other), over all GWAS and cell types at this size.",

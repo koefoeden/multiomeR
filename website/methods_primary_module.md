@@ -79,9 +79,15 @@ ATAC clusters are built from the LSI dimensions as described in [Batch correctio
 
 {{< include _shared_methods/motif_accessibility.md >}}
 
+### Gene activity {#gene-activity}
+
+{{< include _shared_methods/ATAC_gene_activity.md >}}
+
+They are computed only when [`aggregation_ATAC_gene_activity_scores`](parameters.html#aggregation_ATAC_gene_activity_scores) is `true`, and they feed `marker_gene_activity_dot_plot.png` at [checkpoint 7](main_running.md#checkpoint-7).
+
 ### Source and target graph
 
-**Source:** [`extra_targets/ATAC_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/ATAC_targets.R), [`R/processing_ATAC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_ATAC_helpers.R), [`R/processing_GEX_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_GEX_helpers.R), [`R/celltype_labeling_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/celltype_labeling_helpers.R), [`resources/`](https://github.com/koefoeden/multiomeR/tree/main/resources).
+**Source:** [`extra_targets/ATAC_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/ATAC_targets.R), [`extra_targets/ATAC_gene_activity_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/ATAC_gene_activity_targets.R), [`R/processing_ATAC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_ATAC_helpers.R), [`R/processing_GEX_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_GEX_helpers.R), [`R/celltype_labeling_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/celltype_labeling_helpers.R), [`resources/`](https://github.com/koefoeden/multiomeR/tree/main/resources).
 
 This view runs from the combined fragments and the GEX-annotated nuclei through consensus peaks and LSI to ATAC clusters, doublet calls, motif-family accessibility and coverage tracks.
 

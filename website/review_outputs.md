@@ -1,5 +1,10 @@
 # Output reference
 
+```{r setup, include = FALSE}
+pipeline_name <- "processing_and_aggregation"
+source("helpers/_setup.R")
+```
+
 This page collects facts about the saved outputs. For a guided first look, see [the demo results](demo_outputs.md); for what to review at each checkpoint, see the [running guide](main_running.md#steps). Plot subtitles and captions explain how to read each plot, and the [output gallery](gallery.md) shows an example of each.
 
 ## Output folders and metric selection {#output-folders}
@@ -24,7 +29,13 @@ Both keep the raw GEX counts in the `RNA` assay with a log-normalized `data` lay
 | `BPCells_native` | `RNA` | `scale.data` of `RNA`: the variable genes, clipped to ±√*N*, computed lazily |
 | `Seurat_SCT` | `SCT` | the `SCTransform()` assay, which also holds corrected counts and their log1p `data` |
 
-The GEX assay is the default assay and carries the GEX reductions and graphs; the `misc$normalization` entry of each assay records how its layers were computed. The cell metadata also holds the Seurat cell-cycle scores `S.Score`, `G2M.Score`, `Phase` and `CC.Difference`, computed from the log-normalized counts with the 2019 Seurat gene sets whether or not they are regressed.
+The GEX assay is the default assay and carries the GEX reductions and graphs. The WNN graphs are the pipeline's own neighbor lists. The PCA and LSI graphs are instead rebuilt among the exported nuclei with a multithreaded search, so they are not the graphs the clusters came from and can differ slightly between runs. Their names keep `harmony` even when Harmony is off. The `misc$normalization` entry of each assay records how its layers were computed. The cell metadata also holds the Seurat cell-cycle scores `S.Score`, `G2M.Score`, `Phase` and `CC.Difference`, computed from the log-normalized counts with the 2019 Seurat gene sets whether or not they are regressed.
+
+This view shows the targets that the exports are built from, as [Change the pipeline](change_the_pipeline.md#graph-views) describes. A change to any of them, such as revised cell-type labels, leaves the exports outdated.
+
+```{r, echo = FALSE, eval = TRUE, results = "asis"}
+emit_mermaid("website/figures/human_curated/seurat_export_v2.mmd")
+```
 
 ## Cell retention tables {#cell-retention}
 

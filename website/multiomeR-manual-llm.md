@@ -1462,7 +1462,7 @@ donor_1	control
 ## Columns
 
 - `donor_id` (required): one row for each donor ID that the nuclei receive; see [Matching donors to nuclei](#matching-donors-to-nuclei).
-- Every other column is a donor-level variable, such as condition, age or sex. The variables become cell metadata: select them for plots with [`aggregation_categorical_vars`](parameters.html#aggregation_categorical_vars) or [`aggregation_continuous_vars`](parameters.html#aggregation_continuous_vars), and use them in the model formulas of the [differential analyses](downstream_differential_analyses.md).
+- Every other column is a donor-level variable, such as condition, age or sex. The variables become cell metadata: select them for plots with [`aggregation_categorical_vars`](parameters.html#aggregation_categorical_vars) or [`aggregation_continuous_vars`](parameters.html#aggregation_continuous_vars), and use them in the model formulas of the [differential analyses](downstream_differential_analyses.md). A column named `sex` is also the recorded sex that the sample sex check at [checkpoint 1](main_running.md#checkpoint-1) compares with XIST and chromosome Y expression.
 
 Put library-, run- or batch-specific variables in the [GEM well table](reference_GEM_wells.md) instead, with a `GEM_well_` prefix.
 
@@ -1483,7 +1483,7 @@ The pipeline joins the files into one donor table. A column that only some files
 
 ## Several samples per donor {#several-samples}
 
-A donor sampled more than once, for example in two tissues or conditions, can enter one aggregation with each sample as its own replicate. `cfg_GEM_well_samples.tsv` in the configuration directory maps each donor of a GEM well to a sample, with columns `GEM_well_ID`, `donor_id` and `sample_id`; sample IDs may not contain underscores. The nuclei then carry the sample ID as their `donor_id`, and the donor's own ID is kept in the column `genotype_donor_id`. Pseudobulks are formed per sample, but a donor's samples are not independent replicates. A [differential](downstream_differential_analyses.md) feature model with two samples of one donor in a cell type must therefore block on the donor, for example with `random_effect: genotype_donor_id`, and is refused otherwise. Abundance models take no random effect, so a contrast between donors needs one sample per donor: select one with `donor_ids`, or add the donor as a fixed effect for contrasts within donors.
+A donor sampled more than once, for example in two tissues or conditions, can enter one aggregation with each sample as its own unit. `cfg_GEM_well_samples.tsv` in the configuration directory maps each donor of a GEM well to a sample, with columns `GEM_well_ID`, `donor_id` and `sample_id`; sample IDs may not contain underscores. The nuclei then carry the sample ID as their `donor_id`, and the donor's own ID is kept in the column `genotype_donor_id`. Pseudobulks are formed per sample, but a donor's samples are not independent. A [differential](downstream_differential_analyses.md) feature model with two samples of one donor in a cell type must therefore block on the donor, for example with `random_effect: genotype_donor_id`, and is refused otherwise. Abundance models take no random effect, so a contrast between donors needs one sample per donor: select one with `donor_ids`, or add the donor as a fixed effect for contrasts within donors.
 
 Each sample inherits its donor's row of the donor table. Add rows for samples only for variables that differ between a donor's samples, such as a condition; a value given for a sample overrides its donor's.
 
@@ -1624,6 +1624,8 @@ The public demo's entry is shown below; the [committed example](https://github.c
 
 # Output reference
 
+
+
 This page collects facts about the saved outputs. For a guided first look, see [the demo results](demo_outputs.md); for what to review at each checkpoint, see the [running guide](main_running.md#steps). Plot subtitles and captions explain how to read each plot, and the [output gallery](gallery.md) shows an example of each.
 
 ## Output folders and metric selection {#output-folders}
@@ -1648,7 +1650,11 @@ Both keep the raw GEX counts in the `RNA` assay with a log-normalized `data` lay
 | `BPCells_native` | `RNA` | `scale.data` of `RNA`: the variable genes, clipped to ±√*N*, computed lazily |
 | `Seurat_SCT` | `SCT` | the `SCTransform()` assay, which also holds corrected counts and their log1p `data` |
 
-The GEX assay is the default assay and carries the GEX reductions and graphs; the `misc$normalization` entry of each assay records how its layers were computed. The cell metadata also holds the Seurat cell-cycle scores `S.Score`, `G2M.Score`, `Phase` and `CC.Difference`, computed from the log-normalized counts with the 2019 Seurat gene sets whether or not they are regressed.
+The GEX assay is the default assay and carries the GEX reductions and graphs. The WNN graphs are the pipeline's own neighbor lists. The PCA and LSI graphs are instead rebuilt among the exported nuclei with a multithreaded search, so they are not the graphs the clusters came from and can differ slightly between runs. Their names keep `harmony` even when Harmony is off. The `misc$normalization` entry of each assay records how its layers were computed. The cell metadata also holds the Seurat cell-cycle scores `S.Score`, `G2M.Score`, `Phase` and `CC.Difference`, computed from the log-normalized counts with the 2019 Seurat gene sets whether or not they are regressed.
+
+This view shows the targets that the exports are built from, as [Change the pipeline](change_the_pipeline.md#graph-views) describes. A change to any of them, such as revised cell-type labels, leaves the exports outdated.
+
+[Mermaid graph omitted; source: `website/figures/human_curated/seurat_export_v2.mmd`]
 
 ## Cell retention tables {#cell-retention}
 
@@ -1988,9 +1994,30 @@ These values measure accessibility associated with a motif or motif family and a
 <!-- end include: website/_shared_methods/motif_accessibility.md -->
 
 
+### Gene activity {#gene-activity}
+
+
+<!-- begin include: website/_shared_methods/ATAC_gene_activity.md -->
+
+Optional gene activity scores summarize the accessibility around each gene in each nucleus.
+They follow ArchR's gene-score model as BPCells implements it [@granja2021_archr; @parks2025_bpcells].
+The genome is cut into 500 bp tiles, and blacklisted tiles are left out.
+Each gene is extended 5 kb upstream of its start, and it takes the tiles of this extended body and those up to 100 kb on either side, stopping at a neighbouring gene.
+A tile's weight is exp(−*d*/5 kb) + exp(−1), where *d* is its distance from the extended body.
+Shorter genes get up to five times the weight, as in ArchR, so that short and long genes score on a similar scale.
+A nucleus's fragment counts are capped at 4 per tile, and its weighted gene sums are scaled to total 10,000.
+The weights come from the Ensembl genes of the aggregation's reference, and the scores cover the nuclei that pass ATAC filtering.
+They are used for one check: whether the GEX-derived cell types have accessibility at their marker genes.
+Accessibility around a gene does not show that it is transcribed, and its window can hold the regulatory regions of neighbouring genes.
+
+<!-- end include: website/_shared_methods/ATAC_gene_activity.md -->
+
+
+They are computed only when [`aggregation_ATAC_gene_activity_scores`](parameters.html#aggregation_ATAC_gene_activity_scores) is `true`, and they feed `marker_gene_activity_dot_plot.png` at [checkpoint 7](main_running.md#checkpoint-7).
+
 ### Source and target graph
 
-**Source:** [`extra_targets/ATAC_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/ATAC_targets.R), [`R/processing_ATAC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_ATAC_helpers.R), [`R/processing_GEX_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_GEX_helpers.R), [`R/celltype_labeling_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/celltype_labeling_helpers.R), [`resources/`](https://github.com/koefoeden/multiomeR/tree/main/resources).
+**Source:** [`extra_targets/ATAC_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/ATAC_targets.R), [`extra_targets/ATAC_gene_activity_targets.R`](https://github.com/koefoeden/multiomeR/blob/main/extra_targets/ATAC_gene_activity_targets.R), [`R/processing_ATAC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_ATAC_helpers.R), [`R/processing_GEX_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/processing_GEX_helpers.R), [`R/celltype_labeling_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/celltype_labeling_helpers.R), [`resources/`](https://github.com/koefoeden/multiomeR/tree/main/resources).
 
 This view runs from the combined fragments and the GEX-annotated nuclei through consensus peaks and LSI to ATAC clusters, doublet calls, motif-family accessibility and coverage tracks.
 
@@ -2010,7 +2037,7 @@ The native implementation returns neighbor indices, distances and modality weigh
 The GEX and ATAC embeddings, after optional Harmony correction, are aligned by barcode and L2-normalized.
 For each modality separately, 200 candidate neighbors are then found with the same reproducible hierarchical navigable small world (HNSW) search as for clustering, here with Euclidean distance on the normalized embeddings [@malkov2020_hnsw].
 multiomeR sets each cell's kernel width in each modality from the configured neighbor count, following Seurat's small-SNN bandwidth strategy.
-Per-cell modality weights are computed from these kernels by comparing within-modality with cross-modality predictions.
+Per-cell modality weights compare within-modality with cross-modality predictions, from neighbors and kernel widths recomputed within the subsets described below.
 The candidates of both modalities are then pooled, and those with the highest weighted kernel scores become the final neighbors.
 In our tests, Seurat's weights approached 0 or 1 as the number of nuclei grew, because the kernel widths shrink with density.
 The weights are therefore estimated within subsets of about 10,000 nuclei, whereas the neighbors are selected among all nuclei.
@@ -2018,7 +2045,6 @@ Each nucleus is assigned to its subset by a consistent hash of its barcode [@lam
 BPCells builds an SNN graph from the joint neighbors for Leiden clustering, and UMAP uses the joint neighbor lists directly.
 The joint lists first keep twice the configured number of neighbors.
 After ATAC doublets and nuclei in small WNN clusters are removed, each remaining nucleus keeps its highest-scoring remaining neighbors, so no second weight estimate is needed.
-Only nuclei left with too few neighbors are searched again.
 Nuclei left with too few are reselected among the remaining nuclei by exact search, with their original weights and kernel widths.
 The implementation does not use `Seurat::FindMultiModalNeighbors()`.
 Because HNSW replaces Seurat's Annoy search, exact equality is not expected.
@@ -2537,7 +2563,8 @@ The Pearson correlation of the residuals is reported as a descriptive summary.
 The hierarchical analysis fits donor fixed intercepts, depth covariates, the accessibility components and a donor-varying slope for the within-donor-centered peak value.
 It uses profiled restricted maximum likelihood, with Kenward–Roger inference for the average slope [@kenward1997_kenward_roger].
 When the slope varies between donors, donors rather than pseudobulks are the units of inference.
-Kenward–Roger adjusts its standard error and degrees of freedom for the small number of donors; when the estimated slope variance is small, its degrees of freedom move towards the number of pseudobulks.
+Kenward–Roger adjusts its standard error and degrees of freedom for the small number of donors.
+When the estimated slope variance is small, its degrees of freedom move towards the number of pseudobulks.
 A peak is tested only when its accessibility varies within at least eight donors.
 With fewer, the random-slope test has too few degrees of freedom to be informative, so its pairs remain untested.
 Fits that fail numerical checks keep their estimates but get no P-value.
@@ -2580,6 +2607,18 @@ The published threshold of 0.02 was calibrated with DNase-seq, H3K27ac and Hi-C 
 
 
 The model fits are compared with `lme4` and `pbkrtest` in [Algorithm validation](algorithm_validation.md). The ABC contact exponent and the 5 kb and 5 Mb distances are the defaults of the [ABC pipeline](https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction). Its current version also sets self-promoter scores to 1 after the division. This module keeps the original ratio, so a gene's scores sum to at most 1.
+
+## How links are checked {#link-checks}
+
+No check in the module validates an individual link. Each addresses a different way the links could mislead:
+
+- **Model fits.** The hierarchical fits agree with `lme4` and `pbkrtest` to within 1e-6, as [Algorithm validation](algorithm_validation.md) lists.
+- **Shared chromatin states.** The accessibility components and each gene's background of distant peaks remove correlation that a gene shares with many peaks. In `distance_correlation_plot.png`, the median calibrated −log10 P of pairs far from the TSS should stay near the background's 0.30. A curve that stays higher far from the gene points to shared variation that the calibration misses.
+- **Power.** `significant_pairs_vs_technical_features_plot.png` compares each cell type's count of FDR-significant pairs with its pseudobulks, depth, detection and residual degrees of freedom. Counts that follow these features show power, not more regulation.
+- **Intragenic associations.** A peak in the target gene's own body can vary with the gene's transcription, so its association need not mark an enhancer. These links have the `link_type` `intragenic_association` and are counted apart in `support_counts_plot.png`. Only the others are candidate enhancer links.
+- **Independent evidence.** ABC scores rank the same pairs from accessibility and distance alone, without donor variation. With the genetic-enrichment module, S-LDSC and fine-mapped variants test whether the top peaks of the ABC and correlation rankings hold more GWAS signal than their territory and than rankings by activity, accessibility share or distance ([S-LDSC methods](methods_genetic_enrichment.md#heritability-enrichment)). A ranking that beats these baselines supports the ranking as a whole, not any one link.
+
+The module does not compare links with CRISPR perturbations or fine-mapped eQTLs, so they remain candidates for such tests.
 
 ## Source and target graph
 

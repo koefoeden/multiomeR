@@ -354,8 +354,8 @@ plot_markers_volcano_simple <- function(markers_tibble) {
     ggplot2::scale_color_manual(values = c(`FALSE` = "grey65", `TRUE` = "#C23B23"),
       labels = c(`FALSE` = "No", `TRUE` = "Yes"), name = "Adjusted p < 0.05") +
     ggplot2::labs(title = "Marker differences between groups",
-      subtitle = stringr::str_wrap("Look for large effects with statistical support; small p-values alone do not establish marker specificity.", width = 100),
-      caption = stringr::str_wrap("Each point is a feature tested against the comparison background. Height shows nominal p; colour uses the supplied adjusted p-value. Up to 20 labels per direction and group are selected by nominal p then absolute effect; labels may be omitted to avoid overlap. Facets use separate scales.", width = 110),
+      subtitle = stringr::str_wrap("Look for coherent sets of markers. The groups come from the same data, so p-values and effects describe them and are not a test of group differences.", width = 100),
+      caption = stringr::str_wrap("Each point is a feature tested against the comparison background. Height shows nominal p; colour uses the supplied adjusted p-value. Up to 20 labels per direction and group are selected by nominal p then absolute effect; labels may be omitted to avoid overlap. Facets use separate scales. The groups are clusters, or labels scored on clusters, of the same nuclei, so even structureless data yield significant features.", width = 110),
       x = "Log2 fold change", y = "-log10(nominal p-value)") +
     ggrepel::geom_text_repel(
       data = top_labels,
@@ -386,7 +386,7 @@ plot_cluster_marker_volcano <- function(marker_result) {
   }
   plot + ggplot2::labs(
     title = paste("GEX cluster markers within", marker_result$cell_type),
-    subtitle = paste(comparison, "Check effect size and marker coherence as well as significance.", sep = "\n"),
+    subtitle = paste(comparison, "The clusters come from these counts, so p-values are not a test of cluster differences; check marker coherence.", sep = "\n"),
     caption = stringr::str_wrap(paste(plot$labels$caption, "Adjustment: BH across genes separately within each contrast. Cells are not independent donor replicates."), width = 110),
     x = "Log2 fold change (cluster / background)",
     y = "-log10(p-value)"

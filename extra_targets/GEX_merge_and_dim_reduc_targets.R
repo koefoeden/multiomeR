@@ -198,14 +198,14 @@ rlang::list2(
         )) +
         ggplot2::geom_point(size = 2) +
         ggplot2::labs(
-          title = "GEX variable genes after SCTransform",
+          title = "GEX variable genes by Pearson residual variance",
           subtitle = paste(
             "Selected variable genes are ordered by residual variance; colour shows weighted loading strength across computed PCs.",
             "Check whether variable genes reflect cell biology or are dominated by mitochondrial, ribosomal or stress genes.",
             sep = "\n"
           ),
-          caption = stringr::str_wrap("Up to 50 entries from the selected variable-gene table. Colour = sqrt(sum((loading x singular value)^2)) across all computed PCs. Selection and residual variance come from SCTransform before Harmony.", width = 110),
-          x = "SCT residual variance", y = NULL, color = "Weighted PCA loading strength"
+          caption = stringr::str_wrap("Up to 50 entries from the selected variable-gene table. Colour = sqrt(sum((loading x singular value)^2)) across all computed PCs. Selection and residual variance come from analytic Pearson residuals with one overdispersion parameter for all genes, before any Harmony correction of the PCs.", width = 110),
+          x = "Pearson residual variance", y = NULL, color = "Weighted PCA loading strength"
         )
       save_plots_structured(plot)
     },

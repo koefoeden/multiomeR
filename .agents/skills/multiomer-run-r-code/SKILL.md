@@ -23,7 +23,8 @@ exit status, separate their output, and avoid concurrent writes to the same
 files or targets store. Forked workers such as `parallel::mclapply()` that do
 matrix algebra set one BLAS thread themselves, with
 `RhpcBLASctl::blas_set_num_threads(1L)` in the forked function as the pseudobulk
-fits do. Never prefix commands with `OPENBLAS_NUM_THREADS=1`, which only slows R
+fits do; forks running OpenMP code, such as scDblFinder's xgboost, also call
+`RhpcBLASctl::omp_set_num_threads(1L)`, or a per-well loop can stall for hours. Never prefix commands with `OPENBLAS_NUM_THREADS=1`, which only slows R
 that does not fork.
 
 Ordinary `Rscript` startup runs the repository's `.Rprofile`, which loads the

@@ -3,7 +3,8 @@ The Pearson correlation of the residuals is reported as a descriptive summary.
 The hierarchical analysis fits donor fixed intercepts, depth covariates, the accessibility components and a donor-varying slope for the within-donor-centered peak value.
 It uses profiled restricted maximum likelihood, with Kenward–Roger inference for the average slope [@kenward1997_kenward_roger].
 When the slope varies between donors, donors rather than pseudobulks are the units of inference.
-Kenward–Roger adjusts its standard error and degrees of freedom for the small number of donors; when the estimated slope variance is small, its degrees of freedom move towards the number of pseudobulks.
+Kenward–Roger adjusts its standard error and degrees of freedom for the small number of donors.
+When the estimated slope variance is small, its degrees of freedom move towards the number of pseudobulks.
 A peak is tested only when its accessibility varies within at least eight donors.
 With fewer, the random-slope test has too few degrees of freedom to be informative, so its pairs remain untested.
 Fits that fail numerical checks keep their estimates but get no P-value.

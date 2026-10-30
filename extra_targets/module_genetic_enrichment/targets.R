@@ -131,5 +131,5 @@ rlang::list2(
     source("extra_targets/module_genetic_enrichment/SCAVENGE_graph_targets.R")$value,
     source("extra_targets/module_genetic_enrichment/SCAVENGE_group_targets.R")$value
   ),
-  source("extra_targets/module_genetic_enrichment/locus_attribution_targets.R")$value
+  if (nrow(genetic_enrichment_tibble) > 0L) source("extra_targets/module_genetic_enrichment/locus_attribution_targets.R")$value
 )

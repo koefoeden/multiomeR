@@ -1,264 +1,284 @@
 name	parent	seconds	completed_utc	bytes	error	node	in_store
-cellranger_summary_file.ENCSR636WIB		0	2026-09-02T11:46:27+00:00	1735		node_2	FALSE
-cellranger_summary_file.ENCSR316WAS		0	2026-09-02T12:05:05+00:00	1737		node_2	FALSE
-cellranger_summary_file.ENCSR788DZO		0.001	2026-09-02T13:22:33+00:00	1735		node_2	FALSE
-cellbender_h5_file.ENCSR316WAS		0.001	2026-09-02T13:38:40+00:00	81365406		node_2	FALSE
-cellranger_summary_file.ENCSR956ZER		0	2026-09-02T14:04:15+00:00	1736		node_2	FALSE
-cellranger_summary_file.ENCSR264JIX		0	2026-09-02T14:53:29+00:00	1736		node_2	FALSE
-cellranger_summary_file.ENCSR033MDU		0	2026-09-02T16:14:13+00:00	1736		node_2	FALSE
-cellranger_summary_file.ENCSR320RLS		0	2026-09-02T16:16:56+00:00	1737		node_2	FALSE
-cellranger_summary_file.ENCSR925IHI		0	2026-09-02T16:32:40+00:00	1738		node_2	FALSE
-cellranger_summary_file.ENCSR245BNT		0	2026-09-02T16:37:33+00:00	1737		node_2	FALSE
-cellranger_summary_file.ENCSR511RDV		0	2026-09-02T16:39:48+00:00	1737		node_2	FALSE
-cellranger_summary_file.ENCSR613LBN		0	2026-09-02T17:00:55+00:00	1737		node_2	FALSE
-cellranger_summary_file.ENCSR534YJW		0	2026-09-02T17:06:50+00:00	1737		node_2	FALSE
-cellranger_summary_file.ENCSR568QKW		0	2026-09-02T17:12:59+00:00	1737		node_2	FALSE
-cellranger_summary_file.ENCSR201BHG		0	2026-09-02T17:18:54+00:00	1736		node_2	FALSE
-cellranger_summary_file.ENCSR351CSQ		0	2026-09-02T17:24:20+00:00	1737		node_2	FALSE
-cellranger_summary_file.ENCSR508WRP		0	2026-09-02T17:30:00+00:00	1736		node_2	FALSE
-cellranger_summary_file.ENCSR793DNM		0	2026-09-02T17:38:13+00:00	1737		node_2	FALSE
-cellranger_summary_file.ENCSR923FKN		0	2026-09-02T18:05:20+00:00	1737		node_2	FALSE
-cellranger_summary_file.ENCSR987VTJ		0	2026-09-02T18:19:58+00:00	1737		node_2	FALSE
-cellranger_summary_file.ENCSR079UEO		0.001	2026-09-02T18:33:39+00:00	1733		node_2	FALSE
-cellranger_summary_file.ENCSR158DQA		0	2026-09-02T18:36:02+00:00	1736		node_2	FALSE
-cellranger_summary_file.ENCSR618WVK		0	2026-09-02T18:45:32+00:00	1737		node_2	FALSE
-cellranger_summary_file.ENCSR233SQG		0	2026-09-02T18:52:43+00:00	1738		node_2	FALSE
-cellranger_summary_file.ENCSR128ZLB		0	2026-09-02T20:41:03+00:00	1735		node_2	FALSE
-cellbender_h5_file.ENCSR636WIB		0.001	2026-09-02T21:55:32+00:00	37499109		node_2	FALSE
-cellbender_h5_file.ENCSR925IHI		0	2026-09-02T21:59:46+00:00	173586522		node_2	FALSE
-cellbender_h5_file.ENCSR079UEO		0	2026-09-02T22:05:15+00:00	26978684		node_2	FALSE
-cellbender_h5_file.ENCSR351CSQ		0	2026-09-02T22:19:05+00:00	96020073		node_2	FALSE
-cellbender_h5_file.ENCSR201BHG		0	2026-09-02T22:20:11+00:00	86607366		node_2	FALSE
-cellbender_h5_file.ENCSR245BNT		0	2026-09-02T22:21:17+00:00	131759442		node_2	FALSE
-cellbender_h5_file.ENCSR320RLS		0	2026-09-02T22:22:55+00:00	116060401		node_2	FALSE
-cellbender_h5_file.ENCSR511RDV		0.001	2026-09-02T22:31:02+00:00	112739567		node_2	FALSE
-cellbender_h5_file.ENCSR508WRP		0.001	2026-09-02T22:31:16+00:00	105560669		node_2	FALSE
-cellbender_h5_file.ENCSR568QKW		0.001	2026-09-02T22:32:10+00:00	86462073		node_2	FALSE
-cellbender_h5_file.ENCSR956ZER		0.001	2026-09-02T22:40:58+00:00	54266285		node_2	FALSE
-cellbender_h5_file.ENCSR534YJW		0	2026-09-02T22:45:09+00:00	115801534		node_2	FALSE
-cellbender_h5_file.ENCSR923FKN		0.001	2026-09-02T22:47:38+00:00	104701011		node_2	FALSE
-cellbender_h5_file.ENCSR793DNM		0	2026-09-02T22:51:02+00:00	166389033		node_2	FALSE
-cellbender_h5_file.ENCSR613LBN		0	2026-09-02T22:55:10+00:00	133999964		node_2	FALSE
-cellbender_h5_file.ENCSR987VTJ		0	2026-09-02T22:55:35+00:00	139091204		node_2	FALSE
-cellbender_h5_file.ENCSR788DZO		0.001	2026-09-02T23:00:53+00:00	57199958		node_2	FALSE
-cellbender_h5_file.ENCSR618WVK		0	2026-09-02T23:01:27+00:00	149085929		node_2	FALSE
-cellbender_h5_file.ENCSR264JIX		0	2026-09-02T23:02:06+00:00	68839441		node_2	FALSE
-cellbender_h5_file.ENCSR128ZLB		0.001	2026-09-02T23:03:37+00:00	67175956		node_2	FALSE
-cellbender_h5_file.ENCSR033MDU		0.001	2026-09-02T23:04:08+00:00	67399080		node_2	FALSE
-cellbender_h5_file.ENCSR233SQG		0.001	2026-09-02T23:15:36+00:00	139820038		node_2	FALSE
-cellbender_h5_file.ENCSR158DQA		0	2026-09-02T23:23:50+00:00	91001279		node_2	FALSE
-cellranger_summary_file.healthy_PBMC_human_2024A		0	2026-09-07T13:56:07+00:00	1826		node_2	FALSE
-cellranger_summary_file.pbmc_unsorted_3k		0	2026-09-07T14:53:56+00:00	1824		node_2	FALSE
-cellranger_summary_file.healthy_brain_human		0	2026-09-07T18:39:38+00:00	1829		node_2	FALSE
-cellbender_h5_file.healthy_PBMC_human_2024A		0.001	2026-09-07T19:38:39+00:00	41595680		node_2	FALSE
-cellbender_h5_file.pbmc_unsorted_3k		0	2026-09-07T19:44:19+00:00	35499418		node_2	FALSE
-cellbender_h5_file.healthy_brain_human		0.001	2026-09-07T19:50:30+00:00	73728096		node_2	FALSE
-cellranger_summary_file.pbmc_granulocyte_sorted_10k		0.001	2026-09-08T00:19:43+00:00	1838		node_2	FALSE
-cellbender_h5_file.pbmc_granulocyte_sorted_10k		0	2026-09-08T00:33:53+00:00	202551007		node_2	FALSE
-cellranger_summary_file.pbmc_unsorted_10k		0	2026-09-08T02:23:09+00:00	1827		node_2	FALSE
-cellranger_summary_file.pbmc_10k_chromium_x		0	2026-09-08T02:35:16+00:00	1830		node_2	FALSE
-cellbender_h5_file.pbmc_unsorted_10k		0	2026-09-08T02:37:46+00:00	166604784		node_2	FALSE
-cellbender_h5_file.pbmc_10k_chromium_x		0	2026-09-08T02:49:20+00:00	178151172		node_2	FALSE
-cellranger_summary_file.pbmc_10k_chromium_controller		0	2026-09-08T02:54:04+00:00	1839		node_2	FALSE
-cellbender_h5_file.pbmc_10k_chromium_controller		0	2026-09-08T03:07:05+00:00	178355667		node_2	FALSE
-QC_checkpoint_manifest_tsv		0	2026-10-19T09:37:46+00:00	3889		node_2	FALSE
-QC_metric_manifest_tsv		0	2026-10-19T09:37:46+00:00	11883		node_2	FALSE
-JASPAR2026_vertebrate_familial_root_motifs_tf		0	2026-10-19T09:37:46+00:00	115774		node_2	FALSE
-JASPAR2026_vertebrate_motif_families_tsv		0	2026-10-19T09:37:46+00:00	57607		node_2	FALSE
-JASPAR_motif_family_annotations_tsv		0.001	2026-10-19T09:37:46+00:00	35526		node_2	FALSE
-cellranger_reference_json_file.ENCSR079UEO		0.145	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR128ZLB		0.155	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.pbmc_unsorted_10k		0.165	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR245BNT		0.025	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR925IHI		0.038	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR264JIX		0.006	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR987VTJ		0.022	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.pbmc_10k_chromium_controller		0.003	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR956ZER		0.004	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR788DZO		0.035	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.pbmc_granulocyte_sorted_10k		0.031	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.healthy_brain_human		0.023	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR793DNM		0.003	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR233SQG		0.023	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR351CSQ		0.136	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR511RDV		0.106	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR923FKN		0.1	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR158DQA		0.099	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR534YJW		0.031	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR508WRP		0.061	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR316WAS		0.009	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR320RLS		0.023	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.pbmc_10k_chromium_x		0.097	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR613LBN		0.018	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR568QKW		0.005	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.pbmc_unsorted_3k		0.024	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR201BHG		0.039	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR636WIB		0.043	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.healthy_PBMC_human_2024A		0.102	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR618WVK		0.024	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_file.ENCSR033MDU		0.019	2026-10-19T09:37:46+00:00	1285		node_2	FALSE
-cellranger_reference_json_files		0	2026-10-19T09:37:46+00:00	3935		node_2	FALSE
-amulet_BPCells_native_source_file		0	2026-10-19T09:37:46+00:00	8285		node_2	FALSE
-UCell_native_source_file		0	2026-10-19T09:37:46+00:00	6698		node_2	FALSE
-peak_gene_REML_native_source_file.peak_gene_correlation.revision_31x		0	2026-10-19T09:37:46+00:00	12843		node_2	FALSE
-WNN_native_source_file		0	2026-10-19T09:37:46+00:00	9963		node_2	FALSE
-GEM_well_config_tsv		0.001	2026-10-19T12:40:50+00:00	23101		node_2	FALSE
-donor_id_metadata_tsv.revision_31x		0	2026-10-19T12:40:50+00:00	358		node_2	FALSE
-donor_id_metadata_tsv.extended.differential_analyses.revision_31x		0.001	2026-10-19T12:40:50+00:00	1166		node_2	FALSE
-SLDSC_sumstats_sources		0.002	2026-10-19T17:19:22+00:00	357		node_2	TRUE
-SLDSC_sumstats_files_3d7addcb42ed66ae	SLDSC_sumstats_files	0	2026-10-19T17:19:23+00:00	0		node_2	TRUE
-SLDSC_sumstats_rows_83ce3bfd354d4029	SLDSC_sumstats_rows	0.164	2026-10-19T17:19:25+00:00	155		node_2	TRUE
-SLDSC_sumstats_records_27a059392559b83b	SLDSC_sumstats_records	0.024	2026-10-19T17:19:26+00:00	173		node_2	TRUE
-GWAS_analysis_inputs_config_tibble.genetic_enrichment.revision_31x		0.014	2026-10-19T17:19:27+00:00	901		node_2	TRUE
-GWAS_source_files.genetic_enrichment.revision_31x_2bcceb9d33ba9b3c	GWAS_source_files.genetic_enrichment.revision_31x	0	2026-10-19T17:19:27+00:00	0		node_2	TRUE
-GWAS_input_records.genetic_enrichment.revision_31x_db2774a965f8522c	GWAS_input_records.genetic_enrichment.revision_31x	6.761	2026-10-19T17:19:39+00:00	12909		node_2	TRUE
-GWAS_inputs_tibble.genetic_enrichment.revision_31x		0.018	2026-10-19T17:19:44+00:00	2163		node_2	TRUE
-SLDSC_matched_enrichment_records.cell_type_pseudobulk.genes.genetic_enrichment.revision_31x_e812d0ca43daaf58	SLDSC_matched_enrichment_records.cell_type_pseudobulk.genes.genetic_enrichment.revision_31x	0.167	2026-10-19T17:19:44+00:00	4193		node_2	TRUE
-SLDSC_cell_type_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_e812d0ca43daaf58	SLDSC_cell_type_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	0.058	2026-10-19T17:19:45+00:00	773		node_2	TRUE
-SLDSC_cell_type_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x		0.116	2026-10-19T17:19:45+00:00	147637		node_2	TRUE
-GWAS_metadata_tracks_plot.genetic_enrichment.revision_31x		0.533	2026-10-19T17:19:45+00:00	570833		node_2	TRUE
-GWAS_peak_variant_weight_records.genetic_enrichment.revision_31x_eb393f48c820e8e3	GWAS_peak_variant_weight_records.genetic_enrichment.revision_31x	2.279	2026-10-19T17:19:47+00:00	3309		node_2	TRUE
-SLDSC_block_influence_plot.cell_type_pseudobulk.genetic_enrichment.revision_31x		1.442	2026-10-19T17:19:47+00:00	283820		node_2	TRUE
-GWAS_absolute_effect_weighting_status_tibble.genetic_enrichment.revision_31x		2.509	2026-10-19T17:19:47+00:00	1344		node_2	TRUE
-GWAS_peak_variant_weight_tibble.genetic_enrichment.revision_31x		0.008	2026-10-19T17:19:47+00:00	2277020		node_2	TRUE
-GWAS_peak_weight_records.genetic_enrichment.revision_31x_15dee707c3a759cd	GWAS_peak_weight_records.genetic_enrichment.revision_31x	0.726	2026-10-19T17:19:48+00:00	3934484		node_2	TRUE
-GWAS_absolute_effect_inputs_tibble.genetic_enrichment.revision_31x		0.017	2026-10-19T17:19:48+00:00	1442		node_2	TRUE
-SLDSC_modality_comparison_plot.cell_type_pseudobulk.genetic_enrichment.revision_31x		3.297	2026-10-19T17:19:48+00:00	765476		node_2	TRUE
-SLDSC_heatmap.cell_type_pseudobulk.genetic_enrichment.revision_31x		3.488	2026-10-19T17:19:50+00:00	989242		node_2	TRUE
-SLDSC_matched_enrichment_records.cell_type_pseudobulk.peaks.genetic_enrichment.revision_31x_e812d0ca43daaf58	SLDSC_matched_enrichment_records.cell_type_pseudobulk.peaks.genetic_enrichment.revision_31x	1.839	2026-10-19T17:19:52+00:00	7857		node_2	TRUE
-GWAS_credible_set_similarity_matrix.genetic_enrichment.revision_31x		8.179	2026-10-19T17:19:52+00:00	4058		node_2	TRUE
-GWAS_credible_set_similarity_heatmap.genetic_enrichment.revision_31x		1.492	2026-10-19T17:19:54+00:00	808016		node_2	TRUE
-GWAS_absolute_effect_peak_variant_weight_records.genetic_enrichment.revision_31x		5.67	2026-10-19T17:19:54+00:00	1680846		node_2	TRUE
-GWAS_absolute_effect_peak_variant_weight_tibble.genetic_enrichment.revision_31x		0.004	2026-10-19T17:19:54+00:00	1877086		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_0e7770b37c9e89c6	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	7.755	2026-10-19T17:19:57+00:00	2933		node_2	TRUE
-GWAS_peak_weight_matrix.genetic_enrichment.revision_31x		0.449	2026-10-19T17:19:58+00:00	4252181		node_2	TRUE
-GWAS_peak_weights_barplot.genetic_enrichment.revision_31x		1.739	2026-10-19T17:19:59+00:00	349322		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_b2e0543f648a2789	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	3.895	2026-10-19T17:20:01+00:00	1775		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_511528b86ef60478	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	14.189	2026-10-19T17:20:04+00:00	2938		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_eb393f48c820e8e3	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	10.942	2026-10-19T17:20:04+00:00	2900		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_0285d39fd30ab250	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	12.388	2026-10-19T17:20:06+00:00	2920		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_5318c0ebeada9cae	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	12.924	2026-10-19T17:20:06+00:00	1781		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_4a540aef7474afe9	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	18.945	2026-10-19T17:20:08+00:00	1777		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_938d1b999095db1c	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	4.802	2026-10-19T17:20:09+00:00	2935		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_b66ceceba375c430	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	19.98	2026-10-19T17:20:10+00:00	1769		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_56f01808dfc09527	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	17.761	2026-10-19T17:20:11+00:00	2934		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_0eaa845ce58a9bf6	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	16.548	2026-10-19T17:20:11+00:00	1765		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_072a9420149566f9	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	17.546	2026-10-19T17:20:13+00:00	1771		node_2	TRUE
-chromVAR_z_score_chunk_records.single_nucleus.genetic_enrichment.revision_31x_e92fbb5fc3f279f9	chromVAR_z_score_chunk_records.single_nucleus.genetic_enrichment.revision_31x	11.746	2026-10-19T17:20:13+00:00	4689493		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_ab6955fca4129963	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	6.912	2026-10-19T17:20:14+00:00	1778		node_2	TRUE
-GWAS_locus_to_gene_tibble.genetic_enrichment.revision_31x		1.004	2026-10-19T17:20:14+00:00	497982		node_2	TRUE
-SLDSC_matched_enrichment_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x		0.018	2026-10-19T17:20:14+00:00	608920		node_2	TRUE
-GWAS_absolute_effect_metadata_tracks_plot.genetic_enrichment.revision_31x		0.386	2026-10-19T17:20:15+00:00	562525		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_bde752a45d3376ff	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	20.912	2026-10-19T17:20:15+00:00	1764		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_d4b6415686946cea	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	6.549	2026-10-19T17:20:15+00:00	2947		node_2	TRUE
-SLDSC_matched_enrichment_agreement_plot.cell_type_pseudobulk.genetic_enrichment.revision_31x		1.983	2026-10-19T17:20:16+00:00	567399		node_2	TRUE
-GWAS_absolute_effect_peak_weight_records.genetic_enrichment.revision_31x		1.372	2026-10-19T17:20:18+00:00	63222580		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_82a42e3259b3a710	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	4.912	2026-10-19T17:20:18+00:00	2928		node_2	TRUE
-GWAS_absolute_effect_peak_weight_matrix.genetic_enrichment.revision_31x		0.017	2026-10-19T17:20:20+00:00	4157931		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_97358fd0168a18a1	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	12.186	2026-10-19T17:20:22+00:00	1779		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_6f0df0d15a4d4c88	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	22.349	2026-10-19T17:20:24+00:00	2927		node_2	TRUE
-chromVAR_z_score_chunk_records.single_nucleus.genetic_enrichment.revision_31x_e7a85eaaf5c19003	chromVAR_z_score_chunk_records.single_nucleus.genetic_enrichment.revision_31x	8.224	2026-10-19T17:20:27+00:00	4865189		node_2	TRUE
-chromVAR_z_score_chunk_records.single_nucleus.genetic_enrichment.revision_31x_e9b206769b84469e	chromVAR_z_score_chunk_records.single_nucleus.genetic_enrichment.revision_31x	8.697	2026-10-19T17:20:29+00:00	6443186		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_1615b10aef0e8b83	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	25.409	2026-10-19T17:20:32+00:00	2842		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_e4d003416ccf6a72	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	27.455	2026-10-19T17:20:32+00:00	2836		node_2	TRUE
-chromVAR_z_score_chunk_records.single_nucleus.genetic_enrichment.revision_31x_485d7b06f6764817	chromVAR_z_score_chunk_records.single_nucleus.genetic_enrichment.revision_31x	12.911	2026-10-19T17:20:33+00:00	10925072		node_2	TRUE
-chromVAR_peak_contribution_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x		2.578	2026-10-19T17:20:33+00:00	23041087		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_826874873e4ded49	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	40.969	2026-10-19T17:20:34+00:00	2918		node_2	TRUE
-chromVAR_variant_contribution_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x		1.096	2026-10-19T17:20:36+00:00	26675703		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_e829edc1c8f2d2e7	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	25.807	2026-10-19T17:20:38+00:00	1766		node_2	TRUE
-chromVAR_absolute_effect_peak_contribution_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x		2.464	2026-10-19T17:20:38+00:00	14762735		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_c022991f3347e7b5	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	38.978	2026-10-19T17:20:39+00:00	2914		node_2	TRUE
-chromVAR_z_score_chunk_records.single_nucleus.genetic_enrichment.revision_31x_f17043d473fa5133	chromVAR_z_score_chunk_records.single_nucleus.genetic_enrichment.revision_31x	11.159	2026-10-19T17:20:39+00:00	9404608		node_2	TRUE
-chromVAR_absolute_effect_variant_contribution_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x		0.333	2026-10-19T17:20:40+00:00	17375544		node_2	TRUE
-chromVAR_z_score_chunk_records.single_nucleus.genetic_enrichment.revision_31x_569a64be078adfbe	chromVAR_z_score_chunk_records.single_nucleus.genetic_enrichment.revision_31x	14.906	2026-10-19T17:20:40+00:00	12896496		node_2	TRUE
-chromVAR_locus_contribution_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x		4.429	2026-10-19T17:20:41+00:00	6678477		node_2	TRUE
-chromVAR_z_score_chunk_records.single_nucleus.genetic_enrichment.revision_31x_1242bc2978cf8c47	chromVAR_z_score_chunk_records.single_nucleus.genetic_enrichment.revision_31x	13.961	2026-10-19T17:20:42+00:00	11876566		node_2	TRUE
-chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk.genetic_enrichment.revision_31x		0.007	2026-10-19T17:20:42+00:00	6625962		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_dfdac8bc45d55dc5	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	32.424	2026-10-19T17:20:43+00:00	2919		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_24f465b9e133d385	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	30.074	2026-10-19T17:20:43+00:00	2913		node_2	TRUE
-chromVAR_z_score_chunk_records.single_nucleus.genetic_enrichment.revision_31x_056a5b9ff8642193	chromVAR_z_score_chunk_records.single_nucleus.genetic_enrichment.revision_31x	19.167	2026-10-19T17:20:44+00:00	17522797		node_2	TRUE
-chromVAR_absolute_effect_locus_contribution_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x		2.847	2026-10-19T17:20:46+00:00	4545233		node_2	TRUE
-chromVAR_z_score_chunk_records_by_trait.single_nucleus.genetic_enrichment.revision_31x		0.005	2026-10-19T17:20:47+00:00	78586958		node_2	TRUE
-chromVAR_locus_contribution_per_GWAS_faceted_bars_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_03babe96b228875b	chromVAR_locus_contribution_per_GWAS_faceted_bars_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	5.651	2026-10-19T17:20:49+00:00	1175507		node_2	TRUE
-chromVAR_z_score_records.single_nucleus.genetic_enrichment.revision_31x_d591c5aa09e50052	chromVAR_z_score_records.single_nucleus.genetic_enrichment.revision_31x	0.009	2026-10-19T17:20:51+00:00	2820491		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_99babb3368ddaba8	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	62.261	2026-10-19T17:20:53+00:00	2919		node_2	TRUE
-SLDSC_matched_enrichment_summary_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x		31.214	2026-10-19T17:21:00+00:00	19157		node_2	TRUE
-TRS_tibbles.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.revision_31x_8d4697cf1351c5e8	TRS_tibbles.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.revision_31x	8.446	2026-10-19T17:21:01+00:00	2793582		node_2	TRUE
-SLDSC_matched_size_comparison_plot.cell_type_pseudobulk.genetic_enrichment.revision_31x		1.363	2026-10-19T17:21:02+00:00	423479		node_2	TRUE
-chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x_ecafd0629390ecd6	chromVAR_locus_shift_null_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x	68.792	2026-10-19T17:21:03+00:00	1781		node_2	TRUE
-SLDSC_matched_enrichment_curves_plot.cell_type_pseudobulk.genetic_enrichment.revision_31x		2.824	2026-10-19T17:21:03+00:00	536068		node_2	TRUE
-chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x		0.055	2026-10-19T17:21:04+00:00	28267		node_2	TRUE
-chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x		0.051	2026-10-19T17:21:04+00:00	46033		node_2	TRUE
-TRS_tibble.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.revision_31x		0.118	2026-10-19T17:21:04+00:00	75402295		node_2	TRUE
-TRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.revision_31x_23d3880b166c9134	TRS_UMAPs.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.revision_31x	3.756	2026-10-19T17:21:05+00:00	665798		node_2	TRUE
-chromVAR_absolute_effect_top_set_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x		1.625	2026-10-19T17:21:05+00:00	3492		node_2	TRUE
-chromVAR_top_set_tibble.cell_type_pseudobulk.genetic_enrichment.revision_31x		2.19	2026-10-19T17:21:07+00:00	6264		node_2	TRUE
-SLDSC_chromVAR_comparison_plot.cell_type_pseudobulk.genetic_enrichment.revision_31x		3.813	2026-10-19T17:21:08+00:00	850665		node_2	TRUE
-beta_weighted_unscaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk.genetic_enrichment.revision_31x		2.398	2026-10-19T17:21:08+00:00	852577		node_2	TRUE
-beta_weighted_scaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk.genetic_enrichment.revision_31x		1.912	2026-10-19T17:21:09+00:00	863278		node_2	TRUE
-SLDSC_chromVAR_agreement_plot.cell_type_pseudobulk.genetic_enrichment.revision_31x		4.81	2026-10-19T17:21:09+00:00	872549		node_2	TRUE
-raw_deviation_scaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk.genetic_enrichment.revision_31x		2.596	2026-10-19T17:21:10+00:00	1034383		node_2	TRUE
-raw_deviation_unscaled.chromVAR_deviation_heatmaps.cell_type_pseudobulk.genetic_enrichment.revision_31x		3.944	2026-10-19T17:21:11+00:00	1019394		node_2	TRUE
-TRS_summary_tibble.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.revision_31x		5.26	2026-10-19T17:21:12+00:00	74414		node_2	TRUE
-TRS_heatmap_data.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.revision_31x		0.003	2026-10-19T17:21:12+00:00	74952		node_2	TRUE
-median_by_cell_types_unscaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.revision_31x		2.249	2026-10-19T17:21:14+00:00	714917		node_2	TRUE
-median_by_clusters_scaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.revision_31x		2.825	2026-10-19T17:21:15+00:00	928773		node_2	TRUE
-median_by_clusters_unscaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.revision_31x		2.86	2026-10-19T17:21:15+00:00	917902		node_2	TRUE
-median_by_cell_types_scaled.TRS_heatmap.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.revision_31x		2.969	2026-10-19T17:21:15+00:00	722397		node_2	TRUE
-TRS_cluster_summary_plot.WNN_harmony_SNN.SCAVENGE.single_nucleus.genetic_enrichment.revision_31x		14.405	2026-10-19T17:21:26+00:00	21438888		node_2	TRUE
-chromVAR_locus_contribution_per_GWAS_heatmaps.cell_type_pseudobulk.genetic_enrichment.revision_31x		24.039	2026-10-19T17:21:28+00:00	12776686		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_9112198f1f66b03a	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	10.147	2026-10-19T17:21:38+00:00	1380202		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_09e18351c435e3fe	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	18.344	2026-10-19T17:21:46+00:00	1832631		node_2	TRUE
-chromVAR_absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x		68.93	2026-10-19T17:21:55+00:00	17669738		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_baf12118c1be31f4	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	23.836	2026-10-19T17:22:03+00:00	4772566		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_60da59a887891e49	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	22.392	2026-10-19T17:22:07+00:00	4625637		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_d8fdbe6348f5a6ca	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	18.882	2026-10-19T17:22:07+00:00	3519368		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_b57fe991bf6296c8	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	22.803	2026-10-19T17:22:10+00:00	5443882		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_bd7412bfac73140b	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	25.379	2026-10-19T17:22:15+00:00	5555285		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_7bfe705adc80d474	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	36.126	2026-10-19T17:22:23+00:00	8789154		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_4230b3d804ddcf86	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	6.304	2026-10-19T17:22:33+00:00	1104608		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_49b30419e7fcea0f	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	52.444	2026-10-19T17:23:01+00:00	16409311		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_a08c20ab37c29bd2	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	25.83	2026-10-19T17:23:02+00:00	6097973		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_9d8849044a67e583	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	57.285	2026-10-19T17:23:07+00:00	14291211		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_6e490dd2bc516748	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	21.992	2026-10-19T17:23:09+00:00	5739309		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_b66142b73d03bc06	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	57.016	2026-10-19T17:23:13+00:00	17728179		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_de61a56b70dc2f69	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	64.578	2026-10-19T17:23:17+00:00	18436998		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_03babe96b228875b	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	11.505	2026-10-19T17:23:23+00:00	1576872		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_ae62a19caa801540	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	14.499	2026-10-19T17:23:31+00:00	1770261		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_2986696d8f44bec7	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	22.301	2026-10-19T17:23:35+00:00	3819394		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_d7b1cbb54099ee43	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	16.155	2026-10-19T17:23:41+00:00	2983124		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_3d4bae5f3d817d5f	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	14.631	2026-10-19T17:23:41+00:00	2377149		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_1e10f7287b719dfe	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	40.18	2026-10-19T17:24:05+00:00	8459386		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_debad2d2c63366eb	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	57.806	2026-10-19T17:24:09+00:00	17377849		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_8d9376a9e5aad3a2	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	11.593	2026-10-19T17:24:25+00:00	1404766		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_fcd11c8ff13fc90b	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	53.638	2026-10-19T17:24:32+00:00	14723412		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_5636f396a0b442d5	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	60.506	2026-10-19T17:24:34+00:00	8713547		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_401029ad016025ae	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	19.354	2026-10-19T17:24:42+00:00	490560		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_d66137877d0f5d61	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	59.587	2026-10-19T17:24:42+00:00	10006532		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_ff47d7dc73a0f05e	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	11.414	2026-10-19T17:24:55+00:00	2289121		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_29fe21abae96093e	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	11.989	2026-10-19T17:24:55+00:00	2083289		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_5d9d5cfd91ced1c2	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	18.148	2026-10-19T17:25:03+00:00	2120033		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_1670608a61fdbf6d	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	12.801	2026-10-19T17:25:04+00:00	2033241		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_2c2aa708a1280b23	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	36.708	2026-10-19T17:25:05+00:00	8312118		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_7b3e99d943339a55	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	99.242	2026-10-19T17:25:23+00:00	15586237		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_0b590ebada3f3b04	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	16.77	2026-10-19T17:25:23+00:00	5394391		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_bfe590460b1871e2	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	16.9	2026-10-19T17:25:31+00:00	5516301		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_43de584da79bd157	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	12.422	2026-10-19T17:25:46+00:00	1762141		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_95569916ee65e334	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	51.979	2026-10-19T17:25:57+00:00	9029990		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_30bb02f2a59b9921	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	62.615	2026-10-19T17:26:00+00:00	9841365		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_38b4443b6c362848	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	63.388	2026-10-19T17:26:09+00:00	9817388		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_b26ad988b96c01e0	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	54.403	2026-10-19T17:26:18+00:00	17351900		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_cfdbac62756cc48b	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	11.01	2026-10-19T17:26:20+00:00	1250356		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_90dc9bfa23537925	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	16.601	2026-10-19T17:26:23+00:00	1964188		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_8bd7b2de03e2f320	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	44.192	2026-10-19T17:26:32+00:00	8386895		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_b2c35e300b907a1e	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	17.859	2026-10-19T17:26:37+00:00	6530998		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_b77f459233b9e3cb	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	68.631	2026-10-19T17:26:42+00:00	17399444		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_4b7b3abd80c264d3	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	18.733	2026-10-19T17:26:54+00:00	629689		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_67e149db6a6f8e20	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	12.514	2026-10-19T17:27:04+00:00	3119785		node_2	TRUE
-chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x_7c7553c9f3610cfd	chromVAR_variant_contribution_detail_plot_records.cell_type_pseudobulk.genetic_enrichment.revision_31x	20.763	2026-10-19T17:27:05+00:00	1628613		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_cbfd4026084ee47e	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	41.07	2026-10-19T17:27:07+00:00	9777783		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_f3e8ef11a9fe4915	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	47.035	2026-10-19T17:27:09+00:00	7639475		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_92202883d644cfcd	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	18.233	2026-10-19T17:27:13+00:00	3915362		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_7ea4a142ccc3be0d	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	47.989	2026-10-19T17:27:56+00:00	7514293		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_2bba6d1df43e2f4d	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	50.264	2026-10-19T17:27:56+00:00	11020369		node_2	TRUE
-chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x_cae49c392755d7fe	chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.revision_31x	91.574	2026-10-19T17:28:09+00:00	20489949		node_2	TRUE
+cellranger_summary_file.ENCSR636WIB		0.001	2026-09-02T11:46:27+00:00	1735		node_4	FALSE
+cellranger_summary_file.ENCSR316WAS		0	2026-09-02T12:05:05+00:00	1737		node_4	FALSE
+cellranger_summary_file.ENCSR788DZO		0	2026-09-02T13:22:33+00:00	1735		node_4	FALSE
+cellbender_h5_file.ENCSR316WAS		0	2026-09-02T13:38:40+00:00	81365406		node_4	FALSE
+cellranger_summary_file.ENCSR956ZER		0.001	2026-09-02T14:04:15+00:00	1736		node_4	FALSE
+cellranger_summary_file.ENCSR264JIX		0	2026-09-02T14:53:29+00:00	1736		node_4	FALSE
+cellranger_summary_file.ENCSR033MDU		0	2026-09-02T16:14:13+00:00	1736		node_4	FALSE
+cellranger_summary_file.ENCSR320RLS		0	2026-09-02T16:16:56+00:00	1737		node_4	FALSE
+cellranger_summary_file.ENCSR925IHI		0	2026-09-02T16:32:40+00:00	1738		node_4	FALSE
+cellranger_summary_file.ENCSR245BNT		0	2026-09-02T16:37:33+00:00	1737		node_4	FALSE
+cellranger_summary_file.ENCSR511RDV		0	2026-09-02T16:39:48+00:00	1737		node_4	FALSE
+cellranger_summary_file.ENCSR613LBN		0	2026-09-02T17:00:55+00:00	1737		node_4	FALSE
+cellranger_summary_file.ENCSR534YJW		0.001	2026-09-02T17:06:50+00:00	1737		node_4	FALSE
+cellranger_summary_file.ENCSR568QKW		0	2026-09-02T17:12:59+00:00	1737		node_4	FALSE
+cellranger_summary_file.ENCSR201BHG		0.001	2026-09-02T17:18:54+00:00	1736		node_4	FALSE
+cellranger_summary_file.ENCSR351CSQ		0	2026-09-02T17:24:20+00:00	1737		node_4	FALSE
+cellranger_summary_file.ENCSR508WRP		0	2026-09-02T17:30:00+00:00	1736		node_4	FALSE
+cellranger_summary_file.ENCSR793DNM		0.001	2026-09-02T17:38:13+00:00	1737		node_4	FALSE
+cellranger_summary_file.ENCSR923FKN		0	2026-09-02T18:05:20+00:00	1737		node_4	FALSE
+cellranger_summary_file.ENCSR987VTJ		0	2026-09-02T18:19:58+00:00	1737		node_4	FALSE
+cellranger_summary_file.ENCSR079UEO		0	2026-09-02T18:33:39+00:00	1733		node_4	FALSE
+cellranger_summary_file.ENCSR158DQA		0	2026-09-02T18:36:02+00:00	1736		node_4	FALSE
+cellranger_summary_file.ENCSR618WVK		0	2026-09-02T18:45:32+00:00	1737		node_4	FALSE
+cellranger_summary_file.ENCSR233SQG		0	2026-09-02T18:52:43+00:00	1738		node_4	FALSE
+cellranger_summary_file.ENCSR128ZLB		0	2026-09-02T20:41:03+00:00	1735		node_4	FALSE
+cellbender_h5_file.ENCSR636WIB		0.001	2026-09-02T21:55:32+00:00	37499109		node_4	FALSE
+cellbender_h5_file.ENCSR925IHI		0	2026-09-02T21:59:46+00:00	173586522		node_4	FALSE
+cellbender_h5_file.ENCSR079UEO		0.001	2026-09-02T22:05:15+00:00	26978684		node_4	FALSE
+cellbender_h5_file.ENCSR351CSQ		0	2026-09-02T22:19:05+00:00	96020073		node_4	FALSE
+cellbender_h5_file.ENCSR201BHG		0.001	2026-09-02T22:20:11+00:00	86607366		node_4	FALSE
+cellbender_h5_file.ENCSR245BNT		0.001	2026-09-02T22:21:17+00:00	131759442		node_4	FALSE
+cellbender_h5_file.ENCSR320RLS		0	2026-09-02T22:22:55+00:00	116060401		node_4	FALSE
+cellbender_h5_file.ENCSR511RDV		0	2026-09-02T22:31:02+00:00	112739567		node_4	FALSE
+cellbender_h5_file.ENCSR508WRP		0.001	2026-09-02T22:31:16+00:00	105560669		node_4	FALSE
+cellbender_h5_file.ENCSR568QKW		0	2026-09-02T22:32:10+00:00	86462073		node_4	FALSE
+cellbender_h5_file.ENCSR956ZER		0	2026-09-02T22:40:58+00:00	54266285		node_4	FALSE
+cellbender_h5_file.ENCSR534YJW		0	2026-09-02T22:45:09+00:00	115801534		node_4	FALSE
+cellbender_h5_file.ENCSR923FKN		0.001	2026-09-02T22:47:38+00:00	104701011		node_4	FALSE
+cellbender_h5_file.ENCSR793DNM		0	2026-09-02T22:51:02+00:00	166389033		node_4	FALSE
+cellbender_h5_file.ENCSR613LBN		0	2026-09-02T22:55:10+00:00	133999964		node_4	FALSE
+cellbender_h5_file.ENCSR987VTJ		0	2026-09-02T22:55:35+00:00	139091204		node_4	FALSE
+cellbender_h5_file.ENCSR788DZO		0	2026-09-02T23:00:53+00:00	57199958		node_4	FALSE
+cellbender_h5_file.ENCSR618WVK		0.001	2026-09-02T23:01:27+00:00	149085929		node_4	FALSE
+cellbender_h5_file.ENCSR264JIX		0	2026-09-02T23:02:06+00:00	68839441		node_4	FALSE
+cellbender_h5_file.ENCSR128ZLB		0.001	2026-09-02T23:03:37+00:00	67175956		node_4	FALSE
+cellbender_h5_file.ENCSR033MDU		0	2026-09-02T23:04:08+00:00	67399080		node_4	FALSE
+cellbender_h5_file.ENCSR233SQG		0	2026-09-02T23:15:36+00:00	139820038		node_4	FALSE
+cellbender_h5_file.ENCSR158DQA		0	2026-09-02T23:23:50+00:00	91001279		node_4	FALSE
+cellranger_summary_file.healthy_PBMC_human_2024A		0.001	2026-09-07T13:56:07+00:00	1826		node_4	FALSE
+cellranger_summary_file.pbmc_unsorted_3k		0	2026-09-07T14:53:56+00:00	1824		node_4	FALSE
+cellranger_summary_file.healthy_brain_human		0.001	2026-09-07T18:39:38+00:00	1829		node_4	FALSE
+cellbender_h5_file.healthy_PBMC_human_2024A		0	2026-09-07T19:38:39+00:00	41595680		node_4	FALSE
+cellbender_h5_file.pbmc_unsorted_3k		0	2026-09-07T19:44:19+00:00	35499418		node_4	FALSE
+cellbender_h5_file.healthy_brain_human		0	2026-09-07T19:50:30+00:00	73728096		node_4	FALSE
+cellranger_summary_file.pbmc_granulocyte_sorted_10k		0	2026-09-08T00:19:43+00:00	1838		node_4	FALSE
+cellbender_h5_file.pbmc_granulocyte_sorted_10k		0.001	2026-09-08T00:33:53+00:00	202551007		node_4	FALSE
+cellranger_summary_file.pbmc_unsorted_10k		0	2026-09-08T02:23:09+00:00	1827		node_4	FALSE
+cellranger_summary_file.pbmc_10k_chromium_x		0	2026-09-08T02:35:16+00:00	1830		node_4	FALSE
+cellbender_h5_file.pbmc_unsorted_10k		0	2026-09-08T02:37:46+00:00	166604784		node_4	FALSE
+cellbender_h5_file.pbmc_10k_chromium_x		0	2026-09-08T02:49:20+00:00	178151172		node_4	FALSE
+cellranger_summary_file.pbmc_10k_chromium_controller		0	2026-09-08T02:54:04+00:00	1839		node_4	FALSE
+cellbender_h5_file.pbmc_10k_chromium_controller		0.001	2026-09-08T03:07:05+00:00	178355667		node_4	FALSE
+GEM_well_config_tsv		0	2026-10-30T08:06:57+00:00	23101		node_4	FALSE
+donor_id_metadata_tsv.revision_31x		0	2026-10-30T08:06:57+00:00	358		node_4	FALSE
+donor_id_metadata_tsv.extended.differential_analyses.revision_31x		0	2026-10-30T08:06:57+00:00	1166		node_4	FALSE
+QC_checkpoint_manifest_tsv		0	2026-10-30T08:06:57+00:00	3889		node_4	FALSE
+QC_metric_manifest_tsv		0	2026-10-30T08:06:57+00:00	11883		node_4	FALSE
+JASPAR2026_vertebrate_familial_root_motifs_tf		0	2026-10-30T08:06:58+00:00	115774		node_4	FALSE
+JASPAR2026_vertebrate_motif_families_tsv		0	2026-10-30T08:06:58+00:00	57607		node_4	FALSE
+JASPAR_motif_family_annotations_tsv		0.001	2026-10-30T08:06:58+00:00	35512		node_4	FALSE
+JASPAR2026_vertebrate_motifs_jaspar		0.001	2026-10-30T08:06:58+00:00	336314		node_4	FALSE
+cellranger_reference_json_file.ENCSR793DNM		0.149	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR956ZER		0.066	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.pbmc_10k_chromium_x		0.081	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR320RLS		0.007	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.pbmc_10k_chromium_controller		0.037	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR316WAS		0.039	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR158DQA		0.052	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR534YJW		0.068	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.pbmc_granulocyte_sorted_10k		0.006	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR033MDU		0.039	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR618WVK		0.006	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR233SQG		0.007	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR351CSQ		0.003	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR923FKN		0.004	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR925IHI		0.005	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR636WIB		0.006	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR245BNT		0.02	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR568QKW		0.003	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR264JIX		0.026	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR508WRP		0.044	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.healthy_brain_human		0.12	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.pbmc_unsorted_10k		0.023	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.healthy_PBMC_human_2024A		0.025	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR613LBN		0.03	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.pbmc_unsorted_3k		0.022	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR511RDV		0.003	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR128ZLB		0.008	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR987VTJ		0.005	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR788DZO		0.027	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR079UEO		0.005	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_file.ENCSR201BHG		0.007	2026-10-30T08:06:58+00:00	1285		node_4	FALSE
+cellranger_reference_json_files		0	2026-10-30T08:06:58+00:00	3935		node_4	FALSE
+amulet_BPCells_native_source_file		0	2026-10-30T08:06:58+00:00	8285		node_4	FALSE
+UCell_native_source_file		0	2026-10-30T08:06:58+00:00	6698		node_4	FALSE
+peak_gene_REML_native_source_file.peak_gene_correlation.revision_31x		0	2026-10-30T08:06:58+00:00	12843		node_4	FALSE
+WNN_native_source_file		0	2026-10-30T08:06:58+00:00	9963		node_4	FALSE
+sumstats_sources.SLDSC		0.001	2026-10-30T11:54:39+00:00	357		node_4	TRUE
+sumstats_files.SLDSC_2db94e8e4de95d54	sumstats_files.SLDSC	0.001	2026-10-30T11:54:39+00:00	0		node_4	TRUE
+sumstats_rows.SLDSC_491e76bf698bbd5b	sumstats_rows.SLDSC	48.246	2026-10-30T11:55:30+00:00	155		node_4	TRUE
+sumstats_records.SLDSC_d5865236e85428c8	sumstats_records.SLDSC	0.012	2026-10-30T11:55:32+00:00	173		node_4	TRUE
+GWAS_analysis_inputs_config_tibble.genetic_enrichment.revision_31x		0.022	2026-10-30T11:55:34+00:00	901		node_4	TRUE
+GWAS_source_files.genetic_enrichment.revision_31x_2bcceb9d33ba9b3c	GWAS_source_files.genetic_enrichment.revision_31x	0.001	2026-10-30T11:55:34+00:00	0		node_4	TRUE
+GWAS_input_records.genetic_enrichment.revision_31x_db2774a965f8522c	GWAS_input_records.genetic_enrichment.revision_31x	7.756	2026-10-30T11:55:47+00:00	12930		node_4	TRUE
+GWAS_peak_variant_weight_records.genetic_enrichment.revision_31x_eb393f48c820e8e3	GWAS_peak_variant_weight_records.genetic_enrichment.revision_31x	2.342	2026-10-30T11:55:51+00:00	3415		node_4	TRUE
+GWAS_inputs_tibble.genetic_enrichment.revision_31x		0.021	2026-10-30T11:55:53+00:00	2183		node_4	TRUE
+GWAS_peak_variant_weight_tibble.genetic_enrichment.revision_31x		0.293	2026-10-30T11:55:53+00:00	2264979		node_4	TRUE
+GWAS_metadata_tracks_plot.genetic_enrichment.revision_31x		0.405	2026-10-30T11:55:54+00:00	550139		node_4	TRUE
+enrichment_records.share.genetic_validation.peak_gene_correlation.revision_31x_6c726197e33b6b05	enrichment_records.share.genetic_validation.peak_gene_correlation.revision_31x	1.489	2026-10-30T11:55:54+00:00	403093		node_4	TRUE
+GWAS_locus_to_gene_tibble.genetic_enrichment.revision_31x		0.984	2026-10-30T11:55:55+00:00	500787		node_4	TRUE
+locus_contribution_tibble.fine_mapping.enrichment.genetic_enrichment.revision_31x_eb393f48c820e8e3	locus_contribution_tibble.fine_mapping.enrichment.genetic_enrichment.revision_31x	0.14	2026-10-30T11:55:55+00:00	3932		node_4	TRUE
+GWAS_absolute_effect_weighting_status_tibble.genetic_enrichment.revision_31x		2.505	2026-10-30T11:55:55+00:00	1345		node_4	TRUE
+GWAS_absolute_effect_inputs_tibble.genetic_enrichment.revision_31x		0.006	2026-10-30T11:55:55+00:00	1464		node_4	TRUE
+GWAS_peak_weight_records.genetic_enrichment.revision_31x_15dee707c3a759cd	GWAS_peak_weight_records.genetic_enrichment.revision_31x	3.121	2026-10-30T11:55:56+00:00	4080128		node_4	TRUE
+enrichment_records.correlation.genetic_validation.peak_gene_correlation.revision_31x_6c726197e33b6b05	enrichment_records.correlation.genetic_validation.peak_gene_correlation.revision_31x	1.94	2026-10-30T11:55:57+00:00	15885		node_4	TRUE
+enrichment_records.correlation_ABC.genetic_validation.peak_gene_correlation.revision_31x_6c726197e33b6b05	enrichment_records.correlation_ABC.genetic_validation.peak_gene_correlation.revision_31x	1.965	2026-10-30T11:55:57+00:00	17167		node_4	TRUE
+enrichment_records.correlation_conditional.genetic_validation.peak_gene_correlation.revision_31x_6c726197e33b6b05	enrichment_records.correlation_conditional.genetic_validation.peak_gene_correlation.revision_31x	0.067	2026-10-30T11:55:57+00:00	19276		node_4	TRUE
+enrichment_records.territory.genetic_validation.peak_gene_correlation.revision_31x_6c726197e33b6b05	enrichment_records.territory.genetic_validation.peak_gene_correlation.revision_31x	2.264	2026-10-30T11:55:58+00:00	64036		node_4	TRUE
+enrichment_records.activity.genetic_validation.peak_gene_correlation.revision_31x_6c726197e33b6b05	enrichment_records.activity.genetic_validation.peak_gene_correlation.revision_31x	2.867	2026-10-30T11:55:59+00:00	410029		node_4	TRUE
+enrichment_records.ABC.genetic_validation.peak_gene_correlation.revision_31x_6c726197e33b6b05	enrichment_records.ABC.genetic_validation.peak_gene_correlation.revision_31x	2.912	2026-10-30T11:56:00+00:00	421192		node_4	TRUE
+records.SLDSC.specificity.genetic_enrichment.revision_31x_6c726197e33b6b05	records.SLDSC.specificity.genetic_enrichment.revision_31x	0.044	2026-10-30T11:56:01+00:00	772		node_4	TRUE
+GWAS_credible_set_similarity_matrix.genetic_enrichment.revision_31x		8.093	2026-10-30T11:56:01+00:00	4057		node_4	TRUE
+records.enrichment.specific_genes.genetic_enrichment.revision_31x_6c726197e33b6b05	records.enrichment.specific_genes.genetic_enrichment.revision_31x	0.214	2026-10-30T11:56:02+00:00	138737		node_4	TRUE
+enrichment_records.distance.genetic_validation.peak_gene_correlation.revision_31x_6c726197e33b6b05	enrichment_records.distance.genetic_validation.peak_gene_correlation.revision_31x	0.586	2026-10-30T11:56:02+00:00	271244		node_4	TRUE
+enrichment_records.ABC_conditional.genetic_validation.peak_gene_correlation.revision_31x_6c726197e33b6b05	enrichment_records.ABC_conditional.genetic_validation.peak_gene_correlation.revision_31x	1.372	2026-10-30T11:56:02+00:00	382335		node_4	TRUE
+GWAS_credible_set_similarity_heatmap.genetic_enrichment.revision_31x		1.469	2026-10-30T11:56:04+00:00	810597		node_4	TRUE
+records.enrichment.accessible_peaks.genetic_enrichment.revision_31x_6c726197e33b6b05	records.enrichment.accessible_peaks.genetic_enrichment.revision_31x	2.673	2026-10-30T11:56:07+00:00	492751		node_4	TRUE
+GWAS_peak_weights_barplot.genetic_enrichment.revision_31x		1.004	2026-10-30T11:56:07+00:00	347197		node_4	TRUE
+records.enrichment.specific_peaks.genetic_enrichment.revision_31x_6c726197e33b6b05	records.enrichment.specific_peaks.genetic_enrichment.revision_31x	2.722	2026-10-30T11:56:08+00:00	477938		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_0e7770b37c9e89c6	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	16.552	2026-10-30T11:56:13+00:00	2942		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_511528b86ef60478	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	17.646	2026-10-30T11:56:15+00:00	2938		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_5318c0ebeada9cae	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	13.921	2026-10-30T11:56:15+00:00	1778		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_4a540aef7474afe9	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	18.192	2026-10-30T11:56:15+00:00	1766		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_eb393f48c820e8e3	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	15.171	2026-10-30T11:56:16+00:00	2908		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_b2e0543f648a2789	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	11.536	2026-10-30T11:56:17+00:00	1783		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_0285d39fd30ab250	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	16.666	2026-10-30T11:56:18+00:00	2930		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_b66ceceba375c430	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	23.663	2026-10-30T11:56:21+00:00	1774		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_0eaa845ce58a9bf6	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	20.064	2026-10-30T11:56:21+00:00	1774		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_072a9420149566f9	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	22.391	2026-10-30T11:56:24+00:00	1773		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_bde752a45d3376ff	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	22.829	2026-10-30T11:56:24+00:00	1773		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_56f01808dfc09527	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	23.253	2026-10-30T11:56:24+00:00	2935		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_938d1b999095db1c	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	12.105	2026-10-30T11:56:28+00:00	2929		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_ab6955fca4129963	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	10.938	2026-10-30T11:56:28+00:00	1777		node_4	TRUE
+GWAS_absolute_effect_metadata_tracks_plot.genetic_enrichment.revision_31x		0.422	2026-10-30T11:56:28+00:00	541740		node_4	TRUE
+tibble.SLDSC.specificity.genetic_enrichment.revision_31x		0.093	2026-10-30T11:56:28+00:00	148419		node_4	TRUE
+GWAS_absolute_effect_peak_variant_weight_records.genetic_enrichment.revision_31x		4.066	2026-10-30T11:56:29+00:00	1739337		node_4	TRUE
+modality_comparison_plot.SLDSC.specificity.genetic_enrichment.revision_31x		2.574	2026-10-30T11:56:31+00:00	757254		node_4	TRUE
+GWAS_peak_weight_matrix.genetic_enrichment.revision_31x		0.03	2026-10-30T11:56:32+00:00	4338858		node_4	TRUE
+enrichment_tibble.genetic_validation.peak_gene_correlation.revision_31x		0.034	2026-10-30T11:56:32+00:00	1060254		node_4	TRUE
+GWAS_absolute_effect_peak_weight_records.genetic_enrichment.revision_31x		0.544	2026-10-30T11:56:32+00:00	64998025		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_d4b6415686946cea	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	14.854	2026-10-30T11:56:32+00:00	2930		node_4	TRUE
+block_influence_plot.SLDSC.specificity.genetic_enrichment.revision_31x		0.847	2026-10-30T11:56:33+00:00	285684		node_4	TRUE
+tibble.enrichment.genetic_enrichment.revision_31x		0.911	2026-10-30T11:56:35+00:00	1060213		node_4	TRUE
+GWAS_absolute_effect_peak_weight_matrix.genetic_enrichment.revision_31x		0.017	2026-10-30T11:56:35+00:00	4314345		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_97358fd0168a18a1	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	17.207	2026-10-30T11:56:36+00:00	1780		node_4	TRUE
+GWAS_absolute_effect_peak_variant_weight_tibble.genetic_enrichment.revision_31x		0.005	2026-10-30T11:56:36+00:00	1872335		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_82a42e3259b3a710	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	12.362	2026-10-30T11:56:37+00:00	2946		node_4	TRUE
+z_score_chunk_records.chromVAR.specificity.genetic_enrichment.revision_31x_9562c4a1764dc937	z_score_chunk_records.chromVAR.specificity.genetic_enrichment.revision_31x	4.749	2026-10-30T11:56:40+00:00	4809742		node_4	TRUE
+z_score_chunk_records.chromVAR.specificity.genetic_enrichment.revision_31x_9b227575bebceb42	z_score_chunk_records.chromVAR.specificity.genetic_enrichment.revision_31x	4.418	2026-10-30T11:56:40+00:00	4454373		node_4	TRUE
+heatmap.SLDSC.specificity.genetic_enrichment.revision_31x		7.072	2026-10-30T11:56:43+00:00	1000810		node_4	TRUE
+z_score_chunk_records.chromVAR.specificity.genetic_enrichment.revision_31x_992de111c016b5bb	z_score_chunk_records.chromVAR.specificity.genetic_enrichment.revision_31x	4.448	2026-10-30T11:56:44+00:00	6360602		node_4	TRUE
+z_score_chunk_records.chromVAR.specificity.genetic_enrichment.revision_31x_d62b40706d85e8f1	z_score_chunk_records.chromVAR.specificity.genetic_enrichment.revision_31x	2.367	2026-10-30T11:56:46+00:00	12599728		node_4	TRUE
+z_score_chunk_records.chromVAR.specificity.genetic_enrichment.revision_31x_90d7dad6aef8f1d4	z_score_chunk_records.chromVAR.specificity.genetic_enrichment.revision_31x	5.06	2026-10-30T11:56:47+00:00	10847232		node_4	TRUE
+z_score_chunk_records.chromVAR.specificity.genetic_enrichment.revision_31x_50d0f32c090c4419	z_score_chunk_records.chromVAR.specificity.genetic_enrichment.revision_31x	2.867	2026-10-30T11:56:48+00:00	17566652		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_6f0df0d15a4d4c88	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	34.769	2026-10-30T11:56:49+00:00	2913		node_4	TRUE
+z_score_chunk_records.chromVAR.specificity.genetic_enrichment.revision_31x_bc1bf9457bd518f1	z_score_chunk_records.chromVAR.specificity.genetic_enrichment.revision_31x	1.941	2026-10-30T11:56:50+00:00	9981748		node_4	TRUE
+peak_contribution_tibble.chromVAR.specificity.genetic_enrichment.revision_31x		2.339	2026-10-30T11:56:50+00:00	23459901		node_4	TRUE
+agreement_plot.comparison.enrichment.genetic_enrichment.revision_31x		1.443	2026-10-30T11:56:50+00:00	574079		node_4	TRUE
+variant_contribution_tibble.chromVAR.specificity.genetic_enrichment.revision_31x		0.281	2026-10-30T11:56:52+00:00	27242362		node_4	TRUE
+z_score_chunk_records.chromVAR.specificity.genetic_enrichment.revision_31x_9fe38479802d0692	z_score_chunk_records.chromVAR.specificity.genetic_enrichment.revision_31x	5.111	2026-10-30T11:56:53+00:00	11893411		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_1615b10aef0e8b83	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	37.618	2026-10-30T11:56:53+00:00	2842		node_4	TRUE
+z_score_chunk_records_by_trait.chromVAR.specificity.genetic_enrichment.revision_31x		0.004	2026-10-30T11:56:56+00:00	78497218		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_826874873e4ded49	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	55.401	2026-10-30T11:56:56+00:00	2907		node_4	TRUE
+absolute_effect_peak_contribution_tibble.chromVAR.specificity.genetic_enrichment.revision_31x		4.167	2026-10-30T11:56:57+00:00	15123062		node_4	TRUE
+locus_contribution_tibble.chromVAR.specificity.genetic_enrichment.revision_31x		4.466	2026-10-30T11:56:57+00:00	6693191		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_e829edc1c8f2d2e7	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	35.017	2026-10-30T11:56:57+00:00	1768		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_e4d003416ccf6a72	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	41.814	2026-10-30T11:56:58+00:00	2816		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_c022991f3347e7b5	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	48.732	2026-10-30T11:56:58+00:00	2918		node_4	TRUE
+curves_per_category_plots.SLDSC.enrichment.genetic_enrichment.revision_31x		8.545	2026-10-30T11:56:59+00:00	4464932		node_4	TRUE
+locus_contribution_tibbles_by_GWAS.chromVAR.specificity.genetic_enrichment.revision_31x		0.005	2026-10-30T11:56:59+00:00	6788391		node_4	TRUE
+z_score_records.chromVAR.specificity.genetic_enrichment.revision_31x_ebc46088f05a4e54	z_score_records.chromVAR.specificity.genetic_enrichment.revision_31x	0.007	2026-10-30T11:57:00+00:00	2825645		node_4	TRUE
+absolute_effect_variant_contribution_tibble.chromVAR.specificity.genetic_enrichment.revision_31x		0.274	2026-10-30T11:57:00+00:00	17776655		node_4	TRUE
+locus_contribution_heatmaps.fine_mapping.enrichment.genetic_enrichment.revision_31x		29.15	2026-10-30T11:57:04+00:00	23947000		node_4	TRUE
+absolute_effect_locus_contribution_tibble.chromVAR.specificity.genetic_enrichment.revision_31x		3.269	2026-10-30T11:57:04+00:00	4592431		node_4	TRUE
+locus_contribution_per_GWAS_faceted_bars_plots.chromVAR.specificity.genetic_enrichment.revision_31x_ab14ba853c9d5d6e	locus_contribution_per_GWAS_faceted_bars_plots.chromVAR.specificity.genetic_enrichment.revision_31x	4.75	2026-10-30T11:57:04+00:00	1157400		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_24f465b9e133d385	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	42.244	2026-10-30T11:57:07+00:00	2929		node_4	TRUE
+TRS_tibbles.SCAVENGE.specificity.genetic_enrichment.revision_31x_e659e105d797bffa	TRS_tibbles.SCAVENGE.specificity.genetic_enrichment.revision_31x	9.414	2026-10-30T11:57:11+00:00	2798345		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_dfdac8bc45d55dc5	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	50.131	2026-10-30T11:57:12+00:00	2923		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_99babb3368ddaba8	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	75.779	2026-10-30T11:57:13+00:00	2924		node_4	TRUE
+locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x_ecafd0629390ecd6	locus_shift_null_tibble.chromVAR.specificity.genetic_enrichment.revision_31x	72.642	2026-10-30T11:57:14+00:00	1784		node_4	TRUE
+absolute_effect_deviation_tibble.chromVAR.specificity.genetic_enrichment.revision_31x		0.061	2026-10-30T11:57:14+00:00	28384		node_4	TRUE
+deviation_tibble.chromVAR.specificity.genetic_enrichment.revision_31x		0.066	2026-10-30T11:57:15+00:00	46027		node_4	TRUE
+TRS_UMAPs.SCAVENGE.specificity.genetic_enrichment.revision_31x_43e2a2e588f4e59b	TRS_UMAPs.SCAVENGE.specificity.genetic_enrichment.revision_31x	3.306	2026-10-30T11:57:15+00:00	737952		node_4	TRUE
+TRS_tibble.SCAVENGE.specificity.genetic_enrichment.revision_31x		0.145	2026-10-30T11:57:15+00:00	75866808		node_4	TRUE
+absolute_effect_top_set_tibble.chromVAR.specificity.genetic_enrichment.revision_31x		1.65	2026-10-30T11:57:16+00:00	3247		node_4	TRUE
+heatmaps.fine_mapping.enrichment.genetic_enrichment.revision_31x		24.146	2026-10-30T11:57:17+00:00	5165016		node_4	TRUE
+top_set_tibble.chromVAR.specificity.genetic_enrichment.revision_31x		2.599	2026-10-30T11:57:17+00:00	6034		node_4	TRUE
+z_score_plot.comparison.specificity.genetic_enrichment.revision_31x		3.125	2026-10-30T11:57:18+00:00	854150		node_4	TRUE
+design_plot.genetic_validation.peak_gene_correlation.revision_31x		30.924	2026-10-30T11:57:19+00:00	481884		node_4	TRUE
+agreement_plot.comparison.specificity.genetic_enrichment.revision_31x		4.193	2026-10-30T11:57:19+00:00	843111		node_4	TRUE
+beta_weighted_scaled.deviation_heatmaps.chromVAR.specificity.genetic_enrichment.revision_31x		5.057	2026-10-30T11:57:21+00:00	899492		node_4	TRUE
+beta_weighted_unscaled.deviation_heatmaps.chromVAR.specificity.genetic_enrichment.revision_31x		5.522	2026-10-30T11:57:22+00:00	892868		node_4	TRUE
+TRS_summary_tibble.SCAVENGE.specificity.genetic_enrichment.revision_31x		5.165	2026-10-30T11:57:22+00:00	76465		node_4	TRUE
+TRS_heatmap_data.SCAVENGE.specificity.genetic_enrichment.revision_31x		0.005	2026-10-30T11:57:23+00:00	76914		node_4	TRUE
+heatmaps.SLDSC.enrichment.genetic_enrichment.revision_31x		25.408	2026-10-30T11:57:24+00:00	4571582		node_4	TRUE
+raw_deviation_scaled.deviation_heatmaps.chromVAR.specificity.genetic_enrichment.revision_31x		6.707	2026-10-30T11:57:24+00:00	1054014		node_4	TRUE
+raw_deviation_unscaled.deviation_heatmaps.chromVAR.specificity.genetic_enrichment.revision_31x		6.853	2026-10-30T11:57:25+00:00	1040577		node_4	TRUE
+median_by_clusters_scaled.TRS_heatmap.SCAVENGE.specificity.genetic_enrichment.revision_31x		5.11	2026-10-30T11:57:28+00:00	950576		node_4	TRUE
+median_by_cell_types_scaled.TRS_heatmap.SCAVENGE.specificity.genetic_enrichment.revision_31x		5.239	2026-10-30T11:57:28+00:00	735842		node_4	TRUE
+summary_tibble.enrichment.genetic_enrichment.revision_31x		36.654	2026-10-30T11:57:29+00:00	23047		node_4	TRUE
+median_by_clusters_unscaled.TRS_heatmap.SCAVENGE.specificity.genetic_enrichment.revision_31x		6.246	2026-10-30T11:57:29+00:00	936814		node_4	TRUE
+median_by_cell_types_unscaled.TRS_heatmap.SCAVENGE.specificity.genetic_enrichment.revision_31x		6.272	2026-10-30T11:57:30+00:00	731324		node_4	TRUE
+strategy_size_comparison_plot.SLDSC.enrichment.genetic_enrichment.revision_31x		1.385	2026-10-30T11:57:30+00:00	480003		node_4	TRUE
+strategy_curves_plot.SLDSC.enrichment.genetic_enrichment.revision_31x		2.571	2026-10-30T11:57:31+00:00	609968		node_4	TRUE
+TRS_cluster_summary_plot.SCAVENGE.specificity.genetic_enrichment.revision_31x		13.944	2026-10-30T11:57:36+00:00	22147862		node_4	TRUE
+locus_contribution_per_GWAS_heatmaps.chromVAR.specificity.genetic_enrichment.revision_31x		26.124	2026-10-30T11:57:41+00:00	12754306		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_a2bd32d683ca9630	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	7.667	2026-10-30T11:57:46+00:00	966975		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_70c06b203c3badaa	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	8.704	2026-10-30T11:57:48+00:00	2849981		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_5e347b00f8f809de	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	10.642	2026-10-30T11:57:50+00:00	4984918		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_6a9b52aeea32e6a1	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	11.445	2026-10-30T11:57:52+00:00	5164741		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_13d5a0c4145023b2	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	16.626	2026-10-30T11:57:56+00:00	2203889		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_5009bec1d9672fa6	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	25.693	2026-10-30T11:58:07+00:00	5666997		node_4	TRUE
+absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots.chromVAR.specificity.genetic_enrichment.revision_31x		73.305	2026-10-30T11:58:18+00:00	17678634		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_b1b07f8f49c88038	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	34.572	2026-10-30T11:58:23+00:00	5978014		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_fc0fa37274d3f9f1	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	30.499	2026-10-30T11:58:28+00:00	7886236		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_6e48c2245b8d7b59	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	12.159	2026-10-30T11:58:45+00:00	1117501		node_4	TRUE
+enrichment_summary_tibble.genetic_validation.peak_gene_correlation.revision_31x		121.449	2026-10-30T11:58:50+00:00	105870		node_4	TRUE
+cell_type_plot.genetic_validation.peak_gene_correlation.revision_31x		2.181	2026-10-30T11:58:52+00:00	690005		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_145f080fc672dda3	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	58.488	2026-10-30T11:59:07+00:00	17691645		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_a7386698fb86fe42	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	78.379	2026-10-30T11:59:08+00:00	14460533		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_82fa66baada9e0d8	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	21.312	2026-10-30T11:59:08+00:00	5605512		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_39c2999037e40676	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	28.434	2026-10-30T11:59:15+00:00	6023128		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_72f4010ed70a9206	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	83.259	2026-10-30T11:59:17+00:00	16311457		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_d562ac2495f185ca	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	92.639	2026-10-30T11:59:27+00:00	16510165		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_599af0ece5bfa0c8	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	12.977	2026-10-30T11:59:30+00:00	4517630		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_2af3a31b37ff7a78	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	9.634	2026-10-30T11:59:34+00:00	1692239		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_ab14ba853c9d5d6e	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	16	2026-10-30T11:59:34+00:00	1616004		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_ab122920b921ef38	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	13.88	2026-10-30T11:59:39+00:00	2773133		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_5b01a16421eceb8b	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	13.847	2026-10-30T11:59:49+00:00	3167158		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_a82adb38b00d4582	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	58.209	2026-10-30T12:00:09+00:00	17381319		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_e732382ce9becbb3	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	41.784	2026-10-30T12:00:17+00:00	8327131		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_8b56ad911adc14d3	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	49.821	2026-10-30T12:00:25+00:00	8729842		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_99344cd9cfe2cb53	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	8.929	2026-10-30T12:00:36+00:00	708823		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_9236438689fc1fe9	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	12.593	2026-10-30T12:00:44+00:00	1395764		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_d8a1ba08381f5206	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	11.281	2026-10-30T12:00:45+00:00	2039949		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_b64629f92a52c71c	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	80.517	2026-10-30T12:00:52+00:00	15860878		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_4b3a6525db6f3e19	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	19.7	2026-10-30T12:00:59+00:00	4567286		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_f3bace7d26c8e269	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	71.67	2026-10-30T12:01:02+00:00	12988152		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_66bef830cee89681	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	84.838	2026-10-30T12:01:05+00:00	13929338		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_62e26852759cf2a9	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	11.783	2026-10-30T12:01:13+00:00	1713624		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_ef64f454d103e1e2	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	9.916	2026-10-30T12:01:18+00:00	2380736		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_f9f93d1731d63cc3	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	32.076	2026-10-30T12:01:18+00:00	8199462		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_ceb706553cf9e2a7	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	14.681	2026-10-30T12:01:29+00:00	5223924		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_0144fd10b2498a99	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	47.149	2026-10-30T12:01:34+00:00	9029359		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_ada0ddce73234704	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	23.661	2026-10-30T12:01:35+00:00	5080762		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_7e9d7d6de3d4078c	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	21.288	2026-10-30T12:01:49+00:00	2358565		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_be83a1cc6cad5db4	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	7.119	2026-10-30T12:01:50+00:00	2059155		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_94afd5b7e94a7ece	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	48.638	2026-10-30T12:02:03+00:00	8631319		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_37f4da6d1a26ce76	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	51.773	2026-10-30T12:02:11+00:00	9695260		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_c09b536159595c19	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	10.187	2026-10-30T12:02:23+00:00	1242970		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_46b880bc4351d23c	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	19.353	2026-10-30T12:02:40+00:00	7204783		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_b53cf70f78322535	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	50.562	2026-10-30T12:02:42+00:00	11142558		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_58ffc7b25b6204b1	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	52.041	2026-10-30T12:02:44+00:00	9763175		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_e745de377698b21f	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	69.15	2026-10-30T12:02:46+00:00	17579573		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_227c4b51b99e211d	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	81.754	2026-10-30T12:02:53+00:00	17357256		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_9ed29dcef213ba3d	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	6.879	2026-10-30T12:03:04+00:00	1899766		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_566f6549c6c1bcbc	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	42.154	2026-10-30T12:03:07+00:00	7687393		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_303c53695ea95825	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	12.369	2026-10-30T12:03:07+00:00	3298312		node_4	TRUE
+variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x_93f64493b825e089	variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.revision_31x	11.739	2026-10-30T12:03:14+00:00	962128		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_83956e66c765e47a	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	36.253	2026-10-30T12:03:51+00:00	5882578		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_936e880e7d45f9da	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	49.041	2026-10-30T12:03:54+00:00	9294396		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_5564c86c0710ade6	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	80.33	2026-10-30T12:04:02+00:00	22392276		node_4	TRUE
+variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x_e4846cc5849f73a5	variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.revision_31x	61.769	2026-10-30T12:04:10+00:00	11085663		node_4	TRUE

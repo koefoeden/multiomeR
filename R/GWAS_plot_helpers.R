@@ -596,8 +596,8 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
     dplyr::transmute(GWAS_ID, Category, Loci = n_credible_set_loci, Samples = sample_size) |>
     tidyr::pivot_longer(c(Loci, Samples), names_to = "track", values_to = "value") |>
     dplyr::mutate(label = format_GWAS_bar_number(value))
-  # Open Targets and local metadata both carry all six ancestry fractions.
-  ancestry_columns <- grep("^ancestry_(EUR|EAS|AFR|AMR|SAS|OTH)$", colnames(ordered_metadata), value = TRUE)
+  # Open Targets and local metadata both carry all seven ancestry fractions.
+  ancestry_columns <- grep("^ancestry_(EUR|EAS|AFR|AMR|SAS|OTH|MIX)$", colnames(ordered_metadata), value = TRUE)
   ancestry_reported <- rowSums(!is.na(ordered_metadata[ancestry_columns])) > 0
   ancestry_plot_data <- ordered_metadata[ancestry_reported, , drop = FALSE] |>
     dplyr::select(GWAS_ID, dplyr::all_of(ancestry_columns)) |>
@@ -676,6 +676,7 @@ plot_GWAS_metadata_tracks <- function(ordered_metadata) {
         "AMR" = "#FF7F00",
         "SAS" = "#E41A1C",
         "OTH" = "#999999",
+        "MIX" = "#A65628",
         "Unreported" = "#D9D9D9"
       ),
       name = "Ancestry",

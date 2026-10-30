@@ -381,11 +381,11 @@ plot_figure_1_TRS <- function(data, trait, cell_types) {
 
 # Supplementary Figures S5 and S6: a module heatmap of every scored study and assigned cell
 # type, with Figure 1's cell-type labels and stars at q < 0.05 on the cell type's `value`.
-# Values beyond the limit take the end colours. The metadata tracks must hold exactly the
+# Values beyond the limits take the end colours, with white at `midpoint`. The metadata tracks must hold exactly the
 # scored studies. Of them, only trait category, whose rows also name the study, and the
 # listed `bar_tracks` are kept; Supplementary Table S3 gives each study's sample size,
 # method and ancestry.
-plot_trait_cell_type_heatmap <- function(scores, GWAS_metadata_tracks_plot, value_label, limit, bar_tracks = character()) {
+plot_trait_cell_type_heatmap <- function(scores, GWAS_metadata_tracks_plot, value_label, limits, midpoint = 0, bar_tracks = character()) {
   category <- GWAS_metadata_tracks_plot[[1]] +
     ggplot2::scale_y_discrete(expand = c(0, 0),
       labels = \(x) paste0(figure_1_trait_labels(x), " (", sub("^.*_([A-Za-z]+)([0-9]{4}).*$", "\\1 \\2", x), ")"))
@@ -397,10 +397,10 @@ plot_trait_cell_type_heatmap <- function(scores, GWAS_metadata_tracks_plot, valu
   }
   ordered <- scores |>
     dplyr::mutate(cluster = figure_1_cell_type_labels(.data$cluster),
-      value = pmax(pmin(.data$value, limit), -limit), label = dplyr::if_else(.data$q < .05, "*", "")) |>
+      value = pmax(pmin(.data$value, limits[[2]]), limits[[1]]), label = dplyr::if_else(.data$q < .05, "*", "")) |>
     get_ordered_GWAS_score_plot_data(NULL, score_col = "value")
   heatmap <- plot_GWAS_feature_heatmap(ordered$scores, ordered$clusters, "cluster", "value", value_label,
-    fill_limits = c(-limit, limit), support_label_col = "label")
+    fill_limits = limits, support_label_col = "label", fill_midpoint = midpoint)
   n <- length(tracks)
   patchwork::wrap_plots(c(tracks, list(heatmap, plot_GWAS_feature_support_tracks(ordered$clusters))),
     design = paste0(strrep("#", n), LETTERS[n + 2], "\n", paste(LETTERS[seq_len(n + 1)], collapse = "")),

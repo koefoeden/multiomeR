@@ -176,9 +176,9 @@ download_in_ranges <- function(url, path, n_ranges = 6L) {
 #' Summarize the samples of GWAS-SSF metadata
 #'
 #' @param metadata_text Text of a GWAS-SSF `-meta.yaml` file, or `NULL`.
-#' @return One row with the total sample size and the shares of the ancestry
-#'   groups that Open Targets study metadata also report, or `NULL` when the
-#'   metadata lists no samples.
+#' @return One row with the total sample size and the ancestry shares of
+#'   `get_GWAS_ancestry_share_tibble()`, or `NULL` when the metadata lists no
+#'   samples.
 #' @keywords internal
 
 get_GWAS_SSF_metadata_tibble <- function(metadata_text) {
@@ -187,25 +187,14 @@ get_GWAS_SSF_metadata_tibble <- function(metadata_text) {
   if (length(samples) == 0L) {
     return(NULL)
   }
-  sample_sizes <- purrr::map_dbl(samples, \(sample) as.numeric(sample$sample_size %||% NA))
-  categories <- purrr::map(samples, \(sample) as.character(unlist(sample$sample_ancestry_category)))
-  # A sample group with several ancestry categories counts equally towards each.
-  category_sizes <- rep(sample_sizes / lengths(categories), lengths(categories))
-  ancestry_groups <- dplyr::recode_values(
-    unlist(categories),
-    c("European", "Finnish") ~ "EUR",
-    "East Asian" ~ "EAS",
-    c("African American or Afro-Caribbean", "African unspecified", "Sub-Saharan African") ~ "AFR",
-    "Hispanic or Latin American" ~ "AMR",
-    "South Asian" ~ "SAS",
-    default = "OTH"
+  sample_tibble <- tibble::tibble(
+    sample_group = seq_along(samples),
+    sample_size = purrr::map_dbl(samples, \(sample) as.numeric(sample$sample_size %||% NA)),
+    ancestry = purrr::map(samples, \(sample) as.character(unlist(sample$sample_ancestry_category)))
   )
-  ancestry_shares <- tapply(
-    category_sizes, factor(ancestry_groups, c("EUR", "EAS", "AFR", "AMR", "SAS", "OTH")), sum, default = 0
-  ) / sum(category_sizes)
   tibble::tibble(
-    sample_size = sum(sample_sizes),
-    !!!rlang::set_names(as.list(ancestry_shares), paste0("ancestry_", names(ancestry_shares)))
+    sample_size = sum(sample_tibble$sample_size),
+    get_GWAS_ancestry_share_tibble(tidyr::unnest(sample_tibble, ancestry))
   )
 }
 
@@ -967,6 +956,8 @@ plot_SLDSC_specificity_heatmap <- function(SLDSC_tibble, GWAS_inputs_tibble, com
 pair_SLDSC_chromVAR_z <- function(SLDSC_tibble, chromVAR_deviation_tibble) {
   SLDSC_tibble |>
     dplyr::filter(!is.na(z)) |>
+    # A mixed sample group hides how many of its samples are European.
+    dplyr::mutate(ancestry_EUR = dplyr::if_else(ancestry_MIX > 0, NA_real_, ancestry_EUR)) |>
     dplyr::select(GWAS_ID, Category, cluster, SLDSC_z = z, SLDSC_p = p, h2, h2_se, sample_size, ancestry_EUR, n_cells) |>
     dplyr::inner_join(
       dplyr::filter(chromVAR_deviation_tibble, is.finite(z)) |>

@@ -273,12 +273,14 @@ get_GWAS_chromVAR_locus_shift_z_matrices <- function(
 #'   background z-score, the mean and SD of the moved copies' background
 #'   z-scores, the background z-score standardized by them (`z`) and its
 #'   empirical one-sided P-value `z_p`, (1 + moved copies at least as large) /
-#'   (1 + `n_draws`).
+#'   (1 + moved copies). Moved copies that put no weighted variant in a peak
+#'   have no accessibility to score (0/0) and are left out.
 #' @keywords internal
 
 get_GWAS_chromVAR_locus_shift_null_tibble <- function(GWAS_input_record, ..., n_draws = 10000L) {
   purrr::imap_dfr(get_GWAS_chromVAR_locus_shift_z_matrices(GWAS_input_record, ..., n_draws = n_draws), \(z_matrix, weighting) {
     null_matrix <- z_matrix[-1, , drop = FALSE]
+    null_matrix <- null_matrix[rowSums(!is.nan(null_matrix)) > 0L, , drop = FALSE]
     tibble::tibble(
       GWAS_ID = GWAS_input_record$GWAS_ID,
       weighting = weighting,
@@ -287,7 +289,7 @@ get_GWAS_chromVAR_locus_shift_null_tibble <- function(GWAS_input_record, ..., n_
       null_mean = colMeans(null_matrix),
       null_sd = matrixStats::colSds(null_matrix),
       z = (background_z - null_mean) / null_sd,
-      z_p = (colSums(null_matrix >= rep(background_z, each = n_draws)) + 1) / (n_draws + 1)
+      z_p = (colSums(null_matrix >= rep(background_z, each = nrow(null_matrix))) + 1) / (nrow(null_matrix) + 1)
     )
   })
 }
@@ -468,6 +470,7 @@ get_GWAS_chromVAR_variant_contribution_tibble <- function(peak_contribution_tibb
       position,
       locusStart,
       locusEnd,
+      n_signals,
       posteriorProbability,
       peak_variant_weight,
       peak_name,
@@ -591,6 +594,18 @@ get_open_targets_GWAS_locus_to_gene_tibble <- function(
     )
 }
 
+#' Label a credible set by its lead variant
+#'
+#' @param lead_variantId Lead variant of each credible set.
+#' @param n_signals Its expected number of causal signals.
+#' @return The lead variant, followed by the number of signals for sets that
+#'   hold several, whose other signals the lead does not name.
+#' @keywords internal
+
+label_credible_set_lead <- function(lead_variantId, n_signals) {
+  dplyr::if_else(n_signals > 1, paste0(lead_variantId, " (", n_signals, " signals)"), lead_variantId)
+}
+
 #' Sum credible-set variant contributions by locus
 #'
 #' @param variant_contribution_tibble Variant-level chromVAR contribution.
@@ -607,7 +622,8 @@ get_GWAS_chromVAR_locus_contribution_tibble <- function(variant_contribution_tib
       studyLocusId,
       lead_variantId = variantId,
       lead_variant_position = position,
-      lead_variant_PIP = posteriorProbability
+      lead_variant_PIP = posteriorProbability,
+      n_signals
     )
 
   locus_gene_summary_tibble <- locus_to_gene_tibble |>
@@ -654,7 +670,7 @@ get_GWAS_chromVAR_locus_contribution_tibble <- function(variant_contribution_tib
     dplyr::left_join(lead_variant_tibble, by = c("GWAS_ID", "studyLocusId")) |>
     dplyr::left_join(locus_gene_summary_tibble, by = c("GWAS_ID", "studyLocusId"), relationship = "many-to-one") |>
     dplyr::mutate(
-      locus_label = .data$lead_variantId,
+      locus_label = label_credible_set_lead(.data$lead_variantId, .data$n_signals),
       likely_genes_label = dplyr::coalesce(.data$likely_genes_label, "No L2G prediction >= 0.05"),
       n_L2G_genes = dplyr::coalesce(.data$n_L2G_genes, 0L),
       contribution_rank = dplyr::min_rank(dplyr::desc(abs(.data$relative_deviation_contribution))),

@@ -76,6 +76,8 @@ my_aggregation:
       summaryStatistics: GWAS/T2D_consortium_GRCh38.tsv.gz
 ```
 
+Near-duplicate GWAS, such as a multi-ancestry and a European analysis of one study, can share a `study_group`. Summaries across GWAS then resample them together, so that their intervals count them as one study. Without `study_group`, each GWAS is its own group.
+
 The [parameter browser](parameters.html#genetic_enrichment_GWAS_studies) lists the columns that S-LDSC reads. Studies without summary statistics, such as FinnGen studies or local files without `summaryStatistics`, appear as grey rows in the S-LDSC plots. The other analyses use their credible sets as before.
 
 <details>

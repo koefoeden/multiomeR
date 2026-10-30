@@ -23,6 +23,8 @@ genetic_enrichment_GWAS_config_tibble <- if (nrow(genetic_enrichment_tibble) == 
           as.character(config$sourceId)
         }),
         sourceType = purrr::map_chr(sourceId, classify_GWAS_source),
+        # Near-duplicate GWAS share a study group, which cross-GWAS bootstraps resample as one unit.
+        study_group = purrr::map2_chr(GWAS_config, GWAS_ID, \(config, GWAS_ID) as.character(config$study_group %||% GWAS_ID)),
         summaryStatistics = purrr::map_chr(GWAS_config, \(config) as.character(config$summaryStatistics %||% NA)),
         requested_finemappingMethod = purrr::pmap_chr(
           dplyr::pick(GWAS_config, sourceType, GWAS_ID),
@@ -52,6 +54,7 @@ genetic_enrichment_GWAS_config_tibble <- if (nrow(genetic_enrichment_tibble) == 
         aggregation,
         config_order,
         Category,
+        study_group,
         GWAS_ID,
         sourceId,
         sourceType,
@@ -82,6 +85,7 @@ genetic_enrichment_GWAS_config_tibble <- if (nrow(genetic_enrichment_tibble) == 
       GWAS_inputs_config_tibble = c(
         config_order,
         Category,
+        study_group,
         GWAS_ID,
         sourceId,
         sourceType,

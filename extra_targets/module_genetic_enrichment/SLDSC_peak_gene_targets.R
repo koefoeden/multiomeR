@@ -60,13 +60,13 @@ rlang::list2(
     command = dplyr::bind_rows(!!!rlang::syms(paste0("enrichment_records.", SLDSC_peak_gene_rankings$ranking))) |>
       dplyr::select(-h2_share_delete_values, -PIP_bootstrap_shares) |>
       tidyr::separate_wider_delim("cluster", "/", names = c("tier", "cluster")) |>
-      dplyr::left_join(dplyr::select(GWAS_inputs_tibble, GWAS_ID, Category), by = "GWAS_ID", relationship = "many-to-one") |>
+      dplyr::left_join(dplyr::select(GWAS_inputs_tibble, GWAS_ID, Category, study_group), by = "GWAS_ID", relationship = "many-to-one") |>
       dplyr::left_join(get_SLDSC_enriched_pair_tibble(SLDSC_cell_type_tibble.cell_type_pseudobulk), by = c("GWAS_ID", "cluster"), relationship = "many-to-one") |>
       dplyr::relocate(tier, ranking, GWAS_ID, Category, cluster, share, enriched_in_models)
   ),
   targets::tar_target(
     name = enrichment_summary_tibble,
-    description = "Contrast each peak-gene ranking's enrichment with its territory and baselines in enriched and other GWAS-cell-type pairs, with GWAS-bootstrap intervals [part_of_graph:genetic_enrichment_SLDSC]",
+    description = "Contrast each peak-gene ranking's enrichment with its territory and baselines in enriched and other GWAS-cell-type pairs, with study-group bootstrap intervals [part_of_graph:genetic_enrichment_SLDSC]",
     command = summarise_SLDSC_peak_gene_enrichment(enrichment_tibble),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),

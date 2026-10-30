@@ -3,7 +3,7 @@ rlang::list2(
     name = GWAS_analysis_inputs_config_tibble,
     description = "Drop plot-only GWAS fields and stabilize row order before source-specific input branching",
     command = GWAS_inputs_config_tibble |>
-      dplyr::select(-Category, -config_order) |>
+      dplyr::select(-Category, -study_group, -config_order) |>
       dplyr::arrange(GWAS_ID),
     iteration = "vector"
   ),
@@ -36,7 +36,7 @@ rlang::list2(
     command = purrr::map_dfr(GWAS_input_records, "metadata_tibble") |>
       dplyr::left_join(
         GWAS_inputs_config_tibble |>
-          dplyr::select(GWAS_ID, Category, config_order),
+          dplyr::select(GWAS_ID, Category, study_group, config_order),
         by = "GWAS_ID",
         relationship = "one-to-one"
       ) |>

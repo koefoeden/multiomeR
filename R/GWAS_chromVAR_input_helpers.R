@@ -101,6 +101,10 @@ resolve_open_targets_GWAS_input_tibble <- function(
 #' Get open targets credible set variants tibble
 #'
 #' Extract configured Open Targets credible-set variants for GWAS-gene chromVAR.
+#' Credible sets flagged "Variant not found in LD reference" are left out: they
+#' are PICS sets whose lead variant got all the posterior probability without
+#' fine-mapping. Open Targets' other flags on these studies describe provenance,
+#' such as fine-mapping with out-of-sample LD or from curated top hits.
 #'
 #' @param GWAS_inputs_tibble GWAS configuration tibble with labels, Open Targets study IDs and finemapping methods.
 #' @param open_targets_credible_set_dataset_path Local directory or dataset path
@@ -120,7 +124,8 @@ get_open_targets_credible_set_variants_tibble <- function(GWAS_inputs_tibble, op
       confidence,
       locusStart,
       locusEnd,
-      locus
+      locus,
+      qualityControls
     ) |>
     dplyr::collect() |>
     dplyr::inner_join(
@@ -144,6 +149,8 @@ get_open_targets_credible_set_variants_tibble <- function(GWAS_inputs_tibble, op
   }
 
   variants_tibble <- credible_set_tibble |>
+    dplyr::filter(!purrr::map_lgl(qualityControls, \(flags) "Variant not found in LD reference" %in% flags)) |>
+    dplyr::select(-qualityControls) |>
     tidyr::unnest(locus)
   variant_parts <- stringr::str_match(variants_tibble$variantId, "^(.+)_([0-9]+)_([^_]+)_([^_]+)$")
 
@@ -216,7 +223,13 @@ get_open_targets_credible_set_GRanges <- function(variants_tibble) {
     warning("Dropped ", sum(!on_main_chromosome), " credible-set variant(s) outside their set's main chromosome: ",
       paste(unique(variants_tibble$variantId[!on_main_chromosome]), collapse = ", "), call. = FALSE)
   }
+  # A set's posterior probabilities sum to its expected number of causal
+  # signals, which exceeds one in multi-signal regions such as MAGIC's FINEMAP sets.
   variants_tibble[on_main_chromosome, ] |>
+    dplyr::mutate(
+      n_signals = max(1, round(sum(posteriorProbability))),
+      .by = studyLocusId
+    ) |>
     dplyr::mutate(seqnames = stringr::str_c("chr", chromosome), start = position, end = position) |>
     GenomicRanges::makeGRangesFromDataFrame(
       seqnames.field = "seqnames",
@@ -390,13 +403,13 @@ get_local_finemapped_GWAS_metadata_tibble <- function(
       credibleSetProbability = dplyr::first(credibleSetProbability),
       sourceRelease = dplyr::first(sourceRelease),
       sample_size = as.numeric(dplyr::first(sampleSize)),
-      n_credible_set_loci = dplyr::n_distinct(studyLocusId),
       ancestry_EUR = NA_real_,
       ancestry_EAS = NA_real_,
       ancestry_AFR = NA_real_,
       ancestry_AMR = NA_real_,
       ancestry_SAS = NA_real_,
-      ancestry_OTH = NA_real_
+      ancestry_OTH = NA_real_,
+      ancestry_MIX = NA_real_
     )
 }
 
@@ -445,8 +458,7 @@ get_GWAS_chromVAR_input_record <- function(
         credibleSetProbability = GWAS_input_tibble$credibleSetProbability[[1]],
         sourceRelease = open_targets_release,
         sample_size,
-        n_credible_set_loci,
-        dplyr::across(dplyr::matches("^ancestry_(EUR|EAS|AFR|AMR|SAS|OTH)$"))
+        dplyr::across(dplyr::starts_with("ancestry_"))
       )
   } else {
     source_tibble <- arrow::read_parquet(local_source_file)
@@ -460,6 +472,9 @@ get_GWAS_chromVAR_input_record <- function(
     )
     GWAS_input_tibble <- metadata_tibble
   }
+  credible_set_GRanges <- get_open_targets_credible_set_GRanges(variants_tibble)
+  first_variants <- !duplicated(credible_set_GRanges$studyLocusId)
+  metadata_tibble$n_credible_set_loci <- sum(credible_set_GRanges$n_signals[first_variants])
 
   list(
     GWAS_ID = GWAS_config_tibble$GWAS_ID[[1]],
@@ -468,7 +483,7 @@ get_GWAS_chromVAR_input_record <- function(
     studyId = GWAS_input_tibble$studyId[[1]],
     finemappingMethod = GWAS_input_tibble$finemappingMethod[[1]],
     metadata_tibble = metadata_tibble,
-    credible_set_GRanges = get_open_targets_credible_set_GRanges(variants_tibble)
+    credible_set_GRanges = credible_set_GRanges
   )
 }
 

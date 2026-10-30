@@ -130,12 +130,13 @@ get_SLDSC_peak_gene_score_matrix <- function(score_tibble, ranking, tiers, peak_
 #' mislead. Contrasts are computed in enriched pairs, which a single-modality
 #' S-LDSC model enriches at q < 0.05, and in other pairs; their quotient
 #' measures specificity. Pairs without S-LDSC results enter neither. Intervals
-#' are 2.5% and 97.5% quantiles over the bootstrap samples of GWAS, shared by
-#' all contrasts, in which the ratio is defined.
+#' are 2.5% and 97.5% quantiles over the bootstrap samples of study groups,
+#' which resample near-duplicate GWAS together, shared by all contrasts, in
+#' which the ratio is defined.
 #'
 #' @param enrichment_tibble Combined strategy enrichments with `tier`,
-#'   `ranking`, `share`, `cluster` and `enriched_in_models`.
-#' @param n_bootstraps Bootstrap samples of GWAS.
+#'   `ranking`, `share`, `cluster`, `enriched_in_models` and `study_group`.
+#' @param n_bootstraps Bootstrap samples of study groups.
 #' @return One row per territory, ranking, reference, size, statistic, pair
 #'   set and cell type (`All cell types` for all together; single cell types
 #'   only against nothing or the territory) with the numbers of pairs and GWAS,
@@ -148,7 +149,7 @@ summarise_SLDSC_peak_gene_enrichment <- function(enrichment_tibble, n_bootstraps
     dplyr::filter(!is.na(.data$enriched_in_models)) |>
     tidyr::pivot_longer(dplyr::any_of(c("SLDSC_enrichment", "PIP_enrichment")), names_to = "statistic", values_to = "enrichment") |>
     dplyr::filter(!is.na(.data$enrichment)) |>
-    dplyr::select("tier", "ranking", "share", "statistic", "GWAS_ID", "cluster", "enriched_in_models", "enrichment")
+    dplyr::select("tier", "ranking", "share", "statistic", "GWAS_ID", "study_group", "cluster", "enriched_in_models", "enrichment")
   rankings <- unique(pair_tibble$ranking)
   strategies <- intersect(c("ABC", "ABC_conditional", "correlation", "correlation_conditional", "correlation_ABC"), rankings)
   contrast_tibble <- dplyr::bind_rows(
@@ -174,10 +175,10 @@ summarise_SLDSC_peak_gene_enrichment <- function(enrichment_tibble, n_bootstraps
     )) |>
     dplyr::filter(!is.na(.data$reference_enrichment))
 
-  GWAS_IDs <- sort(unique(paired_tibble$GWAS_ID))
+  study_groups <- sort(unique(paired_tibble$study_group))
   withr::local_seed(1L)
-  bootstrap_GWAS <- matrix(sample.int(length(GWAS_IDs), length(GWAS_IDs) * n_bootstraps, replace = TRUE), ncol = n_bootstraps)
-  summarise_contrast <- \(enrichment, reference_enrichment, enriched, GWAS_ID, statistic) {
+  bootstrap_groups <- matrix(sample.int(length(study_groups), length(study_groups) * n_bootstraps, replace = TRUE), ncol = n_bootstraps)
+  summarise_contrast <- \(enrichment, reference_enrichment, enriched, GWAS_ID, study_group, statistic) {
     centre <- if (statistic[[1]] == "SLDSC_enrichment") stats::median else mean
     divide <- \(numerator, denominator) if (is.finite(denominator) && denominator > 0) numerator / denominator else NA_real_
     ratio <- \(rows) divide(centre(enrichment[rows]), centre(reference_enrichment[rows]))
@@ -187,8 +188,8 @@ summarise_SLDSC_peak_gene_enrichment <- function(enrichment_tibble, n_bootstraps
       other_ratio <- ratio(rows[!in_enriched])
       c(enriched_ratio, other_ratio, divide(enriched_ratio, other_ratio))
     }
-    GWAS_rows <- split(seq_along(enrichment), factor(GWAS_ID, GWAS_IDs))
-    draws <- apply(bootstrap_GWAS, 2, \(sample) ratios(unlist(GWAS_rows[sample], use.names = FALSE)))
+    group_rows <- split(seq_along(enrichment), factor(study_group, study_groups))
+    draws <- apply(bootstrap_groups, 2, \(sample) ratios(unlist(group_rows[sample], use.names = FALSE)))
     tibble::tibble(
       pair_set = c("Enriched pairs", "Other pairs", "Specificity"),
       n_pairs = c(sum(enriched), sum(!enriched), length(enriched)),
@@ -204,7 +205,7 @@ summarise_SLDSC_peak_gene_enrichment <- function(enrichment_tibble, n_bootstraps
     dplyr::filter(paired_tibble, .data$reference %in% c("none", "territory"))
   ) |>
     dplyr::reframe(
-      summarise_contrast(.data$enrichment, .data$reference_enrichment, .data$enriched_in_models, .data$GWAS_ID, .data$statistic),
+      summarise_contrast(.data$enrichment, .data$reference_enrichment, .data$enriched_in_models, .data$GWAS_ID, .data$study_group, .data$statistic),
       .by = c("tier", "ranking", "reference", "share", "statistic", "cluster")
     ) |>
     dplyr::mutate(statistic = factor(.data$statistic, c("SLDSC_enrichment", "PIP_enrichment"), c("S-LDSC heritability", "Fine-mapped PIP")))
@@ -284,7 +285,7 @@ plot_SLDSC_peak_gene_uplift_curves <- function(summary_tibble) {
         "Enrichment is an annotation's share of S-LDSC heritability (fitted alone with the 97 baseline-LD v2.2 annotations) or of autosomal credible-set PIP, over its share of common SNPs.",
         "Y: the ranking's median (S-LDSC) or mean (PIP) enrichment over GWAS-cell-type pairs, divided by the territory's over the same pairs.",
         "Enriched pairs reach q < 0.05 in the single-modality peak or gene S-LDSC model; other pairs do not; GWAS without summary statistics are excluded.",
-        "Bands: 95% intervals from 1,000 bootstrap samples of GWAS, drawn from 0.001.",
+        "Bands: 95% intervals from 1,000 bootstrap samples of study groups, which keep near-duplicate GWAS together, drawn from 0.001.",
         hidden,
         paste(n_pairs$label, collapse = "; ")
       ), width = 200),
@@ -336,7 +337,7 @@ plot_SLDSC_peak_gene_contrasts <- function(summary_tibble, share = 0.25) {
         SLDSC_peak_gene_method_caption,
         "Ratio: the ranking's median (S-LDSC) or mean (fine-mapped PIP) enrichment over GWAS-cell-type pairs, divided by its reference's over the same pairs; the reference is the whole territory or a ranking of the same size.",
         "Enriched pairs reach q < 0.05 in the single-modality peak or gene S-LDSC model; specificity divides the enriched-pair ratio by the other-pair ratio.",
-        "Lines: 95% intervals from 1,000 bootstrap samples of GWAS, the same samples for every contrast; lower ends are drawn from 0.001.",
+        "Lines: 95% intervals from 1,000 bootstrap samples of study groups, which keep near-duplicate GWAS together, the same samples for every contrast; lower ends are drawn from 0.001.",
         hidden
       ), width = 190),
       x = "Ratio of enrichments (log scale)",

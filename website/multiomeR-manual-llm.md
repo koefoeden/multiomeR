@@ -897,6 +897,8 @@ my_aggregation:
       summaryStatistics: GWAS/T2D_consortium_GRCh38.tsv.gz
 ```
 
+Near-duplicate GWAS, such as a multi-ancestry and a European analysis of one study, can share a `study_group`. Summaries across GWAS then resample them together, so that their intervals count them as one study. Without `study_group`, each GWAS is its own group.
+
 The [parameter browser](parameters.html#genetic_enrichment_GWAS_studies) lists the columns that S-LDSC reads. Studies without summary statistics, such as FinnGen studies or local files without `summaryStatistics`, appear as grey rows in the S-LDSC plots. The other analyses use their credible sets as before.
 
 <details>
@@ -2172,7 +2174,11 @@ Each multiomeR version uses one fixed Open Targets Platform release, currently 2
 Users can supply their own fine-mapping results as Parquet files in a fixed format.
 For each configured GWAS, multiomeR retrieves the requested study and fine-mapping result.
 When selection is automatic, it takes the first available of SuSiE, SuSiE-inf and PICS fine-mapping [@wang2020_susie; @cui2024_susie_inf; @farh2015_pics].
+Open Targets credible sets flagged "Variant not found in LD reference" are left out, because their lead variant was given all the posterior probability without fine-mapping.
+Open Targets' other flags on these studies describe provenance, such as fine-mapping with out-of-sample LD or from curated top hits, and are kept.
 Variants of the study's credible sets (95% sets for Open Targets) with a posterior probability above 0.001 by default are mapped to consensus ATAC peaks.
+A credible set's posterior probabilities sum to its expected number of causal signals, which exceeds one in multi-signal regions such as those of FINEMAP.
+The rounded sum counts such a set's signals in the loci tracks, and labels of its lead variant name them.
 Variant weights that map to the same peak are summed and capped at one.
 These peak weights form the trait annotation from which analytic nucleus-level chromVAR z-scores are calculated, reusing the GC-bias background of the motif analysis [@schep2017_chromvar; @ulirsch2019_gchromvar; @germain2026_betterchromvar].
 The z-scores use betterChromVAR's finite-population correction, which accounts for each nucleus's expectation being estimated from its own counts and sums the background variance over the squared peak weights.
@@ -2210,6 +2216,7 @@ A block without such a move within 2 Mb moves elsewhere on its chromosome.
 Moved loci fall in fewer and less accessible peaks than real ones, so their raw deviations vary more.
 The real and moved loci are therefore compared by their background z-scores.
 This is the deviation's numerator divided by its standard deviation under independently drawn matched background peaks, which scales with the squared peak weights.
+Moved copies that put no variant in a peak have no accessibility to score and are left out, which happens only for traits with very few loci.
 A class's one-sided P-value is the share of moved copies, plus the real trait, whose background z-score is at least as large.
 The reported z-score standardizes the real background z-score by the mean and standard deviation of the moved copies.
 This null is skewed to the right, so normal P-values would be too small.
@@ -2321,6 +2328,7 @@ The statistics are cleaned largely as ldsc does, without its imputation-quality 
 Variants need an rsID, a P-value within the double-precision range, alleles that match the reference without strand ambiguity, and a minor-allele frequency above 0.01 when one is reported.
 Variants whose sample size is below two-thirds of the 90th percentile are removed.
 Studies without per-variant sample sizes use the total of the samples in the summary statistics' GWAS-SSF metadata, which also gives the sample size and ancestry shown for each trait.
+A sample group that lists several ancestries without their sizes is shown as mixed, and one marked as not reported is left out of the ancestry shares.
 Each class is fitted separately, jointly with the all-peaks annotation and the 97 annotations of the baseline-LD v2.2 model [@gazal2017_baseline_ld].
 The class coefficient therefore measures heritability per variant beyond accessible chromatin in general and the baseline functional categories, which makes it a test of specificity.
 Regression weights follow ldsc but are computed once per GWAS from the shared annotations.
@@ -2391,7 +2399,9 @@ Most classes' most accessible peaks hold more posterior probability than a rando
 Each credible set contributes its posterior probability inside an annotation, over the total and the annotation's share of common variants, so the contributions sum to the fine-mapped enrichment.
 Per GWAS, a heatmap shows these contributions for the credible sets that most set a class apart, by the largest excess of a class's contribution over the median across classes.
 Pairs of GWAS and class are called enriched when a single-modality model reaches q < 0.05.
-Summaries across pairs or GWAS report medians with 95% intervals from 1,000 bootstrap samples of GWAS.
+Summaries across pairs or GWAS report medians with 95% intervals from 1,000 bootstrap samples of study groups.
+A study group holds the configured near-duplicate GWAS, such as multi-ancestry and European analyses of one study, which are resampled together.
+Every other GWAS is its own group.
 A strategy's specificity is each GWAS's median enrichment in its enriched classes divided by that in its other classes, when both are positive.
 Small peak annotations hold only the credible-set variants inside them, while gene windows hold whole credible sets, so imprecise fine-mapping lowers the fine-mapped enrichment of peaks more.
 
@@ -2417,7 +2427,7 @@ The reference is the territory, another ranking of the same size, or, for correl
 The centre is the median for heritability enrichment and the mean for fine-mapped enrichment, because small annotations often hold no credible-set variant.
 A ratio is left missing when its reference's centre is not positive, as the heritability share of a small annotation can be, because its sign would mislead.
 Contrasts are computed in enriched and in other pairs, and the quotient of the two measures specificity.
-Their intervals are 2.5% and 97.5% quantiles over 1,000 bootstrap samples of GWAS, the same samples for every contrast.
+Their intervals are 2.5% and 97.5% quantiles over 1,000 bootstrap samples of study groups, the same samples for every contrast.
 Tested territories are small, so their heritability enrichment is noisy, and fine-mapped enrichment is the more informative statistic there.
 
 Agreement with pseudobulk chromVAR is summarized for each GWAS by the Spearman correlation of the two methods' z-scores across classes.

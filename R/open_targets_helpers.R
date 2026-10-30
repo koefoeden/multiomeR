@@ -44,16 +44,54 @@ download_open_targets_dataset <- function(dataset_url) {
   output_path
 }
 
+#' Share GWAS samples among ancestry groups
+#'
+#' The GWAS Catalog gives a sample group's size, not its split among the
+#' ancestry categories it lists. A group whose categories fall in several
+#' ancestry groups is therefore counted as mixed (`MIX`). "NR" (not reported)
+#' is ignored, and groups that report no ancestry are left out.
+#'
+#' @param sample_tibble One row per sample group and ancestry category, with
+#'   `sample_group`, `ancestry` and the group's `sample_size`.
+#' @return One row of `ancestry_*` shares, all missing when no group reports an
+#'   ancestry.
+#' @keywords internal
+
+get_GWAS_ancestry_share_tibble <- function(sample_tibble) {
+  ancestry_groups <- c("EUR", "EAS", "AFR", "AMR", "SAS", "OTH", "MIX")
+  group_tibble <- sample_tibble |>
+    dplyr::filter(ancestry != "NR") |>
+    dplyr::mutate(ancestry_group = dplyr::recode_values(
+      ancestry,
+      c("European", "Finnish") ~ "EUR",
+      "East Asian" ~ "EAS",
+      c("African American or Afro-Caribbean", "African unspecified", "Sub-Saharan African") ~ "AFR",
+      "Hispanic or Latin American" ~ "AMR",
+      "South Asian" ~ "SAS",
+      default = "OTH"
+    )) |>
+    dplyr::summarise(
+      ancestry_group = if (dplyr::n_distinct(ancestry_group) == 1L) dplyr::first(ancestry_group) else "MIX",
+      sample_size = dplyr::first(sample_size),
+      .by = sample_group
+    )
+  sizes <- tapply(group_tibble$sample_size, factor(group_tibble$ancestry_group, ancestry_groups), sum, default = 0)
+  shares <- if (nrow(group_tibble) > 0L) sizes / sum(sizes) else sizes * NA_real_
+  tibble::as_tibble(as.list(rlang::set_names(as.numeric(shares), paste0("ancestry_", ancestry_groups))))
+}
+
 #' Get open targets GWAS metadata tibble
 #'
 #' Join configured GWAS inputs with Open Targets study and credible-set summaries.
+#' Open Targets splits a GWAS Catalog sample group equally among its listed
+#' ancestries, so rows of equal size within a study are taken as one group.
 #'
 #' @param GWAS_inputs_tibble GWAS configuration tibble with labels, Open Targets study IDs, and finemapping methods.
 #' @param open_targets_study_dataset_path Local directory or dataset path for the
 #'   Open Targets `study` Parquet dataset.
 #' @param open_targets_credible_set_dataset_path Local directory or dataset path
 #'   for the Open Targets credible-set Parquet dataset.
-#' @return A GWAS metadata tibble with sample-size and credible-set counts for
+#' @return A GWAS metadata tibble with sample sizes, ancestry shares and credible-set confidence for
 #'   configured study/finemapping-method combinations. Missing studies error.
 #' @keywords internal
 
@@ -87,43 +125,23 @@ get_open_targets_GWAS_metadata_tibble <- function(GWAS_inputs_tibble, open_targe
     dplyr::group_by(studyId, finemappingMethod) |>
     dplyr::summarise(
       confidence = paste(sort(unique(confidence)), collapse = "; "),
-      n_credible_set_loci = dplyr::n_distinct(studyLocusId),
       max_locus_sample_size = suppressWarnings(max(sampleSize, na.rm = TRUE)),
       .groups = "drop"
     ) |>
     dplyr::mutate(max_locus_sample_size = dplyr::if_else(is.infinite(max_locus_sample_size), NA_real_, max_locus_sample_size))
 
-  ancestry_alias_tibble <- tibble::tribble(
-    ~ancestry, ~ancestry_group,
-    "European", "EUR",
-    "Finnish", "EUR",
-    "East Asian", "EAS",
-    "African American or Afro-Caribbean", "AFR",
-    "African unspecified", "AFR",
-    "Sub-Saharan African", "AFR",
-    "Hispanic or Latin American", "AMR",
-    "South Asian", "SAS",
-    "Central Asian", "OTH",
-    "Greater Middle Eastern", "OTH",
-    "Other", "OTH",
-    "NR", "OTH"
-  )
-
   ancestry_wide_tibble <- study_tibble |>
     dplyr::select(studyId, discoverySamples) |>
     tidyr::unnest(discoverySamples, keep_empty = TRUE) |>
     dplyr::mutate(sampleSize = as.numeric(sampleSize), ancestry = dplyr::coalesce(ancestry, "NR")) |>
-    dplyr::left_join(ancestry_alias_tibble, by = "ancestry") |>
-    dplyr::mutate(ancestry_group = dplyr::coalesce(ancestry_group, "OTH")) |>
-    dplyr::summarise(ancestry_sample_size = sum(sampleSize, na.rm = TRUE), .by = c(studyId, ancestry_group)) |>
-    tidyr::complete(studyId, ancestry_group = c("EUR", "EAS", "AFR", "AMR", "SAS", "OTH"), fill = list(ancestry_sample_size = 0)) |>
-    dplyr::mutate(
-      total_ancestry_sample_size = sum(ancestry_sample_size),
-      ancestry_fraction = dplyr::if_else(total_ancestry_sample_size > 0, ancestry_sample_size / total_ancestry_sample_size, 0),
+    dplyr::reframe(
+      get_GWAS_ancestry_share_tibble(tibble::tibble(
+        sample_group = sampleSize,
+        ancestry = ancestry,
+        sample_size = stats::ave(sampleSize, sampleSize, FUN = sum)
+      )),
       .by = studyId
-    ) |>
-    dplyr::select(studyId, ancestry_group, ancestry_fraction) |>
-    tidyr::pivot_wider(names_from = ancestry_group, values_from = ancestry_fraction, names_prefix = "ancestry_", values_fill = 0)
+    )
 
   GWAS_inputs_tibble |>
     dplyr::left_join(study_tibble, by = "studyId") |>
@@ -139,7 +157,6 @@ get_open_targets_GWAS_metadata_tibble <- function(GWAS_inputs_tibble, open_targe
       confidence,
       open_targets_release,
       sample_size,
-      n_credible_set_loci,
-      dplyr::matches("^ancestry_(EUR|EAS|AFR|AMR|SAS|OTH)$")
+      dplyr::starts_with("ancestry_")
     )
 }

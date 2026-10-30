@@ -188,12 +188,17 @@ get_SLDSC_credible_set_annotation_matrix <- function(credible_set_GRanges, range
 #' @return One row per annotation with its share of the PIP, the bootstrap
 #'   standard error and 95% interval of that share, its bootstrap shares
 #'   `PIP_bootstrap_shares`, paired across annotations, and the numbers of
-#'   credible sets and loci.
+#'   credible sets and loci; the shares are missing without autosomal
+#'   credible-set variants.
 #' @keywords internal
 
 get_SLDSC_PIP_share_tibble <- function(credible_set_GRanges, ranges, annotation_matrix, n_bootstraps = 1000L) {
   placed <- get_SLDSC_credible_set_annotation_matrix(credible_set_GRanges, ranges, annotation_matrix)
   variants <- placed$variants
+  if (length(variants) == 0L) {
+    return(tibble::tibble(annotation = colnames(annotation_matrix), PIP_share = NA_real_, PIP_share_se = NA_real_,
+      PIP_share_lower = NA_real_, PIP_share_upper = NA_real_, PIP_bootstrap_shares = list(NULL), n_credible_sets = 0L, n_loci = 0L))
+  }
   set_tibble <- tibble::tibble(
     studyLocusId = variants$studyLocusId,
     chromosome = as.character(GenomicRanges::seqnames(variants)),
@@ -317,7 +322,8 @@ get_SLDSC_matched_enrichment_tibble <- function(GWAS_input_record, sumstats_reco
 #' @param baseline_record Record from `read_SLDSC_baseline_record()`, which
 #'   gives the number of common SNPs.
 #' @return One row per cell type, size and credible set with a nonzero
-#'   contribution, with the credible set's lead variant.
+#'   contribution, with the credible set's lead variant and number of signals,
+#'   or `NULL` without autosomal credible-set variants.
 #' @keywords internal
 
 get_SLDSC_PIP_locus_contribution_tibble <- function(GWAS_input_record, annotation_record, baseline_record) {
@@ -328,13 +334,15 @@ get_SLDSC_PIP_locus_contribution_tibble <- function(GWAS_input_record, annotatio
     annotation_record$annotation_matrix[, cell_type_annotations, drop = FALSE]
   )
   variants <- placed$variants
+  if (length(variants) == 0L) return(NULL)
   SNP_share <- annotation_record$baseline_overlap_matrix[cell_type_annotations, "baseL2"] / baseline_record$M_5_50[["baseL2"]]
   contribution_matrix <- sweep(
     rowsum(variants$posteriorProbability * placed$inside_matrix, variants$studyLocusId) / sum(variants$posteriorProbability),
     2, SNP_share, "/"
   )
   nonzero <- which(contribution_matrix > 0, arr.ind = TRUE)
-  lead_tibble <- tibble::tibble(studyLocusId = variants$studyLocusId, lead_variantId = variants$variantId, PIP = variants$posteriorProbability) |>
+  lead_tibble <- tibble::tibble(studyLocusId = variants$studyLocusId, lead_variantId = variants$variantId,
+    n_signals = variants$n_signals, PIP = variants$posteriorProbability) |>
     dplyr::slice_max(PIP, n = 1, with_ties = FALSE, by = studyLocusId) |>
     dplyr::select(-PIP)
   tibble::tibble(
@@ -423,11 +431,12 @@ test_SLDSC_matched_enrichment <- function(enrichment_tibble, min_loci = 10L) {
 #' pairs, and of the random reference over GWAS. Specificity is each GWAS's
 #' median enrichment in its enriched cell types over that in its other cell
 #' types, when both are positive, summarised by its median over GWAS.
-#' Intervals are 2.5% and 97.5%
-#' quantiles of the medians over bootstrap samples of GWAS.
+#' Intervals are 2.5% and 97.5% quantiles of the medians over bootstrap
+#' samples of study groups, which resample near-duplicate GWAS together.
 #'
-#' @param enrichment_tibble Combined matched-size enrichment of all GWAS.
-#' @param n_bootstraps Bootstrap samples of GWAS.
+#' @param enrichment_tibble Combined matched-size enrichment of all GWAS, with
+#'   their `study_group`.
+#' @param n_bootstraps Bootstrap samples of study groups.
 #' @return One row per strategy, share, statistic, pair set and cell type
 #'   (`All cell types` for all together) with the number of pairs and GWAS,
 #'   the median and its interval.
@@ -435,11 +444,11 @@ test_SLDSC_matched_enrichment <- function(enrichment_tibble, min_loci = 10L) {
 
 summarise_SLDSC_matched_enrichment <- function(enrichment_tibble, n_bootstraps = 1000L) {
   withr::local_seed(1L)
-  bootstrap_median <- \(value, GWAS_ID) {
-    GWAS_rows <- split(seq_along(value), GWAS_ID)
-    medians <- replicate(n_bootstraps, stats::median(value[unlist(sample(GWAS_rows, replace = TRUE), use.names = FALSE)]))
+  bootstrap_median <- \(value, GWAS_ID, study_group) {
+    group_rows <- split(seq_along(value), study_group)
+    medians <- replicate(n_bootstraps, stats::median(value[unlist(sample(group_rows, replace = TRUE), use.names = FALSE)]))
     tibble::tibble(
-      n_pairs = length(value), n_GWAS = length(GWAS_rows), median = stats::median(value),
+      n_pairs = length(value), n_GWAS = dplyr::n_distinct(GWAS_ID), median = stats::median(value),
       lower = stats::quantile(medians, 0.025, names = FALSE), upper = stats::quantile(medians, 0.975, names = FALSE)
     )
   }
@@ -454,7 +463,7 @@ summarise_SLDSC_matched_enrichment <- function(enrichment_tibble, n_bootstraps =
   )
   enrichment_summary <- purrr::imap_dfr(pair_sets, \(pairs, pair_set) {
     dplyr::bind_rows(dplyr::mutate(pairs, cluster = "All cell types"), if (pair_set != "Random reference") pairs) |>
-      dplyr::reframe(bootstrap_median(enrichment, GWAS_ID), .by = c(strategy, share, statistic, cluster)) |>
+      dplyr::reframe(bootstrap_median(enrichment, GWAS_ID, study_group), .by = c(strategy, share, statistic, cluster)) |>
       dplyr::mutate(pair_set = pair_set)
   })
   specificity_summary <- pair_tibble |>
@@ -462,11 +471,11 @@ summarise_SLDSC_matched_enrichment <- function(enrichment_tibble, n_bootstraps =
     dplyr::summarise(
       enriched = stats::median(enrichment[enriched_in_models %in% TRUE]),
       other = stats::median(enrichment[!enriched_in_models %in% TRUE]),
-      .by = c(strategy, share, statistic, GWAS_ID)
+      .by = c(strategy, share, statistic, GWAS_ID, study_group)
     ) |>
     dplyr::filter(enriched > 0, other > 0) |>
     dplyr::mutate(enrichment = enriched / other) |>
-    dplyr::reframe(bootstrap_median(enrichment, GWAS_ID), .by = c(strategy, share, statistic)) |>
+    dplyr::reframe(bootstrap_median(enrichment, GWAS_ID, study_group), .by = c(strategy, share, statistic)) |>
     dplyr::mutate(cluster = "All cell types", pair_set = "Specificity")
   dplyr::bind_rows(enrichment_summary, specificity_summary) |>
     dplyr::relocate(strategy, share, statistic, pair_set, cluster)
@@ -797,7 +806,10 @@ plot_SLDSC_PIP_locus_contribution_heatmaps <- function(locus_contribution_tibble
     locus_tibble <- locus_contribution_tibble |>
       dplyr::filter(.data$GWAS_ID == .env$GWAS_ID) |>
       dplyr::left_join(gene_tibble, by = c("GWAS_ID", "studyLocusId"), relationship = "many-to-one") |>
-      dplyr::mutate(label = dplyr::if_else(is.na(top_L2G_gene), lead_variantId, paste0(lead_variantId, " (", top_L2G_gene, ")")))
+      dplyr::mutate(
+        label = label_credible_set_lead(lead_variantId, n_signals),
+        label = dplyr::if_else(is.na(top_L2G_gene), label, paste0(label, " (", top_L2G_gene, ")"))
+      )
     cells <- total_tibble |>
       dplyr::filter(.data$GWAS_ID == .env$GWAS_ID) |>
       dplyr::mutate(compartment = get_cluster_compartments(cluster, compartments_patterns), size = size_label(share))
@@ -938,7 +950,7 @@ plot_SLDSC_matched_enrichment_curves <- function(summary_tibble, dropped_tibble)
         "Most enriched pairs come from the peak model on the same summary statistics, which favours peaks in S-LDSC.",
         sprintf("Specificity: each GWAS's median enrichment in its enriched cell types over that in its other cell types, for the up to %d GWAS with an enriched pair and both medians positive.", n_GWAS("Specificity", "S-LDSC heritability")),
         "PIP enrichment rests on fine-mapping resolution: wide gene windows hold whole credible sets, while small peaks hold only the variants inside them.",
-        "Lines: medians over pairs or GWAS; bands: 95% intervals from 1,000 bootstrap samples of GWAS.",
+        "Lines: medians over pairs or GWAS; bands: 95% intervals from 1,000 bootstrap samples of study groups, which keep near-duplicate GWAS together.",
         describe_SLDSC_dropped_annotations(dropped_tibble)
       ), width = 180),
       theme = ggplot2::theme(plot.caption = ggplot2::element_text(hjust = 0))

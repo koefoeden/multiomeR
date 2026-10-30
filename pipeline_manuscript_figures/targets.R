@@ -169,7 +169,7 @@ figure_pipeline <- list(
       # Figure 1D's colour scale: deviations beyond its range take its end colours.
       limit <- max(abs(scores$deviation[scores$GWAS_ID %in% figure_1_traits.mixed_human_31x$GWAS_ID]))
       ggplot2::ggsave(paths[[1]], plot_trait_cell_type_heatmap(dplyr::mutate(scores, value = .data$deviation, q = .data$z_q),
-        GWAS_metadata_tracks_plot.genetic_enrichment.mixed_human_31x, "Deviation", limit, bar_tracks = "Loci"),
+        GWAS_metadata_tracks_plot.genetic_enrichment.mixed_human_31x, "Deviation", c(-limit, limit), bar_tracks = "Loci"),
         device = ragg::agg_png, width = 9, height = 10.5, dpi = 300)
       readr::write_tsv(dplyr::select(scores, "GWAS_ID", "Category", "cluster", "deviation", "z", "z_q"), paths[[2]])
       paths
@@ -178,13 +178,18 @@ figure_pipeline <- list(
   ),
   tarchetypes::tar_file(
     supplementary_figure_S6.mixed_human_31x,
-    description = "Supplementary Figure S6: the module's S-LDSC tau* heatmap of the peak model for every GWAS study with summary statistics and positive heritability and every assigned cell type, with a trait-category track and q < 0.05 stars, and its values",
+    description = "Supplementary Figure S6: the module's S-LDSC heritability enrichment in each assigned cell type's most accessible peaks, sized to 0.5% of common SNPs, for every GWAS study with summary statistics, on the module's enrichment scale with a trait-category track and q < 0.05 stars, and its values",
     command = {
-      scores <- SLDSC_cell_type_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x |>
-        dplyr::filter(.data$model == "peaks", !is.na(.data$tau_star), is_figure_1_cell_type(.data$cluster))
+      enrichment <- SLDSC_matched_enrichment_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x
+      # The main readout at its smallest size, which most cell types can fill.
+      scores <- enrichment |>
+        dplyr::filter(.data$strategy == "accessible_peaks", .data$share == 0.005, .data$cluster != "random",
+          !is.na(.data$SLDSC_enrichment), is_figure_1_cell_type(.data$cluster)) |>
+        dplyr::left_join(cell_type_pseudobulk_support_tibble.ATAC.genetic_enrichment.mixed_human_31x, by = "cluster",
+          relationship = "many-to-one")
       paths <- file.path(output_dir, c("S6.png", "data/cell_type_heritability_enrichment.tsv"))
-      # As in the module's heatmap, a few extreme tau* would otherwise wash out the others.
-      limit <- signif(stats::quantile(abs(scores$tau_star), .99, names = FALSE), 2)
+      # The module's enrichment heatmaps' scale, linear around 1, so that a few extreme values do not wash out the others.
+      limits <- get_SLDSC_enrichment_limits(enrichment)
       # The module's metadata tracks, built for the studies with S-LDSC results.
       tracks <- GWAS_inputs_tibble.genetic_enrichment.mixed_human_31x |>
         dplyr::filter(.data$GWAS_ID %in% scores$GWAS_ID) |>
@@ -196,11 +201,11 @@ figure_pipeline <- list(
         values = make_named_heatmap_palette(GWAS_inputs_tibble.genetic_enrichment.mixed_human_31x$Category, "Set3"),
         labels = \(x) gsub("_", " ", x), name = "Category",
         guide = ggplot2::guide_legend(ncol = 4L, byrow = TRUE, title.position = "top", order = 1))
-      ggplot2::ggsave(paths[[1]], plot_trait_cell_type_heatmap(dplyr::mutate(scores, value = .data$tau_star),
-        tracks, "tau*", limit),
+      ggplot2::ggsave(paths[[1]], plot_trait_cell_type_heatmap(dplyr::mutate(scores, value = .data$SLDSC_enrichment),
+        tracks, "Enrichment", limits, midpoint = 1),
         device = ragg::agg_png, width = 9, height = 2.5 + 0.22 * dplyr::n_distinct(scores$GWAS_ID), dpi = 300)
-      readr::write_tsv(dplyr::select(scores, "GWAS_ID", "Category", "cluster", "tau_star", "z", "p", "q", "h2", "h2_se",
-        "sumstats_url"), paths[[2]])
+      readr::write_tsv(dplyr::select(scores, "GWAS_ID", "Category", "cluster", "share", "SLDSC_enrichment",
+        "SLDSC_enrichment_se", "z", "p", "q", "h2", "h2_se"), paths[[2]])
       paths
     },
     resources = get_tar_resources(RAM_GB_req = 4)

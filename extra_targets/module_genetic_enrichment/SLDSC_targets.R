@@ -122,7 +122,7 @@ rlang::list2(
       SLDSC_matched_enrichment_records.cell_type_pseudobulk.specific_genes
     ) |>
       test_SLDSC_matched_enrichment() |>
-      dplyr::left_join(dplyr::select(GWAS_inputs_tibble, GWAS_ID, Category), by = "GWAS_ID", relationship = "many-to-one") |>
+      dplyr::left_join(dplyr::select(GWAS_inputs_tibble, GWAS_ID, Category, study_group), by = "GWAS_ID", relationship = "many-to-one") |>
       dplyr::left_join(get_SLDSC_enriched_pair_tibble(SLDSC_cell_type_tibble.cell_type_pseudobulk), by = c("GWAS_ID", "cluster"), relationship = "many-to-one") |>
       dplyr::relocate(strategy, GWAS_ID, Category, cluster, share, enriched_in_models)
   ),

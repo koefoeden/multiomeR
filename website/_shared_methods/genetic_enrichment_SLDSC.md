@@ -16,6 +16,7 @@ The statistics are cleaned largely as ldsc does, without its imputation-quality 
 Variants need an rsID, a P-value within the double-precision range, alleles that match the reference without strand ambiguity, and a minor-allele frequency above 0.01 when one is reported.
 Variants whose sample size is below two-thirds of the 90th percentile are removed.
 Studies without per-variant sample sizes use the total of the samples in the summary statistics' GWAS-SSF metadata, which also gives the sample size and ancestry shown for each trait.
+A sample group that lists several ancestries without their sizes is shown as mixed, and one marked as not reported is left out of the ancestry shares.
 Each class is fitted separately, jointly with the all-peaks annotation and the 97 annotations of the baseline-LD v2.2 model [@gazal2017_baseline_ld].
 The class coefficient therefore measures heritability per variant beyond accessible chromatin in general and the baseline functional categories, which makes it a test of specificity.
 Regression weights follow ldsc but are computed once per GWAS from the shared annotations.
@@ -86,7 +87,9 @@ Most classes' most accessible peaks hold more posterior probability than a rando
 Each credible set contributes its posterior probability inside an annotation, over the total and the annotation's share of common variants, so the contributions sum to the fine-mapped enrichment.
 Per GWAS, a heatmap shows these contributions for the credible sets that most set a class apart, by the largest excess of a class's contribution over the median across classes.
 Pairs of GWAS and class are called enriched when a single-modality model reaches q < 0.05.
-Summaries across pairs or GWAS report medians with 95% intervals from 1,000 bootstrap samples of GWAS.
+Summaries across pairs or GWAS report medians with 95% intervals from 1,000 bootstrap samples of study groups.
+A study group holds the configured near-duplicate GWAS, such as multi-ancestry and European analyses of one study, which are resampled together.
+Every other GWAS is its own group.
 A strategy's specificity is each GWAS's median enrichment in its enriched classes divided by that in its other classes, when both are positive.
 Small peak annotations hold only the credible-set variants inside them, while gene windows hold whole credible sets, so imprecise fine-mapping lowers the fine-mapped enrichment of peaks more.
 
@@ -112,7 +115,7 @@ The reference is the territory, another ranking of the same size, or, for correl
 The centre is the median for heritability enrichment and the mean for fine-mapped enrichment, because small annotations often hold no credible-set variant.
 A ratio is left missing when its reference's centre is not positive, as the heritability share of a small annotation can be, because its sign would mislead.
 Contrasts are computed in enriched and in other pairs, and the quotient of the two measures specificity.
-Their intervals are 2.5% and 97.5% quantiles over 1,000 bootstrap samples of GWAS, the same samples for every contrast.
+Their intervals are 2.5% and 97.5% quantiles over 1,000 bootstrap samples of study groups, the same samples for every contrast.
 Tested territories are small, so their heritability enrichment is noisy, and fine-mapped enrichment is the more informative statistic there.
 
 Agreement with pseudobulk chromVAR is summarized for each GWAS by the Spearman correlation of the two methods' z-scores across classes.

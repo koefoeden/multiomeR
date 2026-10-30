@@ -17,7 +17,7 @@ The active workflow is a single root `targets` project driven by `_targets.R`, t
 
 ## Status
 
-multiomeR has been stable since 1.0. The manuscript describing it is under peer review (link to come).
+multiomeR is under active development, and will remain so while the manuscript describing it is under peer review (link to come).
 
 ## Updating
 
@@ -31,7 +31,7 @@ pixi install --locked --run-post-link-scripts
 pixi run --use-environment-activation-cache install-r-github-packages
 ```
 
-Each release's notes repeat these commands with its tag and list any further steps. Major versions change configuration, target names or output schemas incompatibly; minor versions add features or change scientific methods; patch versions fix bugs. Any release can rebuild targets, and its notes say which.
+Each release's notes repeat these commands with its tag and list any further steps. Major versions change configuration, target names or output schemas incompatibly; minor versions add features or change scientific methods; patch versions fix bugs. During peer review, minor versions can also make such incompatible changes; their notes say how to adapt. Any release can rebuild targets, and its notes say which.
 
 ## User manual
 

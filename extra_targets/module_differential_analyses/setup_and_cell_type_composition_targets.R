@@ -29,8 +29,9 @@ rlang::list2(
       metadata <- donor_id_metadata_tibble.extended[
         match(donor_ids, as.character(donor_id_metadata_tibble.extended$donor_id)), , drop = FALSE]
       metadata$donor_id <- donor_ids
+      # A sample's donor lets feature models check that they block on it.
       project_keyed_metadata_tibble(metadata, "donor_id",
-        get_differential_analysis_metadata_columns(models, models.cell_type_composition),
+        union(get_differential_analysis_metadata_columns(models, models.cell_type_composition), intersect("genotype_donor_id", names(metadata))),
         strict = TRUE, canonical = TRUE)
     }
   ),

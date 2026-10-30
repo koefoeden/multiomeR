@@ -696,7 +696,7 @@ Before enabling the module, confirm that:
 - you have reviewed the aggregation through [checkpoint 8](main_running.md#checkpoint-8), including its cell-type annotations;
 - the donor metadata has one row per `donor_id` and every variable used in a model;
 - model variables describe donors, not individual nuclei; and
-- each compared group has enough donors for the design and contrasts.
+- each compared group has enough donors for the design and contrasts, and at least three donors in each level of a tested factor. With fewer, no reference distribution gives reliable P values, and the abundance plots say so.
 
 If the models need variables that the aggregation's donor metadata lacks, give a complete donor table in [`differential_analyses_extended_donor_id_metadata_tsv`](parameters.html#differential_analyses_extended_donor_id_metadata_tsv). The module then reads only this table, so it must hold every variable that any model uses, keyed by a unique `donor_id`. Donors missing from it, like donors with missing values, are left out of the models.
 
@@ -743,8 +743,8 @@ my_aggregation:
 Each branch holds named models; the model and contrast names label the outputs.
 
 - **Abundance models** ([`differential_analyses_cell_type_composition_models`](parameters.html#differential_analyses_cell_type_composition_models)) fit each cell type's share of a donor's nuclei. Use a one-sided, fixed-effects formula; the response is added for you. `plot_phenotype_vars` and `color_by` choose the plotted variables. Omit the field to skip this branch.
-- **Feature models** ([`differential_analyses_pseudobulk_models`](parameters.html#differential_analyses_pseudobulk_models)) test the four feature families. The formula uses donor metadata variables; replace `my_cell_type` with one of your cell types. A model tests all cell types together unless `cell_type_subset` names one. One donor's pseudobulks of different cell types are not independent replicates, so a model over several cell types is refused unless it also sets a paired cell-type design (`cell_type_formula` with `pairing_variable`) or a `random_effect`.
-- **Contrasts** in `contrast_specs_vec` are coefficient names of the model matrix, or linear combinations of them. A text variable's alphabetically first value is the reference, so `conditiontreated` is treated minus control. Replace the example variable, formula and contrast with your own.
+- **Feature models** ([`differential_analyses_pseudobulk_models`](parameters.html#differential_analyses_pseudobulk_models)) test the four feature families. The formula uses donor metadata variables; replace `my_cell_type` with one of your cell types. A model tests all cell types together unless `cell_type_subset` names one. One donor's pseudobulks of different cell types are not independent replicates, so a model over several cell types is refused unless it also sets a paired cell-type design (`cell_type_formula` with `pairing_variable`) or a `random_effect`. For the same reason, a model with [several samples of one donor](reference_donor_metadata.md#several-samples) in a cell type must block on that donor.
+- **Contrasts** in `contrast_specs_vec` are coefficient names of the model matrix, or linear combinations of them. A text variable's alphabetically first value is the reference, so `conditiontreated` is treated minus control. Replace the example variable, formula and contrast with your own. A contrast named `A_minus_B` reads as a difference of two effects; when the model also names both effects as contrasts, its results add their log fold changes (`logFC_first_effect` and `logFC_subtracted_effect`), so that each hit shows which effect moved.
 
 Optional fields narrow a model:
 
@@ -1447,7 +1447,7 @@ The pipeline joins the files into one donor table. A column that only some files
 
 ## Several samples per donor {#several-samples}
 
-A donor sampled more than once, for example in two tissues or conditions, can enter one aggregation with each sample as its own replicate. `cfg_GEM_well_samples.tsv` in the configuration directory maps each donor of a GEM well to a sample, with columns `GEM_well_ID`, `donor_id` and `sample_id`; sample IDs may not contain underscores. The nuclei then carry the sample ID as their `donor_id`, so pseudobulks and differential analyses treat samples as replicates.
+A donor sampled more than once, for example in two tissues or conditions, can enter one aggregation with each sample as its own replicate. `cfg_GEM_well_samples.tsv` in the configuration directory maps each donor of a GEM well to a sample, with columns `GEM_well_ID`, `donor_id` and `sample_id`; sample IDs may not contain underscores. The nuclei then carry the sample ID as their `donor_id`, and the donor's own ID is kept in the column `genotype_donor_id`. Pseudobulks are formed per sample, but a donor's samples are not independent replicates. A [differential](downstream_differential_analyses.md) feature model with two samples of one donor in a cell type must therefore block on the donor, for example with `random_effect: genotype_donor_id`, and is refused otherwise. Abundance models take no random effect, so a contrast between donors needs one sample per donor: select one with `donor_ids`, or add the donor as a fixed effect for contrasts within donors.
 
 Each sample inherits its donor's row of the donor table. Add rows for samples only for variables that differ between a donor's samples, such as a condition; a value given for a sample overrides its donor's.
 
@@ -2030,7 +2030,9 @@ Unless the model lists the response classes, the assigned classes observed in at
 Rarer classes and unassigned clusters are not tested, as they would only add to the multiple-testing burden, but they still count in every donor's total.
 Each class is modeled separately in a fixed-effects beta-binomial model with logit link, fitted by `glmmTMB` with the configured formula [@brooks2017_glmmtmb].
 Its response has two columns: the numbers of nuclei in that class and in all other classes.
-Named linear contrasts of the fixed effects are tested with Wald statistics.
+Named linear contrasts of the fixed effects are tested with Wald statistics against a *t* distribution with the fit's residual degrees of freedom.
+The beta-binomial dispersion is estimated from the same donors, so a normal reference would be liberal with few donors.
+Each level of a tested factor needs at least three donors; with fewer, no reference distribution is reliable.
 Fits that fail, do not converge or lack a positive-definite Hessian are reported as non-estimable.
 Benjamini–Hochberg correction is applied across the tested annotation classes within each model and contrast, but not across contrasts or models.
 
@@ -2064,6 +2066,8 @@ Model matrices are built from a configured formula or custom design function, an
 A configured random effect selects `limma::duplicateCorrelation()` with the random effect as block [@smyth2005_duplicatecorrelation; @ritchie2015_limma].
 For counts, voom precision weights [@law2014_voom] are re-estimated for the block and correlation (`edgeR::voomLmFit()`).
 Weighted fits with a block use a closed-form solution of limma's generalized least squares, computed for all features at once, which agrees with `limma::lmFit()` to floating-point error.
+A contrast of several coefficients takes each feature's exact standard error from its own weighted design, rather than `limma::contrasts.fit()`'s approximation, which uses one coefficient correlation for all features.
+A model with several samples of one donor in an annotation class must block on that donor, as its samples are not independent replicates.
 Wherever an intra-block correlation is estimated, the consensus is taken from at most 50,000 evenly spaced features, enough to estimate this one value pooled across all features [@smyth2005_duplicatecorrelation] at a fraction of the runtime.
 The models are still fitted to all features.
 Without a random effect, count designs with more than one coefficient are fitted with edgeR quasi-likelihood models and tested with quasi-likelihood F-tests [@lund2012_quasi_likelihood; @chen2025_edger_v4].

@@ -20,6 +20,8 @@ Model matrices are built from a configured formula or custom design function, an
 A configured random effect selects `limma::duplicateCorrelation()` with the random effect as block [@smyth2005_duplicatecorrelation; @ritchie2015_limma].
 For counts, voom precision weights [@law2014_voom] are re-estimated for the block and correlation (`edgeR::voomLmFit()`).
 Weighted fits with a block use a closed-form solution of limma's generalized least squares, computed for all features at once, which agrees with `limma::lmFit()` to floating-point error.
+A contrast of several coefficients takes each feature's exact standard error from its own weighted design, rather than `limma::contrasts.fit()`'s approximation, which uses one coefficient correlation for all features.
+A model with several samples of one donor in an annotation class must block on that donor, as its samples are not independent replicates.
 Wherever an intra-block correlation is estimated, the consensus is taken from at most 50,000 evenly spaced features, enough to estimate this one value pooled across all features [@smyth2005_duplicatecorrelation] at a fraction of the runtime.
 The models are still fitted to all features.
 Without a random effect, count designs with more than one coefficient are fitted with edgeR quasi-likelihood models and tested with quasi-likelihood F-tests [@lund2012_quasi_likelihood; @chen2025_edger_v4].

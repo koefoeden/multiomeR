@@ -38,7 +38,7 @@ The pipeline joins the files into one donor table. A column that only some files
 
 ## Several samples per donor {#several-samples}
 
-A donor sampled more than once, for example in two tissues or conditions, can enter one aggregation with each sample as its own replicate. `cfg_GEM_well_samples.tsv` in the configuration directory maps each donor of a GEM well to a sample, with columns `GEM_well_ID`, `donor_id` and `sample_id`; sample IDs may not contain underscores. The nuclei then carry the sample ID as their `donor_id`, so pseudobulks and differential analyses treat samples as replicates.
+A donor sampled more than once, for example in two tissues or conditions, can enter one aggregation with each sample as its own replicate. `cfg_GEM_well_samples.tsv` in the configuration directory maps each donor of a GEM well to a sample, with columns `GEM_well_ID`, `donor_id` and `sample_id`; sample IDs may not contain underscores. The nuclei then carry the sample ID as their `donor_id`, and the donor's own ID is kept in the column `genotype_donor_id`. Pseudobulks are formed per sample, but a donor's samples are not independent replicates. A [differential](downstream_differential_analyses.md) feature model with two samples of one donor in a cell type must therefore block on the donor, for example with `random_effect: genotype_donor_id`, and is refused otherwise. Abundance models take no random effect, so a contrast between donors needs one sample per donor: select one with `donor_ids`, or add the donor as a fixed effect for contrasts within donors.
 
 Each sample inherits its donor's row of the donor table. Add rows for samples only for variables that differ between a donor's samples, such as a condition; a value given for a sample overrides its donor's.
 

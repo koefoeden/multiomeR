@@ -13,7 +13,7 @@ Before enabling the module, confirm that:
 - you have reviewed the aggregation through [checkpoint 8](main_running.md#checkpoint-8), including its cell-type annotations;
 - the donor metadata has one row per `donor_id` and every variable used in a model;
 - model variables describe donors, not individual nuclei; and
-- each compared group has enough donors for the design and contrasts.
+- each compared group has enough donors for the design and contrasts, and at least three donors in each level of a tested factor. With fewer, no reference distribution gives reliable P values, and the abundance plots say so.
 
 If the models need variables that the aggregation's donor metadata lacks, give a complete donor table in [`differential_analyses_extended_donor_id_metadata_tsv`](parameters.html#differential_analyses_extended_donor_id_metadata_tsv). The module then reads only this table, so it must hold every variable that any model uses, keyed by a unique `donor_id`. Donors missing from it, like donors with missing values, are left out of the models.
 
@@ -60,8 +60,8 @@ my_aggregation:
 Each branch holds named models; the model and contrast names label the outputs.
 
 - **Abundance models** ([`differential_analyses_cell_type_composition_models`](parameters.html#differential_analyses_cell_type_composition_models)) fit each cell type's share of a donor's nuclei. Use a one-sided, fixed-effects formula; the response is added for you. `plot_phenotype_vars` and `color_by` choose the plotted variables. Omit the field to skip this branch.
-- **Feature models** ([`differential_analyses_pseudobulk_models`](parameters.html#differential_analyses_pseudobulk_models)) test the four feature families. The formula uses donor metadata variables; replace `my_cell_type` with one of your cell types. A model tests all cell types together unless `cell_type_subset` names one. One donor's pseudobulks of different cell types are not independent replicates, so a model over several cell types is refused unless it also sets a paired cell-type design (`cell_type_formula` with `pairing_variable`) or a `random_effect`.
-- **Contrasts** in `contrast_specs_vec` are coefficient names of the model matrix, or linear combinations of them. A text variable's alphabetically first value is the reference, so `conditiontreated` is treated minus control. Replace the example variable, formula and contrast with your own.
+- **Feature models** ([`differential_analyses_pseudobulk_models`](parameters.html#differential_analyses_pseudobulk_models)) test the four feature families. The formula uses donor metadata variables; replace `my_cell_type` with one of your cell types. A model tests all cell types together unless `cell_type_subset` names one. One donor's pseudobulks of different cell types are not independent replicates, so a model over several cell types is refused unless it also sets a paired cell-type design (`cell_type_formula` with `pairing_variable`) or a `random_effect`. For the same reason, a model with [several samples of one donor](reference_donor_metadata.md#several-samples) in a cell type must block on that donor.
+- **Contrasts** in `contrast_specs_vec` are coefficient names of the model matrix, or linear combinations of them. A text variable's alphabetically first value is the reference, so `conditiontreated` is treated minus control. Replace the example variable, formula and contrast with your own. A contrast named `A_minus_B` reads as a difference of two effects; when the model also names both effects as contrasts, its results add their log fold changes (`logFC_first_effect` and `logFC_subtracted_effect`), so that each hit shows which effect moved.
 
 Optional fields narrow a model:
 

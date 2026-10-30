@@ -448,18 +448,17 @@ duplicate_correlation_on_feature_subset <- function(object, design, block, weigh
   list(consensus.correlation = correlation, cor = correlation, atanh.correlations = atanh_correlations)
 }
 
-#' `limma:::gls.series()` for a block correlation with per-feature weights, vectorised over features
+slice_features <- function(x, i, j) matrix(x[, i, j], dim(x)[1])
+
+#' Per-feature weighted normal equations under a compound-symmetric block correlation
 #'
-#' limma fits such models one feature at a time. The block correlation matrix of
-#' a feature's observed samples is compound symmetric within each block, so its
-#' inverse has a closed form and every feature's weighted normal equations come
-#' from a few matrix products. Features whose design is (nearly) rank-deficient
-#' or has no residual degrees of freedom fall back to limma.
-gls_series_block_weights <- function(M, design = NULL, ndups = 2, spacing = 1, block = NULL, correlation = NULL, weights = NULL, ...) {
-  gls_series <- utils::getFromNamespace("gls.series", "limma")
-  if (is.null(block) || is.null(weights) || is.null(correlation) || abs(correlation) >= 1) {
-    return(gls_series(M, design = design, ndups = ndups, spacing = spacing, block = block, correlation = correlation, weights = weights, ...))
-  }
+#' The block correlation matrix of a feature's observed samples is compound
+#' symmetric within each block, so its inverse has a closed form and every
+#' feature's weighted normal equations come from a few matrix products. Within a
+#' block of m observed samples the inverse correlation is (I - c 11') / (1 - rho);
+#' the products omit the factor 1 / (1 - rho). `L` holds the batched Cholesky
+#' factors of X'V^-1 X. Without a block, give each sample its own block.
+block_weighted_normal_equations <- function(M, design, block, correlation, weights) {
   M <- as.matrix(M)
   weights[is.na(weights)] <- 0
   weights <- limma::asMatrixWeights(weights, dim(M))
@@ -471,7 +470,6 @@ gls_series_block_weights <- function(M, design = NULL, ndups = 2, spacing = 1, b
   n_features <- nrow(M)
   n_coef <- ncol(design)
   block_indicator <- outer(as.vector(block), unique(as.vector(block)), "==") * 1
-  # Within a block of m observed samples the inverse correlation is (I - c 11') / (1 - rho).
   c_block <- correlation / (1 - correlation + correlation * (observed %*% block_indicator))
   root_w <- sqrt(w)
   design_block_sums <- lapply(seq_len(n_coef), function(a) root_w %*% (block_indicator * design[, a]))
@@ -481,50 +479,81 @@ gls_series_block_weights <- function(M, design = NULL, ndups = 2, spacing = 1, b
   for (a in seq_len(n_coef)) for (b in seq_len(a)) {
     XtVX[, a, b] <- w %*% (design[, a] * design[, b]) - block_term(design_block_sums[[a]], design_block_sums[[b]])
   }
-  XtVy <- (w * y) %*% design - vapply(design_block_sums, block_term, numeric(n_features), y_block_sums)
-  ytVy <- rowSums(w * y^2) - block_term(y_block_sums, y_block_sums)
-
-  # Batched Cholesky factor L of XtVX, forward solve z = L^-1 XtVy and L^-1 for the coefficient variances.
-  slice <- function(x, i, j) matrix(x[, i, j], n_features)
-  L <- L_inverse <- array(0, dim(XtVX))
-  z <- matrix(0, n_features, n_coef)
+  L <- array(0, dim(XtVX))
   full_rank <- rep(TRUE, n_features)
   for (j in seq_len(n_coef)) {
     before <- seq_len(j - 1)
-    pivot <- XtVX[, j, j] - rowSums(slice(L, j, before)^2)
+    pivot <- XtVX[, j, j] - rowSums(slice_features(L, j, before)^2)
     full_rank <- full_rank & pivot > 1e-8 * XtVX[, j, j]
     L[, j, j] <- sqrt(pmax(pivot, 0))
     for (i in seq_len(n_coef)[-seq_len(j)]) {
-      L[, i, j] <- (XtVX[, i, j] - rowSums(slice(L, i, before) * slice(L, j, before))) / L[, j, j]
-    }
-    z[, j] <- (XtVy[, j] - rowSums(slice(L, j, before) * z[, before, drop = FALSE])) / L[, j, j]
-  }
-  for (j in seq_len(n_coef)) {
-    L_inverse[, j, j] <- 1 / L[, j, j]
-    for (i in seq_len(n_coef)[-seq_len(j)]) {
-      between <- j:(i - 1)
-      L_inverse[, i, j] <- -rowSums(slice(L, i, between) * slice(L_inverse, between, j)) / L[, i, i]
+      L[, i, j] <- (XtVX[, i, j] - rowSums(slice_features(L, i, before) * slice_features(L, j, before))) / L[, j, j]
     }
   }
+  list(L = L, full_rank = full_rank & !is.na(full_rank), observed = observed, weights = weights,
+    block_indicator = block_indicator,
+    XtVy = (w * y) %*% design - vapply(design_block_sums, block_term, numeric(n_features), y_block_sums),
+    ytVy = rowSums(w * y^2) - block_term(y_block_sums, y_block_sums))
+}
+
+# Forward solve L z = b for every feature, with b one row per feature.
+batched_forward_solve <- function(L, b) {
+  z <- matrix(0, nrow(b), ncol(b))
+  for (j in seq_len(ncol(b))) {
+    before <- seq_len(j - 1)
+    z[, j] <- (b[, j] - rowSums(slice_features(L, j, before) * z[, before, drop = FALSE])) / L[, j, j]
+  }
+  z
+}
+
+# Each feature's unscaled standard error sqrt(c'(X'V^-1 X)^-1 c) of every contrast
+# column; NA where the feature's weighted design is (nearly) rank-deficient.
+block_weighted_contrast_stdev_unscaled <- function(normal_equations, correlation, contrasts) {
+  n_features <- dim(normal_equations$L)[1]
+  stdev_unscaled <- matrix(apply(contrasts, 2, function(contrast) {
+    unit_solution <- batched_forward_solve(normal_equations$L, matrix(contrast, n_features, length(contrast), byrow = TRUE))
+    sqrt((1 - correlation) * rowSums(unit_solution^2))
+  }), n_features, ncol(contrasts))
+  stdev_unscaled[!normal_equations$full_rank, ] <- NA_real_
+  stdev_unscaled
+}
+
+#' `limma:::gls.series()` for a block correlation with per-feature weights, vectorised over features
+#'
+#' limma fits such models one feature at a time; `block_weighted_normal_equations()`
+#' forms every feature's equations at once. Features whose design is (nearly)
+#' rank-deficient or has no residual degrees of freedom fall back to limma.
+gls_series_block_weights <- function(M, design = NULL, ndups = 2, spacing = 1, block = NULL, correlation = NULL, weights = NULL, ...) {
+  gls_series <- utils::getFromNamespace("gls.series", "limma")
+  if (is.null(block) || is.null(weights) || is.null(correlation) || abs(correlation) >= 1) {
+    return(gls_series(M, design = design, ndups = ndups, spacing = spacing, block = block, correlation = correlation, weights = weights, ...))
+  }
+  M <- as.matrix(M)
+  n_features <- nrow(M)
+  n_coef <- ncol(design)
+  normal_equations <- block_weighted_normal_equations(M, design, block, correlation, weights)
+  L <- normal_equations$L
+  z <- batched_forward_solve(L, normal_equations$XtVy)
   coefficients <- matrix(0, n_features, n_coef, dimnames = list(rownames(M), colnames(design)))
   for (j in rev(seq_len(n_coef))) {
     after <- seq_len(n_coef)[-seq_len(j)]
-    coefficients[, j] <- (z[, j] - rowSums(slice(L, after, j) * coefficients[, after, drop = FALSE])) / L[, j, j]
+    coefficients[, j] <- (z[, j] - rowSums(slice_features(L, after, j) * coefficients[, after, drop = FALSE])) / L[, j, j]
   }
-  stdev_unscaled <- matrix(sqrt((1 - correlation) * vapply(seq_len(n_coef), function(j) rowSums(slice(L_inverse, j:n_coef, j)^2), numeric(n_features))),
-    n_features, n_coef, dimnames = dimnames(coefficients))
-  df_residual <- rowSums(observed) - n_coef
-  sigma <- sqrt(pmax(ytVy - rowSums(z^2), 0) / (1 - correlation) / df_residual)
+  stdev_unscaled <- block_weighted_contrast_stdev_unscaled(normal_equations, correlation, diag(n_coef))
+  dimnames(stdev_unscaled) <- dimnames(coefficients)
+  df_residual <- rowSums(normal_equations$observed) - n_coef
+  sigma <- sqrt(pmax(normal_equations$ytVy - rowSums(z^2), 0) / (1 - correlation) / df_residual)
 
-  fallback <- which(!full_rank | df_residual <= 0 | is.na(full_rank))
+  fallback <- which(!normal_equations$full_rank | df_residual <= 0)
   if (length(fallback)) {
-    exact <- gls_series(M[fallback, , drop = FALSE], design = design, block = block, correlation = correlation, weights = weights[fallback, , drop = FALSE])
+    exact <- gls_series(M[fallback, , drop = FALSE], design = design, block = block, correlation = correlation,
+      weights = normal_equations$weights[fallback, , drop = FALSE])
     coefficients[fallback, ] <- exact$coefficients
     stdev_unscaled[fallback, ] <- exact$stdev.unscaled
     sigma[fallback] <- exact$sigma
     df_residual[fallback] <- exact$df.residual
   }
-  correlation_matrix <- block_indicator %*% (correlation * t(block_indicator))
+  correlation_matrix <- normal_equations$block_indicator %*% (correlation * t(normal_equations$block_indicator))
   diag(correlation_matrix) <- 1
   QR <- qr(backsolve(chol(correlation_matrix), design, transpose = TRUE))
   cov_coefficients <- chol2inv(QR$qr, size = QR$rank)
@@ -789,6 +818,7 @@ fit_pseudobulk_feature_matrix_model <- function(pseudobulk_feature_matrix, exten
 
   # Set up design
   model_list <- pseudobulk_feature_dynamic_tibble$model[[1]]
+  assert_donor_samples_blocked(final_sample_tibble, model_list, pseudobulk_feature_dynamic_tibble$model_name)
   design_and_basis_matrices <- get_design_and_basis_matrices_from_model_list(sample_tibble = final_sample_tibble, model_list = model_list)
   design_matrix <- design_and_basis_matrices$design_matrix
   basis_matrix <- design_and_basis_matrices$basis_matrix
@@ -866,6 +896,21 @@ fit_pseudobulk_feature_matrix_model <- function(pseudobulk_feature_matrix, exten
     magrittr::inset2("basis_matrix", basis_matrix) |>
     magrittr::inset2("analysis_type", analysis_type) |>
     magrittr::inset2("samples", gene_expression_list$samples)
+}
+
+# A donor's pseudobulks of one cell type are not independent replicates, so a
+# model with several samples of one donor in a cell type must block on the donor.
+assert_donor_samples_blocked <- function(sample_tibble, model_list, model_name) {
+  if (!"genotype_donor_id" %in% names(sample_tibble) || !anyDuplicated(sample_tibble[c("cluster", "genotype_donor_id")])) {
+    return(invisible())
+  }
+  block_variable <- purrr::keep(c(model_list$random_effect, model_list$correlation_block), nzchar)
+  blocked <- length(block_variable) > 0L &&
+    all(tapply(sample_tibble[[block_variable[[1]]]], sample_tibble$genotype_donor_id, dplyr::n_distinct) == 1L)
+  if (!blocked) {
+    stop("Model ", model_name, " has several samples of one donor in a cell type; block on the donor with ",
+      "random_effect: genotype_donor_id, or a correlation_block that groups each donor's samples.", call. = FALSE)
+  }
 }
 
 #' Get design and basis matrices from model list
@@ -1044,18 +1089,23 @@ get_pseudobulk_cell_type_contrasts <- function(pseudobulk_feature_matrix_fit, jo
     purrr::keep(~ any(abs(.x) > sqrt(.Machine$double.eps)))
 }
 
-#' `limma::contrasts.fit()` without its per-feature loop over correlated coefficients
+#' `limma::contrasts.fit()` with each feature's exact contrast standard errors
 #'
-#' A contrast's unscaled standard error is the norm of R diag(s) c, with R the
-#' Cholesky root of the coefficient correlation matrix and s a feature's unscaled
-#' coefficient standard errors; one matrix product gives it for every feature.
-contrasts_fit <- function(fit, contrasts) {
-  if (anyNA(fit$coefficients) || NROW(fit$cov.coefficients) < ncol(fit$coefficients)) {
+#' limma combines a feature's coefficient errors through one coefficient
+#' correlation matrix, from the design and block correlation alone, which is
+#' exact only when every feature has the same weights. With precision weights,
+#' each contrast's unscaled error comes from the feature's own weighted design
+#' (`elist`'s weights, the fit's design, block and correlation), and limma's
+#' slow per-feature loop is avoided.
+contrasts_fit <- function(fit, contrasts, elist = fit$EList) {
+  contrasts <- as.matrix(contrasts)
+  if (is.null(elist$weights) || anyNA(fit$coefficients) || NROW(fit$cov.coefficients) < ncol(fit$coefficients)) {
     return(limma::contrasts.fit(fit, contrasts))
   }
-  correlation_root <- chol(stats::cov2cor(fit$cov.coefficients))
-  fit$stdev.unscaled <- apply(contrasts, 2, function(contrast) sqrt(rowSums((fit$stdev.unscaled %*% (contrast * t(correlation_root)))^2)))
+  correlation <- fit$correlation %||% 0
+  normal_equations <- block_weighted_normal_equations(elist$E, fit$design, fit$block %||% seq_len(ncol(elist$E)), correlation, elist$weights)
   fit$coefficients <- fit$coefficients %*% contrasts
+  fit$stdev.unscaled <- block_weighted_contrast_stdev_unscaled(normal_equations, correlation, contrasts)
   dimnames(fit$stdev.unscaled) <- dimnames(fit$coefficients)
   fit$cov.coefficients <- crossprod(chol(fit$cov.coefficients) %*% contrasts)
   fit$contrasts <- contrasts
@@ -1143,6 +1193,7 @@ get_pseudobulk_paired_cell_type_contrast_statistics <- function(pseudobulk_featu
   reference_norm <- sqrt(sum(cell_type_contrasts_list[[1]][[1]]^2))
   contrast_matrix <- sapply(cell_type_contrasts_list, function(cell_type_contrasts) cell_type_contrasts[[1]] / reference_norm)
   lm_fit_block_weights(combined$elist, combined$design, block = block, correlation = correlation) |>
+    magrittr::inset2("EList", combined$elist) |>
     get_pseudobulk_cell_type_contrast_statistics(contrast_matrix, AveExpr = unname(combined$AveExpr))
 }
 
@@ -1271,7 +1322,7 @@ get_pseudobulk_feature_model_results <- function(pseudobulk_feature_matrix_fit, 
     purrr::imap(
       contrast_vec_list,
       ~ pseudobulk_feature_matrix_fit |>
-        limma::contrasts.fit(contrast = .x) |>
+        contrasts_fit(.x) |>
         limma::eBayes() |>
         limma::topTable(coef = 1, number = Inf) |>
         dplyr::rename(PValue = P.Value, FDR = adj.P.Val) |>
@@ -1282,6 +1333,7 @@ get_pseudobulk_feature_model_results <- function(pseudobulk_feature_matrix_fit, 
   }
 
   formatted_out <- test_table_list |>
+    add_difference_contrast_effects(contrast_vec_list) |>
     dplyr::bind_rows() |>
     dplyr::mutate(
       cell_type_subset = pseudobulk_feature_dynamic_tibble$cell_type_subset,
@@ -1290,6 +1342,26 @@ get_pseudobulk_feature_model_results <- function(pseudobulk_feature_matrix_fit, 
     tibble::as_tibble()
 
   return(formatted_out)
+}
+
+# A hit of a difference contrast, named A_minus_B, can mean a change in either
+# effect. Where the model also configures both effects as contrasts, each
+# difference's rows gain their logFC, so readers see which effect moved.
+add_difference_contrast_effects <- function(test_table_list, contrast_vec_list) {
+  is_difference <- stringr::str_detect(names(contrast_vec_list), "_minus_")
+  effects <- names(contrast_vec_list)[!is_difference]
+  pairs <- tidyr::expand_grid(first_effect = effects, subtracted_effect = effects)
+  purrr::imap(test_table_list, function(test_table, contrast_name) {
+    if (!is_difference[[match(contrast_name, names(contrast_vec_list))]]) return(test_table)
+    matches <- purrr::map2_lgl(pairs$first_effect, pairs$subtracted_effect, \(first, subtracted)
+      max(abs(contrast_vec_list[[contrast_name]] - contrast_vec_list[[first]] + contrast_vec_list[[subtracted]])) < 1e-8)
+    if (!any(matches)) return(test_table)
+    pair <- pairs[which(matches)[[1]], ]
+    effect_logFC <- \(effect) test_table_list[[effect]]$logFC[match(test_table$feature_id, test_table_list[[effect]]$feature_id)]
+    dplyr::mutate(test_table,
+      first_effect = pair$first_effect, logFC_first_effect = effect_logFC(pair$first_effect),
+      subtracted_effect = pair$subtracted_effect, logFC_subtracted_effect = effect_logFC(pair$subtracted_effect))
+  })
 }
 
 #' Get pseudobulk differential significant elements tibble

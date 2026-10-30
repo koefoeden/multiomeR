@@ -125,6 +125,8 @@ fit_cell_type_composition_model <- function(model_data, model, model_name) {
         family = glmmTMB::betabinomial(link = "logit")), error = identity)
       failure <- if (inherits(fit, "error")) conditionMessage(fit) else if (
         fit$fit$convergence != 0L || !isTRUE(fit$sdr$pdHess)) "Model did not converge with a positive-definite Hessian" else NA_character_
+      # The dispersion is estimated from the same few donors, so a normal reference is liberal; a t reference is not.
+      df_residual <- if (is.na(failure)) stats::df.residual(fit) else NA_real_
       purrr::imap_dfr(contrasts, function(contrast, contrast_name) {
         estimate <- std.error <- NA_real_
         if (is.na(failure)) {
@@ -134,9 +136,9 @@ fit_cell_type_composition_model <- function(model_data, model, model_name) {
           estimate <- sum(contrast * coefficients)
           std.error <- sqrt(as.numeric(t(contrast) %*% covariance %*% contrast))
         }
-        p <- if (is.finite(std.error) && std.error > 0) 2 * stats::pnorm(-abs(estimate / std.error)) else NA_real_
+        p <- if (is.finite(std.error) && std.error > 0 && df_residual > 0) 2 * stats::pt(-abs(estimate / std.error), df_residual) else NA_real_
         tibble::tibble(model = model_name, contrast = contrast_name, cluster = cell_type,
-          estimate, std.error, p.value = p, n_donors = nrow(data),
+          estimate, std.error, df_residual, p.value = p, n_donors = nrow(data),
           baseline_frac = sum(data$n_nuclei) / sum(data$n_total_nuclei),
           status = if (is.na(failure) && is.finite(p)) "fitted" else "not_estimable",
           diagnostic = failure)
@@ -153,12 +155,23 @@ plot_cell_type_composition_model <- function(model_data, model, model_name, resu
     ". Selected wells: ", paste(model$GEM_well_IDs %||% "all aggregation wells", collapse = ", "),
     ". Denominator: all retained nuclei in selected wells for each eligible donor, including unassigned labels. ",
     "Zero cell-type counts retained. Cell types tested: ", paste(model$cell_types_to_test %||% "assigned labels observed in at least half of the donors", collapse = ", "), ".")
+  # With fewer than three donors in a level of a tested factor, no reference distribution is reliable.
+  donors <- dplyr::distinct(model_data$counts, donor_id, .keep_all = TRUE)
+  design <- get_design_and_basis_matrices_from_model_list(donors, model)$design_matrix
+  tested <- rowSums(abs(do.call(cbind, get_contrast_vec_list(list(design = design), model)))) > 0
+  level_sizes <- design[, tested & apply(design, 2, function(x) all(x %in% 0:1) && length(unique(x)) == 2L), drop = FALSE]
+  sparse_factors <- colnames(level_sizes)[pmin(colSums(level_sizes), colSums(1 - level_sizes)) < 3]
+  if (length(sparse_factors)) {
+    caption <- paste0(caption, " Fewer than three donors in a level of ", paste(sparse_factors, collapse = ", "),
+      ": this model demonstrates the mechanics only, and its P values are not reliable.")
+  }
+  as_discrete <- function(x) if (is.numeric(x) && length(unique(x)) <= 2L) factor(x) else x
   plots <- lapply(model$plot_phenotype_vars, function(phenotype) {
     counts <- model_data$counts
-    counts$phenotype <- counts[[phenotype]]
-    if (is.numeric(counts$phenotype) && length(unique(counts$phenotype)) <= 2L) counts$phenotype <- factor(counts$phenotype)
+    counts$phenotype <- as_discrete(counts[[phenotype]])
+    counts$colour <- if (!is.null(model$color_by)) as_discrete(counts[[model$color_by]])
     plot <- ggplot2::ggplot(counts, ggplot2::aes(phenotype, prop)) +
-      ggplot2::geom_point(ggplot2::aes(colour = if (is.null(model$color_by)) NULL else .data[[model$color_by]]), alpha = 0.7) +
+      ggplot2::geom_point(ggplot2::aes(colour = if (is.null(model$color_by)) NULL else colour), alpha = 0.7) +
       ggplot2::facet_wrap(~cluster, scales = "free_y") +
       ggplot2::scale_y_continuous(labels = scales::label_percent()) +
       ggplot2::labs(title = paste("Cell-type abundance and", phenotype),
@@ -171,15 +184,15 @@ plot_cell_type_composition_model <- function(model_data, model, model_name, resu
   plots$contrasts <- ggplot2::ggplot(dplyr::filter(results, status == "fitted"),
     ggplot2::aes(estimate, cluster, colour = FDR < 0.05)) +
     ggplot2::geom_point() +
-    ggplot2::geom_errorbar(ggplot2::aes(xmin = estimate - 1.96 * std.error,
-      xmax = estimate + 1.96 * std.error), orientation = "y", width = 0.2) +
+    ggplot2::geom_errorbar(ggplot2::aes(xmin = estimate - stats::qt(0.975, df_residual) * std.error,
+      xmax = estimate + stats::qt(0.975, df_residual) * std.error), orientation = "y", width = 0.2) +
     ggplot2::geom_vline(xintercept = 0, linetype = "dashed") +
     ggplot2::facet_wrap(~contrast, scales = "free_x") +
     ggplot2::labs(title = paste("Cell-type abundance contrasts:", model_name),
-      subtitle = "Positive effects indicate increased relative abundance; intervals show 95% Wald uncertainty, not absolute cell counts.",
-      x = "Log-odds contrast", y = "Cell type", colour = "BH FDR < 0.05",
+      subtitle = "Positive effects indicate increased relative abundance; intervals show 95% uncertainty, not absolute cell counts.",
+      x = "Log-odds contrast (per unit, such as one SD, of a continuous covariate)", y = "Cell type", colour = "BH FDR < 0.05",
       caption = stringr::str_wrap(paste(caption,
-        "Separate beta-binomial fits per cell type. BH correction across tested cell types within each model/contrast.",
+        "Separate beta-binomial fits per cell type, tested against a t distribution with the fit's residual degrees of freedom. BH correction across tested cell types within each model/contrast.",
         sum(results$status != "fitted"), "non-estimable contrasts omitted; see the results table."), 120))
   if (!any(results$status == "fitted")) {
     plots$contrasts <- ggplot2::ggplot() + ggplot2::theme_void() +

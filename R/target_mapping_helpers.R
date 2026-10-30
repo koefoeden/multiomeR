@@ -96,6 +96,7 @@ read_keyed_metadata_tibble <- function(metadata_tsv, key_col) {
 #' the columns those files share; its rows are combined into one. Each sample of
 #' `cfg_GEM_well_samples.tsv` gets a row whose missing values come from its
 #' donor's row, so the tables need sample rows only for sample-level columns.
+#' With samples, `genotype_donor_id` gives each row's donor.
 #'
 #' @param metadata_tsvs Paths of the donor metadata TSV files.
 #' @param sample_donor_ids Donor of each sample, named by sample ID.
@@ -127,13 +128,17 @@ read_donor_metadata_tibble <- function(metadata_tsvs, sample_donor_ids = charact
     }
     donors <- dplyr::summarise(combined, dplyr::across(dplyr::everything(), first_value), .by = "donor_id")
   }
-  known <- sample_donor_ids %in% donors$donor_id
-  if (!any(known)) {
+  if (!length(sample_donor_ids)) {
     return(donors)
   }
-  # A sample's own row, if any, comes first, so its values win over its donor's.
-  inherited <- dplyr::mutate(donors[match(sample_donor_ids[known], donors$donor_id), ], donor_id = names(sample_donor_ids)[known])
-  dplyr::summarise(dplyr::bind_rows(donors, inherited), dplyr::across(dplyr::everything(), first_value), .by = "donor_id")
+  known <- sample_donor_ids %in% donors$donor_id
+  if (any(known)) {
+    # A sample's own row, if any, comes first, so its values win over its donor's.
+    inherited <- dplyr::mutate(donors[match(sample_donor_ids[known], donors$donor_id), ], donor_id = names(sample_donor_ids)[known])
+    donors <- dplyr::summarise(dplyr::bind_rows(donors, inherited), dplyr::across(dplyr::everything(), first_value), .by = "donor_id")
+  }
+  # Keep each sample's donor, so that models can block on it.
+  dplyr::mutate(donors, genotype_donor_id = dplyr::coalesce(unname(sample_donor_ids[.data$donor_id]), .data$donor_id))
 }
 
 subset_keyed_metadata_tibble <- function(metadata_tibble, key_col, keys, source_label) {

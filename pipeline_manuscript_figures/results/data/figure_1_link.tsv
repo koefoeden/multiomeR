@@ -1,2 +1,2 @@
 cell_group	TargetGene	peak	distance	n_donors	n_aggregates	correlation	hierarchical_pvalue
-NK	SETBP1	chr18-44700503-44701002	20579	10	40	0.7996080272018887	4.5327131419183676e-4
+Fibroblast	WEE1	chr11-9613067-9613566	39646	10	88	0.7159098295383569	1.1708500135153975e-4

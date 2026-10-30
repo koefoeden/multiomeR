@@ -308,25 +308,38 @@ empty_peak_GRanges <- function() {
 #'
 #' Downsample each peak-calling cluster's barcodes and split them into two
 #' random halves, whose peaks are called separately so that only peaks called
-#' in both are kept (ArchR's pseudo-replicate reproducibility).
+#' in both are kept (ArchR's pseudo-replicate reproducibility). A cluster
+#' whose discovery nuclei hold fewer than `halves_min_fragments` fragments is
+#' instead called once, pooled, at q < `pooled_q_value`: in such shallow
+#' groups most peaks called in only one half are real, and the halves rule
+#' discards them without gaining precision.
 #' Per-cluster calls keep the peaks of rare populations, which a pooled call would dilute.
 #'
 #' @param BCs_per_peak_cluster_list Named list of barcode vectors, one element
 #'   per peak-calling cluster.
+#' @param fragments_per_barcode Fragments of each barcode, named by barcode.
+#' @param halves_min_fragments Discovery fragments a cluster needs to be split
+#'   into halves.
 #' @param peak_calling_cluster_names Cluster names to include; defaults to the
 #'   names of `BCs_per_peak_cluster_list`.
 #' @param max_cells_per_cluster Maximum number of barcodes retained per cluster;
 #'   larger clusters are downsampled to limit peak-calling runtime and memory.
+#' @param pooled_q_value Peak-calling q-value cutoff of pooled clusters.
 #' @param seed Random seed of the downsampling and the split, combined with
 #'   each cluster's name.
-#' @return A tibble with two rows per cluster: `peak_calling_cluster_name`,
-#'   `replicate_name` and the half's `BCs_for_peak_discovery`.
+#' @return A tibble with two rows per split cluster and one per pooled
+#'   cluster: `peak_calling_cluster_name`, `replicate_name`, the replicate's
+#'   `BCs_for_peak_discovery` and its `q_value_cutoff`, `NA` for halves, which
+#'   take the peak caller's default.
 #' @keywords internal
 
 build_peak_calling_cluster_discovery_tibble <- function(
   BCs_per_peak_cluster_list,
+  fragments_per_barcode,
+  halves_min_fragments,
   peak_calling_cluster_names = names(BCs_per_peak_cluster_list),
   max_cells_per_cluster = 50000,
+  pooled_q_value = 0.001,
   seed = 1
 ) {
   max_cells_per_cluster <- max_cells_per_cluster %||% Inf
@@ -335,10 +348,15 @@ build_peak_calling_cluster_discovery_tibble <- function(
     # Seeding by the name's SHA3 hash keeps a cluster's halves independent of the other clusters.
     set.seed(strtoi(substr(secretbase::sha3(paste(seed, cluster_name)), 1, 7), 16L))
     if (length(barcodes) > max_cells_per_cluster) barcodes <- sort(sample(barcodes, max_cells_per_cluster))
+    if (sum(fragments_per_barcode[barcodes]) < halves_min_fragments) {
+      return(tibble::tibble(peak_calling_cluster_name = cluster_name, replicate_name = paste0(cluster_name, "__pooled"),
+        BCs_for_peak_discovery = list(barcodes), q_value_cutoff = pooled_q_value))
+    }
     tibble::tibble(
       peak_calling_cluster_name = cluster_name,
       replicate_name = paste0(cluster_name, "__half", 1:2),
-      BCs_for_peak_discovery = unname(split(barcodes, sample(rep_len(1:2, length(barcodes)))))
+      BCs_for_peak_discovery = unname(split(barcodes, sample(rep_len(1:2, length(barcodes))))),
+      q_value_cutoff = NA_real_
     )
   })
 }
@@ -346,15 +364,16 @@ build_peak_calling_cluster_discovery_tibble <- function(
 #' Write peak-calling cut sites for one GEM well
 #'
 #' Write the left cut site of each fragment of the well's discovery nuclei, one
-#' BED file per half, in a single pass over the well's fragments. MACS3 reads a
-#' fragment as one read at its left end, so these are the tags it would read
-#' from the halves' fragment files. Chromosomes are read one at a time, so memory
-#' follows the largest chromosome rather than the well's depth.
+#' BED file per replicate (a half or a pooled cluster), in a single pass over
+#' the well's fragments. MACS3 reads a fragment as one read at its left end, so
+#' these are the tags it would read from the replicates' fragment files.
+#' Chromosomes are read one at a time, so memory follows the largest chromosome
+#' rather than the well's depth.
 #'
 #' @param GEM_well_cells One row of `split_cells_by_GEM_well()`.
 #' @param discovery_tibble Output of `build_peak_calling_cluster_discovery_tibble()`.
 #' @param genome Genome build key used to select the standard chromosomes.
-#' @return Directory holding one `<replicate_name>.bed.gz` per half with nuclei in the well.
+#' @return Directory holding one `<replicate_name>.bed.gz` per replicate with nuclei in the well.
 #' @keywords internal
 
 write_peak_calling_cut_sites_for_GEM_well <- function(GEM_well_cells, discovery_tibble, genome) {
@@ -406,11 +425,12 @@ get_cut_site_files <- function(cut_site_dirs, replicate_name) {
 
 #' Call peaks w MACS3
 #'
-#' Run MACS3 peak calling on the cut sites of one half of a cluster. The
-#' maximum gap is fixed: by default MACS3 sets it to the mean length of the
-#' first ten lines, so peaks would depend on line order.
+#' Run MACS3 peak calling on the cut sites of one replicate of a cluster: a
+#' half, or the pooled cluster. The maximum gap is fixed: by default MACS3 sets
+#' it to the mean length of the first ten lines, so peaks would depend on line
+#' order.
 #'
-#' @param ATAC_cut_site_files Paths of BED files of the half's cut sites, as
+#' @param ATAC_cut_site_files Paths of BED files of the replicate's cut sites, as
 #'   returned by `get_cut_site_files()`.
 #' @param ATAC_peak_calling_cluster_names Cluster label used in errors and, by
 #'   default, the output filename suffix.
@@ -419,6 +439,7 @@ get_cut_site_files <- function(cut_site_dirs, replicate_name) {
 #'   MACS3 `--name`; defaults to the cluster label.
 #' @param allow_no_peaks Logical; when `TRUE`, empty input or empty MACS3 output
 #'   is represented as an empty narrowPeak file instead of an error.
+#' @param q_value_cutoff MACS3 q-value cutoff; `NA` keeps MACS3's default of 0.05.
 #' @return Path to the cluster narrowPeak file. MACS3 summit and XLS sidecar
 #'   files are deleted because downstream code only consumes narrowPeak output.
 #' @keywords internal
@@ -427,7 +448,8 @@ call_peaks_w_MACS3 <- function(ATAC_cut_site_files,
                                ATAC_peak_calling_cluster_names,
                                genome,
                                output_suffix = ATAC_peak_calling_cluster_names,
-                               allow_no_peaks = FALSE) {
+                               allow_no_peaks = FALSE,
+                               q_value_cutoff = NA) {
   out_dir <- get_structured_file_path(override_suffix = output_suffix)
   prefix_path <- file.path(out_dir, output_suffix)
   out_file <- stringr::str_glue("{prefix_path}_peaks.narrowPeak")
@@ -444,6 +466,7 @@ call_peaks_w_MACS3 <- function(ATAC_cut_site_files,
       c("--extsize", "150"),
       c("--max-gap", "150"),
       c("--call-summits"),
+      if (!is.na(q_value_cutoff)) c("-q", q_value_cutoff),
       c("--name", output_suffix),
       c("--outdir", out_dir),
       c("--keep-dup", "all"),
@@ -641,16 +664,18 @@ combine_collapse_GRanges_ArchR <- function(GRanges_list, by, decreasing = TRUE) 
 
 #' Keep a group's reproducible peaks and its strongest, as ArchR does
 #'
-#' Each half's peaks are collapsed by summit significance, their union is
-#' collapsed again, and peaks that both halves called are kept. At most
+#' Each replicate's peaks are collapsed by summit significance, their union is
+#' collapsed again, and peaks that every replicate called are kept: both
+#' halves of a split group, or all peaks of a pooled one. At most
 #' `peaks_per_cell` peaks per discovery nucleus and `max_peaks` in all are then
 #' kept. Their `score_quantile`, the rank of summit significance within the
 #' group, ranks overlapping peaks across groups independently of group depth.
-#' Defaults follow ArchR (Granja et al. 2021, doi:10.1038/s41588-021-00790-6); the caps
-#' and quantiles keep large or deeply sequenced groups from dominating the consensus.
+#' Defaults follow ArchR (Granja et al. 2021, doi:10.1038/s41588-021-00790-6).
+#' The cap binds only for deep groups, where it trims a weak tail: peaks with
+#' less enrichment than any other group's kept peaks.
 #'
 #' @param replicate_peaks List of fixed-width, blacklist-filtered peaks, one
-#'   element per half of the group's discovery nuclei.
+#'   element per replicate of the group's discovery nuclei.
 #' @param cluster_name Group label stored in the `cluster` metadata column.
 #' @param n_cells Number of nuclei used for peak discovery in the group.
 #' @return Formatted `GRanges` with a `score_quantile` metadata column.

@@ -74,9 +74,12 @@ rlang::list2(
     ),
     targets::tar_target(
       name = peak_calling_cluster_discovery_tibble.ATAC,
-      description = "Select each cluster's full-genome ATAC peak-calling discovery cells, with optional downsampling, and split them into two random halves",
+      description = "Select each cluster's full-genome ATAC peak-calling discovery cells, with optional downsampling, and split them into two random halves, or pool them in shallow clusters",
       command = build_peak_calling_cluster_discovery_tibble(
         BCs_per_peak_cluster_list = BCs_per_peak_cluster_list.ATAC,
+        fragments_per_barcode = rlang::set_names(metadata_w_cell_types_tibble.GEX$atac_fragments,
+          metadata_w_cell_types_tibble.GEX$barcode_w_prefix),
+        halves_min_fragments = aggregation_ATAC_peak_calling_halves_min_fragments,
         peak_calling_cluster_names = peak_calling_cluster_names.ATAC
       ),
       iteration = "vector"
@@ -93,14 +96,14 @@ rlang::list2(
     ),
     targets::tar_target(
       name = within_clusters_collapsed_peaks_per_cluster_GRanges.ATAC,
-      description = "Keep each cluster's fixed-width peaks called in both halves of its nuclei, capped and ranked as in ArchR [part_of_graph:ATAC] [part_of_graph:seurat_export]",
+      description = "Keep each cluster's fixed-width peaks called in both halves of its nuclei, or in its pooled nuclei, capped and ranked as in ArchR [part_of_graph:ATAC] [part_of_graph:seurat_export]",
       command = {
-        halves <- peak_calling_cluster_discovery_tibble.ATAC$peak_calling_cluster_name == peak_calling_cluster_names.ATAC
+        replicates <- peak_calling_cluster_discovery_tibble.ATAC$peak_calling_cluster_name == peak_calling_cluster_names.ATAC
         collapse_group_peaks_ArchR(
-          purrr::map(peaks_per_cluster_narrowPeaks.peaks.ATAC[halves], get_peak_GRanges_w_fixed_width,
+          purrr::map(peaks_per_cluster_narrowPeaks.peaks.ATAC[replicates], get_peak_GRanges_w_fixed_width,
             genome = aggregated_cellranger_ref_list$genomes[[1]], blacklist_GRanges = blacklist_GRanges.ATAC),
           cluster_name = peak_calling_cluster_names.ATAC,
-          n_cells = sum(lengths(peak_calling_cluster_discovery_tibble.ATAC$BCs_for_peak_discovery[halves]))
+          n_cells = sum(lengths(peak_calling_cluster_discovery_tibble.ATAC$BCs_for_peak_discovery[replicates]))
         )
       },
       pattern = map(peak_calling_cluster_names.ATAC)

@@ -66,13 +66,15 @@ with `slurm_monitor history samples`: the schema 2 `timestamp`, `raw_job_id`,
 
 The benchmark runs form four series, each on its own node, from a clean
 checkout with its own store on node-local disk; a series' first run starts from
-an empty store. After each run, `record_run.py` records the targets it built,
-with their runtimes, completion times, bytes, errors and node, and the input
-files outside the store that it tracked, in `data/benchmark_runs/<run>.tsv`.
-The records, not the stores, hold the measurements. Monitor samples and worker
-jobs are matched to a recorded target by its name and node, as the series ran
-at the same time and built targets of the same names. The committed records
-name the nodes `node_1` to `node_3`. A table outside the repository, named by
+an empty store. `sizing_31x` ran last, from an empty store of its own, on the
+node of the 91-sample series. After each run, `record_run.py` records the
+targets it built, with their runtimes, completion times, bytes, errors and
+node, and the input files outside the store that it tracked, in
+`data/benchmark_runs/<run>.tsv`. The records, not the stores, hold the
+measurements. Monitor samples and worker jobs are matched to a recorded target
+by its name and node within its runtime, as the series ran at the same time and
+built targets of the same names. The committed records name the nodes `node_1`
+to `node_4`. A table outside the repository, named by
 `BENCHMARK_NODE_LABELS`, gives each node's hostname (`node`) and label
 (`label`), and the build maps the hostnames in the monitor's samples and in new
 records to those labels.
@@ -159,9 +161,10 @@ peak-calling clusters and their cut sites is excluded from all workflows, and
 analyses that the conventional chain does not perform from both multiomeR
 measurements: cell-type annotation, doublet detection, QC metrics, gene and peak
 annotation, chromatin-state projection, motif analysis, and the ATAC-only and
-uncorrected RNA embeddings. multiomeR and the SCTransform chain are measured in
-one run, the `comparison` series, which builds all six aggregations from an
-empty store.
+uncorrected RNA embeddings. multiomeR and both conventional chains are measured
+in one record, the `comparison` series. Its first run builds multiomeR's six
+aggregations from an empty store, and a second run builds the chains on that
+store, so the chains run alone and nothing is built twice.
 
 Another line measures the same multiomeR result with its default normalization,
 the BPCells_native backend, which computes Pearson residuals on disk: `sizing_1x` to
@@ -205,10 +208,10 @@ downstream of them, are left out of its totals rather than counted as zero, as
 its `excluded_targets` column states. The ATAC motif-family marker volcano plot
 facets by ATAC cell type, and at about a hundred cell types its automatic
 canvas, 42,300 pixels square, is more than the PNG device can allocate: its
-worker crashed twice, each time about a minute after it started, against 66 s
+worker crashed twice, each time about a minute after it started, against 82 s
 for the whole plot at 31 wells. The genetic-enrichment variant detail plots were
 not run: on earlier code they ran over 1.5 h and up to 110 GB per GWAS without
-finishing, against at most 2.3 min per GWAS at 31 wells now. The plot records
+finishing, against at most 3.0 min per GWAS at 31 wells now. The plot records
 they draw from finished and are counted. The sizing aggregations keep clusters
 of any size, so `sizing_91x` had 1,699 cell-type groups, most of them unassigned
 clusters of one or a few nuclei. Genetic enrichment now profiles only cell
@@ -263,19 +266,20 @@ dashed line at 100%, and careful manual checkpointing narrows that gap.
   overhead against measured runs. It schedules each run on the workers that
   ran it, the 16 light, 6 heavy, one large and one huge worker of
   `configuration_dev/crew_controllers.R`, each execution holding one worker of
-  its tier. With the overhead, the simulation came to 0.77-1.07 times the
-  measured elapsed time of each single-run record, against 0.67-1.00 times
+  its tier. With the overhead, the simulation came to 0.87-1.09 times the
+  measured elapsed time of each single-run record, against 0.79-0.96 times
   without it, which falls short most for runs of many short targets, such as `revision_1`. The full revision build
-  is the exception, at 0.53: other users' jobs on its node held up its workers,
-  so 191 of its targets waited over a minute between dispatch and start, against
-  none in an earlier build of the same aggregation. The check compares the
+  is the exception, at 0.59. In the previous series it came to 0.53, when other
+  users' jobs on its node held up its workers and 191 of its targets waited
+  over a minute between dispatch and start. The check compares the
   simulation, with and without that overhead, with each recorded run's elapsed
   time: the periods in which its targets ran, from the first recorded start to
   the last completion, joined across gaps of up to ten minutes. It also gives each run's median start gap,
   the time from the last completion of a target's upstream targets in the run to
   its start, which in large runs includes waiting for a busy worker.
-  Records that span several driver runs are left out: `comparison`,
-  `comparison_lognorm_91x`, `sizing_31x` and `sizing_91x`.
+  It leaves out `comparison` and `sizing_91x`, whose records span two driver
+  runs, and `comparison_lognorm_91x` and `sizing_31x`, whose records did so in
+  the previous series.
 - **CPU time and memory:** each target's runtime times its job's mean sampled
   CPU use and unreclaimable memory, which leaves out page cache. Jobs too short
   to be sampled get the median of the sampled jobs measured with them. Memory
@@ -330,44 +334,29 @@ dashed line at 100%, and careful manual checkpointing narrows that gap.
 - Leaving out the analyses that only multiomeR performs keeps its
   like-for-like measures to the shared result; the sizing measures include them.
 
-The series ran from 18 to 21 October 2026 on three nodes of one model (AMD EPYC
-7543, 128 cores, 2 TB RAM), each with its workers on its own node and its own
-store on that node's disk:
+The series ran on 30 October 2026 at commit c12aeb3b, with MACS3 3.1.0, on
+four nodes of one model (AMD EPYC 7543, 128 cores, 2 TB RAM), each with its
+workers on its own node and its own store on that node's disk:
 
-- `comparison` at commit f9a109d5, with both Seurat/Signac chains measured at
-  594af40e, each step alone on the 32-core, 256-GB workstation worker;
-- `comparison_lognorm_91x` on `sizing_91x`'s store after its sizing run,
-  measured again in the same way;
-- `sizing_small`, which builds `sizing_1x` to `sizing_20x`, at 950472fd, on the
-  comparison's node after it had finished;
-- `sizing_31x` and `sizing_91x`, each from an empty store at 113d5633 with all
-  three optional modules, topped up after failed Open Targets downloads and
-  after S-LDSC fixes up to 9d6c026e, from which genetic enrichment profiles
-  only cell types with at least 100 nuclei;
-- `revision_base` at 113d5633, then `revision_1` to `revision_5` on its store,
-  at the five configuration commits on top of it.
+- `comparison` on `node_1`: multiomeR first, then both Seurat/Signac chains on
+  its store, each step alone on the 32-core, 256-GB workstation worker;
+- `sizing_small`, which builds `sizing_1x` to `sizing_20x`, on `node_2`;
+- `sizing_91x` on `node_3`, with all three optional modules. Its Seurat export
+  failed once in a neighbour search and built on a retry;
+- `comparison_lognorm_91x` on `sizing_91x`'s store between its two runs,
+  measured in the same way as the comparison's chains;
+- `sizing_31x` with all three optional modules, from an empty store of its own
+  on `node_3` after those runs;
+- `revision_base` on `node_4`, then `revision_1` to `revision_5` on its store,
+  at the five configuration commits on top of c12aeb3b.
 
 Each target counts with its latest build. Each series' first run builds the
 setup, such as reference downloads, and the per-well steps itself, and compiles
 the native kernels into its own cache, so every measured aggregation is a first
-build. Before 950472fd, `save_plots_structured()` drew only the first part of a
-patchwork plot, which made those plots cheaper, so the sizing and revision
-series were measured at 950472fd or later; the comparison builds no plot
-targets. The nodes also ran other users' jobs. Their median load averages,
-sampled from 12:00 to 02:00 on 19-20 October and counting the series' own
-workers, were about 50 cores on node_4 and 28 on node_2. node_1
-was not sampled, and a spot check showed about 29. Times may therefore be
-somewhat longer than on idle nodes. The Seurat/Signac chains were measured
-again on 20 and 21 October, finally with garbage collection at 594af40e. A first log-normalization series on its own node
-read the largest Cell Ranger outputs from network storage 4 to 10 times as
-slowly as the comparison's node, twice, with most cores idle, so that chain was
-moved to the comparison's store. On `comparison_lognorm_91x`'s node, reading
-the 91 Cell Ranger gene-expression matrices took 43 and then 39 minutes while
-its access to network storage was slow, against 8 minutes in the final
-measurement. Each record keeps its latest build. S-LDSC's cell-type fits and matched-size
-annotation records moved from 16 GB to 60 GB workers during the sizing top-ups,
-so `benchmark_allocations.tsv` gives each recorded target's request in its
-latest build.
+build. The nodes were not reserved, so other users' jobs could run beside the
+series, and times may be somewhat longer than on idle nodes.
+`benchmark_allocations.tsv` gives each recorded target's request at the last
+revision commit, whose graph adds `revision_5`'s GEM well.
 
 ## Supplementary Table S4
 

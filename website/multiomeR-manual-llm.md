@@ -1309,7 +1309,7 @@ Changes to code, configuration, input files, or any upstream target make downstr
 
 ## Results change slightly after a rebuild
 
-Neighbor searches build their index on one thread, so rebuilding a target from unchanged inputs gives the same neighbors, clusters and UMAP layouts. A small upstream change can still move results: removing a few nuclei, for example, redraws the random subsets in which WNN modality weights are estimated, and clusters, UMAP coordinates and downstream statistics shift with them. This is expected; compare cluster composition and marker results rather than exact labels, and keep the store when results must stay unchanged.
+Neighbor searches build their index on one thread, so rebuilding a target from unchanged inputs gives the same neighbors, clusters and UMAP layouts. A small upstream change can still move results: removing a few nuclei, for example, changes the neighbors and WNN modality weights of the nuclei near them, and clusters, UMAP coordinates and downstream statistics shift with them. This is expected; compare cluster composition and marker results rather than exact labels, and keep the store when results must stay unchanged.
 
 ## Old plots remain in the store
 
@@ -1967,10 +1967,11 @@ multiomeR sets each cell's kernel width in each modality from the configured nei
 Per-cell modality weights are computed from these kernels by comparing within-modality with cross-modality predictions.
 The candidates of both modalities are then pooled, and those with the highest weighted kernel scores become the final neighbors.
 In our tests, Seurat's weights approached 0 or 1 as the number of nuclei grew, because the kernel widths shrink with density.
-The weights are therefore estimated within random subsets of at most 10,000 nuclei, whereas the neighbors are selected among all nuclei.
+The weights are therefore estimated within subsets of about 10,000 nuclei, whereas the neighbors are selected among all nuclei.
+Each nucleus is assigned to its subset by a consistent hash of its barcode [@lamping2014_jump_hash], so adding or removing nuclei leaves almost all other nuclei in their subsets, and the weights are averaged over three such partitions, each from a different hash.
 BPCells builds an SNN graph from the joint neighbors for Leiden clustering, and UMAP uses the joint neighbor lists directly.
 The joint lists first keep twice the configured number of neighbors.
-After nuclei in small WNN clusters are removed, each remaining nucleus keeps its highest-scoring remaining neighbors, so no second weight estimate is needed.
+After ATAC doublets and nuclei in small WNN clusters are removed, each remaining nucleus keeps its highest-scoring remaining neighbors, so no second weight estimate is needed.
 Only nuclei left with too few neighbors are searched again.
 Nuclei left with too few are reselected among the remaining nuclei by exact search, with their original weights and kernel widths.
 The implementation does not use `Seurat::FindMultiModalNeighbors()`.
@@ -2552,7 +2553,7 @@ pixi run --use-environment-activation-cache test-amulet-parity
 
 **Reason for reimplementation.** The pipeline already holds aligned RNA and ATAC embeddings and needs reusable neighbor indices, distances, and modality weights without creating a Seurat object. Native graph state also feeds UMAP, Leiden clustering, SCAVENGE, and the Seurat/Signac export.
 
-**Deliberate deviations and consequences.** HNSW search with RcppHNSW replaces Seurat's Annoy search, so candidate sets need not be identical. The helper does not expose Seurat's optional smoothing or cross-constant list, and BPCells builds the downstream SNN graph rather than Seurat `Neighbor` and `Graph` objects. Modality weights are estimated within random subsets of at most 10,000 cells, whose assignment the `seed` argument fixes, because Seurat's weights become nearly binary in large datasets; the validation fixtures are smaller, so this deviation is not tested. The `seed` does not control neighbor-search randomness. These choices can change weights, selected neighbors, SNN edges, clusters, and UMAP coordinates, so correlation and overlap, not exact equality, are the validation contract.
+**Deliberate deviations and consequences.** HNSW search with RcppHNSW replaces Seurat's Annoy search, so candidate sets need not be identical. The helper does not expose Seurat's optional smoothing or cross-constant list, and BPCells builds the downstream SNN graph rather than Seurat `Neighbor` and `Graph` objects. Modality weights are estimated within subsets of about 10,000 cells, because Seurat's weights become nearly binary in large datasets. Cells are assigned to subsets by a hash of their name, and the weights are averaged over three such partitions; the validation fixtures are smaller, so this deviation is not tested. These choices can change weights, selected neighbors, SNN edges, clusters, and UMAP coordinates, so correlation and overlap, not exact equality, are the validation contract.
 
 **Implementation.** `weighted_nearest_neighbors_BPCells()` in `R/processing_multimodal_helpers.R` with the small-SNN bandwidth kernel in `src/wnn_snn_bandwidth.cpp`; `extra_targets/WNN_targets.R` aligns the embeddings and wires the result into clustering, UMAP and metadata targets.
 

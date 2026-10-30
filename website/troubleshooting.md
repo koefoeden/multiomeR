@@ -111,7 +111,7 @@ Changes to code, configuration, input files, or any upstream target make downstr
 
 ## Results change slightly after a rebuild
 
-Neighbor searches build their index on one thread, so rebuilding a target from unchanged inputs gives the same neighbors, clusters and UMAP layouts. A small upstream change can still move results: removing a few nuclei, for example, redraws the random subsets in which WNN modality weights are estimated, and clusters, UMAP coordinates and downstream statistics shift with them. This is expected; compare cluster composition and marker results rather than exact labels, and keep the store when results must stay unchanged.
+Neighbor searches build their index on one thread, so rebuilding a target from unchanged inputs gives the same neighbors, clusters and UMAP layouts. A small upstream change can still move results: removing a few nuclei, for example, changes the neighbors and WNN modality weights of the nuclei near them, and clusters, UMAP coordinates and downstream statistics shift with them. This is expected; compare cluster composition and marker results rather than exact labels, and keep the store when results must stay unchanged.
 
 ## Old plots remain in the store
 

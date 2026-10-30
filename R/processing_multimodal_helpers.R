@@ -188,13 +188,67 @@ get_WNN_modality_weights <- function(embeddings_norm, modality_nn, k) {
   purrr::map(scores, \(score) score / total)
 }
 
+#' Assign keys to subsets by jump consistent hashing
+#'
+#' Lamping and Veach's jump consistent hash (arXiv:1406.2294), with the random
+#' jumps drawn from a hash of each key: a key's subset depends only on the key
+#' and the number of subsets, and when that number changes from `m` to `m + 1`
+#' only about `1 / (m + 1)` of the keys move.
+#'
+#' @param keys Character keys, such as cell names.
+#' @param n_subsets Number of subsets.
+#' @return Subset of each key, from 0 to `n_subsets - 1`.
+#' @keywords internal
+
+assign_jump_hash_subsets <- function(keys, n_subsets) {
+  hash <- digest::getVDigest(algo = "xxhash32")
+  subset <- integer(length(keys))
+  jump <- numeric(length(keys))
+  active <- seq_along(keys)
+  step <- 0L
+  while (length(active) > 0L) {
+    subset[active] <- jump[active]
+    step <- step + 1L
+    uniform <- (strtoi(substr(hash(paste(keys[active], step), serialize = FALSE), 1, 7), 16L) + 1) / 2^28
+    jump[active] <- floor((subset[active] + 1) / uniform)
+    active <- active[jump[active] < n_subsets]
+  }
+  subset
+}
+
+#' WNN modality weights within barcode-hashed subsets
+#'
+#' Estimate the modality weights within subsets of about `weight_cells` cells.
+#' A cell's subset follows from a consistent hash of its name and `salt`, so
+#' adding or removing cells leaves the other cells' subsets almost unchanged.
+#'
+#' @inheritParams weighted_nearest_neighbors_BPCells
+#' @param embeddings_norm L2-normalized modality embeddings, rows named by cell.
+#' @param salt Value hashed with each cell name; each salt gives another partition.
+#' @return Named list of per-cell weights, one vector per modality.
+#' @keywords internal
+
+get_WNN_hashed_subset_weights <- function(embeddings_norm, weight_cells, salt, k, threads, ef, native_source_file) {
+  cell_names <- rownames(embeddings_norm[[1]])
+  subset <- assign_jump_hash_subsets(paste(salt, cell_names), ceiling(length(cell_names) / weight_cells))
+  # Neighbour indices are built on one thread, so the subsets run in parallel instead.
+  subset_weights <- parallel::mclapply(split(seq_along(cell_names), subset), \(cells) {
+    subset_embeddings <- purrr::map(embeddings_norm, \(embedding) embedding[cells, , drop = FALSE])
+    get_WNN_modality_weights(subset_embeddings,
+      find_WNN_modality_neighbors(subset_embeddings, k + 1L, k, 1L, ef, native_source_file), k)
+  }, mc.cores = threads)
+  purrr::map(purrr::set_names(names(embeddings_norm)),
+    \(modality) stats::setNames(unsplit(purrr::map(subset_weights, modality), subset), cell_names))
+}
+
 #' Weighted nearest neighbors BPCells
 #'
 #' Compute Seurat-style weighted nearest neighbors from aligned, L2-normalized
 #' modality embeddings with Euclidean distances. In our tests, Seurat's modality
 #' weights approached 0 or 1 as the number of cells grew, because the kernel
-#' widths shrink with density, so they are estimated within random subsets of at
-#' most `weight_cells` cells; neighbours are selected among all cells.
+#' widths shrink with density, so they are estimated within subsets of about
+#' `weight_cells` cells and averaged over `weight_partitions` partitions into
+#' such subsets; neighbours are selected among all cells.
 #' Adapted from Seurat WNN (Hao et al. 2021, doi:10.1016/j.cell.2021.04.048), without a Seurat object.
 #'
 #' @param embeddings_list Named list of modality embedding matrices with
@@ -204,9 +258,10 @@ get_WNN_modality_weights <- function(embeddings_norm, modality_nn, k) {
 #'   KNN graphs before choosing the final weighted `k`.
 #' @param threads Number of threads passed to BPCells, HNSW, or matrix-stat routines.
 #' @param ef HNSW search breadth parameter; larger values improve recall at higher runtime/memory cost.
-#' @param weight_cells Largest subset in which modality weights are estimated;
-#'   `Inf` estimates them among all cells, as Seurat does.
-#' @param seed Seed of the random assignment of cells to weight subsets.
+#' @param weight_cells Size of the subsets in which modality weights are
+#'   estimated; `Inf` estimates them among all cells, as Seurat does.
+#' @param weight_partitions Number of partitions into weight subsets, each
+#'   assigning cells by a hash of their name, whose weights are averaged.
 #' @param extra_neighbors Neighbours returned beyond `k`, in score order, so that
 #'   [restrict_WNN_results()] can later drop cells without a new search.
 #' @param native_source_file Path to the tracked C++ implementation of the
@@ -224,7 +279,7 @@ weighted_nearest_neighbors_BPCells <- function(
   threads = 1,
   ef = 500,
   weight_cells = 1e4,
-  seed = 1,
+  weight_partitions = 3,
   extra_neighbors = 0,
   native_source_file = file.path(get_project_root(), "src", "wnn_snn_bandwidth.cpp")
 ) {
@@ -235,6 +290,11 @@ weighted_nearest_neighbors_BPCells <- function(
   knn_k <- min(max(k + 1L, candidate_k + 1L), n_cells)
 
   embeddings_norm <- purrr::map(embeddings_list, normalize_embedding_rows)
+  # The weight subsets run in forked workers, started before the full neighbour search so that they share little memory.
+  if (n_cells > weight_cells) {
+    partition_weights <- lapply(seq_len(weight_partitions), \(salt)
+      get_WNN_hashed_subset_weights(embeddings_norm, weight_cells, salt, k, threads, ef, native_source_file))
+  }
   modality_knn <- find_WNN_modality_neighbors(embeddings_norm, knn_k, k, threads, ef, native_source_file)
   nearest_dist <- purrr::map(modality_knn, \(nn) nn$dist[, 2])
   sigma_list <- purrr::map(modality_knn, "sigma")
@@ -242,14 +302,8 @@ weighted_nearest_neighbors_BPCells <- function(
   modality_weights <- if (n_cells <= weight_cells) {
     get_WNN_modality_weights(embeddings_norm, modality_knn, k)
   } else {
-    subset <- withr::with_seed(seed, sample(rep_len(seq_len(ceiling(n_cells / weight_cells)), n_cells)))
-    subset_weights <- lapply(split(seq_len(n_cells), subset), \(cells) {
-      subset_embeddings <- purrr::map(embeddings_norm, \(embedding) embedding[cells, , drop = FALSE])
-      get_WNN_modality_weights(subset_embeddings,
-        find_WNN_modality_neighbors(subset_embeddings, k + 1L, k, threads, ef, native_source_file), k)
-    })
     purrr::map(purrr::set_names(names(embeddings_norm)),
-      \(modality) stats::setNames(unsplit(purrr::map(subset_weights, modality), subset), cell_names))
+      \(modality) Reduce(`+`, purrr::map(partition_weights, modality)) / weight_partitions)
   }
 
   # Candidates are each modality's neighbours 2..candidate_k + 1 (first occurrence), scored by the

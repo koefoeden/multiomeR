@@ -1,7 +1,8 @@
 # Version 1.4.0 release validation
 
 Checked on 2026-10-30 on commit `ddb03315d3a026184f93bb4a10f18ead6e958ad6`
-with a clean working tree. The release commit adds only this report.
+with a clean working tree. Later commits add only this report and the
+fresh-installation fix below.
 
 1.4.0 changes results for every aggregation after its per-well steps, so both
 stores rebuilt most of their targets before the final checks. The final
@@ -51,3 +52,19 @@ Inputs as for 1.2.0. Main commands as for 1.3.0, with
 
 Reports: `outputs/validation/20261030T121318` and
 `outputs_dev/validation/20261030T122556`.
+
+## Fresh installation
+
+A fresh environment lacked the three BSgenome data packages (hg38, mm10,
+mm39). Pixi ran their post-link scripts, but each script's `R CMD INSTALL`
+read the project's `.Rprofile`, whose runtime check stopped because the
+pinned BPCells was not yet installed. Pixi reports a failed post-link script
+only as a warning that its default log level hides. Since b8f466c6, R CMD
+sessions skip the project runtime.
+
+A fresh clone of b8f466c6 on node-local disk, with Pixi 0.82.1 and no
+global Pixi configuration, followed the README's two install commands.
+`pixi install --locked --run-post-link-scripts` installed all three packages
+in 3 min. They loaded in R before and after
+`install-r-github-packages`, and with the project runtime; the working tree
+stayed clean.

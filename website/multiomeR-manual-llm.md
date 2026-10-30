@@ -852,6 +852,7 @@ Before enabling the module, confirm that:
 | Do the studies share fine-mapped variants? | A heatmap of credible-set similarity between studies |
 | Which cell types are enriched, and which matters most? | Cell-type chromVAR deviation heatmaps, which outline each study's top set of cell types |
 | Which loci and variants drive a cell type's enrichment? | Locus-contribution heatmaps and bars, and variant detail plots |
+| Which cell types does each locus's own accessibility point to? | With the experimental [locus attribution](#locus-attribution), locus heatmaps and tables |
 | Which nuclei are trait-relevant? | SCAVENGE trait-relevance scores on the WNN graph, summarized by cell type and cluster |
 | How much of a study's genome-wide heritability lies in each cell type's most accessible chromatin? | S-LDSC enrichment heatmaps, one per annotation size, and enrichment curves across sizes, one file per study category; both mark each study's top sets of cell types |
 | Is that heritability specific to a cell type's peaks or genes, beyond peaks or genes in general? | S-LDSC specificity heatmap, which outlines each study's top set of cell types, and a comparison of the peak, gene and joint models |
@@ -995,6 +996,35 @@ targets::tar_read(
   SLDSC_cell_type_tibble.cell_type_pseudobulk.genetic_enrichment.my_aggregation
 )
 ```
+
+## Locus attribution (experimental) {#locus-attribution}
+
+Locus attribution is an experimental route, off by default. It asks which cell types each credible set's own accessibility points to, rather than which cell types a trait's loci enrich. [Method details](methods_genetic_enrichment.md#locus-attribution)
+
+Its outputs are attributions, not tests. A random peak of the same GC content and accessibility is usually about as specific to some cell type, so a single locus's attribution is weak evidence on its own. Use it to choose loci for follow-up with allelic evidence, such as caQTL colocalisation.
+
+Switch it on per aggregation:
+
+```{.yaml filename="cfg_module_genetic_enrichment.yaml"}
+my_aggregation:
+  genetic_enrichment_locus_attribution: true
+```
+
+The module's run selection then builds these outputs too:
+
+```text
+<store>/plots/my_aggregation/genetic_enrichment/locus_attribution/
+├── trait_heatmap.png
+└── locus_heatmaps/
+<store>/files/my_aggregation/genetic_enrichment/locus_attribution/
+├── locus_table.tsv
+└── compartment_table.tsv
+```
+
+- `locus_heatmaps/` holds one heatmap per study of its 30 credible sets with the most PIP in peaks. A cell type's fold is its share of the locus's PIP in peaks over an even share.
+- `locus_table.tsv` has one row per credible set: its lead variant, strongest association, likely genes, PIP in peaks, and top cell types and compartment with their shares and folds.
+- `compartment_table.tsv` gives each credible set's share and fold per compartment of [`genetic_enrichment_compartment_patterns`](parameters.html#genetic_enrichment_compartment_patterns).
+- `trait_heatmap.png` shows each study's cell-type weights over all its loci against random matched peaks. The loci's attributions do not use them. Studies with too few loci to estimate weights keep grey rows, and their loci are still reported.
 
 ## Parameter reference
 
@@ -2155,7 +2185,7 @@ It equals one minus the total variation distance and is not a colocalization tes
 <!-- end include: website/_shared_methods/genetic_enrichment_nuclei.md -->
 
 
-## Cell-type enrichment and locus attribution {#cell-type-enrichment}
+## Cell-type enrichment and locus contributions {#cell-type-enrichment}
 
 
 <!-- begin include: website/_shared_methods/genetic_enrichment_cell_types.md -->
@@ -2209,6 +2239,40 @@ Traits with fewer than 10 loci get no top set, because so few loci give no relia
 Heatmaps outline the top sets.
 
 <!-- end include: website/_shared_methods/genetic_enrichment_cell_types.md -->
+
+
+## Locus attribution {#locus-attribution}
+
+
+<!-- begin include: website/_shared_methods/genetic_enrichment_locus_attribution.md -->
+
+Locus attribution is an experimental route, off by default, that asks which cell types each credible set points to through its own accessibility.
+It uses the peak weights of the cell-type enrichment: each pair of a credible set and a peak carries the posterior probability (PIP) of the set's credible variants in the peak.
+A cell type takes a peak in proportion to the peak's share of its ATAC reads, summed by the final WNN cell-type labels.
+Each cell type's profile is shrunk toward the pooled profile of all cell types by the reads of 50 average nuclei.
+A peak without reads in a small cell type therefore counts as average rather than closed.
+A uniform background takes peaks that no cell type explains better than reads spread evenly over all peaks.
+Without it, the cell types with the most diffuse reads, such as neurons in a peripheral tissue, would collect every weak peak.
+Each pair's PIP is split between the cell types and the background in proportion to these likelihoods, and summed over each credible set's peaks.
+A cell type's fold is its share among the cell types divided by an even share.
+A fold of 1 thus means that the locus's accessibility does not favour the cell type.
+A compartment's fold is the mean of its cell types' folds, so that large compartments do not lead by their size alone.
+These shares and folds use no information from other loci.
+They are attributions, not tests.
+A random peak of the same GC content and accessibility is usually about as specific to some cell type, so a single locus's attribution is weak evidence on its own.
+
+For context, a mixture over the cell types and the background is fitted to all of a trait's pairs, each weighted by its PIP, by expectation–maximization [@dempster1977_em].
+Its weights estimate which cell types the trait's loci act through as a whole.
+A Dirichlet prior of 0.1, 1, 10 or 100 loci, spread evenly over the cell types, is chosen by the likelihood of the pairs on held-out chromosomes in five folds.
+The weights are reported only when they predict the held-out pairs at least one nat better than even weights, which split each pair by its accessibility alone.
+This is positive evidence on the scale of Kass and Raftery [@kass1995_bayes_factors].
+Traits with fewer loci keep their locus attributions, and their weights are marked as not estimable.
+Each cell type's share by chance is the mean of the weights fitted to ten sets of random peaks.
+Each random peak comes from the same bin of GC content and expected accessibility as the real peak it replaces, as in the background model of the cell-type enrichment.
+The random peaks are drawn with a fixed seed.
+Loci are labelled with the highest-scoring Open Targets locus-to-gene genes [@mountjoy2021_l2g].
+
+<!-- end include: website/_shared_methods/genetic_enrichment_locus_attribution.md -->
 
 
 ## SCAVENGE propagation {#scavenge-propagation}
@@ -2368,9 +2432,9 @@ How the R implementation of S-LDSC was compared with ldsc is described in [Algor
 
 ## Source and target graphs
 
-`extra_targets/module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in its directory. Its shared targets download the S-LDSC reference and each distinct GWAS's summary statistics once for all aggregations. `extra_targets/module_genetic_enrichment/peak_gene_targets.R` maps the comparison of peak–gene strategies over the aggregations that also run the peak–gene correlation module, after both modules' mappings.
+`extra_targets/module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in its directory. Its shared targets download the S-LDSC reference and each distinct GWAS's summary statistics once for all aggregations. `extra_targets/module_genetic_enrichment/peak_gene_targets.R` maps the comparison of peak–gene strategies over the aggregations that also run the peak–gene correlation module, after both modules' mappings. `extra_targets/module_genetic_enrichment/locus_attribution_targets.R` maps the experimental locus attribution over the aggregations that set [`genetic_enrichment_locus_attribution`](parameters.html#genetic_enrichment_locus_attribution), after the module's other targets.
 
-**Source:** [`extra_targets/module_genetic_enrichment/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_genetic_enrichment), [`R/open_targets_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/open_targets_helpers.R), [`R/GWAS_chromVAR_input_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_input_helpers.R), [`R/GWAS_chromVAR_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_helpers.R), [`R/GWAS_chromVAR_absolute_effect_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_absolute_effect_helpers.R), [`R/GWAS_chromVAR_contribution_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_contribution_helpers.R), [`R/SCAVENGE_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SCAVENGE_helpers.R), [`R/SLDSC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_helpers.R), [`R/SLDSC_annotation_evaluation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_annotation_evaluation_helpers.R), [`R/SLDSC_peak_gene_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_peak_gene_helpers.R).
+**Source:** [`extra_targets/module_genetic_enrichment/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_genetic_enrichment), [`R/open_targets_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/open_targets_helpers.R), [`R/GWAS_chromVAR_input_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_input_helpers.R), [`R/GWAS_chromVAR_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_helpers.R), [`R/GWAS_chromVAR_absolute_effect_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_absolute_effect_helpers.R), [`R/GWAS_chromVAR_contribution_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_contribution_helpers.R), [`R/GWAS_locus_attribution_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_locus_attribution_helpers.R), [`R/SCAVENGE_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SCAVENGE_helpers.R), [`R/SLDSC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_helpers.R), [`R/SLDSC_annotation_evaluation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_annotation_evaluation_helpers.R), [`R/SLDSC_peak_gene_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_peak_gene_helpers.R).
 
 ### Nucleus-level enrichment and SCAVENGE
 
@@ -2384,7 +2448,7 @@ This view covers the absolute-effect branch, which weights variants by posterior
 
 [Mermaid graph omitted; source: `website/figures/human_curated/genetic_enrichment_cell_type_absolute_effect_v2.mmd`]
 
-### Cell-type contributions and locus attribution
+### Cell-type contributions
 
 This view covers the annotation-class pseudobulk deviations and their decomposition into contributing peaks, variants and loci.
 

@@ -31,6 +31,7 @@ Before enabling the module, confirm that:
 | Do the studies share fine-mapped variants? | A heatmap of credible-set similarity between studies |
 | Which cell types are enriched, and which matters most? | Cell-type chromVAR deviation heatmaps, which outline each study's top set of cell types |
 | Which loci and variants drive a cell type's enrichment? | Locus-contribution heatmaps and bars, and variant detail plots |
+| Which cell types does each locus's own accessibility point to? | With the experimental [locus attribution](#locus-attribution), locus heatmaps and tables |
 | Which nuclei are trait-relevant? | SCAVENGE trait-relevance scores on the WNN graph, summarized by cell type and cluster |
 | How much of a study's genome-wide heritability lies in each cell type's most accessible chromatin? | S-LDSC enrichment heatmaps, one per annotation size, and enrichment curves across sizes, one file per study category; both mark each study's top sets of cell types |
 | Is that heritability specific to a cell type's peaks or genes, beyond peaks or genes in general? | S-LDSC specificity heatmap, which outlines each study's top set of cell types, and a comparison of the peak, gene and joint models |
@@ -174,6 +175,35 @@ targets::tar_read(
   SLDSC_cell_type_tibble.cell_type_pseudobulk.genetic_enrichment.my_aggregation
 )
 ```
+
+## Locus attribution (experimental) {#locus-attribution}
+
+Locus attribution is an experimental route, off by default. It asks which cell types each credible set's own accessibility points to, rather than which cell types a trait's loci enrich. [Method details](methods_genetic_enrichment.md#locus-attribution)
+
+Its outputs are attributions, not tests. A random peak of the same GC content and accessibility is usually about as specific to some cell type, so a single locus's attribution is weak evidence on its own. Use it to choose loci for follow-up with allelic evidence, such as caQTL colocalisation.
+
+Switch it on per aggregation:
+
+```{.yaml filename="cfg_module_genetic_enrichment.yaml"}
+my_aggregation:
+  genetic_enrichment_locus_attribution: true
+```
+
+The module's run selection then builds these outputs too:
+
+```text
+<store>/plots/my_aggregation/genetic_enrichment/locus_attribution/
+├── trait_heatmap.png
+└── locus_heatmaps/
+<store>/files/my_aggregation/genetic_enrichment/locus_attribution/
+├── locus_table.tsv
+└── compartment_table.tsv
+```
+
+- `locus_heatmaps/` holds one heatmap per study of its 30 credible sets with the most PIP in peaks. A cell type's fold is its share of the locus's PIP in peaks over an even share.
+- `locus_table.tsv` has one row per credible set: its lead variant, strongest association, likely genes, PIP in peaks, and top cell types and compartment with their shares and folds.
+- `compartment_table.tsv` gives each credible set's share and fold per compartment of [`genetic_enrichment_compartment_patterns`](parameters.html#genetic_enrichment_compartment_patterns).
+- `trait_heatmap.png` shows each study's cell-type weights over all its loci against random matched peaks. The loci's attributions do not use them. Studies with too few loci to estimate weights keep grey rows, and their loci are still reported.
 
 ## Parameter reference
 

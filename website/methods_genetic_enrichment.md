@@ -11,9 +11,13 @@ This page describes the analyses of the optional genetic-enrichment module. [Gen
 
 {{< include _shared_methods/genetic_enrichment_nuclei.md >}}
 
-## Cell-type enrichment and locus attribution {#cell-type-enrichment}
+## Cell-type enrichment and locus contributions {#cell-type-enrichment}
 
 {{< include _shared_methods/genetic_enrichment_cell_types.md >}}
+
+## Locus attribution {#locus-attribution}
+
+{{< include _shared_methods/genetic_enrichment_locus_attribution.md >}}
 
 ## SCAVENGE propagation {#scavenge-propagation}
 
@@ -29,9 +33,9 @@ How the R implementation of S-LDSC was compared with ldsc is described in [Algor
 
 ## Source and target graphs
 
-`extra_targets/module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in its directory. Its shared targets download the S-LDSC reference and each distinct GWAS's summary statistics once for all aggregations. `extra_targets/module_genetic_enrichment/peak_gene_targets.R` maps the comparison of peak–gene strategies over the aggregations that also run the peak–gene correlation module, after both modules' mappings.
+`extra_targets/module_genetic_enrichment/targets.R` selects the aggregations whose `modules` include `genetic_enrichment`, resolves one configured Open Targets study set per aggregation, attaches symbols for the primary-module inputs it consumes, and maps the target files in its directory. Its shared targets download the S-LDSC reference and each distinct GWAS's summary statistics once for all aggregations. `extra_targets/module_genetic_enrichment/peak_gene_targets.R` maps the comparison of peak–gene strategies over the aggregations that also run the peak–gene correlation module, after both modules' mappings. `extra_targets/module_genetic_enrichment/locus_attribution_targets.R` maps the experimental locus attribution over the aggregations that set [`genetic_enrichment_locus_attribution`](parameters.html#genetic_enrichment_locus_attribution), after the module's other targets.
 
-**Source:** [`extra_targets/module_genetic_enrichment/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_genetic_enrichment), [`R/open_targets_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/open_targets_helpers.R), [`R/GWAS_chromVAR_input_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_input_helpers.R), [`R/GWAS_chromVAR_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_helpers.R), [`R/GWAS_chromVAR_absolute_effect_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_absolute_effect_helpers.R), [`R/GWAS_chromVAR_contribution_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_contribution_helpers.R), [`R/SCAVENGE_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SCAVENGE_helpers.R), [`R/SLDSC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_helpers.R), [`R/SLDSC_annotation_evaluation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_annotation_evaluation_helpers.R), [`R/SLDSC_peak_gene_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_peak_gene_helpers.R).
+**Source:** [`extra_targets/module_genetic_enrichment/`](https://github.com/koefoeden/multiomeR/tree/main/extra_targets/module_genetic_enrichment), [`R/open_targets_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/open_targets_helpers.R), [`R/GWAS_chromVAR_input_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_input_helpers.R), [`R/GWAS_chromVAR_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_helpers.R), [`R/GWAS_chromVAR_absolute_effect_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_absolute_effect_helpers.R), [`R/GWAS_chromVAR_contribution_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_chromVAR_contribution_helpers.R), [`R/GWAS_locus_attribution_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/GWAS_locus_attribution_helpers.R), [`R/SCAVENGE_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SCAVENGE_helpers.R), [`R/SLDSC_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_helpers.R), [`R/SLDSC_annotation_evaluation_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_annotation_evaluation_helpers.R), [`R/SLDSC_peak_gene_helpers.R`](https://github.com/koefoeden/multiomeR/blob/main/R/SLDSC_peak_gene_helpers.R).
 
 ### Nucleus-level enrichment and SCAVENGE
 
@@ -49,7 +53,7 @@ This view covers the absolute-effect branch, which weights variants by posterior
 emit_mermaid("website/figures/human_curated/genetic_enrichment_cell_type_absolute_effect_v2.mmd")
 ```
 
-### Cell-type contributions and locus attribution
+### Cell-type contributions
 
 This view covers the annotation-class pseudobulk deviations and their decomposition into contributing peaks, variants and loci.
 

@@ -6,7 +6,6 @@ rlang::list2(
       gene_expression = significant_elements_tibble.gene_expression,
       chromatin_accessibility = significant_elements_tibble.chromatin_accessibility,
       motif_family_accessibility = significant_elements_tibble.motif_family_accessibility,
-      transcription_factor_activity = significant_elements_tibble.transcription_factor_activity,
       .id = "modality"
     ) |>
       dplyr::summarise(n_significant = sum(n_significant), .by = c(modality, model, contrast)) |>
@@ -32,33 +31,33 @@ rlang::list2(
     )
   ),
   targets::tar_target(
-    name = activity_accessibility_source_comparison_tibble.CollecTRI_JASPAR,
-    description = "Compare CollecTRI activity, JASPAR motif-family accessibility, and TF expression results [part_of_graph:differential_analyses]",
+    name = regulon_accessibility_source_comparison_tibble.CollecTRI_JASPAR,
+    description = "Compare regulon target enrichment, JASPAR motif-family accessibility and TF expression results [part_of_graph:differential_analyses]",
     command = get_CollecTRI_JASPAR_comparison_tibble(
-      CollecTRI_results_tibble = results_tibble.transcription_factor_activity,
+      regulon_results_tibble = results.CollecTRI.regulon_target_enrichment.gene_expression,
       motif_family_accessibility_results_tibble = results_tibble.motif_family_accessibility,
       gene_expression_results_tibble = results_tibble.gene_expression,
       CollecTRI_JASPAR_family_map = CollecTRI_JASPAR_family_map
     )
   ),
   targets::tar_target(
-    name = activity_accessibility_family_comparison_tibble.CollecTRI_JASPAR,
-    description = "Collapse CollecTRI-JASPAR comparisons to motif families per model and contrast [part_of_graph:differential_analyses]",
+    name = regulon_accessibility_family_comparison_tibble.CollecTRI_JASPAR,
+    description = "Collapse regulon-motif comparisons to motif families per model and contrast [part_of_graph:differential_analyses]",
     command = get_CollecTRI_JASPAR_family_comparison_tibble(
-      activity_accessibility_source_comparison_tibble.CollecTRI_JASPAR
+      regulon_accessibility_source_comparison_tibble.CollecTRI_JASPAR
     )
   ),
   targets::tar_target(
-    name = activity_accessibility_concordance_tibble.CollecTRI_JASPAR,
-    description = "Summarize CollecTRI-JASPAR correlation, direction concordance, and joint significance per contrast [part_of_graph:differential_analyses]",
+    name = regulon_accessibility_concordance_tibble.CollecTRI_JASPAR,
+    description = "Summarize regulon-motif correlation, direction concordance, joint significance and a null range per contrast [part_of_graph:differential_analyses]",
     command = get_CollecTRI_JASPAR_concordance_tibble(
-      activity_accessibility_family_comparison_tibble.CollecTRI_JASPAR
+      regulon_accessibility_family_comparison_tibble.CollecTRI_JASPAR
     )
   ),
   tarchetypes::tar_file(
-    name = activity_accessibility_concordance_plots.CollecTRI_JASPAR,
-    description = "Plot expression- versus accessibility-derived TF activity concordance per contrast. [checkpoint:differential_analyses]",
-    command = activity_accessibility_concordance_tibble.CollecTRI_JASPAR |>
+    name = regulon_accessibility_concordance_plots.CollecTRI_JASPAR,
+    description = "Plot the concordance of regulon target enrichment and motif-family accessibility per contrast. [checkpoint:differential_analyses]",
+    command = regulon_accessibility_concordance_tibble.CollecTRI_JASPAR |>
       plot_CollecTRI_JASPAR_concordance() |>
       save_plots_structured()
   ),

@@ -25,9 +25,9 @@ If the models need variables that the aggregation's donor metadata lacks, give a
 | Which genes change expression? | `gene_expression` |
 | Which peaks change accessibility? | `chromatin_accessibility` |
 | Which motif families change accessibility? | `motif_family_accessibility` (JASPAR) |
-| Which regulators show altered expression-based activity? | `transcription_factor_activity` (CollecTRI) |
+| Which regulators' targets change together? | `regulon_target_enrichment` (CollecTRI) |
 
-Motif-family accessibility summarizes ATAC data; transcription-factor activity is inferred from GEX data. The module also produces pseudobulk-depth and model diagnostics, comparisons across the feature families, and Hallmark and Reactome gene-set tests for gene expression.
+Motif-family accessibility summarizes ATAC data. Regulon target enrichment tests whether a transcription factor's CollecTRI targets change together in gene expression; it does not show that the factor itself changed, so its results name the leading targets and the factor's own expression. The module also produces pseudobulk-depth and model diagnostics, comparisons across the feature families, and Hallmark and Reactome gene-set tests for gene expression.
 
 ## Configure
 
@@ -60,7 +60,7 @@ my_aggregation:
 Each branch holds named models; the model and contrast names label the outputs.
 
 - **Abundance models** ([`differential_analyses_cell_type_composition_models`](parameters.html#differential_analyses_cell_type_composition_models)) fit each cell type's share of a donor's nuclei. Use a one-sided, fixed-effects formula; the response is added for you. `plot_phenotype_vars` and `color_by` choose the plotted variables. Omit the field to skip this branch.
-- **Feature models** ([`differential_analyses_pseudobulk_models`](parameters.html#differential_analyses_pseudobulk_models)) test the four feature families. The formula uses donor metadata variables; replace `my_cell_type` with one of your cell types. A model tests all cell types together unless `cell_type_subset` names one. One donor's pseudobulks of different cell types are not independent replicates, so a model over several cell types is refused unless it also sets a paired cell-type design (`cell_type_formula` with `pairing_variable`) or a `random_effect`. For the same reason, a model with [several samples of one donor](reference_donor_metadata.md#several-samples) in a cell type must block on that donor.
+- **Feature models** ([`differential_analyses_pseudobulk_models`](parameters.html#differential_analyses_pseudobulk_models)) test the three feature families. The formula uses donor metadata variables; replace `my_cell_type` with one of your cell types. A model tests all cell types together unless `cell_type_subset` names one. One donor's pseudobulks of different cell types are not independent replicates, so a model over several cell types is refused unless it also sets a paired cell-type design (`cell_type_formula` with `pairing_variable`) or a `random_effect`. For the same reason, a model with [several samples of one donor](reference_donor_metadata.md#several-samples) in a cell type must block on that donor.
 - **Contrasts** in `contrast_specs_vec` are coefficient names of the model matrix, or linear combinations of them. A text variable's alphabetically first value is the reference, so `conditiontreated` is treated minus control. Replace the example variable, formula and contrast with your own. A contrast named `A_minus_B` reads as a difference of two effects; when the model also names both effects as contrasts, its results add their log fold changes (`logFC_first_effect` and `logFC_subtracted_effect`), so that each hit shows which effect moved.
 
 Optional fields narrow a model:
@@ -107,16 +107,16 @@ Review the plots ([examples](gallery.md#differential-analyses)); each plot's sub
 ├── gene_expression/
 │   ├── volcano_plots/condition_model/
 │   ├── gene_set_enrichment/{Hallmark,Reactome}/enrichment_plots/condition_model/
+│   ├── regulon_target_enrichment/CollecTRI/enrichment_plots/condition_model/
 │   ├── significant_elements_plot.png
 │   └── p_value_distribution_plot.png
 ├── chromatin_accessibility/
 ├── motif_family_accessibility/
-├── transcription_factor_activity/
 ├── significant_elements_modality_distribution_plots/
-└── CollecTRI_JASPAR/activity_accessibility_concordance_plots/
+└── CollecTRI_JASPAR/regulon_accessibility_concordance_plots/
 ```
 
-The other feature families follow the `gene_expression/` layout without gene sets.
+The other feature families follow the `gene_expression/` layout without gene-set and regulon tests.
 
 Read feature-model results in R, for example for gene expression:
 

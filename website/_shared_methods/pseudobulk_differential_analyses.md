@@ -1,14 +1,11 @@
 For molecular analyses, GEX and ATAC counts of the final WNN nuclei are summed within each donor–annotation-class combination to form pseudobulk samples.
-Four feature matrices are tested:
+Three feature matrices are tested:
 
 - **Gene expression** (differential gene expression, DGE): gene pseudobulk counts.
 - **Chromatin accessibility** (differential chromatin accessibility, DCA): consensus-peak pseudobulk counts.
 - **Motif-family accessibility** (differential transcription-factor motif accessibility, DTFA): betterChromVAR bias-corrected deviations of the 233 JASPAR motif families, calculated from the pseudobulk ATAC counts [@germain2026_betterchromvar].
   This matrix is therefore continuous.
   Unlike chromVAR *z*-scores, deviations do not grow with sample depth, and no per-sample centering or cross-sample normalization is applied.
-- **Transcription-factor activity** (differential CollecTRI transcription-factor activity, DCTA): signed CollecTRI regulator activities, inferred with the `decoupleR` univariate linear model from filtered, library-size-normalized log-CPM GEX pseudobulks [@muller_dott2023_collectri; @badia2022_decoupler].
-  Each regulator requires at least five measured targets.
-  The CollecTRI network is used only when its checksum matches the recorded one, and complexes such as AP1 and NF-κB are kept as single regulons.
 
 For each model, donors that miss a model variable or fall outside an optional donor list are removed.
 Samples outside an optional annotation-class subset are also removed, and the DTFA analysis by default removes samples with fewer than 5,000 ATAC counts.
@@ -39,12 +36,24 @@ For each model and contrast, Benjamini–Hochberg FDR is calculated across the t
 DGE contrasts are also tested against the Hallmark and Reactome collections of MSigDB release 2026.1 [@liberzon2015_hallmark; @milacic2024_reactome] with competitive `camera` tests [@wu2012_camera; @dolgalev2026_msigdbr].
 These tests use the contrast's expression, precision weights and design, or the combined response for cross-class contrasts.
 Each set's inter-gene correlation is estimated from the residuals, and each set needs at least ten tested genes.
+camera cannot account for a random effect or correlation block, so such models instead test the blocked fit's moderated *t*-statistics with `limma::cameraPR()`, passing camera's estimated correlations, floored at zero.
+The 13 mitochondrially encoded genes are left out of the gene-set tests, but kept in the per-gene results: in nuclei, their reads mostly come from ambient and cytoplasmic RNA.
 FDR is calculated within each contrast and collection.
 A set's direction compares its genes with all other tested genes, including genes that belong to no set.
 The sets of one contrast therefore often lean the same way, even under the null.
+
+Transcription-factor regulons of the CollecTRI network [@muller_dott2023_collectri] are tested as signed gene sets in the same competitive way.
+The network is used only when its checksum matches the recorded one, and complexes such as AP1 and NF-κB are kept as single regulons.
+For every contrast, `limma::cameraPR()` compares the moderated *t*-statistics of a regulon's targets, with those of repressed targets negated, against all other tested genes.
+Models fitted with edgeR quasi-likelihood tests, which report no *t*-statistic, use the signed normal quantile of each gene's *P* value instead.
+Each regulon's inter-gene correlation is camera's estimate for the signed set, floored at zero.
+Each class fit sets the gene universe, and a regulon needs at least ten tested targets.
+A significant regulon shows that its targets moved together in the expected directions, not that the transcription factor itself changed.
+The results therefore name each regulon's leading targets and the factor's expression, pooled over the pseudobulks of each class the contrast involves, and flag factors below 0.5 counts per million.
+The network is human, so mouse aggregations stop with an error.
 A cross-modality comparison maps CollecTRI regulators to JASPAR families.
-It compares the model *t*-statistics, rather than the raw scales, of transcription-factor activity and motif-family accessibility.
-Where gene expression is fitted with limma, it also compares TF expression (edgeR tests report no *t*-statistic).
-Family-level summaries use the median regulator *t*-statistic.
+It compares each regulon's signed enrichment, the normal quantile of its *P* value, with the motif-family accessibility *t*-statistics, and summarizes families by the median over their regulators.
+Each contrast's Spearman correlation is shown against ±1.96/√(*n* − 1), the 95% range for unrelated rankings of its *n* families.
+Where gene expression is fitted with limma, the comparison also reports TF expression (edgeR tests report no *t*-statistic).
 An analysis stops with an error rather than returning a model when no samples or testable features remain or residual degrees of freedom are below one.
 It also fails when a correlation block or contrast is invalid, or when too few shared donors remain for a requested paired-cell-type comparison.

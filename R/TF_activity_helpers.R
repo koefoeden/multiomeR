@@ -25,56 +25,99 @@ read_CollecTRI_human_network <- function(network_csv) {
     )
 }
 
-#' Infer CollecTRI TF activities from pseudobulk expression
+#' Get regulon target enrichment results
 #'
-#' Convert cluster-donor pseudobulk counts to filtered log-CPM values and infer
-#' one signed ULM activity score per CollecTRI regulator and sample.
+#' Test each CollecTRI regulon as a signed gene set. For every contrast of a
+#' gene-expression model, `limma::cameraPR()` compares the targets' statistics,
+#' with the repressed targets' (`mor < 0`) flipped, against all other tested
+#' genes. Its variance comes from the spread of the gene-level statistics and
+#' the set's inter-gene correlation, which camera estimates for the signed set
+#' and which is floored at 0. So, unlike a per-sample regulon score, an
+#' arbitrary set is not called merely because many genes change. Each class fit
+#' sets the gene universe. A significant regulon means that its targets moved
+#' together in the expected directions, not that the TF itself changed, so each
+#' result names its leading targets and the TF's own expression.
 #'
-#' @param pseudobulk_GEX_counts_matrix Gene-by-pseudobulk-sample count matrix.
-#' @param CollecTRI_network_tibble Signed CollecTRI network with `source`,
-#'   `target`, and `mor` columns.
-#' @param min_targets Minimum detected regulon targets required per source.
-#' @return A regulator-by-pseudobulk-sample numeric activity matrix.
+#' @param pseudobulk_feature_matrix_fit Fitted gene-expression model.
+#' @param pseudobulk_feature_dynamic_tibble Dynamic-branch metadata row describing the model.
+#' @param results_tibble The model's gene results, whose moderated t is tested.
+#' @param pseudobulk_counts_matrix The model's gene-by-pseudobulk counts, for the TFs' expression.
+#' @param CollecTRI_network_tibble Signed CollecTRI network with `source`, `target` and `mor` columns.
+#' @param organism_chr Pipeline organism identifier; the network is human.
+#' @param min_targets Minimum number of tested targets per regulon.
+#' @param n_leading_targets Number of leading targets reported per regulon.
+#' @param min_TF_CPM TF expression below which a regulon is flagged.
+#' @return One row per contrast and regulon, with cameraPR's `PValue`, BH `FDR`
+#'   within the contrast, a signed normal quantile `z`, the leading targets, and
+#'   `TF_CPM`, the TF's lowest pooled expression across the contrast's cell types.
 #' @keywords internal
 
-get_pseudobulk_CollecTRI_TF_activity_matrix <- function(
-  pseudobulk_GEX_counts_matrix,
+get_regulon_target_enrichment_results <- function(
+  pseudobulk_feature_matrix_fit,
+  pseudobulk_feature_dynamic_tibble,
+  results_tibble,
+  pseudobulk_counts_matrix,
   CollecTRI_network_tibble,
-  min_targets = 5L
+  organism_chr,
+  min_targets = 10L,
+  n_leading_targets = 5L,
+  min_TF_CPM = 0.5
 ) {
-  counts_matrix <- if (inherits(pseudobulk_GEX_counts_matrix, "IterableMatrix")) {
-    methods::as(pseudobulk_GEX_counts_matrix, "dgCMatrix")
-  } else {
-    pseudobulk_GEX_counts_matrix
+  if (!identical(organism_chr, "Homo_sapiens")) {
+    stop("Regulon target enrichment uses the human CollecTRI network, so it supports only Homo_sapiens aggregations, not ",
+      organism_chr, ".", call. = FALSE)
   }
+  model_list <- pseudobulk_feature_dynamic_tibble$model[[1]]
+  pairing_variable <- model_list$pairing_variable %||% model_list$random_effect %||% "donor_id"
+  regulons <- split(stats::setNames(sign(CollecTRI_network_tibble$mor), CollecTRI_network_tibble$target), CollecTRI_network_tibble$source)
 
-  sample_tibble <- get_pseudobulk_sample_tibble(counts_matrix)
-  gene_expression_list <- edgeR::DGEList(counts = counts_matrix)
-  expressed_features <- edgeR::filterByExpr(
-    gene_expression_list,
-    group = sample_tibble$cluster
-  )
-  gene_expression_list <- edgeR::normLibSizes(
-    gene_expression_list[expressed_features, , keep.lib.sizes = FALSE]
-  )
-  log_CPM_matrix <- edgeR::cpm(gene_expression_list, log = TRUE, prior.count = 2)
+  # Each TF's expression, pooled over each cell type's pseudobulks.
+  cell_type_counts <- pseudobulk_counts_matrix %*% Matrix::t(Matrix::fac2sparse(factor(get_pseudobulk_sample_tibble(pseudobulk_counts_matrix)$cluster)))
+  TF_rows <- match(names(regulons), toupper(rownames(cell_type_counts)))
+  TF_CPM <- 1e6 * t(t(as.matrix(cell_type_counts[TF_rows[!is.na(TF_rows)], , drop = FALSE])) / Matrix::colSums(cell_type_counts))
+  TF_CPM <- TF_CPM[match(names(regulons), names(regulons)[!is.na(TF_rows)]), , drop = FALSE]
+  rownames(TF_CPM) <- names(regulons)
 
-  activity_matrix <- decoupleR::run_ulm(
-    mat = log_CPM_matrix,
-    network = dplyr::select(CollecTRI_network_tibble, source, target, mor),
-    minsize = min_targets
-  ) |>
-    dplyr::select(source, condition, score) |>
-    tidyr::pivot_wider(names_from = condition, values_from = score) |>
-    tibble::column_to_rownames("source") |>
-    as.matrix()
+  contrast_vec_list <- get_contrast_vec_list(pseudobulk_feature_matrix_fit, model_list)
+  purrr::imap_dfr(contrast_vec_list, function(contrast_vec, contrast_name) {
+    test <- get_set_test_inputs(pseudobulk_feature_matrix_fit, contrast_vec, pairing_variable)
+    statistic <- get_contrast_statistic(results_tibble, contrast_name, test$genes)
+    tested <- purrr::map(regulons, function(signs) {
+      index <- match(names(signs), toupper(test$genes))
+      list(index = index[!is.na(index)], sign = unname(signs[!is.na(index)]))
+    }) |>
+      purrr::keep(\(regulon) length(regulon$index) >= min_targets)
+    if (!length(tested)) {
+      return(tibble::tibble())
+    }
+    # Negating a gene's expression negates its residuals, so camera estimates a
+    # signed set's correlation as that of a plain set in the expression stacked
+    # over its negation.
+    elist <- test$elist[test$genes, ]
+    n_genes <- length(test$genes)
+    stacked <- new("EList", list(E = rbind(elist$E, -elist$E), weights = if (!is.null(elist$weights)) rbind(elist$weights, elist$weights)))
+    correlation <- limma::camera(stacked, purrr::map(tested, \(regulon) regulon$index + n_genes * (regulon$sign < 0)),
+      design = test$design, contrast = test$contrast, inter.gene.cor = NA, sort = FALSE)$Correlation |>
+      pmax(0) |>
+      stats::setNames(names(tested))
 
-  activity_matrix <- activity_matrix[, colnames(counts_matrix), drop = FALSE]
-  assert_with_info(
-    nrow(activity_matrix) > 0L && all(is.finite(activity_matrix)),
-    glue_info = "CollecTRI ULM did not produce a finite TF activity matrix."
-  )
-  activity_matrix
+    purrr::imap_dfr(tested, function(regulon, TF) {
+      signed <- statistic
+      signed[regulon$index] <- regulon$sign * statistic[regulon$index]
+      set_result <- limma::cameraPR(signed, list(regulon$index), inter.gene.cor = correlation[[TF]], sort = FALSE)
+      leading <- regulon$index[order(if (set_result$Direction == "Up") -signed[regulon$index] else signed[regulon$index])]
+      tibble::tibble(ID = TF, NGenes = length(regulon$index), Correlation = correlation[[TF]],
+        Direction = set_result$Direction, PValue = set_result$PValue,
+        leading_targets = paste(test$genes[utils::head(leading, n_leading_targets)], collapse = ";"),
+        TF_CPM = min(TF_CPM[TF, test$cell_types]))
+    }) |>
+      format_set_test_results(contrast_name, "cameraPR", pseudobulk_feature_dynamic_tibble) |>
+      dplyr::mutate(
+        z = dplyr::if_else(Direction == "Up", 1, -1) * stats::qnorm(PValue / 2, lower.tail = FALSE),
+        low_TF_expression = TF_CPM < min_TF_CPM,
+        .after = PValue
+      )
+  })
 }
 
 
@@ -138,9 +181,9 @@ get_CollecTRI_JASPAR_family_map <- function(
 }
 
 
-#' Match expression- and accessibility-derived TF results
+#' Match regulon target enrichment with motif accessibility and TF expression
 #'
-#' @param CollecTRI_results_tibble Differential CollecTRI activity results.
+#' @param regulon_results_tibble Regulon target enrichment results.
 #' @param motif_family_accessibility_results_tibble Differential JASPAR motif-family accessibility results.
 #' @param gene_expression_results_tibble Differential gene-expression results.
 #' @param CollecTRI_JASPAR_family_map CollecTRI-to-JASPAR crosswalk.
@@ -148,21 +191,20 @@ get_CollecTRI_JASPAR_family_map <- function(
 #' @keywords internal
 
 get_CollecTRI_JASPAR_comparison_tibble <- function(
-  CollecTRI_results_tibble,
+  regulon_results_tibble,
   motif_family_accessibility_results_tibble,
   gene_expression_results_tibble,
   CollecTRI_JASPAR_family_map
 ) {
   join_keys <- c("model", "contrast", "cell_type_subset")
-  CollecTRI_results <- CollecTRI_results_tibble |>
+  regulon_results <- regulon_results_tibble |>
     dplyr::bind_rows() |>
     dplyr::transmute(
       dplyr::across(dplyr::all_of(join_keys)),
-      source = feature_id,
-      logFC_CollecTRI = logFC,
-      t_CollecTRI = t,
-      PValue_CollecTRI = PValue,
-      FDR_CollecTRI = FDR
+      source = ID,
+      z_regulon = z,
+      PValue_regulon = PValue,
+      FDR_regulon = FDR
     )
   motif_family_accessibility_results <- motif_family_accessibility_results_tibble |>
     dplyr::bind_rows() |>
@@ -190,7 +232,7 @@ get_CollecTRI_JASPAR_comparison_tibble <- function(
       FDR_TF_expression = FDR
     )
 
-  CollecTRI_results |>
+  regulon_results |>
     dplyr::left_join(
       CollecTRI_JASPAR_family_map,
       by = "source",
@@ -210,16 +252,16 @@ get_CollecTRI_JASPAR_comparison_tibble <- function(
       motif_mapping_status = dplyr::if_else(is.na(motif_family), "unmapped", "mapped"),
       direction_concordant = dplyr::if_else(
         motif_mapping_status == "mapped",
-        sign(t_CollecTRI) == sign(t_motif_family_accessibility),
+        sign(z_regulon) == sign(t_motif_family_accessibility),
         NA
       ),
-      jointly_FDR_significant = FDR_CollecTRI < 0.05 & FDR_motif_family_accessibility < 0.05
+      jointly_FDR_significant = FDR_regulon < 0.05 & FDR_motif_family_accessibility < 0.05
     ) |>
     dplyr::arrange(model, contrast, source, motif_family)
 }
 
 
-#' Collapse CollecTRI comparisons to motif families
+#' Collapse regulon comparisons to motif families
 #'
 #' @param comparison_tibble Output from `get_CollecTRI_JASPAR_comparison_tibble()`.
 #' @return One row per model, contrast, and mapped motif family.
@@ -229,28 +271,31 @@ get_CollecTRI_JASPAR_family_comparison_tibble <- function(comparison_tibble) {
   comparison_tibble |>
     dplyr::filter(motif_mapping_status == "mapped", is.finite(t_motif_family_accessibility)) |>
     dplyr::summarise(
-      t_CollecTRI = stats::median(t_CollecTRI, na.rm = TRUE),
+      z_regulon = stats::median(z_regulon, na.rm = TRUE),
       t_motif_family_accessibility = dplyr::first(t_motif_family_accessibility),
       t_TF_expression = if (all(is.na(t_TF_expression))) {
         NA_real_
       } else {
         stats::median(t_TF_expression, na.rm = TRUE)
       },
-      min_source_FDR_CollecTRI = min(FDR_CollecTRI, na.rm = TRUE),
-      any_source_FDR_significant = any(FDR_CollecTRI < 0.05, na.rm = TRUE),
+      min_source_FDR_regulon = min(FDR_regulon, na.rm = TRUE),
+      any_source_FDR_significant = any(FDR_regulon < 0.05, na.rm = TRUE),
       FDR_motif_family_accessibility = dplyr::first(FDR_motif_family_accessibility),
       n_CollecTRI_sources = dplyr::n_distinct(source),
       CollecTRI_sources = paste(sort(unique(source)), collapse = ";"),
       .by = c(model, contrast, cell_type_subset, motif_family)
     ) |>
     dplyr::mutate(
-      direction_concordant = sign(t_CollecTRI) == sign(t_motif_family_accessibility),
+      direction_concordant = sign(z_regulon) == sign(t_motif_family_accessibility),
       jointly_FDR_significant = any_source_FDR_significant & FDR_motif_family_accessibility < 0.05
     )
 }
 
 
-#' Summarize CollecTRI-JASPAR concordance by contrast
+#' Summarize regulon-motif concordance by contrast
+#'
+#' `null_rho_95` is the 95% range of a Spearman correlation between unrelated
+#' rankings of as many motif families.
 #'
 #' @param family_comparison_tibble Family-level CollecTRI-JASPAR comparison.
 #' @return Contrast-level mapping, direction, significance, and correlation summary.
@@ -261,12 +306,13 @@ get_CollecTRI_JASPAR_concordance_tibble <- function(family_comparison_tibble) {
     dplyr::summarise(
       n_motif_families = dplyr::n(),
       spearman_rho = if (dplyr::n() >= 3L) {
-        stats::cor(t_CollecTRI, t_motif_family_accessibility, method = "spearman", use = "complete.obs")
+        stats::cor(z_regulon, t_motif_family_accessibility, method = "spearman", use = "complete.obs")
       } else {
         NA_real_
       },
+      null_rho_95 = if (dplyr::n() >= 3L) stats::qnorm(0.975) / sqrt(dplyr::n() - 1) else NA_real_,
       direction_concordance = mean(direction_concordant, na.rm = TRUE),
-      n_CollecTRI_FDR = sum(any_source_FDR_significant, na.rm = TRUE),
+      n_regulon_FDR = sum(any_source_FDR_significant, na.rm = TRUE),
       n_motif_family_accessibility_FDR = sum(FDR_motif_family_accessibility < 0.05, na.rm = TRUE),
       n_joint_FDR = sum(jointly_FDR_significant, na.rm = TRUE),
       .by = c(model, contrast, cell_type_subset)
@@ -274,7 +320,7 @@ get_CollecTRI_JASPAR_concordance_tibble <- function(family_comparison_tibble) {
 }
 
 
-#' Plot CollecTRI-JASPAR concordance across contrasts
+#' Plot regulon-motif concordance across contrasts
 #'
 #' @param concordance_tibble Contrast-level CollecTRI-JASPAR summary.
 #' @return A list of ggplots split by pseudobulk model.
@@ -306,6 +352,7 @@ plot_CollecTRI_JASPAR_concordance <- function(concordance_tibble) {
             color = direction_concordance
           )
         ) +
+        ggplot2::geom_linerange(ggplot2::aes(xmin = -null_rho_95, xmax = null_rho_95), color = "grey85", linewidth = 4) +
         ggplot2::geom_vline(xintercept = 0, color = "grey65", linetype = "dashed") +
         ggplot2::geom_point(size = 3) +
         ggplot2::geom_text(ggplot2::aes(label = joint_label), hjust = -0.25, size = 3) +
@@ -319,17 +366,19 @@ plot_CollecTRI_JASPAR_concordance <- function(concordance_tibble) {
         ) +
         ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0.05, 0.2))) +
         ggplot2::labs(
-          title = paste("Expression-accessibility TF concordance:", stringr::str_replace_all(model_name, "_", " ")),
-          subtitle = stringr::str_wrap("Look for consistent ranks and directions across modalities; motif-family agreement does not identify one causal TF.", width = 100),
-          x = "Spearman correlation: CollecTRI activity versus motif accessibility t-statistics",
+          title = paste("Regulon-accessibility concordance:", stringr::str_replace_all(model_name, "_", " ")),
+          subtitle = stringr::str_wrap("Look for correlations outside the grey band and consistent directions; motif-family agreement does not identify one causal TF.", width = 100),
+          x = "Spearman correlation: regulon target enrichment versus motif accessibility",
           y = NULL,
           color = "Direction concordance",
-          caption = paste0(
-            "CollecTRI values are median regulator t-statistics for ",
+          caption = stringr::str_wrap(paste0(
+            "Regulon values are median signed z of regulon target enrichment over the CollecTRI regulons mapped to each of ",
             family_count_label,
-            " mapped motif families per contrast. Colour: fraction with matching effect directions; joint labels count families significant in both analyses. Scores summarize family-level concordance, not independent donor replication."
-          )
+            " motif families per contrast. Grey bands: 95% range of the correlation between unrelated rankings of as many families. ",
+            "Colour: fraction with matching effect directions; joint labels count families significant in both analyses. ",
+            "Scores summarize family-level concordance, not independent donor replication."
+          ), width = 110)
         ) +
-        ggplot2::theme(legend.position = "bottom")
+        ggplot2::theme(legend.position = "bottom", plot.title.position = "plot", plot.caption.position = "plot")
     })
 }

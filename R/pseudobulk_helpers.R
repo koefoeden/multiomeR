@@ -1488,56 +1488,98 @@ plot_pseudobulk_differential_significant_elements_modality_distribution <- funct
 #' Run competitive camera gene-set tests for pseudobulk contrasts, estimating
 #' each set's inter-gene correlation from the model residuals. A fixed small
 #' correlation makes coherent sets, whose genes co-vary across donors, look far
-#' more significant than they are.
+#' more significant than they are. camera cannot block samples, so models with
+#' a `random_effect` or `correlation_block` test the blocked fit's moderated t
+#' with `limma::cameraPR()`, passing camera's estimated correlations, floored at 0.
+#' Mitochondrially encoded genes stay out of the sets and the background.
 #'
 #' @param pseudobulk_feature_matrix_fit Fitted model from `fit_pseudobulk_feature_matrix_model()`.
 #' @param pseudobulk_feature_dynamic_tibble Dynamic-branch metadata row describing the model.
 #' @param gene_sets Named list of gene identifiers per gene set.
+#' @param results_tibble The model's feature results, whose moderated t blocked models test.
 #' @param min_genes_per_set Minimum number of tested genes required per gene set.
 #' @return camera result tibble for each contrast and gene set.
 #' @keywords internal
 
-get_gene_set_enrichment_results <- function(pseudobulk_feature_matrix_fit, pseudobulk_feature_dynamic_tibble, gene_sets, min_genes_per_set = 10L) {
+get_gene_set_enrichment_results <- function(pseudobulk_feature_matrix_fit, pseudobulk_feature_dynamic_tibble, gene_sets, results_tibble, min_genes_per_set = 10L) {
   model_list <- pseudobulk_feature_dynamic_tibble$model[[1]]
   pairing_variable <- model_list$pairing_variable %||% model_list$random_effect %||% "donor_id"
+  blocked <- any(nzchar(c(model_list$random_effect, model_list$correlation_block)))
   contrast_vec_list <- get_contrast_vec_list(pseudobulk_feature_matrix_fit, model_list)
 
   purrr::imap_dfr(contrast_vec_list, function(contrast_vec, contrast_name) {
-    test <- if (inherits(pseudobulk_feature_matrix_fit, "pseudobulk_cell_type_fit")) {
-      cell_type_contrasts <- get_pseudobulk_cell_type_contrasts(pseudobulk_feature_matrix_fit, contrast_vec)
-      if (length(cell_type_contrasts) == 1L) {
-        fit <- pseudobulk_feature_matrix_fit$cell_type_fits[[names(cell_type_contrasts)]]
-        list(elist = fit$EList, design = fit$design, contrast = cell_type_contrasts[[1]])
-      } else {
-        get_pseudobulk_combined_contrast_elist(pseudobulk_feature_matrix_fit, cell_type_contrasts, pairing_variable)
-      }
-    } else {
-      list(elist = pseudobulk_feature_matrix_fit$EList, design = pseudobulk_feature_matrix_fit$design, contrast = contrast_vec)
-    }
-    gene_indices <- limma::ids2indices(gene.sets = gene_sets, identifiers = rownames(test$elist$E), remove.empty = FALSE)
+    test <- get_set_test_inputs(pseudobulk_feature_matrix_fit, contrast_vec, pairing_variable)
+    gene_indices <- limma::ids2indices(gene.sets = gene_sets, identifiers = test$genes, remove.empty = FALSE)
     gene_indices <- gene_indices[lengths(gene_indices) >= min_genes_per_set]
     if (!length(gene_indices)) {
       return(tibble::tibble())
     }
 
-    limma::camera(test$elist, index = gene_indices, design = test$design, contrast = test$contrast,
-      inter.gene.cor = NA, sort = FALSE) |>
+    set_results <- limma::camera(test$elist[test$genes, ], index = gene_indices, design = test$design, contrast = test$contrast,
+      inter.gene.cor = NA, sort = FALSE)
+    if (blocked) {
+      set_results <- limma::cameraPR(get_contrast_statistic(results_tibble, contrast_name, test$genes), gene_indices,
+        inter.gene.cor = pmax(set_results$Correlation, 0), sort = FALSE)
+    }
+    set_results |>
       tibble::as_tibble(rownames = "ID") |>
-      dplyr::mutate(
-        FDR = stats::p.adjust(PValue, method = "BH"),
-        contrast = contrast_name,
-        method = "camera",
-        `-log10(PValue)` = -log10(PValue),
-        `-log10(FDR)` = -log10(FDR),
-        cell_type_subset = pseudobulk_feature_dynamic_tibble$cell_type_subset,
-        model = pseudobulk_feature_dynamic_tibble$model_name,
-        color_category = dplyr::case_when(
-          FDR < 0.05 & Direction == "Up" ~ "SigUP",
-          FDR < 0.05 & Direction == "Down" ~ "SigDown",
-          TRUE ~ "NS"
-        )
-      )
+      format_set_test_results(contrast_name, if (blocked) "cameraPR" else "camera", pseudobulk_feature_dynamic_tibble)
   })
+}
+
+# The expression, precision weights and design that camera tests for one
+# contrast: the class fit for a within-class contrast, the combined response for
+# a cross-class one, or the model's own fit. `genes` leaves out the 13
+# mitochondrially encoded genes, which in nuclei mostly measure ambient and
+# cytoplasmic RNA; `cell_types` are those the contrast involves.
+get_set_test_inputs <- function(pseudobulk_feature_matrix_fit, contrast_vec, pairing_variable) {
+  if (inherits(pseudobulk_feature_matrix_fit, "pseudobulk_cell_type_fit")) {
+    cell_type_contrasts <- get_pseudobulk_cell_type_contrasts(pseudobulk_feature_matrix_fit, contrast_vec)
+    test <- if (length(cell_type_contrasts) == 1L) {
+      fit <- pseudobulk_feature_matrix_fit$cell_type_fits[[names(cell_type_contrasts)]]
+      list(elist = fit$EList, design = fit$design, contrast = cell_type_contrasts[[1]])
+    } else {
+      get_pseudobulk_combined_contrast_elist(pseudobulk_feature_matrix_fit, cell_type_contrasts, pairing_variable)
+    }
+    test$cell_types <- names(cell_type_contrasts)
+  } else {
+    test <- list(elist = pseudobulk_feature_matrix_fit$EList, design = pseudobulk_feature_matrix_fit$design, contrast = contrast_vec,
+      cell_types = unique(get_pseudobulk_sample_tibble(pseudobulk_feature_matrix_fit$EList$E)$cluster))
+  }
+  test$genes <- stringr::str_subset(rownames(test$elist$E), stringr::regex("^MT-", ignore_case = TRUE), negate = TRUE)
+  test
+}
+
+# A contrast's moderated t from the model's own fit, blocked where the model
+# blocks. edgeR's quasi-likelihood tests report no t; their signed normal
+# quantile orders the genes in the same way.
+get_contrast_statistic <- function(results_tibble, contrast_name, genes) {
+  contrast_results <- dplyr::filter(results_tibble, .data$contrast == contrast_name)
+  statistic <- if ("t" %in% names(contrast_results)) {
+    contrast_results$t
+  } else {
+    sign(contrast_results$logFC) * stats::qnorm(contrast_results$PValue / 2, lower.tail = FALSE)
+  }
+  statistic <- stats::setNames(statistic, contrast_results$feature_id)[genes]
+  assert_with_info(!anyNA(statistic), glue_info = "Set tests need a statistic for every tested gene of {contrast_name}.")
+  statistic
+}
+
+format_set_test_results <- function(set_results, contrast_name, method, pseudobulk_feature_dynamic_tibble) {
+  dplyr::mutate(set_results,
+    FDR = stats::p.adjust(PValue, method = "BH"),
+    contrast = contrast_name,
+    method = method,
+    `-log10(PValue)` = -log10(PValue),
+    `-log10(FDR)` = -log10(FDR),
+    cell_type_subset = pseudobulk_feature_dynamic_tibble$cell_type_subset,
+    model = pseudobulk_feature_dynamic_tibble$model_name,
+    color_category = dplyr::case_when(
+      FDR < 0.05 & Direction == "Up" ~ "SigUP",
+      FDR < 0.05 & Direction == "Down" ~ "SigDown",
+      TRUE ~ "NS"
+    )
+  )
 }
 
 #' Plot pseudobulk gene expression volcano
@@ -1795,51 +1837,58 @@ plot_pseudobulk_chromatin_accessibility_volcanoes <- function(pseudobulk_differe
 }
 
 
-plot_gene_set_enrichment_results <- function(gene_set_enrichment_results_tibble) {
+plot_gene_set_enrichment_results <- function(gene_set_enrichment_results_tibble, title = "Competitive pathway enrichment") {
   if (nrow(gene_set_enrichment_results_tibble) == 0) {
     return(structure(list(), class = c("empty_plot_list", "list")))
   }
 
   gene_set_enrichment_results_tibble |>
     group_split_by("contrast") |>
-    purrr::map(plot_gene_set_enrichment_contrast_results)
+    purrr::map(plot_gene_set_enrichment_contrast_results, title = title)
 }
 
 
 #' Plot gene-set enrichment contrast results
 #'
-#' Plot top competitive camera terms for one pseudobulk contrast.
+#' Plot the top competitive set tests of one pseudobulk contrast. Regulons
+#' whose TF is barely expressed in the contrast's cell types are marked.
 #'
-#' @param gene_set_enrichment_results_tibble camera results of one contrast, with gene-set `ID`, `Direction`, `PValue`, `FDR`, `model` and `contrast` columns.
+#' @param gene_set_enrichment_results_tibble camera or cameraPR results of one contrast, with set `ID`, `Direction`, `PValue`, `FDR`, `method`, `model` and `contrast` columns.
+#' @param title Plot title before the model and contrast.
 #' @return A ggplot, patchwork, or BPCells trackplot object ready for `save_plots_structured()` or composition.
 #' @keywords internal
 
-plot_gene_set_enrichment_contrast_results <- function(gene_set_enrichment_results_tibble) {
+plot_gene_set_enrichment_contrast_results <- function(gene_set_enrichment_results_tibble, title = "Competitive pathway enrichment") {
+  # Regulon results flag their TFs' expression.
+  regulons <- "low_TF_expression" %in% names(gene_set_enrichment_results_tibble)
   plotting_tibble <- gene_set_enrichment_results_tibble |>
     dplyr::mutate(
       ID = stringr::str_remove(ID, "^HALLMARK_|^WP_|^GOBP_|^GOCC_|^GOMF_|^HP_|^REACTOME_|^PID_|^MODULE_|^GAVISH_3CA_|^KEGG_"),
       ID = stringr::str_replace_all(ID, "_", " "),
+      ID = if (regulons) dplyr::if_else(low_TF_expression %in% TRUE, paste0(ID, " (TF < 0.5 CPM)"), ID) else ID,
       ID = stringr::str_wrap(ID, width = 48),
-      signed_log10_FDR = dplyr::if_else(
-        Direction == "Up",
-        -log10(pmax(FDR, .Machine$double.xmin)),
-        log10(pmax(FDR, .Machine$double.xmin))
-      )
+      # BH ties many sets at one FDR, so position shows the P value that ranks them.
+      signed_log10_P = dplyr::if_else(Direction == "Up", 1, -1) * -log10(pmax(PValue, .Machine$double.xmin))
     ) |>
     dplyr::slice_min(PValue, n = 25, with_ties = FALSE) |>
-    dplyr::mutate(ID = stats::reorder(ID, signed_log10_FDR)) |>
-    dplyr::select(ID, signed_log10_FDR, FDR, model, contrast)
+    dplyr::mutate(ID = stats::reorder(ID, signed_log10_P)) |>
+    dplyr::select(ID, signed_log10_P, FDR, model, contrast, method)
 
-  build_gene_set_enrichment_plot(plotting_tibble)
+  build_gene_set_enrichment_plot(plotting_tibble, title, note = if (regulons) {
+    paste("Regulons are signed: repressed targets count in reverse. A significant regulon shows that its targets moved together,",
+      "not that the TF itself changed; '(TF < 0.5 CPM)' marks TFs barely expressed in the contrast's cell types.")
+  })
 }
 
 # Keep the plot environment separate from the full enrichment results.
-build_gene_set_enrichment_plot <- function(plotting_tibble) {
+build_gene_set_enrichment_plot <- function(plotting_tibble, title, note = NULL) {
   force(plotting_tibble)
+  force(title)
+  force(note)
 
   ggplot2::ggplot(
     plotting_tibble,
-    ggplot2::aes(x = signed_log10_FDR, y = ID, color = FDR < 0.05)
+    ggplot2::aes(x = signed_log10_P, y = ID, color = FDR < 0.05)
   ) +
     ggplot2::geom_vline(
       xintercept = c(log10(0.05), -log10(0.05)),
@@ -1850,7 +1899,7 @@ build_gene_set_enrichment_plot <- function(plotting_tibble) {
     ggplot2::scale_color_manual(values = c(`TRUE` = "#D55E00", `FALSE` = "grey55")) +
     ggplot2::labs(
       title = stringr::str_c(
-        "Competitive pathway enrichment: ",
+        title, ": ",
         unique(plotting_tibble$model),
         ": ",
         unique(plotting_tibble$contrast)
@@ -1858,9 +1907,9 @@ build_gene_set_enrichment_plot <- function(plotting_tibble) {
         stringr::str_replace_all("_", " ") |>
         stringr::str_wrap(width = 70),
       subtitle = stringr::str_wrap("Read direction from the sign and support from the magnitude; enrichment is relative to genes outside each set.", width = 100),
-      caption = stringr::str_wrap("camera results: up to 25 terms with the smallest nominal p-values are displayed, including non-significant terms. Position is signed -log10(FDR), not an enrichment effect size. Dashed lines and colour mark FDR = 0.05. Overlapping gene sets are not independent findings.", width = 110),
+      caption = stringr::str_wrap(paste(unique(plotting_tibble$method), "results: up to 25 sets with the smallest nominal p-values are displayed, including non-significant sets. Position is signed -log10(nominal p), not an enrichment effect size; colour marks BH FDR < 0.05, and dashed lines mark nominal p = 0.05, not an FDR cutoff. Overlapping sets are not independent findings.", note), width = 110),
       x = paste(
-        "Signed -log10(FDR)",
+        "Signed -log10(nominal p)",
         "Positive values indicate enrichment among positive statistics",
         sep = "\n"
       ),
@@ -1869,7 +1918,8 @@ build_gene_set_enrichment_plot <- function(plotting_tibble) {
     ) +
     ggplot2::theme(
       axis.text.y = ggplot2::element_text(size = 8),
-      legend.position = "bottom"
+      legend.position = "bottom",
+      plot.title.position = "plot"
     )
 }
 

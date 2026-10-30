@@ -71,8 +71,7 @@ rlang::list2(
     description = "Plot signed counts of FDR-significant pseudobulk differential elements per model and contrast. [checkpoint:differential_analyses]",
     command = significant_elements_tibble |>
       plot_pseudobulk_differential_significant_elements(modality = switch(map_analysis_suffix,
-        gene_expression = "gene expression", chromatin_accessibility = "chromatin accessibility", motif_family_accessibility = "motif-family accessibility",
-        transcription_factor_activity = "TF activity")) |>
+        gene_expression = "gene expression", chromatin_accessibility = "chromatin accessibility", motif_family_accessibility = "motif-family accessibility")) |>
       save_plots_structured()
   ),
   targets::tar_target(

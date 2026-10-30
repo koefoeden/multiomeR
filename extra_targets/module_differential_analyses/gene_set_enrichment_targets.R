@@ -11,9 +11,9 @@ rlang::list2(
   ),
   targets::tar_target(
     name = results,
-    description = "Run competitive camera enrichment, with estimated inter-gene correlations, on pseudobulk contrasts for each gene-set subcollection [part_of_graph:differential_analyses]",
-    command = get_gene_set_enrichment_results(feature_matrix_fit.gene_expression, dynamic_tibble.gene_expression, gene_sets),
-    pattern = map(feature_matrix_fit.gene_expression, dynamic_tibble.gene_expression)
+    description = "Run competitive camera enrichment, with estimated inter-gene correlations, on pseudobulk contrasts for each gene-set subcollection; blocked models use cameraPR on their moderated t [part_of_graph:differential_analyses]",
+    command = get_gene_set_enrichment_results(feature_matrix_fit.gene_expression, dynamic_tibble.gene_expression, gene_sets, results_tibble.gene_expression),
+    pattern = map(feature_matrix_fit.gene_expression, dynamic_tibble.gene_expression, results_tibble.gene_expression)
   ),
   tarchetypes::tar_file(
     name = enrichment_plots,

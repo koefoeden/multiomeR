@@ -7,6 +7,9 @@ differential_analyses_restriction <- build_module_tibble("differential_analyses"
     "pseudobulk_depth_tibble.GEX",
     "pseudobulk_depth_tibble.ATAC",
     "pseudobulk_motif_family_accessibility_matrix.ATAC",
+    "chromVAR_obj.ATAC",
+    "chromVAR_TF_motif_family_matrix.ATAC",
+    "aggregated_cellranger_ref_list",
     "consensus_peak_annotated_GRanges.ATAC",
     "gene_features_df",
     "organism_chr"
@@ -27,7 +30,8 @@ rlang::list2(
         ~map_analysis_suffix, ~map_pseudobulk_data_matrix,
         "gene_expression", rlang::sym("pseudobulk_counts_matrix.GEX"),
         "chromatin_accessibility", rlang::sym("pseudobulk_counts_matrix.ATAC"),
-        "motif_family_accessibility", rlang::sym("pseudobulk_motif_family_accessibility_matrix.ATAC")
+        "motif_family_accessibility", rlang::sym("pseudobulk_motif_family_accessibility_matrix.ATAC"),
+        "TF_motif_accessibility", rlang::sym("pseudobulk_TF_motif_accessibility_matrix")
       ),
       names = map_analysis_suffix,
       descriptions = NULL,

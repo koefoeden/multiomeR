@@ -370,7 +370,7 @@ items:
   group: Primary module
   section: 7. ATAC clusters and motifs
   target: continuous.UMAPs.7_ATAC_QC
-  description: UMAPs colored by continuous motif-family accessibility and peak accessibility metrics.
+  description: UMAPs colored by the accessibility of configured marker TFs' own motifs and by peak accessibility metrics.
   source_file: 7_ATAC_QC/UMAPs/continuous/log10_nCount_RNA.png
   asset: gallery_assets/7_ATAC-QC/continuous.UMAPs.7_ATAC_QC.webp
 - checkpoint: 8_multimodal-QC

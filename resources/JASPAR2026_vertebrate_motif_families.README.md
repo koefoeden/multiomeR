@@ -21,9 +21,20 @@ from the official cluster summaries at:
 https://jaspar.elixir.no/static/archetypes/2026/vertebrates/clusters_info_tabs/cluster{1..233}.txt
 ```
 
-The pipeline scans only the 233 root motifs. Individual family members are
-retained as metadata for resolving configured TF markers and mapping external
-TF resources such as CollecTRI to the corresponding JASPAR family.
+`JASPAR2026_vertebrate_motifs.jaspar` holds the position frequency matrices of
+those 1,019 motifs. It was downloaded on 2026-10-29 and is copied without
+modification from:
+
+```text
+https://jaspar.elixir.no/download/data/2026/CORE/JASPAR2026_CORE_vertebrates_non-redundant_pfms_jaspar.txt
+```
+
+Its SHA-256 digest is
+`4005b5449ba07d9b58495f51143186e7e3959efd0ad670770fbddf57bf941e8f`.
+
+The pipeline scores motif families by scanning the 233 root motifs. Configured
+marker TFs are scored by their own motifs. The membership table also maps
+external TF resources such as CollecTRI to the corresponding JASPAR family.
 
 `JASPAR2026_vertebrate_motif_family_annotations.tsv` provides a display name for
 each of the 233 families, alongside its complete TF-member list, motif IDs,

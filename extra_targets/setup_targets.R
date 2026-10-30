@@ -105,6 +105,11 @@ rlang::list2(
     description = "Track the official JASPAR2026 CORE vertebrate familial motif membership map [part_of_graph:ATAC] [part_of_graph:seurat_export] [part_of_graph:differential_analyses]",
     command = "resources/JASPAR2026_vertebrate_motif_families.tsv"
   ),
+  tarchetypes::tar_file(
+    name = JASPAR2026_vertebrate_motifs_jaspar,
+    description = "Track the 1,019 official JASPAR2026 CORE vertebrate non-redundant motifs [part_of_graph:ATAC]",
+    command = "resources/JASPAR2026_vertebrate_motifs.jaspar"
+  ),
   targets::tar_target(
     name = Ensembl_gene_annotation_GRanges_list,
     description = "Download all supported Ensembl gene annotations once for downstream reference-specific lookup",
@@ -210,6 +215,21 @@ rlang::list2(
       }
 
       family_members
+    }
+  ),
+  targets::tar_target(
+    name = JASPAR_motif_matrix_list,
+    description = "Load the individual JASPAR2026 CORE vertebrate motifs, named by motif feature, to score configured marker TFs by their own motifs [part_of_graph:ATAC]",
+    command = {
+      motifs <- TFBSTools::readJASPARMatrix(JASPAR2026_vertebrate_motifs_jaspar, matrixClass = "PFM")
+      motif_ids <- vapply(seq_along(motifs), \(index) TFBSTools::ID(motifs[[index]]), character(1))
+      if (!setequal(motif_ids, JASPAR_motif_family_members_tibble$motif_id)) {
+        stop("The vendored JASPAR2026 motifs must be the 1,019 members of the motif-family map.")
+      }
+      names(motifs) <- JASPAR_motif_family_members_tibble$motif_feature[
+        match(motif_ids, JASPAR_motif_family_members_tibble$motif_id)
+      ]
+      motifs
     }
   ),
   tarchetypes::tar_file(

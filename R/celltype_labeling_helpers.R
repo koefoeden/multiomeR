@@ -31,6 +31,7 @@ row_sums_for_peak_count_matrix <- function(counts_matrix) {
 
 #' Families are used because related TFs often share near-identical motifs that cannot be told apart. A family
 #' that merges different motif types is scored mainly by its root's type, so its other members are captured poorly.
+#' Roots are trimmed of sparse flank columns, but kept at least 8 columns wide.
 read_JASPAR_familial_root_PFMatrixList <- function(path) {
   lines <- readLines(path, warn = FALSE)
   motif_ends <- which(trimws(lines) == "//")
@@ -51,8 +52,14 @@ read_JASPAR_familial_root_PFMatrixList <- function(path) {
     rownames(profile_matrix) <- c("A", "C", "G", "T")
     # Flank columns aligned from a minority of the family's members carry sparse, spuriously
     # specific counts that would restrict matches to that minority's sub-family.
-    core <- range(which(colSums(profile_matrix) >= 0.5 * max(colSums(profile_matrix))))
-    profile_matrix <- profile_matrix[, core[[1]]:core[[2]], drop = FALSE]
+    column_totals <- colSums(profile_matrix)
+    core <- range(which(column_totals >= 0.5 * max(column_totals)))
+    # Keep the best-supported window of at least 8 columns around the core: below 8, motifmatchr's
+    # P < 5e-5 cannot be reached (0.25^7 > 5e-5), so a root would match only its best word.
+    width <- min(max(diff(core) + 1L, 8L), ncol(profile_matrix))
+    starts <- max(1L, core[[2]] - width + 1L):min(core[[1]], ncol(profile_matrix) - width + 1L)
+    start <- starts[[which.max(vapply(starts, \(s) sum(column_totals[s:(s + width - 1L)]), numeric(1)))]]
+    profile_matrix <- profile_matrix[, start:(start + width - 1L), drop = FALSE]
     colnames(profile_matrix) <- seq_len(ncol(profile_matrix))
 
     TFBSTools::PFMatrix(
@@ -90,37 +97,21 @@ label_motif_families <- function(features, family_labels) {
   dplyr::coalesce(unname(family_labels[as.character(features)]), as.character(features))
 }
 
-resolve_marker_motif_families <- function(marker_TFs_list, motif_family_members_tibble) {
-  resolve_marker <- function(marker_TF) {
-    marker_suffix <- stringr::str_extract(marker_TF, "[+-]$")
-    marker_name <- stringr::str_remove(marker_TF, "[+-]$")
-    marker_name_upper <- stringr::str_to_upper(marker_name)
-
-    matching_rows <- motif_family_members_tibble |>
-      dplyr::filter(
-        stringr::str_to_upper(motif_feature) == marker_name_upper |
-          stringr::str_to_upper(TF_name) == marker_name_upper
-      )
-
-    if (nrow(matching_rows) == 0L) {
-      stop("Configured ATAC marker TF is missing from the JASPAR2026 vertebrate motif families: ", marker_name, ".")
-    }
-
-    matching_families <- unique(matching_rows$motif_family)
-    if (length(matching_families) > 1L) {
-      stop(
-        "Configured ATAC marker TF resolves to multiple JASPAR2026 motif families: ",
-        marker_name,
-        ". Use one of these ID-qualified motifs: ",
-        paste(matching_rows$motif_feature, collapse = ", "),
-        "."
-      )
-    }
-
-    paste0(matching_families, dplyr::coalesce(marker_suffix, ""))
+#' Resolve configured marker TFs to their own JASPAR motifs
+#'
+#' A TF name selects all of its motifs; a name qualified with a motif ID, such as `MEIS1__MA1639.2`, selects that one.
+#'
+#' @param marker_TFs_list Named list of marker TFs per cell type; `+` and `-` suffixes are ignored.
+#' @param motif_family_members_tibble JASPAR motif-family membership target.
+#' @return Unique motif features, in membership-table order.
+resolve_marker_motifs <- function(marker_TFs_list, motif_family_members_tibble) {
+  marker_names <- stringr::str_to_upper(stringr::str_remove(unlist(marker_TFs_list, use.names = FALSE), "[+-]$"))
+  TF_names <- stringr::str_to_upper(motif_family_members_tibble$TF_name)
+  missing_markers <- setdiff(marker_names, c(TF_names, motif_family_members_tibble$motif_feature))
+  if (length(missing_markers) > 0L) {
+    stop("Configured ATAC marker TFs are missing from the JASPAR2026 vertebrate motifs: ", toString(missing_markers), ".")
   }
-
-  purrr::map(marker_TFs_list, \(marker_TFs) unique(purrr::map_chr(marker_TFs, resolve_marker)))
+  motif_family_members_tibble$motif_feature[TF_names %in% marker_names | motif_family_members_tibble$motif_feature %in% marker_names]
 }
 
 get_peak_ranges_for_peak_names <- function(peak_names, ATAC_peak_GRanges, genome_obj) {

@@ -708,6 +708,7 @@ If the models need variables that the aggregation's donor metadata lacks, give a
 | Which genes change expression? | `gene_expression` |
 | Which peaks change accessibility? | `chromatin_accessibility` |
 | Which motif families change accessibility? | `motif_family_accessibility` (JASPAR) |
+| Which regulators' own motifs change accessibility, where their family does not represent them? | `TF_motif_accessibility` (JASPAR) |
 | Which regulators' targets change together? | `regulon_target_enrichment` (CollecTRI) |
 
 Motif-family accessibility summarizes ATAC data. Regulon target enrichment tests whether a transcription factor's CollecTRI targets change together in gene expression; it does not show that the factor itself changed, so its results name the leading targets and the factor's own expression. The module also produces pseudobulk-depth and model diagnostics, comparisons across the feature families, and Hallmark and Reactome gene-set tests for gene expression.
@@ -797,6 +798,7 @@ Review the plots ([examples](gallery.md#differential-analyses)); each plot's sub
 │   └── p_value_distribution_plot.png
 ├── chromatin_accessibility/
 ├── motif_family_accessibility/
+├── TF_motif_accessibility/
 ├── significant_elements_modality_distribution_plots/
 └── CollecTRI_JASPAR/regulon_accessibility_concordance_plots/
 ```
@@ -1968,14 +1970,15 @@ Scanning with them would restrict matches to that minority's sub-family.
 A family that merges different motif types is thus scored mainly by its most common type, and its other members are captured poorly.
 For example, the root motif of the family that holds both forkhead and MEF2 factors matches forkhead sites.
 The trimmed root motifs are matched to the consensus peaks with `motifmatchr` at its default threshold of P < 5 × 10^−5^ [@schep2025_motifmatchr].
-Some short root motifs cannot reach this threshold even with their best-matching sequence.
-They then match only that sequence, which can occur by chance up to eight times as often as the threshold allows.
-Configured transcription factors are matched to families by name, or by name and motif identifier when a symbol belongs to more than one family.
+A motif needs at least eight columns to reach this threshold, so the trim keeps the best-supported eight columns around a shorter core.
+Root motifs that are shorter to begin with may match only their best-matching sequence.
+That sequence can occur by chance up to six times as often as the threshold allows.
 betterChromVAR applies the chromVAR workflow with GC-bias correction to compute analytic motif-family deviations and z-scores for individual nuclei, with its finite-population correction of the z-scores [@schep2017_chromvar; @germain2026_betterchromvar].
 All families are tested per ATAC annotation class with one-versus-rest Wilcoxon tests, with Benjamini–Hochberg correction [@benjamini1995_fdr] across all family–class tests.
 They are also summarized as cell-weighted means per ATAC cluster, GEX cluster and GEX cell type.
-The configured transcription factors select only the families shown on embeddings.
-These values measure accessibility associated with a motif family and are not direct measurements of transcription-factor activity.
+Configured marker transcription factors are scored in the same way by their own JASPAR motifs, and these scores are shown on embeddings.
+A transcription factor's name selects all of its motifs, and a name with a motif identifier selects one.
+These values measure accessibility associated with a motif or motif family and are not direct measurements of transcription-factor activity.
 
 <!-- end include: website/_shared_methods/motif_accessibility.md -->
 
@@ -2079,16 +2082,17 @@ Benjamini–Hochberg correction is applied across the tested annotation classes 
 <!-- begin include: website/_shared_methods/pseudobulk_differential_analyses.md -->
 
 For molecular analyses, GEX and ATAC counts of the final WNN nuclei are summed within each donor–annotation-class combination to form pseudobulk samples.
-Three feature matrices are tested:
+Four feature matrices are tested:
 
 - **Gene expression** (differential gene expression, DGE): gene pseudobulk counts.
 - **Chromatin accessibility** (differential chromatin accessibility, DCA): consensus-peak pseudobulk counts.
 - **Motif-family accessibility** (differential transcription-factor motif accessibility, DTFA): betterChromVAR bias-corrected deviations of the 233 JASPAR motif families, calculated from the pseudobulk ATAC counts [@germain2026_betterchromvar].
   This matrix is therefore continuous.
   Unlike chromVAR *z*-scores, deviations do not grow with sample depth, and no per-sample centering or cross-sample normalization is applied.
+- **Own-motif accessibility**: the same deviations for the own JASPAR motifs of CollecTRI regulators that their family does not represent, as described below.
 
 For each model, donors that miss a model variable or fall outside an optional donor list are removed.
-Samples outside an optional annotation-class subset are also removed, and the DTFA analysis by default removes samples with fewer than 5,000 ATAC counts.
+Samples outside an optional annotation-class subset are also removed, and the two motif analyses by default remove samples with fewer than 5,000 ATAC counts.
 For count matrices, zero-depth samples are removed, features are filtered with the design-aware `edgeR::filterByExpr()` [@chen2025_edger_v4], and library sizes are TMM-normalized with `edgeR::normLibSizes()` [@robinson2009_edger; @robinson2010_tmm].
 TMM assumes that most features do not change in one direction.
 A broad one-sided change, such as a global opening of chromatin, would shrink the estimated effects and make unchanged features appear to change the other way.
@@ -2137,8 +2141,12 @@ A significant regulon shows that its targets moved together in the expected dire
 The results therefore name each regulon's leading targets and the factor's expression, pooled over the pseudobulks of each class the contrast involves, and flag factors below 0.5 counts per million.
 The network is human, so mouse aggregations stop with an error.
 A cross-modality comparison maps CollecTRI regulators to JASPAR families.
-It compares each regulon's signed enrichment, the normal quantile of its *P* value, with the motif-family accessibility *t*-statistics, and summarizes families by the median over their regulators.
-Each contrast's Spearman correlation is shown against ±1.96/√(*n* − 1), the 95% range for unrelated rankings of its *n* families.
+A family's root motif can follow another sub-family than a regulator's own motif.
+So deviations of each regulator's own motif and of its family root are also computed on pseudobulks summed per annotation class.
+Where the two correlate below 0.5 across classes (Spearman), the regulator is compared through its own motif instead.
+The comparison relates each regulon's signed enrichment, the normal quantile of its *P* value, to the accessibility *t*-statistics of its family or own motif.
+It summarizes each family or own motif by the median over its regulators.
+Each contrast's Spearman correlation is shown against ±1.96/√(*n* − 1), the 95% range for unrelated rankings of its *n* families and own motifs.
 Where gene expression is fitted with limma, the comparison also reports TF expression (edgeR tests report no *t*-statistic).
 An analysis stops with an error rather than returning a model when no samples or testable features remain or residual degrees of freedom are below one.
 It also fails when a correlation block or contrast is invalid, or when too few shared donors remain for a requested paired-cell-type comparison.

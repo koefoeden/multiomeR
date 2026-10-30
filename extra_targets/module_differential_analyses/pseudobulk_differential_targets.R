@@ -14,8 +14,8 @@ rlang::list2(
       pseudobulk_data_matrix = map_pseudobulk_data_matrix,
       pseudobulk_feature_dynamic_tibble = dynamic_tibble,
       extended_donor_id_metadata_tibble = donor_id_metadata_tibble.analysis,
-      sample_depth_tibble = if (identical(map_analysis_suffix, "motif_family_accessibility")) pseudobulk_depth_tibble.ATAC else NULL,
-      min_sample_counts = if (identical(map_analysis_suffix, "motif_family_accessibility")) differential_analyses_motif_family_accessibility_min_ATAC_counts else NULL
+      sample_depth_tibble = if (map_analysis_suffix %in% c("motif_family_accessibility", "TF_motif_accessibility")) pseudobulk_depth_tibble.ATAC else NULL,
+      min_sample_counts = if (map_analysis_suffix %in% c("motif_family_accessibility", "TF_motif_accessibility")) differential_analyses_motif_family_accessibility_min_ATAC_counts else NULL
     ),
     pattern = map(dynamic_tibble),
     resources = get_tar_resources(RAM_GB_req = 32)
@@ -71,7 +71,8 @@ rlang::list2(
     description = "Plot signed counts of FDR-significant pseudobulk differential elements per model and contrast. [checkpoint:differential_analyses]",
     command = significant_elements_tibble |>
       plot_pseudobulk_differential_significant_elements(modality = switch(map_analysis_suffix,
-        gene_expression = "gene expression", chromatin_accessibility = "chromatin accessibility", motif_family_accessibility = "motif-family accessibility")) |>
+        gene_expression = "gene expression", chromatin_accessibility = "chromatin accessibility", motif_family_accessibility = "motif-family accessibility",
+        TF_motif_accessibility = "own TF motif accessibility")) |>
       save_plots_structured()
   ),
   targets::tar_target(

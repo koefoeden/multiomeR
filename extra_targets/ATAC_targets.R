@@ -862,22 +862,23 @@ rlang::list2(
 
   ATAC_w_motif_family_accessibility_targets = rlang::list2(
     targets::tar_target(
-      name = ATAC_marker_motif_families_list,
-      description = "Resolve configured ATAC marker TFs to JASPAR2026 motif-similarity families [part_of_graph:ATAC] [part_of_graph:seurat_export]",
-      command = resolve_marker_motif_families(
+      name = ATAC_marker_motifs_vec,
+      description = "Resolve configured ATAC marker TFs to their own JASPAR2026 motifs [part_of_graph:ATAC]",
+      command = resolve_marker_motifs(
         marker_TFs_list = aggregation_ATAC_marker_TFs,
         motif_family_members_tibble = JASPAR_motif_family_members_tibble
       )
     ),
     targets::tar_target(
-      name = ATAC_marker_motif_families_vec,
-      description = "Flatten configured ATAC marker motif families to plain feature names",
-      command = {
-        ATAC_marker_motif_families_list |>
-          unlist(use.names = FALSE) |>
-          stringr::str_remove_all("[+-]$") |>
-          unique()
-      }
+      name = peak_marker_motif_matrix.ATAC,
+      description = "Match the configured marker TFs' own JASPAR2026 motifs to ATAC peaks [part_of_graph:ATAC] [resource_observation: peak_RAM_GiB=2.7; n_peaks=683k; aggregation=unpublished; method=VmHWM; date=2026-10-29]",
+      command = get_motif_matrix_from_ATAC_peak_names(
+        ATAC_peak_names = rownames(consensus_peak_BPCells_matrix.ATAC),
+        ATAC_peak_GRanges = consensus_peak_GRanges.ATAC,
+        motif_matrix_list = JASPAR_motif_matrix_list[ATAC_marker_motifs_vec],
+        genome = aggregated_cellranger_ref_list$genomes[[1]]
+      ),
+      resources = get_tar_resources(RAM_GB_req = 8)
     ),
     targets::tar_target(
       name = peak_TF_motif_family_matrix.ATAC,
@@ -961,6 +962,18 @@ rlang::list2(
       },
       pattern = map(chromVAR_chunk_context_records.ATAC),
       resources = get_tar_resources(RAM_GB_req = 16)
+    ),
+    targets::tar_target(
+      name = marker_motif_chromVAR_chunk_results.ATAC,
+      description = "Compute per-cell accessibility scores of the marker TFs' own motifs for one reusable ATAC chunk [resource_observation: peak_RAM_GiB=3.7; n_nuclei=13.8k per chunk; aggregation=unpublished; method=VmHWM; date=2026-10-29]",
+      command = compute_chromVAR_annotation_chunk_result(
+        annotations = peak_marker_motif_matrix.ATAC,
+        chromVAR_obj = chromVAR_obj.ATAC,
+        chunk_context_record = chromVAR_chunk_context_records.ATAC,
+        compute = "z"
+      ),
+      pattern = map(chromVAR_chunk_context_records.ATAC),
+      resources = get_tar_resources(RAM_GB_req = 8)
     ),
     targets::tar_target(
       name = motif_family_chromVAR_results.ATAC,
@@ -1075,28 +1088,25 @@ rlang::list2(
     targets::tar_target(
       name = continuous_UMAP_spec.ATAC,
       description = "Continuous ATAC UMAP variables to plot one at a time",
-      command = {
-        feature_vars <- intersect(ATAC_marker_motif_families_vec, rownames(motif_family_accessibility_BPCells_matrix.ATAC))
-        tibble::tibble(
-          variable = c(aggregation_w_peaks_continuous_vars, feature_vars),
-          value_source = c(
-            rep("metadata", length(aggregation_w_peaks_continuous_vars)),
-            rep("feature", length(feature_vars))
-          )
+      command = tibble::tibble(
+        variable = c(aggregation_w_peaks_continuous_vars, ATAC_marker_motifs_vec),
+        value_source = c(
+          rep("metadata", length(aggregation_w_peaks_continuous_vars)),
+          rep("feature", length(ATAC_marker_motifs_vec))
         )
-      },
+      ),
       iteration = "vector"
     ),
     targets::tar_target(
       name = continuous_UMAP_inputs.ATAC,
-      description = "Coordinates, metadata variables and motif-family scores plotted on continuous ATAC UMAPs, with scores read in one pass",
+      description = "Coordinates, metadata variables and marker-motif scores plotted on continuous ATAC UMAPs",
       command = prepare_continuous_UMAP_inputs(metadata_w_cell_types_analysis_tibble.ATAC, continuous_UMAP_spec.ATAC,
-        motif_family_accessibility_BPCells_matrix.ATAC, umap_cols = c("LSI_UMAP_1", "LSI_UMAP_2")),
+        do.call(cbind, purrr::map(marker_motif_chromVAR_chunk_results.ATAC, "z")), umap_cols = c("LSI_UMAP_1", "LSI_UMAP_2")),
       resources = get_tar_resources(RAM_GB_req = 16)
     ),
     tarchetypes::tar_file(
       name = continuous.UMAPs.7_ATAC_QC,
-      description = "UMAPs colored by continuous motif-family accessibility and peak accessibility metrics. [checkpoint:7_ATAC-QC] [resource_observation: peak_RAM_GiB=5.3; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
+      description = "UMAPs colored by the accessibility of configured marker TFs' own motifs and by peak accessibility metrics. [checkpoint:7_ATAC-QC] [resource_observation: peak_RAM_GiB=5.3; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
       command = plot_UMAP_from_metadata(
         metadata_tibble = continuous_UMAP_inputs.ATAC$metadata_tibble,
         variable = continuous_UMAP_spec.ATAC$variable,
@@ -1105,14 +1115,14 @@ rlang::list2(
       ) |>
         (\(plot) plot + ggplot2::labs(
           title = paste(if (continuous_UMAP_spec.ATAC$value_source == "feature")
-            label_motif_families(continuous_UMAP_spec.ATAC$variable, JASPAR_motif_family_labels) else
+            stringr::str_replace(continuous_UMAP_spec.ATAC$variable, "__", " motif ") else
             label_plot_variable(continuous_UMAP_spec.ATAC$variable), "on ATAC UMAP"),
           caption = stringr::str_wrap(paste(plot$labels$caption,
-            if (continuous_UMAP_spec.ATAC$value_source == "feature") "Values are motif-family chromVAR Z-scores, not TF-specific activity."), width = 110)
+            if (continuous_UMAP_spec.ATAC$value_source == "feature") "Values are chromVAR Z-scores of this JASPAR motif; TFs with similar motifs score alike, so they are not TF-specific activity."), width = 110)
         ))() |>
         save_plots_structured(
           dyn_suffix_in_subdir = TRUE,
-          override_suffix = stringr::str_replace_all(continuous_UMAP_spec.ATAC$variable, "[/\\\\]", "_")
+          override_suffix = stringr::str_replace_all(continuous_UMAP_spec.ATAC$variable, "[/\\\\:]", "_")
         ),
       pattern = map(continuous_UMAP_spec.ATAC)
     )

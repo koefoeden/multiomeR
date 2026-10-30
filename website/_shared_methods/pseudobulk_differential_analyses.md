@@ -1,14 +1,15 @@
 For molecular analyses, GEX and ATAC counts of the final WNN nuclei are summed within each donor–annotation-class combination to form pseudobulk samples.
-Three feature matrices are tested:
+Four feature matrices are tested:
 
 - **Gene expression** (differential gene expression, DGE): gene pseudobulk counts.
 - **Chromatin accessibility** (differential chromatin accessibility, DCA): consensus-peak pseudobulk counts.
 - **Motif-family accessibility** (differential transcription-factor motif accessibility, DTFA): betterChromVAR bias-corrected deviations of the 233 JASPAR motif families, calculated from the pseudobulk ATAC counts [@germain2026_betterchromvar].
   This matrix is therefore continuous.
   Unlike chromVAR *z*-scores, deviations do not grow with sample depth, and no per-sample centering or cross-sample normalization is applied.
+- **Own-motif accessibility**: the same deviations for the own JASPAR motifs of CollecTRI regulators that their family does not represent, as described below.
 
 For each model, donors that miss a model variable or fall outside an optional donor list are removed.
-Samples outside an optional annotation-class subset are also removed, and the DTFA analysis by default removes samples with fewer than 5,000 ATAC counts.
+Samples outside an optional annotation-class subset are also removed, and the two motif analyses by default remove samples with fewer than 5,000 ATAC counts.
 For count matrices, zero-depth samples are removed, features are filtered with the design-aware `edgeR::filterByExpr()` [@chen2025_edger_v4], and library sizes are TMM-normalized with `edgeR::normLibSizes()` [@robinson2009_edger; @robinson2010_tmm].
 TMM assumes that most features do not change in one direction.
 A broad one-sided change, such as a global opening of chromatin, would shrink the estimated effects and make unchanged features appear to change the other way.
@@ -57,8 +58,12 @@ A significant regulon shows that its targets moved together in the expected dire
 The results therefore name each regulon's leading targets and the factor's expression, pooled over the pseudobulks of each class the contrast involves, and flag factors below 0.5 counts per million.
 The network is human, so mouse aggregations stop with an error.
 A cross-modality comparison maps CollecTRI regulators to JASPAR families.
-It compares each regulon's signed enrichment, the normal quantile of its *P* value, with the motif-family accessibility *t*-statistics, and summarizes families by the median over their regulators.
-Each contrast's Spearman correlation is shown against ±1.96/√(*n* − 1), the 95% range for unrelated rankings of its *n* families.
+A family's root motif can follow another sub-family than a regulator's own motif.
+So deviations of each regulator's own motif and of its family root are also computed on pseudobulks summed per annotation class.
+Where the two correlate below 0.5 across classes (Spearman), the regulator is compared through its own motif instead.
+The comparison relates each regulon's signed enrichment, the normal quantile of its *P* value, to the accessibility *t*-statistics of its family or own motif.
+It summarizes each family or own motif by the median over its regulators.
+Each contrast's Spearman correlation is shown against ±1.96/√(*n* − 1), the 95% range for unrelated rankings of its *n* families and own motifs.
 Where gene expression is fitted with limma, the comparison also reports TF expression (edgeR tests report no *t*-statistic).
 An analysis stops with an error rather than returning a model when no samples or testable features remain or residual degrees of freedom are below one.
 It also fails when a correlation block or contrast is invalid, or when too few shared donors remain for a requested paired-cell-type comparison.

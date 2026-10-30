@@ -25,6 +25,7 @@ If the models need variables that the aggregation's donor metadata lacks, give a
 | Which genes change expression? | `gene_expression` |
 | Which peaks change accessibility? | `chromatin_accessibility` |
 | Which motif families change accessibility? | `motif_family_accessibility` (JASPAR) |
+| Which regulators' own motifs change accessibility, where their family does not represent them? | `TF_motif_accessibility` (JASPAR) |
 | Which regulators' targets change together? | `regulon_target_enrichment` (CollecTRI) |
 
 Motif-family accessibility summarizes ATAC data. Regulon target enrichment tests whether a transcription factor's CollecTRI targets change together in gene expression; it does not show that the factor itself changed, so its results name the leading targets and the factor's own expression. The module also produces pseudobulk-depth and model diagnostics, comparisons across the feature families, and Hallmark and Reactome gene-set tests for gene expression.
@@ -114,6 +115,7 @@ Review the plots ([examples](gallery.md#differential-analyses)); each plot's sub
 │   └── p_value_distribution_plot.png
 ├── chromatin_accessibility/
 ├── motif_family_accessibility/
+├── TF_motif_accessibility/
 ├── significant_elements_modality_distribution_plots/
 └── CollecTRI_JASPAR/regulon_accessibility_concordance_plots/
 ```

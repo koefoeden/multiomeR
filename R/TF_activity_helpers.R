@@ -181,20 +181,75 @@ get_CollecTRI_JASPAR_family_map <- function(
 }
 
 
+#' Correlate CollecTRI regulators' own motifs with their family roots
+#'
+#' A family root can follow another sub-family than a member's own motif, as the
+#' forkhead root of family 007 does for MEF2. Each own motif's and family root's
+#' betterChromVAR deviations are computed on the pseudobulks summed per cell type
+#' and correlated (Spearman) across cell types. A regulator is compared through
+#' its own motif where that correlation is below `min_root_correlation`.
+#'
+#' @param pseudobulk_ATAC_counts_matrix Peak-by-pseudobulk ATAC counts, with samples named `<cell type>_<donor>`.
+#' @param chromVAR_obj Single-nucleus chromVAR object providing peak ranges and GC bias.
+#' @param TF_motif_matrix Peak-by-motif matches of the regulators' own motifs, named by motif feature.
+#' @param motif_family_matrix Peak-by-family matches of the family roots.
+#' @param motif_family_members_tibble JASPAR motif-family membership target.
+#' @param min_root_correlation Root correlation below which a regulator's own motif is used.
+#' @return One row per own motif, with its family, `root_correlation` and `use_own_motif`.
+#' @keywords internal
+
+get_TF_motif_root_correlation_tibble <- function(
+  pseudobulk_ATAC_counts_matrix,
+  chromVAR_obj,
+  TF_motif_matrix,
+  motif_family_matrix,
+  motif_family_members_tibble,
+  min_root_correlation = 0.5
+) {
+  cell_type <- factor(get_pseudobulk_sample_tibble(pseudobulk_ATAC_counts_matrix)$cluster)
+  cell_type_counts <- methods::as(pseudobulk_ATAC_counts_matrix, "dgCMatrix") %*% Matrix::t(Matrix::fac2sparse(cell_type))
+  colnames(cell_type_counts) <- levels(cell_type)
+  deviations <- get_pseudobulk_motif_family_accessibility_matrix(
+    pseudobulk_ATAC_data_matrix = cell_type_counts,
+    chromVAR_obj = chromVAR_obj,
+    chromVAR_motif_family_matrix = cbind(motif_family_matrix, TF_motif_matrix[rownames(motif_family_matrix), , drop = FALSE])
+  )
+  motif_family_members_tibble |>
+    dplyr::filter(motif_feature %in% colnames(TF_motif_matrix)) |>
+    dplyr::transmute(
+      motif_feature,
+      motif_id,
+      motif_family,
+      root_correlation = purrr::map2_dbl(motif_feature, motif_family, \(motif, family) {
+        stats::cor(deviations[motif, ], deviations[family, ], method = "spearman")
+      }),
+      use_own_motif = !is.na(root_correlation) & root_correlation < min_root_correlation
+    )
+}
+
+
 #' Match regulon target enrichment with motif accessibility and TF expression
+#'
+#' Each regulon is compared with its family root's accessibility, or with its own
+#' motif's where `get_TF_motif_root_correlation_tibble()` chose it.
 #'
 #' @param regulon_results_tibble Regulon target enrichment results.
 #' @param motif_family_accessibility_results_tibble Differential JASPAR motif-family accessibility results.
+#' @param TF_motif_accessibility_results_tibble Differential accessibility results of the chosen own motifs.
 #' @param gene_expression_results_tibble Differential gene-expression results.
 #' @param CollecTRI_JASPAR_family_map CollecTRI-to-JASPAR crosswalk.
-#' @return A regulator-level cross-modality comparison tibble.
+#' @param TF_motif_root_correlation_tibble Own-motif root correlations and choices.
+#' @return A regulator-level cross-modality comparison tibble, with `motif_feature`
+#'   naming the family or own motif compared.
 #' @keywords internal
 
 get_CollecTRI_JASPAR_comparison_tibble <- function(
   regulon_results_tibble,
   motif_family_accessibility_results_tibble,
+  TF_motif_accessibility_results_tibble,
   gene_expression_results_tibble,
-  CollecTRI_JASPAR_family_map
+  CollecTRI_JASPAR_family_map,
+  TF_motif_root_correlation_tibble
 ) {
   join_keys <- c("model", "contrast", "cell_type_subset")
   regulon_results <- regulon_results_tibble |>
@@ -206,15 +261,31 @@ get_CollecTRI_JASPAR_comparison_tibble <- function(
       PValue_regulon = PValue,
       FDR_regulon = FDR
     )
-  motif_family_accessibility_results <- motif_family_accessibility_results_tibble |>
-    dplyr::bind_rows() |>
+  motif_map <- CollecTRI_JASPAR_family_map |>
+    tidyr::separate_longer_delim(motif_ids, ";") |>
+    dplyr::left_join(
+      TF_motif_root_correlation_tibble |>
+        dplyr::filter(use_own_motif) |>
+        dplyr::select(motif_ids = motif_id, own_motif = motif_feature, root_correlation),
+      by = "motif_ids"
+    ) |>
+    dplyr::mutate(motif_feature = dplyr::coalesce(own_motif, motif_family)) |>
+    dplyr::summarise(
+      TF_category = dplyr::first(TF_category),
+      mapping_type = dplyr::first(mapping_type),
+      mapped_TF_names = dplyr::first(mapped_TF_names),
+      motif_ids = paste(sort(motif_ids), collapse = ";"),
+      root_correlation = dplyr::first(root_correlation),
+      .by = c(source, motif_family, motif_feature)
+    )
+  motif_accessibility_results <- dplyr::bind_rows(c(motif_family_accessibility_results_tibble, TF_motif_accessibility_results_tibble)) |>
     dplyr::transmute(
       dplyr::across(dplyr::all_of(join_keys)),
-      motif_family = feature_id,
-      logFC_motif_family_accessibility = logFC,
-      t_motif_family_accessibility = t,
-      PValue_motif_family_accessibility = PValue,
-      FDR_motif_family_accessibility = FDR
+      motif_feature = feature_id,
+      logFC_motif_accessibility = logFC,
+      t_motif_accessibility = t,
+      PValue_motif_accessibility = PValue,
+      FDR_motif_accessibility = FDR
     )
   gene_expression_results <- gene_expression_results_tibble |>
     dplyr::bind_rows()
@@ -233,14 +304,10 @@ get_CollecTRI_JASPAR_comparison_tibble <- function(
     )
 
   regulon_results |>
+    dplyr::left_join(motif_map, by = "source", relationship = "many-to-many") |>
     dplyr::left_join(
-      CollecTRI_JASPAR_family_map,
-      by = "source",
-      relationship = "many-to-many"
-    ) |>
-    dplyr::left_join(
-      motif_family_accessibility_results,
-      by = c(join_keys, "motif_family"),
+      motif_accessibility_results,
+      by = c(join_keys, "motif_feature"),
       relationship = "many-to-one"
     ) |>
     dplyr::left_join(
@@ -249,30 +316,34 @@ get_CollecTRI_JASPAR_comparison_tibble <- function(
       relationship = "many-to-one"
     ) |>
     dplyr::mutate(
-      motif_mapping_status = dplyr::if_else(is.na(motif_family), "unmapped", "mapped"),
+      motif_mapping_status = dplyr::case_when(
+        is.na(motif_feature) ~ "unmapped",
+        motif_feature == motif_family ~ "family root",
+        .default = "own motif"
+      ),
       direction_concordant = dplyr::if_else(
-        motif_mapping_status == "mapped",
-        sign(z_regulon) == sign(t_motif_family_accessibility),
+        motif_mapping_status != "unmapped",
+        sign(z_regulon) == sign(t_motif_accessibility),
         NA
       ),
-      jointly_FDR_significant = FDR_regulon < 0.05 & FDR_motif_family_accessibility < 0.05
+      jointly_FDR_significant = FDR_regulon < 0.05 & FDR_motif_accessibility < 0.05
     ) |>
-    dplyr::arrange(model, contrast, source, motif_family)
+    dplyr::arrange(model, contrast, source, motif_feature)
 }
 
 
-#' Collapse regulon comparisons to motif families
+#' Collapse regulon comparisons to motif features
 #'
 #' @param comparison_tibble Output from `get_CollecTRI_JASPAR_comparison_tibble()`.
-#' @return One row per model, contrast, and mapped motif family.
+#' @return One row per model, contrast, and compared motif family or own motif.
 #' @keywords internal
 
 get_CollecTRI_JASPAR_family_comparison_tibble <- function(comparison_tibble) {
   comparison_tibble |>
-    dplyr::filter(motif_mapping_status == "mapped", is.finite(t_motif_family_accessibility)) |>
+    dplyr::filter(motif_mapping_status != "unmapped", is.finite(t_motif_accessibility)) |>
     dplyr::summarise(
       z_regulon = stats::median(z_regulon, na.rm = TRUE),
-      t_motif_family_accessibility = dplyr::first(t_motif_family_accessibility),
+      t_motif_accessibility = dplyr::first(t_motif_accessibility),
       t_TF_expression = if (all(is.na(t_TF_expression))) {
         NA_real_
       } else {
@@ -280,14 +351,14 @@ get_CollecTRI_JASPAR_family_comparison_tibble <- function(comparison_tibble) {
       },
       min_source_FDR_regulon = min(FDR_regulon, na.rm = TRUE),
       any_source_FDR_significant = any(FDR_regulon < 0.05, na.rm = TRUE),
-      FDR_motif_family_accessibility = dplyr::first(FDR_motif_family_accessibility),
+      FDR_motif_accessibility = dplyr::first(FDR_motif_accessibility),
       n_CollecTRI_sources = dplyr::n_distinct(source),
       CollecTRI_sources = paste(sort(unique(source)), collapse = ";"),
-      .by = c(model, contrast, cell_type_subset, motif_family)
+      .by = c(model, contrast, cell_type_subset, motif_feature)
     ) |>
     dplyr::mutate(
-      direction_concordant = sign(z_regulon) == sign(t_motif_family_accessibility),
-      jointly_FDR_significant = any_source_FDR_significant & FDR_motif_family_accessibility < 0.05
+      direction_concordant = sign(z_regulon) == sign(t_motif_accessibility),
+      jointly_FDR_significant = any_source_FDR_significant & FDR_motif_accessibility < 0.05
     )
 }
 
@@ -295,25 +366,25 @@ get_CollecTRI_JASPAR_family_comparison_tibble <- function(comparison_tibble) {
 #' Summarize regulon-motif concordance by contrast
 #'
 #' `null_rho_95` is the 95% range of a Spearman correlation between unrelated
-#' rankings of as many motif families.
+#' rankings of as many motif features.
 #'
-#' @param family_comparison_tibble Family-level CollecTRI-JASPAR comparison.
+#' @param family_comparison_tibble Motif-feature-level CollecTRI-JASPAR comparison.
 #' @return Contrast-level mapping, direction, significance, and correlation summary.
 #' @keywords internal
 
 get_CollecTRI_JASPAR_concordance_tibble <- function(family_comparison_tibble) {
   family_comparison_tibble |>
     dplyr::summarise(
-      n_motif_families = dplyr::n(),
+      n_motif_features = dplyr::n(),
       spearman_rho = if (dplyr::n() >= 3L) {
-        stats::cor(z_regulon, t_motif_family_accessibility, method = "spearman", use = "complete.obs")
+        stats::cor(z_regulon, t_motif_accessibility, method = "spearman", use = "complete.obs")
       } else {
         NA_real_
       },
       null_rho_95 = if (dplyr::n() >= 3L) stats::qnorm(0.975) / sqrt(dplyr::n() - 1) else NA_real_,
       direction_concordance = mean(direction_concordant, na.rm = TRUE),
       n_regulon_FDR = sum(any_source_FDR_significant, na.rm = TRUE),
-      n_motif_family_accessibility_FDR = sum(FDR_motif_family_accessibility < 0.05, na.rm = TRUE),
+      n_motif_accessibility_FDR = sum(FDR_motif_accessibility < 0.05, na.rm = TRUE),
       n_joint_FDR = sum(jointly_FDR_significant, na.rm = TRUE),
       .by = c(model, contrast, cell_type_subset)
     )
@@ -330,7 +401,7 @@ plot_CollecTRI_JASPAR_concordance <- function(concordance_tibble) {
   concordance_tibble |>
     group_split_by("model") |>
     purrr::imap(\(model_tibble, model_name) {
-      family_count_range <- range(model_tibble$n_motif_families)
+      family_count_range <- range(model_tibble$n_motif_features)
       family_count_label <- if (family_count_range[[1]] == family_count_range[[2]]) {
         as.character(family_count_range[[1]])
       } else {
@@ -374,9 +445,10 @@ plot_CollecTRI_JASPAR_concordance <- function(concordance_tibble) {
           caption = stringr::str_wrap(paste0(
             "Regulon values are median signed z of regulon target enrichment over the CollecTRI regulons mapped to each of ",
             family_count_label,
-            " motif families per contrast. Grey bands: 95% range of the correlation between unrelated rankings of as many families. ",
-            "Colour: fraction with matching effect directions; joint labels count families significant in both analyses. ",
-            "Scores summarize family-level concordance, not independent donor replication."
+            " motif features per contrast: a JASPAR family, or a regulator's own motif where its accessibility correlates below 0.5 with its family root's across cell types. ",
+            "Grey bands: 95% range of the correlation between unrelated rankings of as many features. ",
+            "Colour: fraction with matching effect directions; joint labels count features significant in both analyses. ",
+            "Scores summarize feature-level concordance, not independent donor replication."
           ), width = 110)
         ) +
         ggplot2::theme(legend.position = "bottom", plot.title.position = "plot", plot.caption.position = "plot")

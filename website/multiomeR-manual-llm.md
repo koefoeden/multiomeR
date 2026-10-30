@@ -124,8 +124,10 @@ demo_targets <- c(
   "categorical.UMAPs.8_multimodal_QC.immune_human_2x"
 )
 
-targets::tar_make(names = tidyselect::all_of(demo_targets))
+targets::tar_make(names = tidyselect::all_of(!!demo_targets))
 ```
+
+`tar_make()` runs the pipeline in a separate R process, so `!!` passes it the names themselves rather than the variable.
 
 `tar_make()` builds these two targets and every result they depend on, from per-GEM-well quality control to WNN integration. It skips results they do not need, such as most checkpoint plots in the [output gallery](gallery.md).
 

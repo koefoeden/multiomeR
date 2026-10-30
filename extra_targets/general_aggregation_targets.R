@@ -378,6 +378,7 @@ rlang::list2(
     description = "Write pseudobulk GEX counts per WNN cell-type-donor combination to BPCells [part_of_graph:differential_analyses] [resource_observation: peak_RAM_GiB=3.3; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
     command = {
       out_dir <- get_structured_file_path()
+      unlink(out_dir, recursive = TRUE) # BPCells writes into an existing folder twice
       get_BPCells_pseudobulk_matrix(
         feature_matrix = aggregated_counts_BPCells_matrix.GEX,
         metadata_tibble = metadata_w_cell_types_tibble.WNN,
@@ -385,10 +386,11 @@ rlang::list2(
         threads = 6
       ) |>
         methods::as("dgCMatrix") |>
-        BPCells::write_matrix_dir(out_dir, overwrite = TRUE)
+        BPCells::write_matrix_dir(out_dir)
       out_dir
     },
-    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
+    # The pinned BPCells sums pseudobulks on one thread whatever `threads` asks for (cgroup CPU <= 1.0).
+    resources = get_tar_resources(cores_req = 1, RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = pseudobulk_counts_matrix.GEX,
@@ -406,6 +408,7 @@ rlang::list2(
     description = "Write pseudobulk ATAC counts per WNN cell-type-donor combination to BPCells [part_of_graph:differential_analyses] [resource_observation: peak_RAM_GiB=3.4; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=19.2; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
     command = {
       out_dir <- get_structured_file_path()
+      unlink(out_dir, recursive = TRUE) # BPCells writes into an existing folder twice
       get_BPCells_pseudobulk_matrix(
         feature_matrix = peak_QC_filtered_BPCells_matrix.ATAC,
         metadata_tibble = metadata_w_cell_types_tibble.WNN,
@@ -413,10 +416,11 @@ rlang::list2(
         threads = 6
       ) |>
         methods::as("dgCMatrix") |>
-        BPCells::write_matrix_dir(out_dir, overwrite = TRUE)
+        BPCells::write_matrix_dir(out_dir)
       out_dir
     },
-    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
+    # The pinned BPCells sums pseudobulks on one thread whatever `threads` asks for (cgroup CPU <= 1.0).
+    resources = get_tar_resources(cores_req = 1, RAM_GB_req = 32)
   ),
   targets::tar_target(
     name = pseudobulk_counts_matrix.ATAC,

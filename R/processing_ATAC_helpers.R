@@ -137,57 +137,60 @@ get_chrom_sizes_for_BPCells_tile_calling <- function(genome) {
     dplyr::filter(chr %in% get_standard_chroms(genome))
 }
 
-#' Order genes for BPCells gene score archr
+#' Get ArchR gene-score weights
 #'
-#' Reproduce BPCells/ArchR gene-score tile ordering for downstream matrix construction.
+#' The gene-by-tile weights of `BPCells::gene_score_archr()`. They depend only
+#' on the genes, the blacklist and the chromosomes, which
+#' `open_GEM_well_fragments()` gives every GEM well in the same order, so one
+#' weight matrix serves every well of an aggregation.
 #'
-#' @param genes Gene annotation GRanges used by ArchR-style gene-score ordering.
-#' @param chromosome_sizes Data frame/GRanges-like chromosome ranges accepted by
-#'   BPCells range normalization.
-#' @param blacklist Optional blacklist ranges excluded from gene-score tiles.
-#' @param tile_width Width in bases of the tiles used by the ArchR gene-score
-#'   algorithm.
-#' @param addArchRBug Logical passed through to BPCells' ArchR-compatible tile
-#'   generation to reproduce ArchR behavior when required.
-#' @return A character vector of gene names ordered by first appearance in the
-#'   generated gene-score tile table.
+#' @param genes Gene annotation GRanges.
+#' @param blacklist Blacklist GRanges whose tiles are left out.
+#' @param genome Genome build key used to select the standard chromosomes.
+#' @return List of `weights`, a gene-by-tile matrix, and `tiles`, the
+#'   chromosome ranges of its columns for `BPCells::tile_matrix()`.
 #' @keywords internal
 
-order_genes_for_BPCells_gene_score_archr <- function(
-  genes,
-  chromosome_sizes,
-  blacklist = NULL,
-  tile_width = 500,
-  addArchRBug = FALSE
-) {
-  chromosome_sizes <- BPCells:::normalize_ranges(chromosome_sizes)
-  if (!is.null(blacklist)) {
-    blacklist <- BPCells:::normalize_ranges(blacklist)
+get_gene_score_archr_weights <- function(genes, blacklist, genome) {
+  chromosome_sizes <- get_chrom_sizes_for_BPCells_tile_calling(genome)
+  chromosome_sizes <- chromosome_sizes[order(match(chromosome_sizes$chr, get_standard_chroms(genome))), ]
+  genes <- filter_GRanges_to_chrom_sizes(genes, chromosome_sizes)
+  blacklist <- filter_GRanges_to_chrom_sizes(blacklist, chromosome_sizes, allow_empty = TRUE)
+  if (!"gene_name" %in% colnames(S4Vectors::mcols(genes))) {
+    genes$gene_name <- names(genes)
   }
-
-  tiles <- BPCells:::gene_score_tiles_archr(
-    genes = genes,
-    chromosome_sizes = chromosome_sizes,
-    tile_width = tile_width,
-    addArchRBug = addArchRBug
+  list(
+    weights = BPCells::gene_score_weights_archr(genes, chromosome_sizes, blacklist, gene_name_column = "gene_name"),
+    tiles = dplyr::mutate(chromosome_sizes, tile_width = 500)
   )
+}
 
-  if (!is.null(blacklist) && length(blacklist) > 0) {
-    blacklist_tiles <- unique(BPCells:::range_overlaps(tiles, blacklist)$from)
-    if (length(blacklist_tiles) > 0) {
-      tiles <- tiles[-blacklist_tiles, , drop = FALSE]
-    }
-  }
-  if (nrow(tiles) == 0) {
-    stop("No ArchR gene-score tiles retained after blacklist filtering.", call. = FALSE)
-  }
+#' Write ArchR gene scores
+#'
+#' The per-nucleus part of `BPCells::gene_score_archr()`: tile counts capped
+#' at 4, weighted by gene and scaled to 10,000 per nucleus. The tile counts
+#' go to the node's temporary folder.
+#'
+#' @param fragments BPCells fragments of the nuclei to score.
+#' @param weights Output of `get_gene_score_archr_weights()`.
+#' @param out_dir BPCells matrix folder to write the gene-by-nucleus scores to.
+#' @return `out_dir`.
+#' @keywords internal
 
-  # BPCells sizes the gene-weight matrix from max(tiles$gene_idx) after
-  # blacklist filtering. Genes without retained tiles therefore need to be
-  # before scored genes, otherwise trailing zero-tile genes make BPCells assign
-  # too many row names to too few matrix rows.
-  scored_gene_idx <- unique(tiles$gene_idx)
-  genes[c(setdiff(seq_along(genes), scored_gene_idx), scored_gene_idx)]
+write_gene_score_archr <- function(fragments, weights, out_dir) {
+  tile_counts_dir <- tempfile("gene_score_tiles_")
+  on.exit(unlink(tile_counts_dir, recursive = TRUE), add = TRUE)
+  tile_counts <- BPCells::tile_matrix(fragments, weights$tiles)
+  # Writing the 6 million tile names and reading them back took about 7 s per well.
+  dimnames(tile_counts) <- NULL
+  tile_counts <- tile_counts |>
+    BPCells::write_matrix_dir(tile_counts_dir) |>
+    BPCells::min_scalar(4)
+  scores <- weights$weights %*% tile_counts
+  colnames(scores) <- BPCells::cellNames(fragments)
+  BPCells::multiply_cols(scores, 1e4 / BPCells::colSums(scores)) |>
+    BPCells::write_matrix_dir(out_dir)
+  out_dir
 }
 
 #' Normalize Roadmap EDACC names

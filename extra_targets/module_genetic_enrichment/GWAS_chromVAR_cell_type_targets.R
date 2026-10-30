@@ -12,6 +12,7 @@ rlang::list2(
     description = "Write ATAC counts summed per WNN cell type with at least 100 nuclei to BPCells for the cell-type chromVAR and S-LDSC analyses [part_of_graph:genetic_enrichment_cell_type_contributions] [resource_observation: peak_RAM_GiB=3.5; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-11]",
     command = {
       out_dir <- get_structured_file_path()
+      unlink(out_dir, recursive = TRUE) # BPCells writes into an existing folder twice
       # A group of very few nuclei, such as a single unassigned nucleus that a small minimum cluster
       # size keeps, has no stable profile, and every cell type weighs equally in the background.
       get_BPCells_group_pseudobulk_matrix(
@@ -22,10 +23,11 @@ rlang::list2(
         threads = 6
       ) |>
         methods::as("dgCMatrix") |>
-        BPCells::write_matrix_dir(out_dir, overwrite = TRUE)
+        BPCells::write_matrix_dir(out_dir)
       out_dir
     },
-    resources = get_tar_resources(cores_req = 6, RAM_GB_req = 16)
+    # The pinned BPCells sums pseudobulks on one thread whatever `threads` asks for (cgroup CPU <= 1.0).
+    resources = get_tar_resources(cores_req = 1, RAM_GB_req = 16)
   ),
   targets::tar_target(
     name = cell_type_pseudobulk_counts_matrix.ATAC,

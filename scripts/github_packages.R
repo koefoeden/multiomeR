@@ -8,7 +8,7 @@ github_packages <- list(
     package = "BPCells",
     repo = "bnprks/BPCells",
     subdir = "r",
-    ref = "016296413cd7a5725c8b35816df02365d7def853"
+    ref = "5f2a5d21a21f6e75cf3650dee8b65f6220f50a41"
   ),
   list(
     package = "Signac",

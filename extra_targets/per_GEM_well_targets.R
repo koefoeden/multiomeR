@@ -115,7 +115,8 @@ rlang::list2(
       colnames(gene_expression_matrix) <- paste0(GEM_well_ID, "_", colnames(gene_expression_matrix))
 
       # Counts are integers (CellBender stores them as int64); uint32 storage is several times smaller than double.
-      BPCells::write_matrix_dir(BPCells::convert_matrix_type(gene_expression_matrix, "uint32_t"), out_dir, overwrite = TRUE)
+      unlink(out_dir, recursive = TRUE) # BPCells writes into an existing folder twice
+      BPCells::write_matrix_dir(BPCells::convert_matrix_type(gene_expression_matrix, "uint32_t"), out_dir)
       out_dir
     }
   ),
@@ -146,7 +147,8 @@ rlang::list2(
       fragment_file <- file.path(dirname(cellranger_summary_file), "atac_fragments.tsv.gz")
       fragments <- BPCells::open_fragments_10x(fragment_file)
       fragments <- BPCells::prefix_cell_names(fragments, paste0(GEM_well_ID, "_"))
-      BPCells::write_fragments_dir(fragments, out_dir, overwrite = TRUE)
+      unlink(out_dir, recursive = TRUE) # BPCells writes into an existing folder twice
+      BPCells::write_fragments_dir(fragments, out_dir)
 
       out_dir
     }

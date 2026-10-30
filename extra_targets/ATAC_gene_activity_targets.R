@@ -9,42 +9,25 @@ rlang::list2(
     ),
     iteration = "vector"
   ),
+  targets::tar_target(
+    name = gene_score_archr_weights.ATAC,
+    description = "Build the ArchR-style gene-by-tile weights that every GEM well's gene activity scores share [resource_observation: peak_RAM_GiB=2.8; genes=32k; tiles=6.18M; aggregation=unpublished; method=VmHWM; date=2026-10-21]",
+    command = get_gene_score_archr_weights(
+      genes = marker_validated_Ensembl_annotations_GRanges_list$genes,
+      blacklist = blacklist_GRanges.ATAC,
+      genome = aggregated_cellranger_ref_list$genomes[[1]]
+    ),
+    resources = get_tar_resources(RAM_GB_req = 8)
+  ),
   tarchetypes::tar_file(
     name = gene_score_archr_BPCells_matrix_dirs_per_GEM_well.ATAC,
-    description = "Compute ArchR-style ATAC gene activity scores for one GEM well's nuclei with BPCells and write them to disk",
+    description = "Compute ArchR-style ATAC gene activity scores for one GEM well's nuclei with BPCells and write them to disk [resource_observation: peak_RAM_GiB=0.7; n_nuclei=15k per well; aggregation=unpublished; method=VmHWM; date=2026-10-21]",
     command = {
       out_dir <- get_structured_file_path(override_suffix = ATAC_cells_per_GEM_well_tibble.ATAC$GEM_well_ID)
-      tile_matrix_dir <- tempfile(pattern = "gene_score_tiles_", tmpdir = dirname(out_dir))
-      on.exit(if (fs::dir_exists(tile_matrix_dir)) fs::dir_delete(tile_matrix_dir), add = TRUE)
-
-      fragments <- open_GEM_well_fragments(ATAC_cells_per_GEM_well_tibble.ATAC, aggregated_cellranger_ref_list$genomes[[1]]) |>
-        BPCells::select_cells(ATAC_cells_per_GEM_well_tibble.ATAC$barcodes[[1]])
-      genes <- marker_validated_Ensembl_annotations_GRanges_list$genes
-      chromosome_sizes <- get_chrom_sizes_for_BPCells_tile_calling(aggregated_cellranger_ref_list$genomes[[1]])
-      genes <- filter_GRanges_to_chrom_sizes(genes, chromosome_sizes)
-      blacklist <- filter_GRanges_to_chrom_sizes(blacklist_GRanges.ATAC, chromosome_sizes, allow_empty = TRUE)
-
-      if (!"gene_name" %in% colnames(S4Vectors::mcols(genes))) {
-        genes$gene_name <- names(genes)
-      }
-      # Put genes with no retained ArchR tiles first so BPCells can keep a
-      # full zero row for them after blacklist filtering.
-      genes <- order_genes_for_BPCells_gene_score_archr(
-        genes = genes,
-        chromosome_sizes = chromosome_sizes,
-        blacklist = blacklist
-      )
-      gene_scores <- BPCells::gene_score_archr(
-        fragments = fragments,
-        genes = genes,
-        chromosome_sizes = chromosome_sizes,
-        blacklist = blacklist,
-        gene_name_column = "gene_name",
-        tile_matrix_path = tile_matrix_dir
-      )
-
-      BPCells::write_matrix_dir(gene_scores, out_dir, overwrite = TRUE)
-      out_dir
+      unlink(out_dir, recursive = TRUE) # BPCells writes into an existing folder twice
+      open_GEM_well_fragments(ATAC_cells_per_GEM_well_tibble.ATAC, aggregated_cellranger_ref_list$genomes[[1]]) |>
+        BPCells::select_cells(ATAC_cells_per_GEM_well_tibble.ATAC$barcodes[[1]]) |>
+        write_gene_score_archr(gene_score_archr_weights.ATAC, out_dir)
     },
     pattern = map(ATAC_cells_per_GEM_well_tibble.ATAC),
     resources = get_tar_resources(RAM_GB_req = 16)

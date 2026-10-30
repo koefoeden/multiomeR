@@ -50,8 +50,9 @@ rlang::list2(
     targets::tar_target(
       name = combined_BPCells_fragment_obj.ATAC,
       description = "Merge per GEM well BPCells fragment objects and filter to standard chromosomes [part_of_graph:parallel]",
+      # One c() call checks the cell names once; reduce() checked them again at every step.
       command = BPCells::select_chromosomes(
-        purrr::reduce(aggregation_fragments_w_prefix_bpcells_syms, c),
+        do.call(c, aggregation_fragments_w_prefix_bpcells_syms),
         get_standard_chroms(aggregated_cellranger_ref_list$genomes[[1]])
       ),
       packages = w_def("BPCells")
@@ -174,7 +175,8 @@ rlang::list2(
           BPCells::select_cells(GEX_cells_per_GEM_well_tibble.ATAC$barcodes[[1]])
         consensus_mat <- BPCells::peak_matrix(frags, consensus_peak_GRanges.ATAC, mode = "fragments")
         rownames(consensus_mat) <- names(consensus_peak_GRanges.ATAC)
-        BPCells::write_matrix_dir(consensus_mat, out_dir, buffer_size = 65536L, overwrite = TRUE)
+        unlink(out_dir, recursive = TRUE) # BPCells writes into an existing folder twice
+        BPCells::write_matrix_dir(consensus_mat, out_dir, buffer_size = 65536L)
         out_dir
       },
       pattern = map(GEX_cells_per_GEM_well_tibble.ATAC),
@@ -187,7 +189,8 @@ rlang::list2(
         out_dir <- get_structured_file_path()
         consensus_mat <- do.call(cbind, lapply(consensus_peak_BPCells_matrix_dirs_per_GEM_well.ATAC, BPCells::open_matrix_dir))
         stopifnot(identical(colnames(consensus_mat), metadata_w_cell_types_tibble.GEX$barcode_w_prefix))
-        BPCells::write_matrix_dir(consensus_mat, out_dir, buffer_size = 65536L, overwrite = TRUE)
+        unlink(out_dir, recursive = TRUE) # BPCells writes into an existing folder twice
+        BPCells::write_matrix_dir(consensus_mat, out_dir, buffer_size = 65536L)
         out_dir
       },
       resources = get_tar_resources(RAM_GB_req = 16)
@@ -202,22 +205,24 @@ rlang::list2(
   ATAC_peak_diff_accesibility_testing_targets = rlang::list2(
     targets::tar_target(
       name = diff_peak_acc_results_tibble.ATAC,
-      description = "Test differential peak accessibility across clusters with a Wilcoxon test [resource_observation: peak_RAM_GiB=8.6; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10]",
+      description = "Test differential peak accessibility across clusters with a Wilcoxon test [resource_observation: peak_RAM_GiB=8.6; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=7.9; n_nuclei=786k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
       command = {
         groups <- metadata_w_cell_types_tibble.GEX[[aggregation_call_peaks_by_cluster_col]] |>
           as.character() |>
           purrr::set_names(metadata_w_cell_types_tibble.GEX$barcode_w_prefix)
         groups <- groups[colnames(consensus_peak_BPCells_matrix.ATAC)]
 
-        BPCells::marker_features(normalize_BPCells_counts(consensus_peak_BPCells_matrix.ATAC[, names(groups)]), groups, method = "wilcoxon") |>
+        markers <- BPCells::marker_features(normalize_BPCells_counts(consensus_peak_BPCells_matrix.ATAC[, names(groups)]), groups, method = "wilcoxon") |>
           dplyr::mutate(
             avg_log2FC = log2(foreground_mean / background_mean),
             p_val_adj = stats::p.adjust(p_val_raw, method = "BH"),
             cluster = foreground,
             gene = feature
-          ) |>
-          dplyr::mutate(peak = gene) |>
+          )
+        # Split each peak name once rather than once per cluster.
+        peak_coordinates <- tibble::tibble(gene = unique(markers$gene), peak = gene) |>
           tidyr::separate_wider_delim(cols = peak, names = c("chr", "start", "end"), delim = "-")
+        dplyr::left_join(markers, peak_coordinates, by = "gene")
       },
       packages = w_def("BPCells"),
       resources = get_tar_resources(RAM_GB_req = 16)

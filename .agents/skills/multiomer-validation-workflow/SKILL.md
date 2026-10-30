@@ -73,6 +73,10 @@ For a bit-identical comparison, set the BLAS threads the worker had
 (`RhpcBLASctl::blas_set_num_threads()`): OpenBLAS sums matrix products in
 another order with another thread count, or when a matrix gains columns.
 
+Compare folder targets file by file. A stored folder can hold files of an
+earlier format that BPCells' `overwrite = TRUE` never removed, so a rebuild
+that writes identical files still changes the folder's hash.
+
 WNN results cannot be reproduced by rebuilding: `BPCells::knn_hnsw()` with more
 than one thread is nondeterministic. Validate code after the neighbour search on
 a shared kNN input, and expect an adopted WNN change to cascade.

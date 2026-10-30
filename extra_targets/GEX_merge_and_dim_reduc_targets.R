@@ -18,7 +18,8 @@ rlang::list2(
       combined_counts_matrix <- purrr::reduce(aggregation_GEX_counts_BPCells_matrix_syms, cbind)
 
       out_dir <- get_structured_file_path()
-      BPCells::write_matrix_dir(BPCells::convert_matrix_type(combined_counts_matrix, "uint32_t"), out_dir, overwrite = TRUE)
+      unlink(out_dir, recursive = TRUE) # BPCells writes into an existing folder twice
+      BPCells::write_matrix_dir(BPCells::convert_matrix_type(combined_counts_matrix, "uint32_t"), out_dir)
       out_dir
     },
     resources = get_tar_resources(RAM_GB_req = 16)

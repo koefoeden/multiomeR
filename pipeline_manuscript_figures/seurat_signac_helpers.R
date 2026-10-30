@@ -88,27 +88,30 @@ comparison_call_consensus_peaks <- function(
   config,
   blacklist_GRanges
 ) {
-  replicate_peaks <- comparison_with_workers(future.apply::future_lapply(
-    discovery_tibble$replicate_name,
-    \(replicate_name) {
+  # Each replicate is a half of a deep group or a shallow group pooled at its own q cutoff.
+  replicate_peaks <- comparison_with_workers(future.apply::future_Map(
+    \(replicate_name, q_value_cutoff) {
       narrow_peak_file <- call_peaks_w_MACS3(
         ATAC_cut_site_files = get_cut_site_files(cut_site_dirs, replicate_name),
         ATAC_peak_calling_cluster_names = replicate_name,
         genome = config$genome,
         output_suffix = replicate_name,
-        allow_no_peaks = TRUE
+        allow_no_peaks = TRUE,
+        q_value_cutoff = q_value_cutoff
       )
       on.exit(unlink(narrow_peak_file), add = TRUE)
       get_peak_GRanges_w_fixed_width(narrow_peak_file, genome = config$genome, blacklist_GRanges = blacklist_GRanges)
     },
+    discovery_tibble$replicate_name,
+    discovery_tibble$q_value_cutoff,
     future.seed = config$random_seed
   ))
 
   # Groups in discovery order, as the multiomeR targets collapse them.
   within_cluster_peaks <- purrr::map(unique(discovery_tibble$peak_calling_cluster_name), \(cluster_name) {
-    halves <- discovery_tibble$peak_calling_cluster_name == cluster_name
-    collapse_group_peaks_ArchR(replicate_peaks[halves], cluster_name,
-      sum(lengths(discovery_tibble$BCs_for_peak_discovery[halves])))
+    replicates <- discovery_tibble$peak_calling_cluster_name == cluster_name
+    collapse_group_peaks_ArchR(replicate_peaks[replicates], cluster_name,
+      sum(lengths(discovery_tibble$BCs_for_peak_discovery[replicates])))
   })
   combine_collapse_GRanges_ArchR(within_cluster_peaks, by = "score_quantile")
 }

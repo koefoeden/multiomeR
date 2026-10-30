@@ -26,7 +26,7 @@ BENCHMARK_EXCLUDED_TARGETS <- c(
   "motif_family_accessibility_marker_volcano_plots.7_ATAC_QC.sizing_91x" = paste(
     "QC plot faceted by ATAC cell type, whose canvas at about a hundred cell types, 42,300 pixels square, exceeds",
     "what the PNG device can allocate: its worker crashed twice, about a minute after each start (66 s at 31 wells)"),
-  "chromVAR_variant_contribution_detail_plots.cell_type_pseudobulk.genetic_enrichment.sizing_91x" = paste(
+  "variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.sizing_91x" = paste(
     "not run: on earlier code they took over 1.5 h and up to 110 GB per GWAS at 91 samples without finishing",
     "(at most 2.3 min per GWAS at 31 wells)"))
 # Seconds the simulated wall time adds to each target for dispatching, loading and saving. With it,
@@ -58,6 +58,8 @@ SEURAT_SIGNAC_COMPARISON_WORKFLOWS <- local({
     # QC metrics, gene or peak annotation, chromatin-state projection or motif
     # analysis, and no ATAC-only or uncorrected RNA embedding.
     "^cluster_UCell_", "^(UCell_(GEX|WNN)_marker_genes_list|GEX_marker_genes_vec)(\\.|$)",
+    # The unfiltered WNN clusters only group the ATAC doublet calls.
+    "^clusters_tibble_unfiltered[.]WNN",
     "^metadata_w_cell_types(_unfiltered|_annotation)?_tibble[.]",
     "^(amulet|scDblFinder)_", "^(ATAC_qc_metrics|ATAC_blacklist_metrics|per_barcode_metrics|peak_fragment_counts)_tibble[.]",
     "^metadata_w_QC", "Ensembl_(gene_)?annotations?_(GRanges_list|by_hub_ID)(\\.|$)",

@@ -99,9 +99,11 @@ plot_peak_gene_correlation_top_link <- function(plot_data, coverage, aggregate_s
     ncol = 1, heights = c(1, .8, 4, 3), guides = "keep") +
     patchwork::plot_annotation(
       title = paste(top$TargetGene[[1]], "— peak–gene associations across the candidate window"),
-      subtitle = stringr::str_wrap(sprintf(
-        "%s links (%s in %s) with valid hierarchical p-values. Bars extend downward from zero; longer bars indicate stronger evidence. Overlaid colours compare cell types at each peak.",
-        nrow(fits), sum(fits$cell_group == top$cell_group[[1]]), top$cell_group[[1]]), 145),
+      subtitle = stringr::str_wrap(paste(sprintf(
+        "%s tested pairs (%s in %s) with valid hierarchical p-values. Bars extend downward from zero; longer bars indicate stronger evidence. Overlaid colours compare cell types at each peak.",
+        nrow(fits), sum(fits$cell_group == top$cell_group[[1]]), top$cell_group[[1]]),
+        if (isTRUE(top$isTargetGeneBody[[1]])) paste0("The focal peak lies in ", top$TargetGene[[1]],
+          "'s own body, where much of the gene can vary with its expression: an intragenic association, not necessarily an enhancer.")), 145),
       caption = stringr::str_wrap(paste(
         "Bars: -log10 of hierarchical nominal p-values; peak intervals are overlaid, not stacked. Unavailable p-values are omitted; no p-value, slope or promoter cutoff is applied to contextual bars.",
         "Grey backgrounds: consensus peaks; red: focal peak; dashed line: focal gene TSS. Shared candidate window with 2 kb padding. Coverage: focal WNN cell type, 500 bins normalized by bin width and group depth, clipped at the 99.9th percentile.",

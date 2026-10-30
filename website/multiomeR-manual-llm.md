@@ -1050,7 +1050,7 @@ The module's run selection then builds these outputs too:
 
 Use this module to nominate candidate regulatory links between accessible regions and nearby genes within each WNN cell type. It pairs consensus peaks with nearby gene transcription start sites and tests whether accessibility and expression vary together across **donor–state pseudobulks**: nuclei of one cell type summed by donor and ATAC-defined state, with each nucleus in at most one pseudobulk.
 
-A hierarchical model adjusts for donor, sequencing depth and the cell type's main chromatin states and lets the peak–gene slope vary between donors. Positive slopes that significantly exceed those of distant peaks of the same gene nominate candidate links. Links are hypotheses: they do not establish causal regulation, and the distant-peak background cannot separate a specific enhancer from covariation within a local chromatin domain. The module also gives each candidate pair an activity-by-contact (ABC) score in each cell type: the peak's accessibility weighted by its distance to the gene, relative to all peaks around the gene. It needs no donor variation, so it also covers cell types with too few donors for the model. [Method details](methods_peak_gene_correlation.md)
+A hierarchical model adjusts for donor, sequencing depth and the cell type's leading chromatin states and lets the peak–gene slope vary between donors. Positive slopes that significantly exceed those of distant peaks of the same gene nominate links. A link whose peak lies in the gene's own body is reported as an intragenic association rather than a candidate enhancer link, because much of a gene's body can vary with its expression. Links are hypotheses: they do not establish causal regulation, and the distant-peak background cannot separate a specific enhancer from covariation within a local chromatin domain. The module also gives each candidate pair an activity-by-contact (ABC) score in each cell type: the peak's accessibility weighted by its distance to the gene, relative to all peaks around the gene. It needs no donor variation, so it also covers cell types with too few donors for the model. [Method details](methods_peak_gene_correlation.md)
 
 ## Prerequisites
 
@@ -1143,7 +1143,7 @@ targets::tar_read(
 )
 ```
 
-The candidate links are in `peak_gene_correlation_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix. `peak_gene_ABC_scores_tibble.WNN` holds the ABC score of each candidate pair in each cell type that expresses the gene, without a threshold. `peak_gene_ABC_cell_groups_tibble.WNN` lists the scored cell types with their nuclei and their names in the genetic-enrichment module. When the aggregation also runs the [genetic-enrichment module](downstream_genetic_enrichment.md), it tests whether ABC scores and correlations point to GWAS signal beyond accessibility and distance, and saves those plots in `genetic_validation/`.
+The links are in `peak_gene_correlation_links_tibble.WNN`, with the same `.peak_gene_correlation.my_aggregation` suffix; its `link_type` column separates intragenic associations from candidate enhancer links. `peak_gene_ABC_scores_tibble.WNN` holds the ABC score of each candidate pair in each cell type that expresses the gene, without a threshold. `peak_gene_ABC_cell_groups_tibble.WNN` lists the scored cell types with their nuclei and their names in the genetic-enrichment module. When the aggregation also runs the [genetic-enrichment module](downstream_genetic_enrichment.md), it tests whether ABC scores and correlations point to GWAS signal beyond accessibility and distance, and saves those plots in `genetic_validation/`. These tests concern the rankings as a whole; they do not validate individual links.
 
 ## Parameter reference
 
@@ -2536,13 +2536,13 @@ GEX and ATAC values are residualized against donor, scaled log RNA and ATAC dept
 The Pearson correlation of the residuals is reported as a descriptive summary.
 The hierarchical analysis fits donor fixed intercepts, depth covariates, the accessibility components and a donor-varying slope for the within-donor-centered peak value.
 It uses profiled restricted maximum likelihood, with Kenward–Roger inference for the average slope [@kenward1997_kenward_roger].
-The donor-varying slope makes donors rather than pseudobulks the units of inference.
-Kenward–Roger adjusts its standard error and degrees of freedom for the small number of donors.
+When the slope varies between donors, donors rather than pseudobulks are the units of inference.
+Kenward–Roger adjusts its standard error and degrees of freedom for the small number of donors; when the estimated slope variance is small, its degrees of freedom move towards the number of pseudobulks.
 A peak is tested only when its accessibility varies within at least eight donors.
 With fewer, the random-slope test has too few degrees of freedom to be informative, so its pairs remain untested.
 Fits that fail numerical checks keep their estimates but get no P-value.
 Peaks and genes that both vary along shared chromatin states correlate whether or not they interact.
-The accessibility components remove the leading states.
+The accessibility components absorb the leading states, but not necessarily a gradient within the class that shapes only part of its accessibility, such as a mix of subtypes.
 They are the top ten principal components, or one per ten residual degrees of freedom when fewer.
 They are computed from all candidate peaks, across chromosomes, that are accessible in at least 5% of the class's pseudobulks.
 Each peak enters as its donor- and depth-residualized, standardized log1p CPM.
@@ -2554,9 +2554,12 @@ This score is standardized by the mean and SD of the gene's background scores, g
 It is then rescaled by the class's background SD within its peak-detection quintile.
 A candidate's empirical P-value is the share of the class's rescaled background scores that are at least as extreme.
 These P-values are Benjamini–Hochberg-corrected within each annotation class over the complete eligible pair family, counting untested and unreliable pairs.
-A candidate link requires an estimable positive average slope above the gene's background mean and an FDR below 0.05, excluding self-promoter peaks.
+A link requires an estimable positive average slope above the gene's background mean and an FDR below 0.05, excluding self-promoter peaks.
+Links whose peak lies in the target gene's own body are reported separately as intragenic associations, and the others as candidate enhancer links.
+Much of a gene's body can vary with its expression, so the strongest such peak need not mark an enhancer.
 These model-based associations do not establish causal enhancer–gene regulation.
 Background peaks more than 10 Mb away also cannot separate a specific enhancer from covariation within a local chromatin domain.
+An empirical P-value cannot fall below one over the number of background scores plus one, so in classes with many tested pairs a few strong pairs cannot pass the first Benjamini–Hochberg step alone, and link counts can change in jumps.
 
 Top-link plots rank estimable positive hierarchical associations by their uncalibrated Kenward–Roger P-value, without a significance cutoff.
 They exclude self-promoter peaks but keep gene-body peaks.

@@ -158,8 +158,10 @@ finalize_peak_gene_hierarchical_results <- function(results_tibbles) {
   tibble::as_tibble(result)
 }
 
-#' Candidate enhancer links: positive, reliable, FDR-significant nonpromoter
-#' pairs that exceed their gene's background.
+#' Peak-gene links: positive, reliable, FDR-significant nonpromoter pairs that
+#' exceed their gene's background. Links whose peak lies in the target gene's
+#' own body form the `intragenic_association` class, since much of a gene's body
+#' can covary with its expression; the others are `candidate_enhancer_link`s.
 is_peak_gene_link <- function(results_tibble) {
   results_tibble$hierarchical_status == "estimable" & results_tibble$hierarchical_coefficient > 0 &
     results_tibble$hierarchical_gene_z > 0 & results_tibble$hierarchical_FDR < 0.05 & !results_tibble$isSelfPromoter
@@ -167,6 +169,8 @@ is_peak_gene_link <- function(results_tibble) {
 
 make_peak_gene_correlation_links <- function(results_tibble) {
   results_tibble[which(is_peak_gene_link(results_tibble)), ] |>
+    dplyr::mutate(link_type = dplyr::if_else(.data$isTargetGeneBody, "intragenic_association", "candidate_enhancer_link"),
+      .after = "link_class") |>
     dplyr::arrange(.data$cell_group, .data$hierarchical_pvalue, .data$TargetGeneID, .data$peak) |>
     dplyr::mutate(rank_in_cell_group = dplyr::row_number(), .by = "cell_group")
 }

@@ -1097,7 +1097,9 @@ summarize_peak_gene_correlation_support_counts <- function(results_tibble) {
       FDR_significant_pairs = if (all(is.na(.data$hierarchical_FDR))) NA_integer_ else
         sum(.data$hierarchical_FDR < 0.05, na.rm = TRUE),
       candidate_enhancer_links = if (all(is.na(.data$hierarchical_FDR))) NA_integer_ else
-        sum(.data$link, na.rm = TRUE),
+        sum(.data$link & !.data$isTargetGeneBody, na.rm = TRUE),
+      intragenic_associations = if (all(is.na(.data$hierarchical_FDR))) NA_integer_ else
+        sum(.data$link & .data$isTargetGeneBody, na.rm = TRUE),
       .by = "cell_group"
     ) |>
     tidyr::pivot_longer(
@@ -1119,8 +1121,8 @@ plot_peak_gene_correlation_support_counts <- function(plot_tibble) {
   plot_tibble <- plot_tibble |>
     dplyr::mutate(
       metric = factor(.data$metric,
-        levels = c("tested_pairs", "FDR_significant_pairs", "candidate_enhancer_links"),
-        labels = c("Tested pairs", "FDR-significant pairs", "Candidate enhancer links")),
+        levels = c("tested_pairs", "FDR_significant_pairs", "candidate_enhancer_links", "intragenic_associations"),
+        labels = c("Tested pairs", "FDR-significant pairs", "Candidate enhancer links", "Intragenic associations")),
       truncated = !is.na(.data$n) & .data$n > display_limit,
       count_position = pmin(tidyr::replace_na(.data$n, 0), display_limit),
       count_label = dplyr::if_else(is.na(.data$n), "NA",
@@ -1144,8 +1146,8 @@ plot_peak_gene_correlation_support_counts <- function(plot_tibble) {
     ggplot2::coord_cartesian(xlim = c(0, display_limit), clip = "off") +
     ggplot2::labs(
       title = "Peak-gene association support by cell group",
-      subtitle = stringr::str_wrap("Compare significant pairs and candidate links across cell types; these are exploratory associations, not causal links. Bars marked \u00bb exceed the displayed range; labels retain their full counts.", width = 95),
-      caption = stringr::str_wrap("Significant: hierarchical Kenward-Roger BH FDR < 0.05 across tested pairs within each cell group. Candidates also require a reliable positive donor-slope coefficient and exclude self-promoter pairs. The linear axis ends 10% above the largest significant-pair count (at 1 if none are positive). Longer bars are truncated. NA marks groups with no available FDR values; categories overlap.", width = 110),
+      subtitle = stringr::str_wrap("Significant pairs and links are exploratory associations, not causal links. Counts grow with each cell type's pseudobulks and depth, so they do not compare regulation between cell types. Intragenic associations may reflect a whole gene body that varies with expression. Bars marked \u00bb exceed the displayed range; labels retain their full counts.", width = 95),
+      caption = stringr::str_wrap("Significant: Benjamini-Hochberg FDR < 0.05 on the background-calibrated P of the hierarchical Kenward-Roger slope, over all eligible pairs of the cell group, pairs without a reliable fit included. Links also need a reliable positive donor-slope coefficient above the gene's background (positive gene z) and exclude self-promoter peaks. Intragenic associations are links whose peak lies in the target gene's own body; candidate enhancer links are the other links. Tested pairs include the significant pairs, which include both link classes. The linear axis ends 10% above the largest significant-pair count (at 1 if none are positive). Longer bars are truncated. NA marks groups with no available FDR values.", width = 110),
       x = "Pair count (linear scale; long bars truncated)",
       y = "Cell group",
       fill = NULL
@@ -1279,12 +1281,12 @@ plot_peak_gene_significant_pairs_vs_technical_features <- function(plot_tibble) 
 
 summarize_peak_gene_correlation_by_distance <- function(results_tibble) {
   results_tibble |>
-    dplyr::select("cell_group", "correlation", "isSelfPromoter", "distance", "hierarchical_pvalue") |>
+    dplyr::select("cell_group", "correlation", "isSelfPromoter", "distance", "hierarchical_background_pvalue") |>
     dplyr::filter(!is.na(.data$correlation), !.data$isSelfPromoter) |>
     dplyr::mutate(distance_kb = pmin(24, abs(.data$distance) %/% 10000) * 10 + 5) |>
     dplyr::summarise(
       median_correlation = stats::median(.data$correlation),
-      median_neg_log10_p = stats::median(-log10(.data$hierarchical_pvalue), na.rm = TRUE),
+      median_neg_log10_p = stats::median(-log10(.data$hierarchical_background_pvalue), na.rm = TRUE),
       .by = c("cell_group", "distance_kb")
     ) |>
     tidyr::pivot_longer(c("median_correlation", "median_neg_log10_p"),
@@ -1311,7 +1313,7 @@ plot_peak_gene_correlation_by_distance <- function(plot_tibble) {
     dplyr::mutate(mean_tibble, cell_group = mean_label, label = mean_label)
   ) |>
     dplyr::slice_max(.data$distance_kb, n = 1, with_ties = FALSE, by = c("cell_group", "metric"))
-  # Uniform null p-values have median -log10(p) = log10(2).
+  # Background-calibrated P-values of null pairs have median -log10(p) = log10(2).
   reference_tibble <- tibble::tibble(metric = c("median_correlation", "median_neg_log10_p"),
     value = c(0, log10(2)))
   cell_groups <- sort(unique(plot_tibble$cell_group))
@@ -1355,7 +1357,7 @@ plot_peak_gene_correlation_by_distance <- function(plot_tibble) {
     ggplot2::labs(
       title = "Peak-gene correlation and association p-values by distance from the gene TSS",
       subtitle = stringr::str_wrap("Compare distance-dependent trends across WNN-derived cell types; colours and endpoint labels identify each curve. -log10(p) also rises with each cell type's statistical power, so compare curve shapes rather than levels between cell types. Nearby peaks are not necessarily regulatory.", width = 110),
-      caption = stringr::str_wrap("Medians among non-missing, non-self-promoter pairs, with no FDR filter. Correlation is the descriptive donor/depth-adjusted Pearson correlation; p is the nominal two-sided hierarchical Kenward-Roger p-value for the donor-varying peak slope, available only for reliable fits. Absolute peak-centre to TSS distances use 10 kb bins plotted at their midpoints; the final 240–250 kb bin includes the 250 kb boundary. Black dashed curves are means of the available cell-type medians in each bin, weighting cell types equally rather than pooling pairs. Pair counts vary between bins and cell types, and rows use separate y-scales. Grey dotted lines mark zero correlation and log10(2) ≈ 0.30, the median -log10(p) expected for null pairs.", width = 130),
+      caption = stringr::str_wrap("Medians among non-missing, non-self-promoter pairs, with no FDR filter. Correlation is the descriptive donor/depth-adjusted Pearson correlation; p is the background-calibrated P of the hierarchical Kenward-Roger donor-varying peak slope, available only for reliable fits: the share of the cell type's background pairs, peaks more than 10 Mb from the gene, that are at least as extreme. Absolute peak-centre to TSS distances use 10 kb bins plotted at their midpoints; the final 240–250 kb bin includes the 250 kb boundary. Black dashed curves are means of the available cell-type medians in each bin, weighting cell types equally rather than pooling pairs. Pair counts vary between bins and cell types, and rows use separate y-scales. Grey dotted lines mark zero correlation and log10(2) ≈ 0.30, the median -log10(p) of the background pairs.", width = 130),
       x = "Absolute TSS distance, kb",
       y = NULL
     )

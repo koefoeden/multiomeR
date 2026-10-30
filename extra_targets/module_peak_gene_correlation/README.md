@@ -45,14 +45,16 @@ slope or promoter cutoff. Consensus peaks are shaded; the focal peak is red
 and the gene TSS is dashed. The genomic axis uses Mb.
 
 Compact gene-context data and focal coverage are cached separately from
-rendering. Candidate enhancer links are estimable positive slopes above the
-gene's background with hierarchical FDR < 0.05 outside self-promoter peaks; they
-drive the link table and the support summary plots.
+rendering. Links are estimable positive slopes above the gene's background with
+hierarchical FDR < 0.05 outside self-promoter peaks; they drive the link table
+and the support summary plots. Their `link_type` separates intragenic
+associations, whose peak lies in the target gene's own body, from candidate
+enhancer links.
 
 ## Measurement-support filtering
 
-`peak_gene_correlation_filter` is a module setting with allowed values `lenient`
-(default in `manifests/cfg_pipeline_parameters.tsv`), `moderate`, and `strict`. Override
+`peak_gene_correlation_filter` is a module setting with allowed values `lenient`,
+`moderate` (default in `manifests/cfg_pipeline_parameters.tsv`), and `strict`. Override
 it for an aggregation in `configuration/cfg_module_peak_gene_correlation.yaml`.
 The preset thresholds, the depth scaling of the count thresholds and every other
 fixed value of this module are listed in

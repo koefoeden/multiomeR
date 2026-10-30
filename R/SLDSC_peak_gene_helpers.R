@@ -227,8 +227,8 @@ SLDSC_peak_gene_tier_labels <- c(candidate = "ABC candidate peaks", tested = "Co
 
 # Shared caption sentences on what the rankings and territories are.
 SLDSC_peak_gene_method_caption <- paste(
-  "Territories: in each cell type, the peaks of activity-by-contact (ABC) candidate pairs with a positive score, and the peaks of pairs that the donor-level hierarchical correlation tested; self-promoter pairs are excluded.",
-  "Rankings order a territory's peaks by the maximum ABC score of their pairs; by correlation, the Šidák-adjusted best one-sided background-calibrated P-value of their tested genes; by correlation with ABC, ABC among pairs with a positive calibrated correlation first;",
+  "Territories: in each cell type, the peaks of activity-by-contact (ABC) candidate pairs with a positive score, and the peaks of pairs that the within-donor hierarchical correlation tested; self-promoter pairs are excluded.",
+  "Rankings order a territory's peaks by the maximum ABC score of their pairs; by correlation, the Šidák-adjusted best one-sided background-calibrated P-value of their tested genes; by correlation with ABC, ABC among pairs whose calibrated correlation is positive, whatever its significance, first;",
   "and by the baselines activity (ABC's counts per million), share (the S-LDSC accessibility share) and distance (to the nearest TSS among their pairs).",
   "Within-strata (_conditional) rankings rank peaks within quantile bins of activity, share and distance, so their top peaks keep the territory's covariate profile.",
   "Each annotation keeps a ranking's top peaks until they hold the given share of the territory's common (MAF > 5%) 1000 Genomes European SNPs."
@@ -337,6 +337,7 @@ plot_SLDSC_peak_gene_contrasts <- function(summary_tibble, share = 0.25) {
         SLDSC_peak_gene_method_caption,
         "Ratio: the ranking's median (S-LDSC) or mean (fine-mapped PIP) enrichment over GWAS-cell-type pairs, divided by its reference's over the same pairs; the reference is the whole territory or a ranking of the same size.",
         "Enriched pairs reach q < 0.05 in the single-modality peak or gene S-LDSC model; specificity divides the enriched-pair ratio by the other-pair ratio.",
+        "The peak model's annotation is the accessibility share, so rankings that follow the share look specific partly by construction; within-strata rankings are balanced on share.",
         "Lines: 95% intervals from 1,000 bootstrap samples of study groups, which keep near-duplicate GWAS together, the same samples for every contrast; lower ends are drawn from 0.001.",
         hidden
       ), width = 190),

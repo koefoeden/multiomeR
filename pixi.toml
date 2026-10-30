@@ -31,7 +31,7 @@ r-testthat = ">=3.3.2,<4"
 r-tmb = "==1.9.19" # Match the glmmTMB binary ABI.
 # system tools
 htslib = "1.24.*"
-macs3 = "3.0.*"
+macs3 = "3.1.*"
 cellsnp-lite = "1.2.*"
 vireosnp = "0.5.*"
 r-svglite = ">=2.2.2,<3"

@@ -48,7 +48,7 @@ rlang::list2(
       dplyr::mutate(modality = "ATAC")
   ),
   targets::tar_target(
-    name = chromVAR_background_record.cell_type_pseudobulk,
+    name = background_record.chromVAR,
     description = "Fit the cell-type pseudobulk betterChromVAR background used by GWAS score contributions, weighting every cell type equally in the expected accessibility [part_of_graph:genetic_enrichment_cell_type_contributions] [resource_observation: peak_RAM_GiB=2.1; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-12]",
     command = get_pseudobulk_chromVAR_background_record(
       pseudobulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
@@ -61,8 +61,8 @@ rlang::list2(
     name = raw_deviation_unscaled.deviation_heatmaps.chromVAR.specificity,
     description = "Save ordinary GWAS deviations without within-GWAS scaling. [checkpoint:genetic_enrichment]",
     command = plot_GWAS_chromVAR_deviation_heatmap(
-      chromVAR_deviation_tibble.cell_type_pseudobulk,
-      chromVAR_top_set_tibble.cell_type_pseudobulk,
+      deviation_tibble.chromVAR.specificity,
+      top_set_tibble.chromVAR.specificity,
       GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
       compartments_patterns = genetic_enrichment_compartment_patterns,
       standardize = FALSE,
@@ -74,8 +74,8 @@ rlang::list2(
     name = raw_deviation_scaled.deviation_heatmaps.chromVAR.specificity,
     description = "Save ordinary GWAS deviations standardized within each GWAS. [checkpoint:genetic_enrichment]",
     command = plot_GWAS_chromVAR_deviation_heatmap(
-      chromVAR_deviation_tibble.cell_type_pseudobulk,
-      chromVAR_top_set_tibble.cell_type_pseudobulk,
+      deviation_tibble.chromVAR.specificity,
+      top_set_tibble.chromVAR.specificity,
       GWAS_metadata_tracks_plot = GWAS_metadata_tracks_plot,
       compartments_patterns = genetic_enrichment_compartment_patterns,
       standardize = TRUE,

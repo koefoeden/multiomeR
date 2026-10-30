@@ -58,11 +58,11 @@ rlang::list2(
       plot_GWAS_metadata_tracks()
   ),
   targets::tar_target(
-    name = chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk,
+    name = absolute_effect_deviation_tibble.chromVAR.specificity,
     description = "Summarize absolute-effect peak contributions into the cell-type heatmap table and test them against the locus-shift null [part_of_graph:genetic_enrichment_cell_type_absolute_effect]",
     command = summarize_GWAS_chromVAR_peak_contributions(
-      peak_contribution_tibble = chromVAR_absolute_effect_peak_contribution_tibble.cell_type_pseudobulk,
-      null_tibble = dplyr::filter(chromVAR_locus_shift_null_tibble.cell_type_pseudobulk, weighting == "absolute_effect"),
+      peak_contribution_tibble = absolute_effect_peak_contribution_tibble.chromVAR.specificity,
+      null_tibble = dplyr::filter(locus_shift_null_tibble.chromVAR.specificity, weighting == "absolute_effect"),
       cell_type_support_tibble = cell_type_pseudobulk_support_tibble.ATAC
     ) |>
       dplyr::left_join(
@@ -75,8 +75,8 @@ rlang::list2(
     name = beta_weighted_unscaled.deviation_heatmaps.chromVAR.specificity,
     description = "Save absolute-effect-weighted GWAS deviations without within-GWAS scaling. [checkpoint:genetic_enrichment]",
     command = plot_GWAS_chromVAR_deviation_heatmap(
-      chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk,
-      chromVAR_absolute_effect_top_set_tibble.cell_type_pseudobulk,
+      absolute_effect_deviation_tibble.chromVAR.specificity,
+      absolute_effect_top_set_tibble.chromVAR.specificity,
       GWAS_metadata_tracks_plot = GWAS_absolute_effect_metadata_tracks_plot,
       compartments_patterns = genetic_enrichment_compartment_patterns,
       standardize = FALSE,
@@ -89,8 +89,8 @@ rlang::list2(
     name = beta_weighted_scaled.deviation_heatmaps.chromVAR.specificity,
     description = "Save absolute-effect-weighted GWAS deviations standardized within each GWAS. [checkpoint:genetic_enrichment]",
     command = plot_GWAS_chromVAR_deviation_heatmap(
-      chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk,
-      chromVAR_absolute_effect_top_set_tibble.cell_type_pseudobulk,
+      absolute_effect_deviation_tibble.chromVAR.specificity,
+      absolute_effect_top_set_tibble.chromVAR.specificity,
       GWAS_metadata_tracks_plot = GWAS_absolute_effect_metadata_tracks_plot,
       compartments_patterns = genetic_enrichment_compartment_patterns,
       standardize = TRUE,
@@ -105,12 +105,12 @@ rlang::list2(
     command = dplyr::bind_rows(GWAS_absolute_effect_peak_variant_weight_records)
   ),
   targets::tar_target(
-    name = chromVAR_absolute_effect_peak_contribution_tibble.cell_type_pseudobulk,
+    name = absolute_effect_peak_contribution_tibble.chromVAR.specificity,
     description = "Decompose the existing absolute-effect annotation matrix into exact peak contributions [resource_observation: peak_RAM_GiB=4.0; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
     command = if (nrow(GWAS_absolute_effect_inputs_tibble) == 0L) {
-      chromVAR_peak_contribution_tibble.cell_type_pseudobulk[0, ]
+      peak_contribution_tibble.chromVAR.specificity[0, ]
     } else get_GWAS_chromVAR_peak_contribution_tibble(
-      chromVAR_background_record = chromVAR_background_record.cell_type_pseudobulk,
+      chromVAR_background_record = background_record.chromVAR,
       pseudobulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
       chromVAR_obj = chromVAR_obj.ATAC,
       annotation_matrix = GWAS_absolute_effect_peak_weight_matrix,
@@ -118,37 +118,37 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = chromVAR_absolute_effect_variant_contribution_tibble.cell_type_pseudobulk,
+    name = absolute_effect_variant_contribution_tibble.chromVAR.specificity,
     description = "Allocate exact absolute-effect peak contributions to credible-set variants [resource_observation: peak_RAM_GiB=3.7; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
-    command = if (nrow(chromVAR_absolute_effect_peak_contribution_tibble.cell_type_pseudobulk) == 0L) {
-      chromVAR_variant_contribution_tibble.cell_type_pseudobulk[0, ]
+    command = if (nrow(absolute_effect_peak_contribution_tibble.chromVAR.specificity) == 0L) {
+      variant_contribution_tibble.chromVAR.specificity[0, ]
     } else get_GWAS_chromVAR_variant_contribution_tibble(
-      chromVAR_absolute_effect_peak_contribution_tibble.cell_type_pseudobulk,
+      absolute_effect_peak_contribution_tibble.chromVAR.specificity,
       GWAS_absolute_effect_peak_variant_weight_tibble),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = chromVAR_absolute_effect_locus_contribution_tibble.cell_type_pseudobulk,
+    name = absolute_effect_locus_contribution_tibble.chromVAR.specificity,
     description = "Sum absolute-effect variant contributions into loci with L2G predictions",
-    command = if (nrow(chromVAR_absolute_effect_variant_contribution_tibble.cell_type_pseudobulk) == 0L) {
-      chromVAR_locus_contribution_tibble.cell_type_pseudobulk[0, ]
+    command = if (nrow(absolute_effect_variant_contribution_tibble.chromVAR.specificity) == 0L) {
+      locus_contribution_tibble.chromVAR.specificity[0, ]
     } else get_GWAS_chromVAR_locus_contribution_tibble(
-      chromVAR_absolute_effect_variant_contribution_tibble.cell_type_pseudobulk,
+      absolute_effect_variant_contribution_tibble.chromVAR.specificity,
       GWAS_locus_to_gene_tibble),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = chromVAR_absolute_effect_top_set_tibble.cell_type_pseudobulk,
+    name = absolute_effect_top_set_tibble.chromVAR.specificity,
     description = "Find each eligible GWAS's cell types not significantly below its top significant one by absolute-effect-weighted deviation, bootstrapping its loci",
-    command = get_GWAS_chromVAR_top_set_tibble(chromVAR_absolute_effect_locus_contribution_tibble.cell_type_pseudobulk, chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk)
+    command = get_GWAS_chromVAR_top_set_tibble(absolute_effect_locus_contribution_tibble.chromVAR.specificity, absolute_effect_deviation_tibble.chromVAR.specificity)
   ),
   tarchetypes::tar_file(
     name = absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots.chromVAR.specificity,
     description = "Save one faceted locus contribution figure per eligible GWAS using the absolute-effect heatmap weights. [checkpoint:genetic_enrichment]",
-    command = chromVAR_absolute_effect_locus_contribution_tibble.cell_type_pseudobulk |>
+    command = absolute_effect_locus_contribution_tibble.chromVAR.specificity |>
       plot_GWAS_absolute_effect_locus_bars() |>
       save_plots_structured(width = 18, height = 2.5 + 2.3 * ceiling(dplyr::n_distinct(
-        chromVAR_absolute_effect_locus_contribution_tibble.cell_type_pseudobulk$cluster) / 3)),
+        absolute_effect_locus_contribution_tibble.chromVAR.specificity$cluster) / 3)),
     resources = get_tar_resources(RAM_GB_req = 8)
   )
 

@@ -51,14 +51,14 @@ figure_pipeline <- list(
   targets::tar_target(
     figure_1_traits.mixed_human_31x,
     description = "Figure 1D-F traits: broadly supported cell-type enrichments (q < 0.05, top locus below half of the signal), one per study and per cell type and trait category",
-    command = select_figure_1_traits(chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x,
-      chromVAR_locus_contribution_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x),
+    command = select_figure_1_traits(deviation_tibble.chromVAR.specificity.genetic_enrichment.mixed_human_31x,
+      locus_contribution_tibble.chromVAR.specificity.genetic_enrichment.mixed_human_31x),
     resources = get_tar_resources(RAM_GB_req = 4)
   ),
   targets::tar_target(
     figure_1_panel_D.mixed_human_31x,
     description = "Figure 1D: raw_deviation_unscaled data of the selected traits, all assigned cell types in configured order, traits as a staircase, no metadata tracks",
-    command = plot_figure_1_heatmap(chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x,
+    command = plot_figure_1_heatmap(deviation_tibble.chromVAR.specificity.genetic_enrichment.mixed_human_31x,
       figure_1_traits.mixed_human_31x, names(UCell_WNN_marker_genes_list.mixed_human_31x)) |> compact_figure_1_plot(),
     resources = get_tar_resources(RAM_GB_req = 4)
   ),
@@ -69,7 +69,7 @@ figure_pipeline <- list(
       selections <- select_figure_1_showcase(figure_1_traits.mixed_human_31x)
       locus_records <- lapply(seq_len(nrow(selections)), function(i) {
         selection <- selections[i, ]
-        locus <- chromVAR_locus_contribution_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x |>
+        locus <- locus_contribution_tibble.chromVAR.specificity.genetic_enrichment.mixed_human_31x |>
           dplyr::filter(.data$GWAS_ID == selection$GWAS_ID[[1]], .data$cluster == selection$cluster[[1]]) |>
           dplyr::arrange(dplyr::desc(abs(.data$relative_deviation_contribution)), .data$studyLocusId) |>
           dplyr::slice_head(n = 1)
@@ -106,7 +106,7 @@ figure_pipeline <- list(
         dplyr::filter(is.finite(.data$WNN_UMAP_1), is.finite(.data$WNN_UMAP_2))
       # Match production random drawing.
       data <- withr::with_seed(1L, dplyr::slice_sample(data, prop = 1))
-      enriched <- chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x |>
+      enriched <- deviation_tibble.chromVAR.specificity.genetic_enrichment.mixed_human_31x |>
         dplyr::filter(.data$GWAS_ID == trait, .data$z_q < .05, is_figure_1_cell_type(.data$cluster))
       plot_figure_1_TRS(data, trait, gsub("-", "_", enriched$cluster)) |> compact_figure_1_plot()
     }),
@@ -143,7 +143,7 @@ figure_pipeline <- list(
       paths <- file.path(fs::dir_create(file.path(output_dir, "data")),
         c("figure_1_aggregation.tsv", "figure_1_link.tsv", "figure_1_traits.tsv"))
       cell_types <- metadata_w_cell_types_tibble.WNN.mixed_human_31x$WNN_harmony_SNN_cluster_cell_type
-      enriched <- figure_1_enrichments(chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x)
+      enriched <- figure_1_enrichments(deviation_tibble.chromVAR.specificity.genetic_enrichment.mixed_human_31x)
       readr::write_tsv(tibble::tibble(retained_nuclei = length(cell_types),
         assigned_cell_types = dplyr::n_distinct(cell_types[is_figure_1_cell_type(cell_types)]),
         enriched_pairs = nrow(enriched), enriched_studies = dplyr::n_distinct(enriched$GWAS_ID),
@@ -163,7 +163,7 @@ figure_pipeline <- list(
     supplementary_figure_S5.mixed_human_31x,
     description = "Supplementary Figure S5: the module's unscaled cell-type deviation heatmap for every GWAS study and assigned cell type, with trait-category and loci tracks, on Figure 1D's colour scale with its q < 0.05 stars, and its values",
     command = {
-      scores <- chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x |>
+      scores <- deviation_tibble.chromVAR.specificity.genetic_enrichment.mixed_human_31x |>
         dplyr::filter(is_figure_1_cell_type(.data$cluster))
       paths <- file.path(output_dir, c("S5.png", "data/cell_type_trait_enrichment.tsv"))
       # Figure 1D's colour scale: deviations beyond its range take its end colours.
@@ -180,7 +180,7 @@ figure_pipeline <- list(
     supplementary_figure_S6.mixed_human_31x,
     description = "Supplementary Figure S6: the module's S-LDSC heritability enrichment in each assigned cell type's most accessible peaks, sized to 0.5% of common SNPs, for every GWAS study with summary statistics, on the module's enrichment scale with a trait-category track and q < 0.05 stars, and its values",
     command = {
-      enrichment <- SLDSC_matched_enrichment_tibble.cell_type_pseudobulk.genetic_enrichment.mixed_human_31x
+      enrichment <- tibble.enrichment.genetic_enrichment.mixed_human_31x
       # The main readout at its smallest size, which most cell types can fill.
       scores <- enrichment |>
         dplyr::filter(.data$strategy == "accessible_peaks", .data$share == 0.005, .data$cluster != "random",

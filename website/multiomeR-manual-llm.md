@@ -995,13 +995,13 @@ Read the tables behind the plots in R, for example the cell-type enrichment scor
 
 ```{.r filename="R"}
 targets::tar_read(
-  chromVAR_deviation_tibble.cell_type_pseudobulk.genetic_enrichment.my_aggregation
+  deviation_tibble.chromVAR.specificity.genetic_enrichment.my_aggregation
 )
 targets::tar_read(
-  SLDSC_matched_enrichment_tibble.cell_type_pseudobulk.genetic_enrichment.my_aggregation
+  tibble.enrichment.genetic_enrichment.my_aggregation
 )
 targets::tar_read(
-  SLDSC_cell_type_tibble.cell_type_pseudobulk.genetic_enrichment.my_aggregation
+  tibble.SLDSC.specificity.genetic_enrichment.my_aggregation
 )
 ```
 

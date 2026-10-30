@@ -22,10 +22,10 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = chromVAR_peak_contribution_tibble.cell_type_pseudobulk,
+    name = peak_contribution_tibble.chromVAR.specificity,
     description = "Decompose each cell-type GWAS chromVAR heatmap value into exact peak contributions [part_of_graph:genetic_enrichment_cell_type_contributions] [resource_observation: peak_RAM_GiB=3.7; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
     command = get_GWAS_chromVAR_peak_contribution_tibble(
-      chromVAR_background_record = chromVAR_background_record.cell_type_pseudobulk,
+      chromVAR_background_record = background_record.chromVAR,
       pseudobulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
       chromVAR_obj = chromVAR_obj.ATAC,
       annotation_matrix = GWAS_peak_weight_matrix,
@@ -34,13 +34,13 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = chromVAR_locus_shift_null_tibble.cell_type_pseudobulk,
+    name = locus_shift_null_tibble.chromVAR.specificity,
     description = "Test one GWAS's cell-type chromVAR background z-scores against 10,000 copies with its credible sets moved 0.5-2 Mb along their chromosomes, in both weightings [resource_observation: peak_RAM_GiB=2.7; n_nuclei=740k; aggregation=unpublished; method=slurm_monitor; date=2026-10-16]",
     command = get_GWAS_chromVAR_locus_shift_null_tibble(
       GWAS_input_record = GWAS_input_records,
       absolute_effect_weighting_status_tibble = GWAS_absolute_effect_weighting_status_tibble,
       posterior_probability_cutoff = genetic_enrichment_posterior_probability_cutoff,
-      chromVAR_background_record = chromVAR_background_record.cell_type_pseudobulk,
+      chromVAR_background_record = background_record.chromVAR,
       pseudobulk_ATAC_data_matrix = cell_type_pseudobulk_counts_matrix.ATAC,
       peak_ranges = genetic_enrichment_peak_ranges
     ),
@@ -49,43 +49,43 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 4)
   ),
   targets::tar_target(
-    name = chromVAR_deviation_tibble.cell_type_pseudobulk,
+    name = deviation_tibble.chromVAR.specificity,
     description = "Sum peak contributions into the cell-type GWAS chromVAR heatmap table and test them against the locus-shift null [part_of_graph:genetic_enrichment_cell_type_contributions]",
     command = summarize_GWAS_chromVAR_peak_contributions(
-      peak_contribution_tibble = chromVAR_peak_contribution_tibble.cell_type_pseudobulk,
-      null_tibble = dplyr::filter(chromVAR_locus_shift_null_tibble.cell_type_pseudobulk, weighting == "ordinary"),
+      peak_contribution_tibble = peak_contribution_tibble.chromVAR.specificity,
+      null_tibble = dplyr::filter(locus_shift_null_tibble.chromVAR.specificity, weighting == "ordinary"),
       cell_type_support_tibble = cell_type_pseudobulk_support_tibble.ATAC
     )
   ),
   targets::tar_target(
-    name = chromVAR_variant_contribution_tibble.cell_type_pseudobulk,
+    name = variant_contribution_tibble.chromVAR.specificity,
     description = "Allocate exact peak-level GWAS chromVAR contributions to credible-set variants [part_of_graph:genetic_enrichment_cell_type_contributions]",
     command = get_GWAS_chromVAR_variant_contribution_tibble(
-      peak_contribution_tibble = chromVAR_peak_contribution_tibble.cell_type_pseudobulk,
+      peak_contribution_tibble = peak_contribution_tibble.chromVAR.specificity,
       peak_variant_weight_tibble = GWAS_peak_variant_weight_tibble
     ),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = chromVAR_locus_contribution_tibble.cell_type_pseudobulk,
+    name = locus_contribution_tibble.chromVAR.specificity,
     description = "Sum exact credible-set variant contributions into cell-type-by-GWAS locus contribution [part_of_graph:genetic_enrichment_cell_type_contributions] [resource_observation: peak_RAM_GiB=4.1; n_nuclei=376k; aggregation=sizing_31x; method=slurm_monitor; date=2026-10-17] [resource_observation: peak_RAM_GiB>47.9 (out of memory at 48); n_nuclei=1159k; aggregation=sizing_91x; method=slurm_monitor; date=2026-10-17]",
     command = get_GWAS_chromVAR_locus_contribution_tibble(
-      variant_contribution_tibble = chromVAR_variant_contribution_tibble.cell_type_pseudobulk,
+      variant_contribution_tibble = variant_contribution_tibble.chromVAR.specificity,
       locus_to_gene_tibble = GWAS_locus_to_gene_tibble
     ),
     resources = get_tar_resources(RAM_GB_req = 60)
   ),
   targets::tar_target(
-    name = chromVAR_top_set_tibble.cell_type_pseudobulk,
+    name = top_set_tibble.chromVAR.specificity,
     description = "Find each GWAS's cell types not significantly below its top significant one by bootstrapping its loci",
-    command = get_GWAS_chromVAR_top_set_tibble(chromVAR_locus_contribution_tibble.cell_type_pseudobulk, chromVAR_deviation_tibble.cell_type_pseudobulk)
+    command = get_GWAS_chromVAR_top_set_tibble(locus_contribution_tibble.chromVAR.specificity, deviation_tibble.chromVAR.specificity)
   ),
   tarchetypes::tar_file(
     name = locus_contribution_per_GWAS_heatmaps.chromVAR.specificity,
     description = "Save one cell-type-by-locus contribution heatmap per enabled GWAS. [checkpoint:genetic_enrichment]",
     command = plot_GWAS_locus_contribution_heatmaps(
-      locus_contribution_tibble = chromVAR_locus_contribution_tibble.cell_type_pseudobulk,
-      chromVAR_deviation_tibble = chromVAR_deviation_tibble.cell_type_pseudobulk,
+      locus_contribution_tibble = locus_contribution_tibble.chromVAR.specificity,
+      chromVAR_deviation_tibble = deviation_tibble.chromVAR.specificity,
       n_top_loci = 15L
     ) |>
       save_plots_structured(width = 16, height = 8)
@@ -93,18 +93,18 @@ rlang::list2(
   tarchetypes::tar_file(
     name = locus_contribution_per_GWAS_faceted_bars_plots.chromVAR.specificity,
     description = "Save compact signed locus-contribution bars faceted by cell type for each GWAS. [checkpoint:genetic_enrichment]",
-    command = chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk |>
+    command = locus_contribution_tibbles_by_GWAS.chromVAR.specificity |>
       plot_GWAS_locus_contribution_bars(n_top_loci = 5L) |>
       save_plots_structured(width = 18, dyn_suffix_in_subdir = TRUE,
-        height = 2.5 + 2.3 * ceiling(dplyr::n_distinct(chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk$cluster) / 3),
-        override_suffix = chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk$GWAS_ID[[1]]),
-    pattern = map(chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk),
+        height = 2.5 + 2.3 * ceiling(dplyr::n_distinct(locus_contribution_tibbles_by_GWAS.chromVAR.specificity$cluster) / 3),
+        override_suffix = locus_contribution_tibbles_by_GWAS.chromVAR.specificity$GWAS_ID[[1]]),
+    pattern = map(locus_contribution_tibbles_by_GWAS.chromVAR.specificity),
     iteration = "list"
   ),
   targets::tar_target(
-    name = chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk,
+    name = locus_contribution_tibbles_by_GWAS.chromVAR.specificity,
     description = "Group locus contributions by GWAS for independently cached detail plots",
-    command = chromVAR_locus_contribution_tibble.cell_type_pseudobulk |>
+    command = locus_contribution_tibble.chromVAR.specificity |>
       dplyr::group_by(GWAS_ID) |>
       targets::tar_group(),
     iteration = "group"
@@ -119,17 +119,17 @@ rlang::list2(
     name = variant_contribution_detail_plot_records.chromVAR.specificity,
     description = "Prepare plot-ready variant, accessibility, and peak-track data for one GWAS [resource_observation: peak_RAM_GiB=5.7; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=11.8; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-02]",
     command = prepare_GWAS_variant_contribution_detail_records(
-      variant_contribution_tibble = chromVAR_variant_contribution_tibble.cell_type_pseudobulk,
-      locus_contribution_tibble = chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk,
-      deviation_tibble = dplyr::bind_rows(chromVAR_deviation_tibble.cell_type_pseudobulk,
-        chromVAR_absolute_effect_deviation_tibble.cell_type_pseudobulk),
+      variant_contribution_tibble = variant_contribution_tibble.chromVAR.specificity,
+      locus_contribution_tibble = locus_contribution_tibbles_by_GWAS.chromVAR.specificity,
+      deviation_tibble = dplyr::bind_rows(deviation_tibble.chromVAR.specificity,
+        absolute_effect_deviation_tibble.chromVAR.specificity),
       GWAS_input_records = GWAS_input_records,
       consensus_peak_GRanges = consensus_peak_GRanges.ATAC,
       fragments = combined_BPCells_fragment_obj.ATAC,
       metadata_tibble = variant_detail_cell_groups_tibble,
       min_z = genetic_enrichment_variant_detail_min_z
     ),
-    pattern = map(chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk),
+    pattern = map(locus_contribution_tibbles_by_GWAS.chromVAR.specificity),
     iteration = "list",
     resources = get_tar_resources(RAM_GB_req = 32)
   ),
@@ -140,7 +140,7 @@ rlang::list2(
       plot_GWAS_variant_contribution_details(
         GWAS_input_records = GWAS_input_records,
         gene_GRanges = marker_validated_Ensembl_annotations_GRanges_list$genes,
-        locus_contribution_tibble = chromVAR_locus_contribution_tibble.cell_type_pseudobulk) |>
+        locus_contribution_tibble = locus_contribution_tibble.chromVAR.specificity) |>
       add_plot_parameters("cfg_module_genetic_enrichment.yaml",
         genetic_enrichment_variant_detail_min_z = genetic_enrichment_variant_detail_min_z) |>
       save_plots_structured(
@@ -148,11 +148,11 @@ rlang::list2(
           variant_contribution_detail_plot_records.chromVAR.specificity,
           \(record) record$variant_tibble$cluster[[1]])))),
         height = 15,
-        override_suffix = chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk$GWAS_ID[[1]],
+        override_suffix = locus_contribution_tibbles_by_GWAS.chromVAR.specificity$GWAS_ID[[1]],
         dyn_suffix_in_subdir = TRUE
       ),
     pattern = map(variant_contribution_detail_plot_records.chromVAR.specificity,
-      chromVAR_locus_contribution_tibbles_by_GWAS.cell_type_pseudobulk),
+      locus_contribution_tibbles_by_GWAS.chromVAR.specificity),
     iteration = "list",
     resources = get_tar_resources(RAM_GB_req = 60)
   )

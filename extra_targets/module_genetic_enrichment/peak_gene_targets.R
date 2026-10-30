@@ -13,7 +13,7 @@ SLDSC_peak_gene_tibble <- genetic_enrichment_tibble |>
   add_aggregation_target_syms(c(
     paste0(c(
       "GWAS_input_records", "GWAS_inputs_tibble", "cell_type_pseudobulk_counts_matrix.ATAC",
-      "genetic_enrichment_peak_ranges", "SLDSC_cell_type_tibble.cell_type_pseudobulk"
+      "genetic_enrichment_peak_ranges", "tibble.SLDSC.specificity"
     ), ".genetic_enrichment"),
     paste0(c(
       "peak_gene_ABC_scores_tibble.WNN", "peak_gene_ABC_cell_groups_tibble.WNN",

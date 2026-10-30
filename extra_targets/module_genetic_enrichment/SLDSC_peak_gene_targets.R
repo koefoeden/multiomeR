@@ -22,7 +22,7 @@ rlang::list2(
       description = "Binarise one peak-gene ranking to its top shares of each territory's common SNPs and sum the baseline-LD annotations inside [part_of_graph:genetic_enrichment_SLDSC]",
       command = get_SLDSC_matched_annotation_record(
         get_SLDSC_peak_gene_score_matrix(score_tibble, ranking, tiers, genetic_enrichment_peak_ranges),
-        genetic_enrichment_peak_ranges, SLDSC_reference_dir, shares, within_territory = TRUE
+        genetic_enrichment_peak_ranges, reference_dir.SLDSC, shares, within_territory = TRUE
       ),
       resources = get_tar_resources(RAM_GB_req = 60)
     ),
@@ -32,8 +32,8 @@ rlang::list2(
       command = get_SLDSC_LD_score_record(
         annotation_matrix = annotation_record$annotation_matrix,
         annotation_ranges = annotation_record$ranges,
-        reference_dir = SLDSC_reference_dir,
-        regression_SNP_tibble = SLDSC_regression_SNP_tibble,
+        reference_dir = reference_dir.SLDSC,
+        regression_SNP_tibble = regression_SNP_tibble.SLDSC,
         threads = 6L
       ),
       resources = get_tar_resources(cores_req = 6, RAM_GB_req = 32)
@@ -43,13 +43,13 @@ rlang::list2(
       description = "Estimate one GWAS's S-LDSC heritability and fine-mapped PIP enrichment in one peak-gene ranking's annotations",
       command = get_SLDSC_matched_enrichment_tibble(
         GWAS_input_record = GWAS_input_records,
-        sumstats_record = SLDSC_sumstats_records,
-        baseline_record = SLDSC_baseline_record,
+        sumstats_record = sumstats_records.SLDSC,
+        baseline_record = baseline_record.SLDSC,
         annotation_record = annotation_record,
         LD_score_record = LD_score_record
       ) |>
         dplyr::mutate(ranking = ranking, .before = 1L),
-      pattern = map(GWAS_input_records, slice(SLDSC_sumstats_records, index = SLDSC_sumstats_index)),
+      pattern = map(GWAS_input_records, slice(sumstats_records.SLDSC, index = SLDSC_sumstats_index)),
       iteration = "vector",
       resources = get_tar_resources(RAM_GB_req = 32)
     )
@@ -61,7 +61,7 @@ rlang::list2(
       dplyr::select(-h2_share_delete_values, -PIP_bootstrap_shares) |>
       tidyr::separate_wider_delim("cluster", "/", names = c("tier", "cluster")) |>
       dplyr::left_join(dplyr::select(GWAS_inputs_tibble, GWAS_ID, Category, study_group), by = "GWAS_ID", relationship = "many-to-one") |>
-      dplyr::left_join(get_SLDSC_enriched_pair_tibble(SLDSC_cell_type_tibble.cell_type_pseudobulk), by = c("GWAS_ID", "cluster"), relationship = "many-to-one") |>
+      dplyr::left_join(get_SLDSC_enriched_pair_tibble(tibble.SLDSC.specificity), by = c("GWAS_ID", "cluster"), relationship = "many-to-one") |>
       dplyr::relocate(tier, ranking, GWAS_ID, Category, cluster, share, enriched_in_models)
   ),
   targets::tar_target(

@@ -51,7 +51,7 @@ rlang::list2(
       )
   ),
   targets::tar_target(
-    name = chromVAR_z_score_chunk_records.single_nucleus,
+    name = z_score_chunk_records.chromVAR.specificity,
     description = "Compute single-nucleus chromVAR z-scores of every GWAS for one reusable ATAC chunk [resource_observation: peak_RAM_GiB=10.4; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10] [resource_observation: peak_RAM_GiB=6.2; n_nuclei=713k; aggregation=unpublished; method=slurm_monitor; date=2026-10-10]",
     command = get_GWAS_chromVAR_z_score_chunk_records(
       peak_weights_matrix = GWAS_peak_weight_matrix,
@@ -63,18 +63,18 @@ rlang::list2(
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = chromVAR_z_score_chunk_records_by_trait.single_nucleus,
+    name = z_score_chunk_records_by_trait.chromVAR.specificity,
     description = "Group chunk-level single-nucleus chromVAR z-score records by GWAS for branch-stable recombination",
-    command = chromVAR_z_score_chunk_records.single_nucleus |>
+    command = z_score_chunk_records.chromVAR.specificity |>
       dplyr::group_by(GWAS_ID) |>
       targets::tar_group(),
     iteration = "group",
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = chromVAR_z_score_records.single_nucleus,
+    name = z_score_records.chromVAR.specificity,
     description = "Combine chunk-level single-nucleus chromVAR z-scores for SCAVENGE [part_of_graph:genetic_enrichment_single_nucleus]",
-    command = combine_GWAS_chromVAR_z_score_chunk_records(chromVAR_z_score_chunk_records_by_trait.single_nucleus),
-    pattern = map(chromVAR_z_score_chunk_records_by_trait.single_nucleus)
+    command = combine_GWAS_chromVAR_z_score_chunk_records(z_score_chunk_records_by_trait.chromVAR.specificity),
+    pattern = map(z_score_chunk_records_by_trait.chromVAR.specificity)
   )
 )

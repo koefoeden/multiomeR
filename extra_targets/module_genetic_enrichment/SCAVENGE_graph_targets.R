@@ -17,12 +17,12 @@ rlang::list2(
     name = TRS_tibbles.SCAVENGE.specificity,
     description = "Compute cell-level SCAVENGE TRS for one GWAS [part_of_graph:genetic_enrichment_single_nucleus] [resource_observation: peak_RAM_GiB=4.1; n_nuclei=213k; aggregation=mixed_human_31x; method=slurm_monitor; date=2026-10-10]",
     command = get_SCAVENGE_TRS_tibble(
-      chromVAR_z_score_record = chromVAR_z_score_records.single_nucleus,
+      chromVAR_z_score_record = z_score_records.chromVAR.specificity,
       NN_graph = graph_matrix.SCAVENGE.specificity,
       restart_prob = genetic_enrichment_SCAVENGE_restart_prob,
       seed_percent = genetic_enrichment_SCAVENGE_seed_percent
     ),
-    pattern = map(chromVAR_z_score_records.single_nucleus),
+    pattern = map(z_score_records.chromVAR.specificity),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(

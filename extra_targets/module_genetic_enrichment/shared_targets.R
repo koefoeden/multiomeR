@@ -20,7 +20,7 @@ rlang::list2(
     command = download_open_targets_dataset(open_targets_dataset_urls()[["target"]])
   ),
   tarchetypes::tar_file(
-    name = SLDSC_reference_dir,
+    name = reference_dir.SLDSC,
     description = "Download the GRCh38 1000 Genomes EUR LD reference, baseline-LD v2.2 model and HapMap3 regression weights for S-LDSC (Zenodo 10515792) [part_of_graph:genetic_enrichment_SLDSC]",
     command = download_SLDSC_reference(
       url = SLDSC_reference_source()$url,
@@ -28,45 +28,45 @@ rlang::list2(
     )
   ),
   targets::tar_target(
-    name = SLDSC_baseline_record,
+    name = baseline_record.SLDSC,
     description = "Read baseline-LD v2.2 LD scores, regression weights and reference alleles at the S-LDSC regression SNPs [part_of_graph:genetic_enrichment_SLDSC]",
-    command = read_SLDSC_baseline_record(SLDSC_reference_dir),
+    command = read_SLDSC_baseline_record(reference_dir.SLDSC),
     resources = get_tar_resources(RAM_GB_req = 16)
   ),
   targets::tar_target(
-    name = SLDSC_regression_SNP_tibble,
+    name = regression_SNP_tibble.SLDSC,
     description = "Extract the S-LDSC regression SNPs with their reference alleles",
-    command = SLDSC_baseline_record$SNP_tibble
+    command = baseline_record.SLDSC$SNP_tibble
   ),
   targets::tar_target(
-    name = SLDSC_sumstats_sources,
+    name = sumstats_sources.SLDSC,
     description = "List the distinct GWAS sources and summary-statistics settings of all genetic-enrichment aggregations for S-LDSC",
     command = tibble::tibble(!!!SLDSC_sumstats_source_tibble),
     iteration = "vector",
     deployment = "main"
   ),
   targets::tar_target(
-    name = SLDSC_sumstats_files,
+    name = sumstats_files.SLDSC,
     description = "Track one GWAS source's configured local summary-statistics file and its GWAS-SSF metadata",
-    command = resolve_SLDSC_sumstats_files(SLDSC_sumstats_sources$summaryStatistics),
-    pattern = map(SLDSC_sumstats_sources),
+    command = resolve_SLDSC_sumstats_files(sumstats_sources.SLDSC$summaryStatistics),
+    pattern = map(sumstats_sources.SLDSC),
     format = "file",
     deployment = "main"
   ),
   targets::tar_target(
-    name = SLDSC_sumstats_rows,
+    name = sumstats_rows.SLDSC,
     description = "Fetch one GWAS source's genome-wide summary statistics and keep their S-LDSC columns at the regression SNPs [part_of_graph:genetic_enrichment_SLDSC]",
-    command = fetch_SLDSC_sumstats_rows(SLDSC_sumstats_sources, SLDSC_sumstats_files, SLDSC_regression_SNP_tibble$SNP),
-    pattern = map(SLDSC_sumstats_sources, SLDSC_sumstats_files),
+    command = fetch_SLDSC_sumstats_rows(sumstats_sources.SLDSC, sumstats_files.SLDSC, regression_SNP_tibble.SLDSC$SNP),
+    pattern = map(sumstats_sources.SLDSC, sumstats_files.SLDSC),
     iteration = "list",
     # One source at a time keeps EBI's FTP server from refusing connections.
     deployment = "main"
   ),
   targets::tar_target(
-    name = SLDSC_sumstats_records,
+    name = sumstats_records.SLDSC,
     description = "Munge one GWAS source's summary statistics for S-LDSC [part_of_graph:genetic_enrichment_SLDSC]",
-    command = get_SLDSC_sumstats_record(SLDSC_sumstats_rows, SLDSC_regression_SNP_tibble),
-    pattern = map(SLDSC_sumstats_rows),
+    command = get_SLDSC_sumstats_record(sumstats_rows.SLDSC, regression_SNP_tibble.SLDSC),
+    pattern = map(sumstats_rows.SLDSC),
     iteration = "list",
     deployment = "main"
   )

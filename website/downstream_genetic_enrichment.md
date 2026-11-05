@@ -7,7 +7,7 @@ source("helpers/_setup.R")
 
 ## When to use
 
-Use this module to ask which cell types or nuclei have accessible chromatin overlapping genetic evidence for a human trait. It weights ATAC peaks by the fine-mapping probabilities of the GWAS variants they contain, scores enrichment per cell type and per nucleus, and uses the [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) method to propagate nucleus scores through the WNN neighbor graph. Stratified LD score regression (S-LDSC) adds genome-wide readouts: how much more of a trait's heritability each cell type's most accessible peaks carry than random variants, and whether its specifically accessible peaks, or specifically expressed genes, carry more than peaks or genes in general. [Method details](methods_genetic_enrichment.md)
+Use this module to ask which cell types or nuclei have accessible chromatin overlapping genetic evidence for a human trait. It weights ATAC peaks by the fine-mapping probabilities of the GWAS variants they contain, scores enrichment per cell type and per nucleus, and uses the [`SCAVENGE`](https://github.com/sankaranlab/SCAVENGE) method to propagate nucleus scores through the WNN neighbor graph. Stratified LD score regression (S-LDSC) adds genome-wide readouts: how much more of a trait's heritability each cell type's most specific peaks carry than random variants, and whether its specifically accessible peaks, or specifically expressed genes, carry more than peaks or genes in general. [Method details](methods_genetic_enrichment.md)
 
 A **credible set** contains candidate causal variants at a GWAS locus, with probabilities from fine-mapping. Enrichment helps prioritize cellular contexts; it does not by itself identify a causal cell type, gene or mechanism.
 
@@ -33,7 +33,7 @@ Before enabling the module, confirm that:
 | Which loci and variants drive a cell type's enrichment? | Locus-contribution heatmaps and bars, and variant detail plots |
 | Which cell types does each locus's own accessibility point to? | With the experimental [locus attribution](#locus-attribution), locus heatmaps and tables |
 | Which nuclei are trait-relevant? | SCAVENGE trait-relevance scores on the WNN graph, summarized by cell type and cluster |
-| How much of a study's genome-wide heritability lies in each cell type's most accessible chromatin? | S-LDSC enrichment heatmaps, one per annotation size, and enrichment curves across sizes, one file per study category; both mark each study's top sets of cell types |
+| How much of a study's genome-wide heritability lies in each cell type's most specific peaks? | S-LDSC enrichment heatmaps, one per annotation size, and enrichment curves across sizes, one file per study category; both mark each study's top sets of cell types |
 | Is that heritability specific to a cell type's peaks or genes, beyond peaks or genes in general? | S-LDSC specificity heatmap, which outlines each study's top set of cell types, and a comparison of the peak, gene and joint models |
 | Do S-LDSC and chromVAR agree? | S-LDSC versus chromVAR scatter plots per study and an agreement overview |
 | How robust is an S-LDSC enrichment, and do peaks or genes explain more? | A plot of each enrichment's most influential genome blocks, and comparisons of peak and gene annotations of matched size |

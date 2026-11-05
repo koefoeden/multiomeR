@@ -1,5 +1,5 @@
 Stratified LD score regression (S-LDSC) tests whether a GWAS's heritability is enriched in variants within the peaks accessible in each annotation class, using genome-wide summary statistics rather than fine-mapped loci [@finucane2015_stratified_ldsc; @finucane2018_ldsc_seg].
-The main readout is the heritability enrichment of each class's most accessible peaks at matched annotation sizes, described below.
+The main readout is the heritability enrichment of each class's most specific peaks at matched annotation sizes, described below.
 A conditional coefficient tests specificity: whether a class's peaks carry more heritability than accessible chromatin in general.
 S-LDSC uses the peaks and the ATAC counts summed by the final WNN cell-type labels of the pseudobulk chromVAR analysis.
 Each class's counts are divided by its total.
@@ -57,8 +57,7 @@ Blocks span about 15 Mb, so this measures concentration only coarsely.
 Variants above the chi-square cap never enter the fits, so the loci with the largest effects never contribute.
 
 The main readout compares classes at matched annotation sizes, because enrichment depends on how much of the genome an annotation covers.
-For each class, peaks are ranked by their depth-normalized accessibility, counting only entries with at least 10 reads as above.
-Two further strategies rank peaks by their accessibility share and gene windows by expression specificity.
+For each class, peaks are ranked by their accessibility share, the annotation value above, and gene windows by expression specificity.
 A variant in overlapping windows takes the highest specificity among them.
 Peaks or window pieces are added in this order until they hold 0.5%, 1%, 2% or 5% of the common (MAF > 5%) reference variants.
 Pieces are kept whole and ties keep genomic order, so an annotation can exceed its share by one piece.
@@ -74,7 +73,7 @@ Benjamini–Hochberg adjustment is applied across all traits and classes within 
 Each trait gets a top set of classes at each strategy and size, chosen as for tau* but on enrichment.
 The standard errors of the shortfalls come from the paired delete-one-block heritability shares, each divided by its annotation's share of common variants.
 The chi-square cap removes the strongest loci from this statistic.
-Heatmaps of the accessibility ranking, one per size, colour each class by its enrichment on a linear scale that all sizes share.
+Heatmaps of the peak ranking, one per size, colour each class by its enrichment on a linear scale that all sizes share.
 They mark classes at q < 0.05 with two stars, outline the top sets and leave classes without an annotation of that size empty.
 A complementary statistic uses the fine-mapped credible sets of each GWAS instead.
 Fine-mapped enrichment divides the annotation's share of the summed posterior inclusion probabilities of autosomal credible-set variants by its share of common variants.
@@ -82,8 +81,8 @@ Variants are assigned by position, so indels and variants missing from the refer
 Its uncertainty comes from 1,000 bootstrap samples of loci, which group the credible sets whose centres lie within 500 kb of each other.
 Fine-mapping methods differ between sources and some use functional priors, so each result keeps its source's method.
 It is tested above 1 and given top sets as heritability enrichment is, with the bootstrap standard error and paired bootstrap samples, in GWAS with at least 10 loci.
-Heatmaps of the accessibility ranking show it as for heritability, on their own shared scale.
-Most classes' most accessible peaks hold more posterior probability than a random variant, so the top sets say more than the stars.
+Heatmaps of the peak ranking show it as for heritability, on their own shared scale.
+Most classes' most specific peaks hold more posterior probability than a random variant, so the top sets say more than the stars.
 Each credible set contributes its posterior probability inside an annotation, over the total and the annotation's share of common variants, so the contributions sum to the fine-mapped enrichment.
 Per GWAS, a heatmap shows these contributions for the credible sets that most set a class apart, by the largest excess of a class's contribution over the median across classes.
 Pairs of GWAS and class are called enriched when a single-modality model reaches q < 0.05.

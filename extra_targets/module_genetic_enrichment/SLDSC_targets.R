@@ -68,13 +68,12 @@ rlang::list2(
   # Matched-size annotation strategies: each ranks a cell type's territory by its score.
   tarchetypes::tar_map(
     values = tibble::tibble(
-      strategy = c("accessible_peaks", "specific_peaks", "specific_genes"),
+      strategy = c("specific_peaks", "specific_genes"),
       score_matrix = rlang::exprs(
-        get_SLDSC_measured_matrix(cell_type_pseudobulk_counts_matrix.ATAC),
         get_SLDSC_peak_annotation_matrix(cell_type_pseudobulk_counts_matrix.ATAC)[, -1L],
         gene_specificity_record.SLDSC$specificity_matrix
       ),
-      score_ranges = rlang::exprs(genetic_enrichment_peak_ranges, genetic_enrichment_peak_ranges, gene_specificity_record.SLDSC$ranges)
+      score_ranges = rlang::exprs(genetic_enrichment_peak_ranges, gene_specificity_record.SLDSC$ranges)
     ),
     names = strategy,
     descriptions = NULL,
@@ -116,11 +115,7 @@ rlang::list2(
   targets::tar_target(
     name = tibble.enrichment,
     description = "Combine matched-size enrichment of all annotation strategies, test S-LDSC enrichment above 1 with BH q-values over GWAS and cell types within each strategy and size, find each GWAS's top set of cell types by enrichment from paired jackknife values, test fine-mapped PIP enrichment likewise from paired locus-bootstrap values, and add GWAS categories and whether the single-modality S-LDSC models enrich each GWAS-cell-type pair at q < 0.05 [part_of_graph:genetic_enrichment_SLDSC]",
-    command = dplyr::bind_rows(
-      records.enrichment.accessible_peaks,
-      records.enrichment.specific_peaks,
-      records.enrichment.specific_genes
-    ) |>
+    command = dplyr::bind_rows(records.enrichment.specific_peaks, records.enrichment.specific_genes) |>
       test_SLDSC_matched_enrichment() |>
       dplyr::left_join(dplyr::select(GWAS_inputs_tibble, GWAS_ID, Category, study_group), by = "GWAS_ID", relationship = "many-to-one") |>
       dplyr::left_join(get_SLDSC_enriched_pair_tibble(tibble.SLDSC.specificity), by = c("GWAS_ID", "cluster"), relationship = "many-to-one") |>
@@ -135,7 +130,6 @@ rlang::list2(
     name = dropped_tibble.enrichment,
     description = "List the matched-size annotations of each strategy that cell types cannot fill",
     command = dplyr::bind_rows(
-      accessible_peaks = annotation_record.enrichment.accessible_peaks$dropped_tibble,
       specific_peaks = annotation_record.enrichment.specific_peaks$dropped_tibble,
       specific_genes = annotation_record.enrichment.specific_genes$dropped_tibble,
       .id = "strategy"
@@ -143,7 +137,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = curves_per_category_plots.SLDSC.enrichment,
-    description = "Save each cell type's S-LDSC heritability enrichment in its most accessible peaks against annotation size, one file per GWAS category with one panel per GWAS and a shared y scale, with each GWAS's top sets. [checkpoint:genetic_enrichment]",
+    description = "Save each cell type's S-LDSC heritability enrichment in its most specific peaks against annotation size, one file per GWAS category with one panel per GWAS and a shared y scale, with each GWAS's top sets. [checkpoint:genetic_enrichment]",
     command = {
       plots <- plot_SLDSC_enrichment_curves(
         tibble.enrichment,
@@ -189,7 +183,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = heatmaps.SLDSC.enrichment,
-    description = "Save one cell-type-by-GWAS heatmap per size of S-LDSC heritability enrichment in each cell type's most accessible peaks, on the enrichment curves' colour limits, with each size's top sets. [checkpoint:genetic_enrichment]",
+    description = "Save one cell-type-by-GWAS heatmap per size of S-LDSC heritability enrichment in each cell type's most specific peaks, on the enrichment curves' colour limits, with each size's top sets. [checkpoint:genetic_enrichment]",
     command = plot_SLDSC_enrichment_heatmaps(
       tibble.enrichment,
       dplyr::filter(tibble.SLDSC.specificity, model == "peaks"),
@@ -201,7 +195,7 @@ rlang::list2(
   ),
   tarchetypes::tar_file(
     name = heatmaps.fine_mapping.enrichment,
-    description = "Save one cell-type-by-GWAS heatmap per size of fine-mapped PIP enrichment in each cell type's most accessible peaks, with each size's FDR stars and top sets. [checkpoint:genetic_enrichment]",
+    description = "Save one cell-type-by-GWAS heatmap per size of fine-mapped PIP enrichment in each cell type's most specific peaks, with each size's FDR stars and top sets. [checkpoint:genetic_enrichment]",
     command = plot_SLDSC_enrichment_heatmaps(
       tibble.enrichment,
       dplyr::filter(tibble.SLDSC.specificity, model == "peaks"),
@@ -214,10 +208,10 @@ rlang::list2(
   ),
   targets::tar_target(
     name = locus_contribution_tibble.fine_mapping.enrichment,
-    description = "Decompose one GWAS's fine-mapped PIP enrichment in each cell type's most accessible peaks into credible-set contributions",
+    description = "Decompose one GWAS's fine-mapped PIP enrichment in each cell type's most specific peaks into credible-set contributions",
     command = get_SLDSC_PIP_locus_contribution_tibble(
       GWAS_input_record = GWAS_input_records,
-      annotation_record = annotation_record.enrichment.accessible_peaks,
+      annotation_record = annotation_record.enrichment.specific_peaks,
       baseline_record = baseline_record.SLDSC
     ),
     pattern = map(GWAS_input_records),

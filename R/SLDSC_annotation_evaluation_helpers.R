@@ -484,9 +484,8 @@ summarise_SLDSC_matched_enrichment <- function(enrichment_tibble, n_bootstraps =
 # Shared strategy colour scale of the matched-size plots.
 SLDSC_strategy_scale <- \(aesthetics = "colour") {
   ggplot2::scale_colour_manual(
-    values = c(accessible_peaks = "#7570B3", specific_peaks = "#D95F02", specific_genes = "#1B9E77"),
+    values = c(specific_peaks = "#D95F02", specific_genes = "#1B9E77"),
     labels = c(
-      accessible_peaks = "Most accessible peaks",
       specific_peaks = "Most specific peaks (share of accessibility)",
       specific_genes = "Most specific genes (share of expression, \u00b1100 kb)"
     ),
@@ -498,7 +497,7 @@ SLDSC_strategy_scale <- \(aesthetics = "colour") {
 #' Get the shared limits of the enrichment curves and heatmaps
 #'
 #' The limits cap the outer `cap_quantile` of all cell-type estimates of the
-#' `accessible_peaks` strategy at each end, with the lower end at most 0,
+#' `specific_peaks` strategy at each end, with the lower end at most 0,
 #' rounded outward to multiples of 5.
 #'
 #' @param enrichment_tibble Matched-size enrichment from
@@ -509,17 +508,17 @@ SLDSC_strategy_scale <- \(aesthetics = "colour") {
 #' @keywords internal
 
 get_SLDSC_enrichment_limits <- function(enrichment_tibble, cap_quantile = 0.01, estimate_col = "SLDSC_enrichment") {
-  estimates <- dplyr::filter(enrichment_tibble, strategy == "accessible_peaks", cluster != "random")[[estimate_col]]
+  estimates <- dplyr::filter(enrichment_tibble, strategy == "specific_peaks", cluster != "random")[[estimate_col]]
   c(
     floor(min(0, stats::quantile(estimates, cap_quantile, na.rm = TRUE, names = FALSE)) / 5) * 5,
     ceiling(stats::quantile(estimates, 1 - cap_quantile, na.rm = TRUE, names = FALSE) / 5) * 5
   )
 }
 
-#' Plot each cell type's heritability enrichment in its most accessible peaks
+#' Plot each cell type's heritability enrichment in its most specific peaks
 #'
 #' One plot per GWAS category, with one panel per GWAS with S-LDSC estimates,
-#' shows each cell type's enrichment in the `accessible_peaks` strategy's
+#' shows each cell type's enrichment in the `specific_peaks` strategy's
 #' annotations against their size, coloured by compartment, on one y scale
 #' shared by all plots, by default with the limits of
 #' `get_SLDSC_enrichment_limits()`. Points beyond the limits are drawn at them as
@@ -545,7 +544,7 @@ plot_SLDSC_enrichment_curves <- function(enrichment_tibble, compartments_pattern
     dplyr::filter(all(is.na(SLDSC_enrichment)), .by = GWAS_ID) |>
     dplyr::distinct(Category, GWAS_ID)
   curve_tibble <- enrichment_tibble |>
-    dplyr::filter(strategy == "accessible_peaks", !is.na(SLDSC_enrichment)) |>
+    dplyr::filter(strategy == "specific_peaks", !is.na(SLDSC_enrichment)) |>
     dplyr::arrange(Category, GWAS_ID)
   limits <- y_limits %||% get_SLDSC_enrichment_limits(enrichment_tibble, cap_quantile)
   capped <- \(values) pmin(pmax(values, limits[[1]]), limits[[2]])
@@ -614,7 +613,7 @@ plot_SLDSC_enrichment_curves <- function(enrichment_tibble, compartments_pattern
       ggplot2::facet_wrap(ggplot2::vars(GWAS_ID), ncol = n_columns) +
       ggplot2::guides(colour = ggplot2::guide_legend(nrow = 2, override.aes = list(linewidth = 0.8, alpha = 1))) +
       ggplot2::labs(
-        title = paste("Heritability enrichment in each cell type's most accessible peaks:", category, "GWAS"),
+        title = paste("Heritability enrichment in each cell type's most specific peaks:", category, "GWAS"),
         subtitle = paste(
           "Compare cell types at each size: a higher point holds more heritability per common variant than a random one (1, grey line).",
           "The dashed line and band are randomly chosen peaks. Bold, labelled lines lead each GWAS's top sets,",
@@ -622,7 +621,7 @@ plot_SLDSC_enrichment_curves <- function(enrichment_tibble, compartments_pattern
           sep = "\n"
         ),
         caption = stringr::str_wrap(paste(
-          "Each cell type's annotation keeps its peaks with the highest depth-normalized pseudobulk accessibility, among peaks with at least 10 reads in it, until they hold the given share of common (MAF > 5%) 1000 Genomes European SNPs.",
+          "Each cell type's annotation keeps its peaks with the largest share of depth-normalized pseudobulk accessibility over cell types, among peaks with at least 10 reads in it, until they hold the given share of common (MAF > 5%) 1000 Genomes European SNPs.",
           "Enrichment: the annotation's share of S-LDSC heritability, in a model with the 97 baseline-LD v2.2 annotations, over its share of common SNPs; SNPs with chi-square at or above the larger of 80 and 0.001 times the GWAS's largest per-SNP sample size are excluded. Bars and band: 95% intervals from the 200-block jackknife.",
           "Random reference: the mean of 10 random rankings of the same peaks, averaged within jackknife blocks.",
           "Top set at each size: of the cell types with enrichment above 1 at Benjamini-Hochberg q < 0.05 (one-sided jackknife z-test, over all GWAS and cell types at that size), the most enriched one and every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types, from paired jackknife differences.",
@@ -638,7 +637,7 @@ plot_SLDSC_enrichment_curves <- function(enrichment_tibble, compartments_pattern
           ),
           "Estimates below 0, which no true enrichment can take, come from noisy annotations.",
           if (length(category_without_sumstats)) paste0("Not shown, without usable genome-wide summary statistics: ", toString(sort(category_without_sumstats)), "."),
-          describe_SLDSC_dropped_annotations(dplyr::filter(dropped_tibble, strategy == "accessible_peaks"))
+          describe_SLDSC_dropped_annotations(dplyr::filter(dropped_tibble, strategy == "specific_peaks"))
         ), width = 165),
         x = "Annotation size (% of common SNPs)",
         y = "Heritability enrichment"
@@ -654,9 +653,9 @@ plot_SLDSC_enrichment_curves <- function(enrichment_tibble, compartments_pattern
   })
 }
 
-#' Plot enrichment in each cell type's most accessible peaks as heatmaps
+#' Plot enrichment in each cell type's most specific peaks as heatmaps
 #'
-#' One heatmap per size of the `accessible_peaks` strategy, laid out as the
+#' One heatmap per size of the `specific_peaks` strategy, laid out as the
 #' specificity heatmap: every GWAS and cell type of the peak model, with
 #' cell types that cannot fill the size left missing. All sizes share the
 #' statistic's limits from `get_SLDSC_enrichment_limits()`, which for S-LDSC
@@ -684,8 +683,8 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
   estimate_col <- paste0(statistic, "_enrichment")
   limits <- get_SLDSC_enrichment_limits(enrichment_tibble, estimate_col = estimate_col)
   random_label <- "Random peaks"
-  accessible_tibble <- enrichment_tibble |>
-    dplyr::filter(strategy == "accessible_peaks") |>
+  peak_tibble <- enrichment_tibble |>
+    dplyr::filter(strategy == "specific_peaks") |>
     dplyr::mutate(
       cluster = dplyr::if_else(cluster == "random", random_label, cluster),
       estimate = .data[[estimate_col]],
@@ -694,7 +693,7 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
       in_top_set = if (is_SLDSC) in_top_set else PIP_in_top_set,
       z_below_anchor = if (is_SLDSC) z_below_anchor else PIP_z_below_anchor
     )
-  sizes <- sort(unique(accessible_tibble$share))
+  sizes <- sort(unique(peak_tibble$share))
   # Without h2, PIP heatmaps draw every GWAS and add no note on summary statistics.
   GWAS_cluster_tibble <- dplyr::select(SLDSC_tibble, GWAS_ID, Category, cluster, dplyr::any_of(if (is_SLDSC) c("h2", "h2_se")),
     sample_size, dplyr::starts_with("ancestry_"), n_cells)
@@ -704,7 +703,7 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
   heatmap_tibbles <- purrr::map(sizes, \(size) {
     GWAS_cluster_tibble |>
       dplyr::left_join(
-        dplyr::select(dplyr::filter(accessible_tibble, share == size), GWAS_ID, cluster, estimate, significance_label, in_top_set, z_below_anchor),
+        dplyr::select(dplyr::filter(peak_tibble, share == size), GWAS_ID, cluster, estimate, significance_label, in_top_set, z_below_anchor),
         by = c("GWAS_ID", "cluster"),
         relationship = "one-to-one"
       ) |>
@@ -717,18 +716,18 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
     get_ordered_GWAS_score_plot_data(compartments_patterns, score_col = "fill") |>
     purrr::pluck("cluster_levels") |>
     c(random_label)
-  untested <- sort(unique(dplyr::filter(accessible_tibble, is.na(PIP_z))$GWAS_ID))
+  untested <- sort(unique(dplyr::filter(peak_tibble, is.na(PIP_z))$GWAS_ID))
   purrr::map2(heatmap_tibbles, sizes, \(heatmap_tibble, size) {
     size_label <- scales::percent(size, accuracy = 0.1, drop0trailing = TRUE)
-    not_measurable <- dplyr::filter(dropped_tibble, strategy == "accessible_peaks", share == size)$cluster
-    annotation_sentence <- sprintf("Each cell type's annotation keeps its peaks with the highest depth-normalized pseudobulk accessibility, among peaks with at least 10 reads in it, until they hold %s of common (MAF > 5%%) 1000 Genomes European SNPs.", size_label)
+    not_measurable <- dplyr::filter(dropped_tibble, strategy == "specific_peaks", share == size)$cluster
+    annotation_sentence <- sprintf("Each cell type's annotation keeps its peaks with the largest share of depth-normalized pseudobulk accessibility over cell types, among peaks with at least 10 reads in it, until they hold %s of common (MAF > 5%%) 1000 Genomes European SNPs.", size_label)
     limits_sentence <- sprintf(
       "Colour: linear around 1; values beyond %s and %s take the end colours. %s share these limits: the 1%% and 99%% quantiles of all cell-type estimates at all sizes, with the lower end at most 0, rounded outward to multiples of 5.",
       limits[[1]], limits[[2]],
       if (is_SLDSC) "The enrichment curves and the heatmaps of all sizes" else "The fine-mapped heatmaps of all sizes"
     )
     not_measurable_sentence <- if (length(not_measurable)) paste0("Grey columns cannot be measured at this size, since the cell type's peaks with at least 10 reads hold fewer common SNPs: ", toString(sort(not_measurable)), ".")
-    random_subtitle <- "The last column, randomly chosen peaks of the same size, shows what accessibility alone gives: compare cell types with it as well as with 1."
+    random_subtitle <- "The last column, randomly chosen peaks of the same size, shows what any peaks give: compare cell types with it as well as with 1."
     random_sentence <- sprintf(
       "Random peaks: the mean of 10 random rankings of all peaks, cut at %s of common SNPs%s; their median enrichment over GWAS is %.1f, and the column has no stars or outlines.",
       size_label, if (is_SLDSC) ", with heritability shares averaged within jackknife blocks" else "",
@@ -736,9 +735,9 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
     )
     text <- if (is_SLDSC) list(
       fill_label = "Heritability enrichment",
-      title = paste("Heritability enrichment in each cell type's most accessible peaks, sized to", size_label, "of common SNPs (S-LDSC)"),
+      title = paste("Heritability enrichment in each cell type's most specific peaks, sized to", size_label, "of common SNPs (S-LDSC)"),
       subtitle = paste(
-        "Red marks cell types whose most accessible peaks hold more heritability per common variant than a random variant (enrichment 1, white); all sizes share this scale.",
+        "Red marks cell types whose most specific peaks hold more heritability per common variant than a random variant (enrichment 1, white); all sizes share this scale.",
         random_subtitle,
         "Stars mark FDR-significant enrichment above 1 (**); a black outline marks the most enriched of these cell types and grey outlines the cell types not significantly below it.",
         sep = "\n"
@@ -751,14 +750,14 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
         "Estimates below 0, which no true enrichment can take, come from noisy annotations.",
         "Stars: ** enrichment above 1 at Benjamini-Hochberg q < 0.05, from a one-sided z-test with its 200-block jackknife standard error, over all GWAS and cell types at this size.",
         "Outlines: in GWAS with a cell type at q < 0.05, black marks the most enriched of these and grey every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types, from paired jackknife differences.",
-        "Since accessible peaks in general can be enriched, the outlines say more than the stars.",
+        "Since peaks in general can be enriched, the outlines say more than the stars.",
         not_measurable_sentence
       )
     ) else list(
       fill_label = "Fine-mapped PIP enrichment",
-      title = paste("Fine-mapped variant enrichment in each cell type's most accessible peaks, sized to", size_label, "of common SNPs"),
+      title = paste("Fine-mapped variant enrichment in each cell type's most specific peaks, sized to", size_label, "of common SNPs"),
       subtitle = paste(
-        "Red marks cell types whose most accessible peaks hold more fine-mapped posterior probability per common variant than a random variant (enrichment 1, white); all sizes share this scale.",
+        "Red marks cell types whose most specific peaks hold more fine-mapped posterior probability per common variant than a random variant (enrichment 1, white); all sizes share this scale.",
         random_subtitle,
         "Stars mark FDR-significant enrichment above 1 (**); a black outline marks the most enriched of these cell types and grey outlines the cell types not significantly below it.",
         sep = "\n"
@@ -770,7 +769,7 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
         limits_sentence,
         "Stars: ** enrichment above 1 at Benjamini-Hochberg q < 0.05, from a one-sided z-test with the standard error of 1,000 bootstrap samples of loci (credible sets whose centres lie within 500 kb of each other), over all GWAS and cell types at this size.",
         "Outlines: in GWAS with a cell type at q < 0.05, black marks the most enriched of these and grey every cell type whose shortfall from it is not significant at one-sided P < 0.05 divided by the number of other cell types, from the paired bootstrap samples.",
-        "With enough loci, most cell types' most accessible peaks hold more fine-mapped probability than a random variant, so the outlines say more than the stars.",
+        "With enough loci, most cell types' most specific peaks hold more fine-mapped probability than a random variant, so the outlines say more than the stars.",
         "Only genome-wide significant loci are fine-mapped, and a small annotation holds only the credible-set variants inside it, so the enrichment reflects the strongest loci and the fine-mapping resolution.",
         if (length(untested)) paste0("Not tested, with fewer than 10 loci: ", toString(untested), "."),
         not_measurable_sentence
@@ -813,7 +812,7 @@ plot_SLDSC_enrichment_heatmaps <- function(enrichment_tibble, SLDSC_tibble, GWAS
 plot_SLDSC_PIP_locus_contribution_heatmaps <- function(locus_contribution_tibble, enrichment_tibble, locus_to_gene_tibble,
                                                        compartments_patterns, n_top_loci = 12L) {
   total_tibble <- enrichment_tibble |>
-    dplyr::filter(strategy == "accessible_peaks", cluster != "random") |>
+    dplyr::filter(strategy == "specific_peaks", cluster != "random") |>
     dplyr::select(GWAS_ID, cluster, share, PIP_enrichment)
   gene_tibble <- dplyr::filter(locus_to_gene_tibble, L2G_rank == 1L) |>
     dplyr::select(GWAS_ID, studyLocusId, top_L2G_gene = gene_symbol)
@@ -881,12 +880,12 @@ plot_SLDSC_PIP_locus_contribution_heatmaps <- function(locus_contribution_tibble
         labeller = ggplot2::labeller(compartment = \(x) stringr::str_replace_all(x, "_", " "))
       ) +
       ggplot2::labs(
-        title = paste("Credible sets behind fine-mapped variant enrichment in each cell type's most accessible peaks:", GWAS_ID),
+        title = paste("Credible sets behind fine-mapped variant enrichment in each cell type's most specific peaks:", GWAS_ID),
         subtitle = "Look for cell types whose enrichment rests on one or two credible sets rather than many; Total gives the enrichment, where 1 is a random variant.",
         x = "Credible set (lead variant and top Open Targets L2G gene)",
         y = NULL,
         caption = stringr::str_wrap(paste(
-          "A credible set's contribution is its posterior inclusion probability (PIP) inside the cell type's most accessible peaks of that size,",
+          "A credible set's contribution is its posterior inclusion probability (PIP) inside the cell type's most specific peaks of that size,",
           "over the PIP of all autosomal credible sets and the annotation's share of common (MAF > 5%) SNPs, so a cell type's contributions sum to its enrichment (Total).",
           sprintf("Coloured: the %d credible sets that most set a cell type apart, by the largest excess of a cell type's contribution over the median across cell types at any size; Other loci gives the sum of the rest, including credible sets accessible in most cell types.", n_top_loci),
           "A cell type without a row at a size cannot fill it. Gene labels are Open Targets locus-to-gene prioritizations, not causal assignments."
@@ -955,8 +954,8 @@ plot_SLDSC_matched_enrichment_curves <- function(summary_tibble, dropped_tibble)
         sep = "\n"
       ),
       caption = stringr::str_wrap(paste(
-        "Each annotation keeps a cell type's highest-scoring peaks (depth-normalized accessibility, or its share over cell types) or gene windows (expression specificity, gene body +/- 100 kb) until they hold the given share of common (MAF > 5%) 1000 Genomes European SNPs.",
-        "Random reference: the mean of 10 random rankings of the same peaks or gene windows, so both peak strategies share it.",
+        "Each annotation keeps a cell type's highest-scoring peaks (its share of depth-normalized accessibility over cell types) or gene windows (expression specificity, gene body +/- 100 kb) until they hold the given share of common (MAF > 5%) 1000 Genomes European SNPs.",
+        "Random reference: the mean of 10 random rankings of the same peaks or gene windows.",
         "S-LDSC heritability: the annotation's share of heritability in a model with the 97 baseline-LD v2.2 annotations, over its share of common SNPs; SNPs with chi-square at or above the larger of 80 and 0.001 times the GWAS's largest per-SNP sample size are excluded.",
         "Fine-mapped PIP: the annotation's share of the posterior inclusion probability of autosomal credible-set variants, over its share of common SNPs.",
         sprintf(

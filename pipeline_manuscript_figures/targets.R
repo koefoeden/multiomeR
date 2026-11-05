@@ -178,12 +178,12 @@ figure_pipeline <- list(
   ),
   tarchetypes::tar_file(
     supplementary_figure_S6.mixed_human_31x,
-    description = "Supplementary Figure S6: the module's S-LDSC heritability enrichment in each assigned cell type's most accessible peaks, sized to 0.5% of common SNPs, for every GWAS study with summary statistics, on the module's enrichment scale with a trait-category track and q < 0.05 stars, and its values",
+    description = "Supplementary Figure S6: the module's S-LDSC heritability enrichment in each assigned cell type's most specific peaks, sized to 0.5% of common SNPs, for every GWAS study with summary statistics, on the module's enrichment scale with a trait-category track and q < 0.05 stars, and its values",
     command = {
       enrichment <- tibble.enrichment.genetic_enrichment.mixed_human_31x
       # The main readout at its smallest size, which most cell types can fill.
       scores <- enrichment |>
-        dplyr::filter(.data$strategy == "accessible_peaks", .data$share == 0.005, .data$cluster != "random",
+        dplyr::filter(.data$strategy == "specific_peaks", .data$share == 0.005, .data$cluster != "random",
           !is.na(.data$SLDSC_enrichment), is_figure_1_cell_type(.data$cluster)) |>
         dplyr::left_join(cell_type_pseudobulk_support_tibble.ATAC.genetic_enrichment.mixed_human_31x, by = "cluster",
           relationship = "many-to-one")

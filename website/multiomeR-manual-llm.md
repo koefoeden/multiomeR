@@ -176,7 +176,7 @@ cell_metadata
 <!-- begin include: website/data/demo_outputs/cell_metadata.md -->
 
 ```{.default filename="Output"}
-# A tibble: 7,887 x 92
+# A tibble: 7,805 x 92
    orig.ident         barcode nCount_RNA nFeature_RNA log10_nCount_RNA
    <chr>              <chr>        <dbl>        <dbl>            <dbl>
  1 healthy_PBMC_human AAACAG~      4747          2272             3.68
@@ -189,7 +189,7 @@ cell_metadata
  8 healthy_PBMC_human AAAGGA~      2731          1397             3.44
  9 healthy_PBMC_human AAAGGA~      4103.         1861             3.61
 10 healthy_PBMC_human AAAGGA~      3940.         1986             3.60
-# i 7,877 more rows
+# i 7,795 more rows
 # i 87 more variables: RNA_mito_percent <dbl>, novelty <dbl>,
 #   TSS.enrichment <dbl>, nucleosome_signal <dbl>,
 #   atac_fragments_in_blacklist_frac <dbl>, donor_id <chr>,
@@ -215,7 +215,7 @@ demo_object
 
 ```{.default filename="Output"}
 An object of class Seurat
-139033 features across 7887 samples within 3 assays
+144122 features across 7805 samples within 3 assays
 Active assay: RNA (36601 features, 3000 variable features)
  3 layers present: counts, data, scale.data
  2 other assays present: ATAC, motif_family_accessibility

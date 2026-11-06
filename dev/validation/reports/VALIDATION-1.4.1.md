@@ -1,6 +1,6 @@
 # Version 1.4.1 release validation
 
-Checked on 2026-11-06 on commit `ee0fe65c06ed43d45710d054b5204bc8ab8524b3`
+Checked on 2026-11-06 on commit `db2af427b7f87c01ad1c1e0bc519ba39f6ca2be4`
 with a clean working tree. The later commit adds only this report.
 
 1.4.1 reruns every UMAP and the outputs that hold one, and the genetic-enrichment
@@ -25,9 +25,9 @@ is unchanged since 1.4.0.
   - with `configuration_dev/` and `TAR_PROJECT=dev`, `mixed_human_31x`: on the
     release code, 382 targets rebuilt in 14 min on its Slurm workers with no
     errors: the same UMAP closure, and the genetic-enrichment tables and plots
-    without the removed strategy. The 15 targets of the manuscript's Figure 1,
-    S5 and S6 then rebuilt in 2 min after the figure edits. On the release
-    commit, all 5,998 were current.
+    without the removed strategy. The targets of the manuscript's Figure 1, S5
+    and S6 then rebuilt after each figure edit, in 2 min or less. On the
+    release commit, all 5,998 were current.
 - Output checks passed: no errored or outdated targets; Seurat/Signac exports
   with RNA and ATAC assays and the configured GEM wells; and male-versus-female
   results for the differential-analysis matrices and the cell-type
@@ -36,7 +36,8 @@ is unchanged since 1.4.0.
   evaluated for the fix (largest coordinate difference 0).
 - Reference-parity tests (`pixi run test`, with `configuration/` selected): 61
   passed, with no failures, warnings or skips.
-- The manual rendered, `check-website-links` found no broken internal links,
+- On `ee0fe65c`, whose manual the later figure commits leave unchanged, the
+  manual rendered, `check-website-links` found no broken internal links,
   `check-source-links` found no errors in 50 pages, and the working tree
   stayed clean.
 
@@ -49,5 +50,5 @@ is unchanged since 1.4.0.
 Inputs as for 1.2.0. Main commands as for 1.3.0, with
 `MULTIOMER_CONFIGURATION` selecting each configuration directory.
 
-Reports: `outputs/validation/20261106T124207` and
-`outputs_dev/validation/20261106T124547`.
+Reports: `outputs/validation/20261106T140339` and
+`outputs_dev/validation/20261106T140452`.

@@ -918,7 +918,11 @@ choose_ATAC_LSI_variant <- function(n_nonzero, memory_budget_GB) {
 #' Run UMAP from nearest neighbours
 #'
 #' Run UMAP on a precomputed nearest-neighbour index. uwot's batch optimisation
-#' runs on all threads and gives the same coordinates for any thread count.
+#' runs on all threads and gives the same coordinates for any thread count. It
+#' moves each cell once per epoch, so it needs more epochs than uwot's default
+#' of 200, which left islands diffuse and torn into strands. With 1000 epochs,
+#' layouts preserve neighbourhoods and keep cell types compact at least as well
+#' as the single-threaded optimisation did.
 #'
 #' @param knn List with `idx` and `dist` matrices, one row per cell in neighbour
 #'   order; row names are carried into the output.
@@ -958,6 +962,7 @@ run_UMAP_from_neighbors <- function(
     min_dist = min_dist,
     n_components = n_components,
     init = init,
+    n_epochs = 1000,
     n_threads = threads,
     n_sgd_threads = threads,
     batch = TRUE

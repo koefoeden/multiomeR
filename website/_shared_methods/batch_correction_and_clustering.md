@@ -14,6 +14,7 @@ Clusters are renumbered by size, and clusters of fewer than 100 nuclei by defaul
 UMAP embeddings are computed with uwot from the same neighbors [@mcinnes2018_umap; @melville2026_uwot].
 GEX and ATAC layouts start from the first two principal components of the clustering dimensions, and WNN layouts from a spectral embedding of the neighbor graph.
 uwot's batch optimization gives the same layout for any number of threads.
+It runs for 1,000 epochs, since its default of 200 leaves the layout too little optimized and cell types diffuse and torn into strands.
 
 Most clusters below the size threshold hold a single nucleus or a few nuclei that share too few neighbors with any larger cluster, so the filter mainly removes such outlier nuclei.
 Rare populations smaller than the threshold are removed as well.

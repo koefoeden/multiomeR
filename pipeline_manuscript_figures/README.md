@@ -91,9 +91,10 @@ column names 5.5 pt; other text 6 pt.
 - **A:** a left-to-right diagram of multiomeR: inputs, the primary module's
   stages, the optional modules, outputs and the key ideas. Grey letters name the
   panels that show each module's outputs.
-- **B:** the WNN UMAP coloured by cell type in shades of its compartment, with
-  each label at the middle of its cell type's most populated cell of a coarse
-  grid, since a cell type from several tissues forms several islands.
+- **B:** the WNN UMAP coloured by cell type in shades of its compartment. Each
+  label sits on or beside its cell type's main island, the connected island that
+  holds most of its nuclei, since a cell type from several tissues forms several
+  islands; a leader line marks the few labels that had to move further out.
 - **C:** for each WNN cell type, the configured marker gene whose expression
   and promoter accessibility, in cell-type pseudobulks summed over donors and
   scaled across cell types, are most specific to it. Markers and cell types run
@@ -115,13 +116,16 @@ column names 5.5 pt; other text 6 pt.
   with unclipped scores and the cell types enriched for it labelled.
 
 Figure 1F and Supplementary Figures S5 and S6 share one grid of studies (rows)
-and assigned cell types (columns). Cell types keep their configured order within
-compartments that the figure code defines for this aggregation. Each
-compartment of several cell types is named in bold above a bracket, between the
-tiles and the cell-type names. Studies are grouped by their configured trait
-category. Each study's anchor, its largest value at q < 0.05, is boxed, and
-studies and categories follow the column of their anchor, so the anchors step
-down and to the right; studies without one come last. Stars mark P < 0.05 (\*)
+and assigned cell types (columns). Studies are grouped in a fixed order of
+trait categories, which bundles the configured immune and brain categories,
+each named in bold beside a line along its rows, left of the study names. Cell
+types are grouped in compartments that the figure code defines for this
+aggregation, each compartment of several cell types named in bold above a line
+over its columns, above the cell-type names. Each study's anchor, its largest
+value at q < 0.05, is boxed. Compartments and their cell types follow the first
+anchor they hold, row by row, so the anchors step down from the top left; then
+come those with only other values at q < 0.05, and last the rest, in their
+default order. Stars mark P < 0.05 (\*)
 and q < 0.05 (\*\*). S5 shows chromVAR deviations and F tau*, each clipped
 symmetrically at the 99th percentile of its absolute values; S6 shows S-LDSC
 enrichment on the module's scale around 1.

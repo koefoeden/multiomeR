@@ -78,8 +78,7 @@ figure_pipeline <- list(
       data <- figure_1_heritability.mixed_human_31x
       limit <- signif(stats::quantile(abs(data$tau_star), .99, names = FALSE), 2)
       plot_trait_cell_type_grid(dplyr::mutate(data, value = .data$tau_star), names(UCell_WNN_marker_genes_list.mixed_human_31x),
-        "τ*", c(-limit, limit), row_labels = figure_1_trait_labels) +
-        ggplot2::labs(title = "Heritability in cell-type accessibility")
+        "τ*", c(-limit, limit), row_labels = figure_1_trait_labels, title = "Heritability in cell-type accessibility")
     }) |> compact_figure_1_plot(),
     packages = w_def("ggtext"), resources = get_tar_resources(RAM_GB_req = 4)
   ),

@@ -149,9 +149,105 @@ plot_figure_1_overview <- function() {
     ggplot2::theme(plot.margin = ggplot2::margin(t = 2, l = 14))
 }
 
+# The bins of a cell type's main island: the connected group of grid bins in which it
+# is the majority, touching at edges or corners, that holds most of its nuclei.
+figure_1_main_island <- function(bins) {
+  key <- paste(bins$bin_x, bins$bin_y)
+  edges <- tidyr::expand_grid(from = seq_along(key), dx = -1:1, dy = -1:1) |>
+    dplyr::mutate(to = match(paste(bins$bin_x[.data$from] + .data$dx, bins$bin_y[.data$from] + .data$dy), key)) |>
+    dplyr::filter(!is.na(.data$to))
+  island <- igraph::components(igraph::graph_from_data_frame(edges[c("from", "to")], vertices = seq_along(key)))$membership
+  bins[island == which.max(tapply(bins$n, island, sum)), ]
+}
+
+# Places each label box, in bin units, on its island if the island is at least as wide
+# as half the label and as tall as it, or beside it: right, left, above or below, and
+# further out only if those are taken. A box scores 10 per bin of other islands it
+# covers, 3 per bin of other islands within two bins of it, 3 per bin of its own
+# island when beside it, 4 per bin of distance, 500 if another label's island is
+# nearer than its own and it has no leader line, and 1,000 for another label or the
+# panel edge. The most constrained label is placed first. Returns each label's centre
+# and leader line.
+figure_1_place_labels <- function(islands, occupied, limits, width, height) {
+  grid <- matrix(0L, diff(limits[1:2]) + 1, diff(limits[3:4]) + 1)
+  index <- \(bins) cbind(bins$bin_x - limits[[1]] + 1, bins$bin_y - limits[[3]] + 1)
+  grid[index(occupied)] <- 1L
+  candidates <- purrr::imap_dfr(islands, \(island, label) {
+    centre_x <- stats::weighted.mean(island$bin_x, island$n)
+    centre_y <- stats::weighted.mean(island$bin_y, island$n)
+    w <- width[[label]]
+    h <- height
+    rows <- island$bin_y[abs(island$bin_y - centre_y) <= h / 2]
+    columns <- island$bin_x[abs(island$bin_x - centre_x) <= w / 2]
+    right <- max(island$bin_x[island$bin_y %in% rows], island$bin_x[!length(rows)])
+    left <- min(island$bin_x[island$bin_y %in% rows], island$bin_x[!length(rows)])
+    top <- max(island$bin_y[island$bin_x %in% columns], island$bin_y[!length(columns)])
+    bottom <- min(island$bin_y[island$bin_x %in% columns], island$bin_y[!length(columns)])
+    fits <- right - left + 1 >= w / 2 && top - bottom + 1 >= h
+    tidyr::expand_grid(side = c("on", "right", "left", "top", "bottom"), shift = c(0, -.5, .5),
+      distance = c(0, 1, 2, 4, 7, 10)) |>
+      dplyr::filter(.data$side %in% c("top", "bottom") | .data$shift == 0, .data$side != "on" | (fits & .data$distance == 0)) |>
+      dplyr::mutate(label = label,
+        x = dplyr::case_when(.data$side == "right" ~ right + 1 + .data$distance + w / 2,
+          .data$side == "left" ~ left - 1 - .data$distance - w / 2, .default = centre_x + .data$shift * w),
+        y = dplyr::case_when(.data$side == "top" ~ top + 1 + .data$distance + h / 2,
+          .data$side == "bottom" ~ bottom - 1 - .data$distance - h / 2, .default = centre_y),
+        anchor_x = dplyr::case_when(.data$side == "right" ~ right, .data$side == "left" ~ left, .default = centre_x),
+        anchor_y = dplyr::case_when(.data$side == "top" ~ top, .data$side == "bottom" ~ bottom, .default = centre_y),
+        w = w, h = h)
+  })
+  covered <- \(x, y, w, h, label, side, distance) {
+    xs <- floor(x - w / 2):ceiling(x + w / 2) - limits[[1]] + 1
+    ys <- floor(y - h / 2):ceiling(y + h / 2) - limits[[3]] + 1
+    if (min(xs) < 1 || max(xs) > nrow(grid) || min(ys) < 1 || max(ys) > ncol(grid)) return(1000)
+    own <- index(islands[[label]])
+    others <- \(xs, ys) sum(grid[xs, ys]) - sum(own[, 1] %in% xs & own[, 2] %in% ys & grid[own] == 1L)
+    near <- others(max(1, min(xs) - 2):min(nrow(grid), max(xs) + 2), max(1, min(ys) - 2):min(ncol(grid), max(ys) + 2))
+    inside <- others(xs, ys)
+    own_inside <- sum(grid[xs, ys]) - inside
+    gap <- \(bins) min(pmax(abs(bins$bin_x - x) - w / 2, abs(bins$bin_y - y) - h / 2, 0))
+    misread <- side != "on" && distance < 7 && gap(dplyr::bind_rows(islands[names(islands) != label])) < gap(islands[[label]])
+    10 * inside + 3 * (near - inside) + (side != "on") * 3 * own_inside + 500 * misread
+  }
+  candidates$base <- purrr::pmap_dbl(candidates[c("x", "y", "w", "h", "label", "side", "distance")], covered) +
+    4 * candidates$distance
+  # Each label box and, for labels seven or more bins out, its leader line from the box
+  # to the island's edge, as rectangles that later labels and leaders must not overlap.
+  candidates <- dplyr::mutate(candidates, leader = .data$distance >= 7,
+    from_x = dplyr::case_when(.data$side == "right" ~ .data$x - .data$w / 2, .data$side == "left" ~ .data$x + .data$w / 2,
+      .default = .data$anchor_x),
+    from_y = dplyr::case_when(.data$side == "top" ~ .data$y - .data$h / 2, .data$side == "bottom" ~ .data$y + .data$h / 2,
+      .default = .data$anchor_y))
+  rectangles <- \(rows) dplyr::bind_rows(
+    dplyr::transmute(rows, x0 = .data$x - .data$w / 2, x1 = .data$x + .data$w / 2, y0 = .data$y - .data$h / 2, y1 = .data$y + .data$h / 2),
+    dplyr::filter(rows, .data$leader) |>
+      dplyr::transmute(x0 = pmin(.data$from_x, .data$anchor_x) - .2, x1 = pmax(.data$from_x, .data$anchor_x) + .2,
+        y0 = pmin(.data$from_y, .data$anchor_y) - .2, y1 = pmax(.data$from_y, .data$anchor_y) + .2))
+  placed <- candidates[0, ]
+  while (nrow(candidates)) {
+    taken <- rectangles(placed)
+    clash <- vapply(seq_len(nrow(candidates)), \(i) {
+      own <- rectangles(candidates[i, ])
+      any(outer(own$x0, taken$x1, `<`) & outer(own$x1, taken$x0, `>`) & outer(own$y0, taken$y1, `<`) & outer(own$y1, taken$y0, `>`))
+    }, logical(1))
+    candidates$score <- candidates$base + 1000 * clash
+    best <- dplyr::slice_min(candidates, .data$score, n = 1, with_ties = FALSE, by = "label")
+    free <- dplyr::count(dplyr::filter(candidates, .data$score < 10), .data$label)
+    best <- dplyr::left_join(best, free, by = "label") |>
+      dplyr::arrange(dplyr::coalesce(.data$n, 0L), .data$score) |>
+      dplyr::slice(1) |>
+      dplyr::select(-"n")
+    placed <- dplyr::bind_rows(placed, best)
+    candidates <- dplyr::filter(candidates, .data$label != best$label)
+  }
+  placed
+}
+
 # B: the WNN UMAP coloured by cell type in shades of its compartment's colour, with
 # unassigned nuclei grey. A cell type from several tissues forms several islands, so
-# each label points to its largest mass rather than its mean.
+# each label sits beside its main island, as figure_1_place_labels() describes. Label
+# sizes assume the panel's printed width in Figure 1, about 48 mm, and labels may use
+# the 15 mm of free space to its right.
 plot_figure_1_UMAP <- function(data, cell_types) {
   cell_types <- intersect(cell_types, data$WNN_harmony_SNN_cluster_cell_type)
   compartments <- get_cluster_compartments(cell_types, figure_1_compartments)
@@ -162,26 +258,37 @@ plot_figure_1_UMAP <- function(data, cell_types) {
   })))
   data <- dplyr::mutate(data, cell_type = factor(.data$WNN_harmony_SNN_cluster_cell_type, cell_types)) |>
     dplyr::arrange(!is.na(.data$cell_type))
-  # Each label points to the middle of its cell type's most populated cell of a coarse grid.
-  bin <- diff(range(data$WNN_UMAP_1)) / 12
-  labels <- dplyr::filter(data, !is.na(.data$cell_type)) |>
-    dplyr::mutate(bin_x = round(.data$WNN_UMAP_1 / bin), bin_y = round(.data$WNN_UMAP_2 / bin)) |>
-    dplyr::mutate(n = dplyr::n(), .by = c("cell_type", "bin_x", "bin_y")) |>
-    dplyr::filter(.data$n == max(.data$n), .by = "cell_type") |>
-    dplyr::summarise(x = stats::median(.data$WNN_UMAP_1), y = stats::median(.data$WNN_UMAP_2), .by = "cell_type") |>
-    dplyr::mutate(label = figure_1_cell_type_labels(.data$cell_type))
+  bin <- diff(range(data$WNN_UMAP_1)) / 80
+  bin_mm <- 48 / (80 * 1.04)
+  bins <- dplyr::mutate(data, bin_x = round(.data$WNN_UMAP_1 / bin), bin_y = round(.data$WNN_UMAP_2 / bin)) |>
+    dplyr::summarise(n = dplyr::n(), .by = c("cell_type", "bin_x", "bin_y"))
+  islands <- dplyr::filter(bins, !is.na(.data$cell_type), .data$n > sum(.data$n) / 2, .by = c("bin_x", "bin_y")) |>
+    split(~ cell_type, drop = TRUE) |>
+    lapply(figure_1_main_island)
+  names(islands) <- figure_1_cell_type_labels(names(islands))
+  register_benchmark_font()
+  width_mm <- systemfonts::string_width(names(islands), family = BENCHMARK_FONT, size = 6) * 25.4 / 72
+  labels <- figure_1_place_labels(lapply(islands, \(island) dplyr::filter(island, .data$n > 2)),
+    occupied = dplyr::filter(dplyr::summarise(bins, n = sum(.data$n), .by = c("bin_x", "bin_y")), .data$n > 2),
+    limits = c(range(bins$bin_x), range(bins$bin_y)) + c(-1, 1 + round(15 / bin_mm), -1, 1),
+    width = stats::setNames(width_mm / bin_mm + 1, names(islands)), height = 2.6 / bin_mm) |>
+    dplyr::mutate(dplyr::across(c("x", "y", "from_x", "from_y", "anchor_x", "anchor_y"), \(value) value * bin))
   ggplot2::ggplot(data, ggplot2::aes(.data$WNN_UMAP_1, .data$WNN_UMAP_2, colour = .data$cell_type)) +
     ggplot2::geom_point(size = .1, shape = 16) +
-    ggrepel::geom_text_repel(data = labels, ggplot2::aes(.data$x, .data$y, label = .data$label), colour = "black",
-      family = BENCHMARK_FONT, size = figure_1_text_size, bg.colour = "white", bg.r = .12, seed = 1, min.segment.length = .1,
-      segment.size = .25, box.padding = .1, point.padding = 0, force = .5, force_pull = 3, max.time = 3,
-      max.iter = 1e5, max.overlaps = Inf) +
+    ggplot2::geom_segment(data = dplyr::filter(labels, .data$leader), ggplot2::aes(x = .data$from_x, y = .data$from_y,
+      xend = .data$anchor_x, yend = .data$anchor_y), inherit.aes = FALSE, linewidth = .25) +
+    ggrepel::geom_text_repel(data = labels, ggplot2::aes(.data$x, .data$y, label = .data$label), inherit.aes = FALSE,
+      family = BENCHMARK_FONT, size = figure_1_text_size, bg.colour = "white", bg.r = .12, force = 0, force_pull = 0,
+      max.iter = 0, min.segment.length = Inf, max.overlaps = Inf, xlim = c(-Inf, Inf), ylim = c(-Inf, Inf)) +
     ggplot2::scale_colour_manual(values = colours, na.value = "grey85", guide = "none") +
     ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = .02)) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = .02)) +
     figure_1_theme() +
-    ggplot2::theme(panel.grid = ggplot2::element_blank(), axis.text = ggplot2::element_blank()) +
-    ggplot2::coord_equal() +
+    ggplot2::theme(panel.grid = ggplot2::element_blank(), axis.text = ggplot2::element_blank(),
+      axis.line = ggplot2::element_line(linewidth = .3, colour = "grey30"),
+      axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 2)),
+      axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 2))) +
+    ggplot2::coord_equal(clip = "off") +
     ggplot2::labs(title = "Cell types from expression and accessibility", x = "UMAP 1", y = "UMAP 2")
 }
 
@@ -455,10 +562,19 @@ plot_figure_1_TRS <- function(data, trait, cell_types) {
     ggplot2::labs(title = paste(figure_1_trait_labels(trait), "relevance (SCAVENGE)"), x = NULL, y = NULL)
 }
 
-# The public data's cell types in compartments, in column order.
+# The public data's cell types in compartments, in their default order.
 figure_1_compartments <- list(Immune = "^(B|T|NK|Mono|pDC|Macrophage)$", Neural = "neuron|Oligodendrocyte",
   Hepatic = "Hepatocyte", Pancreatic = "Pancreatic|Ductal|Islet", Intestinal = "Colonocyte|Goblet",
   Pulmonary = "Alveolar", Cardiac = "Cardiomyocyte", Vascular = "Endothelial|Pericyte", Stromal = "Fibroblast")
+
+# The configured trait categories in the figure's categories, in row order: the order of
+# the compartments that each concerns, with the immune and the brain traits bundled.
+figure_1_trait_categories <- c(blood_cell_counts = "Blood cell counts", immune_disease = "Immune disease",
+  immune_gut = "Immune disease", lung_immune = "Immune disease", immune_brain = "Immune disease",
+  neurodegeneration = "Brain traits", neuronal_disease = "Brain traits", neuronal_metabolic = "Brain traits",
+  neuronal_complex = "Brain traits", hepatic_lipids = "Hepatic lipids", liver = "Liver",
+  pancreatic_endocrine = "Pancreatic endocrine", colon_epithelial = "Colon epithelial", lung_function = "Lung function",
+  cardiac = "Cardiac", vascular = "Vascular", fibroblast = "Fibroblast")
 
 # Studies as Supplementary Table S3 names them: "Trait, Author Year".
 figure_1_study_labels <- function(x) {
@@ -467,65 +583,83 @@ figure_1_study_labels <- function(x) {
 
 # Figure 1F and Supplementary Figures S5 and S6: one value of each study (rows) in each
 # assigned cell type (columns), in a diverging scale around `midpoint` clipped at `limits`.
-# scores holds GWAS_ID, Category, cluster, value, p and q. Cell types keep their
-# configured order within compartments; each compartment of several cell types is named
-# in bold above a bracket, between the tiles and the cell-type names. Studies are grouped by trait
-# category, named beside them. Each study's anchor, its largest value at q < 0.05, is
-# boxed; studies and their categories follow the column of their anchor, so the anchors
-# step down and to the right, and studies without one come last.
+# scores holds GWAS_ID, Category, cluster, value, p and q. Studies are grouped in the
+# categories of figure_1_trait_categories, in its order, and by name within each. Each
+# study's anchor, its largest value at q < 0.05, is boxed. Compartments, and cell types
+# within them, follow the first significant tile they hold, taking anchors first and
+# each in row order, so that the anchors step down from the top left; the rest keep
+# their default order at the end. A header names each compartment of several cell
+# types in bold above a line over its columns, above the cell-type names; a one-column
+# compartment's cell type names it already. A side column names each category in bold
+# beside a line along its rows, left of the study names.
 # Stars: * P < 0.05, ** q < 0.05.
 plot_trait_cell_type_grid <- function(scores, cell_types, value_label, limits, midpoint = 0,
-                                      row_labels = figure_1_study_labels) {
+                                      row_labels = figure_1_study_labels, title = NULL) {
+  scores <- dplyr::filter(scores, .data$cluster %in% cell_types) |>
+    dplyr::mutate(significant = .data$q < .05 & !is.na(.data$q),
+      Category = factor(figure_1_trait_categories[.data$Category], unique(figure_1_trait_categories))) |>
+    dplyr::arrange(!.data$significant, dplyr::desc(.data$value)) |>
+    dplyr::mutate(anchor = .data$significant & dplyr::row_number() == 1, .by = "GWAS_ID")
+  stopifnot(!anyNA(scores$Category))
+  rows <- dplyr::distinct(scores, .data$GWAS_ID, .data$Category) |>
+    dplyr::arrange(.data$Category, .data$GWAS_ID) |>
+    dplyr::mutate(y = factor(.data$GWAS_ID, rev(.data$GWAS_ID)))
+  steps <- dplyr::filter(scores, .data$significant) |> dplyr::arrange(!.data$anchor, match(.data$GWAS_ID, rows$GWAS_ID))
   columns <- tibble::tibble(cluster = intersect(cell_types, scores$cluster)) |>
-    dplyr::mutate(compartment = get_cluster_compartments(.data$cluster, figure_1_compartments)) |>
-    dplyr::arrange(.data$compartment)
-  scores <- dplyr::filter(scores, .data$cluster %in% columns$cluster) |>
-    dplyr::mutate(significant = .data$q < .05 & !is.na(.data$q))
-  leads <- dplyr::arrange(scores, !.data$significant, dplyr::desc(.data$value)) |>
-    dplyr::distinct(.data$GWAS_ID, .keep_all = TRUE) |>
-    dplyr::mutate(anchor = .data$significant, column = dplyr::if_else(.data$anchor, match(.data$cluster, columns$cluster), Inf)) |>
-    dplyr::mutate(group_column = min(.data$column), .by = "Category") |>
-    dplyr::arrange(.data$group_column, .data$Category, .data$column, .data$GWAS_ID)
-  tiles <- scores |>
-    dplyr::left_join(dplyr::select(leads, "GWAS_ID", "cluster", "anchor"), by = c("GWAS_ID", "cluster")) |>
-    dplyr::mutate(anchor = .data$anchor %in% TRUE, value = pmin(pmax(.data$value, limits[[1]]), limits[[2]]),
-      x = factor(.data$cluster, columns$cluster), y = factor(.data$GWAS_ID, rev(leads$GWAS_ID)),
-      compartment = columns$compartment[match(.data$cluster, columns$cluster)],
-      Category = factor(.data$Category, unique(leads$Category)))
-  # Each bracket runs along its compartment's columns just above the top row of tiles.
-  brackets <- dplyr::count(columns, .data$compartment) |>
-    dplyr::filter(.data$n > 1) |>
-    dplyr::mutate(x = .62, xend = .data$n + .38, y = sum(leads$Category == leads$Category[[1]]) + .8,
-      Category = factor(leads$Category[[1]], levels(tiles$Category)))
-  category_label <- \(x) sub("^(.)", "\\U\\1", gsub("_", " ", x), perl = TRUE)
-  # A one-column compartment's cell type names it already.
-  compartment_label <- \(x) dplyr::if_else(x %in% brackets$compartment, x, "")
-  ggplot2::ggplot(tiles, ggplot2::aes(.data$x, .data$y)) +
+    dplyr::mutate(compartment = get_cluster_compartments(.data$cluster, figure_1_compartments),
+      step = match(.data$cluster, steps$cluster)) |>
+    dplyr::mutate(first_step = min(.data$step, Inf, na.rm = TRUE), .by = "compartment") |>
+    dplyr::arrange(.data$first_step, .data$compartment, .data$step) |>
+    dplyr::mutate(compartment = factor(.data$compartment, unique(.data$compartment)), x = factor(.data$cluster, .data$cluster))
+  tiles <- dplyr::mutate(scores, value = pmin(pmax(.data$value, limits[[1]]), limits[[2]]),
+    x = factor(.data$cluster, levels(columns$x)), y = factor(.data$GWAS_ID, levels(rows$y)),
+    compartment = columns$compartment[match(.data$cluster, columns$cluster)])
+  named <- dplyr::count(columns, .data$compartment) |> dplyr::filter(.data$n > 1)
+  # The three plots share their facets, scales, tile extents and spacing, so that their panels align.
+  x_scale <- ggplot2::scale_x_discrete(position = "top", labels = figure_1_cell_type_labels, expand = ggplot2::expansion(add = .1))
+  y_scale <- ggplot2::scale_y_discrete(labels = row_labels, expand = ggplot2::expansion())
+  line <- \(..., data) ggplot2::geom_segment(ggplot2::aes(...), data = data, inherit.aes = FALSE, linewidth = .35, colour = "grey35")
+  layout_theme <- figure_1_theme() +
+    ggplot2::theme(panel.grid = ggplot2::element_blank(), axis.title = ggplot2::element_blank(),
+      axis.ticks.length = grid::unit(0, "pt"), strip.clip = "off", plot.margin = ggplot2::margin(0, 0, 0, 0),
+      panel.spacing.x = grid::unit(2.4, "mm"), panel.spacing.y = grid::unit(.5, "mm"))
+  header <- ggplot2::ggplot(columns, ggplot2::aes(.data$x, 0)) +
+    ggplot2::geom_tile(width = .86, height = 0, fill = NA) +
+    line(x = .62, xend = .data$n + .38, y = 0, yend = 0, data = named) +
+    ggplot2::facet_grid(cols = ggplot2::vars(.data$compartment), scales = "free_x", space = "free_x",
+      labeller = ggplot2::labeller(compartment = \(x) dplyr::if_else(x %in% named$compartment, x, ""))) +
+    x_scale + ggplot2::scale_y_continuous(limits = c(0, 1), expand = ggplot2::expansion()) +
+    ggplot2::coord_cartesian(clip = "off") + layout_theme +
+    ggplot2::theme(axis.text = ggplot2::element_blank(),
+      strip.text.x.top = ggplot2::element_text(face = "bold", size = 6, margin = ggplot2::margin(b = 1.5)))
+  side <- ggplot2::ggplot(rows, ggplot2::aes(0, .data$y)) +
+    ggplot2::geom_tile(width = 0, height = .86, fill = NA) +
+    line(x = 1, xend = 1, y = .62, yend = .data$n + .38, data = dplyr::count(rows, .data$Category)) +
+    ggplot2::facet_grid(rows = ggplot2::vars(.data$Category), scales = "free_y", space = "free_y", switch = "y") +
+    ggplot2::scale_x_continuous(limits = c(0, 1), expand = ggplot2::expansion()) + y_scale +
+    ggplot2::coord_cartesian(clip = "off") + layout_theme +
+    ggplot2::theme(axis.text = ggplot2::element_blank(), strip.placement = "outside",
+      strip.text.y.left = ggplot2::element_text(angle = 0, hjust = 1, face = "bold", size = 5.5, margin = ggplot2::margin(r = 1.5)))
+  grid <- ggplot2::ggplot(tiles, ggplot2::aes(.data$x, .data$y)) +
     ggplot2::geom_tile(ggplot2::aes(fill = .data$value), width = .86, height = .86) +
     ggplot2::geom_tile(data = dplyr::filter(tiles, .data$anchor), fill = NA, colour = "black", linewidth = .45,
       width = .86, height = .86) +
     ggplot2::geom_text(ggplot2::aes(label = get_significance_stars(.data$p, .data$q)), size = 1.9, vjust = .78) +
-    ggplot2::geom_segment(data = brackets, ggplot2::aes(x = .data$x, xend = .data$xend, y = .data$y, yend = .data$y),
-      inherit.aes = FALSE, linewidth = .35, colour = "grey35") +
     ggplot2::facet_grid(rows = ggplot2::vars(.data$Category), cols = ggplot2::vars(.data$compartment), scales = "free",
-      space = "free", switch = "y", labeller = ggplot2::labeller(Category = category_label, compartment = compartment_label)) +
-    ggplot2::scale_x_discrete(position = "top", labels = figure_1_cell_type_labels, expand = ggplot2::expansion(add = .1)) +
-    ggplot2::scale_y_discrete(labels = row_labels, expand = ggplot2::expansion()) +
+      space = "free") +
+    x_scale + y_scale +
     ggplot2::scale_fill_gradient2(low = "#3B4CC0", mid = "white", high = "#B40426", midpoint = midpoint, limits = limits,
       name = value_label, guide = ggplot2::guide_colourbar(direction = "horizontal", position = "inside",
         theme = ggplot2::theme(legend.title.position = "top", legend.key.width = grid::unit(18, "mm"),
           legend.key.height = grid::unit(2.2, "mm")))) +
-    ggplot2::coord_cartesian(clip = "off") +
-    figure_1_theme() +
-    ggplot2::theme(panel.grid = ggplot2::element_blank(), axis.title = ggplot2::element_blank(),
-      axis.ticks.length = grid::unit(0, "pt"),
-      axis.text = ggplot2::element_text(size = 5.5),
-      axis.text.x.top = ggplot2::element_text(angle = 90, hjust = 0, vjust = .5, margin = ggplot2::margin(b = 2)),
-      strip.placement.x = "inside", strip.placement.y = "outside", strip.clip = "off",
-      strip.text.x.top = ggplot2::element_text(face = "bold", size = 6, margin = ggplot2::margin(t = 1, b = 5)),
-      strip.text.y.left = ggplot2::element_text(angle = 0, hjust = 1, face = "bold", size = 5.5),
-      panel.spacing.x = grid::unit(2.4, "mm"), panel.spacing.y = grid::unit(.5, "mm"), plot.margin = ggplot2::margin(5.5, 8, 5.5, 5.5),
+    ggplot2::coord_cartesian(clip = "off") + layout_theme +
+    ggplot2::theme(strip.text = ggplot2::element_blank(), axis.text = ggplot2::element_text(size = 5.5),
+      axis.text.x.top = ggplot2::element_text(angle = 90, hjust = 0, vjust = .5, margin = ggplot2::margin(t = 1.5, b = 2)),
+      plot.margin = ggplot2::margin(0, 8, 0, 0),
       legend.position.inside = c(0, 1), legend.justification.inside = c(1, 0), legend.margin = ggplot2::margin(r = 6, b = 4))
+  patchwork::wrap_plots(patchwork::plot_spacer(), header, side, grid, ncol = 2,
+    widths = grid::unit(c(1.2, 1), c("mm", "null")), heights = grid::unit(c(1, 1), c("mm", "null"))) +
+    patchwork::plot_annotation(title = title)
 }
 
 # Supplementary Table S3: each configured study's Open Targets record and credible

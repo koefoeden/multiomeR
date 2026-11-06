@@ -298,8 +298,8 @@ add_GEX_normalized_layers <- function(object, RNA_counts, normalized, variable_f
 #' @param k Number of nearest neighbors to use for KNN/SNN construction.
 #' @param dim_prefix Prefix used to translate `dims` into embedding column names, for example `PCA_`, `LSI_`, or `WNN_`.
 #' @param threads Number of threads passed to BPCells, HNSW, or matrix-stat routines.
-#' @return BPCells KNN result with neighbor index and distance matrices aligned
-#'   to `cells`.
+#' @return List with neighbour index and distance matrices aligned to `cells`,
+#'   from [find_hnsw_neighbors()].
 #' @keywords internal
 
 embedding_matrix_to_knn <- function(embedding_matrix, cells, dims, k, dim_prefix, threads = 1) {
@@ -309,7 +309,7 @@ embedding_matrix_to_knn <- function(embedding_matrix, cells, dims, k, dim_prefix
     dim_prefix = dim_prefix
   )
   k <- min(as.integer(k), nrow(graph_input) - 1L)
-  BPCells::knn_hnsw(graph_input, k = k, metric = "cosine", threads = threads, ef = 500)
+  find_hnsw_neighbors(graph_input, k = k, metric = "cosine", threads = threads, ef = 500)
 }
 
 knn_to_sparse_knn_matrix <- function(knn, cell_names) {

@@ -658,7 +658,7 @@ items:
   section: null
   target: TRS_UMAPs.SCAVENGE.specificity.genetic_enrichment
   description: Plot one GWAS SCAVENGE TRS branch on the graph UMAP and save to file.
-  source_file: genetic_enrichment/specificity/SCAVENGE/TRS_UMAPs/ALT_Ghouse2024.png
+  source_file: genetic_enrichment/specificity/SCAVENGE/TRS_UMAPs/ALT_Karczewski2025.png
   asset: gallery_assets/genetic_enrichment/TRS_UMAPs.SCAVENGE.specificity.genetic_enrichment.webp
 - checkpoint: genetic_enrichment
   group: Genetic enrichment
@@ -700,7 +700,7 @@ items:
   section: null
   target: locus_contribution_per_GWAS_heatmaps.chromVAR.specificity.genetic_enrichment
   description: Save one cell-type-by-locus contribution heatmap per enabled GWAS.
-  source_file: genetic_enrichment/specificity/chromVAR/locus_contribution_per_GWAS_heatmaps/01_ALT_Ghouse2024.png
+  source_file: genetic_enrichment/specificity/chromVAR/locus_contribution_per_GWAS_heatmaps/01_ALT_Karczewski2025.png
   asset: gallery_assets/genetic_enrichment/locus_contribution_per_GWAS_heatmaps.chromVAR.specificity.genetic_enrichment.webp
 - checkpoint: genetic_enrichment
   group: Genetic enrichment
@@ -721,14 +721,14 @@ items:
   section: null
   target: locus_contribution_per_GWAS_faceted_bars_plots.chromVAR.specificity.genetic_enrichment
   description: Save compact signed locus-contribution bars faceted by cell type for each GWAS.
-  source_file: genetic_enrichment/specificity/chromVAR/locus_contribution_per_GWAS_faceted_bars_plots/ALT_Ghouse2024.png
+  source_file: genetic_enrichment/specificity/chromVAR/locus_contribution_per_GWAS_faceted_bars_plots/ALT_Karczewski2025.png
   asset: gallery_assets/genetic_enrichment/locus_contribution_per_GWAS_faceted_bars_plots.chromVAR.specificity.genetic_enrichment.webp
 - checkpoint: genetic_enrichment
   group: Genetic enrichment
   section: null
   target: absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots.chromVAR.specificity.genetic_enrichment
   description: Save one faceted locus contribution figure per eligible GWAS using the absolute-effect heatmap weights.
-  source_file: genetic_enrichment/specificity/chromVAR/absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots/01_Alzheimer_Bellenguez2022.png
+  source_file: genetic_enrichment/specificity/chromVAR/absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots/01_ALT_Karczewski2025.png
   asset: gallery_assets/genetic_enrichment/absolute_effect_locus_contribution_per_GWAS_faceted_bars_plots.chromVAR.specificity.genetic_enrichment.webp
 - checkpoint: genetic_enrichment
   group: Genetic enrichment
@@ -770,7 +770,7 @@ items:
   section: null
   target: variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment
   description: Save aligned locus facets with variant effects, gene bodies, ATAC coverage, and peaks per GWAS and focal cell type.
-  source_file: genetic_enrichment/specificity/chromVAR/variant_contribution_detail_plots/ALT_Ghouse2024/01_Ductal-epithelial.png
+  source_file: genetic_enrichment/specificity/chromVAR/variant_contribution_detail_plots/ALT_Karczewski2025/01_Ductal-epithelial.png
   asset: gallery_assets/genetic_enrichment/variant_contribution_detail_plots.chromVAR.specificity.genetic_enrichment.webp
 - checkpoint: genetic_enrichment
   group: Genetic enrichment
@@ -798,7 +798,7 @@ items:
   section: null
   target: locus_contribution_heatmaps.fine_mapping.enrichment.genetic_enrichment
   description: Save one heatmap per GWAS of the credible sets that contribute most to each cell type's fine-mapped PIP enrichment at each size.
-  source_file: genetic_enrichment/enrichment/fine_mapping/locus_contribution_heatmaps/01_ALT_Ghouse2024.png
+  source_file: genetic_enrichment/enrichment/fine_mapping/locus_contribution_heatmaps/01_ALT_Karczewski2025.png
   asset: gallery_assets/genetic_enrichment/locus_contribution_heatmaps.fine_mapping.enrichment.genetic_enrichment.webp
 - checkpoint: genetic_enrichment
   group: Genetic enrichment

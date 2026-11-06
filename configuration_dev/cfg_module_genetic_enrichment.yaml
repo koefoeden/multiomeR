@@ -8,8 +8,14 @@ mixed_human_31x:
   # independent loci. Study-index sample/case counts can omit cohorts; zero cases
   # can mean unreported/not applicable. Correlated traits are not independent tests.
   # Studies with fewer than 20 effective peaks in this aggregation, (sum w)^2 / sum w^2 of their
-  # variant-weighted peaks, are left out, as is FastingGlucose_Chen2023, whose samples
-  # FastingGlucose_Jee2025 contains.
+  # variant-weighted peaks, were left out of the first selection.
+  # Every study has genome-wide summary statistics on the GWAS Catalog FTP, so that S-LDSC tests
+  # all of them. Studies without them were replaced on 2026-11-06 by the same trait's study with
+  # harmonised summary statistics and the largest European-ancestry sample, the ancestry of the
+  # LD reference, whatever their credible sets: Schizophrenia_Pedersen2023 and
+  # ColorectalCancer_Verma2024 have fewer than 20 effective peaks. Multiple sclerosis and lupus
+  # were dropped: no such study reached a total S-LDSC heritability z-score of 7, which every
+  # kept study does.
   genetic_enrichment_GWAS_studies:
     # B;T;NK: Broad lymphocyte abundance proxy; does not distinguish NK from B or T cells.
     LymphocyteCount_Vuckovic2020:
@@ -23,18 +29,14 @@ mixed_human_31x:
     UlcerativeColitis_Liu2023:
       Category: immune_gut
       sourceId: GCST90446794
-    # Microglia;T;B;Oligodendrocyte;OPC: Susceptibility implicates peripheral immune cells and microglia; oligodendrocytes are disease targets rather than established origin of inherited risk.
-    MultipleSclerosis_IMSGC2019:
-      Category: immune_brain
-      sourceId: GCST009597
     # Inhibitory_neuron: Broad energy-balance phenotype; not a negative control in a brain-containing atlas.
     BMI_Verma2024:
       Category: neuronal_metabolic
       sourceId: GCST90475159
     # Inhibitory_neuron: Broad neuronal comparator with social and indirect genetic effects; not cell-type specific or a negative control.
-    EducationalAttainment_Okbay2022:
+    EducationalAttainment_Loh2018:
       Category: neuronal_complex
-      sourceId: GCST90105038
+      sourceId: GCST90029013
     # Airway_secretory;T: Airway epithelial and immune mechanisms; selected for extensive SuSiE-inf coverage.
     Asthma_Zhou2022_EUR:
       Category: lung_immune
@@ -52,29 +54,25 @@ mixed_human_31x:
       Category: neurodegeneration
       sourceId: GCST90027158
     # Inhibitory_neuron;Granule_neuron: GWAS enrichment in excitatory and inhibitory neurons; granule neurons are a broader excitatory-lineage comparator.
-    Schizophrenia_Trubetskoy2022:
+    Schizophrenia_Pedersen2023:
       Category: neuronal_disease
-      sourceId: GCST90128471
+      sourceId: GCST90275158
     # Inhibitory_neuron: Neuronal excitability disease; not specific to inhibitory neurons.
     GeneralizedEpilepsy_ILAE2023:
       Category: neuronal_disease
       sourceId: GCST90271609
-    # B;T;Mono;pDC;Plasma: Autoimmune susceptibility involving B/plasma-cell antibodies and pDC/type-I-interferon biology, alongside broader immune mechanisms.
-    Lupus_Bentham2015:
-      Category: immune_disease
-      sourceId: GCST003155
     # T;B;Mono;Fibroblast: Immune susceptibility and synovial fibroblast disease biology; not fibroblast-specific inherited risk.
     RheumatoidArthritis_Ishigaki2022:
       Category: immune_disease
       sourceId: GCST90132222
     # Cardiomyocyte: Cardiac electrophysiology; interpretation depends on atrial versus ventricular identity.
-    AtrialFibrillation_Roselli2025:
+    AtrialFibrillation_Yuan2025_EUR:
       Category: cardiac
-      sourceId: GCST90559230
+      sourceId: GCST90624412
     # Colonocyte: Colorectal epithelial neoplasia; mature colonocytes are a lineage proxy, not a proven exclusive initiating cell.
-    ColorectalCancer_Law2019:
+    ColorectalCancer_Verma2024:
       Category: colon_epithelial
-      sourceId: GCST007992
+      sourceId: GCST90475566
     # Endothelial;Smooth_muscle;Mono: Atherosclerosis implicates vascular and immune cells; extensive SuSiE-inf coverage.
     CAD_Aragam2022_EUR:
       Category: vascular
@@ -104,17 +102,17 @@ mixed_human_31x:
       Category: hepatic_lipids
       sourceId: GCST90239661
     # Hepatocyte: Liver enzyme phenotype related to hepatocyte function and injury.
-    ALT_Ghouse2024:
+    ALT_Karczewski2025:
       Category: liver
-      sourceId: GCST90428729
+      sourceId: GCST90691566
     # Pancreatic_beta;Pancreatic_alpha: Strong beta-cell evidence with alpha-cell regulatory involvement; not alpha-specific and includes systemic insulin resistance.
-    T2D_Suzuki2024:
+    T2D_Verma2024:
       Category: pancreatic_endocrine
-      sourceId: GCST90492734
-    # Pancreatic_beta;Pancreatic_alpha;Hepatocyte: Larger complementary glycaemic study; overlaps conceptually with Chen and is not independent replication.
-    FastingGlucose_Jee2025:
+      sourceId: GCST90475667
+    # Pancreatic_beta;Pancreatic_alpha;Hepatocyte: Non-fasting glucose; beta-cell and hepatic glucose regulation, with insulin action in other tissues.
+    RandomGlucose_Lagou2023_EUR:
       Category: pancreatic_endocrine
-      sourceId: GCST90662896
+      sourceId: GCST90271557
 sizing_31x:
   inherits: mixed_human_31x
 sizing_91x:

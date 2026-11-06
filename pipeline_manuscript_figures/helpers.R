@@ -57,12 +57,11 @@ figure_1_enrichments <- function(scores) {
     dplyr::arrange(dplyr::desc(.data$z), .data$GWAS_ID)
 }
 
-# G and H show colorectal cancer, which lacks genome-wide summary statistics, in its
-# most strongly enriched cell type, with its loci that have variants in peaks and the
-# largest locus's share of their summed contribution.
+# G and H show ALT in its most strongly enriched cell type, with its loci that have
+# variants in peaks and the largest locus's share of their summed contribution.
 select_figure_1_showcase <- function(scores, loci) {
   showcase <- figure_1_enrichments(scores) |>
-    dplyr::filter(.data$GWAS_ID == "ColorectalCancer_Law2019") |>
+    dplyr::filter(.data$GWAS_ID == "ALT_Karczewski2025") |>
     dplyr::slice_head(n = 1)
   stopifnot(nrow(showcase) == 1L)
   contribution <- dplyr::semi_join(loci, showcase, by = c("GWAS_ID", "cluster"))$relative_deviation_contribution
@@ -75,8 +74,9 @@ figure_1_trait_labels <- function(x) {
   x <- gsub("_", " ", sub("_[^_]+[0-9]{4}(_[A-Z]+)?$", "", x))
   x <- gsub("([a-z])(?=[A-Z][A-Za-z])", "\\1 ", x, perl = TRUE)
   x <- gsub(" ([A-Z])(?=[a-z])", " \\L\\1", x, perl = TRUE)
-  # The spirometry ratio reads FEV1/FVC.
-  sub("FEV1FVC", "FEV1/FVC", x, fixed = TRUE)
+  # The spirometry ratio reads FEV1/FVC, and type 2 diabetes is spelt out.
+  x <- sub("FEV1FVC", "FEV1/FVC", x, fixed = TRUE)
+  sub("^T2D$", "Type 2 diabetes", x)
 }
 
 # Deviation clusters use hyphens and metadata cell types underscores.
@@ -708,7 +708,7 @@ compose_figure_1 <- function(...) {
         plot.title.position = "plot")
   })
   (patchwork::wrap_plots(plots, design = "AA\nBC\nDE\nFF\nGH",
-    heights = c(.85, 2.45, 1.1, 3.05, 1.85)) +
+    heights = c(.85, 2.3, 1.1, 3.45, 1.6)) +
     patchwork::plot_annotation(tag_levels = "A")) &
     ggplot2::theme(plot.tag = ggplot2::element_text(family = BENCHMARK_FONT, face = "bold",
         size = 12, hjust = 0, vjust = 1), plot.tag.position = c(0, 1))

@@ -84,7 +84,7 @@ figure_pipeline <- list(
   ),
   targets::tar_target(
     figure_1_showcase.mixed_human_31x,
-    description = "Figure 1G-H trait: colorectal cancer in its most strongly enriched cell type, with its contributing loci and the largest locus share",
+    description = "Figure 1G-H trait: ALT in its most strongly enriched cell type, with its contributing loci and the largest locus share",
     command = select_figure_1_showcase(deviation_tibble.chromVAR.specificity.genetic_enrichment.mixed_human_31x,
       locus_contribution_tibble.chromVAR.specificity.genetic_enrichment.mixed_human_31x),
     resources = get_tar_resources(RAM_GB_req = 4)

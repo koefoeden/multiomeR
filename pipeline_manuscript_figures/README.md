@@ -105,13 +105,12 @@ column names 5.5 pt; other text 6 pt.
   bodies, focal-cell-type coverage and a schematic link with 25 kb flanks; E the
   aggregate residuals coloured by donor with a descriptive regression line. The
   ranking is not an FDR claim, and aggregates are not independent donors.
-- **F:** the S-LDSC tau* of the specificity model's peak shares for every study
-  with summary statistics, in the grid below.
-- **G:** colorectal cancer, which has no genome-wide summary statistics, in its
-  most strongly enriched cell type, colonocytes: the locus with the largest
-  absolute contribution to the deviation, as aligned facets of variant
-  contributions (point area: PIP), protein-coding genes, focal coverage and
-  consensus peaks.
+- **F:** the S-LDSC tau* of the specificity model's peak shares for every study,
+  in the grid below.
+- **G:** ALT in its most strongly enriched cell type, hepatocytes: the locus
+  with the largest absolute contribution to the deviation, as aligned facets of
+  variant contributions (point area: PIP), protein-coding genes, focal coverage
+  and consensus peaks.
 - **H:** SCAVENGE trait-relevance scores of the same trait on the WNN UMAP,
   with unclipped scores and the cell types enriched for it labelled.
 

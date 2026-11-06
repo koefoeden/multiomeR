@@ -116,19 +116,18 @@ column names 5.5 pt; other text 6 pt.
   with unclipped scores and the cell types enriched for it labelled.
 
 Figure 1F and Supplementary Figures S5 and S6 share one grid of studies (rows)
-and assigned cell types (columns). Studies are grouped in a fixed order of
-trait categories, which bundles the configured immune and brain categories,
-each named in bold beside a line along its rows, left of the study names. Cell
-types are grouped in compartments that the figure code defines for this
-aggregation, each compartment of several cell types named in bold above a line
-over its columns, above the cell-type names. Each study's anchor, its largest
-value at q < 0.05, is boxed. Compartments and their cell types follow the first
-anchor they hold, row by row, so the anchors step down from the top left; then
-come those with only other values at q < 0.05, and last the rest, in their
-default order. Stars mark P < 0.05 (\*)
-and q < 0.05 (\*\*). S5 shows chromVAR deviations and F tau*, each clipped
-symmetrically at the 99th percentile of its absolute values; S6 shows S-LDSC
-enrichment on the module's scale around 1.
+and assigned cell types (columns). Studies are grouped in a fixed order of trait
+categories, named for their traits rather than the cells expected to carry them,
+each in bold beside a line along its rows, left of the study names. Cell types
+are grouped in compartments that the figure code defines for this aggregation,
+each compartment of several cell types named in bold above a line over its
+columns, above the cell-type names. Each study's anchor, its largest value at q
+< 0.05, is boxed. Compartments and their cell types follow the first anchor they
+hold, row by row, so the anchors step down from the top left; then come those
+with only other values at q < 0.05, and last the rest, in their default order.
+Stars mark P < 0.05 (\*) and q < 0.05 (\*\*). S5 shows chromVAR deviations and F
+tau*, each clipped symmetrically at the 99th percentile of its absolute values;
+S6 shows S-LDSC enrichment on the module's scale around 1.
 
 ## Supplementary Figures S2-S4 and Table S6
 

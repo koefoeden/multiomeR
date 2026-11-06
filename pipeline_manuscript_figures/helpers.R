@@ -567,14 +567,15 @@ figure_1_compartments <- list(Immune = "^(B|T|NK|Mono|pDC|Macrophage)$", Neural 
   Hepatic = "Hepatocyte", Pancreatic = "Pancreatic|Ductal|Islet", Intestinal = "Colonocyte|Goblet",
   Pulmonary = "Alveolar", Cardiac = "Cardiomyocyte", Vascular = "Endothelial|Pericyte", Stromal = "Fibroblast")
 
-# The configured trait categories in the figure's categories, in row order: the order of
-# the compartments that each concerns, with the immune and the brain traits bundled.
-figure_1_trait_categories <- c(blood_cell_counts = "Blood cell counts", immune_disease = "Immune disease",
-  immune_gut = "Immune disease", lung_immune = "Immune disease", immune_brain = "Immune disease",
-  neurodegeneration = "Brain traits", neuronal_disease = "Brain traits", neuronal_metabolic = "Brain traits",
-  neuronal_complex = "Brain traits", hepatic_lipids = "Hepatic lipids", liver = "Liver",
-  pancreatic_endocrine = "Pancreatic endocrine", colon_epithelial = "Colon epithelial", lung_function = "Lung function",
-  cardiac = "Cardiac", vascular = "Vascular", fibroblast = "Fibroblast")
+# The configured trait categories in the figure's categories, in row order. Their names
+# describe the traits, not the cells expected to carry them.
+figure_1_trait_categories <- c(blood_cell_counts = "Blood cell counts", immune_disease = "Immune-related diseases",
+  immune_gut = "Immune-related diseases", lung_immune = "Immune-related diseases", immune_brain = "Immune-related diseases",
+  neurodegeneration = "Brain-associated traits", neuronal_disease = "Brain-associated traits",
+  neuronal_metabolic = "Brain-associated traits", neuronal_complex = "Brain-associated traits",
+  hepatic_lipids = "Blood lipids", liver = "Liver enzymes", pancreatic_endocrine = "Glycemic traits", colon_epithelial = "Cancer",
+  lung_function = "Lung function", cardiac = "Cardiovascular traits", vascular = "Cardiovascular traits",
+  fibroblast = "Fibrotic disease")
 
 # Studies as Supplementary Table S3 names them: "Trait, Author Year".
 figure_1_study_labels <- function(x) {

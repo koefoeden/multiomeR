@@ -84,7 +84,9 @@ records to those labels.
 Eight panel targets, named by content, read pipeline data, never saved pipeline
 plots; another combines them and the file target exports an 8 × 9.5 inch page
 at 300 dpi. Selections are deterministic but follow the data. Titles, tags and
-bold labels use the DejaVu Sans of Supplementary Figures S2-S4.
+bold labels use the DejaVu Sans of Supplementary Figures S2-S4, on one type
+scale: panel titles 10 pt, beside their tags; axis titles 7 pt; heatmap row and
+column names 5.5 pt; other text 6 pt.
 
 - **A:** a left-to-right diagram of multiomeR: inputs, the primary module's
   stages, the optional modules, outputs and the key ideas. Grey letters name the
@@ -114,8 +116,9 @@ bold labels use the DejaVu Sans of Supplementary Figures S2-S4.
 
 Figure 1F and Supplementary Figures S5 and S6 share one grid of studies (rows)
 and assigned cell types (columns). Cell types keep their configured order within
-compartments that the figure code defines for this aggregation, each headed by
-its bold name above a bracket. Studies are grouped by their configured trait
+compartments that the figure code defines for this aggregation. Each
+compartment of several cell types is named in bold above a bracket, between the
+tiles and the cell-type names. Studies are grouped by their configured trait
 category. Each study's anchor, its largest value at q < 0.05, is boxed, and
 studies and categories follow the column of their anchor, so the anchors step
 down and to the right; studies without one come last. Stars mark P < 0.05 (\*)

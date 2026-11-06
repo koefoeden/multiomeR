@@ -1,11 +1,18 @@
 # Figure 1 uses data targets, never pipeline ggplot RDS files. Its font is DejaVu Sans with
 # its bold face, which targets that save a figure register first (register_benchmark_font()).
+# One type scale: panel titles 10 pt, axis titles and subtitles 7 pt, heatmap row and
+# column names 5.5 pt, so that they fit their rows, and all other text 6 pt, which text
+# layers get as figure_1_text_size (in mm).
+figure_1_text_size <- 6 / ggplot2::.pt
 figure_1_theme <- function() {
-  ggplot2::theme_minimal(base_size = 8, base_family = BENCHMARK_FONT) +
+  ggplot2::theme_minimal(base_size = 7, base_family = BENCHMARK_FONT) +
     ggplot2::theme(panel.grid.minor = ggplot2::element_blank(),
       plot.title = ggplot2::element_text(face = "bold", size = 10, hjust = .5),
       plot.title.position = "plot",
-      legend.title = ggplot2::element_text(size = 7),
+      plot.subtitle = ggplot2::element_text(size = 7),
+      axis.text = ggplot2::element_text(size = 6),
+      strip.text = ggplot2::element_text(size = 7),
+      legend.title = ggplot2::element_text(size = 6),
       legend.text = ggplot2::element_text(size = 6))
 }
 
@@ -166,7 +173,7 @@ plot_figure_1_UMAP <- function(data, cell_types) {
   ggplot2::ggplot(data, ggplot2::aes(.data$WNN_UMAP_1, .data$WNN_UMAP_2, colour = .data$cell_type)) +
     ggplot2::geom_point(size = .1, shape = 16) +
     ggrepel::geom_text_repel(data = labels, ggplot2::aes(.data$x, .data$y, label = .data$label), colour = "black",
-      family = BENCHMARK_FONT, size = 2, bg.colour = "white", bg.r = .12, seed = 1, min.segment.length = .1,
+      family = BENCHMARK_FONT, size = figure_1_text_size, bg.colour = "white", bg.r = .12, seed = 1, min.segment.length = .1,
       segment.size = .25, box.padding = .1, point.padding = 0, force = .5, force_pull = 3, max.time = 3,
       max.iter = 1e5, max.overlaps = Inf) +
     ggplot2::scale_colour_manual(values = colours, na.value = "grey85", guide = "none") +
@@ -219,7 +226,7 @@ figure_1_marker_profiles <- function(markers, pseudobulk_GEX, pseudobulk_ATAC, p
 # marker, boxed, lies on the diagonal. Each cell is split: expression in the upper-left
 # triangle and promoter accessibility in the lower-right one, so a cell where both
 # agree reads as one square. Values below the cell-type mean are white. A key sits
-# below the first column.
+# in the corner above the cell-type names.
 plot_figure_1_markers <- function(profiles) {
   profiles <- droplevels(profiles)
   corners <- list(`Gene expression` = list(x = c(-.5, -.5, .5), y = c(-.5, .5, .5)),
@@ -229,16 +236,16 @@ plot_figure_1_markers <- function(profiles) {
     dplyr::reframe(x = .data$x + corners[[.data$modality]]$x, y = .data$y + corners[[.data$modality]]$y, z = .data$z,
       .by = c("triangle", "modality"))
   n <- nlevels(profiles$gene)
-  key_x <- c(`Gene expression` = 1, `Promoter accessibility` = 7)
-  key <- purrr::imap_dfr(corners, \(corner, modality) tibble::tibble(modality, x = key_x[[modality]] + corner$x, y = -.9 + corner$y))
+  key_y <- c(`Gene expression` = n + 2.9, `Promoter accessibility` = n + 1.5)
+  key <- purrr::imap_dfr(corners, \(corner, modality) tibble::tibble(modality, y = key_y[[modality]] + corner$y, x = corner$x))
   ggplot2::ggplot(triangles, ggplot2::aes(.data$x, .data$y)) +
     ggplot2::geom_polygon(ggplot2::aes(group = .data$triangle, fill = .data$z)) +
     ggplot2::annotate("rect", xmin = seq_len(n) - .5, xmax = seq_len(n) + .5, ymin = rev(seq_len(n)) - .5,
       ymax = rev(seq_len(n)) + .5, fill = NA, colour = "grey10", linewidth = .35) +
     ggplot2::geom_polygon(data = key, ggplot2::aes(group = .data$modality), fill = "grey50") +
-    ggplot2::annotate("rect", xmin = key_x - .5, xmax = key_x + .5, ymin = -1.4, ymax = -.4, fill = NA,
+    ggplot2::annotate("rect", xmin = -.5, xmax = .5, ymin = key_y - .5, ymax = key_y + .5, fill = NA,
       colour = "grey50", linewidth = .25) +
-    ggplot2::annotate("text", x = key_x + .8, y = -.9, hjust = 0, family = BENCHMARK_FONT, size = 2.3,
+    ggplot2::annotate("text", x = -.8, y = key_y, hjust = 1, family = BENCHMARK_FONT, size = figure_1_text_size,
       label = c("Expression", "Promoter accessibility")) +
     ggplot2::scale_x_continuous(breaks = seq_len(n), labels = levels(profiles$gene), position = "top") +
     ggplot2::scale_y_continuous(breaks = seq_len(n), labels = figure_1_cell_type_labels(levels(profiles$cell_type))) +
@@ -246,9 +253,10 @@ plot_figure_1_markers <- function(profiles) {
       name = "Scaled\nlog CPM") +
     ggplot2::coord_cartesian(xlim = c(.5, n + .5), ylim = c(.5, n + .5), expand = FALSE, clip = "off") +
     figure_1_theme() +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(face = "italic", angle = 90, hjust = 0, vjust = .5, size = 6),
-      axis.text.y = ggplot2::element_text(size = 6), axis.ticks = ggplot2::element_blank(),
-      panel.grid = ggplot2::element_blank(), legend.position = "right", plot.margin = ggplot2::margin(b = 12)) +
+    ggplot2::theme(axis.text = ggplot2::element_text(size = 5.5),
+      axis.text.x = ggplot2::element_text(face = "italic", angle = 90, hjust = 0, vjust = .5),
+      axis.ticks = ggplot2::element_blank(),
+      panel.grid = ggplot2::element_blank(), legend.position = "right") +
     ggplot2::labs(title = "Cell-type markers in the same nuclei", x = NULL, y = NULL)
 }
 
@@ -273,7 +281,7 @@ plot_figure_1_link_tracks <- function(record, coverage) {
     dplyr::arrange(.data$gene != link$TargetGene[[1]])
   coverage <- dplyr::filter(coverage, .data$pos >= bounds[[1]], .data$pos <= bounds[[2]])
   base <- ggplot2::ggplot() + figure_1_theme() +
-    ggplot2::theme(axis.title.y = ggplot2::element_text(size = 6.5, angle = 0, hjust = 1, vjust = .5)) +
+    ggplot2::theme(axis.title.y = ggplot2::element_text(angle = 0, hjust = 1, vjust = .5)) +
     ggplot2::annotate("rect", xmin = link$start, xmax = link$end,
       ymin = -Inf, ymax = Inf, fill = "#B40426", alpha = 0.25) +
     ggplot2::geom_vline(xintercept = link$TargetGeneTSS, linetype = 2, linewidth = 0.3) +
@@ -281,6 +289,7 @@ plot_figure_1_link_tracks <- function(record, coverage) {
       labels = scales::label_number(scale = 1e-6, accuracy = .01))
   genes <- base + genomic_gene_body_layers(genes) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(add = c(.3, .8))) +
+    ggplot2::coord_cartesian(clip = "off") +
     ggplot2::labs(x = NULL, y = "Genes") + ggplot2::guides(y = "none") +
     ggplot2::theme(axis.text.x = ggplot2::element_blank())
   coverage <- dplyr::mutate(coverage,
@@ -319,7 +328,7 @@ plot_figure_1_scatter <- function(data) {
       colour = "black", linewidth = .4) + figure_1_theme() +
     ggplot2::annotate("text", x = -Inf, y = Inf, hjust = -.08, vjust = 1.3,
       label = figure_1_p_label(data$hierarchical_pvalue[[1]]), parse = TRUE,
-      family = BENCHMARK_FONT, size = 2.5) +
+      family = BENCHMARK_FONT, size = figure_1_text_size) +
     ggplot2::guides(colour = "none") +
     ggplot2::labs(title = "Donor\u2013state pseudobulks",
       x = "ATAC residual (log1p CPM)", y = "GEX residual\n(log1p CPM)")
@@ -376,9 +385,7 @@ plot_figure_1_loci <- function(records) {
     ggplot2::facet_wrap(ggplot2::vars(locus), nrow = 1, scales = "free") +
     ggplot2::scale_x_continuous(expand = c(0, 0),
       labels = scales::label_number(scale = 1e-6, accuracy = .01)) +
-    ggplot2::theme(strip.text = ggplot2::element_text(size = 8), strip.clip = "off",
-      axis.title.y = ggplot2::element_text(size = 6.5, angle = 0, hjust = 1, vjust = .5),
-      axis.text.y = ggplot2::element_text(family = "mono"),
+    ggplot2::theme(strip.clip = "off", axis.title.y = ggplot2::element_text(angle = 0, hjust = 1, vjust = .5),
       panel.spacing.x = grid::unit(6, "mm"), legend.position = "right")
   contribution <- base +
     ggplot2::geom_hline(yintercept = 0, colour = "grey70") +
@@ -388,8 +395,7 @@ plot_figure_1_loci <- function(records) {
       .data$relative_deviation_contribution, size = .data$posteriorProbability), colour = "#B40426") +
     ggplot2::scale_size_area(max_size = 3, name = "PIP", limits = c(0, 1), breaks = c(.1, .5, 1)) +
     ggplot2::scale_y_continuous(breaks = figure_1_track_breaks,
-      labels = function(x) formatC(x, format = "f", digits = 1, width = 5),
-      expand = ggplot2::expansion(mult = c(.05, .35))) +
+      labels = scales::label_number(drop0trailing = TRUE), expand = ggplot2::expansion(mult = c(.05, .35))) +
     ggplot2::labs(x = NULL, y = "Genetic\ncontribution") +
     ggplot2::theme(axis.text.x = ggplot2::element_blank())
   # A window without protein-coding genes names the locus's Open Targets locus-to-gene prediction.
@@ -399,7 +405,7 @@ plot_figure_1_loci <- function(records) {
     dplyr::filter(!.data$locus %in% genes$locus)
   gene_track <- base + genomic_gene_body_layers(genes) +
     ggplot2::geom_text(data = empty, ggplot2::aes(.data$position, -1, label = .data$label),
-      size = 2.5, lineheight = .9, vjust = 0) +
+      size = figure_1_text_size, lineheight = .9, vjust = 0) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(add = c(.3, .8))) +
     ggplot2::coord_cartesian(clip = "off") +
     ggplot2::labs(x = NULL, y = "Genes") + ggplot2::guides(y = "none") +
@@ -410,8 +416,7 @@ plot_figure_1_loci <- function(records) {
       y = 0, yend = 0), linewidth = 1, colour = "#B40426") +
     ggplot2::facet_wrap(ggplot2::vars(locus), nrow = 1, scales = "free", strip.position = "bottom",
       labeller = ggplot2::labeller(locus = ggplot2::as_labeller(paste(chromosomes, "(Mb)") |> stats::setNames(labels)))) +
-    ggplot2::scale_y_continuous(breaks = figure_1_track_breaks,
-      labels = function(x) formatC(x, format = "f", digits = 1, width = 5)) +
+    ggplot2::scale_y_continuous(breaks = figure_1_track_breaks, labels = scales::label_number(drop0trailing = TRUE)) +
     ggplot2::labs(x = NULL, y = "ATAC") +
     ggplot2::theme(strip.placement = "outside")
   # Keep each axis label beside its track while aligning the faceted panels.
@@ -437,7 +442,7 @@ plot_figure_1_TRS <- function(data, trait, cell_types) {
     ggplot2::geom_segment(data = labels, ggplot2::aes(.data$x, .data$y, xend = .data$label_x, yend = .data$label_y),
       linewidth = .3, colour = "grey20") +
     ggplot2::geom_label(data = labels, ggplot2::aes(.data$label_x, .data$label_y, label = .data$label),
-      size = 2.8, linewidth = .2, label.padding = grid::unit(1.5, "pt"), fill = "white") +
+      family = BENCHMARK_FONT, size = figure_1_text_size, linewidth = .2, label.padding = grid::unit(1.2, "pt"), fill = "white") +
     ggplot2::scale_colour_viridis_c(name = "TRS", na.value = "grey85") +
     ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = .02)) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = .02)) +
@@ -447,8 +452,7 @@ plot_figure_1_TRS <- function(data, trait, cell_types) {
     ggplot2::guides(colour = ggplot2::guide_colourbar(barwidth = grid::unit(2, "mm"),
       barheight = grid::unit(25, "mm"))) +
     ggplot2::coord_equal(clip = "off") +
-    ggplot2::labs(title = "SCAVENGE trait relevance", subtitle = figure_1_trait_labels(trait),
-      x = "UMAP 1", y = "UMAP 2")
+    ggplot2::labs(title = paste(figure_1_trait_labels(trait), "relevance (SCAVENGE)"), x = NULL, y = NULL)
 }
 
 # The public data's cell types in compartments, in column order.
@@ -464,11 +468,12 @@ figure_1_study_labels <- function(x) {
 # Figure 1F and Supplementary Figures S5 and S6: one value of each study (rows) in each
 # assigned cell type (columns), in a diverging scale around `midpoint` clipped at `limits`.
 # scores holds GWAS_ID, Category, cluster, value, p and q. Cell types keep their
-# configured order within compartments, and each compartment's bold name heads its
-# columns above a bracket. Studies are grouped by trait category, named beside them.
-# Each study's anchor, its largest value at q < 0.05, is boxed; studies and their
-# categories follow the column of their anchor, so the anchors step down and to the
-# right, and studies without one come last. Stars: * P < 0.05, ** q < 0.05.
+# configured order within compartments; each compartment of several cell types is named
+# in bold above a bracket, between the tiles and the cell-type names. Studies are grouped by trait
+# category, named beside them. Each study's anchor, its largest value at q < 0.05, is
+# boxed; studies and their categories follow the column of their anchor, so the anchors
+# step down and to the right, and studies without one come last.
+# Stars: * P < 0.05, ** q < 0.05.
 plot_trait_cell_type_grid <- function(scores, cell_types, value_label, limits, midpoint = 0,
                                       row_labels = figure_1_study_labels) {
   columns <- tibble::tibble(cluster = intersect(cell_types, scores$cluster)) |>
@@ -481,25 +486,21 @@ plot_trait_cell_type_grid <- function(scores, cell_types, value_label, limits, m
     dplyr::mutate(anchor = .data$significant, column = dplyr::if_else(.data$anchor, match(.data$cluster, columns$cluster), Inf)) |>
     dplyr::mutate(group_column = min(.data$column), .by = "Category") |>
     dplyr::arrange(.data$group_column, .data$Category, .data$column, .data$GWAS_ID)
-  # Each compartment leads with a header column, named in bold, that holds no tiles.
-  headers <- dplyr::distinct(columns, .data$compartment) |>
-    dplyr::mutate(cluster = paste("header", .data$compartment), label = paste0("**", .data$compartment, "**"))
-  columns <- dplyr::bind_rows(headers, dplyr::mutate(columns, label = figure_1_cell_type_labels(.data$cluster))) |>
-    dplyr::arrange(.data$compartment, !startsWith(.data$cluster, "header "))
   tiles <- scores |>
     dplyr::left_join(dplyr::select(leads, "GWAS_ID", "cluster", "anchor"), by = c("GWAS_ID", "cluster")) |>
     dplyr::mutate(anchor = .data$anchor %in% TRUE, value = pmin(pmax(.data$value, limits[[1]]), limits[[2]]),
       x = factor(.data$cluster, columns$cluster), y = factor(.data$GWAS_ID, rev(leads$GWAS_ID)),
       compartment = columns$compartment[match(.data$cluster, columns$cluster)],
       Category = factor(.data$Category, unique(leads$Category)))
-  brackets <- dplyr::filter(columns, !startsWith(.data$cluster, "header ")) |>
-    dplyr::summarise(xend = dplyr::n() + 1.38, .by = "compartment") |>
-    dplyr::mutate(x = 1.62, y = sum(leads$Category == leads$Category[[1]]) + .85,
+  # Each bracket runs along its compartment's columns just above the top row of tiles.
+  brackets <- dplyr::count(columns, .data$compartment) |>
+    dplyr::filter(.data$n > 1) |>
+    dplyr::mutate(x = .62, xend = .data$n + .38, y = sum(leads$Category == leads$Category[[1]]) + .8,
       Category = factor(leads$Category[[1]], levels(tiles$Category)))
   category_label <- \(x) sub("^(.)", "\\U\\1", gsub("_", " ", x), perl = TRUE)
+  # A one-column compartment's cell type names it already.
+  compartment_label <- \(x) dplyr::if_else(x %in% brackets$compartment, x, "")
   ggplot2::ggplot(tiles, ggplot2::aes(.data$x, .data$y)) +
-    ggplot2::geom_blank(data = dplyr::mutate(columns, x = factor(.data$cluster, .data$cluster)), ggplot2::aes(x = .data$x),
-      inherit.aes = FALSE) +
     ggplot2::geom_tile(ggplot2::aes(fill = .data$value), width = .86, height = .86) +
     ggplot2::geom_tile(data = dplyr::filter(tiles, .data$anchor), fill = NA, colour = "black", linewidth = .45,
       width = .86, height = .86) +
@@ -507,9 +508,8 @@ plot_trait_cell_type_grid <- function(scores, cell_types, value_label, limits, m
     ggplot2::geom_segment(data = brackets, ggplot2::aes(x = .data$x, xend = .data$xend, y = .data$y, yend = .data$y),
       inherit.aes = FALSE, linewidth = .35, colour = "grey35") +
     ggplot2::facet_grid(rows = ggplot2::vars(.data$Category), cols = ggplot2::vars(.data$compartment), scales = "free",
-      space = "free", switch = "y", labeller = ggplot2::labeller(Category = category_label)) +
-    ggplot2::scale_x_discrete(position = "top", labels = tibble::deframe(dplyr::select(columns, "cluster", "label")),
-      expand = ggplot2::expansion(add = .1)) +
+      space = "free", switch = "y", labeller = ggplot2::labeller(Category = category_label, compartment = compartment_label)) +
+    ggplot2::scale_x_discrete(position = "top", labels = figure_1_cell_type_labels, expand = ggplot2::expansion(add = .1)) +
     ggplot2::scale_y_discrete(labels = row_labels, expand = ggplot2::expansion()) +
     ggplot2::scale_fill_gradient2(low = "#3B4CC0", mid = "white", high = "#B40426", midpoint = midpoint, limits = limits,
       name = value_label, guide = ggplot2::guide_colourbar(direction = "horizontal", position = "inside",
@@ -519,11 +519,12 @@ plot_trait_cell_type_grid <- function(scores, cell_types, value_label, limits, m
     figure_1_theme() +
     ggplot2::theme(panel.grid = ggplot2::element_blank(), axis.title = ggplot2::element_blank(),
       axis.ticks.length = grid::unit(0, "pt"),
-      axis.text.x.top = ggtext::element_markdown(angle = 90, hjust = 0, vjust = .5, size = 5.5, margin = ggplot2::margin(b = 3)),
-      axis.text.y = ggplot2::element_text(size = 5.5),
-      strip.text.x.top = ggplot2::element_blank(), strip.placement = "outside",
+      axis.text = ggplot2::element_text(size = 5.5),
+      axis.text.x.top = ggplot2::element_text(angle = 90, hjust = 0, vjust = .5, margin = ggplot2::margin(b = 2)),
+      strip.placement.x = "inside", strip.placement.y = "outside", strip.clip = "off",
+      strip.text.x.top = ggplot2::element_text(face = "bold", size = 6, margin = ggplot2::margin(t = 1, b = 5)),
       strip.text.y.left = ggplot2::element_text(angle = 0, hjust = 1, face = "bold", size = 5.5),
-      strip.clip = "off", panel.spacing.x = grid::unit(1, "mm"), panel.spacing.y = grid::unit(1.2, "mm"),
+      panel.spacing.x = grid::unit(2.4, "mm"), panel.spacing.y = grid::unit(.5, "mm"), plot.margin = ggplot2::margin(5.5, 8, 5.5, 5.5),
       legend.position.inside = c(0, 1), legend.justification.inside = c(1, 0), legend.margin = ggplot2::margin(r = 6, b = 4))
 }
 
@@ -568,11 +569,11 @@ compose_figure_1 <- function(...) {
     }
     patchwork::wrap_elements(panel = plot) + ggplot2::labs(title = title) +
       ggplot2::theme(plot.title = ggplot2::element_text(family = BENCHMARK_FONT, size = 10,
-          hjust = .5, margin = ggplot2::margin(b = 5.5)),
+          hjust = 0, margin = ggplot2::margin(l = 14, b = 4)),
         plot.title.position = "plot")
   })
   (patchwork::wrap_plots(plots, design = "AA\nBC\nDE\nFF\nGH",
-    heights = c(.9, 2.2, 1.4, 3.1, 1.75)) +
+    heights = c(.85, 2.45, 1.1, 3.05, 1.85)) +
     patchwork::plot_annotation(tag_levels = "A")) &
     ggplot2::theme(plot.tag = ggplot2::element_text(family = BENCHMARK_FONT, face = "bold",
         size = 12, hjust = 0, vjust = 1), plot.tag.position = c(0, 1))

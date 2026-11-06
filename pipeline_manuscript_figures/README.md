@@ -5,12 +5,12 @@ multiomeR manuscript that come from public data. It uses the aggregations in
 [`configuration_dev/`](../configuration_dev/README.md) and writes its results
 below `results/`:
 
-- `1.png`: Figure 1, selected outputs of `mixed_human_31x`, and
-  `data/figure_1_aggregation.tsv`, `data/figure_1_link.tsv` and
-  `data/figure_1_traits.tsv`, the values the manuscript quotes from it.
+- `1.png`: Figure 1, an overview of multiomeR and selected outputs of
+  `mixed_human_31x`, and `data/figure_1_aggregation.tsv`,
+  `data/figure_1_link.tsv`, `data/figure_1_heritability.tsv` and
+  `data/figure_1_showcase.tsv`, the values the manuscript quotes from it.
 - `S5.png` and `data/cell_type_trait_enrichment.tsv`: Supplementary Figure S5,
-  the cell-type deviations of every GWAS study of `mixed_human_31x`, of which
-  Figure 1D shows a selection.
+  the cell-type deviations of every GWAS study of `mixed_human_31x`.
 - `S6.png` and `data/cell_type_heritability_enrichment.tsv`: Supplementary
   Figure S6, the S-LDSC heritability enrichment of each cell type's most
   specific peaks, sized to 0.5% of common SNPs, for every GWAS study of
@@ -81,33 +81,47 @@ records to those labels.
 
 ## Figure 1
 
-Six panel targets read pipeline data, never saved pipeline plots; a seventh
-combines them and the file target exports an 8 × 9.5 inch page at 300 dpi.
-Selections are deterministic but follow the data.
+Eight panel targets, named by content, read pipeline data, never saved pipeline
+plots; another combines them and the file target exports an 8 × 9.5 inch page
+at 300 dpi. Selections are deterministic but follow the data. Titles, tags and
+bold labels use the DejaVu Sans of Supplementary Figures S2-S4.
 
-- **A:** for each WNN cell type, the configured marker gene whose expression
+- **A:** a left-to-right diagram of multiomeR: inputs, the primary module's
+  stages, the optional modules, outputs and the key ideas. Grey letters name the
+  panels that show each module's outputs.
+- **B:** the WNN UMAP coloured by cell type in shades of its compartment, with
+  each label at the middle of its cell type's most populated cell of a coarse
+  grid, since a cell type from several tissues forms several islands.
+- **C:** for each WNN cell type, the configured marker gene whose expression
   and promoter accessibility, in cell-type pseudobulks summed over donors and
-  scaled across cell types, are most specific to it.
-- **B, C:** the eligible, estimable, non-promoter peak–gene link with the lowest
-  hierarchical P-value (ties: cell type, gene, peak). B shows the peak, gene
-  bodies, focal-cell-type coverage and a schematic link with 25 kb flanks; C the
+  scaled across cell types, are most specific to it. Markers and cell types run
+  in the same order, so each cell type's own marker lies on the diagonal, and
+  each cell is split into expression (upper left) and accessibility (lower right).
+- **D, E:** the eligible, estimable, non-promoter peak–gene link with the lowest
+  hierarchical P-value (ties: cell type, gene, peak). D shows the peak, gene
+  bodies, focal-cell-type coverage and a schematic link with 25 kb flanks; E the
   aggregate residuals coloured by donor with a descriptive regression line. The
   ranking is not an FDR claim, and aggregates are not independent donors.
-- **D:** broadly supported cell-type–study enrichments across all assigned
-  cell types: chromVAR q < 0.05 and a top locus below half of the summed
-  contribution, so that no pair rests on one or a few loci; the configured
-  studies already have at least 20 effective peaks, (Σw)²/Σw². In decreasing z, a pair is shown unless its
-  study is shown already or its cell type shows a study of the same category.
-  Stars mark q < 0.05.
-- **E:** for one of these pairs, colorectal cancer in colonocytes, the locus
-  with the largest absolute contribution to the deviation, as aligned facets of variant contributions (point area: PIP),
-  protein-coding genes, focal coverage and consensus peaks.
-- **F:** SCAVENGE trait-relevance scores of the same trait on the WNN UMAP,
-  with unclipped scores and the WNN cell-type labels of D.
+- **F:** the S-LDSC tau* of the specificity model's peak shares for every study
+  with summary statistics, in the grid below.
+- **G:** colorectal cancer, which has no genome-wide summary statistics, in its
+  most strongly enriched cell type, colonocytes: the locus with the largest
+  absolute contribution to the deviation, as aligned facets of variant
+  contributions (point area: PIP), protein-coding genes, focal coverage and
+  consensus peaks.
+- **H:** SCAVENGE trait-relevance scores of the same trait on the WNN UMAP,
+  with unclipped scores and the cell types enriched for it labelled.
 
-Supplementary Figure S5 shows every study across the assigned cell types with
-the module's unscaled deviation heatmap and GWAS metadata tracks, on Figure 1D's
-colour scale and with its stars; larger deviations take the scale's end colours.
+Figure 1F and Supplementary Figures S5 and S6 share one grid of studies (rows)
+and assigned cell types (columns). Cell types keep their configured order within
+compartments that the figure code defines for this aggregation, each headed by
+its bold name above a bracket. Studies are grouped by their configured trait
+category. Each study's anchor, its largest value at q < 0.05, is boxed, and
+studies and categories follow the column of their anchor, so the anchors step
+down and to the right; studies without one come last. Stars mark P < 0.05 (\*)
+and q < 0.05 (\*\*). S5 shows chromVAR deviations and F tau*, each clipped
+symmetrically at the 99th percentile of its absolute values; S6 shows S-LDSC
+enrichment on the module's scale around 1.
 
 ## Supplementary Figures S2-S4 and Table S6
 

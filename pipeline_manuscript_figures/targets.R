@@ -13,8 +13,24 @@ output_dir <- "pipeline_manuscript_figures/results"
 
 figure_pipeline <- list(
   targets::tar_target(
-    figure_1_panel_A.mixed_human_31x,
-    description = "Figure 1A: per WNN cell type, the configured marker with the most specific expression and promoter accessibility in donor-summed cell-type pseudobulks",
+    figure_1_panel_overview,
+    description = "Figure 1A: multiomeR's inputs, modules and outputs from left to right, with its key ideas",
+    command = plot_figure_1_overview() |> compact_figure_1_plot(),
+    resources = get_tar_resources(RAM_GB_req = 4)
+  ),
+  targets::tar_target(
+    figure_1_panel_UMAP.mixed_human_31x,
+    description = "Figure 1B: the WNN UMAP coloured and labelled by WNN cell type, unassigned nuclei grey",
+    command = metadata_w_cell_types_tibble.WNN.mixed_human_31x |>
+      dplyr::select("barcode_w_prefix", "WNN_harmony_SNN_cluster_cell_type") |>
+      dplyr::inner_join(UMAP_embeddings_tibble.WNN.mixed_human_31x, by = "barcode_w_prefix", relationship = "one-to-one") |>
+      dplyr::filter(is.finite(.data$WNN_UMAP_1), is.finite(.data$WNN_UMAP_2)) |>
+      plot_figure_1_UMAP(names(UCell_WNN_marker_genes_list.mixed_human_31x)) |> compact_figure_1_plot(),
+    resources = get_tar_resources(RAM_GB_req = 4)
+  ),
+  targets::tar_target(
+    figure_1_panel_markers.mixed_human_31x,
+    description = "Figure 1C: per WNN cell type, the configured marker with the most specific expression and promoter accessibility in donor-summed cell-type pseudobulks, as split cells along a diagonal",
     command = figure_1_marker_profiles(UCell_WNN_marker_genes_list.mixed_human_31x,
       pseudobulk_counts_matrix.GEX.mixed_human_31x, pseudobulk_counts_matrix.ATAC.mixed_human_31x,
       consensus_peak_annotated_GRanges.ATAC.mixed_human_31x) |>
@@ -22,8 +38,8 @@ figure_pipeline <- list(
     packages = w_def("BPCells"), resources = get_tar_resources(RAM_GB_req = 8)
   ),
   targets::tar_target(
-    figure_1_panel_B.mixed_human_31x,
-    description = "Figure 1B: strongest ranked hierarchical link; compact focal genomic tracks from top_link_aggregate_scatter_plots data",
+    figure_1_panel_link.mixed_human_31x,
+    description = "Figure 1D: strongest ranked hierarchical link; compact focal genomic tracks from top_link_aggregate_scatter_plots data",
     command = local({
       link <- select_figure_1_link(peak_gene_correlation_top_links_tibble.WNN.peak_gene_correlation.mixed_human_31x)
       records <- peak_gene_correlation_top_link_plot_data.WNN.peak_gene_correlation.mixed_human_31x
@@ -36,8 +52,8 @@ figure_pipeline <- list(
     packages = w_def("patchwork"), resources = get_tar_resources(RAM_GB_req = 4)
   ),
   targets::tar_target(
-    figure_1_panel_C.mixed_human_31x,
-    description = "Figure 1C: same aggregate residuals as top_link_aggregate_scatter_plots, with inset hierarchical P and compact donor colours",
+    figure_1_panel_link_scatter.mixed_human_31x,
+    description = "Figure 1E: same aggregate residuals as top_link_aggregate_scatter_plots, with inset hierarchical P and compact donor colours",
     command = local({
       link <- select_figure_1_link(peak_gene_correlation_top_links_tibble.WNN.peak_gene_correlation.mixed_human_31x)
       data <- peak_gene_correlation_top_link_aggregate_values_tibble.WNN.peak_gene_correlation.mixed_human_31x |>
@@ -49,52 +65,61 @@ figure_pipeline <- list(
     resources = get_tar_resources(RAM_GB_req = 4)
   ),
   targets::tar_target(
-    figure_1_traits.mixed_human_31x,
-    description = "Figure 1D-F traits: broadly supported cell-type enrichments (q < 0.05, top locus below half of the signal), one per study and per cell type and trait category",
-    command = select_figure_1_traits(deviation_tibble.chromVAR.specificity.genetic_enrichment.mixed_human_31x,
+    figure_1_heritability.mixed_human_31x,
+    description = "Figure 1F data: S-LDSC tau* of the specificity model's peak shares for every study with summary statistics and assigned cell type",
+    command = figure_1_heritability(tibble.SLDSC.specificity.genetic_enrichment.mixed_human_31x,
+      names(UCell_WNN_marker_genes_list.mixed_human_31x)),
+    resources = get_tar_resources(RAM_GB_req = 4)
+  ),
+  targets::tar_target(
+    figure_1_panel_heritability.mixed_human_31x,
+    description = "Figure 1F: tau* in the grouped staircase grid of Supplementary Figures S5 and S6, clipped at the 99th percentile of |tau*| as in the module's heatmap",
+    command = local({
+      data <- figure_1_heritability.mixed_human_31x
+      limit <- signif(stats::quantile(abs(data$tau_star), .99, names = FALSE), 2)
+      plot_trait_cell_type_grid(dplyr::mutate(data, value = .data$tau_star), names(UCell_WNN_marker_genes_list.mixed_human_31x),
+        "τ*", c(-limit, limit), row_labels = figure_1_trait_labels) +
+        ggplot2::labs(title = "Heritability in cell-type accessibility")
+    }) |> compact_figure_1_plot(),
+    packages = w_def("ggtext"), resources = get_tar_resources(RAM_GB_req = 4)
+  ),
+  targets::tar_target(
+    figure_1_showcase.mixed_human_31x,
+    description = "Figure 1G-H trait: colorectal cancer in its most strongly enriched cell type, with its contributing loci and the largest locus share",
+    command = select_figure_1_showcase(deviation_tibble.chromVAR.specificity.genetic_enrichment.mixed_human_31x,
       locus_contribution_tibble.chromVAR.specificity.genetic_enrichment.mixed_human_31x),
     resources = get_tar_resources(RAM_GB_req = 4)
   ),
   targets::tar_target(
-    figure_1_panel_D.mixed_human_31x,
-    description = "Figure 1D: raw_deviation_unscaled data of the selected traits, all assigned cell types in configured order, traits as a staircase, no metadata tracks",
-    command = plot_figure_1_heatmap(deviation_tibble.chromVAR.specificity.genetic_enrichment.mixed_human_31x,
-      figure_1_traits.mixed_human_31x, names(UCell_WNN_marker_genes_list.mixed_human_31x)) |> compact_figure_1_plot(),
-    resources = get_tar_resources(RAM_GB_req = 4)
-  ),
-  targets::tar_target(
-    figure_1_panel_E.mixed_human_31x,
-    description = "Figure 1E: variant-detail data for the top absolute-contribution locus of the showcase trait; protein-coding genes, focal coverage and PIP only",
+    figure_1_panel_locus.mixed_human_31x,
+    description = "Figure 1G: variant-detail data for the top absolute-contribution locus of the showcase trait; protein-coding genes, focal coverage and PIP only",
     command = local({
-      selections <- select_figure_1_showcase(figure_1_traits.mixed_human_31x)
-      locus_records <- lapply(seq_len(nrow(selections)), function(i) {
-        selection <- selections[i, ]
-        locus <- locus_contribution_tibble.chromVAR.specificity.genetic_enrichment.mixed_human_31x |>
-          dplyr::filter(.data$GWAS_ID == selection$GWAS_ID[[1]], .data$cluster == selection$cluster[[1]]) |>
-          dplyr::arrange(dplyr::desc(abs(.data$relative_deviation_contribution)), .data$studyLocusId) |>
-          dplyr::slice_head(n = 1)
-        records <- purrr::flatten(variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.mixed_human_31x)
-        records <- purrr::keep(records, function(x) {
-          x$GWAS_ID == selection$GWAS_ID[[1]] &&
-            x$variant_tibble$cluster[[1]] == selection$cluster[[1]] &&
-            x$variant_tibble$studyLocusId[[1]] == locus$studyLocusId[[1]]
-        })
-        stopifnot(length(records) == 1L)
-        record <- records[[1]]
-        gene_ranges <- marker_validated_Ensembl_annotations_GRanges_list.mixed_human_31x$genes
-        genes <- prepare_genomic_gene_bodies(
-          gene_ranges[gene_ranges$gene_biotype == "protein_coding"], record$region)
-        list(record = record, genes = genes, selection = selection, locus = locus)
+      selection <- figure_1_showcase.mixed_human_31x
+      locus <- locus_contribution_tibble.chromVAR.specificity.genetic_enrichment.mixed_human_31x |>
+        dplyr::filter(.data$GWAS_ID == selection$GWAS_ID[[1]], .data$cluster == selection$cluster[[1]]) |>
+        dplyr::arrange(dplyr::desc(abs(.data$relative_deviation_contribution)), .data$studyLocusId) |>
+        dplyr::slice_head(n = 1)
+      records <- purrr::flatten(variant_contribution_detail_plot_records.chromVAR.specificity.genetic_enrichment.mixed_human_31x)
+      records <- purrr::keep(records, function(x) {
+        x$GWAS_ID == selection$GWAS_ID[[1]] &&
+          x$variant_tibble$cluster[[1]] == selection$cluster[[1]] &&
+          x$variant_tibble$studyLocusId[[1]] == locus$studyLocusId[[1]]
       })
-      plot_figure_1_loci(locus_records) |> compact_figure_1_plot()
+      stopifnot(length(records) == 1L)
+      record <- records[[1]]
+      gene_ranges <- marker_validated_Ensembl_annotations_GRanges_list.mixed_human_31x$genes
+      genes <- prepare_genomic_gene_bodies(
+        gene_ranges[gene_ranges$gene_biotype == "protein_coding"], record$region)
+      plot_figure_1_loci(list(list(record = record, genes = genes, selection = selection, locus = locus))) |>
+        compact_figure_1_plot()
     }),
     packages = w_def("patchwork"), resources = get_tar_resources(RAM_GB_req = 4)
   ),
   targets::tar_target(
-    figure_1_panel_F.mixed_human_31x,
-    description = "Figure 1F: rebuild the TRS_UMAP of the trait in E, with randomized cell draw order and the cell types enriched for it labelled",
+    figure_1_panel_TRS.mixed_human_31x,
+    description = "Figure 1H: rebuild the TRS_UMAP of the trait in G, with randomized cell draw order and the cell types enriched for it labelled",
     command = local({
-      trait <- select_figure_1_showcase(figure_1_traits.mixed_human_31x)$GWAS_ID
+      trait <- figure_1_showcase.mixed_human_31x$GWAS_ID
       scores <- TRS_tibble.SCAVENGE.specificity.genetic_enrichment.mixed_human_31x |>
         dplyr::filter(.data$GWAS_ID == trait) |>
         dplyr::select("barcode_w_prefix", "score")
@@ -114,34 +139,37 @@ figure_pipeline <- list(
   ),
   targets::tar_target(
     figure_1_plot.mixed_human_31x,
-    description = "Combine manuscript Figure 1 ggplot panels in four rows: A, BC, D, EF",
+    description = "Combine manuscript Figure 1 ggplot panels in five rows: A, BC, DE, F, GH",
     command = compose_figure_1(
-      figure_1_panel_A.mixed_human_31x,
-      figure_1_panel_B.mixed_human_31x,
-      figure_1_panel_C.mixed_human_31x,
-      figure_1_panel_D.mixed_human_31x,
-      figure_1_panel_E.mixed_human_31x,
-      figure_1_panel_F.mixed_human_31x) |>
+      figure_1_panel_overview,
+      figure_1_panel_UMAP.mixed_human_31x,
+      figure_1_panel_markers.mixed_human_31x,
+      figure_1_panel_link.mixed_human_31x,
+      figure_1_panel_link_scatter.mixed_human_31x,
+      figure_1_panel_heritability.mixed_human_31x,
+      figure_1_panel_locus.mixed_human_31x,
+      figure_1_panel_TRS.mixed_human_31x) |>
       compact_figure_1_plot(),
-    packages = w_def("patchwork"), resources = get_tar_resources(RAM_GB_req = 4)
+    packages = w_def(c("patchwork", "ggtext")), resources = get_tar_resources(RAM_GB_req = 4)
   ),
   tarchetypes::tar_file(
     figure_1.mixed_human_31x,
     description = "Export full-page manuscript Figure 1 from its combined ggplot object",
     command = {
       path <- file.path(output_dir, "1.png")
+      register_benchmark_font()
       ggplot2::ggsave(path, figure_1_plot.mixed_human_31x,
         device = ragg::agg_png, width = 8, height = 9.5, dpi = 300, create.dir = TRUE)
       path
     },
-    resources = get_tar_resources(RAM_GB_req = 4)
+    packages = w_def(c("patchwork", "ggtext")), resources = get_tar_resources(RAM_GB_req = 4)
   ),
   tarchetypes::tar_file(
     figure_1_data.mixed_human_31x,
-    description = "Figure 1 values that the manuscript quotes: the aggregation's retained nuclei and assigned cell types, its enriched (q < 0.05) cell type-study pairs, studies and cell types, the selected peak-gene link and, for each heatmap trait's selected cell type, its z, q, contributing loci and the largest locus share of their summed contribution",
+    description = "Figure 1 values that the manuscript quotes: the aggregation's retained nuclei and assigned cell types, its enriched (q < 0.05) cell type-study pairs, studies and cell types, the selected peak-gene link, the tau* of panel F, and the showcase trait's z, q, contributing loci and the largest locus share of their summed contribution",
     command = {
       paths <- file.path(fs::dir_create(file.path(output_dir, "data")),
-        c("figure_1_aggregation.tsv", "figure_1_link.tsv", "figure_1_traits.tsv"))
+        c("figure_1_aggregation.tsv", "figure_1_link.tsv", "figure_1_heritability.tsv", "figure_1_showcase.tsv"))
       cell_types <- metadata_w_cell_types_tibble.WNN.mixed_human_31x$WNN_harmony_SNN_cluster_cell_type
       enriched <- figure_1_enrichments(deviation_tibble.chromVAR.specificity.genetic_enrichment.mixed_human_31x)
       readr::write_tsv(tibble::tibble(retained_nuclei = length(cell_types),
@@ -152,63 +180,53 @@ figure_pipeline <- list(
         dplyr::select("cell_group", "TargetGene", "peak", "distance", "n_donors", "n_aggregates",
           "correlation", "hierarchical_pvalue") |>
         readr::write_tsv(paths[[2]])
-      figure_1_traits.mixed_human_31x |>
+      readr::write_tsv(figure_1_heritability.mixed_human_31x, paths[[3]])
+      figure_1_showcase.mixed_human_31x |>
         dplyr::select("GWAS_ID", "cluster", "z", "z_q", "n_loci", "top_locus_share") |>
-        readr::write_tsv(paths[[3]])
+        readr::write_tsv(paths[[4]])
       paths
     },
     resources = get_tar_resources(RAM_GB_req = 4)
   ),
   tarchetypes::tar_file(
     supplementary_figure_S5.mixed_human_31x,
-    description = "Supplementary Figure S5: the module's unscaled cell-type deviation heatmap for every GWAS study and assigned cell type, with trait-category and loci tracks, on Figure 1D's colour scale with its q < 0.05 stars, and its values",
+    description = "Supplementary Figure S5: chromVAR deviation of every GWAS study in every assigned cell type, in Figure 1F's grouped staircase grid, clipped at the 99th percentile of |deviation|, and its values",
     command = {
       scores <- deviation_tibble.chromVAR.specificity.genetic_enrichment.mixed_human_31x |>
         dplyr::filter(is_figure_1_cell_type(.data$cluster))
       paths <- file.path(output_dir, c("S5.png", "data/cell_type_trait_enrichment.tsv"))
-      # Figure 1D's colour scale: deviations beyond its range take its end colours.
-      limit <- max(abs(scores$deviation[scores$GWAS_ID %in% figure_1_traits.mixed_human_31x$GWAS_ID]))
-      ggplot2::ggsave(paths[[1]], plot_trait_cell_type_heatmap(dplyr::mutate(scores, value = .data$deviation, q = .data$z_q),
-        GWAS_metadata_tracks_plot.genetic_enrichment.mixed_human_31x, "Deviation", c(-limit, limit), bar_tracks = "Loci"),
-        device = ragg::agg_png, width = 9, height = 10.5, dpi = 300)
-      readr::write_tsv(dplyr::select(scores, "GWAS_ID", "Category", "cluster", "deviation", "z", "z_q"), paths[[2]])
+      limit <- signif(stats::quantile(abs(scores$deviation), .99, names = FALSE), 2)
+      register_benchmark_font()
+      ggplot2::ggsave(paths[[1]], plot_trait_cell_type_grid(
+        dplyr::mutate(scores, cluster = gsub("-", "_", .data$cluster), value = .data$deviation, p = .data$z_p, q = .data$z_q),
+        names(UCell_WNN_marker_genes_list.mixed_human_31x), "Deviation", c(-limit, limit)),
+        device = ragg::agg_png, width = 7.5, height = 2 + 0.17 * dplyr::n_distinct(scores$GWAS_ID), dpi = 300)
+      readr::write_tsv(dplyr::select(scores, "GWAS_ID", "Category", "cluster", "deviation", "z", "z_p", "z_q"), paths[[2]])
       paths
     },
-    resources = get_tar_resources(RAM_GB_req = 4)
+    packages = w_def("ggtext"), resources = get_tar_resources(RAM_GB_req = 4)
   ),
   tarchetypes::tar_file(
     supplementary_figure_S6.mixed_human_31x,
-    description = "Supplementary Figure S6: the module's S-LDSC heritability enrichment in each assigned cell type's most specific peaks, sized to 0.5% of common SNPs, for every GWAS study with summary statistics, on the module's enrichment scale with a trait-category track and q < 0.05 stars, and its values",
+    description = "Supplementary Figure S6: the module's S-LDSC heritability enrichment in each assigned cell type's most specific peaks, sized to 0.5% of common SNPs, for every GWAS study with summary statistics, in Figure 1F's grouped staircase grid on the module's enrichment scale, and its values",
     command = {
       enrichment <- tibble.enrichment.genetic_enrichment.mixed_human_31x
       # The main readout at its smallest size, which most cell types can fill.
       scores <- enrichment |>
         dplyr::filter(.data$strategy == "specific_peaks", .data$share == 0.005, .data$cluster != "random",
-          !is.na(.data$SLDSC_enrichment), is_figure_1_cell_type(.data$cluster)) |>
-        dplyr::left_join(cell_type_pseudobulk_support_tibble.ATAC.genetic_enrichment.mixed_human_31x, by = "cluster",
-          relationship = "many-to-one")
+          !is.na(.data$SLDSC_enrichment), is_figure_1_cell_type(.data$cluster))
       paths <- file.path(output_dir, c("S6.png", "data/cell_type_heritability_enrichment.tsv"))
       # The module's enrichment heatmaps' scale, linear around 1, so that a few extreme values do not wash out the others.
-      limits <- get_SLDSC_enrichment_limits(enrichment)
-      # The module's metadata tracks, built for the studies with S-LDSC results.
-      tracks <- GWAS_inputs_tibble.genetic_enrichment.mixed_human_31x |>
-        dplyr::filter(.data$GWAS_ID %in% scores$GWAS_ID) |>
-        dplyr::arrange(.data$Category, .data$GWAS_ID) |>
-        dplyr::mutate(GWAS_ID = factor(.data$GWAS_ID, levels = rev(.data$GWAS_ID))) |>
-        plot_GWAS_metadata_tracks()
-      # Supplementary Figure S5's category colours, which all studies of the aggregation set.
-      tracks[[1]] <- tracks[[1]] + ggplot2::scale_fill_manual(
-        values = make_named_heatmap_palette(GWAS_inputs_tibble.genetic_enrichment.mixed_human_31x$Category, "Set3"),
-        labels = \(x) gsub("_", " ", x), name = "Category",
-        guide = ggplot2::guide_legend(ncol = 4L, byrow = TRUE, title.position = "top", order = 1))
-      ggplot2::ggsave(paths[[1]], plot_trait_cell_type_heatmap(dplyr::mutate(scores, value = .data$SLDSC_enrichment),
-        tracks, "Enrichment", limits, midpoint = 1),
-        device = ragg::agg_png, width = 9, height = 2.5 + 0.22 * dplyr::n_distinct(scores$GWAS_ID), dpi = 300)
+      register_benchmark_font()
+      ggplot2::ggsave(paths[[1]], plot_trait_cell_type_grid(
+        dplyr::mutate(scores, cluster = gsub("-", "_", .data$cluster), value = .data$SLDSC_enrichment),
+        names(UCell_WNN_marker_genes_list.mixed_human_31x), "Enrichment", get_SLDSC_enrichment_limits(enrichment), midpoint = 1),
+        device = ragg::agg_png, width = 7.5, height = 2 + 0.17 * dplyr::n_distinct(scores$GWAS_ID), dpi = 300)
       readr::write_tsv(dplyr::select(scores, "GWAS_ID", "Category", "cluster", "share", "SLDSC_enrichment",
         "SLDSC_enrichment_se", "z", "p", "q", "h2", "h2_se"), paths[[2]])
       paths
     },
-    resources = get_tar_resources(RAM_GB_req = 4)
+    packages = w_def("ggtext"), resources = get_tar_resources(RAM_GB_req = 4)
   ),
   tarchetypes::tar_file(
     supplementary_table_S3.mixed_human_31x,
